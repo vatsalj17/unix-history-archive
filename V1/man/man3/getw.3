@@ -1,0 +1,47 @@
+        11/3/71                                      GETW, GETC, FOPEN (III)
+
+
+NAME              getw, getc, fopen -- buffered input
+
+SYNOPSIS          mov      $filename , r0
+                  jsr      r5,fopen; iobuf
+
+                  jsr r5,getc; iobuf
+                  (character in r0)
+
+                  jsr       r5,getw; iobuf
+                  (word in r0)
+
+DESCRIPTION       These routines are used to provide a buffered input facility.
+                  iobuf is the address of a 134(10) byte buffer area whose
+                  contents are maintamed by these routines. Its format is:
+
+                  ioptr:            . =. +2      /   file descriptor
+                           .=.+ 2                /   characters left in buffer
+                           .=.+ 2                /   ptr to next character
+                                     . = .+28.   /   the buffer
+
+                  fopen should be called initially to open the file. On return,
+                  the error bit (c--bit) is set if the open failed. If fopen is
+                  never called, get will read from the standard input file.
+
+                  getc returns the .next byte from the file in r0. The error bit
+                  is set on end of file or a read error.
+
+                  getw returns the next word in r0. getc and getw may be used
+                  alternately; there are no odd/even problems.
+
+                  iobuf must be provided by the user; it must be on a word
+                  boundary.
+
+FILES             kept in /etc/liba.a
+
+SEE ALSO          sys open, sys read; putc, putw, fcreat
+
+DIAGNOSTICS       c--bit set on EOF or error
+
+BUGS              for greater speed, the buffer should be 512 bytes long.
+                  Unfortunately, this will cause several existing programs to
+                  stop working.
+
+OWNER             dmr

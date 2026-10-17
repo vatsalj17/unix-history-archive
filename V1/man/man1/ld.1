@@ -1,0 +1,94 @@
+       11/3/71                                                       LD (I)
+
+
+NAME             ld -- link editor
+
+SYNOPSIS         ld [ --usaol ] name1 ]
+
+DESCRIPTION      ld combines several object programs into one; resolves
+                 external references; and searches libraries. In the
+                 simplest case the names of several object programs are
+                 given, and ld combines them, producing an object module
+                 which can be either executed or become the input for a
+                 further ld run.
+
+                 The argument routines are concatenated in the order
+                 specified. The entry point of the output is the beginning
+                 of the first routine.
+
+                 If any argument is a library, it is searched, and only
+                 those routines defining an unresolved external reference
+                 are loaded. If any routine loaded from a library refers to
+                 an undefined symbol which does not become defined by the
+                 end of the library, the library is searched again. Thus the
+                 order of libraries primarily affects the efficiency of
+                 loading, not what routines get loaded.
+
+                 ld understands several flag arguments which are written
+                 preceded by a "--"
+
+                    --s "squash" the output, that is, remove the symbol
+                        table and relocation bits to save space (but impair
+                        the usefulness of the debugger). This information
+                        can also be removed by strip.
+
+                    --u take the following argument as a symbol and enter it
+                        as undefined in the symbol table. This is useful for
+                        loading wholly from a library, since initially the
+                        symbol table is empty and an unresolved reference is
+                        needed to force the loading of the first routine.
+
+                    --o set the origin of the load to the octal number which
+                        is given as the next argument. This option affects
+                        only the definition of relocatable external symbols.
+                        See DMR before using.
+
+                       --l This option is an abbreviation for a library
+                       name. "-l" alone stands for "/etc/liba.a", which is
+                       the standard system library for assembly language
+                       programs. "-lx" stands for /etc/libx.a where x is
+                       any character. There are libraries for Fortran
+                       (x="f") and B (x="b").
+        11/3/71                                                          LD (I)
+
+
+                        --a means absolute" (load at origin absolute
+                             0) but it doesn't work.
+
+                  The output of ld is left on a.out. This file is executable
+                  only if no errors occurred during the load.
+
+FILES             /etc/libx.a, for various x;
+                  /etc/ltma, ltmb, ... (temporary)
+                  a.out (output file)
+
+SEE ALSO          as, strip, ar (maintains libraries)
+
+DIAGNOSTICS       "can't create temp file"---- unwritable directory
+                  or someone else is using ld in the same directory.
+
+                  "can't open temp file" -- maybe someone has deleted it out
+                  from under you.
+
+                   "file not found" -- bad argument
+
+                  "bad format" -- bad argument
+
+                  "relocation error" -- bad argument (relocation bits
+                  corrupted)
+
+                  "bad relocation" -- user error: a relocatable
+                  reference to an external symbol that turns out to be
+                  absolute.
+
+                  "multiply defined" -- same symbol defined twice in same
+                  load
+
+                  "un" -- stands for undefined symbol
+
+                  "symbol not found" ---- loader bug
+
+BUGS              Option "-a" doesn't work at all; option "-o" doesn't work
+                  right.
+
+OWNER             dmr

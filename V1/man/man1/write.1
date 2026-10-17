@@ -1,0 +1,45 @@
+        11/3/71                                                     WRITE (I)
+
+
+NAME              write -- write to another user
+
+SYNOPSIS          write user
+
+DESCRIPTION       write copies lines from your typewriter to that of another
+                  user. When first called, write sends the message
+
+                         message from yourname...
+
+                  The recipient of the message should write back at this
+                  point. Communication continues until an end of file is read
+                  from the typewriter or an interrupt is sent. At that point
+                  write writes "EOT" on the other terminal.
+
+                  Permission to write may be denied or granted by use of the
+                  mesg command. At the outset writing is allowed. Certain
+                  commands, in particular roff and pr, disallow messages in
+                  order to prevent messy output.
+
+                  If the character "!" is found at the beginning of a line,
+                  write calls the mini--shell msh to execute the rest of the
+                  line as a command.
+
+                  The following protocol is suggested for using write: When
+                  you first write to another user, wait for him to write back
+                  before starting to send. Each party should end each message
+                  with a distinctive signal ("(o)" for "over is
+                  conventional)that the other may reply. "(oo)" (for over and
+                  out") is suggested when conversation is about to be
+                  terminated.
+
+FILES             /tmp/utmp is used to discover the target user's typewriter
+                  channel and the sending users s name. msh is used to
+                  execute commands.
+
+SEE ALSO          mesg
+
+DIAGNOSTICS       "user not logged in"; "permission denied"
+
+BUGS
+
+OWNER             dmr, ken

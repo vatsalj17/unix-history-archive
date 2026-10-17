@@ -1,0 +1,34 @@
+        11/3/71                                                SYS WAIT (II)
+
+
+NAME              wait -- wait for process to die
+
+SYNOPSIS          sys      wait                / wait = 7.
+                  (process ID in r0)
+
+DESCRIPTION       wait causes its caller to delay until one of its child processes
+                  terminates. If any child has already died, return is immediate; if
+                  there are no children, return is immediate with the error bit set. In
+                  the case of several children several waits are needed to learn of all
+                  the deaths.
+
+FILES
+
+SEE ALSO          fork
+
+DIAGNOSTICS       error bit (c--bit) on if no children not previously waited for.
+
+BUGS              A child which dies but is never waited for is not really gone in that
+                  it still consumes disk swap and system table space. This can make it
+                  impossible to create new processes. The bug can be noticed when
+                  several & separators are given to the shell not followed by an
+                  command without an ampersand. Ordinarily things clean themselves up
+                  when an ordinary command is typed, but it is possible to get into a
+                  situation in which no commands are accepted, so no waits are done;
+                  the system is then hung.
+
+                  The fix, probably, is to have a new kind of fork which creates a
+                  process for which no wait is necessary (or possible); also to limit
+                  the number of active or inactive descendants allowed to a process.
+
+OWNER             ken, dmr

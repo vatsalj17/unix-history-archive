@@ -1,0 +1,45 @@
+        11/3/71                         PUTC, PUTW, FCREAT, FLUSH (III)
+
+
+NAME              putc, putw, fcreat, flush -- buffered output
+
+SYNOPSIS          may      $filename , r0
+                  jsr      r5,fcreat; iobuf
+
+                  (get byte in r0)
+                  jsr r5,putc; iobuf
+
+                  (get word in r0)
+                  jsr r5,putw; iobuf
+
+                  jsr r5,flush; iobuf
+
+DESCRIPTION       fcreat creates the given file (mode 17) and sets up the buffer
+                  iohuf (size 134(10) bytes); putc and putw write a byte or word
+                  respectively onto the file; flush forces the contents of the
+                  buffer to be written, but does not close the file. The format
+                  of the buffer is:
+
+                  iobuf:   .=.+2               /   file descriptor
+                            .=.+2              /   characters unused in buffer
+                            .=.+ 2             /   ptr to next free character
+                            .=.+128.           /   buffer
+
+                  fcreat sets the error bit (c--bit) if the file creation failed;
+                  none of the other routines return error information.
+
+                  Before terminating, a program should call flush to force out
+                  the last of the output.
+
+                  The user must supply iohuf, which should begin on a word
+                  boundary.
+
+FILES             kept in/etc/liba.a
+
+SEE ALSO          sys creat; sys write; getc, getw, fopen
+
+DIAGNOSTICS       error bit possible on fcreat call
+
+BUGS              buffers should be changed to 512 bytes.
+
+OWNER             dmr

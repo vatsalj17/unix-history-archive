@@ -1,0 +1,31 @@
+        11/3/71                                               SYS WRITE (II)
+
+
+NAME              write ---- write, on file
+
+SYNOPSIS          (file descriptor in r0)
+                  sys      write; buffer; nchars        / write = 4.
+                  (number written in r0)
+
+DESCRIPTION       A file descriptor is a word returned from a successful open or creat
+                  call.
+
+                  buffer is the address of nchars contiguous bytes which are written on
+                  the output file. The number of characters actually written is
+                  returned in r0. It should be regarded as an error if this is not the
+                  same as requested.
+
+                  For disk and tape files, writes which are multiples of 512 characters
+                  long and begin on a 512--byte boundary are more efficient than any
+                  others.
+
+FILES
+
+SEE ALSO          sys creat, sys open
+
+DIAGNOSTICS       The error bit (c--bit) is set on an error: bad descriptor, buffer
+                  address, or count. physical I/o errors;
+
+BUGS
+
+OWNER             ken, dmr

@@ -1,0 +1,47 @@
+        11/3/71                                               SYS STAT (II)
+
+NAME              stat -- get file status
+
+SYNOPSIS          sys        stat; name; buf / stat = 18.
+
+DESCRIPTION       name points to a null--terminated string naming a file; buf is the
+                  address of a 34(10) byte buffer into which information is placed
+                  concerning the file. It is unnecessary to have any permissions at all
+                  with respect to the file, but all directories leading to the file
+                  must be readable.
+
+                  After stat, buf has the following format:
+
+                  buf, +1             i--number
+                  +2, +3              flags (see below)
+                  +4                  number of links
+                  +5                      user ID of owner size in bytes
+                  +6,+7            size in bytes
+                  +8,+9            first indirect block or contents block
+                  ...
+                  +22,+23             eighth indirect block or contents block
+                  +24,+25,+26,+27 creation time
+                  +28,+29, +30,+31 modification time
+                      +32,+33         unused
+
+                  The flags are as follows:
+                       100000  used (always on)
+                       040000  directory
+                       020000  file has been modified (always on)
+                       010000  large file
+                       000040  set user ID
+                       000020  executable
+                       000010  read, owner
+                       000004  write, owner
+                       000002  read, non--owner
+                       000001  write, non--owner
+
+FILES
+
+SEE ALSO          fstat
+
+DIAGNOSTICS       Error bit (c--bit) is set if the file cannot be found.
+
+BUGS              The format is going to change someday.
+
+OWNER             ken, dmr

@@ -1,0 +1,30 @@
+        11/3/71                                                 SYS UNLINK (II)
+
+
+NAME              unlink -- remove directory entry
+
+SYNOPSIS          sys        unlink; name      / unlink = 10.
+
+DESCRIPTION       Name points to a null--terminated string. Unlink removes the entry for
+                  the file pointed to by name from its directory. If this entry was the
+                  last link to the file, the contents of the file are freed and the
+                  file is destroyed. If, however, the file was open in any process, the
+                  actual destruction is delayed until it is closed, even though the
+                  directory entry has disappeared.
+
+FILES
+SEE ALSO          link
+
+DIAGNOSTICS       The error bit (c--bit) is set to indicate that the file does not exist
+                  or that its directory cannot be written. Write permission is not
+                  required on the file itself. It is also illegal to unlink a directory
+                  (except for the super--user).
+
+BUGS              Probably write permission should be required to remove the last link
+                  to a file, but this gets in other problems (namely, one can donate an
+                  undeletable file to someone else).
+
+                  If the system crashes while a file is waiting to be deleted because
+                  it is open, the space is lost.
+
+OWNER             ken, dmr

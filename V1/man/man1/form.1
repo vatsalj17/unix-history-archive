@@ -1,0 +1,59 @@
+        11/3/71                                                      FORM (I)
+
+
+NAME              form -- form letter generator
+
+SYNOPSIS          form proto arg1 ...
+
+DESCRIPTION       form generates a form letter from a prototype letter, an
+                  associative memory, arguments and in a special case, the
+                  current date.
+
+                  If form is invoked with the argument x, the following
+                  files come into play:
+
+                     x.f prototype input
+                     x.r form letter output
+                     x.am associative memory
+                     form.am associative memory if x.am not found.
+
+                  Basically, form is a copy process from the file x.f to the
+                  file x.r. If an element of the -form \n (where n is a digit
+                  from 1 to 9) is encountered, The nth argument is inserted
+                  in its place, and that argument is then rescanned. If \0 is
+                  encountered, the current date is inserted. If the desired
+                  argument has not been given, a message of the form "\n:" is
+                  typed. The response typed in then is used for that
+                  argument.
+
+                  If an element of the form [name] is encountered, the name
+                  is looked up in the associative memory. If it is found,
+                  the contents of the memory under this name replaces the
+                  original element (again rescanned.) If the name is not
+                  found, a message of the form "name: " is typed. The
+                  response typed in is used for that element. If the
+                  associative memory is writable, the response is entered in
+                  the memory under the name. Thus the next search for that
+                  name will succeed without interaction.
+
+                  In both of the above cases, the response is typed in by
+                  entering arbitrary text terminated by two new lines. Only
+                  the first of the two new lines is passed with the text.
+                  The process is instantly terminated if an end of file is
+                  encountered anywhere except in the associative memory.
+
+FILES             x.f                   input file
+                  x.r                   output file
+                  x.am                  associative memory
+                  form.am               associative memory
+
+SEE ALSO          type
+
+DIAGNOSTICS       "settup error" when the appropriate files cannot be
+                  located or created.
+
+BUGS              "settup" is misspelled.
+11/3/71              FORM (I)
+
+
+OWNER     rhm, ken

@@ -1,0 +1,155 @@
+       11/3/71                                                        SH (I)
+
+
+NAME             sh   -- shell (command interpreter)
+
+SYNOPSIS         sh [ name [ arg1 ... [ arg9 ] ] ]
+
+DESCRIPTION      sh is the standard command interpreter. It is the program
+                 which reads and arranges the execution of the command lines
+                 typed by most users. It may itself be called as a command
+                 to interpret files of command lines. Before discussing the
+                 arguments to the shell used as a command, the structure of
+                 command lines themselves will be given.
+
+                 Command lines are sequences of commands separated by
+                 command delimiters. Each command is a sequence of non--blank
+                 command arguments separated by blanks. The first argument
+                 specifies the name of a command to be executed. Except for
+                 certain types of special arguments discussed below, the
+                 arguments other than the command name are simply passed to
+                 the invoked command.
+
+                 If the first argument represents the path name of an
+                 executable file, it is invoked; otherwise the string
+                 "/bin/" is prepended to the argument. (In this way the
+                 standard commands, which reside in "/bin," are found.) If
+                 this search too fails a diagnostic is printed.
+
+                 The remaining non--special arguments are simply passed to
+                 the command without further interpretation by the shell.
+
+                 There are three command delimiters: the new line, ";" , and
+                 "&". The semicolon ";" specifies sequential execution of
+                 the commands so separated; that is,
+
+                          coma; comb
+
+                 causes the execution first of command coma, then of comb.
+                 The ampersand "&" causes simultaneous execution:
+
+                          coma & comb
+
+                 causes coma to be called, followed immediately by comb
+                 without waiting for coma to finish. Thus coma and comb
+                 execute simultaneously. As a special case,
+
+                          coma &
+
+                 causes coma to be executed and the shell immediately to
+                 request another command without waiting for coma.
+11/3/71                                                       SH (I)
+
+          Two characters cause the immediately following string to be
+          interpreted as a special argument to the shell itself, not
+          passed to the command. An argument of the form <arg causes
+          the file arg to be used as the standard input file of the
+          given command; an argument of the form ">arg" causes file
+          "arg" to be used as the standard output file for the given
+          command.
+
+          If any argument contains either of the characters "?" or
+          "*" , it is treated specially as follows. The current
+          directory is searched for files which match the given
+          argument. The character "*" in an argument matches any
+          string of characters in a file name (including the null
+          string); ? matches any single character in a file name.
+          Other argument characters match only the same character in
+          the file name. For example, "*" matches all file names; "?"
+          matches all one--character file names; "ab*.s" matches all
+          file names beginning with "ab" and ending with ".s".
+
+          If the argument with "*" or "?" also contains a "/", a
+          slightly different procedure is used: instead of the
+          current directory, the directory used is the one obtained
+          by taking the argument up to the last "/" before a "*" or
+          "?". The matching process matches the remainder of the
+          argument after this "/" against the files in the derived
+          directory. For example:, "/usr/dmr/a*.s" matches all files
+          in directory /usr/dmr which begin with "a" and end with
+          ".s"
+
+          In any event, a list of names is obtained which match the
+          argument. This list is sorted into alphabetical order, and
+          the resulting sequence of arguments replaces the single
+          argument containing the "*" or "?". The same process is
+          carried out for each argument with a * or ?" (the resulting
+          lists are not merged) and finally the command is called
+          with the resulting list of arguments..
+
+          For example: directory /usr/dmr contains the files al * s,
+          a2.s, ..., a9.s. From any directory, the command
+
+          as /usr/dmr/a?.s
+
+          calls as with arguments /usr/dmr/al.s, /usr/dmr/a2.s, ...
+          /usr/dmr/a9.s in that order.
+
+          The character "\" causes the immediately following
+          character to lose any special meaning it may have to the
+          shell; in this way < , , and other characters meaningful to
+          the shell may be passed as part of arguments. A special
+          case of
+        11/3/71                                                       SH (I)
+
+
+                  this feature allows the continuation of commands onto more
+                  than one line: a new--line preceded by "\" is translated
+                  into a blank.
+
+                  Sequences of characters enclosed in double (") or single
+                  (') quotes are also taken literally.
+
+                  When the shell is invoked as a command, it has additional
+                  string processing capabilities. Recall that the form in
+                  which the whell is invoked is
+
+                         sh [ name [ arg1 ... [ arg9 ] ] ]
+
+                  The name is the name of a file which will be read and
+                  interpreted. If not given, this subinstance of the shell
+                  will continue to read the standard input file.
+
+                  In the file, character sequences of the form "$n", where n
+                  is a digit 0, ..., 9, are replaced by the nth argument to
+                  the invocation of the shell (arg ). $0" is replaced by
+                  name.
+
+                  An end--of--file in the shell's input causes it to exit. A
+                  side effect of this fact means that the way to log out from
+                  UNIX is to type an end of file.
+
+FILES             /etc/glob
+
+SEE ALSO          [reference], which gives the theory of operation of the
+                  shell.
+
+DIAGNOSTICS       "?", in case of any difficulty. The most common problem is
+                  inability to find the given command. Others: input file
+                  ("<") cannot be found; no more processes can be created
+                  (this will alleviate itself with the passage of time). Note
+                  that no diagnostic is given for inability to create an
+                  output (">") file; the standard output file has already
+                  been closed when the condition is discovered and there is
+                  no place to write the diagnostic.
+
+                  If a "*" or "?" is used, the "glob" routine is invoked; it
+                  types "No command" if it cannot find the given command, and
+                  "No match" if there were no files which matched an argument
+                  with "?" or "*".
+
+BUGS              Better diagnostics should be provided. If a "*" or "?" is
+                  used, the command must be in /bin (Not, for example, in the
+                  user's directory.) This is actually a glob bug.
+
+OWNER             dmr, ken

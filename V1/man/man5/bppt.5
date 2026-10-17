@@ -1,0 +1,44 @@
+        11/3/71                                                      BPPT (V)
+
+
+NAME              binary punched paper tape format
+
+SYNOPSIS
+
+DESCRIPTION       Binary paper tape. is used to pass and store arbitrary
+                  information on paper tape. The format chosen has the
+                  following features: a) no format of the data is assumed. b)
+                  check summing c) zero suppress ion
+
+                  The format is as follows:
+
+                  Between records, NULL characters are ignored. The beginning
+                  of the tape is considered between records, thus the leader
+                  is ignored.
+
+                  The first non--null character specifies the type and size of
+                  the record. If the character is positive (1 to 177), the
+                  record is a data record consisting of that many characters.
+                  All but the last of these characters are data, the last
+                  being a checksum. The checksum is calculated such that the
+                  sum of the entire record is zero mod 256.
+
+                  If the first character is negative (200--376) the record is
+                  a zero suppression record. It is identical to minus that
+                  number of zeros of data. One character of checksum follows
+                  this negative character. It is the positive of the negative
+                  character.
+
+                  The special case of a record looking like a single zero
+                  character suppressed (377;1) causes no data transfer, but
+                  is an end--of--file indication.
+
+FILES
+
+SEE ALSO          lbppt, dbppt
+
+DIAGNOSTICS
+
+BUGS
+
+OWNER             ken, dmr

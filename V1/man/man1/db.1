@@ -1,0 +1,173 @@
+       11/3/71                                                         DB (I)
+
+
+NAME             db -- debug
+
+SYNOPSIS         db [ core [ namelist ] ]
+
+DESCRIPTION      Unlike many debugging packages (including DEC's ODT, on which
+                 db is loosely based) db is not loaded as part of the core
+                 image which it is used to examine; instead it examines files.
+                 Typically, the file will be either a core image produced
+                 after a fault or the binary output of the assembler. Core is
+                 the file being debugged; if omitted "core" is assumed.
+                 namelist is a file containing a symbol table. If it is
+                 omitted, a.out is the default. If no appropriate name list
+                 file can be found, db can still be used but some of its
+                 symbolic facilities become unavailable.
+
+                 The format for most db requests is an address followed by a
+                 one character command.
+
+                 Addresses are expressions built up as follows:
+
+                    1. A name has the value assigned to it when the input
+                       file was assembled. It may be relocatable or not
+                       depending on the use of the name during the assembly.
+
+                    2.   An octal number is an absolute quantity with the
+                         appropriate value.
+
+                    3. An octal number immediately followed by "r" is a
+                       relocatable quantity with the appropriate value.
+
+                    4. The symbol "." indicates the current pointer of db.
+                       The current pointer is set by many requests.
+
+                    5.   Expressions separated by "+" or " "(blank) are
+                         expressions with value equal to the sum of the
+                         components. At most one of the components may be
+                         relocatable.
+
+                    6.   Expressions separated by "--" form an expression with
+                         value equal to the difference to the components. If
+                         the right component is relocatable, the left
+                         component must be relocatable.
+
+                    7. Expressions are evaluated left to right. Names for
+                 registers are built in:
+
+                                  r0 ... r5
+                                     sp
+                                     pc
+11/3/71                                                         DB (I)
+
+
+                              ac
+                              mq
+
+          These may be examined. Their values are deduced from the
+          contents of the stack in a core image file. They are
+          meaningless in a file that is not a core image.
+
+          If no address is given for a command, the current address
+          (also specified by ".") is assumed. In general, . points to
+          the last word or byte printed by ~.
+
+          There are db commands for examining locations interpreted as
+          octal numbers, machine instructions, ASCII characters, and
+          addresses. For numbers and characters, either bytes or words
+          may be examined. The following commands are used to examine
+          the specified file.
+
+             /   The addressed word is printed in octal.
+
+             \   The addressed byte is printed in octal.
+
+                 " The addressed word is printed as two ASCII
+                 characters.
+
+                 ' The addressed byte is printed as an ASCII character.
+
+              ` The addressed word is multiplied by 2, then printed in
+                 octal (used with B programs,
+                 whose addresses are word addresses).
+
+             ?   The addressed word is interpreted as a machine
+                 instruction and a symbolic form of the instruction,
+                 including symbolic addresses, is printed. Usually, the
+                 result will appear exactly as it was written in the
+                 source program.
+
+             &   The addressed word is interpreted as a symbolic
+                 address and is printed as the name of the symbol whose
+                 value is closest to the addressed word, possibly
+                 followed by a signed offset.
+
+             <nl> (i. e., the character "new line") This command
+                 advances the current location counter * and prints the
+                 resulting location in the mode last specified by one
+                 of the above requests.
+
+                 This character decrements "." and prints the resulting
+                 location in the mode last selected one of the above
+                 requests. It is
+11/3/71                                                       DB (I)
+
+
+                 a converse to <nl>.
+
+          It is illegal for the word--oriented commands to have odd
+          addresses. The incrementing and decrementing of "." done by
+          the <nl> and requests is by one or two depending on whether
+          the last command was word or byte oriented.
+
+          The address portion of any of the above commands may be
+          followed by a comma and then by an expression. In this case
+          that number of sequential words or bytes specified by the
+          expression is printed. "."is advanced so that it points at
+          the last thing printed.
+
+          There are two commands to interpret the value of
+          expressions.
+
+             =   When preceded by an expression, the value of the
+                 expression is typed in octal. When not preceded by an
+                 expression, the value of. "." is indicated. This
+                 command does not change the value of ".".
+
+             :   An attempt is made to print the given expression as a
+                 symbolic address. If the expression is relocatable,
+                 that symbol is found whose value is nearest that of
+                 the expression, and the symbol is typed, followed by a
+                 sign and the appropriate offset. If the value of the
+                 expression is absolute, a symbol with exactly the
+                 indicated value is sought and printed if found; if no
+                 matching symbol is discovered, the octal value of the
+                 expression is given.
+
+          The following command may be used to patch the file being
+          debugged.
+
+             !   This command must be preceded by an expression. The
+                 value of the expression is stored at the location
+                 addressed by the current value of "." . The opcodes do
+                 not appear in the symbol table, so the user must
+                 assemble them by hand.
+
+
+          The following command is used after a fault has caused a core
+          image file to be produced.
+
+             $   causes the contents of the general registers and
+                 several other registers to be printed both in octal
+                 and symbolic format. The values are as they were at
+                 the time of the fault.
+        11/3/71                                                         DB (I)
+
+
+                  The only way to exit from db is to generate an end of file
+                  on the typewriter (EOT character).
+
+FILES
+
+SEE ALSO          as; core for format of core image.
+
+                                      "
+
+DIAGNOSTICS       "File not found" the first argument cannot be read;
+                  otherwise "?"
+
+BUGS              Really, db should know about relocation bits, floating point
+                  operations, and PDP11/45 instructions.
+OWNER             dmr
