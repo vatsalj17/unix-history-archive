@@ -1,0 +1,93 @@
+$NetBSD: virtualization,v 1.2.12.1 2009/01/26 05:17:44 snj Exp $
+
+NetBSD Virtualization Roadmap
+=============================
+
+This is a small roadmap document, and deals with the virtualization
+side of the operating system.
+
+NetBSD 5.0 will ship with the following virtualization elements in
+place:
+
+1. Xen 3 Dom0		[i386/amd64]
+2. Xen 3 DomU		[i386/amd64]
+3. Xen 3 PAE DomU	[i386]
+
+The following projects are expected to be included in NetBSD 6.0
+
+4. NetBSD/usermode
+5. virtualization jails via secmodel
+6. iSCSI booting
+7. iSCSI device cloning
+8. Xen domU migration, suspend and resume
+9. Xen balloon driver support
+
+The timescales for 6.0 are not known at the present time, but we would
+expect to branch 6.0 late in 2009, with a view to a 6.0 release in
+early 2010.
+
+We'll continue to update this roadmap as features and dates get firmed up.
+
+
+Some explanations
+=================
+
+4. NetBSD/usermode
+------------------
+
+NetBSD/usermode is an port of NetBSD to a POSIX-compatible user-space, with
+the intention that it should be possible to run the usermode version of
+NetBSD on any POSIX-compatible operating system.
+
+Responsible: jmcneill
+
+5. Virtualization Jails via secmodel
+------------------------------------
+
+One novel way of creating jails for virtualization is to use a new
+secmodel (part of the kauth framework), to isolate processes into
+jail-based virtual machines. This is the basis of a paper to appear
+in the AsiaBSDcon proceedings in March 2008.
+
+Responsible: bad
+
+6. iSCSI booting
+----------------
+
+In order to make Xen domains migration-friendly, the storage that the
+domain uses must be based on some form of network-centric storage, either
+NFS, or a SAN or IP-SAN. For IP-SANs, iSCSI booting will be used.
+
+Responsible: agc
+
+7. iSCSI device cloning
+-----------------------
+
+To minimise the storage requirements for multiple domU booting, using
+a standard root filesystem or block device for the domU is required, along
+with some form of copy-on-write mechanism to preserve any modifications
+that are made.
+
+Responsible: agc
+
+8. Xen domU migration, suspend and resume
+-----------------------------------------
+
+Xen domU migration is where a domU domain is moved from one dom0 to
+another dom0 on the same vlan (to avoid networking problems, the
+virtual arp address migrates with the domU itself).
+
+Responsible: bouyer
+
+9. Xen balloon driver support
+-----------------------------
+
+The balloon driver allows more memory to be added to a running Xen domU
+instance; this allows extra memory to be used by the domU for resource
+peak needs.
+
+Responsible: bouyer, cherry?
+
+
+Alistair Crooks
+Sun 25 Jan 2009 21:07:42 PST

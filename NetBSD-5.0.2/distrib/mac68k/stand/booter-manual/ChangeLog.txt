@@ -1,0 +1,593 @@
+                       BSD/mac68k Booter Change Log
+                       ============================
+
+Up until 1.9.4 -- Brian Gaeke <brg@usa.net>
+After 1.10.0 -- Nigel Pearson <nigel@ind.tansu.com.au or nigel@socs.uts.edu.au>
+
+This document was originally adapted from notes found in ufs_test.c.
+
+Some quick notes about version numbers and information passing...
+
+Originally, there was the first booter. This booter passed information to the kernel
+through registers. Y’know, A4=video, A2=boot flags, and so on. We ran out of
+registers fairly quickly.
+
+Then there was the Christmas '94 booter. That booter passed an environment buffer.
+The buffer contained arguments specifying interesting parameters to the booter.
+That's what the arguments are in ufs_test.c:shutdownProc().
+
+Then there was the generic booter + a version number. That (this) booter specifies
+the MacOS video and serial addresses, so that the kernel may maintain contact with
+the hardware in the correct locations up until it activates its own page tables,
+whether or not MacOS is operating in a mapped environment. There is also a version
+field, so that newer kernels can know not to boot from old booters.
+
+Here is a (non-exhaustive) list of booters that have existed. Which of these
+correspond to the ones above (or below)?
+* Original booter, Summer 1992
+* 32-bit booter, September 1993
+* nofpu booter, September 1993
+* New parameters and 8k-4k (8k didn’t work) booter, December 1993
+* Newer parameters booter, 01/26/1994
+
+ChangeLog starts here.
+====================================================================================
+* Version 5 -- January 26th, 1994 (the “newer parameters booter” above.)
+  Fifth in line of booters. This booter, amazingly, should work with ALL previous
+  kernels, because parameters have been preserved. Added all parameters below.
+====================================================================================
+* Version 6 -- Allen did some stuff [what?]
+====================================================================================
+* Version 1.6 -- Brad added some time variables and some ROM ADB necessitated
+  variables; ROMBASE, ADBDELAY, TIMEDBRA. No kernel that depends on this info
+  (e.g. MRG kernels) will boot with an earlier Booter.
+====================================================================================
+* Version 1.7 -- Brad added the setenvbuf() function and added two new variables,
+  ADBBASE and EGRETBASE, which actually contain the config info for the ADB and
+  Egret systems, so we can reset them properly. (Maybe.)
+====================================================================================
+* Version 1.8 -- Allen added support for mini-root partition image files, and added 
+  routines to set variables directly in the kernel namespace, and cleaned up some.
+  Brian added video card sRsrc-searching and VBL disabling code, as well as passing
+  of HwCfgFlags and friends as environment variables, dumping of environment
+  variables before boot, a pause-before-booting dialog, and a little bit more
+  clean-up. It seems setenvbuf() has been disabled.
+====================================================================================
+* Version 1.9 -- OK, lots of changes described here but not so much real innovation:
+  Added “No env dumps” option so that if you don't want to see the environment
+  dumped, you don't have to. This will be subsumed in 2.x booters into the
+  diagnostic messages settings.
+
+  main.c: Added check for 32-bit mode at booter startup; Booter will refuse to start
+  up if the machine wasn’t booted in 32-bit addressing mode.
+
+  appkill.c: added. Booter will now try to send ‘quit’ AppleEvents to all other
+  applications before booting.
+
+  ufs_test.c: Added ADBREINIT_JTBL environment variable, 4 bytes at 0xdd8. Flush
+  instruction+data caches just before calling copycode(). Make CLEANUP macro try to
+  free(buf) if it’s been malloc’d. Added more EVENT_CHECKs to copyunix(). Used
+  BootError() in more places.
+
+  videocard.c: video_call() returns an error code. (Hopefully) more informative
+  error messages. “Don’t stop the boot when things go wrong.” -Allen. Moved some
+  things around in get_video_info so that if there's no place to put the info
+  (i.e. an older kernel), it's not gathered.
+
+  strcasecmp.c, strcasestr.c: added (former from BSD libc, latter adapted from Net2
+  libc (ok, I had it lying around...)) stricmp() removed.
+  
+  read_part.c: Revamped get_part_sector() to look at partition names (“Root”,“Swap”)
+  as a quick patch until the silly thing can support interpretation of the BZB, in
+  response to some bug report or another. Tried to bring in newer BSD headers but
+  backed out -- structures weren't aligned properly or something (magic nums were
+  wrong, et c.) Maybe later.
+====================================================================================
+* Version 1.9.1 (M.Hitter)
+
+  main.c, Dialogs.c, MacBSD.h: added Preferences Dialog with DebugLevel. Moved
+  “AutoBoot” controls to there.
+
+  Removed some obsolete variables and move VerbosePrintf to DebugPrintf (1,...).
+  
+  Made modeless Dialogs full working as expected (Event handling etc.).
+====================================================================================
+* Version 1.9.2 (M.Hitter)
+
+  Reviewed to allow THINK C's option “infer prototypes”, i.e. added a lot of
+  prototypes and ‘static’s. Maybe I'm stupid, but I was unable to fix for “required
+  prototypes” (the prototype for harry() was the problem).
+  
+  Added support for logging messages to a logfile.
+  
+  Moved cache disabling from the end of copyunix() to ShutdownProc().
+  Using now the same code as in the kernel.
+====================================================================================
+* Version 1.9.3beta1 (W. Studenmund)
+
+  Added a Serial Ports... Dialog to control the new serial port options in the
+  zsc/zstty serial port driver. Added entries for clocks present on the clock input
+  lines, selection of "stty raw" defaults for either port, warning the kernel that
+  there might be LocalTalk on the printer port (sets the baud rate to 1), and
+  opening the modem for output just before boot (to turn on power to the SCC chip on
+  powerbooks).
+  
+  Moved Serial Echo and Serial Console selection controls to the “Serial Ports...”
+  dialog.
+  
+  Added code to the save and load user configuration routines to deal with no
+  preferences being present. LoadUserConfiguration() now just zeros out
+  currentConfiguration if no prefs are present, and SaveUserConfiguration() will
+  make a preferences resource if needed.
+====================================================================================
+* Version 1.9.3beta2 -- This is a bug-fix-only release. Major changes are that we
+  now test for the presence of the VM system and existence of the _MemoryDispatch
+  trap before calling LockMemoryContiguous. Hopefully this squashed the
+  “unimplemented trap” crashing bug which was appearing on “minimal install”
+  systems. Also, the booter now compiles in CodeWarrior AND in THINK C. (To be
+  precise, it has been tested in MW C/C++ 68k v1.5, the version on the CW9 disk, and
+  in THINK C 8.0.) The mess resulting from having to deal with the two compilers and
+  their two incompatible sets of header files and libraries will be removed after
+  version 1.9.3 final, so compiling under THINK C will not be supported for long.
+
+  More user-invisible changes:
+  Everywhere: Misc. type & type-cast changes, removed some unused variables,
+  Quickdraw globals now use qd. prefix.
+
+  ufs_test.c: The name of the struct exec which holds the a.out header of the kernel
+  was changed from x to exec. Better environment printing (i.e. the environment is
+  no longer calculated twice - once for printing and once “for real”.) print1env()
+  is history. Assembly-language blocks moved into their own functions and MOVEC
+  instrs hand-assembled for compatibility with brain-damaged CodeWarrior assembler.
+  (A complaint has been lodged with the proper authorities. Grumble.) Low memory
+  globals are now accessed by their proper accessor functions where available
+  (LMGetXxxxx()). Prototype for harry added (at considerable cost to code
+  simplicity.) It compiles in CW9 with “Require Function Prototypes” and in THINK C
+  with “Require Prototypes”.
+
+  Dialogs.c: Cleaned code up substantially.
+
+  MacBSD.h: CLEANUP is no longer defined by default to be “while(0);”, now it is
+  “/* NOTHING */” by default. Note that this only makes a difference in read_ufs.c.
+  Sooner or later, I’m just going to ditch EVENT_CHECK and CLEANUP as they are
+  currently implemented.
+====================================================================================
+* Version 1.9.3 BETA 3 -- Mostly cleanup this time around, with 1 important bug fix
+  in dialog code and a whole new way to get the parameters of the main screen using
+  the Graphics Device Manager and Color QuickDraw routines.
+
+  Dialogs.c: Fixed bug in GroupSet() which was not taking into account argument
+  promotion when retrieving item numbers off the vararg stack.
+
+  main.c: Now we check for availability of 68020+68851 or 68030 or better at booter
+  startup time. getRAMSize() and MacOS32BitMapping() moved to machdep.c.
+
+  machdep.c: (added.) Most of the boolean functions that result from interpreting
+  Gestalt results have been moved here. getRAMSize is now GetRAMSize, for
+  consistency.
+
+  ufs_test.c: Changes to include files. load, lowram and mach are history, as well
+  as many other superfluous variables of which I’ve lost track. BootError now works
+  like printf(). New max_avail_mem() which should probably migrate to machdep.c.
+  Caches are now flushed and disabled before the call to copycode(), only.
+  kern_geteof() is history. In copyunix(): Now, load address is LOAD_ADDR (a
+  #define.) All the video info comes out of GetMainDevice() and its subsidiary data
+  structures; the old code is still there (but #if’d out.) Lots more comments,
+  including a try at describing the format of the kernel buffer, and documentation
+  of the new algorithms for finding screen parameters. Figured out exactly what /*
+  LAK says I need this. */ meant: copycode() must be copied to the end of the
+  buffer, which must end on a page boundary. The first two lines round down len to
+  the next lowest page boundary, and then harry is assigned to be 1KB below that.
+====================================================================================
+* Version 1.9.4 -- The new, improved Booter Manual (in HTML) has been included.
+
+  The string+environment size has been doubled to 256KB. Eventually this will
+  be fixed for good by allocating it dynamically.
+
+  Mikael Forselius posted a big list of things to do to make the Booter boot
+  correctly on the LC475 series machines. This includes changing the way the
+  caches are disabled (implemented) and changing (again) the way the video
+  address is determined (not implemented yet). More on this in future versions,
+  for sure.
+====================================================================================
+* Version 1.9.5 (Dan Jacobowitz, youngdrow@mail.geocities.com, Nov 22, 1996)
+Was available at <http://crab.rutgers.edu/~jacobowi/netbsd>.
+Changes: Option for B/W Mode booting! Rearranged prefs dialogs. Fixed the buttons
+         in the Untested Machine dialog.
+(These changes were subsequently lost in later Booters. Nigel)
+====================================================================================
+* Version 1.9.5 and 1.9.6 (Allen Briggs, briggs@macbsd.com, Mar 4, 1997)
+The main (only?) change I made was to support booting with larger kernels--it
+dynamically sizes RAM to account for larger symbol tables. Older versions of the
+booter just assumed that the symbol table would be 120K or less...  Many post-1.2
+kernels do exceed this size.
+====================================================================================
+* Version 1.9.7 (Steve Brown, sbrown@best.com, Mar 19, 1997)
+Added an “Auto Set GMT bias” checkbox and the code to make the booter automatically
+get the GMT offset from the MacOS. Also moved the Centris & Quadra 610 and 650 into
+the “tested” machine category.
+====================================================================================
+* Version 1.10.0 (Allen Briggs, briggs@macbsd.com, Apr 24, 1997)
+Added ability to read gzipped kernels. Removed testedMachine	stuff.
+====================================================================================
+* Version 1.10.1 (Nigel Pearson)
+* Never Officially Released
+Mainly changes to get it to compile under Think C v7 _and_ CodeWarrior. Added alias
+of the resource file (for Think C compilation). Updated versions in ChangeLog and
+resource file.
+
+Dialogs.c: Put all of the SMALLFUNC stuff into a new file, DialogMgr.h and added new
+           function GroupHilite().
+machdep.c: Changed MachineLocation structure de-reference so that it compiles under
+           both Think C _and_ CodeWarrior
+ufs_test.c: Cast shutdownProc() to (ShutDwnUPP)shutdownProc to match Think C
+            prototype for ShutDwnInstall()
+BSD_Mac_Booter.rsrc: Updated version numbers and took chopped list of names out of
+                     version resources, replacing with “by the NetBSD/Mac68k group”
+
+zlib:    Changed all text files from Unix to Macintosh format, added Think C project
+zconf.f: Put (#if !defined (THINK_C) ) wrapper around “Byte” typedef
+zutil.h:     Changed start of line 151 to #if defined(__STDC__) to match Think C
+====================================================================================
+* Version 1.10.2 (Nigel Pearson)
+* Never Officially Released
+Added new Serial fields to set different default serial port speeds (with a matching
+kernel), and a new Monitors dialog which allows you to change the depth of your main
+screen before booting. (will also allow you to change the resolution in the future)
+
+Dialogs.c:  Extracted Serial dialog stuff into separate file, Serial.c
+main.c:     Added extra menu item for Monitors dialog, and a call to MonitorChange()
+            just before booting
+MacBSD.h:   Added extra constants for Monitors and Serial dialog, and variables in
+            the user configuration structure
+Monitors.c: New file containing three functions to handle the new Monitors dialog
+            and MonitorChange() which actually changes the depth
+Serial.c:   Added a little code for handling the new “Default Port Speed” items
+ufs_test.c: Added a few lines to output environment variables for new serial items
+BSD_Mac_Booter.rsrc: New dialog resources for Monitors dialog, re-arranged Serial
+                     dialog and added new fields, added my name to the About dialog
+====================================================================================
+* Version 1.10.3b1 (Nigel Pearson, Aug 29, 1997)
+Fixed nasty booting problem on IIvx machiness, and small bug where “Auto Set GMT
+bias” could be turned on but not off.
+
+Dialogs.c:           Added “currentConfiguration.AutoSetGMT = 0”
+machdep.c:           Added dummy function UsingVM();
+Monitors.c:          Removed some commented-out code
+ufs_test.c:          Removed old (assembler) cache-disabling code (incompat. IIvx)
+BSD_Mac_Booter.rsrc: Again took chopped list of names out of version resources,
+                     replacing with “by the NetBSD/Mac68k group”
+                     (This change somehow was in 1.10.1 but not 1.10.2)
+====================================================================================
+* Version 1.11b1 (Scott Reynolds & Nigel Pearson, Sep 19, 1997)
+Standalone miniroot files are no longer supported, as they have been obsoleted by
+in-kernel root filesystems. As a result of the previous, the ‘Miniroot’ field was
+deleted from the Boot Options dialog. The minimum and preferred memory sizes have
+been set to 2048K and 5120K respectively.
+A new check box was added for the root SCSI ID field: ‘Enabled?’ tells the kernel to
+construct a boot device cookie based on the root SCSI ID. This has been the case in
+the past, and by default this box is checked. The purpose of this option is to allow
+systems to boot without a root SCSI ID specified, e.g. using NFS filesystems or
+in-kernel miniroots.
+The option dialogs had cosmetic cleanup done on them; positions of several items
+were adjusted slightly, and the order of items when tabbing through editable text 
+fields was made consistent. The dialog brought up by ‘File -> Preferences...’ has
+been moved to ‘Options -> Startup...’, as this is more descriptive of its function.
+The dialog itself hasn’t changed at all.  Consequently, the ‘Save Options &
+Preferences’ menu item is now simply `Save Options’. The ‘About ...’ dialog’s author
+list has been split into two columns. It was getting a bit unwieldy.
+
+Dialogs.c : Added DoButtonOutline()
+MacBSD.h  : Re-numbered some menus and dialog items
+main.c    : When creating empty/initial prefs, clear with MetroWerks memset() and
+            set some defaults. Removed MonitorChange() call, disable options menus
+            when booting, menu restructure
+read_macos.c : Removed miniroot stuff
+ufs_test.c   : Updated BOOTERVER env. var., removed miniroot stuff, improved “Not
+               enough free memory” message, added a bit in the booting flag for
+               setting the boot device cookie thingy, added MonitorChange() call
+BSD_Mac_Booter.rsrc  : Re-numbered menus and dialog items, fiddled with positions
+Monitors.c, Serial.c : Added DoButtonOutline() call
+====================================================================================
+* Version 1.11.0 (Scott Reynolds, scottr@og.org, Sep 27, 1997)
+Fixed code to display outline around default (i.e. OK) buttons.
+
+Dialogs.c            : Added DeDefaultOutline() and SetDialogDefaultOutline()
+MacBSD.h             : Renumbered dialog items for extra user item
+Monitors.c, Serial.c : Changed DoButtonOutline() call to SetDialogDefaultOutline()
+BSD_Mac_Booter.rsrc  : Added user item (for drawing default button's outline) to
+                       each dialog, and a few more names to the 'About...' Dialog
+====================================================================================
+* Version 1.11.1b5 (Nigel Pearson, Scott Reynolds, Nov 2, 1997)
+Now writes preferences into a separate file. Better handling of Mac OS kernel file.
+Some user-interface changes. Moved all common copyright-related stuff (e.g. licence
+details) into a new file COPYRIGHT.txt
+
+boot_vfs.c   : Moved all gzip related stuff into a new file, gzip.c
+Dialog.c     : Removed stuff relating to Startup Preferences dialog into a new file,
+               Startup.c. Added code to use a file requestor to select the Mac OS
+               kernel file and to save the resultant FSpec structure
+MacBSD.h     : Reworked user_config structure. Added some #defines to easily enable/
+               disable gzip code (e.g. #define kernel_read gzboot_read or boot_read)
+main.c       : Tidied up error handling logic after calling boot_read. Removed
+               Load/SaveUserConfiguration stuff into a new file, Prefs.c
+Monitors.c   : Added code to remember and restore monitor depth
+read_macos.c : Changed from Unix style io calls to Mac style
+BSD_Mac_Booter.rsrc  : Moved debuging-related items from Booting to Startup dialog.
+                       Added button to set Mac OS kernel file, separated kernel
+                       location items from others in Booting dialog
+====================================================================================
+* Version 1.11.1b7 (Nigel Pearson, Nov 9, 1997)
+Changed booting sequence so that the attempt to kill other MacOS applications
+(note that this is broken, at least in my testing) happens _before_ the depth change
+occurs. This is so that every other app won't have to redraw all of its windows.
+Added UI for an optional booting item to get the real version of the mmapped
+video_address for LC475 type machines (Mikael Forselius's suggestion from about a
+year ago). Killed a few bugs and eliminated unneeded #includes
+
+MacBSD.h   : Moved EVENT_CHECK macro into a new file, event_check.h
+Prefs.c    : Fixed 2 bugs;
+             1) "Log debugging to file" failed if the "Set" button hadn't been used
+                (i.e. there was no default value for the filename)
+             2) Modified preferences file code so that the file is only written
+                when a "Save Options" is done
+ufs_test.c : Removed some #includes and moved kernel console video address stuff
+             into a new file, videoaddr.c
+====================================================================================
+* Version 1.11.1b8 (Nigel Pearson, Nov 11, 1997)
+Implemented hard-coded video address option for LC475/575 machines (looking up MMU
+maps was too hard). Bug fix b7 where video_address was never set (i.e. no console)
+
+ufs_test.c  : Removed extra video_address variable
+videoaddr.c : Added hard-coded address
+====================================================================================
+* Version 1.11.1 (Nigel Pearson, Dec 3, 1997)
+Improved low-lever SCSI debug output and added sensible(?) errors for wrong SCSI ID
+
+MacBSD.h,
+read_disk.c, read_part.c : Added return value for read_scsi,
+read_ufs.c               : Print partition name when searching for boot partition
+====================================================================================
+* Version 1.11.2 (Nigel Pearson, Eugenio Macia Vivo, April 18, 1998)
+Now checks for a few more things in the MacOS (Virtual Memory, AppleScript, et c.),
+correctly kills running applications (a problem with my Think C's project settings),
+and allows changing screen resolution and colour mode to greyscale. Also has better
+default memory settings
+
+appkill.c           : Added error-checking and Control Strip hiding code
+BSD_Mac_Booter.rsrc : Added VM alert and GreyScale box in Monitor dialog
+MacBSD.h            : Added ids for above and a few prototypes
+machdep.c           : Added HasAppleScript() HasControlStrip() HasDesktopPicture().
+                      UsingVM() now checks if logical memory size > physical
+main.c              : Check for UsingVM() and popup Alert, changed conditions for
+                      hiding 'Boot Now' menu, some tidying up
+Monitors.c          : New Display Manager calls to change resolution,
+                      and addition of GreyScale mode changing and restoration
+RequestVideo.c,
+RequestVideo.h,
+RequestVideoSC.h    : New stuff for Display manager
+ufs_test.c          : Now also calls RestoreDepth() & MonitorChange() if colour mode
+                      (e.g. GreyScale) or resolution change requested/happened.
+                      Only kills running apps if AppleScript is available.
+====================================================================================
+* Version 1.11.3b3 (Nigel Pearson, May 6, 1998)
+User interface changes and addition of 'jump into debugger after booting'
+
+BSD_Mac_Booter.rsrc : Moved some items from Booting to Startup dialog,
+                      and added new kernel debugging tick boxes
+MacBSD.h            : Id changes for above, additional debug flags in config struct
+Dialogs.c Startup.c : Moved items, split 'extra debugging', added new items,
+                      removed last traces of "GreyBars"
+====================================================================================
+* Version 1.11.3b4 (Nigel Pearson, July 4, 1998)
+Fixed a small bug in 1.11.3b3 where serial booting would fail when both 'Serial Boot
+Echo' and 'Serial Console' were used together
+
+Dialogs.c, Serial.c, Startup.c : Normalised boolean configuration fields to 1 or 0
+                                 (some were 255 or 0)
+====================================================================================
+* Version 1.11.3b5 (Nigel Pearson, July 5, 1998)
+Bug fixes to low-level SCSI code; which would hang the machine if a removable SCSI
+device was offline, improvements to error messages when wrong SCSI ID used, some
+tidying up of code
+
+BSD_Mac_Booter.rsrc : Made debuglevel input box larger
+Dialogs.c           : Removed unused variable
+main.c              : Separated main text window stuff into new file, Window.c
+Prefs.c             : Changed short WritePrefsFile() to void WritePrefsFile()
+read_disk.c         : Better error messages, SCSIComplete() calls to cleanup after
+                      error with SCSIRead()
+read_ufs.c          : Improved "Partition not found" message
+====================================================================================
+* Version 1.11.3 (Nigel Pearson, July 30, 1998)
+Problem with monitor resolution-changing logic fixed
+
+Monitors.c : Changed logic, which was using unneeded Display Manager call for depth-
+             only changes
+====================================================================================
+* Version 1.11.4a1 (Nigel Pearson, September 30, 1998)
+Created new machine dialog, added alert (and disabling code) for PPCs, moved some
+items, added MACHINEID changing
+
+BSD_Mac_Booter.rsrc : New alert and dialog, moved some items, tidied and added
+                      defaults to alerts
+Dialogs.c           : "Disabled" changing of GMT bias unless 'Auto-set GMT Bias'
+                      is set, moved video hack, VBL interrupt and RAM stuff to
+                      new dialog (Machine.c), added new dialog to Options menu,
+                      some tidying up
+machdep.c           : Added RunningOnPPC()
+main.c              : New alert on PPC machines
+Prefs.c             : Added initialisation for MACHINEID
+Serial.c            : Fix for highlighting problem in serial console radio buttons
+ufs_test.c          : CodeWarrior compile fix (for sys/reboot.h), MACHINEID
+                      override, abort boot before disabling VBL interrupts on PPC
+====================================================================================
+* Version 1.11.4a2 (Marc LaViolette, Nigel Pearson, March 10, 1999)
+Added support for Sonnet Allegro accellerator card
+
+Allegro_finale.c    : new file by Marc LaViolette to disable Allegro driver
+BSD_Mac_Booter.rsrc : New tickbox in Machine dialog
+MacBSD.h            : New config field to store Allegro prefs
+Machine.c           : Support for new Allegro tickbox prefs
+ufs_test.c          : Added call to Allegro disabling code
+====================================================================================
+* Version 1.11.4a3 (Mikael Forselius, Nigel Pearson, May 27, 1999)
+  Version 1.11.4   (June 22, 1999)
+Minor fixes to Allegro code, extra debugging & log output describing machine specs
+memory allocation, now gets Booter version from its own 'vers' resource
+
+Allegro_finale.c  : Minor fixes by Mikael
+appkill.c         : Removed dependance on CScript.h
+BooterManual.html : Documented new machine dialog, new 'Debugging the Boot sequence'
+                    section which documents the debug levels
+Dialogs.c         : Removed version resource reading stuff
+gzip.c            : Some incorrect calls to ErrorPrintf() became Output()
+MacBSD.h          : Added a few prototypes, moved some extern static declaractions
+machdep.c         : New functions GetNumGDevices() and OutputMachineDetails()
+main.c            : Added call to OutputMachineDetails(), changed some ErrorPrintf()
+                    calls to Output(), added version resource reading stuff
+Prefs.c           : Automatic version stuff from version resource
+Output.c,
+read_macos.c,
+read_ufs.c,
+ufs_test.c,
+videocard.c       : Some incorrect calls to ErrorPrintf() became Output() ====================================================================================
+* Version 1.11.5a1 (Nigel Pearson, June 23, 1999)
+Does some additional checking for Mac partitioned disks
+
+MacBSD.h    : Added prototype for read_Block0()
+read_disk.c : Added read_Block0()
+read_part.c : Changes a few '512's to 'SECTOR_SIZE' and 'scsid' to 'SCSIid',
+              added some extra debug, get_part_sector() now calls read_Block0()
+              to check is disk is Mac partitioned
+
+====================================================================================
+* Version 1.11.5a2 (Nigel Pearson, June 24, 1999)
+Backwards compatibility with Think C v6 (partly by disabling Display manager code)
+
+Allegro_finale.c, DialogMgr.h,
+Dialogs.c, MacBSD.h, machdep.c,
+Monitors.c, Prefs.c, RequestVideo.h, ufs_test.c : Think C v6 changes
+reboot.h : Moved from sub folder 'sys' to source directory & renamed 'sys/reboot.h'
+====================================================================================
+* Version 1.11.5a3 (Nigel Pearson, August 29, 2000)
+UI and code for reading partitions from IDE disks
+
+ATA.h               : Stolen from Apple's Universal Headers (not in Think C or CW9)
+boot_vfs.c, gzip.c  : boot_open() & gzboot_open() now accept a device and partition
+BSD_Mac_Booter.rsrc : ATA UI, Y2K in copyrights
+Dialogs.c           : ATA disk UI stuff
+MacBSD.h            : Added ATA UI stuff, device enum & struct, updated prototypes
+machdep.c           : Added TrapAvailable(), HasATA(),
+                      ATA addition and bugfix in OutputMachineDetails()
+MacUFS.h            : Removed prototypes of stuff in read_ufs.c
+main.c              : Changes in load_and_boot() for ATA disks
+read_disk.c         : New ATA structures, read_disk(), disk_name() and read_ata(),
+                      device structure for read_Block0()
+read_part.c         : get_part_entry() & get_part_sect() now accept a device struct
+read_ufs.c          : fdtable struct and several functions now have a device struct,
+                      name/device guessing code extracted from ufs_open()
+RequestVideo.h      : Uncommented element in structure for some unknown reason
+====================================================================================
+* Version 1.11.5a4 (Nigel Pearson, September 5, 2000. Source accidentally deleted?)
+Compilation fixes for Think C v6
+
+ATA.h      : Extra types, and removal of duplicate typedef
+ufs_test.c : copyunix() now correctly reduces length when page aligning buffer,
+             automatically detect compiler jump table when copying copycode()
+====================================================================================
+* Version 1.11.5a5 (Nigel Pearson, January 3, 2002)
+IDE fixes
+
+main.c      : VM alert now will not appear if on PPC machine (for testing)
+read_part.c : Continue boot if kATAMgrGetDrvConfiguration fails, some extra debug
+====================================================================================
+* Version 2.0.0a1 (Nigel Pearson, July 12, 2001)
+Re-write for initial ELF support, and to use more NetBSD header files.
+Won't compile on Think C unless many #include <> are changed to #include ""
+
+kernel_parse.c             : New symbol & string processing code, and a new function
+                             kernel_parse(), which is similar to NetBSD's loadfile()
+loadfile_patched.c         : Slight modification to NetBSD version
+loadfile.h                 : Unmodified, from NetBSD distribution's libsa
+MacBSD.h                   : Added some Unix types, new unum, changed prototypes
+machine/loadfile_machdep.h : Some hacks to get loadfile.c to compile cleanly
+NetBSD includes            : Mostly unmodified headers from the kernel source dist.
+Output.c                   : Added new debug function, hex_file_dump()
+partnames.h                : Interesting partition names stolen from part.h
+Prefs.c                    : New (automatic) version detection (still unstable)
+read_part.h, read_ufs.c    : NetBSD headers, structures, constants
+ufs_test.c                 : Header & variable changes, removed symbol, string &
+                             a.out parsing code. Automatic compiler function jump
+                             table detection. Copies smaller memory area containing
+                             copycode
+videocard.c                : Changes for new symbol/string processing code
+a.out.h, dinode.h, dir.h,
+exec.h, fs.h, lifhdr.h,
+machine_ansi.h,
+machine_types.h, MacUFS.h,
+param.h, part.h, types.h   : Removed, replaced by real NetBSD header files
+====================================================================================
+* Version 2.0.0a2 (Nigel Pearson, July 22, 2001)
+Now locates ELF symbol and string tables using post loadfile() processing,
+and sets some extra environment variables for the kernel to access
+
+kernel_parse.c             : Now iterates through ELF sections,
+                             new functions to locate symbols & strings
+loadfile_patched.c         : Deleted
+loadfile.c                 : Unmodified, from NetBSD distribution's libsa
+MacBSD.h                   : New enum for kernel type, extra prototypes
+machine/loadfile_machdep.c : Load headers from kernels, correct ALIGNENTRY()
+read_part.c read_ufs.c     : Removed un-needed code & includes
+ufs_test.c                 : Set MARK_START, MARK_SYM & MARK_END env. variables,
+                             removed find_sym(), lookup_symbol() and set_long_val()
+====================================================================================
+* Version 2.0.0a3 (Joe Laffey, Nigel Pearson, November, 2001)
+Added code (Joe's suggestion) to prevent removable disks from being ejected.
+Worked around problem with loading kernel from UFS filesystem.
+Changed some debug output to different levels
+
+boot_vfs.c     : Added boot_rewind()
+gzip.c         : Bug fix in gzboot_read() (re-entrancy bug after encountering EOF)
+kernel_parse.c : Changed a few messages, added 'struct nlist' and compatibility
+                 with extra magic number types
+MacBSD.h       : Added noEject & boot_rewind() stuff, deleted 'struct nlist' stuff 
+machdep.c      : Removed erroneous return in CheckHardware()
+Machine.c      : Added noEject stuff
+main.c         : VM alert now will not appear if on PPC machine (for testing)
+read_disk.c    : Added detail to, and changed the level of, some debug output
+read_macos.c   : Added (to) debug messages, corrected return type of macos_read()
+read_ufs.c     : Added some debug, hack to fix UFS booting problem
+                 (disabled caching in read_bsd_block() and ufs_read() )
+ufs_test.c     : Boot on sdOnUnmount instead of sdOnRestart (to not eject disks),
+                 Search for length of copycode() instead of hard coding lengthm
+====================================================================================
+* Version 2.0.0a4 (Christian Grössler, Nigel Pearson, December 19, 2001)
+Added Gzip routines back in (they were accidentally omitted in 2.0.0a3).
+Attempt at using Christian's code to process disklabelled disks.
+
+MacBSD.h        : Uncommented gzboot_() defines
+read_part.c     : New routines dkcksum() and get_disklabel_sector(),
+                  moved MacOS partition searching logic from get_part_sector()
+                  into new locate_partition()
+sys/disklabel.h : Added from NetBSD distribution, used by new disklabel routines
+====================================================================================
+* Version 2.0.0a5 (Nigel Pearson, December 27, 2001)
+Second attempt at disklabel processing
+
+read_part.c : Corrected/added debug messages
+ufs_test.c  : Renamed to copy_and_boot.c
+====================================================================================
+* Version 2.0.0a6 (Nigel Pearson, December 29, 2001)
+Working disklabel processing
+
+read_part.c : More debug messages, corrected defective slice selection logic
+====================================================================================
+* Version 2.0.0a7 (Nigel Pearson, January 3, 2002)
+IDE fix
+
+copy_and_boot.c : Removed some old debug code, disable the killing
+                  of running programs when running on PPC machines
+read_disk.c     : Continue boot if kATAMgrGetDrvConfiguration query fails,
+                  some extra debug messages
+====================================================================================

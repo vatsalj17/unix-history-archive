@@ -1,0 +1,40 @@
+#	$NetBSD: files.pci,v 1.7 2008/08/03 19:32:03 joerg Exp $
+
+device 	aapic
+attach 	aapic at pci
+file 	arch/x86/pci/aapic.c		aapic
+
+file	arch/x86/pci/agp_machdep.c	agp
+
+# PCI-Host bridge chipsets
+device	pchb:	pcibus, agpbus, agp_ali, agp_amd, agp_amd64, agp_i810,
+		agp_intel, agp_sis, agp_via
+attach	pchb at pci
+file	arch/x86/pci/pchb.c		pchb		needs-flag
+file	arch/x86/pci/pchb_rnd.c		pchb & rnd
+
+# PCI-ISA bridges
+device	pcib: isabus
+attach	pcib at pci
+file	arch/x86/pci/pcib.c		pcib | ichlpcib | gscpcib | piixpcib | viapcib |
+					amdpcib
+
+device	amdpcib {} : isabus
+attach	amdpcib at pci
+file	arch/x86/pci/amdpcib.c			amdpcib
+
+attach  hpet at amdpcib with amdpcib_hpet
+file    arch/x86/pci/amdpcib_hpet.c		amdpcib_hpet
+
+# AMD Processors -- Miscellaneous Control
+device	amdtemp: sysmon_envsys
+attach	amdtemp at pci
+file	arch/x86/pci/amdtemp.c		amdtemp
+
+# PCI-LPC bridges
+define	hpetichbus {}
+device	ichlpcib: acpipmtimer, isabus, sysmon_wdog, hpetichbus
+attach	ichlpcib at pci
+attach	hpet at hpetichbus with ichlpcib_hpet
+
+file 	arch/x86/pci/ichlpcib.c 	ichlpcib
