@@ -1,0 +1,582 @@
+This file describes all ELLE functions, and is in a specific format for use
+by the "Describe" function (normally invoked by the command ^_).
+	Each function is identified by a number (which matches its
+internal index as defined by deffun.e), and by a name to the right of
+the number.  All text up to the first blank line is considered part of
+the documentation for that function.
+
+<F0> -- undefined --
+	This command does not have any defined function assigned to it.
+
+<F1> Insert Self
+	The character is inserted into the buffer.
+
+<F2> Quoted Insert
+	Reads a character and inserts it.
+
+<F3> CRLF
+	Insert CRLF (End Of Line), or move onto blank line.
+	A blank line is one containing only spaces and tabs
+	(which are killed if we move onto it).  Single blank lines
+	(followed by nonblank lines) are not eaten up this way.
+
+<F4> Forward Character
+	Moves forward one character.
+	With argument, moves that many characters forward.
+	Negative args move backward.
+
+<F5> Backward Character
+	Moves back one character.
+	With argument, moves that many characters backward.
+	Negative args move forward.
+
+<F6> Delete Character
+	Deletes character after point.
+	With argument, kills (and saves) that many characters.
+	Negative args kill characters backward.
+
+<F7> Backward Delete Character
+	Deletes character before point.
+	With argument, kills (and saves) that many characters.
+	Negative args kill characters forward.
+
+<F8> Delete Horizontal Space
+	Deletes all spaces and tabs around point.
+
+<F9> Transpose Characters
+	Transposes the characters before and after the cursor.
+
+<F10> Forward Word
+	Moves forward over one word.
+
+<F11> Backward Word
+	Moves backward over one word.
+
+<F12> Kill Word
+	Kills next word.
+
+<F13> Backward Kill Word
+	Kills last word.
+
+<F14> Transpose Words
+	Transposes the words before and after the cursor.
+
+<F15> Uppercase Word
+	Converts one word to upper case, moving past it.
+	With arg, applies to that many words backward or forward.
+
+<F16> Lowercase Word
+	Converts one word to lower case, moving past it.
+	With arg, applies to that many words backward or forward.
+
+<F17> Uppercase Initial
+	Puts next word in lower case, but capitalize initial.
+	With arg, applies to that many words backward or forward.
+
+<F18> reserved
+
+<F19> reserved
+
+<F20> Beginning of Line
+	Moves to beginning of line.
+
+<F21> End of Line
+	Moves to end of line.
+
+<F22> Next Line
+	Moves to beginning of next line.
+
+<F23> Previous Line
+	Moves to beginning of previous line.
+
+<F24> Down Real Line
+	Moves down vertically to next real line.
+	Continuation lines are skipped.  If given after the
+	last LF in the buffer, makes a new one at the end.
+
+<F25> Up Real Line
+	Moves up vertically to next real line.
+	Continuation lines are skipped.
+
+<F26> Open Line
+	Inserts an EOL (End Of Line) after point.
+	Differs from ordinary insertion in that point remains
+	before the inserted characters.
+	With argument, inserts several EOLs.
+
+<F27> Delete Blank Lines
+	Kills all blank lines around point.
+
+<F28> Kill Line
+	Kills to end of line, or kills an end of line (EOL).
+	At the end of a line (only blanks following), kills through the EOL.
+	Otherwise, kills the rest of the line but not the EOL.
+	With argument (positive or negative), kills specified number of lines.
+	Killed text is pushed onto the kill ring for retrieval.
+
+<F29> Backward Kill Line
+	Kills from point backwards to beginning of line.
+	With argument, same as Kill Line with negative arg.
+
+<F30> Goto Line
+	Goes to the line number specified by the argument.  The first
+	line in the buffer is line 1.
+
+<F31> reserved
+
+<F32> reserved
+
+<F33> reserved
+
+<F34> reserved
+
+<F35> Set/Pop Mark
+	Sets or pops the mark.
+
+<F36> Exchange Point and Mark
+	Exchanges positions of point and mark.
+
+<F37> Kill Region
+	Kills from point to mark.
+
+<F38> Copy Region
+	Sticks region into kill-ring without killing it.
+	Like killing and getting back, but doesn't mark buffer modified.
+
+<F39> Uppercase Region
+	Converts region between point and mark to upper case.
+
+<F40> Lowercase Region
+	Converts region between point and mark to lower case.
+
+<F41> Fill Region
+	Fills the region between point and mark.
+
+<F42> reserved
+
+<F43> reserved
+
+<F44> reserved
+
+<F45> Forward Paragraph
+	Moves forward to end of paragraph.
+	Paragraphs are delimited by blank lines or by
+	lines which start with "." or "-".
+
+<F46> Backward Paragraph
+	Moves backward to beginning of paragraph.
+
+<F47> Mark Paragraph
+	Puts point and mark around this paragraph.
+
+<F48> Fill Paragraph
+	Fills (or adjusts) this (or next) paragraph.
+	Point stays the same (but text may move past it due to filling).
+
+<F49> reserved
+
+<F50> Select Buffer
+	Selects or creates buffer with specified name.
+	If there is a buffer with that name, it is selected.
+	Otherwise, a buffer with that name is created and selected.
+
+<F51> Select Existing Buffer
+	Like Select Buffer but never creates a new buffer.  A partial
+	name may be given.
+
+<F52> Kill Buffer
+	Kills the specified buffer.
+
+<F53> List Buffers
+	Lists names, lengths, and files of all buffers.
+
+<F54> Buffer Not Modified
+	Pretends that this buffer hasn't been modified.
+	The "*" flag will disappear.
+
+<F55> EOL CRLF Mode
+	Toggles the interpretation of EOL (End-Of-Line) for the current
+	buffer.  An EOL may be either a CR-LF (Carriage-Return = ^M,
+	and LineFeed = ^J) together, or a LF alone.
+	In LF mode: LF alone is considered to be EOL.
+		This is the normal mode for Unix systems.
+	In CRLF mode: both CR and LF must exist to be counted as an EOL.
+		This is the normal mode for TOPS-20 systems.
+
+<F56> Goto Beginning
+	Goes to beginning of buffer.
+
+<F57> Goto End
+	Goes to end of buffer.
+
+<F58> What Page
+	Reports current position in the buffer in terms of the page
+	# and line # from the start of the buffer.
+
+<F59> reserved
+
+<F60> Find File
+	Visits (read) a file in its own buffer.
+	If the file is already in some buffer, selects that buffer.
+	Otherwise, visits the file in a buffer named after the file.
+
+<F61> Read File
+	Reads file into current buffer.  Same as Visit File.
+
+<F62> Visit File
+	Same as Read File.  Reads specified file into current buffer.
+
+<F63> Insert File
+	Inserts contents of file into existing text.
+	The pointer is left at the beginning, and the mark at the end.
+
+<F64> Save File
+	Saves buffer if it has been modified,
+	by writing it out to the file associated with it.
+
+<F65> Save All Files
+	Attempts to save all modified files.
+	With no argument, asks whether to save each one.
+	With any argument, saves all without asking.
+
+<F66> Write File
+	Writes buffer out to specified file.
+
+<F67> Write Region
+	Writes region out to specified file.
+
+<F68> Write Last Kill
+	Asks for a filename and writes out the most recently killed
+	stuff to that file.
+
+<F69> reserved
+
+<F70> Two Windows
+	Shows two windows and selects window 2.
+
+<F71> One Window
+	Shows only one window.
+
+<F72> Other Window
+	Selects other window.
+
+<F73> Grow Window
+	Makes this window use more lines.  Argument is number of extra
+	lines (can be negative).
+
+<F74> Shrink Window
+	Shrinks the current window by one line.  This is the same thing
+	as using Grow Window on the other window.
+	With argument, shrinks that many lines.
+
+<F75> Delete Window
+	Like "One Window" but ends up with different window.
+	If using 2 windows, deletes the current window, and
+	the other window becomes the single remaining window.
+
+<F76> Standout Window
+	Toggles the display standout mode for the current window.
+	With argument of 4, toggles the standout mode for the non-buffer
+	parts of the screen, such as the ELLE mode line.
+	With argument of 0, turns standout mode off for all windows.
+
+<F77> Two Mode Windows
+	Sets the two-mode-window flag, which is checked whenever there are
+	two windows in use.  Normally set to 1 at startup.
+	With argument of:
+		0 - Use only 1 mode line (at the bottom).
+		1 - Use 2 mode lines only if they are in standout mode.
+		2 - Always use 2 mode lines, one for each window.
+	With no argument, toggles the current setting between 0 and 2.
+
+<F78> New Window
+	Chooses new window putting point at center, top or bottom.
+	With no argument, clears the screen and chooses a window
+	which has point roughly at the center.
+	An argument gives the line to put point on.
+	C-U as argument redisplays only the line containing point.
+
+<F79> Next Screen
+	Moves down to display next screenful of text.
+	With argument, moves window down <arg> times (negative moves up).
+
+<F80> Previous Screen
+	Moves up to display previous screenful of text.
+	With arg, moves window back <arg> times.
+
+<F81> Other New Screen
+	If using 2 windows, runs "Next Screen" on other window.
+
+<F82> Line to Window Border 
+	Picks a new window such that the current line is at the top of the
+	window.
+	With any argument, makes the current line be at the bottom instead.
+
+<F83> Scroll Window Up
+	Scrolls the text up by one line, moving stuff out of the top.
+	With argument, scrolls that many lines.
+
+<F84> Scroll Window Down
+	Scrolls the text down by one line, moving stuff out of the bottom.
+	With argument, scrolls that many lines.
+
+<F85> Move to Window Top
+	Moves cursor to top line of window.
+
+<F86> Move to Window Bottom
+	Moves cursor to bottom line of window (or end of buffer).
+
+<F87> reserved
+
+<F88> reserved
+
+<F89> reserved
+
+<F90> Set Profile
+	Asks for the name of an ELLE profile file
+	and sets the command mappings as specified by the file.
+
+<F91> Prefix Meta
+	Sets Meta-bit of following character.
+	E.G. Turns a following A into Meta-A.
+
+<F92> Prefix Extend
+	This is an extended command prefix with many subcommands.
+
+<F93> Universal Arg
+	Sets argument or multiplies it by four.
+	Followed by digits, uses them to specify the
+	argument for the command after the digits.
+	If not followed by digits, multiplies the argument by four.
+
+<F94> Negative Argument
+	Starts an argument collection, like Universal Arg, but
+	makes the resulting arg negative.
+
+<F95> Argument Digit
+	Collects an argument for the next command, starting with this
+	digit.
+
+<F96> VT100 Button Hack
+	Attempts to map VT-100 function buttons into something
+	useful.  Not really supported.
+
+<F97> Describe
+	Asks the user for a command and displays a brief description
+	of the function it invokes.
+
+<F98> reserved
+
+<F99> reserved
+
+<F100> Start Kbd Macro
+	Starts collecting a keyboard macro.  Everything typed
+	after this command, up to an "End Kbd Macro" command, will
+	be both executed and stored as the definition of the current
+	keyboard macro.
+
+<F101> End Kbd Macro
+	Stops collecting a keyboard macro.
+
+<F102> Execute Kbd Macro
+	Executes the currently defined keyboard macro.
+
+<F103> View Kbd Macro
+	Shows the currently defined keyboard macro.
+
+<F105> Un-kill
+	Re-inserts the last stuff killed.
+	Puts point after it and the mark before it.
+
+<F106> Un-kill Pop 
+	Corrects after Un-kill to use an earlier kill.
+	Requires that the region contain the most recent killed stuff,
+	as it does immediately after using Un-kill.
+	It is deleted and replaced with the previous killed stuff,
+	which is rotated to the front of the ring buffer.
+
+<F107> Append Next Kill
+	Makes following kill commands append to last batch.
+	Thus, C-K C-K, cursor motion, this command, and C-K C-K,
+	generate one block of killed stuff, containing two lines.
+
+<F108> reserved
+
+<F109> reserved
+
+<F110> String Search
+	Searches forward for string.  Asks for a string; CR or ESCAPE
+	terminates the string.
+
+<F111> Reverse String Search
+	Searches backward for string.  Asks for a string; CR or ESCAPE
+	terminates the string.
+
+<F112> Incremental Search
+	Searches for character string as you type it.
+	C-Q quotes special characters.  DEL cancels last character.
+	C-S repeats the search, forward, and C-R repeats it backward.
+	C-R or C-S with search string empty changes the direction of search
+	or brings back search string from previous search.
+	ESCAPE exits the search; with search string empty
+	it switches to non-incremental String Search.
+	Other Control and Meta chars exit the search and then are executed.
+	If not all the input string can be found, the rest is not discarded.
+	You can rub it out, discard it all with C-G, exit,
+	or use C-R or C-S to search the other way.
+	Quitting a successful search aborts the search and moves point back;
+	quitting a failing search just discards whatever input wasn't found.
+
+<F113> Reverse Search
+	Does reverse Incremental Search.
+	See info for Incremental Search.
+
+<F114> Replace String
+	Replaces one string with another, globally.
+	Works by calling Query Replace and pretending you typed a !.
+
+<F115> Query Replace
+	Replaces a string interactively.
+	Asks for "Replace string:" (you type old string, eg FOO)
+	Then asks " with string:" (you type new string, eg BAR)
+	Then moves to and shows each each occurrence of FOO,
+	and you must then type a character to say what to do:
+	? => Shows brief summary of this list.
+	Space => replace it with BAR and show next FOO.
+	DEL => don't replace, but show next FOO.
+	^L => redisplay screen.
+	^ => return to site of previous FOO (actually, jump to mark).
+	! => replace all remaining FOOs without asking.
+	ESCAPE => just exit.
+	. => replace this FOO and exit.
+	, => replace this FOO and show result, waiting for next command.
+	Not yet: ^W => kill this FOO and enter recursive editing level.
+	Not yet: ^R => enter recursive editing level.
+	Any other character exits and is read again.
+
+<F116> Replace in Line
+	Like Replace String but only operates on the current line.
+	Asks for the string to replace, then the string to replace it with.
+
+<F117> Set Fill Column
+	Sets fill column to numeric arg or current column.
+	If there is an argument, that is used.
+	Otherwise, the current position of the cursor is used.
+	The Fill Column variable controls where Auto Fill mode
+	and Fill Paragraph put the right margin.
+
+<F118> Set Fill Prefix
+	EMACS: Defines Fill Prefix from current line.
+	All of the current line up to point becomes the value
+	of Fill Prefix.  Auto Fill Mode and Linefeed insert the
+	prefix on each line;  ^R Fill Region assumes that each
+	non-blank line starts with the prefix (which is ignored
+	for filling purposes).
+	To stop using a Fill Prefix, do ^R Set Fill Prefix
+	at the front of a line.
+
+<F119> Auto Fill Mode
+	Turns Auto Fill mode on and off.  When on, the word
+	"Fill" will appear in the mode line, and typing a space
+	when beyond the current Fill Column will cause the
+	current line to be automatically filled.
+
+<F120> Text Mode
+	An IMAGEN-specific function.  Resembles Auto Fill Mode.
+
+<F121> Indent According to Mode
+	Indents suitably for the major mode.
+	In Fundamental mode, just inserts a tab.
+
+<F122> Indent New Line
+	Inserts CRLF (End Of Line), then indents the second line.
+	Uses the definitions of CR and Tab to do the work.
+
+<F123> Back to Indentation
+	Moves to end of current line's indentation.
+
+<F124> Indent for Comment
+	Moves to start of existing comment or creates new one,
+	and indents it to start in Comment Column.
+	This doesn't work well yet.
+
+<F125> Indent Relative
+	Attempts to indent current line by the same amount as the
+	previous line.
+
+<F126> reserved
+
+<F127> reserved
+
+<F128> reserved
+
+<F129> Match Bracket
+	Similar to EMACS' "Show Matching Paren".
+
+<F130> Push to Inferior
+	Starts an inferior shell process.  Exitting this shell will
+	return to ELLE.
+
+<F131> Return to Superior
+	If system permits, returns directly to superior shell in a way which
+	allows later continuation of ELLE.  Otherwise, asks "Quit?" and
+	warns of modified buffers if any exist.  Responding "Y" and CR
+	will then cause ELLE to exit permanently (no continuation possible).
+
+<F132> Write File Exit
+	Calls "Save All Files" and then exits (no continuation possible).
+
+; 133-139 reserved
+
+<F140> Hit Breakpoint
+	This is a debugging function which calls the "bkpt"
+	routine in ELLE, assuming that the user has set a
+	debugging breakpoint there.  If no breakpoint has
+	been set (by ADB or otherwise) then nothing happens.
+
+<F141> Debug Mode
+	With no argument, turns self-checking on and off.  When
+	self-checking is on, the data structures will be verified
+	after each top-level command.  (This may be quite slow).
+	With an argument, invokes ELLE's debug/diagnostic mode, which
+	has the prompt "D>".  Type "?" and CR for a list of subcommands.
+
+; 142-149 reserved
+
+IMAGEN-specific functions.  These can only exist in the IMAGEN configuration
+of ELLE.
+
+<F150> Execute Unix Command
+	An IMAGEN-specific function.
+
+<F151> Execute Make
+	An IMAGEN-specific function.
+
+<F152> Find Next Error
+	An IMAGEN-specific function.
+
+
+ICONOGRAPHICS-dependent functions.  These will not be found in
+anything other than the ICONOGRAPHICS configuration of ELLE.
+
+<F153> ICO Extend Command
+	An Iconographics-specific function.
+
+<F154> ICO Typeset Funs
+	An Iconographics-specific function.
+
+<F155> ICO Spec Input Funs
+	An Iconographics-specific function.
+
+
+SUN-specific functions.
+	These functions are used to handle text selection and stuffing
+when using the mouse version of ELLE.
+
+<F156> Stuff Selection
+	Inserts the current mouse text selection into the buffer.
+
+<F157> Select Region
+	Makes the current region be the current mouse text selection.
+
+
