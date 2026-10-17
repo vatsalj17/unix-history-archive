@@ -1,0 +1,172 @@
+.TH STAT 2 
+.UC
+.SH NAME
+stat, lstat, fstat \- get file status
+.SH SYNOPSIS
+.B #include <sys/types.h>
+.br
+.B #include <sys/stat.h>
+.PP
+.B stat(name, buf)
+.br
+.B char *name;
+.br
+.B struct stat *buf;
+.PP
+.B lstat(name, buf);
+.br
+.B char *name;
+.br
+.B struct stat *buf;
+.PP
+.B fstat(fildes, buf)
+.br
+.B struct stat *buf;
+.SH DESCRIPTION
+.I Stat
+obtains detailed information about a named file.
+Read, write, or execute permission of the named file is not required,
+but all directories in the path name leadiing to the file must be
+searchable.
+.PP
+.I Lstat
+is like
+.I stat
+except in the case where the named file is a symbolic link, in which
+case
+.I lstat
+returns information about the link, while
+.I stat
+returns information about the file the link references.
+.I Fstat
+obtains the same information about an open file
+known by the file descriptor from a successful
+.IR open ", " creat ", " dup
+or
+.IR pipe (2)
+call.
+.PP
+.I Name
+points to a null-terminated string naming
+a file;
+.I buf
+is the address of a buffer
+into which information is placed concerning the file.
+The layout of the structure pointed to by buf
+as defined in
+.I <stat.h>
+is given below.
+.I St\_mode 
+is encoded according to the `#define' statements.
+.PP
+.nf
+struct	stat
+{
+	dev_t	st_dev;
+	ino_t	st_ino;
+	u_short st_mode;
+	short	st_nlink;
+	short  	st_uid;
+	short  	st_gid;
+	dev_t	st_rdev;
+	off_t	st_size;
+	time_t	st_atime;
+	time_t	st_mtime;
+	time_t	st_ctime;
+};
+.ta \w'#define\ 'u +\w'S_IWRITE\ 'u +\w'0070000\ \ 'u
+
+#define	S_IFMT	0170000		/* type of file */
+#define		S_IFDIR	0040000	/* directory */
+#define		S_IFCHR	0020000	/* character special */
+#define		S_IFBLK	0060000	/* block special */
+#define		S_IFREG	0100000	/* regular */
+#define		S_IFMPC	0030000	/* multiplexed char special */
+#define		S_IFMPB	0070000	/* multiplexed block special */
+#define		S_IFQUOT 0140000 /* quota */
+
+#define	S_ISUID	0004000		/* set user id on execution */
+#define	S_ISGID	0002000		/* set group id on execution */
+#define	S_ISVTX	0001000		/* save swapped text even after use */
+#define	S_IREAD	0000400		/* read permission, owner */
+#define	S_IWRITE	0000200	/* write permission, owner */
+#define	S_IEXEC	0000100		/* execute/search permission, owner */
+.fi
+.PP
+The mode bits 0000070 and 0000007 encode group and
+others permissions (see
+.IR chmod (2)).
+The defined types,
+.I 
+ino\_t, off\_t, time\_t,
+name various width integer values;
+.I dev\_t
+encodes
+major and minor device numbers;
+their exact definitions are in
+the include file <sys/types.h>
+(see
+.IR types (5)).
+.PP
+When
+.I fildes
+is associated with a pipe,
+.I fstat
+reports an ordinary file
+with restricted permissions.
+The size is the number of bytes queued in the pipe.
+.PP
+.I St\_atime
+is the file was last read.
+For reasons of efficiency, it is not set when a directory
+is searched, although this would be more logical.
+.I St\_mtime
+is the time the file was last written or created.
+It is not set by changes of owner, group, link count, or mode.
+.I St\_ctime
+is set both both by writing and changing the i-node.
+.SH ERRORS
+.IR Stat " and " lstat
+will fail if one or more of the following is true:
+.TP 20
+[ENOTDIR]
+A component of the path prefix is not a directory.
+.TP 20
+[EINVAL]
+The path name contained a non-ASCII character.
+.TP 20
+[ENOENT]
+The named file does not exist.
+.TP 20
+[EACCES]
+Search permission is denied for a component of the path prefix.
+.TP 20
+[EFAULT]
+.IR Buf " or " name
+points to an invalid address.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.PP
+.I Fstat
+will fail if one or both of the following is true:
+.TP 20
+[EBADF]
+.I Fildes
+is not a valid open file descriptor.
+.TP 20
+[EFAULT]
+.I Buf
+points to an invalid address.
+.SH "SEE ALSO"
+ls(1), filsys(5)
+.SH ASSEMBLER
+(stat = 18.)
+.br
+.B sys stat; name; buf
+.PP
+(fstat = 28.)
+.br
+(file descriptor in r0)
+.br
+.B sys fstat; buf

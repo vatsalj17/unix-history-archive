@@ -1,0 +1,33 @@
+.TH NOSTK 2
+.UC
+.SH NAME
+nostk \- allow process to manage its own stack
+.SH SYNOPSYS
+.B nostk();
+.SH DESCRIPTION
+.I Nostk
+informs the system that the process
+wishes to manage its own stack.
+The system releases the stack segment(s)
+it has reserved, making
+them available for allocation
+(via
+.IR brk (2))
+by the user.
+.PP
+C programs should use
+.I nostk
+only with great caution and understanding
+of the C language calling and stack
+conventions.
+It is most useful for assembler programs
+that want to use the entire available
+address space.
+.SH ASSEMBLER
+.nf
+(local = 58., nostk = 4.)
+.B sys local; 9f
+\&. . .
+.B \&.data
+.B 9: sys nostk
+.fi

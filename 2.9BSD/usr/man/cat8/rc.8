@@ -1,0 +1,43 @@
+
+RC(8)               UNIX Programmer's Manual                RC(8)
+
+NAME
+     rc - command script for auto-reboot and daemons
+
+SYNOPSIS
+     /etc/rc [ autoboot | fastboot [ powerfail ] ]
+
+DESCRIPTION
+     _R_c is the command script which controls the automatic
+     reboot.
+
+     When an automatic reboot is in progress, _r_c is invoked by
+     /_e_t_c/_i_n_i_t with the first argument _a_u_t_o_b_o_o_t and runs _f_s_c_k
+     with option -p to ``preen'' all the disks of minor incon-
+     sistencies resulting from the last system shutdown and to
+     check for serious inconsistencies caused by hardware or
+     software failure.  If this auto-check and repair succeeds,
+     then the second part of _r_c is run.
+
+     The second part of _r_c, which is run after a auto-reboot
+     filesystem check succeeds and also if _r_c is invoked when a
+     single user shell terminates (see _i_n_i_t(8)), starts all the
+     daemons on the system, preserves editor files and clears the
+     scratch directory /_t_m_p. _S_a_v_e_c_o_r_e(8) will be run to check for
+     a system core dump, and, if found, save the dump in
+     /usr/sys.  The second argument may be _p_o_w_e_r_f_a_i_l if the sys-
+     tem went down due to a power failure.
+
+SEE ALSO
+     init(8), reboot(8)
+
+BUGS
+     After making changes to the root file system, the system
+     must be rebooted to keep the incore copy of the super-block
+     from corrupting the newly computed super-block.
+
+     It should be possible to print a message about power failure
+     much earlier than from /etc/rc.
+
+Printed 5/17/83                                                 1
+

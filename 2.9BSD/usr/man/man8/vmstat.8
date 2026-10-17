@@ -1,0 +1,125 @@
+.TH VMSTAT 8
+.de s1
+.if n .sp
+.if t .sp .1i
+..
+.de t1
+.if n .ta 5n
+.if t .ta 1i
+..
+.UC
+.SH NAME
+vmstat \- report system and memory statistics
+.SH SYNOPSIS
+.B vmstat
+[
+.B \-sm
+]
+[ interval [ count ] ]
+.SH DESCRIPTION
+.I Vmstat
+delves into the system and normally reports certain statistics kept about
+process, memory and swap, disk, trap and cpu activity.
+If given a
+.B \-s
+argument, it instead prints the contents
+of the
+.I sum
+structure, giving the total number of several kinds of swap and cpu
+events which have occurred since boot.
+The
+.B \-m
+option causes it to print all of the memory usage statistics.
+Memory usage is categorized as virtual and real,
+active and inactive (for more than 20 seconds),
+text and total, and free memory remaining.
+Virtual memory is the sum of real memory and swap space in use.
+The interval and count options are the same as below.
+.PP
+If neither option is given,
+.I vmstat
+will report in a (usually) iterative fashion on the
+activity in the system.
+In this case, the optional
+.I interval
+argument causes
+.I vmstat
+to report once each
+.I interval
+seconds;
+``vmstat 5'' will print what the system is doing every five seconds;
+this is a good choice of printing interval since this is how often
+the statistics are sampled in the system.
+If a
+.I count
+is given, the statistics are repeated
+.I count
+times.
+The fields are:
+.PP
+Procs: information about numbers of processes in various states.
+.s1
+.t1
+.nf
+RQ	in run queue
+DW	disk wait
+SW	runnable or short sleeper (< 20 secs) but swapped
+.fi
+.s1
+Memory: information about the usage of virtual and real memory.
+Virtual pages are considered active if they belong to processes which
+are running or have run in the last 20 seconds.
+A ``page'' here is 1024 bytes.
+.s1
+.t1
+.nf
+AVM	active virtual pages
+TX	percent of active pages which are shared text
+FRE	size of the free list
+.fi
+.s1
+Swap: information about the swapping activity of the system.
+.s1
+.t1
+.nf
+I	process swap ins in last 5 seconds
+O	process swap outs in last 5 seconds
+.fi
+.s1
+Disk: operations per second (this field is system dependent).
+.s1
+.t1
+.nf
+D0	disk 0
+D1	disk 1
+D2	disk 2
+D3	disk 3
+.fi
+.s1
+Faults: trap/interrupt, per second, over last 5 seconds.
+.s1
+.t1
+.nf
+PD	pseudo-DMA interrupts from DZ-11's (per second)
+IN	device interrupts (per second)
+SY	system calls (per second)
+TR	traps (per second)
+OV	overlay traps (per second)
+CS	cpu context switch rate (switches/sec)
+.fi
+.s1
+Cpu: breakdown of percentage usage of CPU time
+.s1
+.nf
+US	user time for normal processes
+NI	user time for low priority processes
+SY	system time
+ID	cpu idle
+.fi
+.SH FILES
+/dev/kmem
+.br
+/unix
+.SH BUGS
+This program will only work if the information is maintained by the system;
+some of this is optional and depends on the system configuration.

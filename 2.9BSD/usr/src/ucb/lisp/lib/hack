@@ -1,0 +1,72 @@
+
+(def shell
+ (lambda (x) (null (exec /bin/sh))))
+
+(def update
+ (lambda (x)
+  (prog (i poport n f)
+        (setq i (infile x))
+        (setq poport
+              (outfile (setq n (concatp (quote update)))))
+   l1   (cond ((eq (setq f (read i)) (quote eof)) (go e1))
+              ((or (atomp f)
+                   (numbp f)
+                   (null (eq (quote def) (car f))))
+               ($prpr f)
+               (terpri))
+              ((null (getd (cadr f))) ($prpr f) (terpri))
+              (t (ppevq (cons (cadr f)))))
+        (go l1)
+   e1   (close poport)
+        (close i)
+        (eval
+         (cons (quote exec)
+               (cons (quote /usrbin/cp) (cons n (cons x)))))
+        (null
+         (eval
+          (cons (quote exec)
+                (cons (quote /bin/rm) (cons n))))))))
+
+(def teco
+ (lambda (x y)
+  (cond ((eq 1
+             (setq y
+                   (eval
+                    (cons (quote exec)
+                          (cons (quote /bin/teco) (cons x))))))
+         (load x)
+         1)
+        (t y))))
+
+(def tecf
+ (nlambda (x$) (tecfevq (car x$))))
+
+(def tecfevq
+ (lambda (x)
+  (prog (poport a)
+        (setq a (concatp (quote "teclsp.")))
+        (setq poport (outfile a))
+        (ppevq x)
+        (setq poport (close poport))
+        (cond
+         ((greaterp (teco a) -1) (exec /bin/rm "teclsp.bak")))
+        (null
+         (eval
+          (cons (quote exec)
+                (cons (quote /bin/rm) (cons a))))))))
+
+(def unprotocol
+ (lambda (x)
+  (prog (a)
+        (cond
+         ((null (setq a (unprotocol1)))
+          (setq a (quote "l110.protocol"))))
+        (cond
+         (x (eval
+             (cons (quote exec)
+                   (cons (quote /bin/print) (cons a))))
+            (eval
+             (cons (quote exec)
+                   (cons (quote /bin/rm)
+                         (cons (quote -f) (cons a)))))
+            nil)))))

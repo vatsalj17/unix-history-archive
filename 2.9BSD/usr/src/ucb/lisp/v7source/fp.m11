@@ -1,0 +1,171 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+
+;this file has the routines to help out lisps that run on
+;systems without floating hardware
+;
+; forrest howard, aug 75
+;
+  .if ne,fpsim		;bad name choice...
+	.globl	imul,idiv,sign,fpstuf
+
+imul:
+	;multiply the number in a+b * j1+j2
+	;leave result in a+b
+	;if v bit is set on return, then strict overflow
+
+
+	save1
+	call	fixsign		;which leaves both args pos
+	mov	a,j3
+	mov	b,fpstuf
+	bit	#1,j2
+	bne	1$
+	clr	a
+	clr	b
+1$:	bic	#1,j2
+
+
+domul:			;now we do stuff-- shift only when necessary
+	tst	j1
+	bne	1$
+	tst	j2
+	beq	donmul
+1$:	asl	fpstuf
+	rol	j3
+	bvs	ovr
+	ashc	#-1,j1
+	bit	#1,j2
+	beq	2$
+	dec	j2
+	add	fpstuf,b
+	adc	a
+	bvs	ovr
+	add	j3,a
+	bvs	ovr
+2$:	br	domul
+
+ovr:	mov	2(sp),j3
+	cmp	(sp)+,(sp)+
+	sev
+	ret
+donmul:
+dfinup:	mov	2(sp),j3
+	cmp	(sp)+,(sp)+
+	tst	sign
+	beq	1$
+	call	negs
+	call	negr
+1$:	tst	a
+	bne	3$
+	tst	b
+	cln		;clear the n-bit if set (want pos result)
+3$:
+	rts	pc
+
+fixsign:
+	mov	#sign,j3
+	clrb	(j3)
+	tst	j1
+	bge	1$
+	comb	(j3)
+	call	negs
+1$:
+	tst	a
+	bge	2$
+	comb	(j3)
+negr= .
+	com	a
+	com	b
+	add	#1,b
+	adc	a
+2$:	ret
+
+negs:
+	com	j1
+	com	j2
+	add	#1,j2
+	adc	j1
+	rts	pc
+
+
+
+
+idiv:		;idiv divides (a+b)/(j1+j2)
+		;quoitient in a+b
+		;rem in j1+j2
+		;rem is same sign as quo
+		;v bit is set if overflow occurs
+		;or on divide check
+		;z bit is set according to the ans
+
+
+	save1
+	call	fixsign
+			;ok; now we have all registers, and
+			;can muck around
+			;first check for zero's
+	mov	j1,j3
+	bne	10$
+	tst	j2
+	beq	ovr
+10$:	mov	j2,fpstuf
+	mov	a,j1
+	bne	11$
+	tst	b
+	beq	retz
+11$:	mov	b,j2
+	clr	fpstuf+2
+			;left justify the two ints, keeping count
+1$:	ashc	#1,j1
+	bvs	2$
+	dec	fpstuf+2
+	br	1$
+2$:	ror	j1
+	ror	j2			;recover stuff...
+	mov	fpstuf+2,fpstuf+4	;save to form remainder
+3$:	asl	fpstuf
+	rol	j3
+	bvs	4$
+	inc	fpstuf+4
+	br	3$
+4$:	ror	j3
+	ror	fpstuf
+	clr	a
+	clr	b			;clear for answer
+
+	;fpstuf+4 now has count of number of things.....
+	;if it is neg, we can go home
+
+	tst	fpstuf+4
+	blt	divret
+actdiv:
+	sub	fpstuf,j2
+	sbc	j1
+	sub	j3,j1
+	blt	1$
+	inc	b
+	br	2$
+1$:	add	fpstuf,j2
+	adc	j1
+	add	j3,j1
+2$:	asr	j3
+	ror	fpstuf		;shift right for next
+	dec	fpstuf+4
+	blt	divret
+	ashc	#1,a		;for next
+	br	actdiv
+divret:
+	ashc	fpstuf+2,j1
+	br	dfinup
+
+
+retz:	clr	a
+	clr	b
+	clr	j1
+	mov	2(sp),j3
+	cmp	(sp)+,(sp)+
+	clr	j2
+	ret
+
+.endc

@@ -1,0 +1,121 @@
+
+.ds TI "'''A-%'"
+.pn 1
+.bp
+.ce 99
+APPENDIX A
+Notesfile Installation Checklist
+.ce 0
+.ap A "Notesfile Installation Checklist"
+.de bz
+.in +5
+.ll -5
+.ls 1
+..
+.de iz
+.ti -5
+____ \c
+..
+.de ez
+.ls
+.ll
+.in
+..
+
+.iz
+vi parms.h
+.iz 
+select
+Sysname
+[ucbcad, cmcl2]
+.iz
+MSTDIR
+[/usr/spool/notes]
+.iz
+ARCHDIR
+[/usr/spool/oldnotes]
+.iz
+ARCHTIME
+[14 - number of days before removing articles]
+.iz
+NOTESUID
+[user id of the notes maintainer]
+.iz
+ANONUID 
+[unused user id]
+.iz
+define PROMPT
+[if you wish the system to give a command prompt]
+.iz
+define CNTRLZ
+[if your system supports control-Z job control processing]
+.iz
+define DUMPCORE
+[this determines whether core is dumped when an internal error is
+detected. You might want this for testing, but not for production]
+.iz
+define the OS (4.1cBSD, V6,..... - defaults to 4bsd)
+.iz
+define AUTOCREATE
+[if you wish for notes to automatically create new groups]
+.iz
+OLDGROUP
+[amount of time before groups expire]
+.iz
+NOTESUMASK
+[umask for files created by notes]
+.iz
+define NEWS
+[if you wish to submit notes to news]
+.iz
+define DEMANDNEWS
+[this forces articles to be submitted to news at the time of submission]
+.iz
+define BNEWS
+[if running B release of news for gateways. If not running news locally,
+this does not matter.
+If running A news, the notesfile owner will collect lots of mail
+because A news does not allow overriding of the authors name.]
+.iz
+define TONEWS
+[again, dependent on running notes/news gateways locally. The defaults
+here are probably adequate in either case]
+.iz
+[finished editing] 
+parms.h
+.iz
+vi Makefile
+.iz
+DESTDIR
+[same as BIN in parms.h]
+.iz
+MSTDIR
+[make sure it matches that used in parms.h]
+.iz
+ARCHDIR
+[again, make sure it matches that used in parms.h]
+.iz
+NET
+[This directory must already exist - where networking programs are kept 
+(nfxmit, nfrcv)]
+.iz
+NOTES
+[this must match the NOTESUID used is parms.h]
+.iz
+NOTESGRP
+.iz
+AUTOSEQ
+.iz
+[finished editing]
+Makefile
+.iz
+[may have to become super-user at this point]
+.iz
+make base
+[and assess its completion. It will tell you if all went well]
+.iz
+[Signon as notesfile "owner"]
+.iz
+make boot
+[This is the final step, it should complete with a message
+that the system is installed]

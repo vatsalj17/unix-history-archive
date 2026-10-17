@@ -1,0 +1,79 @@
+.PP
+An important feature of
+.VS
+is the connection between
+.I Make(I),
+.I Grep(I),
+and the editor.
+It is useful to immediately edit a line referenced by a compiler
+error message regardless of the use of a visual orientation.
+One should at least be able to easily save these messages
+in a file so they are not lost off the top of the screen.
+This reasoning has not occurred to the
+.UX
+compiler writers.
+Try to save error messages with a command such as
+.PP
+.B
+$ make > errors
+.R
+.LP
+and one will be disappointed.
+Error messages are directed to the
+.I stderr
+stream and not
+.I stdout.
+The result is that the file
+.I errors
+collects everything except errors!
+A better command is
+.PP
+.B
+$ make >& errors
+.R
+.LP
+which collects errors but nothing else.
+The best command turns out to be
+.PP
+.B
+$ make > errors 2>&1
+.R
+.LP
+which collects everything in one place.
+Of course,
+.VS
+does all this redirection properly.
+It shouldn't have to.
+I do not believe
+.I stderr
+is the proper place for complier
+error messages.
+They belong in
+.I stdout.
+.PP
+The same functions provided by the
+.I
+Vsh make/showfile/editor
+.R
+connection can be provided in a more traditional
+.UX
+fashion.
+First, compilers should send their errors to the standard output.
+This will allow users to save those messages without first having
+to first consult a
+.UX
+guru.
+Second, a command should be added to the editor which
+scans for a file name and line number in the
+same fashion as the
+.I showfile
+procedure.
+This will provide the same function
+.I Showfile
+provides in
+.I Vsh.
+Finally, a simple shell file can tie this all together:
+.PP
+.B
+make | tee .makerror;  vi .makerror
+.R

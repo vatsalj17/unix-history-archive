@@ -1,0 +1,39 @@
+/*	@(#)system.c	2.2	SCCS id keyword	*/
+#include	<whoami.h>
+#include	<signal.h>
+
+#ifdef UCB_SHELL
+char	*getenv();
+#endif
+
+system(s)
+char *s;
+{
+	int status, pid, w;
+	register int (*istat)(), (*qstat)();
+
+#ifdef	VIRUS_VFORK
+	if ((pid = vfork()) == 0) {
+#else
+	if ((pid = fork()) == 0) {
+#endif
+#ifdef UCB_SHELL
+		char	*shell;
+		if (!(shell == getenv("SHELL")))
+			shell = UCB_SHELL;
+		execl(shell, shell, "-c", s, 0);
+#else
+		execl("/bin/sh", "sh", "-c", s, 0);
+#endif
+		_exit(127);
+	}
+	istat = signal(SIGINT, SIG_IGN);
+	qstat = signal(SIGQUIT, SIG_IGN);
+	while ((w = wait(&status)) != pid && w != -1)
+		;
+	if (w == -1)
+		status = -1;
+	signal(SIGINT, istat);
+	signal(SIGQUIT, qstat);
+	return(status);
+}

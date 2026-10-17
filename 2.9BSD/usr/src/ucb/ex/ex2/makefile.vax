@@ -1,0 +1,147 @@
+VERSION=2.13
+#
+# Ex skeletal makefile for version 7
+#
+# Version 2.13 is the last release of version 2 of the editor.
+# Since overlays are now available from the U.S. Geological Survey
+# in Menlo Park, and from Berkeley, there is no reason to continue
+# to support this version.  It will continue to exist for people
+# without overlaid systems.
+#
+# NB: This makefile doesn't indicate any dependencies on header files.
+#
+# Ex is very large - it may not fit on PDP-11's depending on the operating
+# system and the cflags you turn on. Things that can be turned off to save
+# space include LISPCODE (-l flag, showmatch and lisp options), UCVISUAL
+# (visual \ nonsense on upper case only terminals), CHDIR (the undocumented
+# chdir command,)  RDONLY (-R flag, view), SOFTTABS (^T tabs), ZCMD (the
+# various strange options after z plus ^F/^B), ZZCMD (ZZ from visual), WRAPMGN
+# (wrapmargin), TAGSCODE (the tags feature), OPENCODE (open without visual),
+# CRNL (code to support terminals with cr, nl, or ns attributes),
+# BEEHIVE (superbee: f1=esc, f2=^c)
+# Rule of thumb: OPENCODE will buy you about 2.5K, LISPCODE and TAGSCODE
+# are worth perhaps 1.5K, and the others are worth fairly small amounts
+# (mostly about 50-100 bytes).  UCVISUAL is worth a bit more (256?) and
+# you should take it out unless you have such a terminal.
+#
+# Don't define VFORK unless your system has the VFORK system call,
+# which is like fork but the two processes share memory until the
+# child execs. This speeds up ex by saving the memory copy.
+# At this time, no known PDP-11 system has the vfork system call.
+#
+# If your system expands tabs to 4 spaces you should -DTABS=4 below
+#
+BINDIR=	/usr/ucb
+NBINDIR=/usr/new
+LIBDIR=	/usr/lib
+FOLD=	${BINDIR}/fold
+CTAGS=	${BINDIR}/ctags
+XSTR=	${BINDIR}/xstr
+DEB=	${NONDEBUGFLAGS}	# or ${DEBUGFLAGS} if mdd
+DEBUGFLAGS=	-DTRACE -g
+NONDEBUGFLAGS=	-O
+CFLAGS=	-DVFORK -DBUFSIZ=1024 ${OPTIONS} ${DEB} 
+OPTIONS=	-DLISPCODE -DCHDIR -DUCVISUAL -DSOFTTABS -DZCMD -DZZCMD -DRDONLY -DWRAPMGN -DTAGSCODE -DOPENCODE -DCRNL -DBEEHIVE
+# everything:	-DLISPCODE -DCHDIR -DUCVISUAL -DSOFTTABS -DZCMD -DZZCMD -DRDONLY -DWRAPMGN -DTAGSCODE -DOPENCODE -DCRNL -DBEEHIVE
+TERMLIB=	-ltermcap
+MKSTR=	${BINDIR}/mkstr
+CXREF=	${BINDIR}/cxref
+INCLUDE=/usr/include
+PR=	pr
+PRINTF=	pprintf.o
+# PRINTF=	doprnt.o printf.o
+OBJS=	ex.o ex_addr.o ex_cmds.o ex_cmds2.o ex_cmdsub.o ex_data.o ex_get.o \
+	ex_io.o ex_put.o ex_re.o ex_set.o ex_subr.o ex_temp.o ex_tty.o \
+	ex_unix.o ex_v.o ex_vadj.o ex_vget.o ex_vmain.o ex_voper.o \
+	ex_vops.o ex_vops2.o ex_vops3.o ex_vput.o ex_vwind.o \
+	${PRINTF} strings.o
+
+all:	a.out exrecover expreserve tags
+
+.c.o:
+	${MKSTR} - ex${VERSION}strings x $*.c
+	${CC} -E ${CFLAGS} x$*.c | ${XSTR} -c -
+	rm -f x$*.c
+	${CC} ${CFLAGS} -c x.c 
+	mv x.o $*.o
+
+a.out: ${OBJS}
+	cc -i ${OBJS} ${TERMLIB}
+#	cc -i -z ${OBJS} ${TERMLIB}
+
+tags:
+	${CTAGS} -w *.h *.c
+
+${OBJS}: ex_vars.h
+
+ex_vars.h:
+	csh makeoptions ${CFLAGS}
+
+strings.o: strings
+	${XSTR}
+	${CC} -c -S xs.c
+	ed - <:rofix xs.s
+	as -o strings.o xs.s
+	rm xs.s
+	
+exrecover: exrecover.o
+	${CC} -o exrecover exrecover.o
+
+exrecover.o:
+	${CC} -c -O exrecover.c
+
+expreserve: expreserve.o
+	${CC} -o expreserve expreserve.o
+
+expreserve.o:
+	${CC} -c -O expreserve.c
+
+clean:
+#	If we dont have ex we cant make it so dont rm ex_vars.h
+#	-rm -f expreserve exrecover
+	-rm -f a.out ex${VERSION}strings strings core trace
+	-rm -f *.o x*.[cs]
+
+ninstall: a.out
+	-rm -f ${NBINDIR}/ex ${NBINDIR}/vi
+	cp a.out ${NBINDIR}/ex
+	-cp ex${VERSION}strings ${LIBDIR}/ex${VERSION}strings
+	ln ${NBINDIR}/ex ${NBINDIR}/vi
+	chmod 1755 ${NBINDIR}/ex
+
+install: a.out
+	-rm -f ${BINDIR}/ex ${BINDIR}/e /usr/bin/ex ${BINDIR}/edit ${BINDIR}/vi
+	cp a.out ${BINDIR}/ex
+	-cp ex${VERSION}strings ${LIBDIR}/ex${VERSION}strings
+	ln ${BINDIR}/ex ${BINDIR}/edit
+	ln ${BINDIR}/ex ${BINDIR}/e
+	ln ${BINDIR}/ex ${BINDIR}/vi
+#	ln ${BINDIR}/ex /usr/bin/ex
+	chmod 1755 ${BINDIR}/ex
+
+installutil: exrecover expreserve
+	cp exrecover ${LIBDIR}/ex${VERSION}recover
+	cp expreserve ${LIBDIR}/ex${VERSION}preserve
+	chmod 4755 ${LIBDIR}/ex${VERSION}recover ${LIBDIR}/ex${VERSION}preserve
+	install.termcap
+	mkdir /usr/preserve
+
+lint:
+	lint ex.c ex_?*.c
+	lint -u exrecover.c
+	lint expreserve.c
+
+print:
+	@${PR} READ* BUGS
+	@${PR} makefile*
+	@${PR} /etc/termcap
+	@(size -l a.out ; size *.o) | ${PR} -h sizes
+	@${PR} -h errno.h ${INCLUDE}/errno.h
+	@${PR} -h setjmp.h ${INCLUDE}/setjmp.h
+	@${PR} -h sgtty.h ${INCLUDE}/sgtty.h
+	@${PR} -h signal.h ${INCLUDE}/signal.h
+	@${PR} -h stat.h ${INCLUDE}/stat.h
+	@${PR} -h types.h ${INCLUDE}/types.h
+	@ls -ls | ${PR}
+	@${CXREF} *.c | ${PR} -h XREF
+	@${PR} *.h *.c

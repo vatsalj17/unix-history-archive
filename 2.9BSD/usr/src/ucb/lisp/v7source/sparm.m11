@@ -1,0 +1,135 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+
+.rept 0
+	universal file for the construction of lisp
+	forrest w. howard, jr.
+	7/74
+	last mod:5/75
+
+	file   has assembly switches and register definitions.
+.endr
+
+
+	.enabl	lc
+	.list meb
+	.nlist	mc
+	.nlist	cnd
+	.nlist	md
+	.list	ttm
+.rept 0
+	registers a&b are used for the passing and return of 
+arguements. they are not to be clobbered in general.  the routines 
+that can clobber are eval, read, print, and subrs.
+j1&j2&j3 are used as scratch
+
+.endr
+
+
+
+
+
+	j1=%0
+	j2=%1
+	a=%2
+	b=%3
+	j3=%4
+	np=%5
+	sp=%6
+	pc=%7
+	ac0=*%0
+	ac1=*%1
+	ac2=*%2
+	ac3=*%3
+	ac4=*%4
+	ac5=*%5
+
+	multiseg=*1		;0 for "normal", 1 for i-d space
+
+	onepage=* 1		;if multiseg is off (0), then this
+				;is a data-space only lisp. this
+				;switch aranges for portions of
+				;the code to be put in private (non-
+				; sharable) space vs the normal 
+				;sharable space (data vs. text).
+				;the amount depends on fpsim--
+				;if fpp hardware exists, the
+				;sharable code for printr, ratomr,
+				;and eval is made non-sharable.
+				;if fpp is on, ctable is also made
+				;non-sharable.
+
+	hash=*10		;hash buckets (0 for no hash)
+
+	hashm=*7		;number of buckets -1
+
+	strlen=*100		;bytes in atom, max
+
+	tblen=*106		;bytes, base 8 for tty buffer size
+
+	nports=*10		;number of i-o ports
+
+;;;;	noeval=*1		;define for evaluator hack
+
+	nplen=*^d1000		;preliminary length of nstk
+
+	width=*1		;define for auto lf on poport
+
+	smlint=*01		;if one, allow smallints
+
+	natom=2			;type codes
+
+	ndtpr=1
+
+	nwd=0
+
+	nbcd=3
+
+	nport=4
+
+	npresc=*^d48		;name stack reserve
+
+	nilas0=*1		;1 for nil to be 0
+				;should be left on!!!
+
+	nilas0=*nilas0!multiseg	;no choice under multiseg
+
+	fpsim=*0		;0  for hardware 11/45,1 for  software
+
+	brksig=* 2.		;signal used for break...
+				;used when gc has no space, and
+				;allows user to specify return to top level
+				;if is zero, then no break, but immediate top
+				;level....
+
+	jcbms=* 01		;john  c    burrus   memorial 
+				;switch (bframe subr)
+
+;;;;	gctrace=*1		;define for gcol messages...
+
+;;;;	notrap=*1		;define    for   trap elimination
+
+	gcrec=* 01		;0 for exit on gcol overflow...
+				;1 for attempt at recovery
+
+	bell411=*1		;0 for harvard 411 i&d (what's that?)
+				;harv 411 hasn't been around since Version 5!
+				;## s. dyer comment 3/4/81
+				;1 for bell 411 i&d
+
+	xfer=* 0		;0 for almost all uses
+				;1 for harvard enviroment xfer project
+				;which never came to be (always 0)
+
+	prvispace=*00		;0 for shareable i-space,1 for private
+				;this switch is not usefull at the moment
+
+	version7 =* 1		;1 for Version 7 (uses long seeks)
+				;0 for V6/PWB
+				;## s. dyer 3/4/81
+
+ .if	ne,bell411!xfer
+	privispace=*0		;no choice for v6 or transfer
+ .endc
+
+

@@ -1,0 +1,39 @@
+
+TTYS(5)             UNIX Programmer's Manual              TTYS(5)
+
+NAME
+     ttys - terminal initialization data
+
+DESCRIPTION
+     The _t_t_y_s file is read by the _i_n_i_t program and specifies
+     which terminal special files are to have a process created
+     for them which will allow people to log in.  It contains one
+     line per special file.
+
+     The first character of a line controls when it will be used.
+     A '0' or '1' indicates that the line is to be off or on,
+     respectively.  A '2' or '3' means that the line will be used
+     in "special session"; see _i_n_i_t(8).  If the character is a
+     '3', it will also be used for normal multi-user operations.
+     The second character is used as an argument to _g_e_t_t_y(8),
+     which performs such tasks as baud-rate recognition, reading
+     the login name, and calling _l_o_g_i_n(1).  For normal lines, the
+     character is `0'; other characters can be used, for example,
+     with hard-wired terminals where speed recognition is
+     unnecessary or which have special characteristics.  (_g_e_t_t_y
+     will have to be fixed in such cases.) The  next field of the
+     line is the terminal's entry in the device directory, /dev.
+     This field is terminated by a whitespace character. The rest
+     of the line is optional information in the form of terminal
+     type (as found in /etc/termcap), port type and number (e.g.
+     `dh', `0'), and remarks (room number, nearby phone, dialup
+     number, etc).
+
+FILES
+     /etc/ttys
+
+SEE ALSO
+     login(1), init(8), getty(8)
+
+Printed 5/17/83                                                 1
+

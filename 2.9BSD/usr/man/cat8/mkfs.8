@@ -1,0 +1,98 @@
+
+MKFS(8)             UNIX Programmer's Manual              MKFS(8)
+
+NAME
+     mkfs - construct a file system
+
+SYNTAX
+     /etc/mkfs special proto [m] [n]
+     /etc/mkfs special size  [m] [n]
+
+DESCRIPTION
+     _M_k_f_s constructs a file system by writing on the special file
+     _s_p_e_c_i_a_l according to the directions found in the prototype
+     file _p_r_o_t_o.  The prototype file contains tokens separated by
+     spaces or new lines.  The first token is the name of a file
+     to be copied onto block zero as the bootstrap program, see
+     _b_o_o_t(8).  The second token is a number specifying the size
+     of the created file system.  Typically it will be the number
+     of logical blocks on the device (not necessarily the same as
+     physical blocks), perhaps diminished by space for swapping.
+     The next token is the number of inodes in the i-list.  The
+     next set of tokens comprise the specification for the root
+     file.  File specifications consist of tokens giving the
+     mode, the user id, the group id, and the initial contents of
+     the file.  The syntax of the contents field depends on the
+     mode.
+
+     The mode token for a file is a 6 character string.  The
+     first character specifies the type of the file.  (The char-
+     acters -bcd specify regular, block special, character spe-
+     cial and directory files respectively.) The second character
+     of the type is either u or - to specify set-user-id mode or
+     not.  The third is g or - for the set-group-id mode.  The
+     rest of the mode is a three digit octal number giving the
+     owner, group, and other read, write, execute permissions,
+     see _c_h_m_o_d(1).
+
+     Two decimal number tokens come after the mode; they specify
+     the user and group ID's of the owner of the file.
+
+     If the file is a regular file, the next token is a pathname
+     whence the contents and size are copied.
+
+     If the file is a block or character special file, two
+     decimal number tokens follow which give the major and minor
+     device numbers.
+
+     If the file is a directory, _m_k_f_s makes the entries .  and ..
+     and then reads a list of names and (recursively) file
+     specifications for the entries in the directory.  The scan
+     is terminated with $.
+
+     If the prototype file cannot be opened and its name consists
+     of a string of digits, _m_k_f_s builds a file system with an
+     empty directory in it.  _M_k_f_s always constructs a lost+found
+
+Printed 8/5/83                                                  1
+
+MKFS(8)             UNIX Programmer's Manual              MKFS(8)
+
+     directory.  The size of the file system, in logical blocks,
+     is the value of _p_r_o_t_o interpreted as a decimal number.  The
+     number of inodes is calculated as a function of the filsys-
+     tem size.  The boot program is left uninitialized.
+
+     The optional flags _m and _n determine the block interleaving
+     of the freelist that will be constructed, where _m is the
+     distance between successive 1024-byte blocks, and _n is the
+     number of blocks before the pattern repeats, typically one
+     cylinder.  The optimal values for these parameters vary with
+     the speed and geometry of the disk, as well as the speed of
+     the processor.
+
+     A sample prototype specification follows:
+
+          /usr/src/sys/mdec/rkuboot
+          2436 55
+          d--777 3 1
+          usr  d--777 3 1
+               sh   ---755 3 1 /bin/sh
+               ken  d--755 6 1
+                    $
+               b0   b--644 3 1 0 0
+               c0   c--644 3 1 0 0
+               $
+          $
+
+FILES
+     /usr/src/sys/mdec/*uboot bootstrap binaries
+
+SEE ALSO
+     dir(5), filsys(5), boot(8)
+
+BUGS
+     There should be some way to specify links.
+
+Printed 8/5/83                                                  2
+

@@ -1,0 +1,836 @@
+#
+ed - ex.c << '-*-END-*-'
+397c
+#ifndef CBREAK
+.
+379c
+#ifdef CBREAK
+.
+370c
+#ifndef CBREAK
+.
+245a
+		value(PROMPT) = intty;
+.
+221c
+			ppid = 0;
+.
+202,208c
+		firstpat = &av[0][1];
+.
+191d
+170c
+#ifdef LISPCODE
+.
+99a
+#endif
+.
+98c
+#ifdef notdef
+.
+89a
+	ppid = getpid();
+	/*
+	 * Defend against d's, v's, and a's in directories of
+	 * path leading to our true name.
+	 */
+	av[0] = tailpath(av[0]);
+	ivis = any('v', av[0]);
+.
+77c
+	bool ivis;
+.
+w
+q
+'-*-END-*-'
+ed - ex.h << '-*-END-*-'
+330c
+#ifdef CBREAK
+.
+201c
+#define	reset()		longjmp(resetlab,1)
+.
+195c
+#define	eq(a, b)	((a) && (b) && strcmp(a, b) == 0)
+.
+177a
+int	ppid;			/* Process id of parent (e.g. main ex proc) */
+.
+158d
+56,63d
+10c
+ * November 1979
+.
+8a
+ * Mark Horton, UC Berkeley
+.
+7c
+ * Ex version 2.9
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+668a
+				putpad(TI);
+.
+666a
+				putpad(TE);
+				flush();
+.
+631a
+			if (seensemi)
+				addr1 = addr2;
+.
+556c
+				printf("Version 2.9, November 11, 1979");
+.
+495a
+				putpad(TI);
+.
+493a
+				putpad(TE);
+				flush();
+.
+407c
+				else
+					putpad(VE);
+.
+283c
+			if (given < 2 && addr2 != dol)
+.
+212a
+			/*
+			 * Caution: dp and dl have special meaning already.
+			 */
+.
+97a
+		if (c == '%') {
+			/* %: same as 1,$ */
+			addr1 = one;
+			addr2 = dol;
+			given = 2;
+			c = getchar();
+		}
+.
+95c
+				seensemi = 1;
+.
+91a
+			given++;
+.
+78a
+		given = seensemi = 0;
+.
+67c
+			if (!hush && value(PROMPT) && !globp && !noprompt && endline) {
+.
+23a
+	int given;
+	int seensemi;
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds2.c << '-*-END-*-'
+490a
+	flush();
+.
+489c
+		putpad(VE);
+.
+486c
+			vmoveitup(1, 0);
+.
+470,471c
+		if (ask) {
+			/*
+			 * Gobble ^Q/^S since the tty driver should be eating
+			 * them (as far as the user can see)
+			 */
+			while (peekkey() == CTRL(Q) || peekkey() == CTRL(S))
+				ignore(getkey());
+			if(getkey() == ':')
+				ungetkey(':');
+		}
+		putpad(VS);
+.
+467c
+#ifndef CBREAK
+.
+312c
+	if (chng && dol > zero) {
+.
+166c
+	if (str && !vcatch)
+.
+164c
+		longjmp(vreslab,1);
+.
+158a
+	die = (getpid() != ppid);	/* Only children die */
+.
+153a
+	bool die;
+.
+105d
+w
+q
+'-*-END-*-'
+ed - ex_cmdsub.c << '-*-END-*-'
+619a
+	if (addr2 == 0 && dot < dol && op == 0)
+		addr1 = addr2 = dot+1;
+.
+614c
+		lines = op == EOF ? value(SCROLL) : excl ? LINES - 1 : 2*value(SCROLL);
+.
+610a
+		value(WINDOW) = lines;
+.
+609c
+		if (lines < LINES)
+.
+536a
+	if (notagsfile)
+		error("No tags file");
+.
+533c
+			value(MAGIC) = omagic;
+.
+512c
+					if (chng && dol > zero)
+.
+469a
+		if (master && io < 0)
+			notagsfile = 1;
+.
+447c
+	omagic = value(MAGIC);
+	value(MAGIC) = 0;	/* force nomagic mode for tags */
+.
+445a
+	short omagic;
+.
+444a
+	bool notagsfile = 0;
+.
+417c
+#ifdef LISPCODE
+.
+396c
+#ifdef LISPCODE
+.
+29a
+	/*
+	 * This is probably a bug, since it's different than the other tests
+	 * in appendnone, delete, and deletenone. It is known to fail for
+	 * the command :g/foo/r xxx (where there is one foo and the file
+	 * xxx exists) and you try to undo it. I'm leaving it in for now
+	 * because I'm afraid if I change it I'll break something.
+	 */
+.
+w
+q
+'-*-END-*-'
+ed - ex_data.c << '-*-END-*-'
+50d
+48d
+34d
+32d
+11,14c
+char	sections[32] = {
+	'N', 'H', 'S', 'H',				/* -ms macros */
+	'H', ' ', 'H', 'U'				/* -mm macros */
+};
+char	paragraphs[32] = {
+	'I', 'P', 'L', 'P', 'P', 'P', 'Q', 'P',		/* -ms macros */
+	'P', ' ', 'L', 'I',				/* -mm macros */
+	'b', 'p'					/* bare nroff */
+};
+.
+2a
+#include "ex_tty.h"
+.
+w
+q
+'-*-END-*-'
+ed - ex_get.c << '-*-END-*-'
+138c
+#ifdef LISPCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_io.c << '-*-END-*-'
+979a
+	value(PROMPT) = oprompt;
+.
+966a
+	oprompt = value(PROMPT);
+	value(PROMPT) &= intty;
+.
+947a
+	int oprompt;
+.
+799d
+769a
+	}
+.
+768c
+	if (mode & 1) {
+		undap1 = undap2 = addr2+1;
+.
+752d
+666d
+656a
+#else
+	pid = vfork();
+#endif
+.
+655a
+#ifndef VFORK
+.
+606c
+	if (warn && hush == 0 && chng && xchng != chng && value(WARN) && dol > zero) {
+.
+446a
+		if (inopen) {
+			vclrech(0);
+			splitw++;
+		}
+.
+377c
+				if (inopen)
+.
+375a
+				firstpat = 0;
+.
+372,374c
+			if (firstpat) {
+				globp = (*firstpat) ? firstpat : "$";
+.
+367c
+		if (wasalt || firstpat) {
+.
+292,295d
+259,272c
+	if (G.argc0 > 1)
+.
+201d
+107a
+	pastwh();
+	if (peekchar() == '+') {
+		for (cp = fpatbuf;;) {
+			c = *cp++ = getchar();
+			if (cp >= &fpatbuf[sizeof(fpatbuf)])
+				error("Pattern too long");
+			if (c == '\\' && isspace(peekchar()))
+				c = getchar();
+			if (c == EOF || isspace(c)) {
+				ungetchar(c);
+				*--cp = 0;
+				firstpat = &fpatbuf[1];
+				break;
+			}
+		}
+	}
+.
+106a
+	static char fpatbuf[32];	/* hence limit on :next +/pat */
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+901,902d
+893,898d
+890c
+#ifdef TIOCSETN
+	ioctl(i, TIOCSETN, &tty);
+#else
+.
+885a
+/*
+ * Bug in USG tty driver, put out a null char as a patch.
+ */
+.
+829,839d
+824,827d
+817,822d
+796c
+#ifndef CBREAK
+.
+775,776d
+766,771d
+763,764c
+#ifdef CBREAK
+	tty.sg_flags = (normf &~ (ECHO|XTABS|CRMOD)) | CBREAK;
+#else
+	tty.sg_flags = (normf &~ (ECHO|XTABS|CRMOD)) | RAW;
+.
+732c
+	tty.sg_flags = normf & ~(ECHO|XTABS|CRMOD);
+.
+599a
+	if (TI)	/* otherwise it flushes anyway, and 'set tty=dumb' vomits */
+		putpad(TI);	 /*adb change -- emit terminal initial sequence */
+.
+529c
+	if (GT && !insmode && destcol - outcol > 1) {
+.
+510c
+		if (BT && !insmode && outcol - destcol > 4+k) {
+.
+3a
+#include "ex_vis.h"
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.c << '-*-END-*-'
+673a
+#endif
+.
+671a
+#ifdef notdef
+.
+634c
+			if (value(MAGIC))
+.
+533c
+			if (value(MAGIC) == 0)
+.
+506,507c
+			c = getchar();
+.
+385c
+	loc2 = sp + (linebuf - genbuf);
+.
+119a
+		}
+.
+116c
+		if (gsubf) {
+#ifdef notdef
+			/*
+			 * should check but loc2 is already munged.
+			 * This needs a fancier check later.
+			 */
+			if (loc1 == loc2)
+				error("substitution loop");
+#endif
+.
+86c
+	inglobal = oinglobal;
+.
+66c
+	inglobal = 2;
+.
+21c
+	/*
+	 * States of inglobal:
+	 *  0: ordinary - not in a global command.
+	 *  1: text coming from some buffer, not tty.
+	 *  2: like 1, but the source of the buffer is a global command.
+	 * Hence you're only in a global command if inglobal==2. This
+	 * strange sounding convention is historically derived from
+	 * everybody simulating a global command.
+	 */
+	if (inglobal==2)
+.
+17a
+	int oinglobal = inglobal;
+.
+w
+q
+'-*-END-*-'
+ed - ex_set.c << '-*-END-*-'
+118c
+			tab(56);
+.
+85a
+/*
+ * At first glance it seems like we shouldn't care if the terminal type
+ * is changed inside visual mode, as long as we assume the screen is
+ * a mess and redraw it. However, it's a much harder problem than that.
+ * If you happen to change from 1 crt to another that both have the same
+ * size screen, it's OK. But if the screen size if different, the stuff
+ * that gets initialized in vop() will be wrong. This could be overcome
+ * by redoing the initialization, e.g. making the first 90% of vop into
+ * a subroutine. However, the most useful case is where you forgot to do
+ * a setenv before you went into the editor and it thinks you're on a dumb
+ * terminal. Ex treats this like hardcopy and goes into HARDOPEN mode.
+ * This loses because the first part of vop calls oop in this case.
+ * The problem is so hard I gave up. I'm not saying it can't be done,
+ * but I am saying it probably isn't worth the effort.
+ */
+.
+82c
+				/* adb change:  allow whitepace in strings */
+				if( (*cp = getchar()) == '\\')
+					if( peekchar() != EOF)
+						*cp = getchar();
+				cp++;
+.
+w
+q
+'-*-END-*-'
+ed - ex_temp.c << '-*-END-*-'
+306c
+		m = (rused[i] ^ 0177777) & 0177777;
+.
+195c
+	register line *a;
+	register short *bp;
+.
+69a
+	if (all) {
+		putpad(TE);
+		flush();
+	}
+.
+4a
+#include "ex_tty.h"
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.c << '-*-END-*-'
+94c
+	namp = "albcbtcdceclcmdcdldmdoedeihoicimipllmandpcsesfsosrtatetiupvbvsve";
+.
+88c
+ 	namp = "ambsdadbeohchzinmincosulxnxt";
+.
+75a
+	gettmode();
+.
+74a
+	/* proper strings to change tty type */
+#ifdef notdef
+	/* Taken out because we don't allow it. See ex_set.c for reasons. */
+	if (inopen)
+		putpad(VE);
+#endif
+.
+64,66c
+	if (cgoto()[0] == 'O')	/* OOPS */
+.
+60c
+	options[SCROLL].ovalue = options[SCROLL].odefault = HC ? 11 : ((l-1) / 2);
+.
+58a
+	aoftspace = tspace;
+	zap();
+
+.
+45c
+	if (tgetent(ltcbuf, type) != 1) {
+.
+41a
+	putpad(TE);
+.
+40a
+	char ltcbuf[TCBUFSIZE];
+.
+33c
+	&AM, &BS, &DA, &DB, &EO, &HC, &HZ, &IN, &MI, &NC, &OS, &UL, &XN, &XT
+.
+28,30c
+	&AL, &BC, &BT, &CD, &CE, &CL, &CM, &DC, &DL, &DM, &DO, &ED, &EI,
+	&HO, &IC, &IM, &IP, &LL, &MA,
+	&ND, &xPC, &SE, &SF, &SO, &SR, &TA, &TE, &TI, &UP, &VB, &VS, &VE
+.
+22c
+	GT = (tty.sg_flags & XTABS) != XTABS && !XT;
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.h << '-*-END-*-'
+74a
+bool	XT;			/* Tabs are destructive */
+.
+67a
+bool	HC;			/* Hard copy terminal */
+.
+56a
+char	*TE;			/*    Terminal end sequence */
+char	*TI;			/*    Terminal initial sequence */
+.
+28c
+char	tspace[256];		/* Space for capability strings */
+.
+w
+q
+'-*-END-*-'
+ed - ex_tune.h << '-*-END-*-'
+46a
+#define TCBUFSIZE	1024		/* Max entry size in termcap, see
+					   also termlib and termcap */
+.
+13,16c
+#define	EXRECOVER	libpath(ex2.9recover)
+#define	EXPRESERVE	libpath(ex2.9preserve)
+#define	EXSTRINGS	libpath(ex2.9strings)
+.
+w
+q
+'-*-END-*-'
+ed - ex_v.c << '-*-END-*-'
+344c
+#ifdef CBREAK
+.
+341c
+		vSCROLL = (value(WINDOW)+1)/2;	/* round up so dft=6,11 */
+.
+331c
+#ifdef CBREAK
+.
+104c
+		vmoveitup(1, 1);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vadj.c << '-*-END-*-'
+388a
+	if (doclr && (SO || SE))
+		vclrech(0);
+.
+380a
+	bool doclr;
+.
+379c
+vmoveitup(cnt, doclr)
+.
+377a
+ * If doclr is true, do a clear eol if the terminal
+ * has standout (to prevent it from scrolling up)
+.
+366c
+	vmoveitup(cnt, 1);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+309c
+		vmoveitup(1, 1);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vis.h << '-*-END-*-'
+218a
+char	vmacbuf[VBSIZE];	/* Text of visual macro, hence nonnestable */
+char	*vmacp;			/* Like vglobp but for visual macros */
+.
+5d
+3a
+ * Mark Horton, UCB
+.
+w
+q
+'-*-END-*-'
+ed - ex_vmain.c << '-*-END-*-'
+734c
+#ifndef CBREAK
+.
+730c
+#ifndef CBREAK
+.
+724c
+#ifndef CBREAK
+.
+658c
+			globp = "e! #";
+.
+656a
+			vsave();
+			ckaw();
+.
+646a
+		 *
+		 *		Note: this doesn't correspond with documentation
+		 *		Is this comment misleading?
+.
+w
+q
+'-*-END-*-'
+ed - ex_voperate.c << '-*-END-*-'
+618c
+#ifndef CBREAK
+.
+614c
+#ifndef CBREAK
+.
+607c
+#ifndef CBREAK
+.
+427a
+			vmacp = 0;
+.
+86c
+#ifdef LISPCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops.c << '-*-END-*-'
+540c
+#ifdef LISPCODE
+.
+363c
+#ifdef LISPCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops2.c << '-*-END-*-'
+699c
+#ifdef LISPCODE
+.
+562a
+#ifdef TIOCSETC
+				if (c == ATTN)
+					c = nttyc.t_intrc;
+#endif
+.
+304c
+#ifdef LISPCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops3.c << '-*-END-*-'
+532,533c
+		if (linebuf[1] == cp[0]) {
+			if (linebuf[2] == cp[1])
+				return (1);
+			if (linebuf[2] == 0 && cp[1] == ' ')
+				return (1);
+		}
+.
+501c
+#ifdef LISPCODE
+.
+471c
+#ifdef LISPCODE
+.
+262c
+#ifdef LISPCODE
+.
+161c
+#ifdef LISPCODE
+.
+72c
+#ifdef LISPCODE
+.
+25c
+#ifdef LISPCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_vput.c << '-*-END-*-'
+964c
+	if (eq(DM, IM)) {
+.
+946c
+		if (eq(DM, IM))
+.
+686c
+		if (dosync) {
+			Outchar = vputchar;
+			vsync(e + 1);
+			Outchar = vinschar;
+		}
+.
+675a
+	vnpins(1);
+}
+
+vnpins(dosync)
+	int dosync;
+{
+	register int d = DEPTH(vcline);
+	register int e;
+
+.
+671d
+495,502c
+		if (AL) {
+			vnpins(0);
+		} else {
+			c = LINE(vcline) + DEPTH(vcline);
+			if (c < LINE(vcline + 1) || c > WBOT)
+				return;
+			i = destcol;
+			vinslin(c, 1, vcline);
+			DEPTH(vcline)++;
+			vigoto(c, i);
+			vprepins();
+		}
+.
+w
+q
+'-*-END-*-'
+ed - ex_vwind.c << '-*-END-*-'
+408c
+#ifndef CBREAK
+.
+391c
+#ifndef CBREAK
+.
+372c
+#ifndef CBREAK
+.
+359c
+#ifndef CBREAK
+.
+343c
+#ifndef CBREAK
+.
+272c
+#ifndef CBREAK
+.
+265,269c
+	vcline = addr - top;
+	dot = addr;
+	getDOT();
+.
+255c
+#ifndef CBREAK
+.
+232c
+#ifndef CBREAK
+.
+191a
+		getline(*addr);
+.
+187a
+		getline(*addr);
+.
+w
+q
+'-*-END-*-'
+ed - expreserve.c << '-*-END-*-'
+320c
+"This works for \"edit\" and \"vi\" also.\n");
+.
+318c
+"An easy way to do this is to give the command \"ex -r %s\".\n",fname);
+.
+w
+q
+'-*-END-*-'
+ed - makefile << '-*-END-*-'
+g/LISP/s//LISPCODE/g
+1c
+VERSION=2.9
+.
+w
+q
+'-*-END-*-'

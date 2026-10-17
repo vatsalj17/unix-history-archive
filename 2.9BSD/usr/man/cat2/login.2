@@ -1,0 +1,44 @@
+
+LOGIN(2)            UNIX Programmer's Manual             LOGIN(2)
+
+NAME
+     login - flag login process and collect accounting informa-
+     tion
+
+SYNOPSIS
+     login(flag, crn);
+     char crn[4];
+
+DESCRIPTION
+     _L_o_g_i_n marks the current process as being a login process and
+     associates the specified _c_r_n with it for accounting pur-
+     poses.  The _c_r_n is inherited by children, the flag is not.
+     _C_r_n is the customer recharge number, also known as ``job
+     number.''
+
+     By convention, the _f_l_a_g given to a login process is the
+     value returned by _t_t_y_s_l_o_t(3) for its control typewriter.
+     This is vestigal.
+
+     Use of this call is restricted to the super-user.
+
+RETURN VALUE
+     Upon successful completion, a value of 0 is returned.  Oth-
+     erwise, a value of -1 is returned and _e_r_r_n_o is set to indi-
+     cate the error.
+
+ERRORS
+     _L_o_g_i_n will fail if:
+
+     [EPERM]             The effective user ID is not the super-
+                         user.
+
+ASSEMBLER
+     (local = 58., login = 1.)
+     sys local; 9f
+     . . .
+     .data
+     9: sys login; flag; crn01; crn23
+
+Printed 5/23/83                                                 1
+

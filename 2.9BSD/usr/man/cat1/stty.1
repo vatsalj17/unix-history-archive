@@ -1,0 +1,200 @@
+
+STTY(1)             UNIX Programmer's Manual              STTY(1)
+
+NAME
+     stty - set terminal options
+
+SYNOPSIS
+     stty [ option ... ]
+
+DESCRIPTION
+     _S_t_t_y sets certain I/O options on the current output termi-
+     nal, placing its output on the diagnostic output.  With no
+     argument, it reports the speed of the terminal and the set-
+     tings of the options which are different from their
+     defaults.  With the argument ``all'', all normally used
+     option settings are reported.  With the argument ``every-
+     thing'', everything _s_t_t_y knows about is printed.  The option
+     strings are selected from the following set:
+
+     even      allow even parity input
+     -even     disallow even parity input
+     odd       allow odd parity input
+     -odd      disallow odd parity input
+     raw       raw mode input (no input processing (erase, kill,
+               interrupt, ...); parity bit passed back)
+     -raw      negate raw mode
+     cooked    same as `-raw'
+     cbreak    make each character available to _r_e_a_d(2) as
+               received; no erase and kill processing, but all
+               other processing (interrupt, suspend, ...) is per-
+               formed
+     -cbreak   make characters available to _r_e_a_d only when new-
+               line is received
+     -nl       allow carriage return for new-line, and output
+               CR-LF for carriage return or new-line
+     nl        accept only new-line to end lines
+     echo      echo back every character typed
+     -echo     do not echo characters
+     lcase     map upper case to lower case
+     -lcase    do not map case
+     tandem    enable flow control, so that the system sends out
+               the stop character when its internal queue is in
+               danger of overflowing on input, and sends the
+               start character when it is ready to accept further
+               input
+     -tandem   disable flow control
+     -tabs     replace tabs by spaces when printing
+     tabs      preserve tabs
+     ek        set erase and kill characters to # and @
+     For the following commands which take a character argument
+     _c, you may also specify _c as the ``u'' or ``undef'', to set
+     the value to be undefined.  A value of ``^x'', a 2 character
+     sequence, is also interpreted as a control character, with
+     ``^?'' representing delete.
+
+Printed 8/5/83                                                  1
+
+STTY(1)             UNIX Programmer's Manual              STTY(1)
+
+     erase _c   set erase character to _c (default `#', but often
+               reset to ^H.)
+     kill _c    set kill character to _c (default `@', but often
+               reset to ^U.)
+     intr _c    set interrupt character to _c (default DEL or ^?
+               (delete), but often reset to ^C.)
+     quit _c    set quit character to _c (default control \.)
+     start _c   set start character to _c (default control Q.)
+     stop _c    set stop character to _c (default control S.)
+     eof _c     set end of file character to _c (default control
+               D.)
+     brk _c     set break character to _c (default undefined.) This
+               character is an extra wakeup causing character.
+     cr0 cr1 cr2 cr3
+               select style of delay for carriage return (see
+               _i_o_c_t_l(2))
+     nl0 nl1 nl2 nl3
+               select style of delay for linefeed
+     tab0 tab1 tab2 tab3
+               select style of delay for tab
+     ff0 ff1   select style of delay for form feed
+     bs0 bs1   select style of delay for backspace
+
+     tty33     set all modes suitable for the Teletype Corpora-
+               tion Model 33 terminal.
+     tty37     set all modes suitable for the Teletype Corpora-
+               tion Model 37 terminal.
+     vt05      set all modes suitable for Digital Equipment Corp.
+               VT05 terminal
+     dec       set all modes suitable for Digital Equipment Corp.
+               operating systems users; (erase, kill, and inter-
+               rupt characters to ^?, ^U, and ^C, decctlq and
+               ``newcrt''.)
+
+     tn300     set all modes suitable for a General Electric Ter-
+               miNet 300
+     ti700     set all modes suitable for Texas Instruments 700
+               series terminal
+     tek       set all modes suitable for Tektronix 4014 terminal
+     0         hang up phone line immediately
+     50 75 110 134 150 200 300 600 1200 1800 2400 4800 9600 exta extb
+               Set terminal baud rate to the number given, if
+               possible.  (These are the speeds supported by the
+               DH-11 interface).
+
+     A teletype driver which supports the job control processing
+     of _c_s_h(1) as introduced in _n_e_w_c_s_h(1) and more functionality
+     that the basic driver is introduced in _n_e_w_t_t_y(4) and fully
+     described in _t_t_y(4).  The following options apply only to
+     it.
+
+     new       Use new driver (switching flushes typeahead).
+
+Printed 8/5/83                                                  2
+
+STTY(1)             UNIX Programmer's Manual              STTY(1)
+
+     crt       Set options for a CRT (crtbs, ctlecho and, if >=
+               1200 baud, crterase and crtkill.)
+     crtbs     Echo backspaces on erase characters.
+     prterase  For printing terminal echo erased characters back-
+               wards within ``\'' and ``/''.
+     crterase  Wipe out erased characters with ``backspace-
+               space-backspace.''
+     -crterase Leave erased characters visible; just backspace.
+     crtkill   Wipe out input on like kill ala crterase.
+     -crtkill  Just echo line kill character and a newline on
+               line kill.
+     ctlecho   Echo control characters as ``^_x'' (and delete as
+               ``^?''.) Print two backspaces following the EOT
+               character (control D).
+     -ctlecho  Control characters echo as themselves; in cooked
+               mode EOT (control-D) is not echoed.
+
+     decctlq   After output is suspended (normally by ^S), only a
+               start character (normally ^Q) will restart it.
+               This is compatible with DEC's vendor supplied sys-
+               tems.
+
+     -decctlq  After output is suspended, any character typed
+               will restart it; the start character will restart
+               output without providing any input.  (This is the
+               default.)
+     tostop    Background jobs stop if they attempt terminal out-
+               put.
+     -tostop   Output from background jobs to the terminal is
+               allowed.
+     tilde     Convert ``~'' to ```'' on output (for Hazeltine
+               terminals).
+     -tilde    Leave poor ``~'' alone.
+     flusho    Output is being discarded usually because user hit
+               control O (internal state bit).
+     -flusho   Output is not being discarded.
+     pendin    Input is pending after a switch from cbreak to
+               cooked and will be re-input when a read becomes
+               pending or more input arrives (internal state
+               bit).
+     -pendin   Input is not pending.
+     intrup    Send a signal (SIGTINT) to the terminal control
+               process group whenever an input record (line in
+               cooked mode, character in cbreak or raw mode) is
+               available for reading.
+     -intrup   Don't send input available interrupts.
+     mdmbuf    Start/stop output on carrier transitions (not
+               implemented).
+     -mdmbuf   Return error if write attempted after carrier
+               drops.
+     litout    Send output characters without any processing.
+     -litout   Do normal output processing, inserting delays,
+
+Printed 8/5/83                                                  3
+
+STTY(1)             UNIX Programmer's Manual              STTY(1)
+
+               etc.
+     nohang    Don't send hangup signal if carrier drops.
+     -nohang   Send hangup signal to control process group when
+               carrier drops.
+     etxack    Diablo style etx/ack handshaking (not imple-
+               mented).
+
+     The following special characters are applicable only to the
+     new teletype driver and are not normally changed.
+
+     susp _c    set suspend process character to _c (default con-
+               trol Z.)
+     dsusp _c   set delayed suspend process character to _c
+               (default control Y.)
+     rprnt _c   set reprint line character to _c (default control
+               R.)
+     flush _c   set flush output character to _c (default control
+               O.)
+     werase _c  set word erase character to _c (default control W.)
+     lnext _c   set literal next character to _c (default control
+               V.)
+
+SEE ALSO
+     tabs(1), tset(1), ioctl(2), newtty(4), tty(4)
+
+Printed 8/5/83                                                  4
+

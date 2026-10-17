@@ -1,0 +1,276 @@
+.nr _0 \n(c.
+.\" this file may contain local macros, which are initialized with
+.\" the ".lo" request.  All macros and number registers in this file
+.\" should be named ".*X", where X is any letter (upper or lower case)
+.\" or digit, to avoid naming conflicts.
+.\"
+.\" %beginstrip%
+.\"	Macros added by Mike Karels   5/81
+.\"	with modifications to customize for sroff
+.\"	(remove cut marks)
+.\"
+.\"	Macros .SP, .SC, .SE, .SO allow material to placed on
+.\"	separate pages (e.g. figure legends, tables).
+.\"	The Pg register specifies the increment to the page number
+.\"	at the next page boundary-- to skip n pages, do
+.\"	.nr Pg +n
+.\"	These require modified versions of .@h, .@e (below)
+.\"
+.rm @m				\" no cut marks
+.nr Pg 1			\" amount to increment page number
+.if m \
+.	ds lq "
+.if s \
+.	ds rq "
+.\"
+.de SP			\" *** start separate-page insert (e.g. figure legend)
+.if \\n(.$>1 \
+\{\
+.	ds *x \\$1
+.	ds *t \\$2
+.\}
+.di |S
+.@C 1
+.in 0
+.fi
+..
+.de SC			\" *** end and center .SP insert
+.	\" arg 1 is # of pages to skip after insert.
+.*E \\$1 C
+..
+.de SE			\" *** end insert, no centering
+.*E \\$1
+..
+.de *E			\" --- end .SP insert
+.br
+.di
+.nf
+.ls 1
+.da |I
+.if "\\$2"C" \
+\{\
+.	rs
+.	if \\n(.pu-\\n(tmu-\\n(bmu-\\n(dnu>0 \
+.	    sp (\\n(.pu-\\n(tmu-\\n(bmu-\\n(dnu)/2u
+.\}
+.|S
+.di
+.rm |S
+.ls
+.fi
+.am |I
+.if !"\\*(*t"" \
+\{\
+.(x \\*(*x
+\\*(*t
+.)x
+.\}
+.nr Pg +\\$1
+.bp +\\n(Pg
+\\..
+.nr *s 1			\" have insert waiting
+.ev
+.rm *x
+.rm *t
+..
+.de *P			\" --- print .SP/.SO insert
+.nr *s 0
+.nr *i 1			\" in insert, suspend other processing
+.nr *T \\n(?T			\" save info on table header
+.rr ?T
+.ev 1
+.nf
+.ls 1
+.in 0
+.ft 1
+.|I				\" print it
+.rm |I
+.ls
+.fi
+.ev
+.nr *i 0
+.if \\n(*T .nr ?T \\n(*T	\" restore table state
+.rr *T
+..
+.de SO			\" *** insert file, separate page
+.	\" (puts .so command in |I, so file is interpolated later)
+.	\" arg 1 is filename.
+.	\" arg 2 is # of pages to skip after insert.
+.am |I
+.ft 1
+.xl \\n($lu
+.lt \\n($lu
+.fi
+.so \\$1
+.nr Pg +\\$2
+.bp +\\n(Pg
+\\..
+.nr *s 1			\" have insert to do
+..
+.de IN			\" *** do automatic index (index x)
+.nr i1 0.6i			\" indent for .sh 2 (or 1), .uh
+.nr i2 0.4i			\" addn'l indent, each addn'l level
+.de $C			\" $$$ put chapter in index x
+.(x
+.in \\\\n(i2u
+.ti -\\\\n(i2u
+\\\\$1\ \\\\$2.\ \ \\\\$3\\\\c
+'in 0
+.)x
+\\..
+.de $0			\" $$$ put section in index x
+.if "\\\\$1"" .ig ..		\" for .sx
+.(x
+.in \\\\n(i1u+\\\\n(i2u
+.if \\\\$3>2 .in +\\\\n(i2u
+.ti -\\\\n(i2u
+.ie \\\\n(.$>1 \\\\$2.\ \ \\\\$1\\\\c
+.el \\\\$1\\\\c
+'in 0
+.)x
+\\..
+..
+.de @h	         \" --- header, modified for Sanders printer and .SP/.SO inserts
+.if (\\n(.i+\\n(.o)>=\\n(.l \
+.	tm Line \\n(c. -- Offset + indent exceeds line length
+.if t .if !s .if (\\n(.l+\\n(.o)>7.75i \
+.	tm Line \\n(c. -- Offset + line length exceeds paper width
+.nr ?h \\n(?H
+.rr ?H
+.nr ?c \\n(?C
+.rr ?C
+.rn |4 |0
+.rn |5 |1
+.rn |6 |2
+.rn |7 |3
+.nr _w 0
+.nr ?I 1
+.nr Pg 1
+.ev 2
+.rs
+.if \\n(hm>0 \
+.	sp |\\n(hmu
+.if \\n($T=2 \\!.
+.@t $h
+.if \\n(tm<=0 \
+.	nr tm \n(.Vu
+.sp |\\n(tmu
+.ev
+.mk _k
+.if \\n(?n .nm 1
+.nr $c 1
+.ie \\n(?s \
+\{\
+.	rr ?s
+.	rs
+'	@b +\\n(Pg
+.\}
+.el \
+\{\
+.	@n
+.	if \\n(*s \
+.		*P		\" start insert
+.\}
+..
+.de @n			\" --- new column or page
+.if \n@>3 .tm >> @n nl=\\n(nl %=\\n% ?f=\\n(?f ?o=\\n(?o
+.if \\n(bm<=0 \
+.	nr bm \\n(.Vu
+.if \\n(_w<=\\n($l \
+\{\
+.	nr _b (\\n(ppu*\\n($ru)/2u	\" compute fudge factor (must be < 1P)
+.	if \\n(_bu>((\\n(bmu-\\n(fmu-(\\n(tpu*\\n($ru))/2u) \
+.		nr _b (\\n(ppu*\\n($ru)-\n(.Vu
+.	nr _b +\\n(bmu
+.\}
+.nr _B \\n(_bu
+.ch @f
+.wh -\\n(_bu @f
+.nr ?f 0			\" reset footnote flag
+.if \\n(*O .if !\\n(*i \	\" done with insert, pick up overflow footnotes
+\{\
+.	(f			\" reprocess footnotes which run off page
+.	nf
+.	*O
+.	fi
+.	)f
+.	rm *O
+.	if !\\n(?o .rr *O
+.\}
+.if \\n(?o \
+.   ie !\\n(*s \		\" if not starting insert
+    \{\
+.	(f			\" reprocess footnotes which run off page
+.	nf
+.	if \\n(*O _________	\" separate two overflows
+.	rr *O
+.	|o
+.	fi
+.	)f
+.	rm |o
+.   \}
+.   el \
+    \{\
+.	nf
+.	di *O			\" save overflow for later
+.	|o
+.	di
+.	fi
+.	rm |o
+.	nr *O 1
+.\}
+.nr ?o 0
+.if \\n(?T \
+\{\
+.	nr _i \\n(.i
+.	in \\n($iu
+.	|h			\" output the table header
+.	in \\n(_iu
+.	rr _i
+.	mk #T			\" for tbl commands
+.	ns
+.\}
+.if !\\n(*i \			\" if in insert, save these for later
+\{\
+.   if \\n(?a \
+    \{\
+.	nr ?a 0			\" output floating keep
+.	@k |t
+.   \}
+.   os
+.   $H				\" special column header macro
+.   ns
+.\}
+..
+.rn pn *p		\" --- reset page number
+.de pn			\" --- reset page number, diddle \n(Pg
+.*p \\$1
+.nr Pg 0			\" inhibit increment, next page
+..
+.de @e			\" --- end page, modified for Pg register
+.@O \\n(_ou
+.rs
+.sp |\\n(.pu-\\n(fmu-(\\n(tpu*\\n($ru)
+.@t $f
+.nr ?h 0
+.ie \\n(Pg \
+.	bp +\\n(Pg
+.el \
+.	bp
+..
+.de @z			\" --- end macro, modified for .SP/.SO
+.if !"\\n(.z"" \
+\{\
+.	tm Line \\n(c. -- Unclosed block, footnote, or other diversion (\\n(.z)
+.	di
+.	ex
+.\}
+.if \\n(?a:\\n(*i \
+.	bp +\\n(Pg
+.rm bp
+.rm @b
+.br
+..
+.so \*(||/refs.me		\" refs.me added 9/81 for refer
+. \"  *** insert new definitions before this line ***
+.nr c. \n(_0

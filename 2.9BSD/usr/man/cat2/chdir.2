@@ -1,0 +1,70 @@
+
+CHDIR(2)            UNIX Programmer's Manual             CHDIR(2)
+
+NAME
+     chdir, chroot - change default directory
+
+SYNOPSIS
+     chdir(dirname)
+     char *dirname;
+
+     chroot(dirname)
+     char *dirname;
+
+DESCRIPTION
+     _D_i_r_n_a_m_e is the address of the path name of a directory, ter-
+     minated by a null byte.  _C_h_d_i_r causes this directory to
+     become the current working directory, the starting point for
+     path names not beginning with `/'.
+
+     _C_h_r_o_o_t sets the root directory, the starting point for path
+     names beginning with `/'.  The call is restricted to the
+     super-user.
+
+RETURN VALUE
+     Upon successful completion, a value of 0 is returned.  Oth-
+     erwise, a value of -1 is returned and _e_r_r_n_o is set to indi-
+     cate the error.
+
+ERRORS
+     _C_h_d_i_r (respectively _c_h_r_o_o_t) will fail and the current work-
+     ing directory (starting point for path names beginning with
+     `/') will be unchanged if one or more of the following is
+     true:
+
+     [ENOTDIR]           A component of the path name is not a
+                         directory.
+
+     [ENOENT]            The named directory does not exist.
+
+     [EINVAL]            The _d_i_r_n_a_m_e contained a non-ASCII byte.
+
+     [EACCES]            Search permission is denied for any com-
+                         ponent of the path name.
+
+     [EFAULT]            _D_i_r_n_a_m_e points outside the process's
+                         allocated address space.
+
+     [ELOOP]             Too many symbolic links were encountered
+                         in translating the path name.
+
+     _C_h_r_o_o_t will also fail if:
+
+     [EPERM]             The user is not the super-user.
+
+Printed 5/23/83                                                 1
+
+CHDIR(2)            UNIX Programmer's Manual             CHDIR(2)
+
+SEE ALSO
+     cd(1)
+
+ASSEMBLER
+     (chdir = 12.)
+     sys chdir; dirname
+
+     (chroot = 61.)
+     sys chroot; dirname
+
+Printed 5/23/83                                                 2
+

@@ -1,0 +1,850 @@
+.bl 10
+.ce 4
+PDP-11 L110
+System Description
+Forrest Howard
+5/28/75
+
+.bp
+
+.fo ''-%-'
+.nf
+Core Allocation
+
+	D-Space Systems
+
+	!-------------------------------!
+	!	.psect	startc		!
+	!-------------------------------!
+	!	.psect	nil		!
+	!-------------------------------!
+	!	.psect	shbydat		!
+	!-------------------------------!
+	!	.psect	shrwddat	!
+	!-------------------------------!
+	!	.psect	shrcode		!
+	!-------------------------------!
+	!	.psect	dsubr		!
+	!-------------------------------!
+
+
+		^sharable^
+		----------
+		!private !
+		v        v
+
+	!-------------------------------!
+	!	.psect	uswdda		!
+	!-------------------------------!
+	!	.psect	usportd		!
+	!-------------------------------!
+	!	.psect	usbyda		!
+	!-------------------------------!
+	!	<blank space>		!
+	!				!
+	!-------------------------------! x00000000  boundary
+	!	.psect	ddtpr		!	   2
+	!-------------------------------!
+	!	.psect	datom		!
+	!-------------------------------! x00000000 boundary
+	!	.psect initcode		!	   2
+	!-------------------------------!
+	!	.psect errorm		!
+	!-------------------------------!
+
+	runtime core allocation space
+
+
+	!-------------------------------!
+	!	control stack ^		!
+	!-------------------------------!
+	!	name stack	!	!
+	!			v	!
+	!-------------------------------!
+	!	job data region		!
+	!-------------------------------!
+
+
+smallints also occupy the last 1280. bytes with the stacks.
+
+.bp
+
+		i&d space
+
+i space
+
+	!-------------------------------!
+	!	.psect	startc		!
+	!-------------------------------!
+	!	.psect	shrcode		!
+	!				!
+	!				!
+	!-------------------------------!
+	!	.psect initcode		!
+	!-------------------------------!
+
+d space
+
+	!-------------------------------!
+	!	.psect	nil		!
+	!-------------------------------!
+	!	data			!
+	!	<blank>			!
+	!-------------------------------! x00000000 boundary
+	!	.psect	dsubr		!	   2
+	!				!		 2
+	!-------------------------------!
+	!	.psect	ddtpr		!
+	!-------------------------------!
+	!	.psect	datom		!
+	!-------------------------------! x00000000 boundary
+	!	.psect	errorm		!	   2
+	!-------------------------------!
+
+
+		<allocate core>
+
+	!-------------------------------!
+	!				!
+	!				!
+	!				!
+	!	   stacks		!
+	!				!
+	!				!
+	!-------------------------------!
+
+
+note all the data is non-sharable
+     smallints occupy the highest 1280.  locations
+
+.bp
+.fi
+.ti +5
+One Page is 400 Octal Bytes.
+.bl
+.ti +5
+As more core is needed by L110 for port buffers, or
+pages for atoms , ints, or dtprs, the routine GLOBALLOC searches out core for blank pages (such as those returned 
+from ports when closed) and requests more core from UNIX as needed.
+.bl
+.ti +5
+The monitor automatically keeps track of the control stack and allocates more core to it as needed.
+.bl
+.ti +5
+The data region expands upwards (i.e. from 0 to 177776) in 400 Octal chunks.
+.bl
+.ti +5
+The control stack expands down (towards 0).
+.bl
+.ti +5
+One should note that the psects "initcode" and "errorm" go away.
+Errorm has the text for the error message file; this file is written out when a "pure" lisp (one that has not had a SAVEME done on it) is called with more than one arguement (that is with more than just its name as arg).
+The algorithim for this writing is to do a creat on the errorfil path name; if this succeds, then write the entire psect into it, and then close it.
+Obviously, this requires write permission on the errorfile.
+.bl
+.ti +5
+The initcode section is thrown away in data-space only lisp by being overwritten by data that is added.
+In i&d lisp, it is eliminated from the file by the SAVEME function.
+.bp
+.ce 1
+Data Objects
+.bl
+
+INTEGERS--2 16 bit words as follow:
+.nf
+
+	foo:	 ---------------------------------------
+		! <high 15 bits *2>!garbage collect bit	!
+		!		low 16 bits		!
+		 ---------------------------------------
+
+.fi
+The instruction ASL x is used to clear the GC bit when forming an INTEGER;
+V bit will be set if the number cannot be represented.
+.bl
+.ti +5
+The instruction ASR x will get the original number back; the sign bit is retained.
+
+As an assembly switch Small Integers can also be selected.
+These have an address above -1280. 
+Note that the address determines the value, not the contents.
+For this reason, all integer manipulation should be done thruogh the "useful numeric macros" (see below).
+.bl 2
+DOTTED PAIRS--2 16 bit words.
+.bl
+.nf
+	foo:	 -----------------------
+		!	car ! gc bit	!
+		!	 cdr		!
+		 -----------------------
+
+.fi
+Note that all addresses in L110 are even, so that the 0 bit of the car is never set, save by the garbage collector.
+The 0 bit of the cdr is always 0.
+.bl
+.ti +5
+Dotted Pairs always start on 0 or 4 byte boundaries.
+.bl 2
+ATOMS--length 3+<<length of print string>+1>/2 16 bit words
+.bl
+.nf
+	foo:	 -----------------------
+		!	plist!gc bit	!
+		!	   tlb		!
+		!	function	!
+		!     'a         'n	!
+		!     'e	 'm	!
+		!     0		 's	!
+		 -----------------------
+
+.fi
+Plist is similar to car of dtpr.
+.bl
+Tlb is similar to cdr of dtpr.
+.bp
+
+Binary#Code
+.bl
+.ti +5
+(For D Space)
+.bl
+The Length of Binary Code is Dependent on t;he number of instructions
+in it.
+.bl
+.ti +5
+If Type is 0 if Lambda and 1 if Nlambda then:
+.bl
+.nf
+	foo:	 -----------------------------------------------
+		!	Type*100000+Args*1000+<fooend-foo> !gc	!
+		!			anil			!
+		!	jsr	pc,chas(chanl)			!
+		!						!
+		!		     <code>			!
+		!						!
+	fooend:	!		last word of code		!
+		 -----------------------------------------------
+
+(For I&D Space)
+.bl
+Length is always 3 16 bit words:
+
+	foo:	 -----------------------------------------------
+		!	type*100000+args*1000+!gc		!
+		!			anil			!
+		!	pointer to instruction space		!
+		 -----------------------------------------------
+
+.fi
+Note that the Binary Code object is always in 
+data space, although it may point to instruction space.
+.bp
+Ports--5 16 bit words
+
+.nf
+		 ---------------------------------------
+	input:	!	savedc	!	fdsn*2!gc	!
+		!	ptr to next char		!
+		!	ptr to buffer start		!
+		!		chars left		!
+		!		length			!
+		 ---------------------------------------
+
+		 ---------------------------------------
+	output:	!	count	! 200!fdsn*2!gcbit	!
+		!	ptr to next char		!
+		!	ptr to buffer start		!
+		!		chars left		!
+		!		length			!
+		 ---------------------------------------
+
+.fi
+Where count in output buffer is number of characters since last Terpr.
+.bl
+Savedc in input buffer is the character saved by savec.
+
+.bp
+Free list formats
+
+.nf
+
+		 !------!	  !-----!		  !-----!
+fnumber:-------->!	!     +-->!	!        ...   -->! nil	!
+		 !   ---+-----^   !   --+----^		  !	!
+		 !------!	  !-----!		  !-----!
+
+		 !------!	  !-----!		  !-----!
+fdtpr:---------->!	!     +-->!	!        ...   -->! nil	!
+		 !   ---+-----^   !   --+----^		  !	!
+		 !------!	  !-----!		  !-----!
+
+
+		!-------!	!-------!		!-------!
+fratom:-------->!    ---+---->	!    ---+---> ....	! anil	!
+		!length	!	!length	!		!length	!
+		!	!	!	!		!	!
+		!	!	!	!		!	!
+		!	!	!-------!		!-------!
+		!	!
+		!	!
+		!-------!
+
+
+
+		 !------!	  !-----!		  !-----!
+fbcd:----------->!size	!     +-->!size	!        ...   -->!size	!
+		 !   ---+-----^   !   --+----^		  ! nil	!
+		 !	!	  !-----!		  !-----!
+		 !------!
+
+
+For i&d space, bcd free size is ignored as it is all 3 words.
+.bl
+All lengths are in words.
+.bp
+.fi
+Telling what things are
+.bl
+.ti +5
+Each data object has a type code:
+.nf
+	0	int
+	1	dtpr
+	2	atom
+	3	bcd
+	4	port
+
+In addition, there are several other types:
+
+	-1	system code (not used)
+	-2	i-o buffer
+	-3	free page owned by us
+	-4	stack space
+	-5	owned by monitor
+
+.fi
+There is a code associated with each 400 Octal byte page of which there are 400 Octal).
+.bl
+This type information is kept in the QMAP, which is 400 bytes long.
+To get the type of the address 1000 in register j1, for example, then
+.bl
+.nf
+	Ldtype	#1000,j1
+.bl
+expands as:
+.bl
+	mov	#1000,j1
+	clrb	j1
+	swab	j1
+	movb	qmap(j1),j1
+.bl
+.fi
+Note that due to the index, the second arguement to ldtype must be a register.
+.bl
+.ti +5
+If the object whose type we wish to know is already in a register, and we want to clobber the very same register with the 
+type code, then
+.bl
+.nf
+	Ldtype	Rx
+.fi
+.bl
+will do the trick.
+.bp
+Stacks:
+.bl
+Stack pointers
+.bl
+SP=%6 is the control stack pointer.
+.bl
+NP=%5 is the name stack pointer.
+.bl
+LTOP (a core location) points to top of name stack before current function call.
+.bl
+CONVENTIONS
+
+Namestack entrys are 4 byte entrys that are <atom, form> pairs.
+NP points to the last form pushed on.
+NP-2 points to the last atom pushed on.
+NPLIM is highest possible location to be used by namestack.
+Name stack grows upwards.
+.bl
+Control stack entrys are of several types.
+The first is a standard even address, i.e. return addresses, nstack addresses, etc.
+These are ignored during garbage collection.
+The second type of entrys are odd addresses.
+Odd address imply that the address&177776 is to be protected during
+garbage collection.
+The user is cautioned not to push spurious odd addresses on the stack.
+The third entry type is a Function Block:
+.bl
+.nf
+	sp->	!  eexit	!
+		!  function	!
+		!  old ltop	!
+		!  form		!
+		!  caller	!
+
+.fi
+The form and Function are protected.
+The fourth type of object is a "saved register" block generated by break:
+.bl
+.nf
+	sp->	!	bksnag	!
+		!	np	!
+		!	ltop	!
+		!	j3	!
+		!	j2	!
+		!	j1	!
+		!	b	!
+		!	return	!
+
+.fi
+None of these objects are garbage collected.
+
+.bl
+other snags recognized have to do with register saving, specifically, the
+r4rres, r3rres, r2rres, and r1rres snags. their format is
+.bp
+.nf
+
+		sp->	!	rnrres		!
+			!	register	!
+				......
+			!			!
+			!	return address	!
+
+.bl
+.fi
+where there are n registers in between the snag and address.
+The instalation of register saves blocks on the stack must be done carefully, least
+the user find himself with an illegal object on top of the stack.
+Simarily, in order to take the registers off, care must be exercised.
+.bl
+.ti +5
+The prototype for using register snags is:
+.bl
+.nf
+	foo:	save3		;save three registers
+		 ...
+		 ...
+	end:	saveret		;which is a mov (sp),pc
+				;which will flush regs + return to my caller
+.bl
+.fi
+.bp
+Debugging note
+.bl
+.ti +5
+As implied earlier, each page for data objects must begin on a 400 byte boundary.
+When L110 is linked with DDT for debugging, it is likely that the begining of the first page will not be on a 400 byte
+boundary.
+Therefor the file filler.m11 is used to pad out the data so
+that the first atom (atmnil ) is in the correct place.
+.bp
+.ul 1
+Use of Saveme
+.bl
+The saveme command writes out the current lisp data enviroment to a file in an executable format.
+This is usefull to produce a copy of Lisp that is already initilized, has the non-primatives loaded, etc.
+.bl
+.ti +5
+The function of saveme for data-space only systems is simple;make a file header, write out the text, and write out the data.
+For I&D space systems, life is a little harder.
+There are two flavors of output; one for Harvard I&D, the other for Bell I&D.
+Saveme has to know the difference.
+.bl
+.ti +5
+Secondly, saveme cannot directly write out instruction space.
+Rather, it opens itself for reading.
+The pathname that it uses is defined in the dstuf.m11 file.
+It then uses the data-space information and the file to build an executable file, minus the instruction space code for initilization and for saveme itself.
+.bl
+.ti +5
+A reset is then executed.
+.bl
+.ti +5
+Previous to the saveme, and implicit resetio is preformed.
+.bp
+.ce 1
+	Major System Modules
+.bl
+.nf
+
+1)	Conversion
+
+a	String to Number
+	Name:	strnum
+	Args:	String in strbuf, null terminated.
+	Return:	a/ptr to Int
+		b/NIL
+
+b	Number to String
+	Name:	numstr
+	Arg:	a/ptr to int
+	Return:	a/NIL
+		b/Pointer to string, null terminated.
+
+c	String to Atom
+	Name:	Strat
+	Args:	String in strbuf
+		b/length of strin in words
+		j2/hash index
+	Return:	a/pointer to atom
+		b/garbage
+
+2)	iO
+
+	all iO routines take a port on top of the name stack 
+	NIL is the port for the tty.
+
+a	Get a Character
+	Name:	xgetc
+	call:	getc	(macro expanding to call xgetc)
+	Return:	next char of port in char.
+
+b	Save a Character
+	Name:	xsavec
+	Call:	savec	(macro expanding to call xcavec)
+	Arg:	char in CHAR
+	Return:	nothing
+
+c	Output a String
+	Name:	putstr
+	Arg:	ptr to asciz string in B
+	Return:	Nil in b
+
+d	Read an Atom
+	Name:	Ratomr
+	Args:	none
+	Return:	a/pointer to form
+		clobbers all registers!!!!
+
+e	Print Number, Atom, Port, Bcd
+	Names:	numout,atmout,portout,bcdout
+	Arg:	a/ptr to object
+	Return:	a,b	NIL
+
+3)	Form I/O
+	
+	Read a Form
+	Name:	Reader
+	Arg:	Port on top of nstk
+	Return:	a/ptr to form
+		b,j1-j3	clobbered
+
+
+
+b	Print a Form
+	Name:	printr
+	Arg:	a/ptr to form
+		port on top of np
+	Return:	a,b NIL
+
+4)	Integer Handlers
+
+a	Numga---Macro
+	Arg:	a/ptr to INT
+	leaves: High 16 bits in A
+		Low 16 bits in B
+
+b	Numgj1
+
+	same as above except leaves result in j1,j2
+
+c	Numga0--Macro
+	Arg:	a/ptr to int
+	leaves floating representation of int in AC0
+
+d	Numga1
+	same as above except leaves result in ac1
+
+e	Nmstore--Macro
+	Arg:	a/high 16 bits of int
+		b/low  16 bits of int
+
+	Result:	a/ptr to int
+		b/NIL
+
+f	Nmstac0--Macro
+	Arg:	AC0 has floating representation of int
+	Result:	a/ptr to int
+
+5)	Atom Handlers
+
+a	Get Atom
+	Name	Gatom
+	Arg	a/number of words needed for string
+	Result:	a/pointer to atom with NILs in bindings
+
+6)	Dtpr Handlers
+
+a	CONSA--Macro calling
+	Name:	xconsa
+	Args:	a/car
+		b/cdr
+
+	Return:	a/pointer to dtpr
+
+	CONSB--Macro calling
+	Name:	xconsb
+	Args:	a/car
+		b/cdr
+	Return:	b/pointer to dtpr
+
+	CONSBNIL--Macro calling
+	Name:	xconsbn
+	Args:	a/car
+	Return:	b/pointer to dtpr with NIL as cdr.
+
+Consa, consb, and consbnil all protect a and b from garbage
+collection
+
+d	Allocate Dtpr
+	Name:	gdtpr
+	Arg:	none
+	Return:	a/ptr to dtpr
+
+.bp
+
+Useful Macros
+
+register save
+
+	save1	-- puts j3 in register snag on stack
+	save2	-- puts j2+j2 in stack block
+	save3	-- j1,j2,j3
+	save4	-- b,j1,j2,j3
+
+	saveret --Returns from register save
+
+push	x
+	puts x onto control stack
+
+pop	x
+	puts top entry of stack into x
+
+npush	x
+	pushs <NIL,x> onto stack
+
+npop	x
+	pops top entry(form) of stack into x
+
+propush	x
+	pushs x onto control stack and marks it for garbage collection
+
+unpropop x
+	undoes propush and puts result in x
+
+call	x
+	jsr	pc,x
+
+ret
+	rts	pc
+
+car	x,y
+	puts car of what x points to into y
+
+cdr	x,y
+	puts cdr of what x points to into y
+
+jmpifinil	x,y,flag
+	generates code to test x=nil and branch to y if true.
+	flag is for nilas0#0, when previous operation mov 
+	manipulated x so that condition codes were set
+
+jmpiftrue	x,y
+	generates code to test x=true and branch to y if so.
+
+getca
+	calls getc, moves char to a
+
+loadnil	x
+	loads nil into x
+
+retnil	
+	<loadnil	a
+	 ret		 >
+
+
+
+rettrue
+	<mov	#atrue,a
+	 ret		>
+
+ldtype y or ldtype x,y
+	loads the type of the first arg into y.
+	y must be a register
+
+cmptype x,y,z
+	using y as scratch generate code to compare the type of
+	the first arguement to z.
+
+generm	</delimited string/>
+	
+	All sorts of perversions are preformed to get the string
+	into errorm psect, from which it will be written to the
+	errorfile.  Most importantly, psect changes are made;
+	beware therefore for local symbols. The psect eventually
+	returned to is the psect of the last ".rsect" (see below).
+	 A template for using this is:
+
+ noway:	generm	</This is my error message/<12>//>
+	mov	#tmp-<^pl errorm>,a
+	call	geterr			;reads the error message file
+	call	putstr			;return with b pointing
+					;to string or asciz
+					;string of digits (if
+					;file not available)
+
+error	</nasty delimited message/> 
+error	</nastier delimited message/>,where
+	code is generated to call the error package, and return to 
+	to "where" when continue is evaled (or to cantcont if blank).
+
+rsect sectname
+	This is esentally a psect directive, except that it assigns 
+	a number corresponding to the "sectname" to a variable that
+	it keeps. This allows things like generm to leave the cur-
+	rent psect, screw around, and then return the user to the
+	place that he was in.
+
+dispatch
+	generates call to routine which returns:
+
+	dispatch	
+	jmp	1$	;if a is int
+	jmp	2$	;if a is dtpr
+	jmp	3$	;if a is atom
+	jmp	4$	;if a is bcd
+	jmp	5$	;if a is port
+
+the 5 instructions following dispatch must be of the two word variety
+
+outstr	x
+	generates code to print the string at label x
+	to port on top of np
+
+Note!  The following macros will work only(!) if the ctable
+	constants are not redefined!!!
+
+isalph	x,y
+	generates code to branch to y if the contents of x(a register) 
+	is alphabetic (more or less)
+
+isnum	x,y
+	generates code ... is -,0,1...9
+
+issep	x,y
+	generates code ... is space, tab, cr, lf, ...
+
+isbrk	x,y
+	generates code if seperator or (, ), ., [, or ].
+
+isalnum	x,y
+	same as		isalph	x,y
+			isnum	x,y
+
+
+
+.bp
+Control Flow
+
+	 ---------------   -------------   -------------
+	!		! !		! !		!
+	!  print	! !  lisp	! !  read	!
+	!		! !		! !		!
+	 ---------------   -------------   -------------
+
+			    ^ !
+			    ^ v
+
+			   -------------
+			  ! 		!
+			  ! eval	!
+			  !		!
+			   -------------
+
+			    ^ !
+			    ! v
+
+			   -------------
+			  !		!
+			  ! subrs	!
+			  !		!
+			   -------------
+
+
+
+	 -------	 -------	 -------	 ------
+	! alloc	!	! alloc	!	! alloc	!	!alloc !
+	! atom	!	! dtpr  !	! int	!	!buffer!
+	 -------	 -------	 -------	 ------
+  	  !		   !		   !     	  !
+	  !		   !		   !     	  !
+	  !		   v		   v	  	  !
+	  !		 -----------------------	  !
+	  !		! garbage collection	!	  !
+	  !		!			!	  !
+	  !		 -----------------------	  !
+	  !			!			  !
+	  v			v			  v
+	 ---------------	v			  v
+	! global	!<--------------------------------
+	!  allocate	!
+	 ---------------
+	     !
+	     v
+	 ---------------
+	!monitor	!
+	!		!
+	 ----------------
+.bp
+
+
+			 -------
+	----------------! print !--------------------
+	!	    !    ------- !	   !	    !
+	!           !            !         !        !
+        v           v            v         v        !
+   ---------   ---------   --------  --------       !
+   ! numout !  ! atmout !  !bcdout ! !portout!      !
+   ---------   ---------   --------  --------       !
+	!	    !		 !	   !	    !
+	v           !            !         !        !
+    --------        !            !         !        !
+   ! numstr !       !            !         !        !
+    --------        !            !         !        !
+	!           !	         !         !        !
+	v           v   ------   v         v        v
+	---------------!putstr!---------------------
+			------
+
+
+
+
+
+			 ------
+			! read !
+			 ------
+			   !
+			   v
+      -----            ----------              ------
+     !getc! <---------!ratomr   !------------>!savec!
+      -----            ----------              ------
+		       !      !
+		       v      v
+		   ------    --------
+		  ! find !  ! strnum !
+		   ------    --------
+		    !               !
+		    v		    v
+		 -----           -------
+		!strat!		!nmstore!
+		 -----           -------
+	         !   !
+		 v   v
+	     -----   -----
+	    !gatom! !gdtpr!
+	     -----   -----
+

@@ -1,0 +1,37 @@
+.TH ACCESS 3F
+.UC
+.SH NAME
+access \- determine accessability of a file
+.SH SYNOPSIS
+.B integer function access (name, mode)
+.br
+.B character*(*) name, mode
+.SH DESCRIPTION
+.I Access
+checks the given file,
+.I name,
+for accessability with respect to the caller according to
+.I mode.
+.I Mode
+may include in any order and in any combination one or more of:
+.br
+.in +5
+\fBr\fR	test for read permission
+.br
+\fBw\fR	test for write permission
+.br
+\fBx\fR	test for execute permission
+.br
+.in -3
+(blank)	test for existence
+.in -2
+.PP
+An error code is returned if either argument is illegal, or if the file
+can not be accessed in all of the specified modes.
+0 is returned if the specified access would be successful.
+.SH FILES
+/usr/lib/libU77.a
+.SH "SEE ALSO"
+access(2), perror(3F)
+.SH BUGS
+Pathnames can be no longer than 127 characters.

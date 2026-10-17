@@ -1,0 +1,54 @@
+.TH KILLPG 2
+.UC
+.SH NAME
+killpg, killbkg \- send signal to process group
+.SH SYNOPSIS
+.B killpg(pgrp, sig);
+.sp
+.B killbkg(pgrp, sig);
+.SH DESCRIPTION
+.I Killpg
+sends the specified signal to all processes
+in the process group headed by process
+.IR pgrp .
+.I Killbkg
+does the same, but only for processes
+that have not been marked by
+.IR submit (2).
+.PP
+Use of these calls is restricted to the super-user.
+.SH RETURN VALUE
+Upon successful completion, a value of 0 is returned.  Otherwise, a
+value of \-1 is returned and
+.I errno
+is set to indicate the error.
+.SH ERRORS
+.I Killbkg
+will fail and no signal will be sent if any of the following occur:
+.TP 20
+[EINVAL]
+.I Sig
+is not a valid signal number.
+.TP 20
+[ESRCH]
+No process can be found corresponding to the process group specified by
+.IR pgrp .
+.TP 20
+[EPERM]
+The caller is not the super-user.
+.SH SEE ALSO
+kill(2), signal(2), submit(2)
+.SH ASSEMBLER
+.nf
+(local = 58., killpg = 6.)
+.B sys local; 9f
+\&. . .
+.B \&.data
+.B 9: sys killpg; pgrp; sig
+.sp
+(local = 58., killbkg = 5.)
+.B sys local; 9f
+\&. . .
+.B \&.data
+.B 9: sys killbkg; pgrp; sig
+.fi

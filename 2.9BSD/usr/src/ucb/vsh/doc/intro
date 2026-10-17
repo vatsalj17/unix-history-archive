@@ -1,0 +1,277 @@
+.de VS
+.I Vsh
+..
+.TL
+A Visual Command Processor
+for the
+\s-2UNIX\s0 Operating System
+.so author
+.AB
+.VS
+is a visual interactive command processor or shell for the
+.UX
+[1] operating system.
+.VS
+is an attempt to provide a command processor for
+high-bandwidth video terminals.
+This orientation results in the printing of much more information
+than provided by traditional command processors.
+This orientation also results in closer control
+over what is printed so nothing unintentionally
+scrolls off the top of the screen.
+The following set of papers describe
+.I Vsh.
+The first,
+"A Visual Command Processor for the \s-2UNIX\s0 Operating System,"
+describes the goals of
+.VS
+and how successfully they have been met.
+The second,
+"Vsh Code Organization,"
+describes the implementation.
+The third is a user's manual.
+Finally, the appendix contains copies of the help files
+available to the online user.
+.AE
+.PP
+.so footnote
+.ls 2
+.SH
+Introduction.
+.PP
+A program tends to complement its input/output devices.
+For example,
+batch programs interface to high speed printers.
+A batch program's output tends to be lengthy and detailed,
+since the printing costs little and extra detail
+may obviate the need for extra runs.
+Existing
+.UX
+programs have the opposite tendency since
+they were usually built for slow, hardcopy terminals.
+Because printing takes so much time,
+messages tend to be terse,
+and information is printed only when specifically requested.
+High-bandwidth video terminals benefit from a different orientation:
+One does not worry excessively about the time it takes to print
+messages.
+Instead, one is
+concerned about losing information off the
+top of the screen before it is used.
+.SH
+Operation.
+.PP
+.VS
+is an attempt to apply this alternative strategy to a command processor.
+.VS
+is highly visual.
+It automatically prints a considerable amount of information,
+and makes sure that information does not
+scroll off the top of the screen.
+.PP
+.VS
+is organized around the
+.UX
+file system.
+This file system has a hierarchical structure which can be
+represented as a tree.
+Each node in the tree is a directory and each leaf a file.
+Each node and leaf has a name.
+To reference a file one specifies the string of names
+which traverses the file system from the root to the desired file.
+One may also reference files relative to one's working directory.
+This directory may be set
+to any accessible directory in the file system.
+.PP
+.VS
+operates by automatically displaying
+the members of the working directory.
+Each member is labeled with a lower case letter
+in the fashion of an indexed menu.
+To select a member one presses its corresponding letter.
+After selection,
+.VS
+determines the nature of the file and takes appropriate action.
+If the member contains \s-2ASCII\s0 text,
+.VS
+calls on the editor.
+If the member is a directory,
+.VS
+makes it the working directory and displays its files.
+.VS
+recognizes many other types of files
+as described in the user's manual.
+.PP
+Directories with a large number of members
+cannot be displayed in a single screen.
+Such directories are broken down into single-screen pages.
+These pages are selected by typing in their corresponding number.
+To select a file in such a directory,
+one first selects the page, then the file.
+.PP
+One can do more than select files and directories.
+By pressing upper-case letters and special characters
+one can select commands.
+There is a set of basic commands
+which allow one to create and delete files,
+invoke compilers, and perform other basic functions.
+One may also define new commands in terms of the basic commands
+and in terms of other programs,
+and in this way create a personalized environment.
+.PP
+Although the
+.VS
+program is not particularly large,
+it has a large number of features.
+The difficult part in implementing
+.VS
+was connecting these parts together so they would coexist
+in a harmonious fashion.
+I believe the parts do fit together in a clean manner.
+The companion document to this paper,
+"Vsh Code Organization,"
+covers the details of how
+.VS
+really works.
+.SH
+Visual Techniques.
+.PP
+The hallmark of visual software is careful control of output.
+Relevant information appears on the screen when needed,
+and does not scroll off the top before use.
+Because one can only put so much information on a screen,
+it is possible to jump between displays
+in an easy, natural manner.
+I believe
+.VS
+does satisfy these criterion.
+.PP
+The ease of jumping between displays was an important
+consideration during the design of
+.I Vsh.
+This emphasis makes
+.VS
+an ideal tool for browsing through the
+.UX
+file system,
+for one can move easily between the various directories and files.
+This convenience also extends to the operation of compilers.
+When one compiles a program,
+the compiler error messages are collected in a file and displayed.
+One then selects an error message from the display,
+and
+.VS
+determines the line and file the message references.
+An editor is then called,
+editing the file starting at the offending line.
+When the error is fixed,
+one can return to the error display to select another.
+This is a large improvement compared to
+just dumping the error messages on the terminal,
+because the risk of losing the errors off the top of the screen
+before use is eliminated.
+.PP
+A visual editor called
+.I Vi
+[2]
+has been well received in Berkeley
+where one finds little use of the standard editor.
+.I Vi
+is similar to
+.I Vsh;
+it automatically displays information (the file being edited)
+and is based on short, often single keypress, commands.
+A command processor, however, is not an editor.
+One does not find the dramatic improvement of
+.I Vi
+over the standard editor when one uses
+.I Vsh.
+Part of the problem is that
+.VS
+does not have the full power and flexibility of the standard
+.UX
+command processor.
+It seems clear that the use of single-keypress commands was
+just too restricting.
+A richer command language is necessary.
+.PP
+Historically,
+.VS
+was not the first visual command processor, but was inspired by
+The University of Illinois \s-2PLATO\s0 [3] system.
+With \s-2PLATO\s0, everything is visual.
+This orientation is in part a result of \s-2PLATO\s0's
+computer assisted instruction emphasis,
+and in part a reflection on the nature of the \s-2PLATO\s0 terminal
+which cannot scroll.
+My goal was to merge the best features of \s-2PLATO\s0 and
+.UX
+philosophies.
+A result of this synthesis is
+.I Vsh.
+.PP
+A major problem with \s-2PLATO\s0 is that there is no alternative
+to the visual, interactive way of doing things.
+If one wants to edit a block,
+one cannot specify the block by name.
+One must select it from the display.
+The
+.VS
+.B F
+command allows one to select a file by name,
+easing the problem somewhat.
+A major difficulty remains;
+one cannot easily consider writing a script of commands for
+.I Vsh.
+Such a script with its single-keypress commands would be unreadable.
+Clearly,
+one needs a traditional command processor for many applications.
+The issue is whether it is worthwhile
+to learn both modes of interaction.
+At Berkeley,
+people are willing to use both types of editors.
+Perhaps people will embrace two shells.
+.SH
+Further Work.
+.PP
+It would be interesting to see
+.VS
+go beyond its current restrictive status
+and implement a universally applicable visual shell.
+This shell would be the focus of a visually oriented programming system
+as available in Xerox's Interlisp [4] system.
+One can imagine countless features.
+One would be able to split the screen into sub-displays
+and run a separate process in each display.
+One would be able to recall previous displays.
+These features could support utilities such as split-screen editors.
+Communications between users would be facilitated.
+Messages from other users would appear in a special display,
+rather than just showing up at the bottom of the screen.
+One could allow others to monitor one's own displays.
+.PP
+Many questions need to be addressed in such a system,
+including the appearance of the user and operating system interfaces,
+and the appearance of the terminal.
+The use of multiple screens, cursors, touch panels,
+special keysets, and intelligent terminals are areas which
+ought to be addressed.
+What ever its drawbacks,
+.VS
+is a step in this direction.
+.SH
+Conclusion.
+.PP
+The major flaw of
+.VS
+is that it cannot act as a complete command processor, although
+I believe such a command processor can be built as part of
+a visually oriented programming system.
+Building such a system would be a major endeavor.
+For the time being,
+.I Vi
+and
+.VS
+can provide the flavor of such a system
+and inspire people to build it.
+.bp

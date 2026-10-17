@@ -1,0 +1,106 @@
+
+CONFIG(8)           UNIX Programmer's Manual            CONFIG(8)
+
+NAME
+     config - set up a kernel configuration and directory
+
+SYNOPSIS
+     config systemname
+
+DESCRIPTION
+     _C_o_n_f_i_g is used to set up a directory with all of the files
+     needed to compile a kernel for a given system.  It is used
+     in the directory /usr/src/sys/conf, where the prototype
+     files for system configutation are kept.  Its single argu-
+     ment is the name of a configuration file that describes the
+     computer for which the kernel is to be built.  It reads this
+     file _s_y_s_t_e_m_n_a_m_e, makes a directory ../_s_y_s_t_e_m_n_a_m_e where the
+     system will be compiled, and copies into it the necessary
+     header files, scripts and local sources.  It edits each of
+     them according to the information in the configuration file.
+
+     The configuration file has a simple format.  Each line of
+     the file is either a comment line, beginning with a '#', or
+     is a data line.  In this case, it has three fields separated
+     by white space.  The first field is the name of a parameter,
+     the second is its value, and the rest of the line is a com-
+     ment.  Because the fields are delimited by any white space,
+     the value field may not contain blanks.  There are three
+     types of data in the file:  general system description,
+     filesystem configuration, and the numbers of peripheral dev-
+     ices.  All of the fields in the first two sections are
+     required.  An example of a configuration file is:
+
+          #  Machine configuration file.
+          #  Format:
+          #    name       value             comments
+          #
+          #  General parameters
+          pdp11           70
+          ident           UNKNOWN
+          maxusers        25
+          bootdev         hp
+          timezone        8                 # Pacific
+          dst             1
+          #
+          #  Filesystem configuration
+          rootdev         makedev(6,0)      # xp0a
+          swapdev         makedev(6,1)      # xp0b
+          dumpdev         NODEV
+          pipedev         makedev(6,0)      # xp0a
+          swplo           0
+          nswap           3200
+          dumplo          0
+          dumproutine     nodev
+          #
+
+Printed 8/2/83                                                  1
+
+CONFIG(8)           UNIX Programmer's Manual            CONFIG(8)
+
+          #  Device configuration
+          NXP             4
+          NXP_CONTROLLER  1
+          NRL             1
+          NHT             1
+          NDZ             1                 # in units of boards (8 each)
+          NDH             2                 # in units of boards (16 each)
+          NDM             1                 # in units of boards (16 each)
+          LOWDM           16                # LOWDM is in units of lines
+          NLP             1
+
+     Most of the parameters have the obvious meanings.  Ident is
+     the name of the machine, the same name used for the confi-
+     guration file.  It is normally in capital letters, and will
+     be placed in a definition in whoami.h so that local options
+     can be conditional on it.  It is also used in the definition
+     of MYNAME, this time as a string in lower case; this defini-
+     tion is used by _u_u_c_p(1C).  Note that the clock and the con-
+     sole are not listed; however, if additional KL-11/DL-11 dev-
+     ices are included, NKL should include the console.  The
+     default for NKL is 1, for all other devices is 0.
+
+     After a directory is set up by _c_o_n_f_i_g, it is wise to look
+     through the header files and the Makefile.  Local options
+     and tuning will probably be needed in localopts.h, param.c
+     and possibly param.h, and there are options in many of the
+     individual device header files.
+
+BUGS
+     _C_o_n_f_i_g is a simple shell script that uses _a_w_k(1) as a
+     parser; thus the input format is rigid and errors are not
+     handled nicely.
+
+     Ideally, the overlay loading rules for overlaid kernels
+     should be determined by _c_o_n_f_i_g.
+
+FILES
+     /usr/src/sys/conf   directory of prototype files
+
+SEE ALSO
+     dtab(5), autoconfig(8)
+     M. J. Karels and C. F. Smith, ``Installing and Operating
+     2.9BSD''
+
+Printed 8/2/83                                                  2
+

@@ -1,0 +1,124 @@
+#
+ed - ex.h << '-*-END-*-'
+7c
+ * Ex version 2.4
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+553c
+				printf("Version 2.4, May 19, 1979");
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+535c
+		if (destcol - outcol > 4 && i < COLUMNS && (BC || BS)) {
+.
+w
+q
+'-*-END-*-'
+ed - ex_voperate.c << '-*-END-*-'
+783c
+
+.
+781c
+	if (op != vchange && op != vdelete && wcursor > linebuf)
+		wcursor--;
+.
+776,779c
+		if (!lnext())
+			return;
+.
+762,774c
+			break;
+.
+757,760c
+	if (!lnext())
+		return;
+	while (blank())
+		if (!lnext())
+			return;
+	which = wordch(wcursor);
+	while (wordof(which, wcursor)) {
+		if (wcursor[1] == 0) {
+.
+753d
+751c
+eend(op)
+.
+744a
+	return (1);
+.
+742c
+		if (wcursor < linebuf || !wordof(which, wcursor))
+.
+734,736c
+		if (!lnext())
+			return (0);
+		while (blank())
+			if (!lnext())
+				return (0);
+.
+729c
+			if (wcursor == iwc && iwdot == wdot && *iwc)
+.
+722,723c
+		while (wordof(which, wcursor)) {
+			if (cnt == 1 && op != vmove && wcursor[1] == 0) {
+				wcursor++;
+				break;
+			}
+			if (!lnext())
+				return (0);
+			if (wcursor == linebuf)
+				break;
+		}
+.
+717a
+	register line *iwdot = wdot;
+.
+236a
+		vmoving = 0;
+.
+174,183c
+		forbid(lfind(3, cnt - 1, opf, 0) < 0);
+.
+162c
+	 * E	    to end of following blank/nonblank word
+.
+152,157c
+		forbid(lfind(2, cnt, opf, 0) < 0);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops3.c << '-*-END-*-'
+62c
+	else if (!value(LISP)) {
+.
+60a
+	if (pastatom >= 2) {
+		while (cnt > 0 && word(f, cnt))
+			cnt--;
+		if (pastatom == 3)
+			eend(f);
+		if (dot == wdot) {
+			wdot = 0;
+			if (cursor == wcursor)
+				rc = -1;
+		}
+	}
+.
+w
+q
+'-*-END-*-'
+ed - ex_vput.c << '-*-END-*-'
+667a
+	endim();
+.
+w
+q
+'-*-END-*-'

@@ -1,0 +1,27 @@
+.TH INTRLVE 4
+.UC
+.SH NAME
+intrlve \- file system interleaving
+.SH DESCRIPTION
+File system interleaving is achieved by encoding information
+in the minor device numbers of the disks across which the
+interleaving is to take place.
+.PP
+The octal representation of the minor device number is encoded
+\fIidp\fP, where \fIi\fP is an interleave flag, \fId\fP is a physical
+drive number, and \fIp\fP is a partition (subsection) within
+a physical unit.  If \fIi\fP is 0, no interleaving takes place.
+If \fIi\fP is 1, the minor device consists of the specified
+partition on drives number 0 through \fId-1\fP and successively
+numbered blocks are distributed across the drives in rotation.
+.SH SEE ALSO
+dvhp(4), hk(4), hp(4), rm(4), rp(4), xp(4)
+.SH DIAGNOSTICS
+None.
+.SH BUGS
+Raw device drivers don't work on interleaved devices.  Thus any
+file system maintainance program must refer to disk files by
+their block (non-raw) names.  Some programs (notably
+.IR fsck (8))
+automatically translate a block device name to its raw counterpart
+and will fail miserably.

@@ -1,0 +1,40 @@
+
+SETJMP(3)           UNIX Programmer's Manual            SETJMP(3)
+
+NAME
+     setjmp, longjmp - non-local goto
+
+SYNOPSIS
+     #include <setjmp.h>
+
+     setjmp(env)
+     jmp_buf env;
+
+     longjmp(env, val)
+     jmp_buf env;
+
+DESCRIPTION
+     These routines are useful for dealing with errors and inter-
+     rupts encountered in a low-level subroutine of a program.
+
+     _S_e_t_j_m_p saves its stack environment in _e_n_v for later use by
+     _l_o_n_g_j_m_p. It returns value 0.
+
+     _L_o_n_g_j_m_p restores the environment saved by the last call of
+     _s_e_t_j_m_p.  It then returns in such a way that execution con-
+     tinues as if the call of _s_e_t_j_m_p had just returned the value
+     _v_a_l to the function that invoked _s_e_t_j_m_p, which must not
+     itself have returned in the interim.  All accessible data
+     have values as of the time _l_o_n_g_j_m_p was called.
+
+SEE ALSO
+     signal(2)
+
+BUGS
+     The values of the register variables are not saved.  Thus,
+     the function that calls _s_e_t_j_m_p should not use register
+     declarations for variables that might be accessed after the
+     _l_o_n_g_j_m_p.
+
+Printed 7/22/83                                                 1
+

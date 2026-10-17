@@ -1,0 +1,80 @@
+
+LOGIN(1)            UNIX Programmer's Manual             LOGIN(1)
+
+NAME
+     login - sign on
+
+SYNTAX
+     login [ username ]
+     login [ username.groupname ]
+
+DESCRIPTION
+     The _l_o_g_i_n command is used when a user initially signs on, or
+     it may be used at any time to change from one user to
+     another.  The latter case is summarized above and described
+     below.
+
+     If _l_o_g_i_n is invoked without an argument, it asks for a user
+     name, and, if appropriate, a password.  Echoing is turned
+     off (if possible) during the typing of the password, so it
+     will not appear on the written record of the session.
+
+     After a successful _l_o_g_i_n, accounting files are updated and
+     the user is informed of the time and terminal he last logged
+     in on.  The message of the day is displayed, followed by any
+     ._b_r_o_a_d_c_a_s_t files in the directories leading to the user's
+     home directory.  If there is a ._r_e_m_i_n_d_e_r file in the user's
+     home directory, it will be printed.  Finally, _l_o_g_i_n notifies
+     the user if there is mail in his mailbox.  _l_o_g_i_n initializes
+     the user and group IDs and the working directory, and sets
+     the HOME, PATH, TERM, SHELL and USER environment variables.
+     It then executes a command interpreter (usually _s_h(1) or
+     _c_s_h(1)), according to specifications found in a password
+     file.  If the command interpreter is /_b_i_n/_c_s_h, the new line
+     discipline is entered, otherwise the terminal stop charac-
+     ters are set to be undefined (see _s_t_t_y(1).  Argument 0 of
+     the command interpreter starts with a `-'.
+
+     _L_o_g_i_n is recognized by _s_h(1) and _c_s_h(1) and executed
+     directly (without forking).
+
+     During special session (see _i_n_i_t(8)), _l_o_g_i_n does not allow
+     any logins of normal users.  Also, if the file /_e_t_c/_n_o_l_o_g_i_n
+     exists, that message is displayed and the login is not
+     allowed if the user is not superuser.
+
+FILES
+     /etc/utmp           accounting
+     /usr/adm/wtmp       accounting
+     /usr/spool/mail/*   mail
+     /etc/motd           message-of-the-day
+     /etc/nologin        message inhibiting new logins
+     /etc/passwd         password file
+
+SEE ALSO
+     Mail(1), mail(1), newgrp(1), passwd(1), environ(5),
+
+Printed 7/25/83                                                 1
+
+LOGIN(1)            UNIX Programmer's Manual             LOGIN(1)
+
+     passwd(5), getty(8), init(8), shutdown(8)
+
+DIAGNOSTICS
+     `Login incorrect', if the name or the password is bad, or if
+     a group was specified and the user is not a member of the
+     named group.
+     `No shell', `cannot open password file', `no directory':
+     consult a programming counselor.
+     `Sorry. You cannot login at this time', if UNIX is running
+     in special session.
+
+BUGS
+     Changes the login name of a user when invoked from a shell.
+     Many systems do not allow its use in this way, for that rea-
+     son.
+     It is not possible to use a login name with an embedded `.'
+     if the `name.group' syntax is allowed.
+
+Printed 7/25/83                                                 2
+

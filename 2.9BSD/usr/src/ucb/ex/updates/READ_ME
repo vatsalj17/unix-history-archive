@@ -1,0 +1,63 @@
+This directory contains shell scripts and news entries to update the editor
+from whatever version you have to the current version.  Each shell script
+is the output from a diffdir -e.  They should be run with csh, e.g.
+	csh 2.9-2.10
+to apply one update.  If you are running, say, 2.8 and you want 2.10
+you should run 2.8-2.9 and then 2.9-2.10.
+
+Complete sources to 2.10 and 3.3 are provided in ../ex2.10 and ../ex3.3.
+If problems arise use these sources.  The advantage to a diffdir is that
+it's shorter and quicker to send via uucp or whatever at 300 baud.
+The diffdirs try not to mung your makefiles, since each flavor of unix
+tends to need a separate makefile.
+
+The 2.* versions fit on an 11/70,  the 3.* versions need a vax or an 11/70
+with overlay software.
+2.9 is slightly bigger than 2.10, 2.10 will fit on a v7 system with LISPCODE
+and CHDIR turned on, 2.9 has to have LISPCODE turned off.
+
+Notes on which version to run how on different flavors of UNIX:
+
+11/23, 11/34 and 11/40:  not supported.  Version 1.1 worked on them, but was
+	written for v6 and probably would need quite a bit of work for v7.
+	It is claimed that the overlay software in ../overlay will make it
+	possible to run vi on such a processor, but it has not been tested
+	recently and you're on your own here.
+
+v6:	Use 2.10 with the libretro package.
+	Be sure to fix the include file sgtty.h
+	in the libretro package by taking out CBREAK.
+	2.10 tries to use it if it is defined.
+	The upgrade directory contains such a fixed libretro.
+	NOTE: the standard v6 cc cannot recompile the editor.
+	You will need a v7 or a typesetter C compiler, or else
+	must use the binaries supplied.
+
+PWB 1.2: Treat this just like v6.  This goes for 1.0, 1.1, etc.
+	The PWB 1.2 C compiler is the same as the typesetter C
+	compiler, so there should be no trouble recompiling.
+
+v7 PDP-11: Use 2.10 with makefile.v7.  You will have to make your cc
+	have a larger symbol table to get ex_io to compile with cc,
+	otherwise you can use pcc.  If you use pcc don't expect to get
+	LISPCODE to fit.  See makefile.v7 for more details on this.
+
+PWB 2.0: Treat this just like v7, but add -DUSG to the makefile's CFLAGS.
+	The pwb system is missing CBREAK and TIOCSETN, so you won't be
+	able to type ahead or rubout typeout in visual mode as well.
+	The last version of ex to be tested on a PWB system was 2.8,
+	as of this writing.
+
+UNIX/32V: Use 3.3 with makefile.novm.  You can use makefile.vm if you
+	prefer, this will make a much (15K) bigger editor and compile
+	the error messages incore instead of making a strings file.
+	3.4 will probably use features of VM/UNIX that will prevent
+	this flag being turned on on non-vm systems.
+
+VM/UNIX: Use 3.3 with makefile.vm.
+
+UNIX/TS: Ex hasn't been gotten running yet on UNIX/TS to my knowledge.
+	Something about : not erasing what's on the echo line.
+	Anyway, use 3.3 if on a vax and 2.10 if on an 11.  Since UNIX/TS
+	is a USG product it will probably be necessary to use -DUSG.
+	The CBREAK and TIOCSETN features are missing here too.  Sigh.

@@ -1,0 +1,99 @@
+.TH ACCESS 2 
+.UC
+.SH NAME
+access \- determine accessibility of file
+.SH SYNOPSIS
+.B #include <sys/types.h>
+.br
+.B #include <sys/file.h>
+.sp
+.B access(name, mode)
+.br
+.B char *name;
+.SH DESCRIPTION
+.I Access
+checks the given
+file
+.I name
+for accessibility according to
+.I mode,
+which is FACCESS_READ (read), FACCESS_WRITE (write), or
+FACCESS_EXECUTE (execute) or a combination thereof.
+Specifying FACCESS_EXISTS
+tests whether the directories leading to the file can be
+searched and the file exists.
+.PP
+An appropriate error indication is returned if 
+.I name
+cannot be found or if any
+of the desired access modes would not be granted.
+On disallowed accesses
+\-1 is returned and the error code is in
+.IR errno .
+Zero is returned from successful tests.
+.PP
+The user and group IDs with respect to which permission is checked
+are the real UID and GID of the process, so this call is
+useful to set-UID programs.
+.PP
+Notice that it is only access bits that are checked.
+A directory may be announced as writable by
+.I access,
+but an attempt to open it for writing will fail
+(although files may be created there);
+a file may look executable, but
+.I exec
+will fail unless it is in proper format.
+.SH ERRORS
+.I Access
+to the file is denied if one or more of the following is true:
+.TP 20
+[ENOTDIR]
+A component of the path prefix is not a directory.
+.TP 20
+[ENOENT]
+Read, write, or execute (search) permission is requested for a null
+path name or the named file does not exist.
+.TP 20
+[EINVAL]
+The
+.I name
+argument contained a non-ASCII byte.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.TP 20
+[EROFS]
+Write access is requested for a file on a read-only file system.
+.TP 20
+[ETXTBSY]
+Write access is requested for a pure procedure (shared text) file
+that is being executed.
+.TP 20
+[EACCES]
+Permission bits of the file mode do not permit the requested access; or
+search permission is denied on a component of the path prefix.  The owner
+of a file has permission checked with respect to the ``owner'' read, write,
+and execute mode bits.  Members of the file's group other than the owner
+have permission checked with respect to the ``group'' mode bits, and all
+others have permissions checked with respect to the ``other'' mode bits.
+.TP 20
+[EFAULT]
+.I Name
+points outside the process's allocated address space.
+.SH BUGS
+The test for execute permission may be successful even though
+.I name
+is a shared text file which is
+currently open for reading and therefore not executable.
+The super-user is always granted execute permission even though 1) execute
+permission is meaningful only for directories and regular files, and 2)
+.I exec
+requires that at least one execute mode bit be set for a regular file
+to be executable.
+.SH SEE ALSO
+chmod(2), execve(2), stat(2)
+.SH ASSEMBLER
+(access = 33.)
+.br
+.B sys access; name; mode

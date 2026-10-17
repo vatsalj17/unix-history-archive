@@ -1,0 +1,49 @@
+
+FT(4)               UNIX Programmer's Manual                FT(4)
+
+NAME
+     ft - fake interval timer
+
+DESCRIPTION
+     _F_t is a pseudo-device that makes it possible to simulate an
+     _a_l_a_r_m(2) call with better than 1 second resolution.
+
+     To use the interval timer, open one of the files /_d_e_v/_f_t?.
+     This opens the interval timer for exclusive use; an attempt
+     by another process to open the timer will fail with error
+     indication EBUSY in _e_r_r_n_o - see _i_n_t_r_o(2).  The resulting
+     file descriptor can be the argument of an _i_o_c_t_l(2) call:
+
+       #include <sgtty.h>
+
+       struct   requestbuf {
+           short     time;
+           short     signo;
+       } request;
+
+       ioctl(fildes, FTIOCSET, (struct sgttyb *) &request);
+
+     After _t_i_m_e clock cycles (fiftieths or sixtieths of a
+     second), a signal of type _s_i_g_n_o will be sent to the request-
+     ing process.  The requested _t_i_m_e may not exceed 60 seconds
+     (if longer delays are required the real _a_l_a_r_m(2) call should
+     be used).  The _i_o_c_t_l(2) call
+
+       ioctl(fildes, FTIOCCANCEL, (struct sgttyb *) NULL);
+
+     cancels any outstanding interrupt request.
+
+FILES
+     /dev/ft?
+
+SEE ALSO
+     alarm(2), ioctl(2)
+
+BUGS
+     An FTIOCCANCEL request prevents the signal from being sent
+     when the interval has expired, but does not actually cancel
+     the timeout request.  It cannot be followed by a new
+     FTIOCSET request until the original delay has expired.
+
+Printed 7/31/83                                                 1
+

@@ -1,0 +1,75 @@
+
+ML(4)               UNIX Programmer's Manual                ML(4)
+
+NAME
+     ml - RH-11, RH-70/ML-11 solid state disk
+
+DESCRIPTION
+     The standard device names begin with ``ml'' followed by the
+     drive number.  The character ? stands here for a drive
+     number in the range 0-7.  The size of each ML-11 unit
+     depends on the number of array modules installed.  There are
+     512 512-byte blocks per array module, for a maximum size of
+     8192 blocks per unit.  The ML-11 may be used for the swap
+     device or perhaps mounted on /tmp.
+
+     The ML-11 has switch-selectable transfer rates of 0.25Mb,
+     0.5Mb, 1.0Mb, and 2.0Mb per second.  The following transfer
+     rate restrictions apply:
+
+          rate       permissible PDP-11 CPUs
+          0.25 Mb    all
+          0.5  Mb    all
+          1.0  Mb    PDP-11/70 with RH-70 only
+          2.0  Mb    none
+
+     The block files access the disk via the system's normal
+     buffering mechanism and may be read and written without
+     regard to physical disk records.  There is also a `raw'
+     interface which provides for direct transmission between the
+     disk and the user's read or write buffer.  A single read or
+     write call results in exactly one I/O operation and there-
+     fore raw I/O is considerably more efficient when many words
+     are transmitted.  The names of the raw files conventionally
+     begin with an extra `r.'
+
+     In raw I/O counts should be a multiple of 512 bytes (a disk
+     sector).  Likewise _l_s_e_e_k(2) calls should specify a multiple
+     of 512 bytes.
+
+FILES
+     /dev/ml[0-7]        block files
+     /dev/rml[0-7]       raw files
+
+SEE ALSO
+     dvhp(4), hk(4), hp(4), hs(4), rf(4), rk(4), rl(4), rm(4),
+     rp(4), rx2(4), xp(4)
+
+DIAGNOSTICS
+     ml%d: hard error bn %d cs2=%b er=%b.  An unrecoverable error
+     occured during transfer of the specified sector of the
+     specified disk partition.  The contents of the two error
+     registers are also printed in octal and symbolically with
+     bits decoded.  The error was unrecoverable.
+
+Printed 5/17/83                                                 1
+
+ML(4)               UNIX Programmer's Manual                ML(4)
+
+     ML11 xfer rate error.  The selected transfer rate for the
+     ML11 did not conform to the restrictions above.
+
+BUGS
+     In raw I/O _r_e_a_d and _w_r_i_t_e(2) truncate file offsets to 512-
+     byte block boundaries, and _w_r_i_t_e scribbles on the tail of
+     incomplete blocks.  Thus, in programs that are likely to
+     access raw devices, _r_e_a_d, _w_r_i_t_e and _l_s_e_e_k(2) should always
+     deal in 512-byte multiples.
+
+     DEC-standard error logging should be supported.
+
+     The _m_l disk driver requires that the ML-11 be installed on a
+     separate RH-11 or RH-70 MASSBUS disk controller.
+
+Printed 5/17/83                                                 2
+

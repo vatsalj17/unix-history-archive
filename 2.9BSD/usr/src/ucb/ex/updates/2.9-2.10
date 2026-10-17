@@ -1,0 +1,325 @@
+#
+ed - ex_cmds.c << '-*-END-*-'
+646a
+				}
+.
+645c
+				else {
+					if (dot == dol)
+						error("At EOF|At end-of-file");
+.
+639,640d
+609a
+/* xit */
+		case 'x':
+			tail("xit");
+			if (!chng)
+				goto quit;
+			c = 'q';
+			goto wq;
+
+.
+595a
+wq:
+.
+574c
+				printf("Version 2.10, February 2, 1980");
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds2.c << '-*-END-*-'
+480a
+		vclrech(0);
+.
+477a
+#endif
+.
+471a
+#ifdef EATQS
+.
+458,461c
+			/*
+			 * We don't know what a shell command may have left on
+			 * the screen, so we move the cursor to the right place
+			 * and then put out a newline.  But this makes an extra
+			 * blank line most of the time so we only do it for :sh
+			 * since the prompt gets left on the screen.
+			 *
+			 * BUG: :!echo longer than current line \\c
+			 * will screw it up, but be reasonable!
+			 */
+			if (state == CRTOPEN) {
+				termreset();
+				vgoto(WECHO, 0);
+			}
+			if (!ask) {
+				putch('\r');
+				putch('\n');
+			}
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmdsub.c << '-*-END-*-'
+548,550c
+		oglobp = globp;
+		globp = cmdbuf;
+		d = peekc; ungetchar(0);
+		if (samef)
+			markpr(dot);
+		value(MAGIC) = 0;	/* force nomagic tags */
+		commands(1, 1);
+		peekc = d;
+		globp = oglobp;
+		value(MAGIC) = omagic;
+		return;
+	}
+.
+545,546c
+			samef = 0;
+.
+540,541d
+538c
+			strcpy(cmdbuf2, "e! ");
+			strcat(cmdbuf2, filebuf);
+			globp = cmdbuf2;
+.
+522,535c
+			if (!quick) {
+				ckaw();
+				if (chng && dol > zero)
+					error("No write@since last change (:tag! overrides)");
+.
+518,520c
+		}
+		strcpy(cmdbuf, cp);
+		if (strcmp(filebuf, savedfile) || !edited) {
+			char cmdbuf2[sizeof filebuf + 10];
+.
+515,516c
+				ncols['t'-'a'] = cursor;
+.
+496,513c
+			serror("%s: Bad tags file entry", lasttag);
+		lp = filebuf;
+		while (*cp && *cp != ' ' && *cp != '\t') {
+			if (lp < &filebuf[sizeof filebuf - 2])
+				*lp++ = *cp;
+			cp++;
+		}
+		*lp++ = 0;
+		if (*cp == 0)
+			goto badtags;
+		if (dol != zero) {
+			/*
+			 * Save current position in 't for ^^ in visual.
+			 */
+			names['t'-'a'] = *dot &~ 01;
+			if (inopen) {
+				extern char *ncols['z'-'a'+1];
+				extern char *cursor;
+.
+487,494c
+		while (*cp && *lp == *cp)
+			cp++, lp++;
+		if (*lp || !iswhite(*cp))
+			continue;
+		close(io);
+		while (*cp && iswhite(*cp))
+			cp++;
+		if (!*cp)
+.
+478,485c
+	io = open("tags", 0);
+	if (io < 0)
+		error("No tags file");
+	while (getfile() == 0) {
+		register char *cp = linebuf;
+		register char *lp = lasttag;
+		char *oglobp;
+.
+457d
+452,453d
+w
+q
+'-*-END-*-'
+ed - ex_io.c << '-*-END-*-'
+440a
+		if (savedfile[0] == 0)
+			error("No file|No current filename");
+.
+340a
+#endif
+.
+302a
+#ifdef ROOMTOBURN
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+568c
+		if (insmode && ND)
+			tputs(ND, 0, plodput);
+		else
+			plodput(i);
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.c << '-*-END-*-'
+248,249c
+			if (!(globp && globp[0])) {
+				ungetchar(c);
+				goto endrhs;
+			}
+.
+83d
+75a
+	saveall();
+.
+w
+q
+'-*-END-*-'
+ed - ex_set.c << '-*-END-*-'
+70c
+				error("Digits required@after =");
+.
+42a
+		/* Implement w300, w1200, and w9600 specially */
+		if (eq(cp, "w300")) {
+			if (ospeed >= B1200) {
+dontset:
+				ignore(getchar());	/* = */
+				ignore(getnum());	/* value */
+				continue;
+			}
+			cp = "window";
+		} else if (eq(cp, "w1200")) {
+			if (ospeed < B1200 || ospeed >= B2400)
+				goto dontset;
+			cp = "window";
+		} else if (eq(cp, "w9600")) {
+			if (ospeed < B2400)
+				goto dontset;
+			cp = "window";
+		}
+.
+29c
+		} while (isalnum(peekchar()));
+.
+15a
+	extern short ospeed;
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.c << '-*-END-*-'
+75c
+	CP(ttytype, longname(ltcbuf, type));
+.
+60c
+		l = 17;
+.
+58c
+		l = 9;	/* including the message line at the bottom */
+.
+49c
+		CP(ltcbuf, "xx|dumb:");
+.
+0a
+
+.
+w
+q
+'-*-END-*-'
+ed - ex_tune.h << '-*-END-*-'
+13,16c
+#define	EXRECOVER	libpath(ex2.10recover)
+#define	EXPRESERVE	libpath(ex2.10preserve)
+#define	EXSTRINGS	libpath(ex2.10strings)
+.
+w
+q
+'-*-END-*-'
+ed - ex_v.c << '-*-END-*-'
+325c
+		vtube[i] = (char *) 0;
+.
+321c
+		vtube[i] = (char *) 0;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+162a
+	case CTRL(v):
+	case CTRL(q):
+		c = getkey();
+		return (c);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vmain.c << '-*-END-*-'
+663c
+			if (value(AUTOWRITE))
+				globp = "e! #";
+			else
+				globp = "e #";
+.
+531a
+		 *		ZZ: like :x
+		 */
+		case 'Z':
+			forbid(getkey() != 'Z');
+			oglobp = globp;
+			globp = "x";
+			vclrech(0);
+			goto gogo;
+
+		/*
+.
+521a
+#endif
+.
+505a
+#ifdef notdef
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops2.c << '-*-END-*-'
+679c
+					vputchar(' ');
+.
+w
+q
+'-*-END-*-'
+ed - ex_vput.c << '-*-END-*-'
+1034c
+		pofix();
+.
+1032c
+	/* Fix problem of >79 chars on echo line. */
+.
+770,772c
+			do {
+				if (*up)
+					vputchar(*up++);
+				else
+					break;
+			} while (--i);
+.
+w
+q
+'-*-END-*-'
+ed - makefile << '-*-END-*-'
+1c
+VERSION=2.10
+.
+w
+q
+'-*-END-*-'

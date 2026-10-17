@@ -1,0 +1,1090 @@
+#
+ed - ex.c << '-*-END-*-'
+444a
+# ifdef TRACE
+	if (trace)
+		fclose(trace);
+# endif
+.
+w
+q
+'-*-END-*-'
+ed - ex.h << '-*-END-*-'
+220,222c
+char	direct[ONMSZ];		/* Temp file goes here */
+char	shell[ONMSZ];		/* Copied to be settable */
+char	ttytype[ONMSZ];		/* A long and pretty name */
+.
+197a
+			/*
+			 * FIXUNDO: do we want to mung undo vars?
+			 * Usually yes unless in a macro or global.
+			 */
+#define FIXUNDO		(inopen >= 0 && (inopen || !inglobal))
+.
+115c
+# endif
+.
+113c
+# else
+.
+111c
+# ifdef	VMUNIX
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+735,736c
+				vcontin(0);
+.
+731c
+				pofix();
+.
+718a
+			if (inglobal == 2)
+				pofix();
+.
+691a
+				}
+.
+690c
+				else {
+					if (dot == dol)
+						error("At EOF|At end-of-file");
+.
+684,685d
+636a
+/* xit */
+		case 'x':
+			tail("xit");
+			if (!chng)
+				goto quit;
+			c = 'q';
+			goto wq;
+
+.
+623a
+				pofix();
+.
+622a
+wq:
+.
+601c
+				printf("Version 3.3, February 2, 1980");
+.
+529d
+w
+q
+'-*-END-*-'
+ed - ex_cmds2.c << '-*-END-*-'
+485,486c
+		vclrech(1);
+		if (ask && Peekkey != ':') {
+			putpad(TI);
+			putpad(VS);
+			putpad(KS);
+		}
+.
+483a
+			}
+.
+482c
+#endif
+			if(getkey() == ':') {
+				/* Ugh. Extra newlines, but no other way */
+				putch('\n');
+				outline = WECHO;
+.
+475a
+#ifdef EATQS
+.
+462,465c
+			/*
+			 * We don't know what a shell command may have left on
+			 * the screen, so we move the cursor to the right place
+			 * and then put out a newline.  But this makes an extra
+			 * blank line most of the time so we only do it for :sh
+			 * since the prompt gets left on the screen.
+			 *
+			 * BUG: :!echo longer than current line \\c
+			 * will screw it up, but be reasonable!
+			 */
+			if (state == CRTOPEN) {
+				termreset();
+				vgoto(WECHO, 0);
+			}
+			if (!ask) {
+				putch('\r');
+				putch('\n');
+			}
+.
+452c
+ * Continue after a : command from open/visual.
+.
+176,177d
+165a
+		if (str)
+			noonl();
+.
+162,163d
+160a
+	inglobal = 0;
+	globp = vglobp = vmacp = 0;
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmdsub.c << '-*-END-*-'
+1110c
+		mp[slot].descr = src;
+.
+1106c
+		mp[slot].descr = msnext;
+.
+1102c
+	mp[slot].mapto = msnext;
+.
+1099c
+	mp[slot].cap = msnext;
+.
+1087c
+	if (zer >= 0 && mp[slot].mapto == 0)
+.
+1077,1079c
+		if (mp[slot].cap) {
+			mp[slot].cap = NOSTR;
+			mp[slot].descr = NOSTR;
+.
+1066,1068c
+	for (slot=0; mp[slot].mapto; slot++) {
+		if (mp[slot].cap) {
+			if (eq(src, mp[slot].cap))
+.
+1062a
+	else if (dest) {
+		/* check for tail recursion in input mode: fussier */
+		if (eq(src, dest+strlen(dest)-strlen(src)))
+			error("No tail recursion");
+	}
+	/*
+	 * If the src were null it would cause the dest to
+	 * be mapped always forever. This is not good.
+	 */
+	if (src == NOSTR || src[0] == 0)
+		error("Missing lhs");
+.
+1056,1061d
+1042,1043c
+		 * but this makes mapping involving escapes that
+		 * is reasonable mess up.
+.
+1037c
+	if (dest && mp==arrows) {
+.
+1033a
+	register struct maps *mp;
+.
+1032c
+addmac(src,dest,dname,mp)
+.
+1030c
+ * using NOSTR for dest.  Dname is what to show in listings.  mp is
+ * the structure to affect (arrows, etc).
+.
+1023c
+	addmac(lhs,rhs,dname,mp);
+.
+983c
+				addmac(lhs, NOSTR, NOSTR, mp);
+.
+963c
+				lprintf("%s", mp[i].mapto);
+.
+961c
+				lprintf("%s", mp[i].cap);
+.
+957,959c
+		for (i=0; mp[i].mapto; i++)
+			if (mp[i].cap) {
+				lprintf("%s", mp[i].descr);
+.
+948a
+	mp = exclam() ? immacs : arrows;
+.
+947a
+	struct maps *mp;	/* the map structure we are working on */
+.
+897a
+#ifdef TRACE
+	if (trace)
+		vudump("after undo");
+#endif
+.
+893,894c
+		} else
+			undkind = UNDCHANGE;
+.
+789a
+#ifdef TRACE
+	if (trace)
+		vudump("before undo");
+#endif
+.
+568a
+	if (!FIXUNDO)
+		error("Can't yank inside global/macro");
+.
+559c
+	else
+		serror("%s: No such tag@in tags file", lasttag);
+.
+555,557c
+		}	/* end of "for each tag in file" */
+
+		/*
+		 * No such tag in this file.  Close it and try the next.
+		 */
+#ifdef VMUNIX
+		fclose(iof);
+#else
+		close(io);
+#endif
+	}	/* end of "for each file in path" */
+	if (tfcount <= 0)
+.
+548a
+			/*
+			 * BUG: if it isn't found (user edited header
+			 * line) we get left in nomagic mode.
+			 */
+.
+543a
+
+			/*
+			 * Look for pattern in the current file.
+			 */
+.
+533,537d
+522a
+				/* Different file.  Do autowrite & get it. */
+.
+504a
+
+.
+492a
+#endif
+			/* name of file */
+.
+491a
+			}
+
+			/*
+			 * We found the tag.  Decode the line in the file.
+			 */
+#ifdef VMUNIX
+			fclose(iof);
+#else
+.
+490c
+			if (*lp || !iswhite(*cp)) {
+#ifdef VMUNIX
+				if (*lp > *cp)
+					bot = mid + 1;
+				else
+					top = mid - 1;
+#endif
+				/* Not this tag.  Try the next */
+.
+487a
+#ifdef VMUNIX
+			mid = (top + bot) / 2;
+			fseek(iof, mid, 0);
+			if (mid > 0)	/* to get first tag in file to work */
+				fgets(linebuf, sizeof linebuf, iof);	/* scan to next \n */
+			fgets(linebuf, sizeof linebuf, iof);	/* get a line */
+			linebuf[strlen(linebuf)-1] = 0;	/* was '\n' */
+#endif
+.
+483a
+#endif
+			/* loop for each tags file entry */
+.
+479,482c
+
+	/*
+	 * Loop once for each file in tags "path".
+	 */
+	CP(tagfbuf, svalue(TAGS));
+	fne = tagfbuf - 1;
+	while (fne) {
+		fn = ++fne;
+		while (*fne && *fne != ' ')
+			fne++;
+		if (*fne == 0)
+			fne = 0;	/* done, quit after this time */
+		else
+			*fne = 0;	/* null terminate filename */
+#ifdef VMUNIX
+		iof = fopen(fn, "r");
+		if (iof == NULL)
+			continue;
+		tfcount++;
+		setbuf(iof, iofbuf);
+		fstat(fileno(iof), &sbuf);
+		top = sbuf.st_size;
+		if (top == 0L || iof == NULL)
+			top = -1L;
+		bot = 0L;
+		while (top >= bot) {
+#else
+		/*
+		 * Avoid stdio and scan tag file linearly.
+		 */
+		io = open(fn, 0);
+		if (io<0)
+			continue;
+.
+454,456c
+	int tfcount = 0;
+	int omagic;
+	char *fn, *fne;
+#ifdef VMUNIX
+	/*
+	 * We have lots of room so we bring in stdio and do
+	 * a binary search on the tags file.
+	 */
+# undef EOF
+# include <stdio.h>
+# undef getchar
+# undef putchar
+	FILE *iof;
+	char iofbuf[BUFSIZ];
+	long mid;	/* assumed byte offset */
+	long top, bot;	/* length of tag file */
+	struct stat sbuf;
+#endif
+.
+451a
+	char tagfbuf[128];
+.
+400c
+	if(FIXUNDO)
+.
+335a
+	if (!FIXUNDO)
+		error("Cannot put inside global/macro");
+.
+297,306c
+		if(FIXUNDO) {
+			if (cflag) {
+				undap1 = addrt + 1;
+				undap2 = undap1 + lines;
+				deletenone();
+			} else {
+				undkind = UNDMOVE;
+				undap1 = addr1;
+				undap2 = addr2;
+				unddel = addrt;
+				squish();
+			}
+.
+175,182c
+	if(FIXUNDO) {
+		if (inopen == -1)
+			return;
+		if (a1 < a2 && a2 < a3)
+			do
+				*a1++ = *a2++;
+			while (a2 < a3);
+		truedol -= unddol - dol;
+		unddol = dol;
+	}
+.
+160c
+	if(FIXUNDO) {
+.
+111c
+	if(FIXUNDO) {
+.
+74c
+	if(FIXUNDO) {
+.
+44c
+				if (FIXUNDO && f == getsub) {
+.
+30,37c
+	if(FIXUNDO && !inopen && f!=getsub) {
+.
+w
+q
+'-*-END-*-'
+ed - ex_data.c << '-*-END-*-'
+59a
+	"timeout",	"to",	ONOFF,		1,	1,	0,
+	"ttytype",	"tty",	OTERM,		0,	0,	ttytype,
+	"undomacro",	"um",	ONOFF,		1,	1,	0,
+.
+57d
+55a
+	"tags",		"tag",	STRING,		0,	0,	tags,
+.
+48a
+	"remap",	0,	ONOFF,		1,	1,	0,
+.
+42d
+23c
+char	tags[ONMSZ] = {
+	't', 'a', 'g', 's', ' ',
+	'/', 'u', 's', 'r', '/', 'l', 'i', 'b', '/', 't', 'a', 'g', 's'
+};
+char	ttytype[ONMSZ] =
+.
+21c
+char	sections[ONMSZ] = {
+	'N', 'H', 'S', 'H',				/* -ms macros */
+	'H', ' ', 'H', 'U'				/* -mm macros */
+};
+char	shell[ONMSZ] =
+.
+12,16c
+char	paragraphs[ONMSZ] = {
+.
+10c
+char	direct[ONMSZ] =
+.
+8a
+ *
+ * These initializations are done char by char instead of as strings
+ * to confuse xstr so it will leave them alone.
+.
+w
+q
+'-*-END-*-'
+ed - ex_get.c << '-*-END-*-'
+42c
+		if (!globp && c == CTRL(d))
+.
+28c
+	while (!globp && c == CTRL(d));
+.
+15,19c
+	ignore(getchar());
+.
+w
+q
+'-*-END-*-'
+ed - ex_io.c << '-*-END-*-'
+782c
+		if(FIXUNDO)
+			undap1 = undap2 = addr2+1;
+.
+635c
+		if (inopen && Outchar != termchar) {
+.
+444a
+		if (savedfile[0] == 0)
+			error("No file|No current filename");
+.
+392c
+		if(FIXUNDO)
+			undkind = UNDNONE;
+.
+349c
+	if (FIXUNDO && inopen && c == 'r')
+.
+251c
+		error("No match");
+.
+220a
+		close(2);	/* so errors don't mess up the screen */
+		open("/dev/null", 1);
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+876c
+#ifdef EATQS
+.
+854c
+#ifdef EATQS
+.
+838c
+#ifdef EATQS
+.
+771c
+#ifdef EATQS
+.
+560c
+			plodput(i);
+.
+557c
+		/*
+		 * move one char to the right.  We don't use ND space
+		 * because it's better to just print the char we are
+		 * moving over.  There are various exceptions, however.
+		 * If !inopen, vtube contains garbage.  If the char is
+		 * a null or a tab we want to print a space.  Other random
+		 * chars we use space for instead, too.
+		 */
+#ifdef TRACE
+		if (trace)
+			fprintf(trace, "ND: inopen=%d, i=%d, outline=%d, outcol=%d\n", inopen, i, outline, outcol);
+#endif
+		if (!inopen || vtube[outline]==NULL ||
+			(i=vtube[outline][outcol]) < ' ')
+			i = ' ';
+		if (insmode && ND)
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.c << '-*-END-*-'
+260,261c
+			if (!(globp && globp[0])) {
+				ungetchar(c);
+				goto endrhs;
+			}
+.
+118c
+	if(FIXUNDO)
+.
+83d
+75a
+	saveall();
+.
+w
+q
+'-*-END-*-'
+ed - ex_set.c << '-*-END-*-'
+73a
+			if (op == &options[WINDOW])
+				vsetsiz(value(WINDOW));
+.
+70c
+				error("Digits required@after =");
+.
+42a
+		/* Implement w300, w1200, and w9600 specially */
+		if (eq(cp, "w300")) {
+			if (ospeed >= B1200) {
+dontset:
+				ignore(getchar());	/* = */
+				ignore(getnum());	/* value */
+				continue;
+			}
+			cp = "window";
+		} else if (eq(cp, "w1200")) {
+			if (ospeed < B1200 || ospeed >= B2400)
+				goto dontset;
+			cp = "window";
+		} else if (eq(cp, "w9600")) {
+			if (ospeed < B2400)
+				goto dontset;
+			cp = "window";
+		}
+.
+29c
+		} while (isalnum(peekchar()));
+.
+15a
+	extern short ospeed;
+.
+w
+q
+'-*-END-*-'
+ed - ex_subr.c << '-*-END-*-'
+603c
+# endif
+.
+601c
+# else
+.
+599c
+# ifdef VMUNIX
+.
+528a
+#ifdef TRACE
+	if (trace)
+		vudump("after save");
+#endif
+.
+512a
+	if (!FIXUNDO)
+		return;
+#ifdef TRACE
+	if (trace)
+		vudump("before save");
+#endif
+.
+w
+q
+'-*-END-*-'
+ed - ex_temp.c << '-*-END-*-'
+409d
+402c
+	cnt = append(getREG, addr2);
+.
+398a
+		if (!FIXUNDO) {
+			splitw++; vclean(); vgoto(WECHO, 0); vreg = -1;
+			error("Can't put partial line inside macro");
+		}
+.
+278a
+#endif
+.
+277a
+#ifdef VMUNIX
+short	rused[256];
+#else
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.c << '-*-END-*-'
+88c
+	CP(ttytype, longname(ltcbuf, type));
+.
+64c
+		l = 17;
+.
+62c
+		l = 9;	/* including the message line at the bottom */
+.
+53c
+		CP(ltcbuf, "xx|dumb:");
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.h << '-*-END-*-'
+124a
+struct maps immacs[MAXNOMACS];	/* for while in insert mode */
+.
+117,118c
+#ifdef VMUNIX
+# define MAXNOMACS	128	/* max number of macros of each kind */
+# define MAXCHARMACS	2048	/* max # of chars total in macros */
+#else
+# define MAXNOMACS	32	/* max number of macros of each kind */
+# define MAXCHARMACS	512	/* max # of chars total in macros */
+#endif
+.
+w
+q
+'-*-END-*-'
+ed - ex_tune.h << '-*-END-*-'
+46c
+#define	ONMSZ		64		/* Option name size */
+.
+18d
+16c
+#define	EXSTRINGS	libpath(ex3.3strings)
+.
+13,14c
+#define	EXRECOVER	libpath(ex3.3recover)
+#define	EXPRESERVE	libpath(ex3.3preserve)
+.
+w
+q
+'-*-END-*-'
+ed - ex_v.c << '-*-END-*-'
+325c
+		vtube[i] = (char *) 0;
+.
+321c
+		vtube[i] = (char *) 0;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vars.h << '-*-END-*-'
+37c
+#define	NOPTS	38
+.
+31,35c
+#define TIMEOUT         30
+#define TTYTYPE         31
+#define UNDOMACRO       32
+#define WARN            33
+#define WINDOW          34
+#define WRAPSCAN        35
+#define WRAPMARGIN      36
+#define WRITEANY        37
+.
+27,28c
+#define TAGS            26
+#define TABSTOP         27
+.
+13,19c
+#define NUMBER          12
+#define OPEN            13
+#define OPTIMIZE        14
+#define PARAGRAPHS      15
+#define PROMPT          16
+#define REDRAW          17
+#define REMAP           18
+.
+w
+q
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+518,521c
+	/*
+	 * If the user has set notimeout, we wait forever for a key.
+	 * If we are in a macro we do too, but since it's already
+	 * buffered internally it will return immediately.
+	 * In other cases we force this to die in 1 second.
+	 * This is pretty reliable (VMUNIX rounds it to .5 - 1.5 secs,
+	 * but UNIX truncates it to 0 - 1 secs) but due to system delays
+	 * there are times when arrow keys or very fast typing get counted
+	 * as separate.  notimeout is provided for people who dislike such
+	 * nondeterminism.
+	 */
+	if (value(TIMEOUT) && inopen >= 0) {
+		signal(SIGALRM, trapalarm);
+		alarm(1);
+	}
+.
+484a
+#endif
+.
+482,483c
+		fprintf(trace, "%s: undkind=%d, vundkind=%d, unddel=%d, undap1=%d, undap2=%d, dot=%d, dol=%d, unddol=%d, truedol=%d\n", s, undkind, vundkind, lineno(unddel), lineno(undap1), lineno(undap2), lineno(dot), lineno(dol), lineno(unddol), lineno(truedol));
+.
+480a
+vudump(s)
+char *s;
+{
+.
+479a
+}
+
+.
+477a
+		inopen = -1;	/* no need to save since it had to be 1 or -1 before */
+.
+474d
+466c
+		if (!FIXUNDO)
+			canundo = 0;	/* can't undo inside a macro anyway */
+.
+462c
+	if ((vmacp ? strlen(vmacp) : 0) + strlen(st) > BUFSIZ)
+.
+460c
+		fprintf(trace, "macpush(%s), canundo=%d",st,canundo);
+.
+457a
+	if (!value(UNDOMACRO))
+		canundo = 0;
+.
+414c
+						/*
+						 * We want to be able to undo
+						 * commands, but it's nonsense
+						 * to undo part of an insertion
+						 * so if in input mode don't.
+						 */
+						macpush(&b[1],maps == arrows);
+.
+411,412c
+						if (trace)
+							fprintf(trace,"fpk=0: return %c",c);
+.
+169a
+	case CTRL(v):
+	case CTRL(q):
+		c = getkey();
+		return (c);
+
+.
+88,91d
+w
+q
+'-*-END-*-'
+ed - ex_vmain.c << '-*-END-*-'
+1080c
+	if (FIXUNDO && vundkind == VCHNG || vundkind == VCAPU) {
+.
+1067c
+	if (FIXUNDO)
+.
+1064a
+	if (FIXUNDO)
+		undap1 = undap2 = dot;
+.
+1062,1063d
+954a
+					}
+.
+953c
+					else if (state == CRTOPEN) {
+.
+905a
+			shouldpo = 0;
+.
+903a
+				shouldpo = 1;
+.
+895c
+			if (FIXUNDO && tchng && tchng != i)
+.
+832a
+			if (shouldpo) {
+				/*
+				 * So after a "Hit return..." ":", we do
+				 * another "Hit return..." the next time
+				 */
+				pofix();
+				shouldpo = 0;
+			}
+.
+720,727c
+				/*
+				 * After a put want current line first line,
+				 * and dot was made the last line put in code
+				 * run so far.  This is why we increment vcline
+				 * above and decrease dot here.
+				 */
+				dot -= nlput - 1;
+			}
+#ifdef TRACE
+			if (trace)
+				fprintf(trace, "vreplace(%d, %d, %d), undap1=%d, undap2=%d, dot=%d\n", vcline, i, nlput, lineno(undap1), lineno(undap2), lineno(dot));
+#endif
+			vreplace(vcline, i, nlput);
+.
+718c
+				nlput--;
+.
+716c
+				if (FIXUNDO)
+					undap1++, undap2++;
+.
+709a
+			nlput = dol - addr + 1;
+.
+698a
+			addr = dol;	/* old dol */
+.
+647c
+			forbid (!vreg && value(UNDOMACRO) && inopen < 0);
+.
+633a
+		 * ZZ		Like :x
+		 */
+		 case 'Z':
+			forbid(getkey() != 'Z');
+			oglobp = globp;
+			globp = "x";
+			vclrech(0);
+			goto gogo;
+			
+		/*
+.
+632a
+
+.
+622a
+#endif
+.
+607a
+#ifdef notdef
+.
+570c
+			if(FIXUNDO)
+				vundkind = VCHNG;
+			vmoving = 0;
+.
+503c
+				macpush(mbuf, 1);
+.
+224c
+				macpush(tmpbuf, 1);
+.
+212c
+			c = getesc();
+			if (c == 0)
+				continue;
+.
+173a
+			if (c == CTRL(l) || (KR && *KR==CTRL(l))) {
+				vclear();
+				vdirty(0, vcnt);
+			}
+.
+172a
+		case CTRL(l):
+.
+171a
+		 *		On terminals where the right arrow key sends
+		 *		^L we make ^R act like ^L, since there is no
+		 *		way to get ^L.  These terminals (adm31, tvi)
+		 *		are intelligent so ^R is useless.  Soroc
+		 *		will probably foul this up, but nobody has
+		 *		one of them.
+.
+164,167d
+143a
+			if (!value(REMAP))
+				break;
+.
+23c
+	int ind, nlput;
+	int shouldpo = 0;
+.
+w
+q
+'-*-END-*-'
+ed - ex_voperate.c << '-*-END-*-'
+643a
+		if (*globp) {
+			/* random junk after the pattern */
+			beep();
+			goto slerr;
+		}
+.
+642c
+		if (any(*globp, "^+-."))
+.
+632a
+		if (*globp == ';') {
+			/* /foo/;/bar/ */
+			globp++;
+			dot = addr;
+			cursor = loc1;
+			goto fromsemi;
+		}
+		dot = odot;
+.
+622a
+			dot = odot;
+			cursor = ocurs;
+.
+621a
+slerr:
+.
+606c
+		d = peekc;
+fromsemi:
+		ungetchar(0);
+		fixech();
+.
+599a
+		odot = dot;
+.
+305a
+		}
+.
+301,304c
+		if (!subop) {
+			i = getesc();
+			if (i == 0)
+				return;
+.
+282c
+		i = lastFCHR;
+.
+262c
+		i = lastFCHR;
+.
+29a
+	line *odot;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops.c << '-*-END-*-'
+786c
+		if (FIXUNDO)
+			vundkind = VNONE;
+.
+760c
+	if (FIXUNDO)
+		vundkind = VCHNG;
+.
+643a
+	/*
+	 * BUG: we shouldn't be depending on what undap2 and undap1 are,
+	 * since we may be inside a macro.  What's really wanted is the
+	 * number of lines we read from the filter.  However, the mistake
+	 * will be an overestimate so it only results in extra work,
+	 * it shouldn't cause any real screwups.
+	 */
+.
+547c
+	if (FIXUNDO)
+		vundkind = VMANY;
+.
+149c
+		break;
+.
+145c
+		break;
+.
+125c
+			break;
+.
+108c
+		break;
+.
+101c
+			break;
+.
+84c
+			break;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops2.c << '-*-END-*-'
+682c
+					vputchar(' ');
+.
+447a
+				if (!value(REMAP))
+					break;
+			}
+.
+445,446c
+		if (vglobp == 0 && Peekkey == 0)
+			while ((ch = map(c, immacs)) != c) {
+.
+329c
+		if (FIXUNDO && vundkind == VCHNG) {
+.
+40c
+	if (FIXUNDO)
+		vundkind = VCHNG, CP(vutmp, linebuf);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vput.c << '-*-END-*-'
+1034c
+		pofix();
+.
+1032c
+	/* Fix problem of >79 chars on echo line. */
+.
+770,772c
+			do {
+				if (*up)
+					vputchar(*up++);
+				else
+					break;
+			} while (--i);
+.
+w
+q
+'-*-END-*-'
+ed - makefile << '-*-END-*-'
+1c
+VERSION=3.3
+.
+w
+q
+'-*-END-*-'

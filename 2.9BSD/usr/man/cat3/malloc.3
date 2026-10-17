@@ -1,0 +1,74 @@
+MALLOC(3)           UNIX Programmer's Manual            MALLOC(3)
+
+NAME
+     malloc, free, realloc, calloc - main memory allocator
+
+SYNOPSIS
+     char *malloc(size)
+     unsigned size;
+
+     free(ptr)
+     char *ptr;
+
+     char *realloc(ptr, size)
+     char *ptr;
+     unsigned size;
+
+     char *calloc(nelem, elsize)
+     unsigned nelem, elsize;
+
+DESCRIPTION
+     _M_a_l_l_o_c and _f_r_e_e provide a simple general-purpose memory
+     allocation package.  _M_a_l_l_o_c returns a pointer to a block of
+     at least _s_i_z_e bytes beginning on a word boundary.
+
+     The argument to _f_r_e_e is a pointer to a block previously
+     allocated by _m_a_l_l_o_c; this space is made available for
+     further allocation, but its contents are left undisturbed.
+
+     Needless to say, grave disorder will result if the space
+     assigned by _m_a_l_l_o_c is overrun or if some random number is
+     handed to _f_r_e_e.
+
+     _M_a_l_l_o_c allocates the first big enough contiguous reach of
+     free space found in a circular search from the last block
+     allocated or freed, coalescing adjacent free blocks as it
+     searches.  It calls _s_b_r_k (see _b_r_e_a_k(2)) to get more memory
+     from the system when there is no suitable space already
+     free.
+
+     _R_e_a_l_l_o_c changes the size of the block pointed to by _p_t_r to
+     _s_i_z_e bytes and returns a pointer to the (possibly moved)
+     block.  The contents will be unchanged up to the lesser of
+     the new and old sizes.
+
+     _R_e_a_l_l_o_c also works if _p_t_r points to a block freed since the
+     last call of _m_a_l_l_o_c, _r_e_a_l_l_o_c or _c_a_l_l_o_c; thus sequences of
+     _f_r_e_e, _m_a_l_l_o_c and _r_e_a_l_l_o_c can exploit the search strategy of
+     _m_a_l_l_o_c to do storage compaction.
+
+     _C_a_l_l_o_c allocates space for an array of _n_e_l_e_m elements of
+     size _e_l_s_i_z_e. The space is initialized to zeros.
+
+     Each of the allocation routines returns a pointer to space
+     suitably aligned (after possible pointer coercion) for
+
+Printed 9/10/82                                                 1
+
+MALLOC(3)           UNIX Programmer's Manual            MALLOC(3)
+
+     storage of any type of object.
+
+DIAGNOSTICS
+     _M_a_l_l_o_c, _r_e_a_l_l_o_c and _c_a_l_l_o_c return a null pointer (0) if
+     there is no available memory or if the arena has been
+     detectably corrupted by storing outside the bounds of a
+     block.  _M_a_l_l_o_c may be recompiled to check the arena very
+     stringently on every transaction; see the source code.
+
+BUGS
+     When _r_e_a_l_l_o_c returns 0, the block pointed to by _p_t_r may be
+     destroyed.
+
+Printed 9/10/82                                                 2
+

@@ -1,0 +1,271 @@
+CFLAGS='-O -s'
+: DESTDIR=
+if [ $DESTDIR ]
+then DD="DESTDIR=$DESTDIR"; export DESTDIR
+fi
+arg="$DD all"
+C=all
+L=
+case $1 in
+-f)	CRT=/lib/fcrt0.o;
+	FP=-f;
+	;;
+-34)	PDP=34;
+	FP=;
+	CRT=/lib/crt0.o;
+	FMT=-n;
+	IONLY= ;
+	;;
+-40)	PDP=40;
+	FP=-f;
+	CRT=/lib/fcrt0.o;
+	FMT=-n;
+	IONLY= ;
+	;;
+-70)	PDP=70;
+	FP=;
+	FMT=-i;
+	IONLY=-i;
+	;;
+*)	echo 'Usage: MAKE -40|-34|-70 [ -cp ] [ -cmp ] [ -f ] name ...';
+	echo ' -40 uses no separate I/D and loads floating point interpreter;';
+	echo ' -34 uses no separate I/D;';
+	echo ' -70 uses separate I/D as appropriate.';
+	echo ' -f loads floating point interpreter;';
+	exit 1;
+	;;
+esac
+shift
+for a
+do
+	cmd=
+	s=.c
+	case $a in
+	*.y)	s=.y ;;
+	*.s)	s=.s ;;
+	esac
+	b=`basename $a $s`
+	D=/bin
+	case $b in
+	-cmp)	C=cmp
+		arg="$DD cmp"
+		echo COMPARING ...
+		continue ;;
+	-cp)	C=cp
+		arg="$DD cp"
+		echo INSTALLING ...
+		continue ;;
+	esac
+	echo ===== $b:
+	case $b in
+	512dumpdir) cmd="cc $CFLAGS 512dumpdir.c -o 512dumpdir $L"; D=/usr/bin;;
+	512restor) cmd="cc $IONLY $CFLAGS 512restor.c -o 512restor $L"; D=/usr/bin ;;
+	ac)	cmd="cc $FP $CFLAGS ac.c -o ac $L"; D=/usr/bin ;;
+	accton)	cmd="cc -n $CFLAGS accton.c -o accton $L"; D=/etc ;;
+	ar)	cmd="cc -n $CFLAGS ar.c -o ar $L";;
+	arcv)	cmd="cc -n $CFLAGS arcv.c -o arcv $L";;
+	at)	cmd="cc -n $CFLAGS at.c -o at $L"; D=/usr/bin ;;
+	atrun)	cmd="cc -n $CFLAGS atrun.c -o atrun $L"; D=/usr/lib ;;
+	basename) cmd="cc -n $CFLAGS basename.c -o basename $L";;
+	bc)	(set -x; yacc bc.y && mv y.tab.c bc.c && cc -n $CFLAGS bc.c -o bc && rm bc.c); D=/usr/bin ;;
+	cal)	cmd="cc -n $CFLAGS cal.c -o cal $L"; D=/usr/bin ;;
+	calendar) cmd="cc -n $CFLAGS calendar.c -o calendar$L"; D=/usr/lib ;;
+	cat)	cmd="cc -n $CFLAGS cat.c -o cat $L";;
+	cb)	cmd="cc -n $CFLAGS cb.c -o cb $L"; D=/usr/bin ;;
+	cc)	cmd="cc -n $CFLAGS cc.c -o cc $L";;
+	checkeq) cmd="cc -n $CFLAGS checkeq.c -o checkeq $L"; D=/usr/bin ;;
+	chgrp)	cmd="cc -n $CFLAGS chgrp.c -o chgrp $L";;
+	chmod)	cmd="cc -n $CFLAGS chmod.c -o chmod $L";;
+	chown)	cmd="cc -n $CFLAGS chown.c -o chown $L";;
+	clri)	cmd="cc -n $CFLAGS clri.c -o clri $L";;
+	cmp)	cmd="cc -n $CFLAGS cmp.c -o cmp $L";;
+	col)	cmd="cc -n $CFLAGS col.c -o col $L"; D=/usr/bin ;;
+	comm)	cmd="cc -n $CFLAGS comm.c -o comm $L"; D=/usr/bin ;;
+	cp)	cmd="cc -n $CFLAGS cp.c -o cp $L";;
+	cron)	cmd="cc -n $CFLAGS cron.c -o cron $L"; D=/etc ;;
+	crypt)	cmd="cc -n $CFLAGS crypt.c -o crypt $L"; D=/usr/bin ;;
+	cu)	cmd="cc -n $CFLAGS cu.c -o cu $L"; D=/usr/bin ;;
+	date)	cmd="cc -n $CFLAGS date.c -o date $L";;
+	dcheck)	cmd="cc -n $CFLAGS dcheck.c -o dcheck $L";;
+	dd)	cmd="cc -n $CFLAGS dd.c -o dd $L";;
+	deroff)	cmd="cc -n $CFLAGS deroff.c -o deroff $L"; D=/usr/bin ;;
+	df)	cmd="cc -n $FP $CFLAGS df.c -o df $L";;
+	diff3)	cmd="cc -n $CFLAGS diff3.c -o diff3 $L"; D=/usr/lib ;;
+	diffh)	cmd="cc -n $CFLAGS diffh.c -o diffh $L"; D=/usr/lib ;;
+	dmesg)	cmd="cc -n $CFLAGS dmesg.c -o dmesg $L"; D=/etc ;;
+	du)	cmd="cc -n $CFLAGS du.c -o du $L";;
+	dump)	cmd="cc $IONLY $CFLAGS dump.c -o dump $L";;
+	dumpdir) cmd="cc $IONLY $CFLAGS dumpdir.c -o dumpdir $L";;
+	echo)	cmd="cc -n $CFLAGS echo.c -o echo $L";;
+	ed)	cmd="cc -n $CFLAGS ed.c -o ed $L";;
+	egrep)	(set -x; yacc egrep.y && mv y.tab.c egrep.c && cc -n $CFLAGS egrep.c -o egrep && rm egrep.c);;
+	expr)	(set -x; yacc expr.y && mv y.tab.c expr.c && cc -n $CFLAGS expr.c -o expr && rm expr.c);;
+	factor) if [ x$FP = x-f ]
+		then (set -x; as -o factor.o factor.nofp.s && ld -s -o factor factor.o /lib/libfpsim.a && rm factor.o)
+		else (set -x; as -o factor factor.s && strip factor)
+		fi
+		D=/usr/bin ;;
+	fgrep)	cmd="cc $IONLY $CFLAGS fgrep.c -o fgrep $L";;
+	file)	cmd="cc -n $CFLAGS file.c -o file $L";;
+	find)	cmd="cc -n $CFLAGS find.c -o find $L";;
+	fsck)	cmd="cc -n $CFLAGS fsck.c -o fsck $L";;
+	getty)	cmd="cc -n $CFLAGS getty.c -o getty $L"; D=/etc ;;
+	grep)	cmd="cc -n $CFLAGS grep.c -o grep $L";;
+	icheck)	cmd="cc $FMT $CFLAGS icheck.c -o icheck $L";;
+	init)	cmd="cc -n $CFLAGS init.c -o init $L"; D=/etc ;;
+	iostat)	cmd="cc -n $FP $CFLAGS iostat.c -o iostat $L";;
+	join)	cmd="cc -n $CFLAGS join.c -o join $L"; D=/usr/bin ;;
+	kill)	cmd="cc -n $CFLAGS kill.c -o kill $L";;
+	ld)	cmd="cc -n $CFLAGS ld.c -o ld $L";;
+	ln)	cmd="cc -n $CFLAGS ln.c -o ln $L";;
+	login)	cmd="cc -n $CFLAGS login.c -o login $L";;
+	look)	cmd="cc -n $CFLAGS look.c -o look $L"; D=/usr/bin ;;
+	mail)	cmd="cc -n $FP $CFLAGS mail.c -o mail $L";;
+	makekey) cmd="cc -n $CFLAGS makekey.c -o makekey $L"; D=/usr/lib ;;
+	man)	cmd="cc -n $CFLAGS man.c -o man";;
+	mesg)	cmd="cc -n $CFLAGS mesg.c -o mesg $L";;
+	mkdir)	cmd="cc -n $CFLAGS mkdir.c -o mkdir $L";;
+	mkfs)	cmd="cc -n $CFLAGS mkfs.c -o mkfs $L"; D=/etc ;;
+	mknod)	cmd="cc -n $CFLAGS mknod.c -o mknod $L"; D=/etc ;;
+	mount)	cmd="cc -n $CFLAGS mount.c -o mount $L"; D=/etc ;;
+	mv)	cmd="cc -n $CFLAGS mv.c -o mv $L";;
+	ncheck)	cmd="cc $FMT $CFLAGS ncheck.c -o ncheck $L";;
+	newgrp)	cmd="cc -n $CFLAGS newgrp.c -o newgrp $L"; D=/usr/bin ;;
+	nice)	cmd="cc -n $CFLAGS nice.c -o nice $L";;
+	nm)	cmd="cc -n $CFLAGS nm.c -o nm $L";;
+	od)	cmd="cc -n $CFLAGS od.c -o od $L";;
+	passwd)	cmd="cc -n $CFLAGS passwd.c -o passwd $L";;
+	pr)	cmd="cc -n $CFLAGS pr.c -o pr $L";;
+	primes)	if [ x$FP = x-f ]
+		then (set -x; as -o primes.o /usr/include/sys.s primes.nofp.s && ld -s -o primes primes.o /lib/libfpsim.a && rm primes.o)
+		else (set -x; as -o primes /usr/include/sys.s primes.s && strip primes)
+		fi
+		D=/usr/bin ;;
+	prof)	cmd="cc -n $FP $CFLAGS -Dplot prof.c -lplot -o prof $L"; D=/usr/bin ;;
+	pstat)	cmd="cc $FP $CFLAGS pstat.c -o pstat $L";;
+	ptx)	cmd="cc -n $CFLAGS ptx.c -o ptx $L"; D=/usr/bin ;;
+	pwd)	cmd="cc -n $CFLAGS pwd.c -o pwd $L";;
+	quot)	cmd="cc -n $CFLAGS quot.c -o quot $L"; D=/usr/bin ;;
+	ranlib) cmd="cc -n $CFLAGS ranlib.c -o ranlib";;
+	reboot) cmd="cc -n $CFLAGS reboot.c -o reboot"; D=/etc;;
+	restor)	cmd="cc $IONLY $FP $CFLAGS restor.c -o restor $L";;
+	rev)	cmd="cc -n $CFLAGS rev.c -o rev $L"; D=/usr/bin ;;
+	rm)	cmd="cc -n $CFLAGS rm.c -o rm $L";;
+	rmdir)	cmd="cc -n $CFLAGS rmdir.c -o rmdir $L";;
+	sa)	cmd="cc -n $FP $CFLAGS sa.c -o sa $L"; D=/usr/bin ;;
+	savecore) cmd="cc -n $CFLAGS savecore.c -o savecore"; D=/etc;;
+	shutdown) cmd="cc -n $CFLAGS shutdown.c -o shutdown"; D=/etc;;
+	size)	cmd="cc -n $CFLAGS size.c -o size $L";;
+	sleep)	cmd="cc -n $CFLAGS sleep.c -o sleep $L";;
+	sort)	cmd="cc $FMT $CFLAGS sort.c -o sort $L";;
+	split)	cmd="cc -n $CFLAGS split.c -o split $L"; D=/usr/bin ;;
+	strip)	cmd="cc -n $CFLAGS strip.c -o strip $L";;
+	stty)	cmd="cc -n $CFLAGS stty.c -o stty $L";;
+	su)	cmd="cc -n $CFLAGS su.c -o su $L";;
+	sum)	cmd="cc -n $CFLAGS sum.c -o sum $L"; D=/usr/bin ;;
+	sync)	cmd="cc -n $CFLAGS sync.c -o sync $L";;
+	tabs)	cmd="cc -n $CFLAGS tabs.c -o tabs $L";;
+	tail)	cmd="cc -n $CFLAGS tail.c -o tail $L";;
+	tar)	cmd="cc -n $CFLAGS tar.c -o tar";;
+	tc)	cmd="cc -n $CFLAGS tc.c -o tc $L"; D=/usr/bin ;;
+	tee)	cmd="cc -n $CFLAGS tee.c -o tee $L";;
+	test)	cmd="cc -n $CFLAGS test.c -o test $L";;
+	time)	cmd="cc -n $CFLAGS time.c -o time $L";;
+	tk)	cmd="cc -n $CFLAGS tk.c -o tk $L"; D=/usr/bin ;;
+	touch)	cmd="cc -n $CFLAGS touch.c -o touch $L";;
+	tr)	cmd="cc -n $CFLAGS tr.c -o tr $L";;
+	tsort)	cmd="cc -n $CFLAGS tsort.c -o tsort $L"; D=/usr/bin ;;
+	tty)	cmd="cc -n $CFLAGS tty.c -o tty $L";;
+	umount)	cmd="cc -n $CFLAGS umount.c -o umount $L"; D=/etc ;;
+	uniq)	cmd="cc -n $CFLAGS uniq.c -o uniq $L"; D=/usr/bin ;;
+	units)	cmd="cc -n $FP $CFLAGS units.c -o units $L"; D=/usr/bin ;;
+	update)	cmd="cc -n $CFLAGS update.c -o update $L"; D=/etc ;;
+	wall)	cmd="cc -n $CFLAGS wall.c -o wall $L"; D=/etc ;;
+	wc)	cmd="cc -n $CFLAGS wc.c -o wc $L"; D=/bin ;;
+	who)	cmd="cc -n $CFLAGS who.c -o who $L";;
+	write)	cmd="cc -n $CFLAGS write.c -o write $L";;
+	yes)	cmd="cc -n $CFLAGS yes.c -o yes $L";;
+
+	adb)	(set -x; cd adb; make FP=$FP FMT=$FMT $arg clean); continue;;
+	as)	(set -x; cd as; make $arg clean); continue;;
+	awk)	(set -x; cd awk; make FP=$FP FMT=$IONLY $arg clean); continue;;
+	c)	(set -x; cd c; make FP=$FP FMT=$FMT $arg clean); continue;;
+	cpp)	(set -x; cd cpp; make $arg clean); continue;;
+	dc)	(set -x; cd dc; make $arg clean); continue;;
+	diff)	(set -x; cd diff; make $arg clean); continue;;
+	eqn)	(set -x; cd eqn; make FP=$FP $arg clean); continue;;
+	f77)	if [ $PDP = 70 ]
+		then (set -x; cd f77; make FP=$FP $arg clean)
+		else (set -x; cd f77; make -f Ovmakefile FP=$FP STARTUP=$CRT $arg clean);
+		fi
+		continue;;
+	learn)	(set -x; cd learn; make $arg clean); continue;;
+	lex)	if [ $PDP = 70 ]
+		then (set -x; cd lex; make $arg clean)
+		else (set -x; cd lex; make -f Ovmakefile STARTUP=$CRT $arg clean);
+		fi
+		continue;;
+	lint)	if [ $PDP = 70 ]
+		then (set -x; cd lint; make $arg clean)
+		else (set -x; cd lint; make -f Ovmakefile STARTUP=$CRT $arg clean)
+		fi
+		continue;;
+	ls)	(set -x; cd ls; make $arg clean); continue;;
+	m4)	(set -x; cd m4; make $arg clean); continue;;
+	make)	(set -x; cd make; make FMT=$FMT $arg clean); continue;;
+	neqn)	(set -x; cd neqn; make FP=$FP $arg clean); continue;;
+	nroff)	(set -x; cd troff; make $arg clean); continue;;
+	pcc)	if [ $PDP = 70 ]
+		then (set -x; cd pcc; make $arg clean)
+		else echo "pcc will only work with separate I/D"
+		fi
+		continue;;
+	prep)	(set -x; cd prep; make $arg clean); continue;;
+	ps)	(set -x; cd ps; make $arg clean); continue;;
+	ratfor)	(set -x; cd ratfor; make FP=$FP $arg clean); continue;;
+	refer)	if [ $PDP = 70 ]
+		then (set -x; cd refer/refer; make $arg clean)
+		else (set -x; cd refer/refer; make -f Ovmakefile $arg clean)
+		fi
+		(set -x; cd refer/util; make $arg clean);
+		continue;;
+	remind)	(set -x; cd remind; make $arg clean); continue;;
+	roff)	(set -x; cd roff; make $arg clean); continue;;
+	sed)	(set -x; cd sed; make $arg clean); continue;;
+	sh)	(set -x; cd sh; make $arg clean); continue;;
+	spell)	(set -x; cd spell; make FMT=$FMT $arg clean); continue;;
+	struct)	if [ $PDP = 70 ]
+		then (set -x; cd struct; make $arg clean)
+		else (set -x; cd struct; make -f Ovmakefile STARTUP=$CRT $arg clean)
+		fi
+		continue;;
+	tbl)	(set -x; cd tbl; make FMT=$IONLY $arg clean); continue;;
+	tp)	(set -x; cd tp; make $arg clean); continue;;
+	troff)	(set -x; cd troff; make $arg clean); continue;;
+	uucp)	(set -x; cd uucp; make $arg clean); continue;;
+	xsend)	(set -x; cd xsend; make $arg clean); continue;;
+	yacc)	if [ $PDP = 70 ]
+		then (set -x; cd yacc; make $arg clean)
+		else (set -x; cd yacc; make -f Ovmakefile STARTUP=$CRT $arg clean)
+		fi
+		continue;;
+
+	clean)
+		cmd="rm -f *.o core y.tab.c lex.yy.c" ;: Clean unwanted files.
+		;;
+
+	*)	echo "Don't know how to make $b."
+		continue ;;
+	esac || continue
+	case $cmd in
+	"")	;;
+	*)	echo $cmd
+		$cmd ;;
+	esac || continue
+	case $C in
+	cmp)	echo cmp $b ${DESTDIR}$D/$b
+		cmp $b ${DESTDIR}$D/$b ;;
+	cp)	echo cp $b ${DESTDIR}$D/$b \; rm $b
+		cp $b ${DESTDIR}$D/$b && rm $b ;;
+	esac
+done

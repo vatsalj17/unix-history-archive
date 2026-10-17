@@ -1,0 +1,58 @@
+
+SCRIPT(1)           UNIX Programmer's Manual            SCRIPT(1)
+
+NAME
+     script - make typescript of terminal session
+
+SYNOPSIS
+     script [ -a ] [ -n ] [ -q ] [ -s ] [ -S shell ] [ file ]
+
+DESCRIPTION
+     _S_c_r_i_p_t makes a typescript of everything printed on your ter-
+     minal.  The typescript is saved in a file, and can be sent
+     to the line printer later with _l_p_r.  If _f_i_l_e is given, the
+     typescript is saved there.  If not, the typescript is saved
+     in the file _t_y_p_e_s_c_r_i_p_t.
+
+     To exit _s_c_r_i_p_t, type control-D.  This sends an end of file
+     to all processes you have started up, and causes _s_c_r_i_p_t to
+     exit.  For this reason, control-D behaves as though you had
+     typed an infinite number of control-D's.
+
+     This program is useful when using a crt and a hard-copy
+     record of the dialog is desired, as for a student handing in
+     a program that was developed on a crt when hard-copy termi-
+     nals are in short supply.  The options are:
+
+     -a   Append to the typescript file instead of creating a new
+          file.
+
+     -n   Use the ``new'' shell (interpretation of ``new'' is
+          installation dependent).
+
+     -q   Suppress the ``script started'' and ``script done''
+          messages.
+
+     -s   Use the ```standard'' shell (usually _s_h(1)).
+
+     -S   Use _s_h_e_l_l.  If the requested shell is not available,
+          _s_c_r_i_p_t uses any shell it can find.
+
+AUTHOR
+     Mark Horton
+
+BUGS
+     Since UNIX has no way to write an end-of-file down a pipe
+     without closing the pipe, there is no way to simulate a sin-
+     gle control-D without ending _s_c_r_i_p_t.
+
+     The new shell has its standard input coming from a pipe
+     rather than a tty, so _s_t_t_y(1) will not work, and neither
+     will _t_t_y_n_a_m_e(1).
+
+     When the user interrupts a printing process, _s_c_r_i_p_t attempts
+     to flush the output backed up in the pipe for better
+     response.  Usually the next prompt also gets flushed.
+
+Printed 7/25/83                                                 1
+

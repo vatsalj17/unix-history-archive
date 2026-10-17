@@ -1,0 +1,35 @@
+CFLAGS = -O -s -DMFLAG
+LIBC =	/usr/lib/libovc.a
+
+CC= cc -V
+all:	refer
+
+cp:	all
+	cp refer ${DESTDIR}/usr/bin
+	rm refer *.o
+
+cmp:	all
+	cmp refer ${DESTDIR}/usr/bin/refer
+	rm *.o
+
+refer0.o: refer.h
+refer1.o: refer.h
+refer2.o: refer.h
+refer3.o: refer.h
+refer4.o: refer.h
+refer6.o: refer.h
+refer7.o: refer.h
+refer8.o: refer.h
+refer: glue1.o refer1.o refer2.o refer4.o refer5.o refer6.o mkey3.o
+refer: refer7.o refer8.o hunt2.o hunt3.o deliv2.o hunt6.o hunt8.o
+refer: hunt7.o glue2.o glue4.o glue5.o refer0.o shell.o doscan.o 
+	ld -n -X /lib/crt0.o -Z refer[0124678].o -Z glue?.o refer5.o \
+		-Z hunt[23678].o mkey3.o shell.o deliv2.o \
+		doscan.o -L -lovc -o refer
+	size refer
+
+doscan.o:
+	ar x ${LIBC} doscan.o
+
+clean:
+	rm -f *.o

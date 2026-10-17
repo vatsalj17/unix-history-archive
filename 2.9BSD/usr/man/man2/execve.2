@@ -1,0 +1,281 @@
+.TH EXECVE 2
+.UC
+.SH NAME
+execve \- execute a file
+.SH SYNOPSIS
+.nf
+.B execve(name, argv, envp)
+.B char *name, *argv[], *envp[];
+.fi
+.SH DESCRIPTION
+.I Execve
+transforms the calling process into a new process.
+The new process is constructed from an ordinary file called the
+.I new process file.
+This file is either an executable object file, or a file of data for an
+interpreter.  An executable object file consists of an identifying
+header, followed by pages of data representing the initial program (text)
+and initialized data pages.  Additional pages may be specified by the
+header to be initialized with zero data.  See
+.IR a.out (5).
+.PP
+An interpreter file begins with a line of the form
+.RI ``#! " interpreter" '';
+when an interpreter file is 
+.IR execve 'd,
+the system
+.IR execve 's
+the specified
+.IR interpreter .
+.PP
+There can be no return from a successful
+.I execve
+because the calling core image is lost.  This is the mechanism whereby different
+process images become active.
+.PP
+The argument
+.I argv
+is an array of character pointers to null-terminated character strings.
+These strings constitute the argument list to be made available to the
+new process.  By convention, at least one argument must be present in
+this array, and the first element of this array should be the name of
+the executed program (i.e. the last component of
+.IR name ).
+.PP
+The arument
+.I envp
+is also an array of character pointers to null-terminated strings.  These
+strings pass information to the new process which are not directly arguments
+to the command, see
+.IR environ (5).
+.PP
+Descriptors open in the calling process remain open in the new process,
+except for those for which the close-on-exec flag is set; see
+.IR ioctl (2).
+Descriptors which remain open are unaffected by
+.IR execve .
+Ignored/held signals remain ignored/held across
+.IR execve ,
+but signals that are caught
+are reset to their default values;
+see
+.IR signal (2).
+.PP
+Each process has a
+.I real
+user ID and group ID and an
+.I effective
+user ID and group ID.
+The real ID identifies the person using the system;
+the effective ID determines his access privileges.
+.I Execve
+changes the effective user and group ID to
+the owner of the executed file if the file has the ``set-user-ID''
+or ``set-group-ID'' modes.  The real user ID is not affected.
+.PP
+The new process also inheirits the following attributes from
+the calling process:
+.PP
+.in +5n
+.nf
+.ta +2i
+process ID	see \fIgetpid\fP\|(2)
+parent process ID	see \fIgetpid\fP\|(2)
+process group ID	see \fIgetpgrp\fP\|(2)
+working directory	see \fIchdir\fP\|(2)
+root directory	see \fIchdir\fP\|(2)
+control terminal	see \fItty\fP\|(4)
+file mode mask	see \fIumask\fP\|(2)
+.in -5n
+.fi
+.PP
+When a C program is executed,
+it is called as follows:
+.PP
+.DT
+.nf
+	main(argc, argv, envp)
+	int argc;
+	char **argv, **envp;
+.fi
+.PP
+where
+.I argc
+is the number of elements in
+.I argv
+(the ``arg count'') and
+.I argv
+is an array of character pointers
+to the arguments themselves.
+.PP
+.I Envp
+is a pointer to an array of strings that constitute the
+.I environment
+of the process.
+A pointer to this arrya is also stored in the global variable ``environ.''
+Each string consists of a name, an \*(lq=\*(rq, and a null-terminated value.
+The array of pointers is terminated by a null pointer.  The shell
+.IR sh (1)
+passes an environment entry for each global shell variable
+defined when the program is called.
+See
+.IR environ (5)
+for some conventionally used names.
+.SH DIAGNOSTICS
+If
+.I execve
+returns to the calling process an error has occurred; the return value
+will be \-1 and the global variable
+.I errno
+will receive the error code.
+.SH ERRORS
+.I Execve
+will fail and return to the calling process if one or more of
+the following is true:
+.TP 20
+[EINVAL]
+The path name contains a non-ASCII byte.
+.TP 20
+[ENOENT]
+One or more components of the new process file's path name does not exist.
+.TP 20
+[ENOTDIR]
+A component of the new process file is not a directory.
+.TP 20
+[EACCES]
+Search permission is denied for a directory listed in the new process
+file's path prefix.
+.TP 20
+[EACCES]
+The new process file is not a regular file.
+.TP 20
+[EACCES]
+The new process file mode denies execute permission.
+.TP 20
+[ENOEXEC]
+The new process file has the appropriate access permission but has an
+invalid magic number in its header.
+.TP 20
+[ETXTBSY]
+The new process file is a pure procedure (shared text) file that is currently
+open for writing or reading by some process.
+.TP 20
+[ENOMEM]
+The new process requires more memory than is allowed.
+.TP 20
+[E2BIG]
+The number of bytes in the new process's argument list is larger than the
+system imposed limit.
+.TP 20
+[EFAULT]
+The new process file is not as long as indicated by the size values in
+its header.
+.TP 20
+[EFAULT]
+.IR Name , argv ,
+.RI " or " envp
+point to an illegal address.
+.SH "SEE ALSO"
+csh(1), fork(2), vfork(2), environ(5)
+.SH "ASSEMBLER (PDP-11)"
+.DT
+(exec = 11.)
+.br
+.B sys exec; name; argv
+.PP
+(exece = 59.)
+.br
+.B sys exece; name; argv; envp
+.PP
+.I Exec
+is obsoleted by
+.I exece,
+but remains for historical reasons.
+.PP
+When the called file starts execution on the PDP11,
+the stack pointer points to a word containing the number of arguments.
+Just above this number is a list of pointers to the argument strings,
+followed by a null pointer, followed by the pointers to
+the environment strings and then another null pointer.
+The strings themselves follow;
+a 0 word is left at the very top of memory.
+.PP
+  sp\(->	nargs
+.br
+	arg0
+.br
+	...
+.br
+	argn
+.br
+	0
+.br
+	env0
+.br
+	...
+.br
+	envm
+.br
+	0
+.PP
+ arg0:	<arg0\e0>
+.br
+	...
+.br
+ env0:	<env0\e0>
+.br
+	0
+.PP
+On the Interdata 8/32,
+the stack begins at a conventional place
+(currently 0xD0000)
+and grows upwards.
+After
+.I exec,
+the layout of data on the stack is as follows.
+.PP
+.nf
+	int	0
+ arg0:	byte	...
+	...
+argp0:	int	arg0
+	...
+	int	0
+envp0:	int	env0
+	...
+	int	0
+ %2\(->	space	40
+	int	nargs
+	int	argp0
+	int	envp0
+ %3\(->
+.fi
+.PP
+This arrangement happens to conform well to C calling conventions.
+.PP
+On a VAX-11, the stack begins at
+.lg 0
+0x7ffff000
+.lg 1
+and grows towards lower numbered addresses.
+After
+.IR exec ,
+the layout of data on the stack is as follows.
+.PP
+.nf
+.ta \w' arg0:  'u
+ ap \(->
+ fp \(->
+ sp \(->	.long nargs
+	.long arg0
+	...
+	.long argn
+	.long 0
+	.long env0
+	...
+	.long envn
+	.long 0
+ arg0:	.byte "arg0\e0"
+	...
+ envn:	.byte "envn\e0"
+	.long 0

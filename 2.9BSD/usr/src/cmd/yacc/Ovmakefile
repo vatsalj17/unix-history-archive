@@ -1,0 +1,24 @@
+CFLAGS=-O
+STARTUP = /lib/crt0.o	# /lib/fcrt0.o for machines without floating point
+
+all:	yacc
+
+cmp:	all
+	cmp yacc ${DESTDIR}/usr/bin/yacc
+
+cp:	all
+	-strip yacc
+	cp yacc ${DESTDIR}/usr/bin/yacc
+	rm yacc *.o
+
+yacc: y1.o y2.o y3.o y4.o
+	ld -n -s -X ${STARTUP} -o yacc -Z y1.o y3.o -Z y2.o -L y4.o -lovc
+	size yacc
+
+y1.o y2.o y3.o y4.o: dextern files
+
+.c.o:
+	cc -V -c ${CFLAGS} $*.c
+
+clean:
+	rm -f *.o

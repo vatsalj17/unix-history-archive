@@ -1,0 +1,80 @@
+
+V6(8)               UNIX Programmer's Manual                V6(8)
+
+NAME
+     v6 - version 6 UNIX file system access utility
+
+SYNTAX
+     v6 [ -r ] special
+
+DESCRIPTION
+     _V_6 reads a version 6 UNIX file system present on the block
+     special file _s_p_e_c_i_a_l. It reads the root directory of the
+     file system, which is then the current directory.  At any
+     time there is a current version 6 working directory in addi-
+     tion to the current version 7 directory (that in effect at
+     the time the program was entered).  _V_6 allows the user to
+     change version 6 directories, list their entries, print the
+     contents of files on the terminal, and copy them onto a ver-
+     sion 7 file system.  It does not include any operations that
+     write on or change the version 6 file system.  The -r option
+     allows examination of a damaged file system; it suppresses
+     the reading of the superblock or the root directory.
+
+COMMANDS
+     The available commands are:
+
+     ls [ -i ] [ name ]
+                    List entries in directory _n_a_m_e; list current
+                    directory if no argument.  -i gives inode
+                    numbers of files.
+
+     cd name        Change to (version 6) directory _n_a_m_e.
+
+     cat file       Print version 6 file _f_i_l_e on terminal
+
+     cp file1 file2 Copy version 6 _f_i_l_e_1 to (v7) file _f_i_l_e_2
+
+     cpdir          Copy all files in current v6 directory to
+                    current version 7 directory
+
+     printi inumber ...
+                    Print the contents of the specified inodes.
+
+     printblk blk   Print the contents of the specified block.
+
+     cpblk file blk ...
+                    Copy the specified blocks to v7 file _f_i_l_e.
+                    The blocks are appended to the file if it
+                    exists, otherwise the file is created.
+
+     rootino inumber
+                    Inode _i_n_u_m_b_e_r is taken to be that of the root
+                    directory, and the corresponding directory is
+                    read.
+
+Printed 8/2/83                                                  1
+
+V6(8)               UNIX Programmer's Manual                V6(8)
+
+     !              Escape to the shell; the rest of the line is
+                    passed to the shell.
+
+     ?              Print the list of available commmands
+
+     q or ^d        Exit from the program
+
+DIAGNOSTICS
+     Invalid command.
+     Input line too long.  Input line limited to 80 characters.
+
+BUGS
+     It believes the superblock, thus results are unpredictable
+     if the file system is not healthy.
+     Cpdir is not recursive.
+
+AUTHOR
+     Mike Karels, University of California at Berkeley
+
+Printed 8/2/83                                                  2
+

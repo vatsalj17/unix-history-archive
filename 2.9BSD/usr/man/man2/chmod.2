@@ -1,0 +1,89 @@
+.TH CHMOD 2 
+.UC
+.SH NAME
+chmod \- change mode of file
+.SH SYNOPSIS
+.B chmod(name, mode)
+.br
+.B char *name;
+.SH DESCRIPTION
+The file whose name
+is given as the null-terminated string pointed to by
+.I name
+has its mode changed to
+.IR mode .
+Modes are constructed by ORing together some
+combination of the following:
+.PP
+.RS
+ 04000 set user ID on execution
+ 02000 set group ID on execution
+ 01000 save text image after execution
+ 00400 read by owner
+ 00200 write by owner
+ 00100 execute (search on directory) by owner
+ 00070 read, write, execute (search) by group
+ 00007 read, write, execute (search) by others
+.RE
+.PP
+If an executable file is set up for sharing
+(\fB\-n\fP or \fB\-i\fP option of
+.IR ld (1))
+then mode 01000 prevents the system from
+abandoning the swap-space image of the program-text portion
+of the file when its last user
+terminates.
+Thus when the next user of the file executes it,
+the text need not be read from the file
+system but can simply be swapped in,
+saving time.
+Ability to set this bit is restricted to the super-user
+since swap space is consumed
+by the images; it is only worth while for heavily used commands.
+.PP
+If a directory (for example, /tmp) has the 01000 bit on in its mode,
+only the user himself (or the super-user) may delete files he owns
+from the directory (regardless of other ``write'' permissions).
+.PP
+Only the owner of a file (or the super-user) may change the mode.
+Only the super-user can set the 01000 mode.
+.SH RETURN VALUE
+Upon successful completion, a value of 0 is returned.  Otherwise, a
+value of \-1 is returned and
+.I errno
+is set to indicate the error.
+.SH ERRORS
+.I Chmod
+will fail and the file mode will be unchanged if:
+.TP 20
+[EINVAL]
+The path name contained a non-ASCII byte.
+.TP 20
+[ENOTDIR]
+A component of the path prefix is not a directory.
+.TP 20
+[ENOENT]
+The named file does not exist.
+.TP 20
+[EACCES]
+Search permission is denied on a component of the path prefix.
+.TP 20
+[EPERM]
+The effective user ID does not match the owner of the file and the
+effective user ID is not the super-user.
+.TP 20
+[EROFS]
+The named file resdes on a read-only file system.
+.TP 20
+[EFAULT]
+.I Name
+points outside the process's allocated address space.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.SH "SEE ALSO"
+chmod(1)
+.SH ASSEMBLER
+(chmod = 15.)
+.br
+.B sys chmod; name; mode

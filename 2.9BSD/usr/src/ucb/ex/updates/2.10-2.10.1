@@ -1,0 +1,61 @@
+#
+ed - ex_cmds.c << '-*-END-*-'
+574c
+				printf("Version 2.10.1, March 12, 1980");
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+885c
+#ifdef TIOCGETC
+	/* Heaven help us if TIOCGETC is defined but TIOCSETC isn't! */
+.
+877,878c
+	if (tty.sg_ospeed >= B1200)
+		write(1, "\377", 1);
+.
+874c
+ * Bug in USG tty driver, put out a DEL as a patch.
+.
+866a
+	nttyc = ottyc;
+.
+865d
+863c
+#ifdef TIOCGETC
+.
+851c
+		ttcharoff();
+.
+847c
+#ifdef TIOCGETC
+.
+791a
+ * Turn off start/stop chars if they aren't the default ^S/^Q.
+ * This is so idiots who make esc their start/stop don't lose.
+ * We always turn off quit since datamedias send ^\ for their
+ * right arrow key.
+ */
+ttcharoff()
+{
+	nttyc.t_quitc = '\377';
+	if (nttyc.t_startc != CTRL(q))
+		nttyc.t_startc = '\377';
+	if (nttyc.t_stopc != CTRL(s))
+		nttyc.t_stopc = '\377';
+}
+#endif
+
+/*
+.
+790a
+#ifdef TIOCGETC
+.
+782,783c
+#ifdef TIOCGETC
+	ttcharoff();
+.
+w
+q
+'-*-END-*-'

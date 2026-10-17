@@ -1,0 +1,14 @@
+CFLAGS=		-O -V
+LIB=		libovln.a
+OBJS=		allprint.o main.o reject.o yyless.o yywrap.o
+
+all:		${LIB}
+
+cp:		all
+		cp ${LIB} ${DESTDIR}/usr/lib/${LIB}
+
+clean:
+		rm -f ${LIB} ${OBJS}
+
+${LIB}:		${OBJS}
+		ar rv ${LIB} ${OBJS}

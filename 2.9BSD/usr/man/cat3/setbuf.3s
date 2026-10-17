@@ -1,0 +1,41 @@
+
+SETBUF(3S)          UNIX Programmer's Manual           SETBUF(3S)
+
+NAME
+     setbuf - assign buffering to a stream
+
+SYNOPSIS
+     #include <stdio.h>
+
+     setbuf(stream, buf)
+     FILE *stream;
+     char *buf;
+
+DESCRIPTION
+     _S_e_t_b_u_f is used after a stream has been opened but before it
+     is read or written.  It causes the character array _b_u_f to be
+     used instead of an automatically allocated buffer.  If _b_u_f
+     is the constant pointer NULL, input/output will be com-
+     pletely unbuffered.
+
+     A manifest constant BUFSIZ tells how big an array is needed:
+
+          char buf[BUFSIZ];
+
+     A buffer is normally obtained from _m_a_l_l_o_c(3) upon the first
+     _g_e_t_c or _p_u_t_c(3S) on the file, except that the standard out-
+     put is line buffered when directed to a terminal.  Other
+     output streams directed to terminals, and the standard error
+     stream _s_t_d_e_r_r are normally not buffered.  If the standard
+     output is line buffered, then it is flushed each time data
+     are read from the standard input by _r_e_a_d(2).
+
+SEE ALSO
+     fopen(3S), getc(3S), malloc(3), putc(3S)
+
+BUGS
+     The standard error stream should be line buffered by
+     default.
+
+Printed 5/17/83                                                 1
+

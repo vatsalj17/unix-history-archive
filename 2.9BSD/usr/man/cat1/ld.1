@@ -1,0 +1,224 @@
+
+LD(1)               UNIX Programmer's Manual                LD(1)
+
+NAME
+     ld - loader
+
+SYNTAX
+     ld [ option ] file ...
+
+DESCRIPTION
+     _L_d combines several object programs into one, resolves
+     external references, and searches libraries.  In the sim-
+     plest case several object _f_i_l_e_s are given, and _l_d combines
+     them, producing an object module which can be either exe-
+     cuted or become the input for a further _l_d run.  (In the
+     latter case, the -r option must be given to preserve the
+     relocation bits.) The output of _l_d is left on a.out.  This
+     file is made executable only if no errors occurred during
+     the load.  Such a module is in an `executable' format.
+
+     The argument routines are concatenated in the order speci-
+     fied.  The default entry point is the beginning of the first
+     routine.
+
+     If any argument is a library, it is searched exactly once at
+     the point it is encountered in the argument list.  Only
+     those routines defining an unresolved external reference are
+     loaded.  If a routine from a library references another rou-
+     tine in the library, and the library has not been processed
+     by _r_a_n_l_i_b(1), the referenced routine must appear after the
+     referencing routine in the library.  Thus the order of pro-
+     grams within libraries may be important.  If the first
+     member of a library is named `__.SYMDEF', then it is under-
+     stood to be a dictionary for the library such as produced by
+     _r_a_n_l_i_b; the dictionary is searched iteratively to satisfy as
+     many references as possible.
+
+     The symbols `_etext', `_edata' and `_end' (`etext', `edata'
+     and `end' in C) are reserved, and if referred to, are set to
+     the first location above the program, the first location
+     above initialized data, and the first location above all
+     data respectively.  It is erroneous to define these symbols.
+
+     _L_d understands several options.  Except for -l, they should
+     appear before the file names.
+
+     -d   Force definition of common storage even if the -r flag
+          is present.
+
+     -D   The next argument is a decimal number that sets the
+          size of the data segment.
+
+     -e   The following argument is taken to be the name of the
+          entry point of the loaded program; location 0 is the
+          default.
+
+Printed 7/25/83                                                 1
+
+LD(1)               UNIX Programmer's Manual                LD(1)
+
+     -i   When the output file is executed, the program text and
+          data areas will live in separate address spaces.  The
+          only difference between this option and -n is that here
+          the text and data segments are in separate address
+          spaces and both start at location 0.  This option
+          creates a `separate executable' format.
+
+     -l_x  This option is an abbreviation for the library name
+          `/lib/lib_x.a', where _x is a string.  If that does not
+          exist, _l_d tries `/usr/lib/lib_x.a'.  A library is
+          searched when its name is encountered, so the placement
+          of a -l is significant.
+
+     -n   Arrange that when the output file is executed, the text
+          portion will be read-only and shared among all users
+          executing the file.  This involves moving the data
+          areas up to the first possible 4K word boundary follow-
+          ing the end of the text.  This option creates a `pure
+          executable' format.
+
+     -o   The _n_a_m_e argument after -o is used as the name of the
+          _l_d output file, instead of a.out.
+
+     -O   This is a text replacement overlay file; only the text
+          segment will be replaced by _e_x_e_c_v_e(2).  Shared data
+          must have the same size as the program overlaid, other-
+          wise the _e_x_e_c_v_e(2) will fail.  The entry point to the
+          overlay may be defined with the -e option.  This option
+          allows the creation of a `replacement executable' for-
+          mat.
+
+     -r   Generate relocation bits in the output file so that it
+          can be the subject of another _l_d run.  This flag also
+          prevents final definitions from being given to common
+          symbols, and suppresses the `undefined symbol' diagnos-
+          tics.  (Note that this option cannot be used with over-
+          lays (-Z) since they cannot be reloaded.)
+
+     -s   `Strip' the output, that is, remove the symbol table
+          and relocation bits to save space (but impair the use-
+          fulness of the debugger).  This information can also be
+          removed by _s_t_r_i_p(1).
+
+     -t   Show a trace of the loading of a module.
+
+     -u   Take the following argument as a symbol and enter it as
+          undefined in the symbol table.  This is useful for
+          loading wholly from a library, since initially the sym-
+          bol table is empty and an unresolved reference is
+          needed to force the loading of the first routine.
+
+     -x   Do not preserve local (non-.globl) symbols in the
+
+Printed 7/25/83                                                 2
+
+LD(1)               UNIX Programmer's Manual                LD(1)
+
+          output symbol table; only enter external symbols.  This
+          option saves some space in the output file.  It also
+          allows temporary labels  to be discarded to prevent
+          redefinition in sucessive ld's.  Warning: _a_d_b uses
+          these local symbols, especially when debugging overlaid
+          programs, so some debugging information is necessarily
+          lost if this option is used.
+
+     -X   Save local symbols except for those whose names begin
+          with `L'.  This option is used by _c_c(1) to discard
+          internally generated labels while retaining symbols
+          local to routines.
+
+     -Z   Indicate the creation of an automatic-overlay format.
+          In addition a -i or -n must be present, for this format
+          is also `separate i/d' or `pure procedure' only.
+          Repeated instances bracket the modules that will be
+          loaded into a given overlay.  Modules before the first
+          -Z or after the concluding -L will be loaded into the
+          non-overlaid text (base) area.  Note that there may be
+          a maximum of 7 overlays and that all modules must be
+          compiled with a special compiler flag (see example).
+          This option produces the `overlaid pure executable' and
+          the `overlaid separate executable' formats.  The loader
+          creates a small entry interface in the base segment for
+          each subroutine in the overlays.  This interface
+          ("thunk") arranges for the correct overlay to be
+          present before the actual routine is entered.
+
+     -L   Terminate overlaying text.  This will allow loading the
+          remaining modules or libraries in the non-overlaid text
+          space.
+
+EXAMPLE
+     To overlay program text with the loader, use a command of
+     the form:
+
+          ld -n -X /lib/crt0.o base.o base2.o
+          -Z ov1a.o ov1b.o ...
+          -Z ov2a.o ov2b.o ...
+          -L base3.o ... -lovc
+
+     Source code must be compiled using the compiler overlay
+     flags:
+
+          _f_7_7 -_c -_V prog.f,
+          _c_c -_c -_V prog.c, or
+          _a_s -_V prog.s
+
+     and the overlay versions of the libraries must be used.  To
+     request the overlaid version of a library, use the prefix
+
+Printed 7/25/83                                                 3
+
+LD(1)               UNIX Programmer's Manual                LD(1)
+
+     "ov".  For example, the f77 library is called libovF77.a and
+     loaded using -lovF77.
+
+     When arranging modules into overlays, the following rules
+     control the maximum sizes for an executable file.  The magic
+     numbers are due to the granularity of PDP-11 segmentation
+     registers (there are 8 registers, each controlling an 8192-
+     byte segment).  The program is made up of base text, over-
+     lay, data + bss, and stack sections.  The size of the over-
+     lay section is controlled by the size of the largest of the
+     overlays.  Each section starts at an address that is a mul-
+     tiple of 8192, thus the size of each section is rounded up
+     to a multiple of 8192.  In the case of separate overlaid
+     executable files, the text and overlays share one 64K byte
+     address space; the data + bss and stack share the other.
+     Thus, the total of the base text size (rounded up to an 8K
+     boundary) plus the maximum overlay size must be less than or
+     equal to 64K (the number of full or partial text segments
+     plus the number of overlay segments is <= 8).  As an exam-
+     ple, if the base text segment has 36800 bytes and the larg-
+     est overlay takes 14144, the base will fit in 5 segments and
+     the overlays in 2 segments; leaving one to spare.  The data
+     and bss together must fit in 7 segments (56K bytes), leaving
+     one 8K segment for the stack.  There is also a limit placed
+     on the total size of the program, including all overlays;
+     that limit is system-dependent.  All of the limits can be
+     checked by using _c_h_e_c_k_o_b_j(1).
+
+     For pure overlaid programs, the rules are similar except
+     that all four sections share one 64K-byte address space.
+     The number of segments required by the text, overlay, data +
+     bss and stack are calculated in the same way.  The sum of
+     the segments required, including one for the stack, must be
+     less than or equal to 8.  Example: a program has 8128 bytes
+     of base text, the largest overlay is 16248 bytes, and the
+     data and bss total 19500.  The text requires 1 8K segment,
+     the overlays 2, and data and bss use 4, leaving one for the
+     stack.
+
+FILES
+     /lib/lib*.a         libraries
+     /usr/lib/lib*.a     more libraries
+     /usr/lib/libov*.a   overlaid versions of libraries
+     a.out               output file
+
+SEE ALSO
+     adb(1), ar(1), as(1), cc(1), checkobj(1), f77(1), file(1),
+     ranlib(1), size(1), a.out(5)
+
+Printed 7/25/83                                                 4
+

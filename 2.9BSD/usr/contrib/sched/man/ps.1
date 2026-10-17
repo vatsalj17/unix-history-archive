@@ -1,0 +1,119 @@
+.TH PS 1
+.SH NAME
+ps \- display process status
+.SH SYNOPSIS
+ps [axltpku] [ARG2 ARG3 ...]
+.SH DESCRIPTION
+.I Ps\^
+is used to display the status of some or all of the processes
+currently in the operating system.
+If no options are specified, the program displays a heading, followed by
+one line for each process which belongs to the user who has issued the
+.I ps\^
+command.
+Each line has four columns, namely:
+
+.in+13
+.ti-13
+TIME\ \ \ \ \ \ \ \ the total system and user mode CPU time used by the process.
+The time is printed out in the form "mmm:ss", where mmm is the number of
+minutes and ss is the number of seconds.
+
+.ti-13
+TTY\ \ \ \ \ \ \ \ \ the name of the controlling terminal associated with the
+process.  If the terminal name is of the conventional form "ttyxx", the last
+two characters of the name are printed.
+The console terminal ("/dev/console") is denoted by "co".
+
+.ti-13
+PID\ \ \ \ \ \ \ \ \ the process number of the process.
+
+.ti-13
+COMMAND\ \ \ \ \ an educated guess at the program name and arguments from the
+last "exec" (see EXEC(2)) performed by the process.
+It is possible for a process to falsify or destroy this information, so
+don't stake your life on its accuracy.
+If the process is a "zombie", that is, if it has done an EXIT(2) call, but
+its parent process is alive and has not done a WAIT(2) for it, the COMMAND
+column for the process will contain the words "<PROCESS EXITING>".
+
+.in-13
+The "l" option is used to request a "long" listing.  The long listing
+has additional columns displayed before the ones listed above.
+These columns are
+
+.in+13
+.ti-13
+SIZE\ \ \ \ \ \ \ \ the number of kilobytes in the process image.
+
+.ti-13
+WAITING-FOR\ \ this column represents symbolically the
+state of the process.
+A process in an SWAIT (long sleep) state is indicated by the name
+of the kernel condition which the process is waiting on.
+A process in an SSLEEP (short sleep) state has the name of the condition
+in uppercase letters.
+A number in this field indicates that the process is awaiting a condition
+for which
+.I ps\^
+does not have a name; the number is a kernel virtual data space address (in octal).
+Other process states are indicated by: <ready> (SRUN), <stopped> (SSTOP),
+<newborn> (SIDL), <zombie> (SZOMB), and <empty> (SEMPTY).
+A process which resides in main memory is indicated by an asterisk immediately
+to the left of the WAITING-FOR field.
+
+.ti-13
+LEVEL\ \ \ \ \ \ \ scheduler queue level.  The best level to be at is 31,
+and the worst is 0.
+However, processes should normally be in the range 0-15, with only the
+"swapper" process (process 0) at priority 16.  The priorities 16-31
+are "real-time" priorities which the system does not change.
+Levels 0-15 are adjusted dynamically by the system based on program
+behavior.
+
+.ti-13
+UID\ \ \ \ \ \ \ \ \ the real user ID of the process owner.
+
+.ti-13
+PPID\ \ \ \ \ \ \ \ the process number of this process' parent process.
+
+.in-13
+The "a" option indicates that a list of processes for all user ID's is to
+be displayed;  the "x" option causes processes with no controlling terminal
+to be listed.
+The "t" option indicates that processes for a given terminal (specified
+by a later argument) are to be listed.
+If no argument or a null argument corresponds to the "t" option, processes
+for all terminals are listed.
+The format of the additional argument is
+.I XX
+where
+.I /dev/ttyXX
+is the name of the terminal's character special device file.
+
+The "p" option indicates that information is to be displayed concerning a
+particular process, whose process number is specified by a later argument.
+
+The "k" option allows the user to specify that an alternate core file is
+to be used instead of "/dev/mem".  Similarly, the "u" option indicates
+that an alternate "namelist" file is to be used instead of "/unix".
+Only the superuser is permitted to make use of the "k" and "u" options.
+These options are normally used to perform autopsies on system core
+dumps.
+.SH FILES
+.ta 2i
+/unix	default system namelist
+.br
+/dev/mem	default core image file
+.br
+/dev	searched to find swap device and tty names
+.SH "SEE ALSO
+kill(1), pstat(1), nice(1), nice(2).
+.SH NOTES
+Since the system is not affected by
+.I ps,
+things can change while
+.I ps\^
+is running;
+thus, the picture it gives is only an approximation to a snapshot of the
+system status.

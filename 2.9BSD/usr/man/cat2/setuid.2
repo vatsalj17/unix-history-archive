@@ -1,0 +1,45 @@
+
+SETUID(2)           UNIX Programmer's Manual            SETUID(2)
+
+NAME
+     setuid, setgid - set user or group ID
+
+SYNOPSIS
+     setuid(uid)
+     setgid(gid)
+
+DESCRIPTION
+     The real and effective user ID (group ID) of the current
+     process are set to the argument.  These calls are only per-
+     mitted to the super-user or if the argument is the real or
+     effective ID.
+
+ERRORS
+     _S_e_t_u_i_d will fail and the user IDs will be unchanged if:
+
+     [EPERM]             The current process's effective user ID
+                         is not the super-user and a change other
+                         than changing the user IDs to the real
+                         or effective user ID was specified.
+
+     Setgid will fail and the group IDs will be unchanged if:
+
+     [EPERM]             The current process's effective user ID
+                         is not the super-user and a change other
+                         than changing the group IDs to the real
+                         or effective group ID was specified.
+
+SEE ALSO
+     getuid(2)
+
+ASSEMBLER
+     (setuid = 23.)
+     (user ID in r0)
+     sys setuid
+
+     (setgid = 46.)
+     (group ID in r0)
+     sys setgid
+
+Printed 8/5/83                                                  1
+

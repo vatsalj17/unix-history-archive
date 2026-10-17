@@ -1,0 +1,55 @@
+
+READLINK(2)         UNIX Programmer's Manual          READLINK(2)
+
+NAME
+     readlink - read value of a symbolic link
+
+SYNOPSIS
+     cc = readlink(path, buf, bufsiz);
+     int cc;
+     char *path, *buf;
+     int bufsiz;
+
+DESCRIPTION
+     _R_e_a_d_l_i_n_k places the contents of the symbolic link _n_a_m_e in
+     the buffer _b_u_f which has size _b_u_f_s_i_z.  The contents of the
+     link are not null terminated when returned.
+
+RETURN VALUE
+     The call returns the count of characters placed in the
+     buffer if it succeeds, or a -1 if an error occurs, placing
+     the error code in the global variable _e_r_r_n_o.
+
+ERRORS
+     _R_e_a_d_l_i_n_k will fail and the file mode will be unchanged if:
+
+     [EINVAL]            The path name contained a non-ASCII
+                         character.
+
+     [ENOTDIR]           A component of the path prefix is not a
+                         directory.
+
+     [ENOENT]            The named file does not exist.
+
+     [ENXIO]             The named file is not a symbolic link.
+
+     [EACCES]            Search permission is denied on a com-
+                         ponent of the path prefix.
+
+     [EPERM]             The effective user ID does not match the
+                         owner of the file and the effective user
+                         ID is not the super-user.
+
+     [EINVAL]            The named file is not a symbolic link.
+
+     [EFAULT]            _B_u_f extends outside the process's allo-
+                         cated address space.
+
+     [ELOOP]             Too many symbolic links were encountered
+                         in translating the path name.
+
+SEE ALSO
+     lstat(2), stat(2), symlink(2)
+
+Printed 5/23/83                                                 1
+

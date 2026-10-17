@@ -1,0 +1,60 @@
+.TH WRITE 2
+.UC
+.SH NAME
+write \- write on a file
+.SH SYNOPSIS
+.B write(fildes, buffer, nbytes)
+.br
+.B char *buffer;
+.br
+.B unsigned nbytes;
+.SH DESCRIPTION
+A file descriptor is a word returned from a
+successful
+.I open,
+.I creat,
+.I dup,
+or
+.IR pipe (2)
+call.
+.PP
+.I Buffer
+is the address of
+.I nbytes
+contiguous
+bytes which are written on the output file.
+The number of characters actually written is returned.
+It should be regarded as an error
+if this is not the same as requested.
+.PP
+Writes which are multiples
+of 1024 characters long and begin on a 1024-byte boundary
+in the file
+are more efficient than any others.
+.SH ERRORS
+.I Write
+will fail if one or more of the following is true:
+.TP 20
+[EBADF]
+.I Fildes
+is not a valid descriptor open for writing.
+.TP 20
+[EPIPE]
+Ann attempts is made to write to a piipe that is not open for reading
+by any process.
+.TP 20
+[EFBIG]
+An attempt was made to write a file that exceeds the maximum file size.
+.TP 20
+[EQUOT]
+An attempt was made to write a file that exceeds a quota governing the file.
+.SH "SEE ALSO"
+creat(2), open(2), pipe(2)
+.SH ASSEMBLER
+(write = 4.)
+.br
+(file descriptor in r0)
+.br
+.B sys  write; buffer; nbytes
+.br
+(byte count in r0)

@@ -1,0 +1,2684 @@
+# 2.10-2.11
+echo '2.11 has not been tested on v6, and you have to hand mung your makefile'
+echo 'to add lots of CFLAGS (see the v7 makefile for a list), add the object'
+echo 'file ex_unix.o, and add the link "view" to the list (e, ex, edit, vi).'
+ed - ex.c << '-*-END-*-'
+447a
+#endif
+.
+433a
+#ifdef ROOMTOBURN
+.
+428a
+#ifdef TRACE
+	if (trace)
+		fclose(trace);
+#endif
+.
+347a
+#ifdef USG
+	/*
+	 * USG tty driver can send multiple HUP's!!!
+	 */
+	signal (SIGINT, SIG_IGN);
+	signal (SIGHUP, SIG_IGN);
+#endif
+.
+329a
+#ifdef USG
+	signal (SIGHUP, SIG_IGN);
+#endif
+#ifdef USG3TTY
+# ifndef USG
+	signal (SIGHUP, SIG_IGN);
+# endif
+#endif
+.
+257c
+		if ((globp = getenv("EXINIT")) && *globp)
+			commands(1, 1);
+		else if ((cp = getenv("HOME")) != 0 && *cp)
+.
+252c
+			if ((cp = getenv("TERM")) != 0 && *cp)
+.
+247a
+		if (cp = getenv("SHELL"))
+			CP(shell, cp);
+.
+196a
+#endif
+.
+188a
+#ifdef TAGSCODE
+.
+177a
+#ifdef RDONLY
+		case 'R':
+			value(READONLY) = 1;
+			break;
+#endif
+
+.
+118,121c
+	erfile = open(erpath, 0);
+.
+108c
+	if (any('d', av[0])) {	/* edit */
+.
+102,106c
+	ivis = any('v', av[0]);	/* vi */
+#ifdef RDONLY
+	if (any('w', av[0]))	/* view */
+		value(READONLY) = 1;
+.
+99d
+91,96d
+89a
+#else
+	normf = tty;
+#endif
+.
+88a
+#ifndef USG3TTY
+.
+w
+q
+'-*-END-*-'
+ed - ex.h << '-*-END-*-'
+200a
+#define FIXUNDO		((inopen >= 0) && (inopen || !inglobal))
+.
+164a
+short	oprompt;		/* Saved during source */
+.
+107a
+#   endif
+.
+106a
+#   ifndef BUFSIZ
+.
+50a
+/*
+ *	The following little dance copes with the new USG tty handling.
+ *	This stuff has the advantage of considerable flexibility, and
+ *	the disadvantage of being incompatible with anything else.
+ *	The presence of the symbol USG3TTy wil indicate the new code:
+ *	in this case, we define CBREAK (because we can simulate it exactly),
+ *	but we won't actually use it, so we set it to a value that will
+ *	probably blow the compilation if we goof up.
+ */
+#ifdef USG3TTY
+#include <termio.h>
+#define CBREAK xxxxx
+#else
+#include <sgtty.h>
+#endif
+
+.
+46d
+39c
+ * or to csvax.mark@berkeley on the ARPA-net.  I would particularly like to hear
+.
+32c
+ *	Mark Horton
+.
+11d
+7c
+ * Ex version 2 (see exact version in ex_cmds.c, search for /Version/
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+669a
+			continue;
+
+/* " */
+		case '"':
+			comment();
+.
+580a
+				if (inopen) {
+					c = 'e';
+					goto editcmd;
+				}
+.
+574c
+				printf("Version 2.11, May 30, 1980");
+.
+551a
+#endif
+.
+542a
+#ifdef TAGSCODE
+.
+439a
+					ckaw();
+					ignore(quickly());
+.
+438d
+239a
+editcmd:
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds2.c << '-*-END-*-'
+512a
+#endif
+.
+509a
+#ifdef OPENCODE
+.
+477a
+#endif
+.
+456a
+#ifdef OPENCODE
+.
+379c
+	return (endcmd(peekchar()) && peekchar() != '"');
+.
+277a
+		case '"':
+			comment();
+			setflav();
+			return;
+
+.
+188a
+#endif
+.
+186a
+#ifdef OPENCODE
+.
+121,124d
+104a
+	if (laste) {
+		laste = 0;
+		sync();
+	}
+.
+41a
+	case '"':
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmdsub.c << '-*-END-*-'
+686a
+#endif
+.
+657a
+#ifdef ZCMD
+.
+654a
+#endif
+.
+641a
+#ifdef ZCMD
+.
+607a
+#endif
+.
+605a
+#ifdef ZCMD
+.
+604a
+#endif
+.
+584a
+#ifdef ZCMD
+.
+546a
+#endif
+.
+508c
+				extern char *ncols['z'-'a'+2];
+.
+487a
+
+		/* Rest of tag if abbreviated */
+		while (*cp && !iswhite(*cp))
+			cp++;
+
+.
+485c
+		if ((*lp || !iswhite(*cp)) && (value(TAGLENGTH)==0 || lp-lasttag < value(TAGLENGTH)))
+.
+440a
+#ifdef TAGSCODE
+.
+219a
+	if (FIXUNDO)
+		vundkind = VMANY;
+.
+218a
+	if (FIXUNDO)
+		undap1 = undap2 = addr1;
+.
+14a
+static	jnoop();
+.
+5a
+#include "ex_vis.h"
+.
+w
+q
+'-*-END-*-'
+ed - ex_data.c << '-*-END-*-'
+54a
+	"taglength",	"tl",	NUMERIC,	0,	0,	0,
+.
+45a
+	"readonly",	"ro",	ONOFF,		0,	0,	0,
+.
+w
+q
+'-*-END-*-'
+ed - ex_io.c << '-*-END-*-'
+958d
+536,844d
+479a
+			if (value(READONLY))
+				error(" File is read only");
+.
+478a
+		case EDF:
+			if (value(READONLY))
+				error(" File is read only");
+			break;
+.
+460c
+		if (!exclam && (!value(WRITEANY) || value(READONLY)))
+		switch (edfile()) {
+.
+137c
+			if (any(peekchar(), "#%|"))
+.
+86a
+#ifdef RDONLY
+			if (value(READONLY))
+				printf(" [Read only]");
+#endif
+.
+9c
+ * File input/output, source, preserve and recover
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+886a
+# endif
+#else
+	/* USG 3 very simple: just set everything */
+	ioctl(i, TCSETAW, &tty);
+.
+884,885c
+# endif
+# ifdef TIOCGETC
+	/*
+	 * Update the other random chars while we're at it.
+	 * Heaven help us if TIOCGETC is defined but TIOCSETC isn't!
+	 */
+.
+882c
+# else
+	/* We have to.  Too bad. */
+.
+876,880c
+# ifdef USG
+	if (tty.sg_ospeed >= B1200)
+		write(1, "\377", 1);
+# endif
+# ifdef TIOCSETN
+	/* Don't flush typeahead if we don't have to. */
+.
+874c
+ * Bug in USG tty driver, put out a DEL as a patch.
+.
+872a
+#ifndef USG3TTY
+.
+868a
+/*
+ * sTTY: set the tty modes on file descriptor i to be what's currently
+ * in global "tty".  (Also use nttyc if needed.)
+ */
+.
+866a
+	nttyc = ottyc;
+.
+865c
+# endif
+#else
+	ioctl(i, TCGETA, &tty);
+.
+863c
+# ifdef TIOCGETC
+.
+861a
+#ifndef USG3TTY
+.
+853a
+#else
+	if (tty.c_lflag & ICANON)
+		ttcharoff();
+	tty = f;
+#endif
+.
+851,852c
+		ttcharoff();
+.
+847c
+#ifndef USG3TTY
+.
+845a
+#else
+	ttymode ot;
+	ot = tty;
+#endif
+.
+844a
+#ifndef USG3TTY
+.
+843c
+	ttymode f;
+.
+841a
+ttymode
+.
+830c
+	ttymode f;
+.
+798a
+#else
+	pfast = (f.c_oflag & OCRNL) == 0;
+#endif
+.
+797a
+#ifndef USG3TTY
+.
+795c
+	ttymode f;
+.
+791a
+ * Turn off start/stop chars if they aren't the default ^S/^Q.
+ * This is so idiots who make esc their start/stop don't lose.
+ * We always turn off quit since datamedias send ^\ for their
+ * right arrow key.
+ */
+ttcharoff()
+{
+	nttyc.t_quitc = '\377';
+	if (nttyc.t_startc != CTRL(q))
+		nttyc.t_startc = '\377';
+	if (nttyc.t_stopc != CTRL(s))
+		nttyc.t_stopc = '\377';
+}
+#endif
+
+#ifdef USG3TTY
+ttcharoff()
+{
+	nttyc.t_quitc = '\377';
+# ifdef VSTART
+	/*
+	 * The following is sample code if USG ever lets people change
+	 * their start/stop chars.  As long as they can't we can't get
+	 * into trouble so we just leave them alone.
+	 */
+	if (tty.c_cc[VSTART] != CTRL(q))
+		tty.c_cc[VSTART] = '\377';
+	if (tty.c_cc[VSTOP] != CTRL(s))
+		tty.c_cc[VSTOP] = '\377';
+# endif
+}
+#endif
+
+/*
+.
+790a
+#ifdef TIOCGETC
+.
+782,784d
+780c
+	f = tty;
+	tty = normf;
+	tty.c_iflag &= ~ICRNL;
+	tty.c_lflag &= ~(ECHO|ICANON);
+	tty.c_oflag &= ~TAB3;
+	tty.c_cc[VMIN] = 1;
+	tty.c_cc[VTIME] = 1;
+	ttcharoff();
+.
+777,778c
+	tty.sg_flags = (normf &~ (ECHO|XTABS|CRMOD)) |
+# ifdef CBREAK
+							CBREAK;
+# else
+							RAW;
+# endif
+# ifdef TIOCGETC
+	ttcharoff();
+# endif
+.
+775a
+#ifndef USG3TTY
+.
+770c
+	ttymode f;
+.
+767a
+ttymode
+.
+746a
+#else
+	tty = normf;
+	tty.c_oflag &= ~(ONLCR|TAB3);
+	tty.c_lflag &= ~ECHO;
+#endif
+.
+745a
+#ifndef USG3TTY
+.
+677,686d
+667c
+	*obp++ = c & 0177;
+.
+499c
+#ifdef CRNL
+			if (xNL)
+				tputs(xNL, 0, plodput);
+			else
+#endif
+			plodput('\n');
+.
+491c
+#ifdef CRNL
+			if (xNL)
+				tputs(xNL, 0, plodput);
+			else
+#endif
+				plodput('\n');
+.
+489c
+#ifdef CRNL
+		if (xCR)
+			tputs(xCR, 0, plodput);
+		else
+#endif
+			plodput('\r');
+.
+369c
+			/*
+			 * The following linefeed (or simulation thereof)
+			 * is supposed to scroll up the screen, since we
+			 * are on the bottom line.  We make the assumption
+			 * that linefeed will scroll.  If ns is in the
+			 * capability list this won't work.  We should
+			 * probably have an sc capability but sf will
+			 * generally take the place if it works.
+			 */
+#ifdef CRNL
+			if (xNL /* && !XB */ && pfast)
+				tputs(xNL, 0, putch);
+			else
+#endif
+				putch('\n');
+.
+347,348c
+#ifdef CRNL
+					if (xCR)
+						tputs(xCR, 0, putch);
+					else
+#endif
+						putch('\r');
+#ifdef CRNL
+				if (xNL)
+					tputs(xNL, 0, putch);
+				else
+#endif
+					putch('\n');
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.c << '-*-END-*-'
+774c
+	case CEOFC:
+.
+638c
+				*ep++ = CEOFC;
+.
+513c
+			*ep++ = CEOFC;
+.
+298c
+	if (cflag == 0)
+.
+194c
+			cflag++;
+.
+160c
+	cflag = 0;
+.
+148c
+	if (stotal == 0 && !inglobal && !cflag)
+.
+107c
+bool	cflag;
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.h << '-*-END-*-'
+62c
+#define	CEOFC	17
+.
+w
+q
+'-*-END-*-'
+ed - ex_set.c << '-*-END-*-'
+76a
+			if (op == &options[PROMPT])
+				oprompt = 1 - no;
+.
+w
+q
+'-*-END-*-'
+ed - ex_subr.c << '-*-END-*-'
+181a
+	else if (c=='"')
+		comment();
+.
+58a
+/*
+ * Ignore a comment to the end of the line.
+ * This routine eats the trailing newline so don't call newline().
+ */
+comment()
+{
+	register int c;
+
+	do {
+		c = getchar();
+	} while (c != '\n' && c != EOF);
+	if (c == EOF)
+		ungetchar(c);
+	}
+
+.
+w
+q
+'-*-END-*-'
+ed - ex_temp.c << '-*-END-*-'
+219a
+			if (*bp > NMBLKS)
+				error(" Tmp file too large");
+.
+30,32c
+	tline = INCRMT * (HBLKS+2);
+	blocks[0] = HBLKS;
+	blocks[1] = HBLKS+1;
+.
+26c
+	if (tline == INCRMT * (HBLKS+2))
+.
+w
+q
+'-*-END-*-'
+ed - ex_temp.h << '-*-END-*-'
+28,35c
+#if BUFSIZ==512
+# define BLKMSK	0777		/* 01777 */
+# define BNDRY	8		/* 16 */
+# define INCRMT	0200		/* 0100 */
+# define LBTMSK	0770		/* 0760 */
+# define NMBLKS	506		/* 1018 */
+# define OFFBTS	7		/* 6 */
+# define OFFMSK	0177		/* 077 */
+# define SHFT	2		/* 3 */
+#else
+# define BLKMSK	01777
+# define BNDRY	8
+# define INCRMT	0400
+# define LBTMSK	01770
+# define NMBLKS	253
+# define OFFBTS	7
+# define OFFMSK	0377
+# define SHFT	2
+#endif
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.c << '-*-END-*-'
+105c
+	namp = "albcbtcdceclcmcrdcdldmdoedeihoicimipllmandnlpcsesfsosrtatetiupvbvsve";
+.
+99c
+ 	namp = "ambsdadbeohchzinmincnsosulxbxnxtxx";
+.
+70c
+	if (tgoto(CM, 2, 2)[0] == 'O')	/* OOPS */
+.
+68c
+	if (COLUMNS <= 4)
+.
+50c
+		CP(ltcbuf, "uk|dumb:");
+.
+39c
+	char *tgoto();
+.
+34c
+	&AM, &BS, &DA, &DB, &EO, &HC, &HZ, &IN, &MI, &NC, &NS, &OS, &UL,
+	&XB, &XN, &XT, &XX
+.
+31c
+	&ND, &xNL, &xPC, &SE, &SF, &SO, &SR, &TA, &TE, &TI, &UP, &VB, &VS, &VE
+.
+29c
+	&AL, &BC, &BT, &CD, &CE, &CL, &CM, &xCR, &DC, &DL, &DM, &DO, &ED, &EI,
+.
+24a
+#else
+	if (ioctl(1, TCGETA, &tty) < 0)
+		return;
+	if (ospeed != tty.c_cflag & CBAUD)
+		value(SLOWOPEN) = (tty.c_cflag & CBAUD) < B1200;
+	ospeed = tty.c_cflag & CBAUD;
+	normf = tty;
+	UPPERCASE = (tty.c_iflag & IUCLC) != 0;
+	GT = (tty.c_oflag & TABDLY) != TAB3 && !XT;
+	NONL = (tty.c_oflag & OCRNL) = 0;
+#endif
+.
+15a
+#ifndef USG3TTY
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.h << '-*-END-*-'
+102c
+
+ttymode ostart(), setty(), unixex();
+.
+100c
+ttymode	normf;			/* Restore tty flags to this (someday) */
+.
+97,98c
+/*
+ * There are several kinds of tty drivers to contend with.  These include:
+ * (1)	V6:		no CBREAK, no ioctl.  (Include PWB V1 here.)
+ * (2)	V7 research:	has CBREAK, has ioctl, and has the tchars (TIOCSETC)
+ *			business to change start, stop, etc. chars.
+ * (3)	USG V2:		Basically like V6 but RAW mode is like V7 RAW.
+ *			(We treat it as V6.)
+ * (4)	USG V3:		equivalent to V7 but totally incompatible.
+ *
+ * The following attempts to decide what we are on, and declare
+ * some variables in the appropriate format.  The wierd looking one (ttymode)
+ * is the thing we pass to sTTY and family to turn "RAW" mode on or off
+ * when we go into or out of visual mode.  In V7/V6 it's just the flags word
+ * to stty.  In USG V3 it's the whole tty structure.
+ */
+#ifdef USG3TTY
+	struct	termio	tty;	/* Use this one structure to change modes */
+	typedef	struct termio ttymode;	/* Mode to contain tty flags */
+#else
+	struct	sgttyb tty;	/* Always stty/gtty using this one structure */
+	typedef	int	ttymode;	/* Mode to contain tty flags */
+# ifdef 	TIOCSETC
+	struct	tchars ottyc, nttyc;	/* For V7 character masking */
+# endif
+.
+78a
+bool	XX;			/* Tektronix 4025/4027 */
+.
+76a
+bool	XB;			/* Beehive superbee f1=esc, f2=^C */
+.
+74a
+bool	NS;			/* No scroll - linefeed at bottom won't scroll */
+.
+50a
+char	*xNL;			/*    Line feed (new line) */
+.
+37a
+char	*xCR;			/* P  Carriage return */
+.
+w
+q
+'-*-END-*-'
+ed - ex_tune.h << '-*-END-*-'
+85c
+#define	ATTN	(-2)
+.
+72c
+#define	TUBESIZE	3400	/* Maximum screen size for visual */
+.
+70c
+#define	TUBELINES	44	/* Number of screen lines for visual */
+.
+43a
+#define HBLKS		1		/* struct header fits in BUFSIZ*HBLKS */
+.
+33,34c
+
+#if BUFSIZ == 1024
+# define LBSIZE		1024
+# define ESIZE		512
+#else
+# define LBSIZE		512		/* Line length */
+# define ESIZE		128		/* Size of compiled re */
+#endif
+
+.
+12,15c
+#include <local/uparm.h>
+#define	EXRECOVER	libpath(ex2.11recover)
+#define	EXPRESERVE	libpath(ex2.11preserve)
+#define	EXSTRINGS	libpath(ex2.11strings)
+.
+8,10d
+w
+q
+'-*-END-*-'
+cat > ex_unix.c << '-*-END-*-'
+/* Copyright (c) 1979 Regents of the University of California */
+#include "ex.h"
+#include "ex_temp.h"
+#include "ex_tty.h"
+#include "ex_vis.h"
+
+/*
+ * Unix escapes, filtering
+ */
+
+/*
+ * First part of a shell escape,
+ * parse the line, expanding # and % and ! and printing if implied.
+ */
+unix0(warn)
+	bool warn;
+{
+	register char *up, *fp;
+	register short c;
+	char printub, puxb[UXBSIZE + sizeof (int)];
+
+	printub = 0;
+	CP(puxb, uxb);
+	c = getchar();
+	if (c == '\n' || c == EOF)
+		error("Incomplete shell escape command@- use 'shell' to get a shell");
+	up = uxb;
+	do {
+		switch (c) {
+
+		case '\\':
+			if (any(peekchar(), "%#!"))
+				c = getchar();
+		default:
+			if (up >= &uxb[UXBSIZE]) {
+tunix:
+				uxb[0] = 0;
+				error("Command too long");
+			}
+			*up++ = c;
+			break;
+
+		case '!':
+			fp = puxb;
+			if (*fp == 0) {
+				uxb[0] = 0;
+				error("No previous command@to substitute for !");
+			}
+			printub++;
+			while (*fp) {
+				if (up >= &uxb[UXBSIZE])
+					goto tunix;
+				*up++ = *fp++;
+			}
+			break;
+
+		case '#':
+			fp = altfile;
+			if (*fp == 0) {
+				uxb[0] = 0;
+				error("No alternate filename@to substitute for #");
+			}
+			goto uexp;
+
+		case '%':
+			fp = savedfile;
+			if (*fp == 0) {
+				uxb[0] = 0;
+				error("No filename@to substitute for %%");
+			}
+uexp:
+			printub++;
+			while (*fp) {
+				if (up >= &uxb[UXBSIZE])
+					goto tunix;
+				*up++ = *fp++ | QUOTE;
+			}
+			break;
+		}
+		c = getchar();
+	} while (c == '"' || c == '|' || !endcmd(c));
+	if (c == EOF)
+		ungetchar(c);
+	*up = 0;
+	if (!inopen)
+		resetflav();
+	if (warn)
+		ckaw();
+	if (warn && hush == 0 && chng && xchng != chng && value(WARN) && dol > zero) {
+		xchng = chng;
+		vnfl();
+		printf(mesg("[No write]|[No write since last change]"));
+		noonl();
+		flush();
+	} else
+		warn = 0;
+	if (printub) {
+		if (uxb[0] == 0)
+			error("No previous command@to repeat");
+		if (inopen) {
+			splitw++;
+			vclean();
+			vgoto(WECHO, 0);
+		}
+		if (warn)
+			vnfl();
+		if (hush == 0)
+			lprintf("!%s", uxb);
+		if (inopen && Outchar != termchar) {
+			vclreol();
+			vgoto(WECHO, 0);
+		} else
+			putnl();
+		flush();
+	}
+}
+
+/*
+ * Do the real work for execution of a shell escape.
+ * Mode is like the number passed to open system calls
+ * and indicates filtering.  If input is implied, newstdin
+ * must have been setup already.
+ */
+ttymode
+unixex(opt, up, newstdin, mode)
+	char *opt, *up;
+	int newstdin, mode;
+{
+	int pvec[2];
+	ttymode f;
+
+	signal(SIGINT, SIG_IGN);
+	if (inopen)
+		f = setty(normf);
+	if ((mode & 1) && pipe(pvec) < 0) {
+		/* Newstdin should be io so it will be closed */
+		if (inopen)
+			setty(f);
+		error("Can't make pipe for filter");
+	}
+#ifndef VFORK
+	pid = fork();
+#else
+	pid = vfork();
+#endif
+	if (pid < 0) {
+		if (mode & 1) {
+			close(pvec[0]);
+			close(pvec[1]);
+		}
+		setrupt();
+		error("No more processes");
+	}
+	if (pid == 0) {
+		if (mode & 2) {
+			close(0);
+			dup(newstdin);
+			close(newstdin);
+		}
+		if (mode & 1) {
+			close(pvec[0]);
+			close(1);
+			dup(pvec[1]);
+			if (inopen) {
+				close(2);
+				dup(1);
+			}
+			close(pvec[1]);
+		}
+		if (io)
+			close(io);
+		if (tfile)
+			close(tfile);
+		close(erfile);
+		signal(SIGHUP, oldhup);
+		signal(SIGQUIT, oldquit);
+		if (ruptible)
+			signal(SIGINT, SIG_DFL);
+		execl(svalue(SHELL), "sh", opt, up, (char *) 0);
+		printf("No %s!\n", svalue(SHELL));
+		error(NOSTR);
+	}
+	if (mode & 1) {
+		io = pvec[0];
+		close(pvec[1]);
+	}
+	if (newstdin)
+		close(newstdin);
+	return (f);
+}
+
+/*
+ * Wait for the command to complete.
+ * F is for restoration of tty mode if from open/visual.
+ * C flags suppression of printing.
+ */
+unixwt(c, f)
+	bool c;
+	ttymode f;
+{
+
+	waitfor();
+	if (inopen)
+		setty(f);
+	setrupt();
+	if (!inopen && c && hush == 0) {
+		printf("!\n");
+		flush();
+		termreset();
+		gettmode();
+	}
+}
+
+/*
+ * Setup a pipeline for the filtration implied by mode
+ * which is like a open number.  If input is required to
+ * the filter, then a child editor is created to write it.
+ * If output is catch it from io which is created by unixex.
+ */
+filter(mode)
+	register int mode;
+{
+	static int pvec[2];
+	register ttymode f;
+	register int lines = lineDOL();
+
+	mode++;
+	if (mode & 2) {
+		signal(SIGINT, SIG_IGN);
+		if (pipe(pvec) < 0)
+			error("Can't make pipe");
+		pid = fork();
+		io = pvec[0];
+		if (pid < 0) {
+			setrupt();
+			close(pvec[1]);
+			error("No more processes");
+		}
+		if (pid == 0) {
+			setrupt();
+			io = pvec[1];
+			close(pvec[0]);
+			putfile();
+			exit(0);
+		}
+		close(pvec[1]);
+		io = pvec[0];
+		setrupt();
+	}
+	f = unixex("-c", uxb, (mode & 2) ? pvec[0] : 0, mode);
+	if (mode == 3) {
+		delete(0);
+		addr2 = addr1 - 1;
+	}
+	if (mode & 1) {
+		undap1 = undap2 = addr2+1;
+		ignore(append(getfile, addr2));
+	}
+	close(io);
+	io = -1;
+	unixwt(!inopen, f);
+	netchHAD(lines);
+}
+
+/*
+ * Set up to do a recover, getting io to be a pipe from
+ * the recover process.
+ */
+recover()
+{
+	static int pvec[2];
+
+	if (pipe(pvec) < 0)
+		error(" Can't make pipe for recovery");
+	pid = fork();
+	io = pvec[0];
+	if (pid < 0) {
+		close(pvec[1]);
+		error(" Can't fork to execute recovery");
+	}
+	if (pid == 0) {
+		close(2);
+		dup(1);
+		close(1);
+		dup(pvec[1]);
+	        close(pvec[1]);
+		execl(EXRECOVER, "exrecover", svalue(DIRECTORY), file, (char *) 0);
+		close(1);
+		dup(2);
+		error(" No recovery routine");
+	}
+	close(pvec[1]);
+}
+
+/*
+ * Wait for the process (pid an external) to complete.
+ */
+waitfor()
+{
+
+	do
+		rpid = wait(&status);
+	while (rpid != pid && rpid != -1);
+	status = (status >> 8) & 0377;
+}
+
+/*
+ * The end of a recover operation.  If the process
+ * exits non-zero, force not edited; otherwise force
+ * a write.
+ */
+revocer()
+{
+
+	waitfor();
+	if (pid == rpid && status != 0)
+		edited = 0;
+	else
+		change();
+}
+'-*-END-*-'
+ed - ex_v.c << '-*-END-*-'
+366a
+#endif
+.
+364a
+#ifdef OPENCODE
+.
+297a
+#endif
+.
+294a
+#ifdef OPENCODE
+.
+288a
+#endif
+.
+270a
+#ifdef OPENCODE
+.
+179a
+#endif
+.
+178a
+#ifdef OPENCODE
+.
+176a
+#ifdef CRNL
+		if (NS && !SF) {
+#ifdef OPENCODE
+			if (initev)
+				goto toopen;
+#endif
+			error("Visual requires scrolling");
+		}
+#endif
+.
+175a
+#endif
+.
+173a
+#ifdef OPENCODE
+.
+170a
+#endif
+.
+168a
+#ifdef OPENCODE
+.
+165a
+#endif
+.
+158a
+#ifdef OPENCODE
+.
+156c
+	register ttymode f;
+.
+131c
+	ttymode f;
+.
+113a
+#endif
+.
+57a
+#ifndef OPENCODE
+	error("Open mode not available@Use visual or command mode");
+#else
+.
+56c
+	register ttymode f;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vadj.c << '-*-END-*-'
+1029a
+#endif
+.
+1019a
+#ifdef OPENCODE
+.
+815c
+		if (
+#ifdef OPENCODE
+		     l == 0 && state != VISUAL ||
+#endif
+.
+798a
+#endif
+	if (splitw)
+		return;
+.
+797c
+#ifdef OPENCODE
+	if (state == HARDOPEN)
+.
+664c
+	if (
+#ifdef OPENCODE
+	    state == VISUAL &&
+#endif
+	    p <= WBOT) {
+.
+597a
+#endif
+	if (splitw)
+		return;
+.
+596c
+#ifdef OPENCODE
+	if (state == HARDOPEN)
+.
+511a
+#endif
+.
+509a
+#ifdef OPENCODE
+.
+508a
+#endif
+.
+507a
+#ifdef OPENCODE
+.
+503c
+	if (vcnt == 0 || vcline < 0 || vcline > vcnt
+#ifdef OPENCODE
+						     || holdupd && state != VISUAL
+#endif
+						     ) {
+.
+405a
+#endif
+.
+401a
+#ifdef OPENCODE
+.
+366a
+	vscroll(cnt);
+.
+365d
+363c
+	if (splitw
+#ifdef OPENCODE
+	           && (state == VISUAL || state == CRTOPEN)
+#endif
+		   )
+.
+188c
+			if (
+#ifdef OPENCODE
+			    state == VISUAL &&
+#endif
+			    WTOP - ZERO >= need && AL && DL) {
+.
+151a
+#endif
+.
+136a
+#ifdef OPENCODE
+.
+66c
+	if (
+#ifdef OPENCODE
+	    state == VISUAL &&
+#endif
+	    vcline == 0 && vcnt > 1 && p > ZERO) {
+.
+48a
+#endif
+.
+32a
+#ifdef OPENCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_vars.h << '-*-END-*-'
+35c
+#define	NOPTS	35
+.
+17,33c
+#define READONLY        16
+#define REDRAW          17
+#define REPORT          18
+#define SCROLL          19
+#define SECTIONS        20
+#define SHELL           21
+#define SHIFTWIDTH      22
+#define SHOWMATCH       23
+#define SLOWOPEN        24
+#define TABSTOP         25
+#define TAGLENGTH       26
+#define TTYTYPE         27
+#define TERM            28
+#define TERSE           29
+#define WARN            30
+#define WINDOW          31
+#define WRAPSCAN        32
+#define WRAPMARGIN      33
+#define WRITEANY        34
+.
+w
+q
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+330a
+#endif
+.
+328a
+#ifdef OPENCODE
+.
+327a
+#endif
+.
+325a
+#ifdef OPENCODE
+.
+309c
+	if (notecnt < 2 || !must
+#ifdef OPENCODE
+	                         && state == VISUAL
+#endif
+				 )
+.
+88a
+#ifdef BEEHIVE
+	if (XB && c == ESCAPE) {
+		if (read(0, &Peek2key, 1) != 1)
+			goto getATTN;
+		Peek2key &= TRIM;
+		switch (Peek2key) {
+		case 'C':	/* in SPOW mode sometimes space sends esc C */
+			c = ' ';
+			goto clrpeek;
+		case 'q':	/* f2 -> ^C */
+			c = CTRL(c);
+		case 'p':	/* f1 -> esc */
+clrpeek:
+			Peek2key = 0;
+			break;
+		}
+	}
+#endif
+.
+70a
+#ifdef BEEHIVE
+	if (Peek2key) {
+		c = Peek2key;
+		Peek2key = 0;
+		return (c);
+	}
+#endif
+.
+63a
+#ifdef BEEHIVE
+	static char Peek2key;
+#endif
+.
+w
+q
+'-*-END-*-'
+ed - ex_vis.h << '-*-END-*-'
+20a
+#endif
+.
+18a
+#ifdef OPENCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_vmain.c << '-*-END-*-'
+1080a
+#endif
+.
+1069a
+#ifdef ZCMD
+.
+1067a
+#endif
+.
+1065a
+#ifdef ZCMD
+.
+1064a
+#endif
+.
+1051a
+#ifdef ZCMD
+.
+1043a
+#endif
+.
+1019a
+#ifdef OPENCODE
+.
+876c
+#ifdef OPENCODE
+			if (state == VISUAL)
+#endif
+						{
+.
+855a
+#endif
+.
+853a
+#ifdef OPENCODE
+.
+852a
+#endif
+.
+851a
+#ifdef OPENCODE
+.
+839a
+#endif
+.
+837c
+			if (i < 0 || i >= vcnt && i >= -vcnt
+#ifdef OPENCODE
+							     || state != VISUAL && dot != addr
+#endif
+							     ) {
+#ifdef OPENCODE
+.
+689a
+#endif
+.
+680a
+#ifdef TAGSCODE
+.
+671a
+#endif
+.
+665a
+#ifdef TAGSCODE
+.
+647a
+#endif
+.
+636a
+#ifdef OPENCODE
+.
+541a
+#endif
+.
+532a
+#ifdef ZZCMD
+.
+422a
+#endif
+.
+420a
+#ifdef OPENCODE
+.
+332a
+#endif
+.
+331a
+#ifdef OPENCODE
+.
+325a
+#endif
+.
+324a
+#ifdef OPENCODE
+.
+310a
+#endif
+.
+306c
+				dot -= vcline - 2 + (cnt-1)*basWLINES;
+.
+303,304d
+291c
+				dot += (vcnt - vcline) - 2 + (cnt-1)*basWLINES;
+.
+288,289d
+281a
+#ifdef ZCMD
+.
+243a
+#endif
+.
+241a
+#ifdef OPENCODE
+.
+240a
+#endif
+.
+239a
+#ifdef OPENCODE
+.
+227a
+#endif
+.
+225a
+#ifdef OPENCODE
+.
+224a
+#endif
+.
+223a
+#ifdef OPENCODE
+.
+156a
+#endif
+.
+145a
+#ifdef OPENCODE
+.
+79c
+			} else
+#endif
+			if (i == 3)
+.
+74a
+#ifdef OPENCODE
+.
+65a
+#endif
+.
+64a
+#ifdef OPENCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_voperate.c << '-*-END-*-'
+667a
+#endif
+.
+665a
+#ifdef OPENCODE
+.
+652a
+#endif
+.
+650a
+#ifdef OPENCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops.c << '-*-END-*-'
+599a
+#endif
+.
+597a
+#ifdef OPENCODE
+.
+557a
+#endif
+.
+556a
+#ifdef OPENCODE
+.
+550a
+#endif
+.
+547a
+#ifdef OPENCODE
+.
+505a
+#endif
+.
+495a
+#ifdef OPENCODE
+.
+493a
+#endif
+.
+492a
+#ifdef OPENCODE
+.
+484a
+#endif
+.
+483a
+#ifdef OPENCODE
+.
+480a
+#endif
+.
+477a
+#ifdef OPENCODE
+.
+471a
+#endif
+.
+470a
+#ifdef OPENCODE
+.
+427a
+#endif
+.
+418a
+#ifdef OPENCODE
+.
+287a
+#endif
+.
+282a
+#ifdef OPENCODE
+.
+259a
+#endif
+.
+255a
+#ifdef OPENCODE
+.
+231a
+#endif
+.
+200a
+#ifdef OPENCODE
+.
+126a
+#endif
+.
+119a
+#ifdef OPENCODE
+.
+99c
+		if (cnt < 0 || cnt > vcnt
+#ifdef OPENCODE
+		                          || state != VISUAL
+#endif
+					  ) {
+.
+91,92c
+		if (undkind == UNDMOVE)
+			vdirty(0, LINES);
+		else
+			vreplace(undap1 - addr, undap2 - undap1,
+			    undkind == UNDPUT ? 0 : unddol - dol);
+.
+52a
+	cursor = linebuf;
+.
+50a
+#endif
+.
+46a
+#ifdef OPENCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops2.c << '-*-END-*-'
+707d
+703d
+652a
+#endif
+.
+644,646c
+					 * BUG:	Don't hack ^T except right
+					 * after right after initial white
+					 * space.  This doesn't work right
+					 * anyway, but is not being fixed
+					 * since the official GOOD THING TO DO
+					 * is to set TABSTOP and SHIFTWIDTH
+					 * and use ctrl I, not ctrl T.
+.
+635a
+#ifdef SOFTTABS
+.
+627a
+#endif
+.
+623a
+#ifdef SOFTTABS
+.
+589a
+#endif
+.
+575a
+#ifdef WRAPMGN
+.
+540a
+#else
+				if (c == tty.c_cc[VERASE]
+					|| c == tty.c_cc[VKILL]) {
+#endif
+.
+539a
+#ifndef USG3TTY
+.
+456a
+#else
+			if (c == tty.c_cc[VERASE])
+				c = CTRL(h);
+			else if (c == tty.c_cc[VKILL])
+				c = -1;
+#endif
+.
+452a
+#ifndef USG3TTY
+.
+444c
+		c = getkey();
+		if (c != ATTN)
+			c &= (QUOTE|TRIM);
+		ch = c;
+.
+368a
+#endif
+.
+366a
+#ifdef OPENCODE
+.
+365a
+#endif
+.
+364a
+#ifdef OPENCODE
+.
+351a
+#endif
+.
+350a
+#ifdef OPENCODE
+.
+344a
+#endif
+.
+341a
+#ifdef OPENCODE
+.
+285a
+#endif
+.
+284a
+#ifdef OPENCODE
+.
+276a
+#endif
+.
+275a
+#ifdef OPENCODE
+.
+207c
+	if (*cursor == 0
+#ifdef OPENCODE
+	                 || state == CRTOPEN
+#endif
+			 )
+.
+128a
+#endif
+.
+113a
+#ifdef OPENCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops3.c << '-*-END-*-'
+459c
+			if (lf == vmove && wcursor > linebuf)
+.
+372a
+	else {
+		strcLIN(sp);
+		strcpy(scurs, genbuf);
+		if (!lmatchp((line *) 0))
+			beep();
+	}
+.
+329c
+	parens = any(*cp, "()") ? "()" : any(*cp, "[]") ? "[]" : "{}";
+.
+325c
+	for (cp = cursor; !any(*cp, "({[)}]");)
+.
+w
+q
+'-*-END-*-'
+ed - ex_vput.c << '-*-END-*-'
+1104c
+		if (d == (c & TRIM) && !insmode
+#ifdef OPENCODE
+						&& (state != HARDOPEN || OS)
+#endif
+						   			) {
+.
+1061c
+		if (!insmode && !IN &&
+#ifdef OPENCODE
+				      (state != HARDOPEN || OS) &&
+#endif
+							     (*tp&TRIM) == 0) {
+.
+402c
+	register int i = destcol;
+.
+307a
+#endif
+.
+280a
+#ifdef OPENCODE
+.
+142a
+#endif
+.
+138a
+#ifdef OPENCODE
+.
+118,121c
+		if (DB) {
+			vgoto(WECHO, 0);
+			vputp(CD ? CD : CE, 1);
+		} else {
+			if (XT) {
+				/*
+				 * This code basically handles the t1061
+				 * where positioning at (0, 0) won't work
+				 * because the terminal won't let you put
+				 * the cursor on its magic cookie.
+				 *
+				 * Should probably be XS above, or even a
+				 * new X? glitch, but right now t1061 is the
+				 * only terminal with XT.
+				 */
+				vgoto(WECHO, 0);
+				vputp(DL, 1);
+			} else {
+				vigoto(WECHO, 0);
+				vclreol();
+			}
+		}
+.
+54a
+#endif
+.
+52a
+#ifdef OPENCODE
+.
+w
+q
+'-*-END-*-'
+ed - ex_vwind.c << '-*-END-*-'
+370a
+#endif
+.
+368a
+#ifdef OPENCODE
+.
+357a
+#endif
+.
+355a
+#ifdef OPENCODE
+.
+353a
+#endif
+.
+351a
+#ifdef OPENCODE
+.
+251a
+#endif
+.
+246a
+#ifdef OPENCODE
+.
+241c
+	if (
+#ifdef OPENCODE
+	    state != HARDOPEN && state != ONEOPEN &&
+#endif
+	                                             i >= 0 && i < vcnt) {
+.
+222a
+#endif
+.
+216a
+#ifdef OPENCODE
+.
+205a
+#endif
+.
+203a
+#ifdef OPENCODE
+.
+201a
+#endif
+.
+199a
+#ifdef OPENCODE
+.
+179c
+	else
+#endif
+	switch (where) {
+.
+176a
+#ifdef OPENCODE
+.
+157c
+	if (
+#ifdef OPENCODE
+	    state == VISUAL &&
+#endif
+	                       scroll) {
+.
+149c
+		if (
+#ifdef OPENCODE
+		    state != VISUAL ||
+#endif
+		    cnt - tot > 0 || vfit(dot, cnt) > tot / 3 + 1) {
+.
+101c
+	if (
+#ifdef OPENCODE
+	    state != VISUAL ||
+#endif
+	    (!AL && !SR) || (!scroll && (cnt > tot || vfit(dot - cnt, cnt) > tot / 3 + 1))) {
+.
+97c
+	if (
+#ifdef OPENCODE
+	    state == VISUAL &&
+#endif
+	    !AL && !SR &&
+.
+w
+q
+'-*-END-*-'
+ed - expreserve.c << '-*-END-*-'
+185c
+	if (lseek(0, (long) 0, 0)) {
+.
+169c
+		fprintf(stderr, "Negative number of lines (%d)\n", H.Flines);
+.
+156c
+	ignorl(lseek(0, (long) 0, 0));
+.
+150a
+		}
+.
+149a
+		{
+#ifdef DEBUG
+			fprintf(stderr, "can't open %s\n", name);
+#endif
+.
+104a
+		}
+.
+103a
+		{
+#ifdef DEBUG
+			fprintf(stderr, "mode(%s) = %o\n", dirent.d_name, stbuf.st_mode);
+#endif
+.
+102a
+		}
+.
+101a
+		{
+#ifdef DEBUG
+			fprintf(stderr, "stat(%s) fails\n", dirent.d_name);
+#endif
+.
+47a
+#endif
+.
+46a
+#ifndef V6
+.
+1a
+#ifdef V6
+#include <retrofit.h>
+#endif
+.
+w
+q
+'-*-END-*-'
+ed - exrecover.c << '-*-END-*-'
+179a
+#else
+	ioctl(2, TCGETA, &tty);
+	if (tty.c_lflag & ICANON)
+#endif
+.
+177a
+#ifndef USG3TTY
+.
+w
+q
+'-*-END-*-'
+echo 'Making new makefile.v7 for pdp-11 and makefile.vax for vax.'
+echo 'You should configure the one you want by hand'
+mv makefile makefile.old
+cat > makefile.v7 << '-*-END-*-'
+VERSION=2.11
+#
+# Ex skeletal makefile for version 7
+#
+# NB: This makefile doesn't indicate any dependencies on header files.
+#
+# Ex is very large - it may not fit on PDP-11's depending on the operating
+# system and the cflags you turn on. Things that can be turned off to save
+# space include LISPCODE (-l flag, showmatch and lisp options), UCVISUAL
+# (visual \ nonsense on upper case only terminals), CHDIR (the undocumented
+# chdir command,)  RDONLY (-R flag, view), SOFTTABS (^T tabs), ZCMD (the
+# various strange options after z plus ^F/^B), ZZCMD (ZZ from visual), WRAPMGN
+# (wrapmargin), TAGSCODE (the tags feature), OPENCODE (open without visual),
+# CRNL (code to support terminals with cr, nl, or ns attributes),
+# BEEHIVE (superbee: f1=esc, f2=^c)
+# Rule of thumb: OPENCODE will buy you about 2.5K, LISPCODE and TAGSCODE
+# are worth perhaps 1.5K, and the others are worth fairly small amounts
+# (mostly about 50-100 bytes).  UCVISUAL is worth a bit more (256?) and
+# you should take it out unless you have such a terminal.
+# Also make sure you are running the doprnt printf and not the portable
+# one unless you have to run the portable one.
+#
+# Don't define VFORK unless your system has the VFORK system call,
+# which is like fork but the two processes share memory until the
+# child execs. This speeds up ex by saving the memory copy.
+#
+# If your system expands tabs to 4 spaces you should -DTABS=4 below
+#
+BINDIR=	/usr/bin/eecs
+INSDIR=	/bin
+NBINDIR=/usr/bin/new
+LIBDIR=	/usr/lib
+FOLD=	${BINDIR}/fold
+CTAGS=	${BINDIR}/ctags
+XSTR=	${BINDIR}/xstr
+# Debugging must be done on a vax, otherwise it just won't fit.
+DEB=	${NONDEBUGFLAGS}	# or ${DEBUGFLAGS} if mdd
+DEBUGFLAGS=	-DTRACE -g
+NONDEBUGFLAGS=	-O
+CFLAGS=	${OPTIONS} ${DEB} 
+OPTIONS=	           -DCHDIR            -DSOFTTABS -DZCMD -DZZCMD -DRDONLY -DWRAPMGN -DTAGSCODE -DOPENCODE -DCRNL -DBEEHIVE
+# everything:	-DLISPCODE -DCHDIR -DUCVISUAL -DSOFTTABS -DZCMD -DZZCMD -DRDONLY -DWRAPMGN -DTAGSCODE -DOPENCODE -DCRNL -DBEEHIVE
+TERMLIB=	-ltermlib
+MKSTR=	${BINDIR}/mkstr
+CXREF=	${BINDIR}/cxref
+INCLUDE=/usr/include
+PR=	pr
+# PRINTF can be "pprintf.o" for the portable version or "printf.o doprnt.o"
+# for the nonportable version, which uses doprnt (written in pdp-11 assembly
+# language) and is quite a bit smaller than pprintf.o (about 900 bytes)
+PRINTF=	printf.o doprnt.o
+OBJS=	ex.o ex_addr.o ex_cmds.o ex_cmds2.o ex_cmdsub.o ex_data.o ex_get.o \
+	ex_io.o ex_put.o ex_re.o ex_set.o ex_subr.o ex_temp.o ex_tty.o \
+	ex_unix.o ex_v.o ex_vadj.o ex_vget.o ex_vmain.o ex_voperate.o \
+	ex_vops.o ex_vops2.o ex_vops3.o ex_vput.o ex_vwind.o \
+	${PRINTF} strings.o
+
+.c.o:
+	${MKSTR} - ex${VERSION}strings x $*.c
+	${CC} -E ${CFLAGS} x$*.c | ${XSTR} -c -
+	rm -f x$*.c
+	${CC} ${CFLAGS} -c x.c 
+	mv x.o $*.o
+
+a.out: ${OBJS}
+	cc -i ${OBJS} ${TERMLIB}
+#	cc -i -z ${OBJS} ${TERMLIB}
+
+all:	a.out exrecover expreserve tags
+
+tags:
+	${CTAGS} -w *.h *.c
+
+${OBJS}: ex_vars.h
+
+ex_vars.h:
+	csh makeoptions ${CFLAGS}
+
+strings.o: strings
+	${XSTR}
+	${CC} -c -S xs.c
+#	ed - <:rofix xs.s
+	as -o strings.o xs.s
+	rm xs.s
+	
+exrecover: exrecover.o
+	${CC} -o exrecover exrecover.o
+
+exrecover.o:
+	${CC} -c -O exrecover.c
+
+expreserve: expreserve.o
+	${CC} -o expreserve expreserve.o
+
+expreserve.o:
+	${CC} -c -O expreserve.c
+
+clean:
+#	If we dont have ex we cant make it so dont rm ex_vars.h
+#	-rm -f expreserve exrecover
+	-rm -f a.out ex${VERSION}strings strings core trace
+	-rm -f *.o x*.[cs]
+
+ninstall: a.out
+	-mv ${NBINDIR}/ex ${NBINDIR}/oldex
+	-rm -f ${NBINDIR}/vi ${NBINDIR}/view ${NBINDIR}/oldex
+	cp a.out ${NBINDIR}/ex
+	-cp ex${VERSION}strings ${LIBDIR}/ex${VERSION}strings
+	ln ${NBINDIR}/ex ${NBINDIR}/vi
+	ln ${NBINDIR}/ex ${NBINDIR}/view
+	chmod 1755 ${NBINDIR}/ex
+
+install: a.out
+	-ln ${BINDIR}/ex ${BINDIR}/oldex
+	-rm -f ${BINDIR}/ex ${BINDIR}/e /usr/bin/ex ${BINDIR}/edit ${BINDIR}/vi ${BINDIR}/view ${BINDIR}/oldex
+	cp a.out ${BINDIR}/ex
+	-cp ex${VERSION}strings ${LIBDIR}/ex${VERSION}strings
+	ln ${BINDIR}/ex ${BINDIR}/edit
+	ln ${BINDIR}/ex ${BINDIR}/e
+	ln ${BINDIR}/ex ${BINDIR}/vi
+#	ln ${BINDIR}/ex /usr/bin/ex
+	chmod 1755 ${BINDIR}/ex
+
+installutil: exrecover expreserve
+	cp exrecover ${LIBDIR}/ex${VERSION}recover
+	cp expreserve ${LIBDIR}/ex${VERSION}preserve
+	chmod 4755 ${LIBDIR}/ex${VERSION}recover ${LIBDIR}/ex${VERSION}preserve
+#	cd ../termcap ; make install
+	mkdir /usr/preserve
+
+lint:
+	lint ex.c ex_?*.c
+	lint -u exrecover.c
+	lint expreserve.c
+
+print:
+	@${PR} READ* BUGS
+	@${PR} makefile*
+	@${PR} /etc/termcap
+	@(size -l a.out ; size *.o) | ${PR} -h sizes
+	@${PR} -h errno.h ${INCLUDE}/errno.h
+	@${PR} -h setjmp.h ${INCLUDE}/setjmp.h
+	@${PR} -h sgtty.h ${INCLUDE}/sgtty.h
+	@${PR} -h signal.h ${INCLUDE}/signal.h
+	@${PR} -h stat.h ${INCLUDE}/stat.h
+	@${PR} -h types.h ${INCLUDE}/types.h
+	@ls -ls | ${PR}
+	@${CXREF} *.c | ${PR} -h XREF
+	@${PR} *.h *.c
+'-*-END-*-'
+cat > makefile.vax << '-*-END-*-'
+VERSION=2.11
+#
+# Ex skeletal makefile for version 7
+#
+# NB: This makefile doesn't indicate any dependencies on header files.
+#
+# Ex is very large - it may not fit on PDP-11's depending on the operating
+# system and the cflags you turn on. Things that can be turned off to save
+# space include LISPCODE (-l flag, showmatch and lisp options), UCVISUAL
+# (visual \ nonsense on upper case only terminals), CHDIR (the undocumented
+# chdir command,)  RDONLY (-R flag, view), SOFTTABS (^T tabs), ZCMD (the
+# various strange options after z plus ^F/^B), ZZCMD (ZZ from visual), WRAPMGN
+# (wrapmargin), TAGSCODE (the tags feature), OPENCODE (open without visual),
+# CRNL (code to support terminals with cr, nl, or ns attributes),
+# BEEHIVE (superbee: f1=esc, f2=^c)
+# Rule of thumb: OPENCODE will buy you about 2.5K, LISPCODE and TAGSCODE
+# are worth perhaps 1.5K, and the others are worth fairly small amounts
+# (mostly about 50-100 bytes).  UCVISUAL is worth a bit more (256?) and
+# you should take it out unless you have such a terminal.
+#
+# Don't define VFORK unless your system has the VFORK system call,
+# which is like fork but the two processes share memory until the
+# child execs. This speeds up ex by saving the memory copy.
+#
+# If your system expands tabs to 4 spaces you should -DTABS=4 below
+#
+BINDIR=	/usr/ucb
+NBINDIR=/usr/new
+LIBDIR=	/usr/lib
+FOLD=	${BINDIR}/fold
+CTAGS=	${BINDIR}/ctags
+XSTR=	${BINDIR}/xstr
+DEB=	${NONDEBUGFLAGS}	# or ${DEBUGFLAGS} if mdd
+DEBUGFLAGS=	-DTRACE -g
+NONDEBUGFLAGS=	-O
+CFLAGS=	-DVFORK -DBUFSIZ=1024 ${OPTIONS} ${DEB} 
+OPTIONS=	-DLISPCODE -DCHDIR -DUCVISUAL -DSOFTTABS -DZCMD -DZZCMD -DRDONLY -DWRAPMGN -DTAGSCODE -DOPENCODE -DCRNL -DBEEHIVE
+# everything:	-DLISPCODE -DCHDIR -DUCVISUAL -DSOFTTABS -DZCMD -DZZCMD -DRDONLY -DWRAPMGN -DTAGSCODE -DOPENCODE -DCRNL -DBEEHIVE
+TERMLIB=	-ltermlib
+MKSTR=	${BINDIR}/mkstr
+CXREF=	${BINDIR}/cxref
+INCLUDE=/usr/include
+PR=	pr
+PRINTF=	pprintf.o
+# PRINTF=	doprnt.o printf.o
+OBJS=	ex.o ex_addr.o ex_cmds.o ex_cmds2.o ex_cmdsub.o ex_data.o ex_get.o \
+	ex_io.o ex_put.o ex_re.o ex_set.o ex_subr.o ex_temp.o ex_tty.o \
+	ex_unix.o ex_v.o ex_vadj.o ex_vget.o ex_vmain.o ex_voperate.o \
+	ex_vops.o ex_vops2.o ex_vops3.o ex_vput.o ex_vwind.o \
+	${PRINTF} strings.o
+
+all:	a.out exrecover expreserve tags
+
+.c.o:
+	${MKSTR} - ex${VERSION}strings x $*.c
+	${CC} -E ${CFLAGS} x$*.c | ${XSTR} -c -
+	rm -f x$*.c
+	${CC} ${CFLAGS} -c x.c 
+	mv x.o $*.o
+
+a.out: ${OBJS}
+	cc -i ${OBJS} ${TERMLIB}
+#	cc -i -z ${OBJS} ${TERMLIB}
+
+tags:
+	${CTAGS} -w *.h *.c
+
+${OBJS}: ex_vars.h
+
+ex_vars.h:
+	csh makeoptions ${CFLAGS}
+
+strings.o: strings
+	${XSTR}
+	${CC} -c -S xs.c
+	ed - <:rofix xs.s
+	as -o strings.o xs.s
+	rm xs.s
+	
+exrecover: exrecover.o
+	${CC} -o exrecover exrecover.o
+
+exrecover.o:
+	${CC} -c -O exrecover.c
+
+expreserve: expreserve.o
+	${CC} -o expreserve expreserve.o
+
+expreserve.o:
+	${CC} -c -O expreserve.c
+
+clean:
+#	If we dont have ex we cant make it so dont rm ex_vars.h
+#	-rm -f expreserve exrecover
+	-rm -f a.out ex${VERSION}strings strings core trace
+	-rm -f *.o x*.[cs]
+
+ninstall: a.out
+	-rm -f ${NBINDIR}/ex ${NBINDIR}/vi
+	cp a.out ${NBINDIR}/ex
+	-cp ex${VERSION}strings ${LIBDIR}/ex${VERSION}strings
+	ln ${NBINDIR}/ex ${NBINDIR}/vi
+	chmod 1755 ${NBINDIR}/ex
+
+install: a.out
+	-rm -f ${BINDIR}/ex ${BINDIR}/e /usr/bin/ex ${BINDIR}/edit ${BINDIR}/vi
+	cp a.out ${BINDIR}/ex
+	-cp ex${VERSION}strings ${LIBDIR}/ex${VERSION}strings
+	ln ${BINDIR}/ex ${BINDIR}/edit
+	ln ${BINDIR}/ex ${BINDIR}/e
+	ln ${BINDIR}/ex ${BINDIR}/vi
+#	ln ${BINDIR}/ex /usr/bin/ex
+	chmod 1755 ${BINDIR}/ex
+
+installutil: exrecover expreserve
+	cp exrecover ${LIBDIR}/ex${VERSION}recover
+	cp expreserve ${LIBDIR}/ex${VERSION}preserve
+	chmod 4755 ${LIBDIR}/ex${VERSION}recover ${LIBDIR}/ex${VERSION}preserve
+	install.termcap
+	mkdir /usr/preserve
+
+lint:
+	lint ex.c ex_?*.c
+	lint -u exrecover.c
+	lint expreserve.c
+
+print:
+	@${PR} READ* BUGS
+	@${PR} makefile*
+	@${PR} /etc/termcap
+	@(size -l a.out ; size *.o) | ${PR} -h sizes
+	@${PR} -h errno.h ${INCLUDE}/errno.h
+	@${PR} -h setjmp.h ${INCLUDE}/setjmp.h
+	@${PR} -h sgtty.h ${INCLUDE}/sgtty.h
+	@${PR} -h signal.h ${INCLUDE}/signal.h
+	@${PR} -h stat.h ${INCLUDE}/stat.h
+	@${PR} -h types.h ${INCLUDE}/types.h
+	@ls -ls | ${PR}
+	@${CXREF} *.c | ${PR} -h XREF
+	@${PR} *.h *.c
+'-*-END-*-'
+mv printf.c pprintf.c
+cat > printf.c << '-*-END-*-'
+/* Copyright (c) 1979 Regents of the University of California */
+
+/*
+ * This version of printf calls doprnt, and as such is not portable,
+ * since doprnt is written in pdp-11 assembly language.  (There is a
+ * vax doprnt which has the first 2 arguments reversed.  We don't use it.)
+ * This version is used because it is about 900 bytes smaller than the
+ * portable version, which is also included in case it is needed.
+ */
+#ifdef TRACE
+#include	<stdio.h>
+#undef putchar
+#endif
+
+printf(fmt, args)
+char *fmt;
+{
+	_doprnt(fmt, &args, 0);
+}
+
+_strout(string, count, adjust, file, fillch)
+register char *string;
+register count;
+int adjust;
+register struct _iobuf *file;
+{
+	while (adjust < 0) {
+		if (*string=='-' && fillch=='0') {
+			putchar(*string++);
+			count--;
+		}
+		putchar(fillch);
+		adjust++;
+	}
+	while (--count>=0)
+		putchar(*string++);
+	while (adjust) {
+		putchar(fillch);
+		adjust--;
+	}
+}
+'-*-END-*-'
+cat > doprnt.s << '-*-END-*-'
+
+/ C library -- conversions
+/ doprnt.s - used by nonportable printf
+
+width=-8.
+formp=-10.
+rjust=-12.
+ndfnd=-14.
+ndigit=-16.
+zfill=-18.
+.globl	__doprnt
+
+.globl	pfloat
+.globl	pscien
+.globl	pgen
+
+.globl	__strout
+.globl	csv
+.globl	cret
+
+__doprnt:
+	jsr	r5,csv
+	sub	$128.+12.,sp
+	mov	4(r5),formp(r5)		/ format
+	mov	6(r5),r4
+loop:
+	mov	sp,r3
+	mov	formp(r5),r1
+2:
+	movb	(r1)+,r2
+	beq	2f
+	cmp	r2,$'%
+	beq	2f
+	movb	r2,(r3)+
+	br	2b
+2:
+	mov	r1,formp(r5)
+	cmp	r3,sp
+	beq	2f
+	mov	sp,r0
+	mov	8(r5),-(sp)
+	clr	-(sp)
+	mov	r3,-(sp)
+	sub	r0,(sp)
+	mov	r0,-(sp)
+	jsr	pc,__strout
+	add	$8,sp
+2:
+	tst	r2
+	bne	2f
+	jmp	cret
+2:
+	mov	sp,r3
+2:
+	clr	rjust(r5)
+	clr	ndigit(r5)
+	mov	$' ,zfill(r5)
+	cmpb	*formp(r5),$'-
+	bne	2f
+	inc	formp(r5)
+	inc	rjust(r5)
+2:
+	cmpb	*formp(r5),$'0
+	bne	2f
+	mov	$'0,zfill(r5)
+2:
+	jsr	r3,gnum
+	mov	r1,width(r5)
+	clr	ndfnd(r5)
+	cmp	r0,$'.
+	bne	1f
+	jsr	r3,gnum
+	mov	r1,ndigit(r5)
+1:
+	mov	$swtab,r1
+1:
+	mov	(r1)+,r2
+	bne	2f
+	movb	r0,(r3)+
+	jmp	prbuf
+2:
+	cmp	r0,(r1)+
+	bne	1b
+	jmp	(r2)
+	.data
+swtab:
+	decimal;	'd
+	octal;		'o
+	hex;		'x
+	float;		'f
+	scien;		'e
+	general;	'g
+	charac;		'c
+	string;		's
+	longorunsg;	'l
+	longorunsg;	'L
+	unsigned;	'u
+	remote;		'r
+	long;		'D
+	loct;		'O
+	lhex;		'X
+	lunsigned;	'U
+	0;  0
+	.text
+
+general:
+	mov	ndigit(r5),r0
+	mov	ndfnd(r5),r2
+	jsr	pc,pgen
+	jbr	prbuf
+
+longorunsg:
+	movb	*formp(r5),r0
+	inc	formp(r5)
+	cmp	r0,$'o
+	beq	loct
+	cmp	r0,$'x
+	beq	lhex
+	cmp	r0,$'d
+	beq	long
+	cmp	r0,$'u
+	beq	lunsigned
+	dec	formp(r5)
+	br	unsigned
+
+octal:
+	clr	r0
+	br	1f
+loct:
+	mov	(r4)+,r0
+1:
+	mov	$8.,r2
+	br	2f
+
+hex:
+	clr	r0
+	br	1f
+
+lhex:
+	mov	(r4)+,r0
+1:
+	mov	$16.,r2
+2:
+	mov	(r4)+,r1
+	br	compute
+
+decimal:
+	mov	(r4)+,r1
+	sxt	r0
+	bmi	3f
+	br	2f
+
+unsigned:
+	clr	r0
+	br	1f
+
+long:
+	mov	(r4)+,r0
+	bge	1f
+	mov	(r4)+,r1
+3:
+	neg	r0
+	neg	r1
+	sbc	r0
+	movb	$'-,(r3)+
+	br	2f
+
+lunsigned:
+	mov	(r4)+,r0
+1:
+	mov	(r4)+,r1
+2:
+	mov	$10.,r2
+
+/
+/ Algorithm courtesy Keith Davis
+/
+compute:
+	mov	r5,-(sp)
+	mov	r4,-(sp)
+	mov	r0,r4
+	mov	ndigit(r5),r0	/ patch
+	mov	r1,r5
+	ashc	$0,r4
+	beq	1f
+/	tst	ndigit(r5)
+	tst	r0		/ patch
+	beq	1f
+	movb	$'0,(r3)+
+1:
+	jsr	pc,1f
+	mov	(sp)+,r4
+	mov	(sp)+,r5
+	br	prbuf
+
+1:
+	clr	r0
+	mov	r4,r1
+	beq	2f
+	div	r2,r0
+	mov	r0,r4
+	mov	r1,r0
+2:
+	mov	r5,r1
+	asl	r2
+	div	r2,r0
+	asr	r2
+	asl	r0
+	cmp	r2,r1
+	bgt	2f
+	sub	r2,r1
+	inc	r0
+2:
+	mov	r1,-(sp)
+	mov	r0,r5
+	bne	2f
+	tst	r4
+	beq	1f
+2:
+	jsr	pc,1b
+1:
+	mov	(sp)+,r0
+	add	$'0,r0
+	cmp	r0,$'9
+	ble	1f
+	add	$'a-'0-10.,r0
+1:
+	movb	r0,(r3)+
+	rts	pc
+	
+charac:
+	movb	(r4)+,(r3)+
+	bne	1f
+	dec	r3
+1:
+	movb	(r4)+,(r3)+
+	bne	prbuf
+	dec	r3
+	br	prbuf
+
+string:
+	mov	ndigit(r5),r1
+	mov	(r4),r2
+	mov	r2,r3
+	bne	1f
+	mov	$nulstr,r2
+	mov	r2,r3
+	mov	r2,(r4)
+1:
+	tstb	(r2)+
+	beq	1f
+	inc	r3
+	sob	r1,1b
+1:
+	mov	(r4)+,r2
+	br	prstr
+
+float:
+	mov	ndigit(r5),r0
+	mov	ndfnd(r5),r2
+	jsr	pc,pfloat
+	br	prbuf
+
+scien:
+	mov	ndigit(r5),r0
+	inc	r0
+	tst	ndfnd(r5)
+	bne	1f
+	mov	$7,r0
+1:
+	mov	pc,r2
+	jsr	pc,pscien
+	br	prbuf
+
+remote:
+	mov	(r4)+,r4
+	mov	(r4)+,formp(r5)
+	jmp	loop
+
+prbuf:
+	mov	sp,r2
+prstr:
+	sub	r2,r3
+	mov	width(r5),r1
+	sub	r3,r1
+	bge	1f
+	clr	r1
+1:
+	tst	rjust(r5)
+	bne	1f
+	neg	r1
+1:
+	mov	zfill(r5),-(sp)
+	mov	8(r5),-(sp)
+	mov	r1,-(sp)
+	mov	r3,-(sp)
+	mov	r2,-(sp)
+	jsr	pc,__strout
+	add	$10.,sp
+	jmp	loop
+
+gnum:
+	clr	ndfnd(r5)
+	clr	r1
+1:
+	movb	*formp(r5),r0
+	inc	formp(r5)
+	sub	$'0,r0
+	cmp	r0,$'*-'0
+	bne	2f
+	mov	(r4)+,r0
+	br	3f
+2:
+	cmp	r0,$9.
+	bhi	1f
+3:
+	inc	ndfnd(r5)
+	mul	$10.,r1
+	add	r0,r1
+	br	1b
+1:
+	add	$'0,r0
+	rts	r3
+
+/.bss
+/width:	.=.+2
+/formp:	.=.+2
+/rjust:	.=.+2
+/ndfnd:	.=.+2
+/ndigit:	.=.+2
+/zfill:	.=.+2
+.data
+nulstr:
+	<(null)\0>
+'-*-END-*-'

@@ -1,0 +1,65 @@
+
+GETPWENT(3)         UNIX Programmer's Manual          GETPWENT(3)
+
+NAME
+     getpwent, getpwuid, getpwnam, setpwent, endpwent - get pass-
+     word file entry
+
+SYNOPSIS
+     #include <pwd.h>
+
+     struct passwd *getpwent();
+
+     struct passwd *getpwuid(uid) int uid;
+
+     struct passwd *getpwnam(name) char *name;
+
+     int setpwent();
+
+     int endpwent();
+
+DESCRIPTION
+     _G_e_t_p_w_e_n_t, _g_e_t_p_w_u_i_d and _g_e_t_p_w_n_a_m each return a pointer to an
+     object with the following structure containing the broken-
+     out fields of a line in the password file.
+
+          struct    passwd { /* see getpwent(3) */
+               char *pw_name;
+               char *pw_passwd;
+               int  pw_uid;
+               int  pw_gid;
+               int  pw_quota;
+               char *pw_comment;
+               char *pw_gecos;
+               char *pw_dir;
+               char *pw_shell;
+          };
+
+     The fields _p_w__q_u_o_t_a and _p_w__c_o_m_m_e_n_t are  unused;  the  others
+     have meanings described in _p_a_s_s_w_d(5).
+
+     _G_e_t_p_w_e_n_t reads the next line (opening  the  file  if  neces-
+     sary); _s_e_t_p_w_e_n_t rewinds the file; _e_n_d_p_w_e_n_t closes it.
+
+     _G_e_t_p_w_u_i_d and _g_e_t_p_w_n_a_m search  from  the  beginning  until  a
+     matching _u_i_d or _n_a_m_e is found (or until EOF is encountered).
+
+FILES
+     /etc/passwd
+
+SEE ALSO
+     getgrent(3), getlogin(3), passwd(5)
+
+DIAGNOSTICS
+     A null pointer returned on EOF or error.
+
+Printed 5/27/83                                                 1
+
+GETPWENT(3)         UNIX Programmer's Manual          GETPWENT(3)
+
+BUGS
+     All information is contained in a static area so it must  be
+     copied if it is to be saved.
+
+Printed 5/27/83                                                 2
+

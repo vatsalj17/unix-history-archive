@@ -1,0 +1,34 @@
+.TH LOCK 2
+.UC
+.SH NAME
+lock \- lock a process in primary memory
+.SH SYNOPSIS
+.B lock(flag)
+.SH DESCRIPTION
+If the
+.I flag
+argument is non-zero,
+the process executing this call
+will not be swapped except if it is required
+to grow.
+If the argument is zero,
+the process is
+.RI un lock ed.
+This call may only be executed by
+the super-user.
+.SH BUGS
+.IR Lock ed
+processes interfere with the compaction of primary memory
+and can cause deadlock.
+This system call is not considered
+a permanent part of the system.
+.SH ERRORS
+.I Lock
+will fail if:
+.TP 20
+[EPERM]
+The effective user ID is not the super-user.
+.SH ASSEMBLER
+(lock = 53.)
+.br
+.B sys lock; flag

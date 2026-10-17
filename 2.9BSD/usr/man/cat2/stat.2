@@ -1,0 +1,138 @@
+
+STAT(2)             UNIX Programmer's Manual              STAT(2)
+
+NAME
+     stat, lstat, fstat - get file status
+
+SYNOPSIS
+     #include <sys/types.h>
+     #include <sys/stat.h>
+
+     stat(name, buf)
+     char *name;
+     struct stat *buf;
+
+     lstat(name, buf);
+     char *name;
+     struct stat *buf;
+
+     fstat(fildes, buf)
+     struct stat *buf;
+
+DESCRIPTION
+     _S_t_a_t obtains detailed information about a named file.  Read,
+     write, or execute permission of the named file is not
+     required, but all directories in the path name leadiing to
+     the file must be searchable.
+
+     _L_s_t_a_t is like _s_t_a_t except in the case where the named file
+     is a symbolic link, in which case _l_s_t_a_t returns information
+     about the link, while _s_t_a_t returns information about the
+     file the link references.  _F_s_t_a_t obtains the same informa-
+     tion about an open file known by the file descriptor from a
+     successful _o_p_e_n, _c_r_e_a_t, _d_u_p or _p_i_p_e(2) call.
+
+     _N_a_m_e points to a null-terminated string naming a file; _b_u_f
+     is the address of a buffer into which information is placed
+     concerning the file.  The layout of the structure pointed to
+     by buf as defined in <_s_t_a_t._h> is given below.  _S_t__m_o_d_e is
+     encoded according to the `#define' statements.
+
+     struct    stat
+     {
+          dev_t     st_dev;
+          ino_t     st_ino;
+          u_short st_mode;
+          short     st_nlink;
+          short     st_uid;
+          short     st_gid;
+          dev_t     st_rdev;
+          off_t     st_size;
+          time_t    st_atime;
+          time_t    st_mtime;
+          time_t    st_ctime;
+     };
+
+Printed 7/30/83                                                 1
+
+STAT(2)             UNIX Programmer's Manual              STAT(2)
+
+     #define S_IFMT   0170000  /* type of file */
+     #define          S_IFDIR  0040000/* directory */
+     #define          S_IFCHR  0020000/* character special */
+     #define          S_IFBLK  0060000/* block special */
+     #define          S_IFREG  0100000/* regular */
+     #define          S_IFMPC  0030000/* multiplexed char special */
+     #define          S_IFMPB  0070000/* multiplexed block special */
+     #define          S_IFQUOT 0140000 /* quota */
+
+     #define S_ISUID  0004000  /* set user id on execution */
+     #define S_ISGID  0002000  /* set group id on execution */
+     #define S_ISVTX  0001000  /* save swapped text even after use */
+     #define S_IREAD  0000400  /* read permission, owner */
+     #define S_IWRITE 0000200  /* write permission, owner */
+     #define S_IEXEC  0000100  /* execute/search permission, owner */
+
+     The mode bits 0000070 and 0000007 encode group and others
+     permissions (see _c_h_m_o_d(2)).  The defined types, _i_n_o__t,
+     _o_f_f__t, _t_i_m_e__t, name various width integer values; _d_e_v__t
+     encodes major and minor device numbers; their exact defini-
+     tions are in the include file <sys/types.h> (see _t_y_p_e_s(5)).
+
+     When _f_i_l_d_e_s is associated with a pipe, _f_s_t_a_t reports an
+     ordinary file with restricted permissions.  The size is the
+     number of bytes queued in the pipe.
+
+     _S_t__a_t_i_m_e is the file was last read.  For reasons of effi-
+     ciency, it is not set when a directory is searched, although
+     this would be more logical.  _S_t__m_t_i_m_e is the time the file
+     was last written or created.  It is not set by changes of
+     owner, group, link count, or mode.  _S_t__c_t_i_m_e is set both
+     both by writing and changing the i-node.
+
+ERRORS
+     _S_t_a_t and _l_s_t_a_t will fail if one or more of the following is
+     true:
+
+     [ENOTDIR]           A component of the path prefix is not a
+                         directory.
+
+     [EINVAL]            The path name contained a non-ASCII
+                         character.
+
+     [ENOENT]            The named file does not exist.
+
+     [EACCES]            Search permission is denied for a com-
+                         ponent of the path prefix.
+
+     [EFAULT]            _B_u_f or _n_a_m_e points to an invalid
+                         address.
+
+     [ELOOP]             Too many symbolic links were encountered
+
+Printed 7/30/83                                                 2
+
+STAT(2)             UNIX Programmer's Manual              STAT(2)
+
+                         in translating the path name.
+
+     _F_s_t_a_t will fail if one or both of the following is true:
+
+     [EBADF]             _F_i_l_d_e_s is not a valid open file descrip-
+                         tor.
+
+     [EFAULT]            _B_u_f points to an invalid address.
+
+SEE ALSO
+     ls(1), filsys(5)
+
+ASSEMBLER
+     (stat = 18.)
+     sys stat; name; buf
+
+     (fstat = 28.)
+     (file descriptor in r0)
+     sys fstat; buf
+
+Printed 7/30/83                                                 3
+

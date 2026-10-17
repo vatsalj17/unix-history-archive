@@ -1,0 +1,72 @@
+.TH LINK 2 
+.UC
+.SH NAME
+link \- link to a file
+.SH SYNOPSIS
+.B link(name1, name2)
+.br
+.B char *name1, *name2;
+.SH DESCRIPTION
+A link
+to
+.I name1
+is created;
+the link has the name
+.IR name2 .
+Either name may be an arbitrary path name.
+.SH ERRORS
+.I Link
+will fail and no link will be created if one or more of the following is true:
+.TP 20
+[EINVAL]
+Either path name contains a non-ASCII byte.
+.TP 20
+[ENOTDIR]
+A component of either path prefix is not a directory.
+.TP 20
+[ENOENT]
+A component of either path prefix does not exist.
+.TP 20
+[EACCES]
+A component of either path prefix denies search permission.
+.TP 20
+[ENOENT]
+The file named by
+.I name1
+does not exist.
+.TP 20
+[EEXIST]
+The link named by
+.I name2
+does exist.
+.TP 20
+[EPERM]
+The file named by
+.I name1
+is a directory and the effective user ID is not the super-user.
+.TP 20
+[EXDEV]
+The link named by
+.I name2
+and the file named by
+.I name1
+are on different file systems.
+.TP 20
+[EACCES]
+The requested link requires writing iin a directory with a mode that
+denies write permission.
+.TP 20
+[EROFS]
+The requested link requires writing in a directory on a read-only file system.
+.TP 20
+[EFAULT]
+One of the path names specified is outside the process's allocated address space.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.SH "SEE ALSO"
+ln(1), unlink(2)
+.SH ASSEMBLER
+(link = 9.)
+.br
+.B sys link; name1; name2

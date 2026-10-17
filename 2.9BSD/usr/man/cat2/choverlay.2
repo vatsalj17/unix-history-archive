@@ -1,0 +1,52 @@
+
+CHOVERLAY(2)        UNIX Programmer's Manual         CHOVERLAY(2)
+
+NAME
+     choverlay - change overlay
+
+SYNOPSIS
+     choverlay(ovno)
+     int ovno;
+
+DESCRIPTION
+     _C_h_o_v_e_r_l_a_y is an "invisible" system call used by overlaid
+     (type 0430 or 0431) programs to remap a fixed segment of the
+     process's text address space to one of up to seven different
+     overlay segments. These segments are determined by the _l_d(1)
+     utility at the time of program creation.  Similarly, _l_d(1)
+     inserts the appropriate _c_h_o_v_e_r_l_a_y calls to effect the over-
+     laid execution of the process.
+
+     Notice that the _c_h_o_v_e_r_l_a_y system call is intended only to be
+     used by the overlay mechanism. In fact, it is impossible to
+     use this system call in nonoverlaid programs because of its
+     implementation. Instead of using the `sys' or `trap'
+     instruction as other system calls, this call redefines the
+     `emt' instruction as the overlay call. In ordinary (nonover-
+     laid) programs this ``emulator trap instruction'' generates
+     a SIGEMT exception.  In overlaid programs the instruction
+     switches to the overlay indicated in general register zero
+     (r0).  Overlays are numbered 1-7, with 0 indicating that no
+     overlay is to be mapped.  If the number specified
+     corresponds to an overlay that is unused (has zero length),
+     no overlay will be mapped.  If the overlay number is outside
+     of the range of 0-7 a SIGEMT exception will be generated.
+
+     Overlay address regions are mapped by one or more segmenta-
+     tion registers in the user text address space, begining with
+     the segmentation register following regular text space.
+
+WARNING
+     The _c_h_o_v_e_r_l_a_y system call is meant to be executed from
+     within the normal text space.  Unpredictable results will
+     occur if this call is attempted from within an overlay.
+
+SEE ALSO
+     ld(1), signal(2), a.out(5)
+
+ASSEMBLER
+     (overlay number r0)
+     emt       / text address space contents will change
+
+Printed 5/17/83                                                 1
+

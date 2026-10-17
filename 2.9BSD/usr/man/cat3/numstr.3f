@@ -1,0 +1,64 @@
+
+NUMSTR(3F)          UNIX Programmer's Manual           NUMSTR(3F)
+
+NAME
+     numstr - convert a number to a string
+
+SYNTAX
+     numstr(value,precision)
+     character*length numstr
+     real value
+     integer*2 precision
+
+DESCRIPTION
+     _N_u_m_s_t_r is a character function that becomes the ascii
+     equivalent of the real number _v_a_l_u_e.  The format is the
+     number left justified with any remaining characters being
+     blanks.  _N_u_m_s_t_r is not null terminated to fit Fortran stan-
+     dards.
+
+     _P_r_e_c_i_s_i_o_n is the number of digits to the right of the
+     decimal point. For integer output precision = -1 and for
+     output in exponent format add 1,000 to the precision.  Thus
+
+            Value       Precision      Character*10 numstr
+
+         123.456            3             "123.456   "
+                            2             "123.45    "
+                            1             "123.4     "
+                            0             "123.      "
+                           -1             "123       "
+                           -2             "12        "
+                           -3             "1         "
+        -123.456           -3             "-1        "
+                           -2             "-12       "
+                           -1             "-123      "
+                            0             "-123.     "
+                         1003             "-1.234e+02"
+                         1002             "-1.23e+02 "
+                         1001             "-1.2e+02  "
+                         1000             "-1.e+02   "
+                          999             "-1e+02    "
+                          998             not valid
+
+BUGS
+     An internal buffer is arbitrarily set to limit any precision
+     to less than 40 or 1040 as appropriate.
+
+EXAMPLE
+             character*15  numstr
+             x=1.23
+             y=3.45
+             write(6,1)numstr(x,2),numstr(y,1002)
+      1      format(2a15)
+             call letter(x,y,-1,numstr(x,1002),30.0,1)
+
+Printed 5/16/83                                                 1
+
+NUMSTR(3F)          UNIX Programmer's Manual           NUMSTR(3F)
+
+AUTHOR
+     Peter L. Ward, U.S.Geological Survey, Menlo Park, California
+
+Printed 5/16/83                                                 2
+

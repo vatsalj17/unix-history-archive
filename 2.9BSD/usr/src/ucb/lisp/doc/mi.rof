@@ -1,0 +1,65 @@
+.ce 1
+list structure insertion macro
+.bl
+.ti +5
+on file /lib/lisp/mi.tec is a teco macro which automatically 
+formats list structure as you type it.
+get the macro into a q-register and execute it when the buffer
+pointer is at the beginning of a line.
+any characters typed will be inserted into the buffer.
+when a line feed is typed, sufficient tabs and blanks are inserted to indent the
+new line just the way the lisp pretty-printer would indent it.
+the tabs and blanks are echoed so that what appears on
+the screen corresponds to what is in the file. super-brackets
+are handled appropriately. if too many right parentheses are typed,
+a warning message is printed and the extras are ignored for
+formatting purposes. if you make a typing error, a control q will
+delete the current line. the deleted text will disappear from
+the screen and the cursor will be repositioned. successive control-q's
+continue to delete lines and move the cursor up the screen. exit the
+macro with control-c.
+.bl
+.ti +5
+the macro uses q-registers 1, 2, 3, a, c, and s.
+.bl
+.ti +5
+.ti +5
+One can bring the macro into teco by the teco command:
+.br
+*em/lib/lisp/mi.tec$i$$
+.br
+which will bring it into q-register i,  where
+it can be executed with *mi$$. (the * is teco's prompt and the
+dollar signs are altmodes).
+.bl
+glytchs:
+.bl
+.in 5
+the ^u feature only works on terminals for which 154 octal moves
+the cursor up (most of the data-points are ok). on other terminals
+you can still delete lines with ^u but the deleted text will remain
+on the screen.
+.bl
+when the message "too many right parentheses" appears,
+it will take two control u's to get rid of the offending line.
+.bl
+if more than one control-u is used, they don't disappear from the
+screen. 
+.bl
+you can control-u right to the beginning of the text
+which you have inserted. if you hit ^u again, and there was stuff
+above what you had inserted, there are no gaurantees that you will
+come out alive.
+.bl
+.ti -3
+bug:
+.bl
+if a left superbracket governs the line above a deleted line,
+the cursor isn't repositioned properly. this can be remedied by another
+^u.
+ 
+.bl
+This macro was written by greg nelson for use in applied math 110 and other
+courses using lisp.
+
+

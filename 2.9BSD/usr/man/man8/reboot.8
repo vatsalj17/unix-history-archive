@@ -1,0 +1,91 @@
+.TH REBOOT 8
+.UC
+.SH NAME
+reboot \- UNIX bootstrapping procedures
+.SH SYNOPSIS
+.B /etc/reboot
+[
+.B \-n
+] [
+.B \-q
+] [
+.B \-f
+] [
+.B \-a
+] [
+.B \-h
+] [
+.B \-d
+]
+.SH DESCRIPTION
+.PP
+UNIX is started by placing it in memory
+at location zero and transferring to zero.
+Since the system is not reentrant,
+it is necessary to read it in from disk or tape
+each time it is to be bootstrapped.
+.PP
+.B Rebooting a running system.
+When a UNIX is running and a reboot is desired,
+.IR shutdown (8)
+is normally used.
+If there are no users then
+.I /etc/reboot
+can be used.
+.I Reboot
+normally causes the disks to be synced, and then a multi-user
+reboot (as described below) is initiated.  This causes a system to be
+booted and an automatic disk check to be performed.  If all this succeeds
+without incident, the system is then brought up multiuser.
+.PP
+Options to
+.I reboot
+are:
+.TP
+.B \-\^n
+option avoids the sync.
+It is necessary to reboot without a sync after rebuilding
+the root file system.
+.TP
+.B \-\^q
+reboots quickly and ungracefully, without shutting down running
+processes first.
+.TP
+.B \-\^f
+fast boot, omitting the automatic file system consistency check.
+.TP
+.B \-\^a
+.IR boot (8)
+will ask for the name of the system to be booted,
+rather than immediately booting the default system.
+.TP
+.B \-\^h
+halt the system rather than rebooting.
+.TP
+.B \-\^d
+dump memory onto the dump device, usually part of swap, before rebooting.
+The dump is done in the same way as after a panic.
+.PP
+.B "Power fail and crash recovery."
+The system will normally reboot itself after crashes
+and power failures (if the contents of low memory are intact).
+An automatic consistency check of the file systems will be performed
+and unless this fails the system will resume multiuser operations.
+.PP
+.B Cold starts.
+These are processor dependent.
+See
+.IR boot (8).
+.SH FILES
+.ta 2.5i
+/unix	system code
+.br
+/usr/src/sys/mdec/xxboot	block 0 bootstrap for boot device xx
+.br
+/boot	system bootstrap, on boot disk file system
+.br
+/etc/init
+.br
+/etc/rc	script to check file systems and bring the system up
+.SH "SEE ALSO"
+crash(8), fsck(8), init(8), rc(8), shutdown(8)

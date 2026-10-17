@@ -1,0 +1,40 @@
+
+WORKDR(3F)          UNIX Programmer's Manual           WORKDR(3F)
+
+NAME
+     workdr - get name of working directory
+
+SYNTAX
+     character*length workdr, name
+     workdr()
+     or
+     call workdr(name)
+
+DESCRIPTION
+     _W_o_r_k_d_r returns the absolute pathname of the working direc-
+     tory as a string.  It works like _p_w_d(1) moving up the file
+     tree to each parent directory until it reaches root and then
+     it changes back to the current directory.  If the length of
+     _w_o_r_k_d_r is not long enough for the pathname, _w_o_r_k_d_r is
+     returned as all blank.  _W_o_r_k_d_r is returned as a string that
+     is not null-terminated.  Note that dummy parentheses are
+     required for the compiler to recognize _w_o_r_k_d_r if used as a
+     function.
+
+SEE ALSO
+     pwd(1)
+
+EXAMPLE
+           character*20 workdr,name
+           write(6,1) workdr()
+         1 format(20a1)
+           call workdr(name)
+           write(6,1)name
+           end
+
+AUTHOR
+     Peter L. Ward, U.S. Geological Survey, Menlo Park, Califor-
+     nia.
+
+Printed 5/16/83                                                 1
+

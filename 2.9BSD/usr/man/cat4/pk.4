@@ -1,0 +1,48 @@
+
+PK(4)               UNIX Programmer's Manual                PK(4)
+
+NAME
+     pk - packet driver
+
+DESCRIPTION
+     The packet driver implements a full-duplex end-to-end flow
+     control strategy for machine-to-machine communication.
+     Packet driver protocol is established by calling _p_k_o_n(2)
+     with a character device file descriptor and a desired packet
+     size in bytes.  The packet size must be a power of 2,
+     32<__s_i_z_e<_4096.  The file descriptor must represent an 8-bit
+     data path.  This is normally obtained by  setting the device
+     in raw mode (see _i_o_c_t_l(2)).
+
+     The actual packet size, which may be smaller than the
+     desired packet size, is arrived at by negotiation with the
+     packet driver at the remote end of the data link.
+
+     The packet driver maintains two data areas for incoming and
+     outgoing packets.  The output area is needed to implement
+     retransmission on errors, and arriving packets are queued in
+     the input area.  Data arriving for a file not open for read-
+     ing are discarded.  Initially the size of both areas is set
+     to two packets.
+
+     It is not necessary that reads and writes be multiples of
+     the packet size although there is less system overhead if
+     they are.  Read operations return the maximum amount of data
+     available from the input area up to the number of bytes
+     specified in the system call.  The buffer sizes in write
+     operations are not normally transmitted across the link.
+     However, writes of zero length are treated specially and are
+     reflected at the remote end as a zero-length read.  This
+     facilitates marking the serial byte stream, usually for del-
+     imiting files.
+
+     When one side of a packet driver link is shut down by
+     _c_l_o_s_e(2) or _p_k_o_f_f (see _p_k_o_n(2)), _r_e_a_d(2) on the other side
+     will return 0, and _w_r_i_t_e on the other side will raise a SIG-
+     PIPE signal.
+
+SEE ALSO
+     pkon(2), pkopen(3)
+
+Printed 5/17/83                                                 1
+

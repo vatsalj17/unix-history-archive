@@ -1,0 +1,236 @@
+
+EXECVE(2)           UNIX Programmer's Manual            EXECVE(2)
+
+NAME
+     execve - execute a file
+
+SYNOPSIS
+     execve(name, argv, envp)
+     char *name, *argv[], *envp[];
+
+DESCRIPTION
+     _E_x_e_c_v_e transforms the calling process into a new process.
+     The new process is constructed from an ordinary file called
+     the _n_e_w _p_r_o_c_e_s_s _f_i_l_e. This file is either an executable
+     object file, or a file of data for an interpreter.  An exe-
+     cutable object file consists of an identifying header, fol-
+     lowed by pages of data representing the initial program
+     (text) and initialized data pages.  Additional pages may be
+     specified by the header to be initialized with zero data.
+     See _a._o_u_t(5).
+
+     An interpreter file begins with a line of the form ``#!
+     _i_n_t_e_r_p_r_e_t_e_r''; when an interpreter file is _e_x_e_c_v_e'd, the
+     system _e_x_e_c_v_e's the specified _i_n_t_e_r_p_r_e_t_e_r.
+
+     There can be no return from a successful _e_x_e_c_v_e because the
+     calling core image is lost.  This is the mechanism whereby
+     different process images become active.
+
+     The argument _a_r_g_v is an array of character pointers to
+     null-terminated character strings.  These strings constitute
+     the argument list to be made available to the new process.
+     By convention, at least one argument must be present in this
+     array, and the first element of this array should be the
+     name of the executed program (i.e. the last component of
+     _n_a_m_e).
+
+     The arument _e_n_v_p is also an array of character pointers to
+     null-terminated strings.  These strings pass information to
+     the new process which are not directly arguments to the com-
+     mand, see _e_n_v_i_r_o_n(5).
+
+     Descriptors open in the calling process remain open in the
+     new process, except for those for which the close-on-exec
+     flag is set; see _i_o_c_t_l(2).  Descriptors which remain open
+     are unaffected by _e_x_e_c_v_e.  Ignored/held signals remain
+     ignored/held across _e_x_e_c_v_e, but signals that are caught are
+     reset to their default values; see _s_i_g_n_a_l(2).
+
+     Each process has a _r_e_a_l user ID and group ID and an _e_f_f_e_c_-
+     _t_i_v_e user ID and group ID.  The real ID identifies the per-
+     son using the system; the effective ID determines his access
+     privileges.  _E_x_e_c_v_e changes the effective user and group ID
+     to the owner of the executed file if the file has the
+     ``set-user-ID'' or ``set-group-ID'' modes.  The real user ID
+
+Printed 7/30/83                                                 1
+
+EXECVE(2)           UNIX Programmer's Manual            EXECVE(2)
+
+     is not affected.
+
+     The new process also inheirits the following attributes from
+     the calling process:
+
+          process ID          see _g_e_t_p_i_d(2)
+          parent process ID   see _g_e_t_p_i_d(2)
+          process group ID    see _g_e_t_p_g_r_p(2)
+          working directory   see _c_h_d_i_r(2)
+          root directory      see _c_h_d_i_r(2)
+          control terminal    see _t_t_y(4)
+          file mode mask      see _u_m_a_s_k(2)
+
+     When a C program is executed, it is called as follows:
+
+          main(argc, argv, envp)
+          int argc;
+          char **argv, **envp;
+
+     where _a_r_g_c is the number of elements in _a_r_g_v (the ``arg
+     count'') and _a_r_g_v is an array of character pointers to the
+     arguments themselves.
+
+     _E_n_v_p is a pointer to an array of strings that constitute the
+     _e_n_v_i_r_o_n_m_e_n_t of the process.  A pointer to this arrya is also
+     stored in the global variable ``environ.'' Each string con-
+     sists of a name, an =, and a null-terminated value.  The
+     array of pointers is terminated by a null pointer.  The
+     shell _s_h(1) passes an environment entry for each global
+     shell variable defined when the program is called.  See
+     _e_n_v_i_r_o_n(5) for some conventionally used names.
+
+DIAGNOSTICS
+     If _e_x_e_c_v_e returns to the calling process an error has
+     occurred; the return value will be -1 and the global vari-
+     able _e_r_r_n_o will receive the error code.
+
+ERRORS
+     _E_x_e_c_v_e will fail and return to the calling process if one or
+     more of the following is true:
+
+     [EINVAL]            The path name contains a non-ASCII byte.
+
+     [ENOENT]            One or more components of the new pro-
+                         cess file's path name does not exist.
+
+     [ENOTDIR]           A component of the new process file is
+                         not a directory.
+
+     [EACCES]            Search permission is denied for a direc-
+                         tory listed in the new process file's
+                         path prefix.
+
+Printed 7/30/83                                                 2
+
+EXECVE(2)           UNIX Programmer's Manual            EXECVE(2)
+
+     [EACCES]            The new process file is not a regular
+                         file.
+
+     [EACCES]            The new process file mode denies execute
+                         permission.
+
+     [ENOEXEC]           The new process file has the appropriate
+                         access permission but has an invalid
+                         magic number in its header.
+
+     [ETXTBSY]           The new process file is a pure procedure
+                         (shared text) file that is currently
+                         open for writing or reading by some pro-
+                         cess.
+
+     [ENOMEM]            The new process requires more memory
+                         than is allowed.
+
+     [E2BIG]             The number of bytes in the new process's
+                         argument list is larger than the system
+                         imposed limit.
+
+     [EFAULT]            The new process file is not as long as
+                         indicated by the size values in its
+                         header.
+
+     [EFAULT]            _N_a_m_e,_a_r_g_v,  or _e_n_v_p point to an illegal
+                         address.
+
+SEE ALSO
+     csh(1), fork(2), vfork(2), environ(5)
+
+ASSEMBLER (PDP-11)
+     (exec = 11.)
+     sys exec; name; argv
+
+     (exece = 59.)
+     sys exece; name; argv; envp
+
+     _E_x_e_c is obsoleted by _e_x_e_c_e, but remains for historical rea-
+     sons.
+
+     When the called file starts execution on the PDP11, the
+     stack pointer points to a word containing the number of
+     arguments.  Just above this number is a list of pointers to
+     the argument strings, followed by a null pointer, followed
+     by the pointers to the environment strings and then another
+     null pointer.  The strings themselves follow; a 0 word is
+     left at the very top of memory.
+
+       sp->    nargs
+          arg0
+
+Printed 7/30/83                                                 3
+
+EXECVE(2)           UNIX Programmer's Manual            EXECVE(2)
+
+          ...
+          argn
+          0
+          env0
+          ...
+          envm
+          0
+
+      arg0:    <arg0\0>
+          ...
+      env0:    <env0\0>
+          0
+
+     On the Interdata 8/32, the stack begins at a conventional
+     place (currently 0xD0000) and grows upwards.  After _e_x_e_c,
+     the layout of data on the stack is as follows.
+
+          int  0
+      arg0:    byte ...
+          ...
+     argp0:    int  arg0
+          ...
+          int  0
+     envp0:    int  env0
+          ...
+          int  0
+      %2->     space     40
+          int  nargs
+          int  argp0
+          int  envp0
+      %3->
+
+     This arrangement happens to conform well to C calling con-
+     ventions.
+
+     On a VAX-11, the stack begins at 0x7ffff000 and grows
+     towards lower numbered addresses.  After _e_x_e_c, the layout of
+     data on the stack is as follows.
+
+      ap ->
+      fp ->
+      sp ->  .long nargs
+             .long arg0
+             ...
+             .long argn
+             .long 0
+             .long env0
+             ...
+             .long envn
+             .long 0
+      arg0:  .byte "arg0\0"
+             ...
+
+Printed 7/30/83                                                 4
+
+EXECVE(2)           UNIX Programmer's Manual            EXECVE(2)
+
+      envn:  .byte "envn\0"
+             .long 0
+
+Printed 7/30/83                                                 5
+

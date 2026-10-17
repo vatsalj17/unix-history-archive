@@ -1,0 +1,120 @@
+.TH ANSI 1
+.SH NAME
+ansi - ANSI standard tape handler
+.SH SYNOPSIS
+.B ansi
+[key] [files]
+.SH DESCRIPTION
+.I Ansi
+reads and writes magnetic tapes written in
+ANSI standard format
+(called ``Files-11'' by DEC).
+Tapes written by
+.I ansi
+are labeled with the host name
+(as returned by
+.IR gethostname(3) )
+by default.
+Actions are controlled by the
+.I key
+argument.
+The
+.I key
+is a string of characters containing at
+most one function letter.
+Other arguments to the command are
+a tape label and file names specifying which files are
+to be written onto or extracted from the tape.
+.PP
+The function portion of the key is
+specified by one of the following letters:
+.TP 8
+.B r
+The named files are written on the end of the tape.
+The
+.B c
+function implies this.
+.TP 8
+.B x
+The named files are extracted from the tape.
+If no file argument is given,
+the entire contents of the tape is extracted.
+Note that if multiple entries
+specifying the same file are on the tape,
+each entry will be extracted, overwriting the previous one.
+.TP 8
+.B t
+The names of the specified files are listed
+each time they occur on the tape.
+If no file argument is given,
+all files on the tape are listed.
+.TP 8
+.B c
+Create a new tape; writing begins on the
+beginning of the tape instead of after
+the last file.
+This command implies
+.B r.
+.TP 8
+.PP
+The following characters may be used in
+addition to the letter which selects
+the function desired.
+.TP 8
+.B 0, 1, 2
+This modifier selects the density for the tape;
+0 is 800 bpi (/dev/rmt0) and 1 is 1600 bpi (/dev/rmt1).
+The default is 1.
+2 indicates output will be written to 
+or read from a file \fIansi.out\fR instead of
+tape. 
+.TP 8
+.B s
+The
+.B s
+option allows the user to specify a maximum record length longer than the
+default 80 characters.  The first argument following the key is taken as
+the new record length.  Eg.  \fIansi cs 100 file1 file2\fR changes the
+maximum to 100 and writes two files.
+.TP 8
+.B l
+The 
+.B l
+option allows the user to specify the label to be placed on the tape. 
+The first argument following the key is taken as the tape label, which
+will be space padded or truncated to six characters.
+This option is meaningless unless 
+.B c
+is also specified.
+.TP 8
+.B v
+Normally
+.I ansi
+does its work silently.
+The
+.B v
+(verbose) option causes it to type the
+name of each file preceded by the
+function letter.
+.TP 8
+.B d
+Turn on debugging printouts (prints 
+a lot of garbage).
+.SH FILES
+/dev/rmt[01] 
+.br
+/dev/nrmt[01]
+.br
+ ./ansi.out
+.SH DIAGNOSTICS
+A warning given if a record exceeds the maximum allowed size, refer
+to the description of the \fIs\fR key.
+.br
+A warning is given if a filename exceeds 17 characters. 
+Ansi truncates the long name and continues.  Beware of long pathnames.
+.SH AUTHOR
+Tom Ferrin UCSF
+.SH BUGS
+There should be a way to specify the n'th instance of a file.
+.br
+There should be a f key replacing the 0, 1, and 2 keys.

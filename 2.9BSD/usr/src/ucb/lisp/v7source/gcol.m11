@@ -1,0 +1,749 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+	.psect	shrcode con
+
+;
+;;this section of code is the garbage collector
+;;it reclaims unused atoms, dtprs, numbers, and bcd
+;;
+;;in interest of speed, the collection of atoms is not enabled 
+;;normally.  if one feels that he can use this feature, then 
+;;there is a language level switch
+;;that enables  full collection
+;;
+;;
+;;this code is the recursive part of the collector that does the marking
+;;the driver and  marker follow
+;;
+;;note that the gc bit on each object is the 0 bit in the first 
+;;word of that object. this gives a quick check as to whether the 
+;;object is already loved or not, and therefore whether on needs to fool
+;;around with it.
+;
+;
+gcolinr:
+
+.if	eq,multiseg
+ .if	ne,nilas0
+	jmpifnil	a,31$
+ .endc
+.endc
+	mov	b,np		;use np to tell how many things on stack
+	br	21$
+10$:	pop	a
+20$:
+.if	eq,multiseg
+ .if	ne,nilas0
+	jmpifnil	a,2$,nl
+ .endc
+.endc
+21$:	bit	b,(a)		;b is loaded with constant 1
+	bne	2$
+7$:
+	dispatch
+	br	3$		;if number
+	.word 0			;for dispatch allowing 2 words/inst
+	br	4$		;dtpr
+	.word	0
+	br	5$		;atom
+	.word	0
+	br	6$		;bcd
+1$:	bis	b,(a)		;hole...
+2$:	sob	np,10$		;port + other stuff
+31$:	ret
+
+3$:	brifsmalint	a,2$	;integer code
+	br	1$
+
+
+5$:	jmpifnil (a),35$ 	;save push if possible
+	push	(a)		;trace atom out
+	inc	np
+35$:	bis	b,(a)+		;mark it
+	tst	(a)+		;point to fb
+	jmpifnil (a),36$ 	;and this one
+	push	(a)		;trace shallowest (probably) first
+	inc	np
+36$:	mov	-(a),a		;get middle
+	br	20$
+
+
+4$:	tst	(a)+		;want to push on cdr,trace car
+	jmpifnil (a),37$	;again, don't push nil on
+	push	(a)
+	inc	np		;one deeper
+37$:
+	bis	b,-(a)
+	mov	(a),a		;get car
+	bic	b,a		;and clear it
+	br	20$
+
+6$:	tstb	supcol
+	beq	8$
+.if	eq,multiseg
+	cmp	a,#firpage
+	blos	8$
+.endc
+	bis	b,(a)
+8$:
+	mov	2(a),a
+	br	20$
+
+	.rsect	shrcode
+
+nogcol:				;not enough stack space
+	add	#100.+20,sp		;see if np is too large
+	mov	npbottom,np
+	cmp	sp,np
+	blo	1$
+	add	#20,npbottom	;help in future gcol's
+1$:
+	mov	np,sp
+	generm	</not enough stack space to attempt gcol/<12>//>
+	mov	#tmp-<^pl errorm>,a
+	call	geterr
+	loadnil	@np
+	call	putstr
+	jmp	lsploop
+
+
+
+;this is the collector driver
+
+gcol:	incb	noint			;do not allow 5^c's
+	mov	j1,-(sp)		;save r0
+	$sig
+		11.			;seg fault
+	nogcol
+	mov	%0,$$sig+4		;prepare to reset trap
+	add	#-100.,sp		;gotta make sp point...
+	mov	sp,j1			;first move sp to j1 and
+	bic	#17777,j1		;see about testing somebody's seg
+	cmp	j1,$$break+2		;instead of nowhere
+	blos	nogcol			;woops--this is owned!!!
+	tst	(sp)			;now see if is in no man's land
+	add	#100.,sp		;there had to be room
+	mov	#11.,$$sig+2		;and trap type
+	$indir
+	$$sig
+	push	a
+	push	b
+	push	j2
+	push	j3
+	push	np
+	mov	sp,gcolf		;save sp
+.if	df,gctrace
+	.globl	gcex,gcem
+	npush	#anil
+	outstr	gcem
+	call	dmpport
+.if	df,width
+	clrb	poport+1
+.endc
+	add	#-4,np
+ .endc
+
+
+resgcol:
+
+
+	mov	#1,b
+	tstb	supcol
+	beq	10$		;if in short mode, save all atoms
+
+.if	eq, hash
+	.ift
+	mov	xoblist,j1
+1$:	bic	b,j1		;clear tracebit if nec.
+	jmpifnil	j1,20$
+	car	j1,j2
+	bis	b,(j1)
+	bit	b,(j2)
+	bne	9$
+	cmp	j2,#lsatm
+	blo	2$
+.if	ne,nilas0
+	tst	(j2)
+	bne	2$
+	tst	2(j2)
+	bne	2$
+	tst	4(j2)
+	beq	9$
+ .iff
+	cmp	(j2),#anil
+	bne	2$
+	cmp	2(j2),#anil
+	bne	2$
+	jmpifnil	4(j2),9$
+.endc
+2$:	mov	j2,a
+	call	gcolinr
+9$:	cdr	j1,j1
+	br	1$
+      .iff
+	mov	#<2*hash>,j3
+7$:	mov	<hasht-2>(j3),j1
+1$:	bic	b,j1
+	jmpifnil	j1,9$
+	car	j1,j2
+	bis	b,(j1)+
+	bit	b,(j2)
+	bne	8$
+	mov	j2,a
+	cmp	j2,#lsatm
+	blo	6$
+.if	ne,nilas0
+	tst	(j2)+
+	bne	6$
+	tst	(j2)+
+	bne	6$
+	tst	(j2)
+	beq	8$
+ .iff
+	jmpnnil	(j2)+,6$
+	jmpnnil (j2)+,6$
+	jmpifnil	(j2),8$
+.endc
+6$:	call	gcolinr
+8$:	mov	@j1,j1
+	br	1$
+9$:	bit	#2,j3
+	beq	2$
+	bis	b,<hasht-2>(j3)
+2$:	dec	j3
+	sob	j3,7$
+.endc
+10$:	mov xoblist,a
+	call	gcolinr
+
+;now we trace the namestack
+;j1-j3 are available
+
+
+20$:	mov	(sp),j1
+	mov	cptop,j2
+	tst	(j2)+		;get to first entry
+11$:	cmp	j2,j1
+	bhi	19$		;if past stack, quit
+	mov	(j2)+,a
+	call	gcolinr
+	br	11$
+
+;and now the cstk
+;the things that are traced are oddaddresses, and things protected by snags
+;which are at the moment eexit,(eexit1),brksnag,register snags
+
+
+19$:	mov	sp,j1
+	add	#14,j1
+	mov	cptop,j2
+21$:	bit	b,(j1)
+	beq	22$
+	mov	(j1)+,a
+	bic	b,a
+	call	gcolinr
+	br	23$
+22$:	cmp	#eexit,(j1)
+	bne	29$
+28$:	tst	(j1)+
+	mov	(j1)+,a
+	call	gcolinr
+	tst	(j1)+
+	mov	(j1)+,a
+	call	gcolinr
+	br	23$
+29$:
+.if	ne,xfer
+	cmp	#eexit1,(j1)
+	beq	28$
+.endc
+	cmp	#brksnag,(j1)
+	beq	56$
+	cmp	#r4rres,(j1)
+	beq	55$
+	cmp	#r3rres,(j1)
+	beq	54$
+	cmp	#r2rres,(j1)
+	beq	52$
+	cmp	#r1rres,(j1)+
+	beq	51$
+	br	23$
+56$:	cmp	(j1)+,(j1)+
+55$:	tst	(j1)+
+54$:	tst	(j1)+
+52$:	tst	(j1)+
+	tst	(j1)+
+51$:	tst	(j1)+
+23$:	cmp	j1,j2
+	blo	21$
+
+
+
+
+
+;well, that it for the tracing.
+;now we gotta go around and collect the stuff we've played with
+;and reset the gcbits back to 0
+;refreshing our memory on the qmap values
+;	-5	owned by monitor
+;	-4	stack space(np+cp)
+;	-3	not allocated but owned by us
+;	-2	allocatecd by port
+;	-1	binary code
+;	0	word
+;	1	dtpr
+;	2	atom
+;	3	bcd(p)
+;	4	port
+;
+;first we gotta get rid of the freelists
+
+
+	loadnil	fnumber
+	loadnil	fdtpr
+	tstb	supcol
+	beq	30$
+	loadnil	fbcd
+30$:	clr	cdtpr
+	clr	cnumber
+
+
+
+;reminder a,j1-np are available for the gathering process
+;b still contains 1
+
+.if	eq,multiseg
+	.ift
+	mov	#firpage,np
+	.iff
+	mov	#starbc,np
+.endc
+colloop:	mov	np,j3
+	swab	j3
+	movb	qmap(j3),j2
+1$:	add	#^d256,np
+	asl		j2; mult by two
+	jmp	@gcjmtbl(j2)
+
+.psect	shrwddat con
+	gcfinup		;if in monitor core
+	gcfinup		;or in stack space
+	colloop
+	colloop		;if port or free ignore page
+	colloop		;ditto for sys
+gcjmtbl: gccolwd
+	gccoldt
+	colloop		;atoms are taken care of latter
+	gccolbcd	;for bcd
+	colloop	;take care of ports
+
+	.psect	shrcode con
+gccoldt:	mov	fdtpr,j1
+	mov	cdtpr,j2	
+	call gcwdat
+	mov	j1,fdtpr
+	mov	j2,cdtpr
+	br	colloop
+gccolwd:	mov	fnumber,j1
+	mov	cnumber,j2
+	call	gcwdatt
+	mov	j1,fnumber
+	mov	j2,cnumber
+	br	colloop
+gcwdat:	mov	np,a
+	mov	#^d64,j3
+1$:	add	#-4,a
+	bit	b,(a)
+	beq	2$
+	bic	b,(a)
+	sob	j3,1$
+	ret
+2$:	mov	j1,(a)
+	inc j2
+	mov a,j1
+	sob	j3,1$
+	ret
+
+gccolbcd:	tstb	supcol
+	bne	2$
+6$:	br colloop
+2$:
+.if	eq,multiseg
+	.ift
+	mov	np,a
+	sub	#^d256,a
+3$:	mov	(a),j1
+	bic	#177001,j1
+	bit	b,(a)
+	bne	4$
+	mov	fbcd,2(a)
+	mov	a,fbcd
+4$:	bic	b,(a)
+	add	j1,a
+	cmp	a,np
+	blo	3$
+		br	6$
+    .iff
+	mov	np,a
+	mov	np,j3
+	sub	#6,j3
+	sub	#^d256,a
+4$:	bit	b,(a)
+	bne	5$
+	mov	fbcd,2(a)
+	mov	a,fbcd
+5$:	bic	b,(a)
+	add	#6,a
+	cmp	a,j3
+	blo	4$
+	br	6$
+.endc
+
+gcfinup: tstb	supcol
+	beq	20$
+ .if	eq,hash		;implement supercolect on atoms...
+	mov	#<xoblist-2>,a
+9$:	cdr	a,j1
+	jmpifnil	j1,30$,nl
+	car	j1,j3
+	bit	b,(j3)
+	beq	10$
+	bic	b,(j3)
+	mov	j1,a
+	br	9$
+10$:	cdr	j1,2(a)
+	mov	fdtpr,(j1)
+	mov	j1,fdtpr
+	inc	cdtpr
+	mov	#4,j2
+	mov	j3,np
+	add	#6,np
+11$:	inc	np
+	tstb	(np)+
+	beq	12$
+	inc	j2
+	br	11$
+12$:	mov	j2,2(j3)	;save count
+	mov	fratom,(j3)
+	mov	j3,fratom
+	br	9$
+
+
+   .iff
+
+
+	mov	#<2*hash>,np
+5$:	mov	np,a
+	add	#<hasht-2>,a
+	jmpifnil	(a),14$
+6$:	mov	@a,j1
+	jmpifnil	j1,14$,nl
+	mov	(j1)+,j2
+	bit	b,(j2)
+	beq	10$
+	bic	b,(j2)
+	mov	j1,a
+	br	6$
+10$:	mov	@j1,(a)
+	mov	fdtpr,-(j1)
+	mov	j1,fdtpr
+	inc	cdtpr
+	mov	#4,j3
+	mov	j2,j1
+	add	#6,j1
+11$:	inc j1
+	tstb (j1)+
+	beq	12$
+	inc	j3
+	br	11$
+12$:	mov	j3,2(j2)
+	mov	fratom,(j2)
+	mov	j2,fratom
+	br	6$
+14$:	dec	np
+	sob	np,5$
+	br	30$
+.endc
+
+20$:		;here if not supcol, to clear oblist bits
+	call	clrobl		;clear bits...
+;	br	30$		;and finish up
+
+
+
+
+30$:	cmp	mfdtpr,cdtpr
+	blos	31$
+	call	globallc
+	mov	a,np
+	beq	fgcexit
+	movb	#1,qmap(a)
+	swab	np
+	add	#400,np
+	mov	cdtpr,j2
+	mov	fdtpr,j1
+	call	gcwdat
+	mov	j1,fdtpr
+	mov	j2,cdtpr
+31$:	cmp	mfnumb,cnumber
+	blos	32$
+	call	globallc
+	mov	a,np
+	beq	fgcexit
+	clrb	qmap(a)
+	swab	np
+	add	#400,np
+	mov	cnumber,j2
+	mov	fnumber,j1
+	call	gcwdatt
+	mov	j1,fnumber
+	mov	j2,cnumber
+	br	30$
+32$:
+	cmp	mfdtpr,cdtpr
+	bhi	30$
+
+resstack:
+	pop	np
+.if	df,gctrace
+	npush	#anil
+	outstr	gcex
+	call	dmpport
+.if	df,width
+	clrb	poport+1
+.endc
+	add	#-4,np
+.endc
+	pop	j3
+	pop	j2
+	pop	b
+	pop	a
+	pop	j1
+	clr	gcolf
+	decb	noint			;and allow ^c's
+	ret
+
+
+
+
+
+
+fgcexit:
+	mov	14(sp),saveloc	;save real return
+	mov	#1$,14(sp)
+	br	resstack	;pop off things
+1$:				;and return here...
+
+.if	ne,xfer			;if we are env xfer material
+	call	noroom		;go to routine
+nroomg:			;leaving trail......
+ .iff
+	push	saveloc		;push	return back on
+	save1
+	mov	a,j3			;this saves register a
+;now we go into the error routine
+;if no more dtprs avail, and brksig#0, then give differnt error, and
+;allow break to return to tl.
+
+
+ .if	ne, brksig
+	tst	cdtpr
+	beq	fgcebrk
+  .iftf
+	error	</cannot reclaim required amount of ints or dtprs/>,3$
+3$:	mov	j3,a
+	mov	2(sp),j3
+	cmp	(sp)+,(sp)+
+4$:	jmp	gcol
+ .ift
+fgcebrk:
+	$sig
+	brksig
+	lsploop
+	error	</no more dtprs--hit break to return to top level/>
+.endc
+
+.endc
+	.rsect	shrcode
+
+clrobl:		;this file clears the oblist bits
+			;used when overflow occurs
+			;and when gcfinup finishes up
+ .if	eq,hash
+	mov	xoblist,a
+21$:
+	jmpifnil	a,30$,nl
+	bic	b,(a)	;clear the mark bit
+	car	a,j1
+	bic	b,(j1)
+	cdr	a,a
+	br	21$
+  .iff
+	mov	#<2*hash>,j1
+21$:	bic	b,<hasht-2>(j1)
+	mov	<hasht-2>(j1),a
+22$:
+	jmpifnil	a,23$,nl
+	bic	b,(a)
+	mov	(a)+,j2		;get ready for cdr as well as take car
+	bic	b,(j2)
+	mov	(a),a		;the cdr refered to above
+	br	22$
+23$:	dec	j1
+	sob	j1,21$
+.endc
+	ret
+
+	.rsect	shrcode
+
+
+gcolovr:				;this routine takes care of
+					;gc overflow..............
+
+	;first, restore stack
+
+	mov	gcolf,sp
+
+
+.if ne,gcrec
+
+	;rearm stack ovr
+
+	$sig
+		11.
+	segfault
+ .if	df,gctrace		;get out message...
+	loadnil	-(sp)		;load nil on sp
+	mov	sp,np		;and fool np
+	generm	<//<12>/***attempt to recover from gcol stack overflow ***/<12>//>
+	mov	#tmp-<^pl errorm>,a
+	call	geterr
+	call	putstr
+	call	dmpport
+  .if	df,width
+	clrb	poport+1
+  .endc
+	tst	(sp)+		;back up sp
+ .endc
+	mov	#1,b		;leave b ok
+;and now scan the env to fix things up...
+
+ .if	eq,multiseg
+	mov	#firpage,j3
+  .iff
+	mov	#starbc,j3
+ .endc
+
+1$:	mov	j3,j2
+	mov	j3,a
+	swab	a
+	add	#400,j3
+	movb	qmap(a),a
+	bmi	10$
+	cmp	a,#1
+	beq	5$
+	cmp	a,#3
+	bne	1$		;loop for more...
+
+2$:				;here for binary code
+ .if	eq,multiseg		;case for d space only
+
+	cmp	j2,j3
+	bhis	1$		;done...
+	mov	2(j2),a		;get arg ready
+	mov	(j2),j1
+	bic	#177000,j1
+	add	j1,j2	;and make j2 point to next
+	bit	b,j2	;if odd, we collect
+	beq	3$
+	call	gcolinr		;collect thing
+3$:
+	bic	b,j2
+	br	2$
+
+  .iff
+	mov	j2,j1
+	add	#6,j2
+	cmp	j2,j3
+	bhis	1$
+	bit	b,(j1)+
+	beq	2$
+	mov	(j1)+,a
+	call	gcolinr
+	br	2$
+ .endc
+
+
+	
+
+5$:				;here for dtprs...
+
+	bit	b,(j2)
+	beq	6$
+	mov	(j2)+,a
+	bic	b,a		;clear it
+	call	gcolinr
+	mov	(j2)+,a
+	call	gcolinr
+	br	8$
+6$:
+	cmp	(j2)+,(j2)+
+8$:
+	cmp	j2,j3
+	blo	5$
+	br	1$
+
+
+10$:
+ .if	df,gctrace
+	generm <//<12>/*** about to clear all those oblist bits ***/<12>//>
+	mov	#tmp-<^pl errorm>,a
+	call	geterr
+	loadnil	-(sp)
+	mov	sp,np
+	call	putstr
+	call	dmpport
+  .if	df,width
+	clrb	poport+1
+  .endc
+	tst	(sp)+
+	mov	#1,%0
+ .endc
+
+	call	clrobl		;clear the oblist bits....
+ .if	ne,hash			;gotta clear oblist
+	mov	xoblist,a
+	mov	#<hash/2>,j1
+12$:	bic	b,(a)+
+	mov	(a),a
+	sob	j1,12$
+ .endc
+
+
+ .if	df,gctrace
+
+	generm	</about to jump to gcresume/<12>//>
+	mov	#tmp-<^pl errorm>,a
+	call	geterr
+	loadnil	-(sp)
+	mov	sp,np
+	call	putstr
+	call	dmpport
+  .if	df,width
+	clrb	poport+1
+  .endc
+	tst	(sp)+
+	mov	#1,b
+ .endc
+	jmp	resgcol
+ .iff
+
+	generm	<//<12>/gc stack overflow--lisp exit/<12>/**********/>
+	mov	#tmp-<^pl errorm>,a
+	call	geterr
+	loadnil	-(sp)
+	mov	sp,np
+	call	putstr
+	call	dmpport
+	$exit
+.endc

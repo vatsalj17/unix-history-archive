@@ -1,0 +1,36 @@
+TSORT(1)            UNIX Programmer's Manual             TSORT(1)
+
+NAME
+     tsort - troff sort program
+
+SYNTAX
+     tsort [file ... ]
+
+DESCRIPTION
+     _t_r_o_f_f(1) produces phototypesetter ouput which is simulated
+     on the Versatec by _v_c_a_t(1). _v_c_a_t cannot buffer up many
+     typesetter commands before it must flush its Versatec
+     buffer.  Thus documents containing large backwards motions
+     will be typeset wrong.  Large backwards motions are produced
+     by _e_q_n(1), multiple columning, and line drawing commands.
+     Thus the need for _t_s_o_r_t, which sorts out all the reverse
+     motions in a _t_r_o_f_f input stream.  If no file arguments are
+     given _t_s_o_r_t reads it's standard input.  A typical usage is:
+           troff -t files | tsort | vcat
+
+SEE ALSO
+     troff(1), troff(5), eqn(1), vcat(1), Troff manual.
+
+DIAGNOSTICS
+     Cannot open input file.
+     Cannot alloc.
+
+BUGS
+     _t_s_o_r_t has a limit of 12 inches of reverse line motion.  Its
+     troff code generator leaves something to be desired.
+
+AUTHOR
+     University of California at San Francisco
+
+Printed 9/10/82                                                 1
+

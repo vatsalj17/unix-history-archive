@@ -1,0 +1,40 @@
+
+HOMEDR(3F)          UNIX Programmer's Manual           HOMEDR(3F)
+
+NAME
+     homedr - get name of home directory
+
+SYNTAX
+     character*length homedr, name
+     homedr()
+          or
+     call homedr(name)
+
+DESCRIPTION
+     _H_o_m_e_d_r returns the absolute pathname of the user's home
+     directory as defined in /_e_t_c/_p_a_s_s_w_d.  In other words the
+     home directory or more properly the login directory reported
+     by this function is not changed by the HOME parameter in the
+     shell.  If length is not long enough for the character
+     string, the string is returned as all blanks.  The string is
+     not null terminated.  Note that dummy parentheses are
+     required for the compiler to recognize _h_o_m_e_d_r if used as a
+     function.
+
+SEE ALSO
+     getpwent(3)
+
+EXAMPLE
+           character*20 homedr,name
+           write(6,1) homedr()
+         1 format(a20)
+           call homedr(name)
+           write(6,1)name
+           end
+
+AUTHOR
+     Peter L. Ward, U.S. Geological Survey, Menlo Park, Califor-
+     nia.
+
+Printed 5/27/83                                                 1
+

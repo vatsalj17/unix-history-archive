@@ -1,0 +1,46 @@
+
+UTMP(5)             UNIX Programmer's Manual              UTMP(5)
+
+NAME
+     utmp, wtmp - login records
+
+SYNOPSIS
+     #include <utmp.h>
+
+DESCRIPTION
+     The _u_t_m_p file allows one to discover information about who
+     is currently using UNIX.  The file is a sequence of entries
+     with the following structure declared in the include file:
+
+          struct utmp {
+               char ut_line[8];         /* tty name */
+               char ut_name[8];         /* user id */
+               long ut_time;            /* time on */
+          };
+
+     This structure gives the name of the special file associated
+     with the user's terminal, the user's login name, and the
+     time of the login in the form of _t_i_m_e(2).
+
+     The _w_t_m_p file records all logins and logouts.  Its format is
+     exactly like _u_t_m_p except that a null user name indicates a
+     logout on the associated terminal.  Furthermore, the termi-
+     nal name `~' indicates that the system was rebooted at the
+     indicated time; the adjacent pair of entries with terminal
+     names `|' and `{' indicate the system-maintained time just
+     before and just after a _d_a_t_e command has changed the
+     system's idea of the time.
+
+     _W_t_m_p is maintained by _l_o_g_i_n(1) and _i_n_i_t(8).  Neither of
+     these programs creates the file, so if it is removed
+     record-keeping is turned off.  It is summarized by _a_c(8).
+
+FILES
+     /etc/utmp
+     /usr/adm/wtmp
+
+SEE ALSO
+     login(1), who(1), init(8), ac(8)
+
+Printed 5/17/83                                                 1
+

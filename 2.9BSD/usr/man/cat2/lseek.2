@@ -1,0 +1,73 @@
+
+LSEEK(2)            UNIX Programmer's Manual             LSEEK(2)
+
+NAME
+     lseek, tell - move read/write pointer
+
+SYNOPSIS
+     #include <sys/types.h>
+     #include <sys/file.h>
+
+     long lseek(fildes, offset, whence)
+     long offset;
+
+     long tell(fildes)
+
+DESCRIPTION
+     The file descriptor refers to a file open for reading or
+     writing.  The read (resp. write) pointer for the file is set
+     as follows:
+
+          If _w_h_e_n_c_e is FSEEK_ABSOLUTE, the pointer is set to
+          _o_f_f_s_e_t bytes.
+
+          If _w_h_e_n_c_e is FSEEK_RELATIVE, the pointer is set to its
+          current location plus _o_f_f_s_e_t.
+
+          If _w_h_e_n_c_e is FSEEK_EOF, the pointer is set to the size
+          of the file plus _o_f_f_s_e_t.
+
+     The returned value is the resulting pointer location.
+
+     The obsolete function _t_e_l_l(_f_i_l_d_e_s) is identical to
+     _l_s_e_e_k(_f_i_l_d_e_s, _0_L, _F_S_E_E_K__R_E_L_A_T_I_V_E).
+
+     Seeking far beyond the end of a file, then writing, creates
+     a gap or `hole', which occupies no physical space and reads
+     as zeros.
+
+RETURN VALUE
+     Upon successful completion, the new file offset returned.
+     Otherwise, a value of -1 is returned and _e_r_r_n_o is set to
+     indicate the error.
+
+ERRORS
+     _L_s_e_e_k will fail and the file pointer will remain unchanged
+     if:
+
+     [EBADF]             _F_i_l_d_e_s is not an open file descriptor.
+
+     [ESPIPE]            _F_i_l_d_e_s is associated with a pipe.
+
+SEE ALSO
+     creat(2), open(2), fseek(3S)
+
+Printed 6/30/83                                                 1
+
+LSEEK(2)            UNIX Programmer's Manual             LSEEK(2)
+
+BUGS
+     _L_s_e_e_k is a no-op on character special files.  No bounds
+     check is made on _o_f_f_s_e_t.  It is permissible to seek past the
+     end of a file open only for reading.
+
+ASSEMBLER
+     (lseek = 19.)
+     (file descriptor in r0)
+     sys lseek; offset1; offset2; whence
+
+     _O_f_f_s_e_t_1 and _o_f_f_s_e_t_2 are the high and low words of _o_f_f_s_e_t; r0
+     and r1 contain the pointer upon return.
+
+Printed 6/30/83                                                 2
+

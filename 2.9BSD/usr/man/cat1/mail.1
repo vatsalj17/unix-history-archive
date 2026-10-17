@@ -1,0 +1,91 @@
+
+MAIL(1)             UNIX Programmer's Manual              MAIL(1)
+
+NAME
+     mail - send or receive mail among users
+
+SYNOPSIS
+     /bin/mail [ + ] [ -i ] [ person ] ...
+     /bin/mail [ + ] [ -i ] -f file
+
+DESCRIPTION
+     _M_a_i_l with no argument prints a user's mail, message-by-
+     message, in last-in, first-out order; the optional argument
+     + causes first-in, first-out order.  For each message, it
+     reads a line from the standard input to direct disposition
+     of the message.
+
+     newline
+          Go on to next message.
+
+     d    Delete message and go on to the next.
+
+     p    Print message again.
+
+     -    Go back to previous message.
+
+     s [ _f_i_l_e ] ...
+          Save the message in the named _f_i_l_e_s (`mbox' default).
+
+     w [ _f_i_l_e ] ...
+          Save the message, without a header, in the named _f_i_l_e_s
+          (`mbox' default).
+
+     m [ _p_e_r_s_o_n ] ...
+          Mail the message to the named _p_e_r_s_o_n_s (yourself is
+          default).
+
+     EOT (control-D)
+          Put unexamined mail back in the mailbox and stop.
+
+     q    Same as EOT.
+
+     !_c_o_m_m_a_n_d
+          Escape to the Shell to do _c_o_m_m_a_n_d.
+
+     *    Print a command summary.
+
+     An interrupt normally causes termination of the command; the
+     mail file is unchanged.  The optional argument -i causes
+     _m_a_i_l to continue after interrupts.
+
+     When _p_e_r_s_o_n_s are named, _m_a_i_l takes the standard input up to
+     an end-of-file (or a line with just `.') and adds it to each
+     _p_e_r_s_o_n'_s `mail' file.  The message is preceded by the
+     sender's name and a postmark.  Lines that look like
+
+Printed 5/16/83                                                 1
+
+MAIL(1)             UNIX Programmer's Manual              MAIL(1)
+
+     postmarks are prepended with `>'.  A _p_e_r_s_o_n is usually a
+     user name recognized by _l_o_g_i_n(1).  To denote a recipient on
+     a remote system, prefix _p_e_r_s_o_n by the system name and excla-
+     mation mark (see _u_u_c_p(1)).
+
+     The -f option causes the named file, e.g. `mbox', to be
+     printed as if it were the mail file.
+
+     When a user logs in he is informed of the presence of mail.
+
+FILES
+     /etc/passwd         to identify sender and locate persons
+     /usr/spool/mail/*   incoming mail for user *
+     mbox                saved mail
+     /tmp/ma*            temp file
+     /usr/spool/mail/*.locklock for mail directory
+     dead.letter         unmailable text
+
+SEE ALSO
+     Mail(1), uucp(1), uux(1), write(1), xsend(1), delivermail(8)
+
+BUGS
+     Race conditions sometimes result in a failure to remove a
+     lock file.
+
+     Normally anybody can read your mail, unless it is sent by
+     _x_s_e_n_d(1).  An installation can overcome this by making _m_a_i_l
+     a set-user-id command that owns the mail directory.
+
+Printed 5/16/83                                                 2
+

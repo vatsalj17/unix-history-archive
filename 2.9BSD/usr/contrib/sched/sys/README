@@ -1,0 +1,43 @@
+This directory contains files from the original UNIX/V7 distribution
+(names of the form *.v7) and files that I have just produced by adding
+my scheduler enhancements to the vanilla V7 files.
+
+			*** WARNING ***
+
+	Please note that this is NOT the system which I have tested
+	and which we are currently running.  Our system is by now
+	a great deal different from UNIX/V7.  It incorporates numerous
+	bug fixes, other enhancements, and some parts of UNIX System III.
+	Unfortunately, I am not presently at liberty to distribute
+	all of the system.  Therefore, I have had to attempt to install
+	just the scheduler enhancements in the vanilla V7 source.
+	While I hope that I have done this correctly, I have no way to
+	test this code.  Moreover, I would not advise anyone to run
+	UNIX/V7 in its original form, without including several well-known
+	bug fixes.  PLEASE BE CAREFUL when installing these files.
+
+The file slp.c has no corresponding slp.c.v7, because it is more a rewrite
+than a few simple changes.  All of the other files should have corresponding
+*.v7 files, and the differences between them should be enclosed in ifdefs
+using the symbol NEWSCHED.  The theory is that all files except slp.c could
+be installed in a vanilla V7 system, and if NEWSCHED is not defined, everything
+would operate normally.  Defining NEWSCHED and switching to the new version
+of slp.c should install the new (enhanced) scheduler.
+
+The following definitions should be added to param.h ...
+
+#define NEWSCHED	1	/* include the hooks for new slp.c */
+
+#ifdef NEWSCHED
+#define MAXLEVEL	31	/* maximum scheduler level */
+#define RTLEVEL		16	/* minimum real-time level */
+#endif
+
+There is a new system call SETBLEV in our system, which is described
+in ../man/setblev.2.  In our system this call is entered through the
+System III utssys system call.  Since some people getting this distribution
+are not licensed for System III, I could not include the source for
+utssys.c.  However, all of the real work in this call is done by the
+SETBASLEV subroutine in slp.c.  You will only have to implement a system
+entry point that picks up the arguments from user space and then calls
+SETBASLEV.  The uses of the setblev call are described in ../cmd/README.

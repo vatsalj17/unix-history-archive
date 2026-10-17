@@ -1,0 +1,43 @@
+.TH SETUID 2 
+.UC
+.SH NAME
+setuid, setgid \- set user or group ID
+.SH SYNOPSIS
+.B setuid(uid)
+.br
+.B setgid(gid)
+.SH DESCRIPTION
+The real and effective user ID (group ID) of the current process are set to
+the argument.
+These calls are only permitted to the super-user
+or if the argument is the real or effective ID.
+.SH ERRORS
+.I Setuid
+will fail and the user IDs will be unchanged if:
+.TP 20
+[EPERM]
+The current process's effective user ID is not the super-user
+and a change other than changing the user IDs to the
+real or effective user ID was specified.
+.PP
+.I Setgid
+will fail and the group IDs will be unchanged if:
+.TP 20
+[EPERM]
+The current process's effective user ID is not the super-user
+and a change other than changing the group IDs to the
+real or effective group ID was specified.
+.SH "SEE ALSO"
+getuid(2)
+.SH ASSEMBLER
+(setuid = 23.)
+.br
+(user ID in r0)
+.br
+.B sys setuid
+.PP
+(setgid = 46.)
+.br
+(group ID in r0)
+.br
+.B sys  setgid

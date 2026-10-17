@@ -1,0 +1,188 @@
+.TH CRASH 8
+.UC
+.SH NAME
+crash \- what happens when the system crashes
+.SH DESCRIPTION
+This section explains what happens when the system crashes and how
+to analyze crash dumps.
+.PP
+When the system crashes voluntarily it prints a message of the form
+``\fIpanic:\fP specific panic message''
+on the console, takes a dump on a mass storage peripheral,
+and then invokes an automatic reboot procedure as
+described in
+.IR reboot (8).
+(If auto-reboot is disabled, the system
+will simply halt at this point.)
+Unless some unexpected inconsistency is encountered in the state
+of the file systems due to hardware or software failure the system
+will then resume multi-user operations.
+If automatic reboots are not enabled, or if the automatic file system
+check fails, the file systems should be checked and repaired with
+.IR fsck (8)
+before continuing.
+.PP
+If the system stops or hangs without a panic, it is possible to stop
+it and take a dump of memory before rebooting.
+If automatic reboot is enabled, a panic can be forced from the console,
+which will allow a dump, automatic reboot and file system check.
+This is accomplished by halting the CPU, loading the PC with 040,
+and continuing without a reset (use continue, not start).
+The message ``panic:  forced from console'' should print, and the
+autoreboot will start.
+If this fails or is not enabled,
+a dump of the first 248K bytes of memory can be made on magtape.
+Mount a tape (with write ring!), halt the CPU, load address 044,
+and start (which does a reset).
+After this completes, halt again and reboot.
+After rebooting, or after an automatic file system check fails,
+check and fix the file systems with
+.IR fsck .
+If the system will not reboot, a runnable system must be obtained
+from a backup medium after verifying that the hardware is functioning normally.
+A damaged root file system should be patched while running with an alternate
+root if possible.
+.PP
+The system has a large number of internal consistency checks; if one
+of these fails, then it will panic with a very short message indicating
+which one failed.
+.PP
+The most common cause of system failures is hardware failure, which
+can reflect itself in different ways.  Here are the most common messages which
+are encountered, with some hints as to causes.
+Left unstated in all cases is the possibility that hardware or software
+error produced the message in some unexpected way.
+.TP
+IO err in swap
+The system encountered an error trying to write to the swap device
+or an error in reading information from a disk drive.
+The disk should be fixed or replaced if it is broken or unreliable.
+.TP
+Timeout table overflow
+.ns
+This really shouldn't be a panic.  If this happens,
+the timeout table should be made larger (NCALL in param.c).
+.TP
+Out of swap
+.ns
+.TP
+Out of swap space
+These really shouldn't be panics but there's no other
+satisfactory solution.
+The size of the swap area must be increased.
+The system attempts to avoid running out of swap by refusing to
+start new processes when short of swap space (resulting in
+``No more proceses'' messages from the shell).
+.TP
+&remap_area > 0120000
+.ns
+.TP
+_end > 0120000
+The kernel detected at boot time that an unacceptable portion of
+its data space extended into the region controlled by KDSA5.
+In the case of the first message, the size of the kernel's data
+segment (excluding the file, proc, and text tables) must be
+decreased.  In the latter case, there are two possibilities:
+if &remap_area is not greater than 0120000, the kernel must be
+recompiled without defining the option NOKA5.  Otherwise, as
+above, the size of the kernel's data segment must be decreased.
+.TP
+init died
+The system initialization process (process 1) has exited.
+This is serious, as the system will slowly die away or constipate.
+Rebooting is the only fix, so the system panics.
+.TP
+Can't exec /etc/init
+This is not a normal panic, as the system does not reboot.
+This occurs during a bootstrap when the system is unable to exec /etc/init.
+Either it isn't present on the root filesystem, the root filesystem was
+incorrectly set, or /etc/init is not executable (no execute permission).
+.TP
+trap type %o
+An unexpected trap has occurred within the system; the trap types are:
+.PP
+.nf
+0	bus error
+1	illegal instruction trap
+2	BPT/trace trap
+3	IOT
+4	power fail trap (if autoreboot fails)
+5	EMT
+6	recursive system call (TRAP instruction)
+7	programmed interrupt request
+11	protection fault (segmentation violation)
+12	parity trap
+.fi
+In some of these cases it is possible for octal 020 to be added into
+the trap type; this indicates that the processor was in user mode
+when the trap occurred.
+.PP
+In addition to the trap type, the system will have
+printed out three (or four) other numbers:
+.IR ka6 ,
+which is the contents of the segmentation
+register for the area in which the system's stack is kept;
+.IR aps ,
+which is the location where the hardware stored
+the program status word during the trap;
+.IR pc ,
+which was the system's program counter when
+it faulted (already incremented to the next word);
+.IR __ovno ,
+the overlay number from which the trap occurred (this is
+printed only if the kernel is overlaid).
+.PP
+That completes the list of panic types that are most likely to be seen.
+There are many other panic messages which are less likely to occur;
+most of them detect logical inconsistencies within the kernel
+and thus ``cannot happen'' unless some part of the kernel has been modified.
+.PP
+.I "Interpreting dumps."
+When the system crashes it writes (or at least attempts to write)
+an image of the current memory into the last part of the swap
+area.  After the system is rebooted, the program
+.IR savecore (8)
+runs and preserves a copy of this core image and the current
+system in a specified directory for later perusal.  See
+.IR savecore (8)
+for details.
+A magtape dump can be read onto disk with
+.IR dd (1).
+.PP
+To analyze a dump, begin by running
+.I "ps \-alxk"
+and/or
+.I "pstat \-p"
+to print the process table at the time of the crash.
+Use
+.IR adb (1)
+with the \fI\-k\fP option to examine the core file and
+to get a reverse calling order with the \fI$c\fP or \fI$C\fP command.
+If the mapping or the stack frame are incorrect, the following
+magic locations may be examined in an attempt to find out what went wrong.
+The registers R0, R1, R2, R3, R4, R5, SP, and KDSA6 (or KISA6 for machines
+without separate instruction and data)
+are saved at location 04.
+If the core dump was taken on disk, these values also appear
+at 0300.
+The value of KDSA6 (KISA6) multiplied by 0100 (8) gives the address
+of the user structure and kernel stack for the running process.
+Relabel these addresses 0140000 through 0142000.
+R5 is C's frame or display pointer.
+Stored at (R5) is the old R5 pointing to the previous
+stack frame.
+At (R5)+2
+is the saved PC of the calling procedure.
+Trace
+this calling chain
+to an R5 value of 0141756 (0141754 for overlaid kernels), which
+is where the user's R5 is stored.
+If the chain is broken,
+look for a plausible
+R5, PC pair and continue from there.
+In most cases this procedure will give
+an idea of what is wrong.
+A more complete discussion
+of system debugging is impossible here.
+.SH "SEE ALSO"
+adb(1), ps(1), pstat(1), boot(8), fsck(8), reboot(8), savecore(8)

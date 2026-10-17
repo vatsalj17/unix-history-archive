@@ -1,0 +1,54 @@
+
+MONITOR(3)          UNIX Programmer's Manual           MONITOR(3)
+
+NAME
+     monitor - prepare execution profile
+
+SYNOPSIS
+     monitor(lowpc, highpc, buffer, bufsize, nfunc)
+     int (*lowpc)( ), (*highpc)( );
+     short buffer[ ];
+
+DESCRIPTION
+     An executable program created by `cc -p' automatically
+     includes calls for _m_o_n_i_t_o_r with default parameters; _m_o_n_i_t_o_r
+     needn't be called explicitly except to gain fine control
+     over profiling.
+
+     _M_o_n_i_t_o_r is an interface to _p_r_o_f_i_l(2).  _L_o_w_p_c and _h_i_g_h_p_c are
+     the addresses of two functions; _b_u_f_f_e_r is the address of a
+     (user supplied) array of _b_u_f_s_i_z_e short integers.  _M_o_n_i_t_o_r
+     arranges to record a histogram of periodically sampled
+     values of the program counter, and of counts of calls of
+     certain functions, in the buffer.  The lowest address sam-
+     pled is that of _l_o_w_p_c and the highest is just below _h_i_g_h_p_c.
+     At most _n_f_u_n_c call counts can be kept; only calls of func-
+     tions compiled with the profiling option -p of _c_c(1) are
+     recorded.  For the results to be significant, especially
+     where there are small, heavily used routines, it is sug-
+     gested that the buffer be no more than a few times smaller
+     than the range of locations sampled.
+
+     To profile the entire program, it is sufficient to use
+
+          extern etext();
+          ...
+          monitor((int)2, etext, buf, bufsize, nfunc);
+
+     _E_t_e_x_t lies just above all the program text, see _e_n_d(3).
+
+     To stop execution monitoring and write the results on the
+     file _m_o_n._o_u_t, use
+
+          monitor(0);
+
+     then _p_r_o_f(1) can be used to examine the results.
+
+FILES
+     mon.out
+
+SEE ALSO
+     cc(1), prof(1), profil(2)
+
+Printed 5/17/83                                                 1
+

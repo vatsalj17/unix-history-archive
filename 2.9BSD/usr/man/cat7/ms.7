@@ -1,0 +1,171 @@
+
+MS(7)               UNIX Programmer's Manual                MS(7)
+
+NAME
+     ms - macros for formatting manuscripts
+
+SYNOPSIS
+     nroff -ms [ options ] file ...
+     troff -ms [ options ] file ...
+
+DESCRIPTION
+     This package of _n_r_o_f_f and _t_r_o_f_f macro definitions provides a
+     canned formatting facility for technical papers in various
+     formats.  When producing 2-column output on a terminal,
+     filter the output through _c_o_l(1).
+
+     The macro requests are defined below.  Many _n_r_o_f_f and _t_r_o_f_f
+     requests are unsafe in conjunction with this package, how-
+     ever these requests may be used with impunity after the
+     first .PP:
+
+          .bp   begin new page
+          .br   break output line here
+          .sp n insert n spacing lines
+          .ls n (line spacing) n=1 single, n=2 double space
+          .na   no alignment of right margin
+
+     Output of the _e_q_n, _n_e_q_n, _r_e_f_e_r, and _t_b_l(1) preprocessors for
+     equations and tables is acceptable as input.
+
+FILES
+     /usr/lib/tmac/tmac.s
+
+SEE ALSO
+     eqn(1), refer(1), tbl(1), troff(1)
+
+REQUESTS
+Request   Initial Cause Explanation
+          Value   Break
+.1C       yes     yes   One column format on a new page.
+.2C       no      yes   Two column format.
+.AB       no      yes   Begin abstract.
+.AE       -       yes   End abstract.
+.AI       no      yes   Author's institution follows.  Suppressed
+                        in TM.
+.AT       no      yes   Print `Attached' and turn off line fil-
+                        ling.
+.AU _x _y   no      yes   Author's name follows.  _x is location and
+                        _y is extension, ignored except in TM.
+.B _x      no      no    Print _x in boldface; if no argument
+                        switch to boldface.
+.B1       no      yes   Begin text to be enclosed in a box.
+.B2       no      yes   End text to be boxed . print it.
+.BT       date    no    Bottom title, automatically invoked at
+                        foot of page.  May be redefined.
+
+Printed 5/17/83                                                 1
+
+MS(7)               UNIX Programmer's Manual                MS(7)
+
+.BX _x     no      no    Print _x in a box.
+.CS _x...  -       yes   Cover sheet info if TM format, suppressed
+                        otherwise.  Arguments are number of text
+                        pages, other pages, total pages, figures,
+                        tables, references.
+.CT       no      yes   Print `Copies to' and enter no-fill mode.
+.DA _x     nroff   no    `Date line' at bottom of page is _x.
+                        Default is today.
+.DE       -       yes   End displayed text.  Implies .KE.
+.DS _x     no      yes   Start of displayed text, to appear verba-
+                        tim line-by-line.  _x=I for indented
+                        display (default), _x=L for left-justified
+                        on the page, _x=C for centered, _x=B for
+                        make left-justified block, then center
+                        whole block.  Implies .KS.
+.EG       no      -     Print document in BTL format for
+                        `Engineer's Notes.'  Must be first.
+.EN       -       yes   Space after equation produced by _e_q_n or
+                        _n_e_q_n.
+.EQ _x _y   -       yes   Precede equation; break out and add
+                        space.  Equation number is _y.  The
+                        optional argument _x may be _I to indent
+                        equation (default), _L to left-adjust the
+                        equation, or _C to center the equation.
+.FE       -       yes   End footnote.
+.FS       no      no    Start footnote.  The note will be moved
+                        to the bottom of the page.
+.HO       -       no    `Bell Laboratories, Holmdel, New Jersey
+                        07733'.
+.I _x      no      no    Italicize _x; if _x missing, italic text
+                        follows.
+.IH       no      no    `Bell Laboratories, Naperville, Illinois
+                        60540'
+.IM       no      no    Print document in BTL format for an
+                        internal memorandum.  Must be first.
+.IP _x _y   no      yes   Start indented paragraph, with hanging
+                        tag _x.  Indentation is _y ens (default 5).
+.KE       -       yes   End keep.  Put kept text on next page if
+                        not enough room.
+.KF       no      yes   Start floating keep.  If the kept text
+                        must be moved to the next page, float
+                        later text back to this page.
+.KS       no      yes   Start keeping following text.
+.LG       no      no    Make letters larger.
+.LP       yes     yes   Start left-blocked paragraph.
+.MF       -       -     Print document in BTL format for
+                        `Memorandum for File.'  Must be first.
+.MH       -       no    `Bell Laboratories, Murray Hill, New Jer-
+                        sey 07974'.
+.MR       -       -     Print document in BTL format for
+                        `Memorandum for Record.'  Must be first.
+.ND _d_a_t_e  troff   no    Use date supplied (if any) only in
+
+Printed 5/17/83                                                 2
+
+MS(7)               UNIX Programmer's Manual                MS(7)
+
+                        special BTL format positions; omit from
+                        page footer.
+.NH _n     -       yes   Same as .SH, with section number supplied
+                        automatically.  Numbers are multilevel,
+                        like 1.2.3, where _n tells what level is
+                        wanted (default is 1).
+.NL       yes     no    Make letters normal size.
+.OK       -       yes   `Other keywords' for TM cover sheet fol-
+                        low.
+.PP       no      yes   Begin paragraph.  First line indented.
+.PT       pg #    -     Page title, automatically invoked at top
+                        of page.  May be redefined.
+.PY       -       no    `Bell Laboratories, Piscataway, New Jer-
+                        sey 08854'
+.QE       -       yes   End quoted (indented and shorter)
+                        material.
+.QP       -       yes   Begin single paragraph which is indented
+                        and shorter.
+.QS       -       yes   Begin quoted (indented and shorter)
+                        material.
+.R        yes     no    Roman text follows.
+.RE       -       yes   End relative indent level.
+.RP       no      -     Cover sheet and first page for released
+                        paper.  Must precede other requests.
+.RS       -       yes   Start level of relative indentation.
+                        Following .IP's are measured from current
+                        indentation.
+.SG _x     no      yes   Insert signature(s) of author(s), ignored
+                        except in TM.  _x is the reference line
+                        (initials of author and typist).
+.SH       -       yes   Section head follows, font automatically
+                        bold.
+.SM       no      no    Make letters smaller.
+.TA _x...  5...    no    Set tabs in ens.  Default is 5 10 15 ...
+.TE       -       yes   End table.
+.TH       -       yes   End heading section of table.
+.TL       no      yes   Title follows.
+.TM _x...  no      -     Print document in BTL technical memoran-
+                        dum format.  Arguments are TM number,
+                        (quoted list of) case number(s), and file
+                        number.  Must precede other requests.
+.TR _x     -       -     Print in BTL technical report format;
+                        report number is _x.  Must be first.
+.TS _x     -       yes   Begin table; if _x is _H table has repeated
+                        heading.
+.UL _x     -       no    Underline argument (even in troff).
+.UX       -       no    `UNIX'; first time used, add footnote
+                        `UNIX is a trademark of Bell Labora-
+                        tories.'
+.WH       -       no    `Bell Laboratories, Whippany, New Jersey
+                        07981'.
+
+Printed 5/17/83                                                 3
+

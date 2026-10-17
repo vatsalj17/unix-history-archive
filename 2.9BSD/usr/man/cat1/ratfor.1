@@ -1,0 +1,75 @@
+
+RATFOR(1)           UNIX Programmer's Manual            RATFOR(1)
+
+NAME
+     ratfor - rational Fortran dialect
+
+SYNOPSIS
+     ratfor [ option ... ] [ filename ... ]
+
+DESCRIPTION
+     _R_a_t_f_o_r converts a rational dialect of Fortran into ordinary
+     irrational Fortran.  _R_a_t_f_o_r provides control flow constructs
+     essentially identical to those in C:
+
+     statement grouping:
+          { statement; statement; statement }
+
+     decision-making:
+          if (condition) statement [ else statement ]
+          switch (integer value) {
+               case integer:  statement
+               ...
+               [ default: ]   statement
+          }
+
+     loops:
+          while (condition) statement
+          for (expression; condition; expression) statement
+          do limits statement
+          repeat statement [ until (condition) ]
+          break [n]
+          next [n]
+
+     and some syntactic sugar to make programs easier to read and write:
+
+     free form input:
+          multiple statements/line; automatic continuation
+
+     comments:
+          # this is a comment
+
+     translation of relationals:
+          >, >=, etc., become .GT., .GE., etc.
+
+     return (expression)
+          returns expression to caller from function
+
+     define:
+          define name replacement
+
+     include:
+          include filename
+
+     The option -h causes quoted strings to be turned into 27H
+     constructs.  -C copies comments to the output, and attempts
+
+Printed 12/7/82                                                 1
+
+RATFOR(1)           UNIX Programmer's Manual            RATFOR(1)
+
+     to format it neatly.  Normally, continuation lines are
+     marked with a & in column 1; the option -6x makes the con-
+     tinuation character x and places it in column 6.
+
+     _R_a_t_f_o_r is best used with _f_7_7(1).
+
+SEE ALSO
+     f77(1)
+     B. W. Kernighan and P. J. Plauger, _S_o_f_t_w_a_r_e _T_o_o_l_s, Addison-
+     Wesley, 1976.
+     B. W. Kernighan, _R_a_t_f_o_r - _A _P_r_e_p_r_o_c_e_s_s_o_r _f_o_r _a _R_a_t_i_o_n_a_l _F_o_r_-
+     _t_r_a_n
+
+Printed 12/7/82                                                 2
+

@@ -1,0 +1,219 @@
+CFLAGS='-O -s'
+D=/usr/ucb
+: DESTDIR=
+if [ $DESTDIR ]
+then DD="DESTDIR=$DESTDIR"; export DESTDIR
+fi
+arg="$DD all"
+C=all
+L=
+TC=-ltermcap
+case $1 in
+-f)	CRT=/lib/fcrt0.o;
+	FP=-f;
+	;;
+-34)	PDP=34;
+	FP=;
+	CRT=/lib/crt0.o;
+	FMT=-n;
+	;;
+-40)	PDP=40;
+	FP=-f;
+	CRT=/lib/fcrt0.o;
+	FMT=-n;
+	;;
+-70)	PDP=70;
+	FP=;
+	FMT=-i;
+	;;
+*)	echo 'Usage: MAKE -40|-34|-70 [ -cp ] [ -f ] name ...';
+	echo ' -40 uses no separate I/D and loads floating point interpreter;';
+	echo ' -34 uses no separate I/D;';
+	echo ' -70 uses separate I/D as appropriate.';
+	echo ' -f loads floating point interpreter;';
+	exit 1;
+	;;
+esac
+shift
+for a
+do
+	cmd=
+	cpcmd=
+	s=.c
+	case $a in
+	*.y)	s=.y ;;
+	*.s)	s=.s ;;
+	*.sh)	s=.sh;;
+	esac
+	b=`basename $a $s`
+	case $b in
+	-cp)	C=cp
+		arg="$DD cp"
+		echo INSTALLING ...
+		continue ;;
+	esac
+	echo ===== $b:
+	case $b in
+
+	astags)	cpcmd="cp astags.sh ${DESTDIR}/usr/ucb/astags; chmod +x ${DESTDIR}/usr/ucb/astags" ;;
+	bad144) cmd="cc -n $CFLAGS bad144.c -o bad144 $L" ;;
+	badsect) cmd="cc -n $CFLAGS badsect.c -o badsect $L" ;;
+	catman)	cmd="cc -n $CFLAGS catman.c -o catman $L" ;;
+	checknr) cmd="cc -n $CFLAGS checknr.c -o checknr $L" ;;
+	checkobj) cmd="cc -n $CFLAGS checkobj.c -o checkobj $L" ;;
+	chfn)	cmd="cc -n $CFLAGS chfn.c -o chfn $L" ;;
+	chsh)	cmd="cc -n $CFLAGS chsh.c -o chsh $L" ;;
+	ckdir)	cmd="cc -n $CFLAGS ckdir.c -o ckdir $L" ;;
+	clear)	cmd="cc -n $CFLAGS clear.c $TC -o clear $L" ;;
+	clock)	cmd="cc -n $CFLAGS clock.c -o clock $L" ;;
+	colcrt)	cmd="cc -n $CFLAGS colcrt.c -o colcrt $L" ;;
+	colrm)	cmd="cc -n $CFLAGS colrm.c -o colrm $L" ;;
+	ctags)	cmd="cc -n $CFLAGS ctags.c -o ctags $L" ;;
+	cxref)	cpcmd="cp cxref.sh ${DESTDIR}/usr/ucb/cxref; chmod +x ${DESTDIR}/usr/ucb/cxref" ;;
+	daytime) cmd="cc -n $CFLAGS daytime.c -o daytime $L" ;;
+	double)	cmd="cc -n $CFLAGS double.c -o double $L" ;;
+	expand)	cmd="cc -n $CFLAGS expand.c -o expand $L" ;;
+	finger)	cmd="cc -n $CFLAGS finger.c -o finger $L" ;;
+	fleece)	cmd="cc -n $CFLAGS fleece.c -o fleece $L" ;;
+	fold)	cmd="cc -n $CFLAGS fold.c -o fold $L" ;;
+	from)	cmd="cc -n $CFLAGS from.c -o from $L" ;;
+	getNAME) cmd="cc -n $CFLAGS getNAME.c -o getNAME $L" ;;
+	gets)	cmd="cc -n $CFLAGS gets.c -o gets $L" ;;
+	grep)	cmd="cc -n $CFLAGS grep.c -o grep $L" ;;
+	head)	cmd="cc -n $CFLAGS head.c -o head $L" ;;
+	hostname)	cmd="cc -n $CFLAGS hostname.c -o hostname $L" ; D=/etc;;
+	la)	cmd="cc -n $CFLAGS $FP la.c -o la $L" ;;
+	last)	cmd="cc -n $CFLAGS last.c -o last $L" ;;
+	lastcomm) cmd="cc -n $CFLAGS $FP lastcomm.c -o lastcomm $L" ;;
+	leave)	cmd="cc -n $CFLAGS leave.c -o leave $L" ;;
+	lock)	cmd="cc -n $CFLAGS lock.c -o lock $L" ;;
+	makewhatis) cpcmd="cp makewhatis.sh ${DESTDIR}/usr/lib/makewhatis; chmod +x ${DESTDIR}/usr/lib/makewhatis" ;;
+	mkstr)	cmd="cc -n $CFLAGS mkstr.c -o mkstr $L" ;;
+	more)	cmd="cc -n $CFLAGS more.c $TC -o more $L" ;;
+	mt)	cmd="cc -n $CFLAGS mt.c -o mt $L" ;;
+	pq)	cmd="cc -n $CFLAGS $FP pq.c -o pq $L" ;;
+	print)	cpcmd="cp print.sh ${DESTDIR}/usr/ucb/print; chmod +x ${DESTDIR}/usr/ucb/print" ;;
+	printenv) cmd="cc -n $CFLAGS printenv.c -o printenv $L" ;;
+	prmail)	cmd="cc -n $CFLAGS prmail.c -o prmail $L" ;;
+	pti)	cmd="cc -n $CFLAGS pti.c -o pti $L" ;;
+	pubindex) cpcmd="cp pubindex.sh ${DESTDIR}/usr/ucb/pubindex; chmod +x ${DESTDIR}/usr/ucb/pubindex" ;;
+	renice)	cmd="cc -n $CFLAGS renice.c -o renice $L" ;;
+	rewind)	cmd="cc -n $CFLAGS rewind.c -o rewind $L" ;;
+	script)	cmd="cc -n $CFLAGS script.c -o script $L" ;;
+	see) cpcmd="cp see.sh ${DESTDIR}/usr/ucb/see; chmod +x ${DESTDIR}/usr/ucb/see" ;;
+	setquota) cmd="cc -n $CFLAGS setquota.c -o setquota $L" ;;
+	soelim)	cmd="cc -n $CFLAGS soelim.c -o soelim $L" ;;
+	sq)	cmd="cc -n $CFLAGS sq.c -o sq $L" ;;
+	strings) cmd="cc -n $CFLAGS strings.c -o strings $L" ;;
+	submit)	cmd="cc -n $CFLAGS submit.c -o submit $L" ;;
+	sysline) cmd="cc -n $FP $CFLAGS sysline.c -o sysline -lcurses -ltermcap $L" ;;
+	tod)	cmd="cc -n $CFLAGS tod.c -o tod $L" ;;
+	tra) cpcmd="cp tra.sh ${DESTDIR}/usr/ucb/tra; chmod +x ${DESTDIR}/usr/ucb/tra" ;;
+	ul)	cmd="cc -n $CFLAGS ul.c -o ul -ltermcap $L" ;;
+	unexpand) cmd="cc -n $CFLAGS unexpand.c -o unexpand $L" ;;
+	unifdef) cmd="cc -n $CFLAGS unifdef.c -o unifdef $L" ;;
+	untmp)	cmd="cc -n $CFLAGS untmp.c -o untmp $L" ;;
+	users)	cmd="cc -n $CFLAGS users.c -o users $L" ;;
+	uudecode) cmd="cc -n $CFLAGS uudecode.c -o uudecode $L" ;;
+	uuencode) cmd="cc -n $CFLAGS uuencode.c -o uuencode $L" ;;
+	uusend)	cmd="cc -n $CFLAGS uusend.c -o uusend $L" ;;
+	vmstat)	cmd="cc -n $CFLAGS vmstat.c -o vmstat $L" ;;
+	w)	cmd="cc -n $CFLAGS w.c -o w $L" ;;
+	what)	cmd="cc -n $CFLAGS what.c -o what $L" ;;
+	whereis) cmd="cc -n $CFLAGS whereis.c -o whereis $L" ;;
+	which)	cpcmd="cp which.sh ${DESTDIR}/usr/ucb/which; chmod +x ${DESTDIR}/usr/ucb/which" ;;
+	whoami)	cmd="cc -n $CFLAGS whoami.c -o whoami $L" ;;
+	xstr)	cmd="cc -n $CFLAGS xstr.c -o xstr $L" ;;
+
+	Mail)	echo "should probably edit v7.local.h and configdefs.c first."
+		echo "Making job-control version."
+		if [ $PDP = 70 ] 
+		then (set -x; cd Mail; make $arg clean)
+		else (set -x; cd Mail; make -f Ovmakefile $arg clean)
+		fi
+		continue;;
+	berknet) echo "Berknet should be configured manually"; continue;;
+	compact) (set -x; cd compact; make $arg clean); continue;;
+	csh)	if [ $PDP = 70 ] 
+		then (set -x; cd csh; make $arg clean)
+		else (set -x; cd csh; make -f Ovmakefile $arg clean)
+		fi
+		continue;;
+	delivermail) echo "Delivermail should be configured manually (cf. sendmail)";continue;;
+	dump) echo "Dump should be made and installed manually";continue;;
+	error)	(set -x; cd error; make $arg clean); continue;;
+	ex)	echo "Making ex version 3"
+		(set -x; cd ex/ex3; make PDP=$PDP FP=$FP $arg clean); continue;;
+	eyacc)	if [ $PDP = 70 ]
+		then (set -x; cd eyacc; make $arg clean)
+		else (set -x; cd eyacc; make -f Ovmakefile $arg clean)
+		fi
+		continue;;
+	indent)	(set -x; cd indent; make FP=$FP $arg clean); continue;;
+	l11)	(set -x; cd l11; make $arg clean); continue;;
+	libndir)echo "Look through the libndir directory before making libndir"
+		continue ;;
+	lisp)	echo "Look through the lisp directory before making lisp"
+		continue ;;
+	lpr)	(set -x; cd lpr; make $arg clean); continue;;
+	m11)	if [ $PDP = 70 ]
+		then (set -x; cd m11; make $arg clean)
+		else echo at.sml must be edited for nonseparate I/D CPUs
+		fi
+		continue;;
+	me)	(set -x; cd me; make $arg clean); continue;;
+	msgs)	(set -x; cd msgs; make $arg clean); continue;;
+	oldcsh)	echo "oldcsh isn\'t usually installed"
+		echo "unless you're not running job control."
+		echo "With job control, /bin/csh is linked to /bin/oldcsh."
+		continue;;
+	pascal)
+		if [ $PDP = 70 ]
+		then (set -x; cd pascal/pi; make $arg clean)
+		else (set -x; cd pascal/pi; make -f Ovmakefile STARTUP=$CRT $arg clean)
+		fi
+		(set -x; cd pascal/px; make PDP=$PDP $arg clean)
+		(set -x; cd pascal/pxp; make FMT=$FMT $arg clean);
+		continue;;
+	pi)	if [ $PDP = 70 ]
+		then (set -x; cd pascal/pi; make $arg clean)
+		else (set -x; cd pascal/pi; make -f Ovmakefile STARTUP=$CRT $arg clean)
+		fi
+		continue;;
+	px)	(set -x; cd pascal/px; make PDP=$PDP $arg clean); continue;;
+	pxp)	(set -x; cd pascal/pxp; make FMT=$FMT $arg clean); continue;;
+	pix)	(set -x; cd pascal/pi; make pix); continue;;
+	pwhash)	echo "Look at the pwhash system before installing"
+		continue ;;
+	ranm)	(set -x; cd ranm; make $arg clean); continue;;
+	sendmail) echo "Sendmail should be configured manually (cf. delivermail)";continue;;
+	termcap) echo "Edit the reorder script, then run \"make termcap\""
+		continue ;;
+	termlib) (set -s; cd termlib; make $arg $clean); continue;;
+	tset)	(set -x; cd tset; make $arg clean); continue;;
+	vgrind)	(set -x; cd vgrind; make $arg clean); continue;;
+	vsh)	(set -x; cd vsh; make $arg clean); continue;;
+
+	*)	echo "Don't know how to make $b."
+		continue ;;
+	esac || continue
+	case $cmd in
+	"")	;;
+	*)	echo $cmd
+		$cmd ;;
+	esac || continue
+	case $C in
+	cmp)	echo cmp $b ${DESTDIR}$D/$b
+		cmp $b ${DESTDIR}$D/$b
+		;;
+	cp)	if [ -n $cpcmd ]
+		then
+			echo $cpcmd
+			sh -c "$cpcmd"
+		else
+			echo cp $b ${DESTDIR}$D/$b \; rm $b
+			cp $b ${DESTDIR}$D/$b && rm $b
+		fi
+		;;
+	esac
+done

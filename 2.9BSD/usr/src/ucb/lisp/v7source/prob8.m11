@@ -1,0 +1,193 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+
+.rept	0
+
+this file contains the evaluator for xfer lisp.
+it is identical to the eval-apply routines of
+pdp-10 lisp.
+
+note that it is necessary to conform to 10-lisp (vs make 10 conform to 
+11 lisp) because of the syntatic extentions that have been added to the
+11 evaluator.
+
+i.e.
+
+	((cond (nil 'car)(t 'cdr)) '(a)] is legal in
+
+10 lisp, but must be illegal in xfer lisp.
+
+
+
+9/28/75--- forrest w. howard, jr.
+
+
+.endr
+
+	.sharable
+
+	.sbttl	the evaluator....
+
+eval:
+
+.if	df,noeval
+	tstb	tracflg		;see if we're to output records
+				;of eval activations...
+	beq	1$
+	propush	a
+	npush	#anil
+	call	printr
+	outstr	linefeed
+	call	dmpport
+ .if	df,width
+	clrb	poport+1	;reset width
+ .endc
+	cmp	-(np),-(np)
+	unpropop	a
+.endc
+
+	dispatch		;see what type of stuff we have
+	ret			;an int--return
+	.word	0		;allow for 2 word instructions
+	br	evdtpr		;a dtpr..take care of it
+	.word	0
+	br	evatom		;a atom
+	.word	0
+	ret			;binary code
+	.word	0
+	ret			;ports
+
+
+
+evatom:	jmpifnil a,1$		;if nil or true, leave alone
+	jmpiftrue a,1$
+	call	lookup		;lookup returns ptr to storage cell in a
+	mov	2(a),a		;get current binding
+1$:	ret
+
+
+	.sharable
+
+evdtpr:	push	a		;create function block
+	push	np
+	loadnil	-(sp)		;nil for function for now
+.if	ne,xfer
+	.globl	eexit1
+	mov	#eexit1,-(sp)	;move on not entered snag
+  .iff
+	mov	#eexit,-(sp)	;and snag
+.endc
+
+; we now have
+
+;	(sp)-->	eexit
+;		nil
+;		np/ltop
+;		form
+;		real return
+
+
+	car	a,a		;get function def
+econt:	cmptype	a,j3,#natom	;is atom???
+	bne	1$		;if not,skip to remainder
+	mov	4(a),j3		;this gets binding of atom
+	jmpnnil	j3,11$,nl		;if not nil, assume is function
+	call	lookup		;get binding of atom
+	mov	2(a),j3		;this moves actual form
+11$:	mov	j3,a		;in any case, move binding to a
+1$:	mov	a,2(sp)		;save in function block
+	ldtype	a,j3
+	cmp	j3,#ndtpr	;is it a dtpr
+	beq	2$
+	cmp	j3,#nbcd
+	bne	3$		;if not bcd or dtpr,error
+	tst	(a)
+	bmi	dofsbr		;if <0,fsubr
+	br	dosubr		;else, is subr
+
+2$:	cmp	@a,#alambda
+	beq	dolam
+	cmp	@a,#anlambda
+	beq	donlam
+
+3$:	error	</undefined procedure/>,econt
+
+
+
+	.sharable
+
+dofsbr:	mov	6(sp),b		;get form
+	npush	2(b)		;push the cdr
+subcm:	mov	4(sp),j3	;exchange ltop and np
+	mov	ltop,4(sp)
+	mov	j3,ltop
+.if	ne,xfer
+	mov	#eexit,(sp)
+.endc
+	call	intcheck
+.if	eq,multiseg
+	jmp	4(a)
+ .iff
+	jmp	@4(a)
+.endc
+
+dosubr:	mov	6(sp),b
+	cdr	b,b
+	call	evalb
+	mov	2(sp),a
+	br	subcm
+
+
+
+	.sharable
+
+donlam:	mov	6(sp),b
+	npush	2(b)
+	br	apply
+
+dolam:	mov	6(sp),b
+	cdr	b,b
+	call	evalb
+	mov	2(sp),a
+	br	apply
+
+
+
+	.sharable
+
+intcheck:
+	tstb	intflg
+	beq	p832$
+	propush	a
+	error	</^c interrupt/>,31$
+31$:	unpropop	a
+p832$:	ret
+
+
+
+	.sharable
+
+;	apply
+
+;	fn block is on cstack
+;	args are bound on nstk
+;	a/ptr lambda or nlambda
+;	putnames on name stack with already present values
+;	then call eval on body of lambda or nlambda
+
+apply:
+	cdr	a,b
+	mov	@2(b),a
+	car	b,b		;this sequence leaves function in a, arg list
+				;in b
+	mov	4(sp),j3	;exchange the ltop and saved np
+	mov	ltop,4(sp)
+	mov	j3,ltop
+	call	stkb		;put on the names and adjust the stack
+	call	intcheck	;any ^c's pending???
+.if	ne,xfer
+	mov	#eexit,(sp)	;set up "entered" snag
+.endc
+	call	eval		;and do a bit or recursion
+	ret			;and go home
+

@@ -1,0 +1,53 @@
+:  rc for use with autoreboot
+:  '/etc/rc [ autoboot | fastboot  [ powerfail | "" ] ]'
+HOME=/; export HOME
+PATH=/etc:/bin:/usr/bin; export PATH
+case $2 in 
+powerfail)
+	echo REBOOTING AFTER POWER FAILURE >/dev/console
+	;;
+esac
+case $1 in
+autoboot)
+	echo Automatic reboot in progress... >/dev/console
+	date >/dev/console
+	fsck -p -t fsck.tmp >/dev/console 2>&1
+	case $? in
+	0)
+		;;
+	4)
+		echo "Root was modified-- rebooting." >/dev/console
+		reboot -n
+		;;
+	8)
+		echo "Automatic filesystem check failed... help!" >/dev/console
+		exit 1
+		;;
+	12)
+		echo "Reboot interrupted" >/dev/console
+		exit 1
+		;;
+	*)
+		echo "Unknown error in reboot" > /dev/console
+		exit 1
+		;;
+	esac
+;;
+esac
+date >/dev/console
+cp /dev/null /etc/mtab
+cp /dev/null /etc/utmp
+mount -a			>/dev/console 2>&1
+savecore /usr/sys >/dev/console 2>&1
+/usr/lib/ex3.7preserve -a
+rm -rf /usr/tmp/*
+rm -rf /tmp/*
+rm -f /usr/spool/uucp/LCK..*
+rm -f /usr/spool/lpd/lock
+rm -f /usr/spool/vpd/lock
+/etc/update
+/etc/cron
+ps -U
+/etc/accton /usr/adm/acct
+/etc/hostname hostnameunknown
+exit 0

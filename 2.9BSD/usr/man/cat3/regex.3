@@ -1,0 +1,47 @@
+
+REGEX(3)            UNIX Programmer's Manual             REGEX(3)
+
+NAME
+     re_comp, re_exec - regular expression handler
+
+SYNOPSIS
+     char *re_comp(s)
+     char *s;
+
+     re_exec(s)
+     char *s;
+
+DESCRIPTION
+     _R_e__c_o_m_p compiles a string into an internal form suitable for
+     pattern matching. _R_e__e_x_e_c checks the argument string against
+     the last string passed to _r_e__c_o_m_p.
+
+     _R_e__c_o_m_p returns 0 if the string _s was compiled successfully;
+     otherwise a string containing an error message is returned.
+     If _r_e__c_o_m_p is passed 0 or a null string, it returns without
+     changing the currently compiled regular expression.
+
+     _R_e__e_x_e_c returns 1 if the string _s matches the last compiled
+     regular expression, 0 if the string _s failed to match the
+     last compiled regular expression, and -1 if the compiled
+     regular expression was invalid (indicating an internal
+     error).
+
+     The strings passed to both _r_e__c_o_m_p and _r_e__e_x_e_c may have
+     trailing or embedded newline characters; they are terminated
+     by nulls.  The regular expressions recognized are described
+     in the manual entry for _e_d (1), given the above difference.
+
+SEE ALSO
+     ed(1), ex(1)
+
+DIAGNOSTICS
+     _R_e__e_x_e_c returns -1 for an internal error.
+
+     _R_e__c_o_m_p returns one of the following strings if an error
+     occurs: "No previous regular expression", "Regular expres-
+     sion too long", "unmatched \(", "missing ]", "too many \(\)
+     pairs", "unmatched \)".
+
+Printed 7/31/83                                                 1
+

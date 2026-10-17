@@ -1,0 +1,155 @@
+.\"	$Header:   RCS/grab.1.v  Revision 1.2  83/07/01  19:34:59  donn  Exp$
+.\"	$Log:	RCS/grab.1.v $
+.\"	Revision 1.2  83/07/01  19:34:59  donn
+.\"	Added descriptions of '-i' and '-L' options for inode grabbing
+.\"	and dumping.
+.\"							Donn
+.\"	
+.\"
+.TH GRAB 1 5/18/82
+.UC 4
+.SH NAME
+grab \- get files from filesystems
+.SH SYNOPSIS
+.B grab
+[ -246pxvilLtb ] filesystem [ name ... ]
+.SH DESCRIPTION
+.PP
+.I Grab
+is a program which reads Unix filesystem-format devices
+and extracts named files.
+.I Grab
+will run on Version 6 Unix, 2.9 BSD Unix or 4.1 BSD Unix and
+will read filesystems made on any of these three.
+It is useful for reading filesystems that
+cannot be mounted for various reasons
+(e.g. there is damage,
+system mountable filesystem parameter is set too low,
+you are using dual-ported disks or controllers,
+the filesystem is not the same type as the one
+.I grab
+is running on, etc.)
+It can also be used as a fast disk copy program,
+especially for big chunks of file systems,
+since it can restore ownerships and permissions on files,
+recreate links and make directories and devices.
+.PP
+.I Grab
+needs to be supplied with the name of a filesystem format file or device,
+and a list of pathnames for files on that filesystem
+starting at the filesystem root.
+For example if you need to extract a file
+/mnt/donn/c/quote.c where /mnt is normally mounted
+on /dev/xy2, then you type
+.br
+     grab /dev/xy2 donn/c/quote.c
+.br
+and this will copy the remote file into a file named
+.I quote.c
+in your current directory.
+(Mounted devices can be listed using
+.IR df (1)
+or
+.IR mount (8).)
+If a directory is given as a name,
+all the files in that directory are (recursively) extracted
+into a subdirectory in the current directory
+that has the same name as the remote directory.
+If any files extracted are linked together
+on the remote filesystem,
+the copies
+.I grab
+makes will also be linked.
+The permission information on the files is copied
+except for owner, setuid, setgid and sticky information
+which must be requested specifically by the
+.B \-p
+option.
+Device nodes will be copied for the super-user.
+Here are the options in detail:
+.TP 8
+.B  -2
+The remote filesystem is a 2.9 BSD filesystem.
+(Note: By default the remote filesystem
+is assumed to be the same type as the host system.)
+.TP 8
+.B -4
+The remote filesystem is a 4.1 BSD filesystem.
+.TP 8
+.B -6
+The remote filesystem is a Version 6 filesystem.
+(Note: On version 6 grab cannot consistently read filesystems
+made on Version 7 that use more than 65K small blocks
+since the V6 I/O system uses 16 bits to store block numbers...)
+.TP 8
+.B  -p
+Restore owner and group, setuid, setgid and sticky bits,
+and access and modification times.
+Only the superuser can reliably copy owner and group.
+.I Grab
+will not allow protected files on remote filesystems to be read
+except by the super-user.
+.TP 8
+.B  -v
+Verbose option -- the names of copied files
+are announced as they are finished being copied.
+.TP 8
+.B  -x
+Print option -- the requested files are copied
+to the standard output.
+If the standard output is a file then
+this is the default.
+.TP 8
+.B  -i
+Inode option -- the arguments must be inode numbers
+and the program looks at the files indicated by the given inodes.
+If files are created without a name being available,
+the inode number is converted into a name.
+This is useful for recovering files on screwed-up filesystems
+when the inode numbers are known through (say)
+.IR dcheck (8).
+.TP 8
+.B  -l
+List option -- the names of files in the requested directories are listed.
+This is useful if you don't know or can't remember
+the name of a file to extract.
+.TP 8
+.B  -L
+Long listing option -- the program lists files individually
+and displays useful information about them:
+their name, inode number, mode word, link count, uid and gid,
+access and modify times, and within-inode block numbers.
+.TP 8
+.B  -t
+.I Tar
+option -- the requested files are placed on the standard output
+in a format identical to that of the
+.IR tar (1)
+program.
+Digits following the letter
+.B t
+are taken to be a blocking factor for the tape;
+the default blocksize is 20.
+To put a Version 6 directory on tape you might type:
+.br
+   grab -6tv /dev/rxp0d /etc > /dev/rmt0
+.TP 8
+.B -b
+This option allows you to set the size of the buffer
+.I grab
+uses for reading and writing.
+Digits following the
+.B b
+are taken to be a buffer size in 512-byte blocks.
+The default is 128 blocks on the VAX, 32 on PDPs.
+Increasing the buffer size generally increases
+the speed but you have to be careful not to exceed
+the bounds of your machine.
+.SH BUGS
+Checking uids of remote files is
+rather silly if the remote system
+is not the same as the host system.
+.sp
+No warning is given about clobbering pre-existing files.
+.sp
+Version 6 is obsolete.

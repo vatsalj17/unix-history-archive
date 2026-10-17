@@ -1,0 +1,130 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+
+	.sbttl make things 400 byte multiples long+clean up
+;
+;forrest howard
+;
+
+
+
+	.psect	dsubr con
+.if	ne,multiseg
+	tmp=.-starbc
+	.blkb	<<tmp+377>&<^c 377>>-tmp
+.endc
+
+
+	;now put the oblist or hash table in its (their) place(s)
+
+.psect	ddtpr con
+hasht:
+
+	i=0
+.rept	hash
+	dumphash	\i
+	i=i+1
+.endr
+
+
+	i=0
+.rept	<hash/2>
+	cons	<hasht+<4*i>>,oblist
+	oblist=ddtpr
+	i=i+1
+.endr
+
+;;;;;;;;;now build in eval driver in case of xfer lisp
+
+.if	ne,xfer
+	.globl	feval1,feval2,fevq1,fevq2,feval3,fevq3
+	cons	anil,anil
+	tnil=* ddtpr
+	cons	aread,tnil	;make (read nil)
+	feval3=* ddtpr
+	cons	feval3,anil	;((read nil))
+	tmp=* ddtpr
+	cons	aeval,tmp	;now (eval(read nil))
+	feval2=* ddtpr
+	cons	feval2,tnil	; ((eval (read nil)) nil)
+	tmp=* ddtpr
+	cons	aprint,tmp	; (print(eval(read nil)) nil)
+
+	elist = ddtpr		;list for eval mode...now evalquote
+	feval1=* ddtpr
+
+	cons	aevquote,tnil
+	fevq3 =* ddtpr
+	cons	fevq3,anil	;((evalquote nil))
+	tmp=* ddtpr
+	cons	aeval,tmp	;(eval(evalquote nil))
+	fevq2=* ddtpr
+	cons	fevq2,tnil	;((eval(evalquote nil)) nil)
+	tmp=* ddtpr
+	cons	aprint,tmp	;(print(eval(evalquotenil))nil]
+	eqlist = ddtpr
+	fevq1=* eqlist
+
+	cons	eqlist,elist	;cons together
+
+	elists=* ddtpr		;will be lit list of $mumble...
+.endc
+
+
+
+
+	.psect	uswddat con
+xoblist:	oblist
+
+
+	.psect	ddtpr con
+	.blkb		<<.-frstdtpr>!^b11111111>-<.-frstdtpr>
+	.psect	datom con
+lsatm=.
+	tmp=<<<.-frstatom>!377>+1>-<.-frstatom>
+.if	le,tmp-3
+	.ift
+	  onlyatom=anil
+	.iff
+onlyatom:	.word	anil,<tmp-2>/2
+.endc
+	.blkb	<<<.-frstatom>!377>+1>-<.-frstatom>
+lastpage:
+
+	.psect	datom con
+	.word	2		;this was once necessary to allocate
+				;not sure is needed now, but doesn't hurt
+
+	.psect	uswddat
+	tmp=<.-<where>>
+	.psect	usport
+	tmp=tmp+<.-<piport>>
+	.psect	usbydat	con
+
+	.even
+	tmp=tmp+<.-<char>>
+
+
+.if	ne,multiseg		;concern self with "share" data
+
+	.psect	shrwdda
+	.even
+	tmp=tmp+<.-master>
+	tmp=tmp+20+24+202	;for numbers,gcolptrs,ctable
+	tmp = tmp+12		;for psect anil
+.if	ne,fpsim
+	tmp= tmp-20
+.endc
+
+.endc
+
+	.blkb	<<tmp+377>&<^c 377>>-tmp
+	.psect	shbydat
+
+	.even
+
+
+
+
+	.end
+

@@ -1,0 +1,79 @@
+.TH OPEN 2 
+.UC
+.SH NAME
+open \- open for reading or writing
+.SH SYNOPSIS
+.B #include <sys/types.h>
+.br
+.B #include <sys/file.h>
+.sp
+.B open(name, mode)
+.br
+.B char *name;
+.SH DESCRIPTION
+.I Open
+opens the file
+.I name
+for reading
+(if
+.I mode
+is FATT_RDONLY),
+writing (if
+.I mode
+is FATT_WRONLY) or for both reading and writing
+(if
+.I mode
+is FATT_RDWR).
+.I Name
+is the address of a string of ASCII characters representing
+a path name, terminated by a null character.
+.PP
+The file is positioned at the beginning (byte 0).
+The returned file descriptor must be used for subsequent calls
+for other input-output functions on the file.
+.SH ERRORS
+The named file is opened unless one or more of the following is true:
+.TP 20
+[EINVAL]
+The path name contains a non-ASCII byte.
+.TP 20
+[ENOTDIR]
+A component of the path prefix is not a directory.
+.TP 20
+[EACCES]
+A component of the path prefix denies search permission.
+.TP 20
+[ENOENT]
+The named file does not exist.
+.TP 20
+[EISDIR]
+The named file is a directory and the arguments specify it is to be
+opened for writing.
+.TP 20
+[EROFS]
+The named file resides on a read-only file system and the file is to
+be modified.
+.TP 20
+[EMFILE]
+The maximum number of file descriptors allowed are already open.
+.TP 20
+[ETXTBSY]
+The file is a pure procedure (shared text) file that is being executed
+and the
+.I open
+call requests write access.
+.TP 20
+[EFAULT]
+.I Name
+points outside the process's allocated address space.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.SH "SEE ALSO"
+close(2), creat(2), dup(2), read(2), write(2)
+.SH ASSEMBLER
+(open = 5.)
+.br
+.B sys open; name; mode
+.br
+(file descriptor in r0)

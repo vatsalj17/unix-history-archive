@@ -1,0 +1,102 @@
+.TH GREP 1
+.SH NAME
+grep \- search a file for a pattern
+.SH SYNOPSIS
+.B grep
+[
+.B \-v
+] [
+.B \-c
+] [
+.B \-l
+] [
+.B \-n
+] [
+.B \-b
+] [
+.B \-s
+] [
+.B \-h
+] [
+.B \-y
+] [
+.B \-e
+] expression [ file ] ...
+.SH DESCRIPTION
+.I Grep
+searches the input files
+(standard input default)
+for lines matching the
+regular expression.
+Normally, each line found
+is copied to the standard output.
+The following options are recognized:
+.TP
+.B \-v
+All lines but those matching
+are printed.
+.TP
+.B \-c
+Only a count of matching lines is printed.
+.TP
+.B \-l
+The names of files with matching lines are listed (once)
+separated by newlines.
+.TP
+.B \-n
+Each line is preceded by
+its line number in the file.
+.TP
+.B \-b
+Each line is preceded by the block number
+on which it was found.
+This is sometimes useful in locating
+disk block numbers by context.
+.TP
+.B \-s
+No output is produced, only status.
+.TP
+.B \-h
+Do not print filename headers with output lines.
+.TP
+.B \-y
+Lower case letters in the pattern will also match
+upper case letters in the input file
+.RI ( grep
+only).
+.TP
+.BI \-e " expression"
+Same as a simple
+.I expression 
+argument,
+but useful when the
+.I expression
+begins with a '\fB\-\fP'.
+.TP
+.BI \-f " file"
+The regular expression
+.RI ( egrep )
+or string list
+.RI ( fgrep ) 
+is taken from the
+.I file.
+.TP
+.B \-x
+(Exact) only lines matched in their entirety are printed
+.RI ( fgrep
+only).
+Care should be taken when
+using the characters
+$ * [ ^ | ( ) and \\ in the regular
+expression as they are
+also meaningful to the shell.
+It is generally necessary to enclose the
+entire
+.I expression
+argument in quotes.
+.SH "SEE ALSO"
+ex(1)
+.SH BUGS
+Lines
+are limited to 256 characters;
+longer lines are truncated.

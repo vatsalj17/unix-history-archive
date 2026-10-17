@@ -1,0 +1,42 @@
+.TH MEM 4
+.UC
+.SH NAME
+mem, kmem  \-  main memory
+.SH DESCRIPTION
+.I Mem
+is a special file that is an image of the main memory
+of the computer.
+It may be used, for example, to examine,
+and even to patch the system.
+.I Kmem
+is the same as 
+.I mem
+except that kernel virtual memory
+rather than physical memory is accessed.
+.I Kmem
+is faster than \fImem\fP when the address,
+count, and base are all even.
+.PP
+References to nonexistent locations return errors.
+.PP
+Examining and patching device registers is likely
+to lead to unexpected results when read-only or write-only
+bits are present.
+.PP
+On PDP-11s, the I/O page
+begins at location 0160000 of
+.I kmem
+and the per-process data segment for the current process
+begins at 0140000.
+.SH FILES
+/dev/mem
+.br
+/dev/kmem
+.SH BUGS
+.PP
+On PDP-11's, memory files are accessed one byte
+at a time, an inapproriate method for some
+device registers.
+.PP
+On machines with ENABLE/34(tm) memory mapping boards
+the I/O page can be accessed only through \fIkmem\fP.

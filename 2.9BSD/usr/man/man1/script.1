@@ -1,0 +1,83 @@
+.TH SCRIPT 1
+.UC
+.SH NAME
+script \- make typescript of terminal session
+.SH SYNOPSIS
+.B script
+[
+.B \-a
+] [
+.B \-n
+] [
+.B \-q
+] [
+.B \-s
+] [
+.B \-S
+shell
+] [ file ]
+.SH DESCRIPTION
+.I Script
+makes a typescript of everything printed on your terminal.
+The typescript is saved in a file, and can be sent to the
+line printer later with
+.IR lpr .
+If
+.I file
+is given, the typescript
+is saved there.  If not, the typescript is saved in the file
+.IR typescript .
+.PP
+To exit
+.IR script ,
+type control-D.  This sends an end of file to
+all processes you have started up, and causes
+.I script
+to exit.
+For this reason, control-D behaves as though you had typed an
+infinite number of control-D's.
+.PP
+This program is useful when using a crt and a hard-copy
+record of the dialog is desired, as for a student handing
+in a program that was developed on a crt when hard-copy
+terminals are in short supply.
+The options are:
+.TP
+.B \-\^a
+Append to the typescript file instead of creating a new file.
+.TP
+.B \-\^n
+Use the ``new'' shell (interpretation of ``new'' is installation
+dependent).
+.TP
+.B \-\^q
+Suppress the ``script started'' and ``script done'' messages.
+.TP
+.B \-\^s
+Use the ```standard'' shell (usually
+.IR sh (1)).
+.TP
+.B \-\^S
+Use
+.IR shell .
+If the requested shell is not available,
+.I script
+uses any shell it can find.
+.SH AUTHOR
+Mark Horton
+.SH BUGS
+Since UNIX has no way to write an end-of-file down a pipe without closing
+the pipe, there is no way to simulate a single control-D without
+ending
+.IR script .
+.PP
+The new shell has its standard input coming
+from a pipe rather than a tty, so
+.IR stty (1)
+will not work, and neither will
+.IR ttyname (1).
+.PP
+When the user interrupts a printing process,
+.I script
+attempts to flush the output backed up in the pipe for better response.
+Usually the next prompt also gets flushed.

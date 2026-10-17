@@ -1,0 +1,41 @@
+.TH SIZE 1
+.UC
+.SH NAME
+size \- size of an object file
+.SH SYNTAX
+.B size
+[ objects ... ]
+.SH DESCRIPTION
+.I Size
+prints on standard output the number of bytes required
+for text, initialized data, and uninitialized data (bss).  It also
+prints the sum of these three numbers in decimal and in octal.
+For overlaid objects, the sizes of the base and each overlay
+segment are also printed.  If no objects are specified, \fBa.out\fP is used.
+.PP
+Note:  on a separate I/D machine,
+the maximum size allowed for nonoverlaid separate I and D objects
+(\-i option for \fIld\fP\|(1)) is 65536 bytes for text and 57344 for data
+since 8192 bytes of data space are used for the stack.  For standard object
+files the limit is 57344.
+.SH SEE ALSO
+nostk(2), a.out(5)
+.SH BUGS
+The compilers and loader store size as an unsigned integer and do not check 
+to see if the value becomes too large.  Thus the size is truncated for values
+above 16 bits and your program may blow up without reasonable error messages.
+.SH EXAMPLES
+For nonoverlaid objects, the output looks like:
+.ta 0.4i 0.8i 1.2i 1.6i 2i 2.4i 2.8i 3.2i 3.6i 4i 4.4i 4.8i 5.2i
+.sp
+	text	data	bss		dec		oct
+.br
+	6272 +	1014 +	2670 =	9956 =	23344	/bin/cc
+.sp
+For overlaid objects:
+.sp
+	text	data	bss		dec		oct
+.br
+	14848 +	4582 +	11770 =	31200 =	74740	/usr/ucb/ex
+.br
+	78528 total text, overlays: (15808,15936,15616,16320)

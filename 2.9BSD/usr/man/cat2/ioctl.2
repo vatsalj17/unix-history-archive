@@ -1,0 +1,89 @@
+
+IOCTL(2)            UNIX Programmer's Manual             IOCTL(2)
+
+NAME
+     ioctl, stty, gtty - control device
+
+SYNOPSIS
+     #include <sgtty.h>
+
+     ioctl(fildes, request, argp)
+     struct sgttyb *argp;
+
+     stty(fildes, argp)
+     struct sgttyb *argp;
+
+     gtty(fildes, argp)
+     struct sgttyb *argp;
+
+DESCRIPTION
+     _I_o_c_t_l performs a variety of functions on character special
+     files (devices).  The writeups of various devices in section
+     4 discuss how _i_o_c_t_l applies to them.
+
+     For certain status setting and status inquiries about termi-
+     nal devices, the functions _s_t_t_y and _g_t_t_y are equivalent to
+          ioctl(fildes, TIOCSETP, argp)
+          ioctl(fildes, TIOCGETP, argp)
+
+     respectively; see _t_t_y(4).
+
+     The following two calls, however, apply to any open file:
+
+          ioctl(fildes, FIOCLEX, NULL);
+          ioctl(fildes, FIONCLEX, NULL);
+
+     The first causes the file to be closed automatically during
+     a successful _e_x_e_c operation; the second reverses the effect
+     of the first.
+
+RETURN VALUE
+     Upon successful completion, a value of 0 is returned.  Oth-
+     erwise, a value of -1 is returned and _e_r_r_n_o is set to indi-
+     cate the error.
+
+ERRORS
+     _I_o_c_t_l will fail if one or more of the following is true:
+
+     [EBADF]             _F_i_l_d_e_s is not a valid descriptor.
+
+     [ENOTTY]            _F_i_l_d_e_s is not associated with a charac-
+                         ter special device.
+
+     [ENOTTY]            The specified request does not apply to
+                         the kind of object that the descriptor
+                         _f_i_l_d_e_s references.
+
+Printed 5/26/83                                                 1
+
+IOCTL(2)            UNIX Programmer's Manual             IOCTL(2)
+
+     [EINVAL]            _R_e_q_u_e_s_t or _a_r_g_p is not valid.
+
+SEE ALSO
+     stty(1), execve(2), exec(3), tty(4)
+
+BUGS
+     Strictly speaking, since _i_o_c_t_l may be extended in different
+     ways to devices with different properties, _a_r_g_p should have
+     an open-ended declaration like
+
+          union { struct sgttyb ...; ...  } *argp;
+
+     The important thing is that the size is fixed by `struct
+     sgttyb'.
+
+ASSEMBLER
+     (ioctl = 54.)
+     sys ioctl; fildes; request; argp
+
+     (stty = 31.)
+     (file descriptor in r0)
+     stty; argp
+
+     (gtty = 32.)
+     (file descriptor in r0)
+     sys gtty; argp
+
+Printed 5/26/83                                                 2
+

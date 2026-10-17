@@ -1,0 +1,33 @@
+
+DU(4)               UNIX Programmer's Manual                DU(4)
+
+NAME
+     du, dp - DU-11/DUP-11 201 data-phone interface
+
+DESCRIPTION
+     The _d_p_0 file is a 201 data-phone interface.  _R_e_a_d and _w_r_i_t_e
+     calls to dp0 are limited to a maximum of 512 bytes.  Each
+     _w_r_i_t_e call is sent as a single record.  Seven bits from each
+     byte are written along with an eighth odd parity bit.  The
+     sync must be user supplied.  Each _r_e_a_d call returns charac-
+     ters received from a single record.  Seven bits are returned
+     unaltered; the eighth bit is set if the byte was not
+     received in odd parity.  A 10 second time out is set and a
+     zero-byte record is returned if nothing is received in that
+     time.
+
+FILES
+     /dev/dp0
+
+SEE ALSO
+     dn(4)
+
+DIAGNOSTICS
+     _E_r_r_n_o is set to ENXIO if an _o_p_e_n(2) fails because the device
+     is already in use by another process.
+
+BUGS
+     The name _d_p_0 is a historical dreg.
+
+Printed 7/31/83                                                 1
+

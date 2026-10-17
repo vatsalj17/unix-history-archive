@@ -1,0 +1,48 @@
+
+PROF(1)             UNIX Programmer's Manual              PROF(1)
+
+NAME
+     prof - display profile data
+
+SYNOPSIS
+     prof [ -v ] [ -a ] [ -l ] [ -_l_o_w [ -_h_i_g_h ] ] [ file ]
+
+DESCRIPTION
+     _P_r_o_f interprets the file _m_o_n._o_u_t produced by the _m_o_n_i_t_o_r
+     subroutine.  Under default modes, the symbol table in the
+     named object file (_a._o_u_t default) is read and correlated
+     with the _m_o_n._o_u_t profile file.  For each external symbol,
+     the percentage of time spent executing between that symbol
+     and the next is printed (in decreasing order), together with
+     the number of times that routine was called and the number
+     of milliseconds per call.
+
+     If the -a option is used, all symbols are reported rather
+     than just external symbols.  If the -l option is used, the
+     output is listed by symbol value rather than decreasing per-
+     centage.
+
+     If the -v option is used, all printing is suppressed and a
+     graphic version of the profile is produced on the standard
+     output for display by the _p_l_o_t(1) filters.  The numbers _l_o_w
+     and _h_i_g_h, by default 0 and 100, cause a selected percentage
+     of the profile to be plotted with accordingly higher resolu-
+     tion.
+
+     In order for the number of calls to a routine to be tallied,
+     the -p option of _c_c must have been given when the file con-
+     taining the routine was compiled.  This option also arranges
+     for the _m_o_n._o_u_t file to be produced automatically.
+
+FILES
+     mon.out             for profile
+     a.out               for namelist
+
+SEE ALSO
+     cc(1), plot(1), profil(2), monitor(3)
+
+BUGS
+     Beware of quantization errors.
+
+Printed 5/16/83                                                 1
+

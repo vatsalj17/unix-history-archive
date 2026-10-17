@@ -1,0 +1,53 @@
+
+DUP(2)              UNIX Programmer's Manual               DUP(2)
+
+NAME
+     dup, dup2 - duplicate an open file descriptor
+
+SYNOPSIS
+     dup(fildes)
+     int fildes;
+
+     dup2(fildes, fildes2)
+     int fildes, fildes2;
+
+DESCRIPTION
+     Given a file descriptor returned from an _o_p_e_n, _p_i_p_e, or
+     _c_r_e_a_t(2) call, _d_u_p allocates another file descriptor
+     synonymous with the original.  The new file descriptor is
+     returned.
+
+     In the second form of the call, _f_i_l_d_e_s is a file descriptor
+     referring to an open file, and _f_i_l_d_e_s_2 is a non-negative
+     integer less than the maximum value allowed for file
+     descriptors (approximately 19).  _D_u_p_2 causes _f_i_l_d_e_s_2 to
+     refer to the same file as _f_i_l_d_e_s. If _f_i_l_d_e_s_2 already
+     referred to an open file, it is closed first.
+
+RETURN VALUE
+     Upon successful completion, a value of 0 is returned.  Oth-
+     erwise, a value of -1 is returned and _e_r_r_n_o is set to indi-
+     cate the error.
+
+ERRORS
+     _D_u_p and _d_u_p_2 will fail if:
+
+     [EBADF]             _F_i_l_d_e_s  _o_r  _f_i_l_d_e_s_2 is not a valid
+                         active descriptor.
+
+     [EMFILE]            Too many descriptors are active.
+
+SEE ALSO
+     close(2), creat(2), open(2), pipe(2)
+
+ASSEMBLER
+     (dup = 41.)
+     (file descriptor in r0)
+     (new file descriptor in r1)
+     sys dup
+     (file descriptor in r0)
+
+     The _d_u_p_2 entry is implemented by adding 0100 to _f_i_l_d_e_s.
+
+Printed 5/23/83                                                 1
+

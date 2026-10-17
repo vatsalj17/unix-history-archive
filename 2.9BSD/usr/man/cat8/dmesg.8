@@ -1,0 +1,42 @@
+
+DMESG(8)            UNIX Programmer's Manual             DMESG(8)
+
+NAME
+     dmesg - collect system diagnostic messages to form error log
+
+SYNOPSIS
+     /etc/dmesg [ - ]
+
+DESCRIPTION
+     _D_m_e_s_g looks in a system buffer for recently printed diagnos-
+     tic messages and prints them on the standard output.  The
+     messages are those printed by the system when device
+     (hardware) errors occur and (occasionally) when system
+     tables overflow non-fatally.  If the - flag is given, then
+     _d_m_e_s_g computes (incrementally) the new messages since the
+     last time it was run and places these on the standard out-
+     put.  This is typically used with _c_r_o_n(8) to produce the
+     error log /_u_s_r/_a_d_m/_m_e_s_s_a_g_e_s by running the command
+
+          /etc/dmesg - >> /usr/adm/messages
+
+     every 10 minutes.
+
+FILES
+     /usr/adm/messages   error log (conventional location)
+     /usr/adm/msgbuf     scratch file for memory of - option
+
+SEE ALSO
+     savecore(8)
+
+BUGS
+     The system error message buffer is of small finite size.
+     Since _d_m_e_s_g is run only every few minutes, not all error
+     messages are guaranteed to be logged.  This can be construed
+     as a blessing rather than a curse.
+
+     Error diagnostics generated immediately before a system
+     crash are not logged by _d_m_e_s_g (but see _s_a_v_e_c_o_r_e(8)).
+
+Printed 5/17/83                                                 1
+

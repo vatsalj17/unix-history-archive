@@ -1,0 +1,91 @@
+
+SIGSET(3)           UNIX Programmer's Manual            SIGSET(3)
+
+NAME
+     sigset, signal, sighold, sigignore, sigrelse, sigpause -
+     manage signals
+
+SYNOPSIS
+     #include <signal.h>
+     void action();
+     int action(); (_i_f _v_o_i_d _i_s _n_o_t _s_u_p_p_o_r_t_e_d)
+     int sig;
+
+     sigset(sig, action)
+     signal(sig, action)
+
+     sighold(sig)
+     sigignore(sig)
+     sigrelse(sig)
+
+     sigpause(sig)
+
+     cc ... -ljobs
+
+DESCRIPTION
+     This is a package of signal management functions to manage
+     the signals as described in _s_i_g_s_y_s(2).  These functions are
+     not available in most versions of UNIX, and should not be
+     used when the mechanisms of _s_i_g_n_a_l(2) would suffice, as they
+     would then impair portability.  These functions are con-
+     tained in the _j_o_b_s library, obtained by specifying the
+     loader option -ljobs.
+
+     _S_i_g_s_e_t is used to provide a default signal handler for sig-
+     nal _s_i_g. This function is remembered across subsequent calls
+     to the other functions, and need not be specified again.
+     After _s_i_g_s_e_t instances of _s_i_g will cause an interrupt to be
+     taken at _f_u_n_c, with the signal then held so that recursive
+     trapping due to the signal will not occur.  During normal
+     return from _f_u_n_c, the routines arrange for the signal action
+     to be restored so that subsequent signals will also trap to
+     _f_u_n_c. If a non-local exit is to be taken, then _s_i_g_r_e_l_s_e must
+     be called to un-hold the signal action, restoring the origi-
+     nal catch.  _F_u_n_c may also be specified as SIG_DFL, SIG_IGN
+     or SIG_HOLD, as described in _s_i_g_s_y_s(2).  The value specified
+     on the previous call to _s_i_g_s_e_t is returned; if _s_i_g_s_e_t has
+     never been called, then the default action inherited from
+     the system is returned.
+
+     _S_i_g_n_a_l is like _s_i_g_s_e_t, but the signal will not be held when
+     the action routine is called; rather it will have reverted
+     to SIG_DFL.  This is generally unsafe, but is included for
+     backwards compatibility to the old signal mechanism.  It
+     should not be used.
+
+Printed 12/7/82                                                 1
+
+SIGSET(3)           UNIX Programmer's Manual            SIGSET(3)
+
+     _S_i_g_h_o_l_d and _s_i_g_r_e_l_s_e may be used to block off _s_i_g in a piece
+     of code where it cannot be tolerated.  After _s_i_g_r_e_l_s_e the
+     catch initially set with _s_i_g_s_e_t will be restored.
+
+     _S_i_g_i_g_n_o_r_e can be used to temporarily set the action for _s_i_g
+     to ignore the signal.  If the signal had been held before
+     the call to _s_i_g_i_g_n_o_r_e, any pending instance of the signal
+     will be discarded.
+
+     _S_i_g_p_a_u_s_e may be used by a routine which wishes to check for
+     some condition produced at interrupt level by the _s_i_g sig-
+     nal, and then to pause waiting for the condition to arise
+     with the catch of the signal enabled.  In correct usage it
+     must be preceded by an instance of _s_i_g_h_o_l_d to block the sig-
+     nal.  _S_i_g_p_a_u_s_e is like _p_a_u_s_e in that it will return after
+     _a_n_y signal is processed.  The usual thing to do then is to
+     reenable the hold with _s_i_g_h_o_l_d, check the condition again,
+     and _s_i_g_p_a_u_s_e again if the condition has not arisen.
+
+SEE ALSO
+     sigsys(2), signal(2), jobs(3), tty(4)
+
+BUGS
+     _S_i_g_h_o_l_d and _s_i_g_r_e_l_s_e do not nest; the first _s_i_g_r_e_l_s_e
+     restores the default catch.
+
+     These functions store information in data space.  You thus
+     must call _s_i_g_s_y_s(2) rather than any of _s_i_g_s_e_t or _s_i_g_n_a_l
+     after a _v_f_o_r_k(2) in the child which is to then _e_x_e_c(2).
+
+Printed 12/7/82                                                 2
+

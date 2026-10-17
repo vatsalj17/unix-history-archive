@@ -1,0 +1,80 @@
+.TH LOGMSG 3 12/31/79
+.SH NAME
+logmsg \- log a message on the log device
+.SH SYNOPSIS
+# include <log.h>
+
+logmsg(pri, fmt, args)
+.br
+char *fmt;
+
+initlog(name, flags, mode)
+.br
+char *name;
+.SH DESCRIPTION
+.I Logmsg
+acts like a simple printf
+into a log file.
+Formats are limited to
+``%s'', ``%d'', ``%c'', and ``%o'';
+no modifiers
+(such as ``%.4s'')
+are allowed.
+In addition,
+``%m'' will print out the value of
+.I errno
+in symbolic form.
+.I Logmsg
+will append a newline to the message
+if there is not one already,
+and writes the message in one physical write
+to keep it from being fragmented by the system.
+.PP
+Messages have priorities between one and nine,
+specified by
+.I pri.
+Legal priorities are described in syslog(8).
+.PP
+The
+.I mode
+parameter describes where to log the output.
+.IP LOG_NULL \w'LOG_CLOSE'u+2n
+Don't change anything.
+This will cause the log to be output
+on file descriptor 2.
+.IP LOG_SOUT
+Merges standard and diagnostic outputs
+and logs on the diagnostic output.
+This should only be used by programs
+that have
+.I only
+log output \- such as daemons.
+.IP LOG_DIAG
+Opens the diagnostic output to be the log device
+and logs there.
+.IP LOG_INDEP
+Opens a seperate file descriptor for the log.
+.IP LOG_CLOSE
+Closes the log.
+.PP
+The
+.I flags
+parameter arranges for special features.
+These options can be ORed together.
+.IP LOG_PID \w'LOG_COOLIT'u+2n
+Log the process id with each message.
+.IP LOG_TIME
+Log the current time-of-day with each message.
+Since
+.I syslog
+does this automatically,
+this is only useful when outputing directly to a terminal
+or file.
+(Actually, this is not currently supported.)
+.IP LOG_COOLIT
+Supresses output of priority tags on messages.
+(Not supported.)
+.SH FILES
+/dev/log \- the log file
+.SH SEE\ ALSO
+syslog(8)

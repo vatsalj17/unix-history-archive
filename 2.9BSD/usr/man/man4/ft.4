@@ -1,0 +1,66 @@
+.TH FT 4 
+.UC
+.SH NAME
+ft \- fake interval timer
+.SH DESCRIPTION
+.I Ft
+is a pseudo-device that makes it possible to simulate an
+.IR alarm (2)
+call with better than 1 second resolution.
+.PP
+To use the interval timer, open one of the files
+.I /dev/ft?.
+This opens the interval timer for exclusive use;
+an attempt by another process to open the timer will fail
+with error indication EBUSY in 
+.I errno
+\- see
+.IR intro (2).
+The resulting file descriptor can be the argument of an
+.IR ioctl (2)
+call:
+.RS 1
+.nf
+
+ #include <sgtty.h>
+
+struct	requestbuf {
+	short	time;
+	short	signo;
+ } request;
+
+ ioctl(fildes, FTIOCSET, (struct sgttyb *) &request);
+
+.fi
+.RE
+After
+.I time
+clock cycles (fiftieths or sixtieths of a second),
+a signal of type
+.I signo
+will be sent to the requesting process.
+The requested
+.I time
+may not exceed 60 seconds
+(if longer delays are required the real
+.IR alarm (2)
+call should be used).
+The
+.IR ioctl (2)
+call
+.RS 1
+
+ ioctl(fildes, FTIOCCANCEL, (struct sgttyb *) NULL);
+
+.RE
+cancels any outstanding interrupt request.
+.SH FILES
+/dev/ft?
+.SH "SEE ALSO"
+alarm(2), ioctl(2)
+.SH BUGS
+An FTIOCCANCEL request prevents the signal from being sent
+when the interval has expired, but does not actually cancel
+the timeout request.
+It cannot be followed by a new FTIOCSET request
+until the original delay has expired.

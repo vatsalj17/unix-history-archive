@@ -1,0 +1,88 @@
+
+CTIME(3)            UNIX Programmer's Manual             CTIME(3)
+
+NAME
+     ctime, localtime, gmtime, asctime, timezone -  convert date
+     and time to ASCII
+
+SYNOPSIS
+     char *ctime(clock)
+     long *clock;
+
+     #include <time.h>
+
+     struct tm *localtime(clock)
+     long *clock;
+
+     struct tm *gmtime(clock)
+     long *clock;
+
+     char *asctime(tm)
+     struct tm *tm;
+
+     char *timezone(zone, dst)
+
+DESCRIPTION
+     _C_t_i_m_e converts a time pointed to by _c_l_o_c_k such as returned
+     by _t_i_m_e(2) into ASCII and returns a pointer to a 26-
+     character string in the following form.  All the fields have
+     constant width.
+
+         Sun Sep 16 01:03:52 1973\n\0
+
+     _L_o_c_a_l_t_i_m_e and _g_m_t_i_m_e return pointers to structures contain-
+     ing the broken-down time.  _L_o_c_a_l_t_i_m_e corrects for the time
+     zone and possible daylight savings time; _g_m_t_i_m_e converts
+     directly to GMT, which is the time UNIX uses.  _A_s_c_t_i_m_e con-
+     verts a broken-down time to ASCII and returns a pointer to a
+     26-character string.
+
+     The structure declaration from the include file is:
+
+          struct    tm   { /* see ctime(3) */
+               short     tm_sec;
+               short     tm_min;
+               short     tm_hour;
+               short     tm_mday;
+               short     tm_mon;
+               short     tm_year;
+               short     tm_wday;
+               short     tm_yday;
+               short     tm_isdst;
+          };
+
+     These quantities give the time on a 24-hour clock, day of
+     month (1-31), month of year (0-11), day of week (Sunday =
+
+Printed 7/31/83                                                 1
+
+CTIME(3)            UNIX Programmer's Manual             CTIME(3)
+
+     0), year - 1900, day of year (0-365), and a flag that is
+     nonzero if daylight saving time is in effect.
+
+     When local time is called for, the program consults the sys-
+     tem to determine the time zone and whether the standard
+     U.S.A. daylight saving time adjustment is appropriate.  The
+     program knows about the peculiarities of this conversion in
+     1974 and 1975; if necessary, a table for these years can be
+     extended.
+
+     _T_i_m_e_z_o_n_e returns the name of the time zone associated with
+     its first argument, which is measured in minutes westward
+     from Greenwich.  If the second argument is 0, the standard
+     name is used, otherwise the Daylight Saving version.  If the
+     required name does not appear in a table built into the rou-
+     tine, the difference from GMT is produced; e.g.  in Afghan-
+     istan _t_i_m_e_z_o_n_e(-(_6_0*_4+_3_0), _0) is appropriate because it is
+     4:30 ahead of GMT and the string GMT+4:30 is produced.
+
+SEE ALSO
+     time(2)
+
+BUGS
+     The return values point to static data whose contents are
+     overwritten by each call.
+
+Printed 7/31/83                                                 2
+

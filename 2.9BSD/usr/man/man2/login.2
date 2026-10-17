@@ -1,0 +1,53 @@
+.TH LOGIN 2
+.UC
+.SH NAME
+login \- flag login process and collect accounting information
+.SH SYNOPSIS
+.B login(flag, crn);
+.br
+.B char crn[4];
+.SH DESCRIPTION
+.I Login
+marks the current process as being a login process
+and associates the specified
+.I crn
+with it for accounting purposes.
+The
+.I crn
+is inherited by children, the flag
+is not.
+.I Crn
+is the customer recharge number, also
+known as ``job number.''
+.PP
+By convention, the
+.I flag
+given to a login process is the
+value returned by
+.IR ttyslot (3)
+for its control typewriter.
+This is vestigal.
+.PP
+Use of this call is restricted
+to the super-user.
+.SH RETURN VALUE
+Upon successful completion, a value of 0 is returned.  Otherwise, a
+value of \-1 is returned and
+.I errno
+is set to indicate the error.
+.SH ERRORS
+.I Login
+will fail if:
+.TP 20
+[EPERM]
+The effective user ID is not the super-user.
+.SH ASSEMBLER
+(local = 58., login = 1.)
+.br
+.B sys local; 9f
+.br
+\&. . .
+.br
+.B \&.data
+.br
+.B 9: sys login; flag; crn01; crn23

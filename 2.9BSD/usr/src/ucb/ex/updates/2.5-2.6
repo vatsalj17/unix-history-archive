@@ -1,0 +1,429 @@
+#
+ed - ex.c << '-*-END-*-'
+252a
+	if (setexit() == 0 && !fast && intty)
+		if ((cp = getenv("HOME")) != 0)
+			source(strcat(strcpy(genbuf, cp), "/.exrc"), 1);
+.
+249,250d
+112,113c
+		erfile = open(erpath, 0);
+		if (erfile < 0) {
+			flush();
+			exit(1);
+		}
+.
+110c
+	erfile = open(erpath+4, 0);
+.
+w
+q
+'-*-END-*-'
+ed - ex.h << '-*-END-*-'
+10c
+ * June 1979
+.
+7c
+ * Ex version 2.6
+.
+w
+q
+'-*-END-*-'
+ed - ex_addr.c << '-*-END-*-'
+225c
+error("No match to TOP|Address search hit TOP without matching pattern");
+.
+218c
+error("No match to BOTTOM|Address search hit BOTTOM without matching pattern");
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+554c
+				printf("Version 2.6, June 2, 1979");
+.
+153,154d
+66c
+			if (!hush && value(PROMPT) && !globp && !noprompt && intty && endline) {
+.
+52c
+error("Offset out-of-bounds|Offset after command too large");
+.
+46c
+		if (pflag ||
+		    lchng != chng && value(AUTOPRINT) && !inglobal && !inopen && endline) {
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds2.c << '-*-END-*-'
+279c
+serror("Extra chars|Extra characters at end of \"%s\" command", Command);
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmdsub.c << '-*-END-*-'
+476c
+			if (*lp || !iswhite(*cp))
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+844a
+#ifdef TIOCSETC
+	ioctl(i, TIOCSETC, &nttyc);
+#endif
+#endif
+.
+843c
+#endif
+#ifdef USG
+	stty(i, &tty);
+#endif
+#ifndef V6
+#ifndef USG
+.
+840a
+#ifdef USG
+	if (tty.sg_ospeed == B1200)
+		write(1, "", 1);
+#endif
+.
+834a
+#ifdef TIOCGETC
+	ioctl(i, TIOCGETC, &ottyc);
+	nttyc = ottyc;
+#endif
+.
+824a
+#ifdef TIOCGETC
+	if (f == normf)
+		nttyc = ottyc;
+	else
+		nttyc.t_quitc = nttyc.t_startc = nttyc.t_stopc = '\377';
+#endif
+.
+804a
+ * Back into raw mode.
+ */
+vraw()
+{
+
+	tty.sg_flags |= RAW;
+	sTTY(1);
+}
+#endif
+
+/*
+.
+803a
+	tty.sg_flags &= ~RAW;
+	sTTY(1);
+}
+
+.
+802a
+#ifdef USG
+/*
+ * Into cooked mode for interruptibility.
+ */
+vcook()
+{
+.
+762a
+#endif
+.
+761a
+#ifdef TIOCGETC
+	nttyc.t_quitc = nttyc.t_startc = nttyc.t_stopc = '\377';
+.
+760c
+#endif
+#ifdef USG
+	tty.sg_flags = (normf &~ (ECHO|CRMOD)) | RAW;
+#endif
+#ifndef V6
+#ifndef USG
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.c << '-*-END-*-'
+692c
+			   !((islower(c) && toupper(c) == *p1) ||
+			   (islower(*p1) && toupper(*p1) == c))))
+.
+621c
+cerror("Badly formed re|Missing closing delimiter for regular expression");
+.
+610c
+cerror("Bad \\n|\\n in regular expression with n greater than the number of \\('s");
+.
+600c
+cerror("No newlines in re's|Can't escape newlines into regular expressions");
+.
+578c
+cerror("Bad character class|Empty character class '[]' or '[^]' cannot match");
+.
+564c
+cerror("Illegal *|Can't * a \\n in regular expression");
+.
+562c
+cerror("Illegal *|Can't * a \\( ... \\) in regular expression");
+.
+549c
+error("Replacement pattern contains \\d@- cannot use in re");
+.
+547c
+error("Replacement pattern contains &@- cannot use in re");
+.
+520c
+cerror("Extra \\)|More \\)'s than \\('s in regular expression");
+.
+512c
+cerror("Awash in \\('s!|Too many \\('d subexressions in a regular expression");
+.
+491c
+cerror("Unmatched \\(|More \\('s than \\)'s in regular expression");
+.
+460c
+error("No previous substitute re|No previous substitute regular expression");
+.
+454c
+error("No previous scan re|No previous scanning regular expression");
+.
+445c
+		error("Regular expressions cannot be delimited by letters or digits");
+.
+w
+q
+'-*-END-*-'
+ed - ex_set.c << '-*-END-*-'
+87c
+error("Can't change type of terminal from within open/visual");
+.
+70c
+error("Digits required@after = when assigning numeric option");
+.
+w
+q
+'-*-END-*-'
+ed - ex_subr.c << '-*-END-*-'
+430c
+	for (markp = (anymarks ? names : &names['z'-'a'+1]);
+	  markp <= &names['z'-'a'+1]; markp++)
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.h << '-*-END-*-'
+92a
+#ifdef 	TIOCSETC
+struct	tchars ottyc, nttyc;	/* For V7 character masking */
+#endif
+.
+w
+q
+'-*-END-*-'
+ed - ex_v.c << '-*-END-*-'
+26c
+ * ex_voperate.c   decoding of operator/operand sequences and
+.
+w
+q
+'-*-END-*-'
+ed - ex_vadj.c << '-*-END-*-'
+804c
+		if (l == 0 && state != VISUAL ||
+		    (l < vcnt && (vp->vliny <= p || vp[0].vliny == vp[1].vliny))) {
+.
+589c
+	if (p < 0 /* || p > WECHO */)
+.
+545,547c
+		if (vcline >= vcnt) {
+			register int i = vcline - vcnt + 1;
+
+			dot -= i;
+			vcline -= i;
+			vroll(i);
+		} else
+.
+542c
+	if (vcline >= vcnt || LINE(vcline) > WBOT) {
+.
+w
+q
+'-*-END-*-'
+ed - ex_vars.h << '-*-END-*-'
+34c
+#define NOPTS		31
+.
+2,32c
+#define AUTOINDENT	0
+#define AUTOPRINT	1
+#define BEAUTIFY	2
+#define DIRECTORY	3
+#define ERRORBELLS	4
+#define IGNORECASE	5
+#define LISP		6
+#define LIST		7
+#define MAGIC		8
+#define NUMBER		9
+#define OPEN		10
+#define OPTIMIZE	11
+#define PARAGRAPHS	12
+#define PROMPT		13
+#define REDRAW		14
+#define REPORT		15
+#define SCROLL		16
+#define SECTIONS	17
+#define SHELL		18
+#define SHIFTWIDTH	19
+#define SHOWMATCH	20
+#define SLOWOPEN	21
+#define TABSTOP		22
+#define TTYTYPE		23
+#define TERM		24
+#define TERSE		25
+#define WARN		26
+#define WINDOW		27
+#define WRAPSCAN	28
+#define WRAPMARGIN	29
+#define WRITEANY	30
+.
+w
+q
+'-*-END-*-'
+ed - ex_vis.h << '-*-END-*-'
+179,185c
+#define	HOLDAT		1
+#define	HOLDDOL		2
+#define	HOLDROL		4
+#define	HOLDQIK		8
+#define	HOLDPUPD	16
+#define	HOLDECH		32
+#define HOLDWIG		64
+.
+w
+q
+'-*-END-*-'
+ed - ex_vmain.c << '-*-END-*-'
+925a
+	addr1++;
+.
+924c
+	addr1 = dot;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops.c << '-*-END-*-'
+538a
+	}
+.
+536,537c
+		if (value(LISP))
+			ind = lindent(dot + 1);
+.
+534a
+	if (value(AUTOINDENT)) {
+		ind = whitecnt(linebuf);
+.
+528d
+521c
+	register int ind = 0, i;
+.
+500a
+*/
+.
+495a
+/*
+.
+91c
+		vreplace(undap1 - addr, undap2 - undap1,
+		    undkind == UNDPUT ? 0 : unddol - dol);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops2.c << '-*-END-*-'
+493c
+				for (c = wordch(cp - 1);
+				    cp > ogcursor && wordof(c, cp - 1); cp--)
+.
+123a
+		*gcursor = i;
+.
+122c
+		gcursor = cursor;
+		i = *gcursor;
+		*gcursor = ' ';
+		wcursor = gcursor;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vput.c << '-*-END-*-'
+874c
+			for (j = (inscol + inssiz - 1) / WCOLS + 1;
+			    j <= (tabstart + inssiz - doomed - 1) / WCOLS; j++) {
+.
+841c
+		} else if (noim)
+			endim();
+		else if (IM && EI) {
+.
+822a
+			i %= value(TABSTOP);
+.
+809c
+			noim = !shft;
+		} else {
+.
+805,806c
+			 * mode; unless the tab has already been expanded
+			 * in which case we MUST use insert mode.
+.
+801c
+		if (inscol + doomed == tabstart) {
+.
+789a
+	register bool noim = 0;
+.
+753c
+		if (i > 0) {
+.
+722c
+		if (slakused > tabslack) {
+.
+589,591c
+	if (trace) {
+		fprintf(trace, "inscol %d, inssiz %d, tabstart %d, ",
+			inscol, inssiz, tabstart);
+		fprintf(trace, "tabend %d, tabslack %d, linend %d\n",
+			tabend, tabslack, linend);
+	}
+.
+498a
+		vigoto(c, 0);
+		vprepins();
+.
+485c
+		if (DEPTH(vcline) * WCOLS + !value(REDRAW) >
+		    (destline - LINE(vcline)) * WCOLS + destcol)
+.
+w
+q
+'-*-END-*-'
+ed - ex_vwind.c << '-*-END-*-'
+97c
+	if (state == VISUAL && !AL && !SR &&
+	    cnt <= WTOP - ZERO && vfit(dot - cnt, cnt) <= WTOP - ZERO)
+.
+w
+q
+'-*-END-*-'

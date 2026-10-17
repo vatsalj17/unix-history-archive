@@ -1,0 +1,337 @@
+
+(def equal
+ (lambda ($a $b)
+   (cond ((and  (dtpr $a)(dtpr $b))
+         (and (equal (car $a) (car $b))
+              (equal (cdr $a) (cdr $b))))
+        (t (eq $a $b)))))
+(def defevq (lambda (at fm)(putd at fm]
+
+(def defprop
+ (nlambda (x)
+   (prog (a)
+	[cond((null(caar x))(rplaca (car x)(list(car(cddr x))(cadr x)))(return nil]
+	(setq a (car (car x)))
+loop	(cond	[ (cdr a)
+		   (setq a (cdr a))
+		   (go loop])
+	(rplacd a (cons (car (cdr (cdr x))) (cons (car (cdr x]
+
+(def putprop
+ [lambda (a val ind)
+   (prog ()
+	[cond((null(car a))(rplaca a(list ind val))(return val]
+	(setq a (car a))
+loop	(cond	[ (eq (car a) ind)
+		   (rplaca (cdr a) val)
+		   (go end]
+		[ (cdr (cdr a))
+		   (setq a (cdr (cdr a)))
+		   (go loop])
+	(rplacd (cdr a) (cons ind (cons val)))
+end	(return val]
+ ]
+
+'(def caar (lambda (x) (car (car x]
+
+'(def cadr (lambda (x) (car (cdr x]
+
+'(def cdar (lambda (x) (cdr (car x]
+
+'(def cddr (lambda (x) (cdr (cdr x]
+(def get (lambda (a ind)
+   (prog ()
+	(setq a (car a))
+loop	(cond	[(eq a nil)(return nil]
+		[ (eq (car a) ind)
+		   (return (cadr a]
+		[ (setq a (cddr a))
+		   (go loop]]
+
+'(def append (lambda (x y)
+   (prog (l l*)
+	(cond	[ (null x)
+		   (return y]
+		[ (null y)
+		   (return x])
+	(setq l* (setq l (cons (car x))))
+loop	(cond	[ (setq x (cdr x))
+		   (setq l* (cdr (rplacd l* (cons (car x)))))
+		   (go loop])
+	(rplacd l* y)
+	(return l]
+
+'(def and (nlambda ($a$)
+   (prog ($r$)
+	(cond	[ (null $a$)
+		   (return t])
+loop	(cond	[ (setq $r$ (eval (car $a$)))
+		  (cond	[ (setq $a$ (cdr $a$))
+			   (go loop]
+			[ t
+			   (return $r$]]]
+
+'(def or (nlambda ($o$)
+   (prog ($r$)
+	(cond	[ (null $o$)
+		   (go end])
+loop	(cond	[ (setq $r$ (eval (car $o$)))
+		   (return $r$]
+		[ (setq $o$ (cdr $o$))
+		   (go loop])
+end	]
+
+'(def member (lambda ($a$ $l$)
+   (prog ()
+	(cond	[ (null $l$)
+		   (go end])
+loop	(cond	[ (eq $a$ (car $l$))
+		   (return t]
+		[ (setq $l$ (cdr $l$))
+		   (go loop])
+end	]
+(def memcar (lambda (a l)
+   (prog ()
+	(cond	[ (null l)
+		   (go end])
+loop	(cond	[ (eq a (caar l))
+		   (return (cdar l]
+		[ (setq l (cdr l))
+		   (go loop])
+end	]
+
+(def memcdr (lambda (a l)
+   (prog ()
+	(cond	[ (null l)
+		   (go end])
+loop	(cond	[ (eq a (cdar l))
+		   (return (caar l]
+		[ (setq l (cdr l))
+		   (go loop])
+end	]
+
+'(def conc (lambda (l1 l2)
+   (prog (l1*)
+	(cond	[ (null l2)
+		   (go end]
+		[ (null (setq l1* l1))
+		   (return l2])
+loop	(cond	[ (cdr l1*)
+		   (setq l1* (cdr l1*))
+		   (go loop])
+	(rplacd l1* l2)
+end	(return l1]
+'(def add1 (lambda ($x$) (add $x$ 1]
+
+'(def sub1 (lambda ($x$) (diff $x$ 1]
+
+'(def list (nlambda ($l$)
+   (prog ($v$ $v$*)
+	(cond	[ (null $l$)
+		   (go end])
+	(setq $v$* (setq $v$ (cons (eval (car $l$)))))
+loop	(cond	[ (setq $l$ (cdr $l$))
+		   (setq $v$* (cdr (rplacd $v$* (cons (eval (car $l$))))))
+		   (go loop])
+end	(return $v$]
+
+'(def function (nlambda ($x$) (cond [ (atom (car $x$)) (getd (car $x$))]
+				   [ t (car $x$]]
+
+'(def length (lambda ($l$)
+   (prog (i)
+	(cond	[ (atom $l$)
+		   (return 0])
+	(setq i 1)
+loop	(cond	[ (setq $l$ (cdr $l$))
+		   (setq i (add i 1))
+		   (go loop])
+	(return i]
+
+'(def apply* (nlambda ($x$)
+	(eval (cons (eval (car $x$)) (cdr $x$]
+
+'(def mapcar (lambda (mapcarf $s$)
+   (prog ($r$ $r$*)
+	(cond	[ (null $s$)
+		   (go end])
+	(setq $r$* (setq $r$ (cons (apply* mapcarf (car $s$)))))
+loop	(cond	[ (setq $s$ (cdr $s$))
+		   (setq $r$* (cdr (rplacd $r$* (cons (apply* mapcarf (car $s$))))))
+		   (go loop])
+end	(return $r$]
+
+'(def mapc (lambda (mapcf $s$)
+   (prog ($r$)
+	(cond	[ (null $s$)
+		   (go end])
+loop	(setq $r$ (apply* mapcf (car $s$)))
+	(cond	[ (setq $s$ (cdr $s$))
+		   (go loop])
+end	(return $r$]
+
+'(def copy (lambda (l)
+	(cond	[ (atom l)
+		   l]
+		[ (numbp l)
+		   l]
+		[ t
+		   (mapcar
+		    (function copy)
+		    l]]
+
+(def delete (lambda (a b)
+	(cond	[ (null b)
+		   nil]
+		[ (eq a (car b))
+		   (cdr b]
+		[ (eq a (cadr b))
+		   (rplacd b (cddr b))
+		   b]
+		[ t
+		   (delete a (cdr b))
+		   b]]
+
+'(def last (lambda (a)
+	(cond	[ (null a)
+		   nil]
+		[ (null (cdr a))
+		   a]
+		[ t
+		   (last (cdr a]]
+
+(def reverse (lambda (x)
+   (prog (temp)
+	(cond	[ (or (atom x)
+		      (numbp x))
+		   (return x]
+		[ (null (cdr x))
+		   (return (cons (car x]
+		[ t
+		   (setq temp (reverse (cdr x)))
+		   (rplacd (last temp) (cons (car x)))
+		   (return temp]]
+(def pp (nlambda ($x$)
+   (ppevq (car $x$]
+
+(def ppevq (lambda ($x$)
+   (prog ()
+	(cond	[ (null
+		  (cond	[ (atom $x$)
+			   (setq $x$ (eval $x$]
+			[ t
+			   $x$]))
+		   (go end])
+loop	(terpri)
+	($patom1 ' "(def ")
+	(prin1 (car $x$))
+	($prpr (getd (car $x$) ))
+	($patom1 rpar)
+	(terpri)
+	(cond	[ (setq $x$ (cdr $x$))
+		   (go loop])
+end	]
+
+(def $prpr (lambda (x)
+	(cond	[ t
+		   (linelength 70)
+		   (terpri)
+		   ($prdf x 1 0]]
+(def $prdf (lambda (l n m)
+   (prog ()
+	($tocolumn n)
+a	(cond	[ (or (atom l)
+		      (lessp (add m (flatsize l (chrct)))
+		             (chrct)))
+		   (return (prin1 l]
+		[ (and ($patom1 lpar)
+		       (lessp 2 (length l))
+		       (atom (car l)))
+		   (prog (c f g h)
+			(setq g
+			 (cond	[ (member (car l) '(lambda nlambda))
+				   -7]
+				[ t
+				   0]))
+			(setq f (eq (prin1 (car l)) 'prog))
+			($patom1 ' " ")
+			(setq c ($dinc))
+		   a	($prd1
+			 (cdr l)
+			 (add
+			  c
+			  (cond	[ (setq h (and f
+				               (cadr l)
+				               (atom (cadr l))))
+				   -5]
+				[ t
+				   g])))
+			(cond	[ (cdr (setq l (cdr l)))
+				  (cond	[ (or (null h) (atom (cadr l)))
+					   (terpri])
+				   (go a]]
+		[ (prog (c)
+			(setq c ($dinc))
+		  a	($prd1 l c)
+			(cond	[ (setq l (cdr l))
+				   (terpri)
+				   (go a]])
+b	($patom1 rpar]
+(def $prd1 (lambda (l n)
+   (prog ()
+	($prdf
+	 (car l)
+	 n
+	 (cond	[ (null (setq l (cdr l)))
+		   (add m 1]
+		[ (atom l)
+		   (setq n)
+		   (plus 4 m (pntlen l]
+		[ t
+		   m]))
+	(cond	[ (null n)
+		   ($patom1 ' " . ")
+		   (return (prin1 l]]
+
+(def flatsize (lambda (l $mlen)
+   (prog ($len)
+	(setq $len 0)
+	($flt1 l)
+	(return $len]
+
+(def $flt1 (lambda (l)
+	(cond	[ (or (atom l)
+		      (numbp l))
+		   ($addl (pntlen l]
+		[ (and (cdr l)
+		       (or (atom (cdr l))
+		           (numbp (cdr l))))
+		   ($flt1 (car l))
+		   ($addl (pntlen (cdr l]
+		[ t
+		   ($addl (add (length l) 2))
+		   (mapc (getd '$flt1 ) l]]
+(def $addl (lambda (n)
+	(cond	[ t
+		   (setq $len (add $len n))
+		  (cond	[ (greaterp $len $mlen)
+			   (return 1000]]]
+
+(def $dinc (lambda () (diff (linelength) (chrct]
+
+(def $tocolumn (lambda (n)
+   (prog ()
+loop	(cond	[ (lessp ($dinc) n)
+		   ($patom1 ' " ")
+		   (go loop]]
+
+(def prin1 (lambda (x)
+	(cond	[ t
+		   (print x poport)
+		   x]]
+
+(def terpri (lambda () (terpr poport]
+
+(def chrct (lambda () (charcnt poport]
+
+(def $patom1 (lambda (x) (patom x poport]

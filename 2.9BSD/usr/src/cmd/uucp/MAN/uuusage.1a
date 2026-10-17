@@ -1,0 +1,167 @@
+.\"	Manual page for uuusage(1a)
+.\"	author:	Alan S. Watt
+.\"
+.\"	Sccsid=@(#)uuusage.1a	1.1
+.\"
+.\"	To format this page:
+.\"	nroff -man
+.\"
+.\"	history:
+.\"	02/28/83   original version
+.TH uuusage 1a "Advanced Technology"
+.ED "2/28/83"
+.SH NAME
+uuusage \- print UUCP usage statistics
+.SH SYNOPSIS
+.B uuusage
+[
+.B \-s
+]
+[
+.B \-t
+]
+[
+.B files
+]
+.SH DESCRIPTION
+.I Uuusage
+examines the UUCP log files describing file transfers and prints
+two usage tables,
+one by user,
+the other by system.
+The table shows total number of files,
+total size in bytes,
+total transfer time in seconds,
+average file size,
+average file transfer time.
+The per-system table also includes the average transfer rate
+in characters per second.
+.PP
+The arguments are:
+.RS 2
+.IP "\fB\-s\fP"
+Only print the system usage summary.
+.IP "\fB\-t\fP"
+Run the output through a filter to produce
+.IR tbl (1)
+commands.
+.RE
+.PP
+.I files
+may be one of:
+.RS 2
+.IP "\fBtoday\fP"
+Just print today's activities.
+This is the default if no
+.I files
+argument is specified.
+.IP "\fBweek\fP"
+Print totals for week to present.
+.IP "\fBmonth\fP"
+Print totals for month to present.
+.IP "\fImonth_name\fP"
+where
+.I month_name
+is a standard three letter abbreviation for a month,
+print totals for that month.
+.IP "\fIfile_name\fP"
+Anything else is taken as the name of a file in the
+format of a UUCP
+.I SYSLOG
+file,
+and is processed.
+Multiple file arguments may be given.
+.RE
+.PP
+A sample output is:
+.PP
+.nf
+.TS
+center, box, tab(:);
+c s s s s s s
+l r r r r r r
+_ _ _ _ _ _ _
+l n n n n n n.
+UUCP Usage from 5/29 to 5/30
+.sp
+user:files:bytes:time:Avgsiz:Avgtim
+shannon:8:4860:123:607:15
+uucp:18:17514:164:973:9
+total:26:22374:287:860:11
+
+system:files:bytes:time:Avgsiz:Avgtim:rate
+decvax:18:20118:277:1117:15:72
+onyxasw:8:2256:10:282:1:225
+total:26:22374:287:860:11:77
+.sp
+.TE
+.fi
+.PP
+Transfer records are kept in the directory /usr/spool/uucp/OLD;
+the files in /usr/spool/uucp record today's activity.
+Old
+.I LOGFILE
+files are kept under the name:
+.IP ""
+LOGFILE.${dayname}${daynum}
+.PP
+Where
+.I dayname
+is the day of the week (e.g. "Mon", "Tue", etc.),
+and
+.I daynum
+is the day of the month (from 1 - 31).
+Old
+.I SYSLOG
+files are kept under the name:
+.IP ""
+SYSLOG.${monname}
+.PP
+Where
+.I monname
+is a three letter month name abbreviation (e.g. "Jan", "Feb", etc).
+The current week's total is kept under:
+.IP ""
+SYSLOG.week
+.PP
+and the current month's total is kept under:
+.IP ""
+SYSLOG.month
+.PP
+The shuffling of old logfiles is done by a command script
+run from
+.IR cron (8).
+.SH SEE ALSO
+awk(1),
+tbl(1),
+uucp(1),
+cron(8),
+.SH FILES
+.ta \w'/usr/spool/uucp/OLD/UUUSAGE.*~~'u
+.nf
+/usr/spool/uucp/SYSLOG	today's transfers
+/usr/spool/uucp/OLD/SYSLOG.*	transfer records for this week
+/usr/spool/uucp/OLD/UUUSAGE.*	pre-computed usage for old months
+/usr/spool/uucp/OLD/LOGFILE.*	old LOGFILE records
+/usr/lib/uucp/uutbl	output filter for tbl
+/usr/lib/uucp/uucp.daily	daily cron script
+.SH AUTHOR
+Alan S. Watt
+.br
+ITT Programming Technology Center
+.br
+(ittvax!swatt)
+.SH BUGS
+All this is done in
+.IR awk (1),
+and is fairly slow.
+The
+.I cron
+script pre-computes the monthly summaries on each new month.
+.PP
+The transfer times, and hence average transfer rates,
+do not include the pre-transfer handshaking time.
+From observation,
+this can amount to 2-4 seconds per file.
+With typical small transfers,
+the "dead" time can consume 50% or more of total connect time.

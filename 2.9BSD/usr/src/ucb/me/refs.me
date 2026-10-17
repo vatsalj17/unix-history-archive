@@ -1,0 +1,133 @@
+.\" REFER macros .... citations
+.\" quickly extracted from a working local version, Mike Karels, 9/82
+.\" Use the .lo macro to include this file.
+.if n .ds [. " [
+.if t .ds [. \s-2\v'-.4m'\f1
+.if n .ds .] ]
+.if t .ds .] \v'.4m'\s+2\fP
+.\" open delim for -m signal:
+.ds (. " (
+.\" close delim "  "    "
+.ds .) )
+.ds [e \\fIet al.\\fP
+.\" for author list in reference:
+.ds &1 &
+.\" for -m signal (auth1 and auth2, year):
+.ds &2 &
+.\" the next lines deal with the problem of .[1] or [1].
+.\" refer will write "linexxx\*(<.[1]\*(>.
+.\" and either "<." or ">." should produce the .;
+.\" similarly for ,
+.if n .ds >. .
+.if t .ds <. .
+.if n .ds >, ,
+.if t .ds <, ,
+.if n .ds >; ;
+.if t .ds <; ;
+.de ][					\" format a reference
+.if \\$1>5 .tm Bad reference type
+.[\\$1					\" switch to correct format type
+..
+.de [0 \" other
+.[<
+.if \\n([F .ip "\\n([F.\0"
+.if !"\\*([A"" \{.nr [: 1
+\\*([A\c\}
+.if !"\\*([T"" \{.if \\n([:>0 ,
+.nr [: 1
+\\f2\\*([T\\f1\c\}
+.if !"\\*([O""\{.if \\n([:>0 ,
+.nr [: 1
+.if \\n([O>0 .nr [: 0
+\\*([O\c
+.if \\n([O>0 \& \c\}
+.ie !"\\*([D"" \{.if \\n([:>0 ,
+.nr [: 1
+\\*([D\c\}
+.if \\n([:>0 \&.
+.[>
+..
+.de [1 			\" journal article
+.[<
+.if !"\\*([A"" \\*([A
+.if !"\\*([D"" (\\*([D)
+.if \\n(T] .if !"\\*([T"" \\*(lq\\*([T.\\*(rq
+\\f2\\*([J\\f1\\c
+.if !"\\*([V"" \& \\f3\\*([V\\f1\\c
+.if !"\\*([P"" \& \\*([P\\c
+\&.
+.if !"\\*([O"" \\*([O
+.[>
+..
+.de [2 			\" book
+.[<
+.if !"\\*([A"" \\*([A
+.if !"\\*([D"" (\\*([D)
+.if !"\\*([T"" \\f2\\*([T\\f1
+(\\*([I\\c
+.if !"\\*([C"" , \\*([C\\c
+)\\c
+.if !"\\*([V"" \& Vol. \\*([V\\c
+.if !"\\*([V"" .if !"\\*([P"" ,\\c
+.if !"\\*([P"" \& pp. \\*([P\\c
+\&.
+.if !"\\*([O"" \\*([O
+.[>
+..
+.de [3 			\" article in book
+.[<
+.if !"\\*([A"" \\*([A
+.if !"\\*([D"" \& (\\*([D)\\c
+.if \\n(T] .if !"\\*([T"" \\*(lq\\*([T,\\*(rq
+in \\f2\\*([B\\f1\\c
+.if !"\\*([E"" , ed. \\*([E\\c
+.ie !"\\*([I"" \{\
+.ie !"\\*([C"" , (\\*([I, \\*([C)\c
+.el  \&(\\*([I) \c\}
+.el \{\
+.ie !"\\*([C"" (\\*([C)\c
+.el \c\}
+.if !"\\*([V"" \& Vol. \\*([V,\\c
+.if !"\\*([P"" \{\
+.ie \\n([P>0 , pp.\c
+.el , p.\c
+ \\*([P\c\}
+\&.
+.if !"\\*([O"" \\*([O
+.[>
+..
+.de [4 			\" report
+.[<
+\\*([A, \\*(lq\\*([T,\\*(rq
+\\*([R\\c
+.if !"\\*([G"" \& (\\*([G)\\c
+.if !"\\*([I"" ,  \\*([I\\c
+.if !"\\*([C"" ,  \\*([C\\c
+.if !"\\*[D"" \& (\\*[D)\\c
+\&.
+.if !"\\*([O"" \\*([O
+.[>
+..
+.de [5 			\" tm style
+.[<
+\\*([A, \\f2\\*([T\\f1,
+.ie \\n(TN \\*([M.
+.el Bell Laboratories internal memorandum (\\*([D).
+.[>
+..
+.de ]-				\" prepare for reference
+.rm [V [P [A [T
+.rm [N [C [B [O
+.rm [R [I [E [D
+..
+.de [<				\" start printing one reference
+.(f
+.ip "\\n([F.\0"
+..
+.de [>				\" end one reference
+.)f
+..
+.de ]<				\" start $LIST$ of references
+.lp
+.rm (f )f
+..

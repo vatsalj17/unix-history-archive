@@ -1,0 +1,49 @@
+.TH UCALL 2 
+.UC
+.SH NAME
+ucall \- call a kernel subroutine from user mode
+.SH SYNOPSIS
+.B #include <sys/psw.h>
+.br
+.B #include <sys/types.h>
+.PP
+.B ucall(priority, function, arg0, arg1)
+.br
+.B int priority, arg0, arg1;
+.br
+.B caddr_t function;
+.SH DESCRIPTION
+.I Ucall
+causes the processor priority to be set to
+.I priority
+and the specified
+.I function
+to be called with arguments
+.IR arg0 " and " arg1 .
+.I Priority
+is one of PS_BR0, \&..., PS_BR7.
+Processor priority is reset to PS_BR0 when
+.I function
+returns.
+.PP
+.I Ucall
+is allowed only if the user is the superuser.
+It is obviously extremely dangerous if misused.
+.SH ERRORS
+.I Ucall
+will fail if:
+.TP 20
+[EPERM]
+The process's effective user ID is not the super-user.
+.SH SEE ALSO
+autoconfig(8)
+.SH BUGS
+No address validations are attempted.
+.SH ASSEMBLER
+.nf
+(local = 58., ucall = 9.)
+.B sys local; 9f
+\&. . .
+.B \&.data
+.B "9: sys ucall; priority; function; arg0; arg1"
+.fi

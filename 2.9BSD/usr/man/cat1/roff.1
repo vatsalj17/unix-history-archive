@@ -1,0 +1,172 @@
+
+ROFF(1)             UNIX Programmer's Manual              ROFF(1)
+
+NAME
+     roff  -  format text
+
+SYNOPSIS
+     roff [ +_n ] [ -_n ] [ -s ] [ -h ] file ...
+
+     nroff -mr [ option ] ... file ...
+     troff -mr [ option ] ... file ...
+
+DESCRIPTION
+     _R_o_f_f formats text according to control lines embedded in the
+     text in the given files.  Encountering a nonexistent file
+     terminates printing.  Incoming inter-terminal messages are
+     turned off during printing.  The optional flag arguments
+     mean:
+     +_n   Start printing at the first page with number _n.
+     -_n   Stop printing at the first page numbered higher than _n.
+     -s   Stop before each page (including the first) to allow
+          paper manipulation; resume on receipt of an interrupt
+          signal.
+     -h   Insert tabs in the output stream to replace spaces
+          whenever appropriate.
+
+     Input consists of intermixed _t_e_x_t _l_i_n_e_s, which contain
+     information to be formatted, and _r_e_q_u_e_s_t _l_i_n_e_s, which con-
+     tain instructions about how to format it.  Request lines
+     begin with a distinguished _c_o_n_t_r_o_l _c_h_a_r_a_c_t_e_r, normally a
+     period.
+
+     Output lines may be _f_i_l_l_e_d as nearly as possible with words
+     without regard to input lineation.  Line _b_r_e_a_k_s may be
+     caused at specified places by certain commands, or by the
+     appearance of an empty input line or an input line beginning
+     with a space.
+
+     The capabilities of _r_o_f_f are specified in the attached
+     Request Summary.  Numerical values are denoted there by n or
+     +n, titles by t, and single characters by c.  Numbers
+     denoted +n may be signed + or -, in which case they signify
+     relative changes to a quantity, otherwise they signify an
+     absolute resetting.  Missing n fields are ordinarily taken
+     to be 1, missing t fields to be empty, and c fields to shut
+     off the appropriate special interpretation.
+
+     Running titles usually appear at top and bottom of every
+     page.  They are set by requests like
+
+               .he 'part1'part2'part3'
+
+     Part1 is left justified, part2 is centered, and part3 is
+     right justified on the page.  Any % sign in a title is
+     replaced by the current page number.  Any nonblank may serve
+
+Printed 7/25/83                                                 1
+
+ROFF(1)             UNIX Programmer's Manual              ROFF(1)
+
+     as a quote.
+
+     ASCII tab characters are replaced in the input by a _r_e_p_l_a_c_e_-
+     _m_e_n_t _c_h_a_r_a_c_t_e_r, normally a space, according to the column
+     settings given by a .ta command.  (See .tr for how to con-
+     vert this character on output.)
+
+     Automatic hyphenation of filled output is done under control
+     of .hy.  When a word contains a designated _h_y_p_h_e_n_a_t_i_o_n _c_h_a_r_-
+     _a_c_t_e_r, that character disappears from the output and hyphens
+     can be introduced into the word at the marked places only.
+
+     The -mr option of _n_r_o_f_f or _t_r_o_f_f(1) simulates _r_o_f_f to the
+     greatest extent possible.
+
+FILES
+     /usr/lib/suftab     suffix hyphenation tables
+     /tmp/rtm?           temporary files
+
+BUGS
+     _R_o_f_f is the simplest of the text formatting programs, and is
+     utterly frozen.
+
+Printed 7/25/83                                                 2
+
+ROFF(1)             UNIX Programmer's Manual              ROFF(1)
+
+                         REQUEST SUMMARY
+
+Request    Break Initial Meaning
+.ad        yes   yes     Begin adjusting right margins.
+.ar        no    arabic  Arabic page numbers.
+.br        yes   -       Causes a line break  the filling of the
+                         current line is stopped.
+.bl n      yes   -       Insert of n blank lines, on new page if
+                         necessary.
+.bp +n     yes   n=1     Begin new page and number it n; no n
+                         means `+1'.
+.cc c      no    c=.     Control character becomes `c'.
+.ce n      yes   -       Center the next n input lines, without
+                         filling.
+.de xx     no    -       Define parameterless macro to be invoked
+                         by request `.xx' (definition ends on
+                         line beginning `..').
+.ds        yes   no      Double space; same as `.ls 2'.
+.ef t      no    t=      Even foot title becomes t.
+.eh t      no    t=      Even head title becomes t.
+.fi        yes   yes     Begin filling output lines.
+.fo        no    t=      All foot titles are t.
+.hc c      no    none    Hyphenation character becomes `c'.
+.he t      no    t=      All head titles are t.
+.hx        no    -       Title lines are suppressed.
+.hy n      no    n=1     Hyphenation is done, if n=1; and is not
+                         done, if n=0.
+.ig        no    -       Ignore input lines through a line begin-
+                         ning with `..'.
+.in +n     yes   -       Indent n spaces from left margin.
+.ix +n     no    -       Same as `.in' but without break.
+.li n      no    -       Literal, treat next n lines as text.
+.ll +n     no    n=65    Line length including indent is n char-
+                         acters.
+.ls +n     yes   n=1     Line spacing set to n lines per output
+                         line.
+.m1 n      no    n=2     Put n blank lines between the top of
+                         page and head title.
+.m2 n      no    n=2     n blank lines put between head title and
+                         beginning of text on page.
+.m3 n      no    n=1     n blank lines put between end of text
+                         and foot title.
+.m4 n      no    n=3     n blank lines put between the foot title
+                         and the bottom of page.
+.na        yes   no      Stop adjusting the right margin.
+.ne n      no    -       Begin new page, if n output lines cannot
+                         fit on present page.
+.nn +n     no    -       The next n output lines are not num-
+                         bered.
+.n1        no    no      Add 5 to page offset; number lines in
+                         margin from 1 on each page.
+.n2 n      no    no      Add 5 to page offset; number lines from
+
+Printed 7/25/83                                                 3
+
+ROFF(1)             UNIX Programmer's Manual              ROFF(1)
+
+                         n; stop if n=0.
+.ni +n     no    n=0     Line numbers are indented n.
+.nf        yes   no      Stop filling output lines.
+.nx file   -     Switch input to `file'.
+.of t      no    t=      Odd foot title becomes t.
+.oh t      no    t=      Odd head title becomes t.
+.pa +n     yes   n=1     Same as `.bp'.
+.pl +n     no    n=66    Total paper length taken to be n lines.
+.po +n     no    n=0     Page offset.  All lines are preceded by
+                         n spaces.
+.ro        no    arabic  Roman page numbers.
+.sk n      no    -       Produce n blank pages starting next
+                         page.
+.sp n      yes   -       Insert block of n blank lines, except at
+                         top of page.
+.ss        yes   yes     Single space output lines, equivalent to
+                         `.ls 1'.
+.ta n n..        -       Pseudotab settings.  Initial tab set-
+                         tings are columns 9 17 25 ...
+.tc c      no    space   Tab replacement character becomes `c'.
+.ti +n     yes   -       Temporarily indent next output line n
+                         spaces.
+.tr cdef.. no    -       Translate c into d, e into f, etc.
+.ul n      no    -       Underline the letters and numbers in the
+                         next n input lines.
+
+Printed 7/25/83                                                 4
+

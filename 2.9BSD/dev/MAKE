@@ -1,0 +1,231 @@
+umask 77
+for i
+do
+case $i in
+
+std)
+	/etc/mknod console	c  0 0
+	/etc/mknod mem		c  8 0	; chmod 600 mem
+	/etc/mknod kmem		c  8 1	; chmod 600 kmem
+	/etc/mknod null		c  8 2	; chmod 666 null
+	/etc/mknod tty		c 17 0	; chmod 666 tty
+	;;
+
+ht*|ut*)
+	umask 0 ; unit=`expr $i : '..\(.*\)'`
+	case $i in
+	ut*) blk=3; chr=12;;
+	ht*) blk=7; chr=15;;
+	esac
+	case $unit in
+	0|1|2|3|4|5|6|7)
+		unit=`expr $unit '*' 2` ; one=`expr $unit + 1`
+		norew=`expr $unit + 128` ; hidens=`expr $unit + 64`
+		norewhidens=`expr $unit + 192`
+		/etc/mknod mt$unit	b $blk $unit
+		/etc/mknod mt$one	b $blk $hidens
+		/etc/mknod nmt$unit	b $blk $norew
+		/etc/mknod nmt$one	b $blk $norewhidens
+		/etc/mknod rmt$unit	c $chr $unit
+		/etc/mknod rmt$one	c $chr $hidens
+		/etc/mknod nrmt$unit	c $chr $norew
+		/etc/mknod nrmt$one	c $chr $norewhidens
+		umask 77
+		;;
+	*)
+		echo bad unit for tape in: $1
+		;;
+	esac
+	;;
+
+tm*|ts*)
+	umask 0 ; unit=`expr $i : '..\(.*\)'`
+	case $i in
+	tm*) blk=3; chr=12;;
+	ts*) blk=9; chr=20;;
+	esac
+	case $unit in
+	0|1|2|3|4|5|6|7)
+		norew=`expr $unit + 128`
+		/etc/mknod mt$unit	b $blk $unit
+		/etc/mknod nmt$unit	b $blk $norew
+		/etc/mknod rmt$unit	c $chr $unit
+		/etc/mknod nrmt$unit	c $chr $norew
+		umask 77
+		;;
+	*)
+		echo bad unit for tape in: $1
+		;;
+	esac
+	;;
+
+hk*|hp*|rm*|rp*|xp*)
+	unit=`expr $i : '..\(.\).'`
+	suf=`expr $i : '...\(.\)'`
+	case $i in
+	hk*) name=hk; blk=4; chr=19;;
+	hp*) name=hp; blk=6; chr=14;;
+	rm*) name=rm; blk=6; chr=14;;
+	xp*) name=xp; blk=6; chr=14;;
+	rp*) name=rp; blk=1; chr=11;;
+	esac
+	case $suf in
+	a) sect=0 ;;
+	b) sect=1 ;;
+	c) sect=2 ;;
+	d) sect=3 ;;
+	e) sect=4 ;;
+	f) sect=5 ;;
+	g) sect=6 ;;
+	h) sect=7 ;;
+	*)
+	    echo bad partition in: $i ; continue;;
+	esac
+	case $unit in
+	0|1|2|3|4|5|6|7)
+		/etc/mknod ${name}${unit}$suf b $blk `expr $unit '*' 8 + $sect`
+		/etc/mknod r${name}${unit}$suf c $chr `expr $unit '*' 8 + $sect`
+		;;
+	*)
+		echo bad unit for disk in: $i
+		;;
+	esac
+	;;
+
+ml*)
+	unit=`expr $i : '..\(.*\)'`
+	echo "*** Better check the major device numbers for ml in c.c"
+	blk=13; chr=26
+	case $unit in
+	0|1|2|3|4|5|6|7)
+		/etc/mknod ml${unit}	b $blk $unit
+		/etc/mknod rml${unit}	c $chr $unit
+		;;
+	*)
+		echo bad unit for ml in: $i
+		;;
+	esac
+	;;
+
+rx2*|rx3*)
+	unit=`expr $i : 'rx.\(.*\)'`
+	echo "*** Better check the major device numbers for rx2/3 in c.c"
+	case $i in
+	rx2*)	blk=11; chr=22
+		/etc/mknod rx0	b $blk 0
+		/etc/mknod rx1	b $blk 1
+		/etc/mknod rx2	b $blk 2
+		/etc/mknod rx3	b $blk 3
+		/etc/mknod rrx0	c $chr 0
+		/etc/mknod rrx1	c $chr 1
+		/etc/mknod rrx2	c $chr 2
+		/etc/mknod rrx3	c $chr 3
+		;;
+		
+	rx3*)	blk=12; chr=23
+		case $unit in
+		0|1|2|3|4|5|6|7)
+			/etc/mknod rx${unit}	b $blk $unit
+			/etc/mknod rrx${unit}	c $chr $unit
+			;;
+		*)
+			echo bad unit for disk in: $i
+			;;
+		esac
+		;;
+	esac
+	;;
+
+rf*|rk*|rl*)
+	unit=`expr $i : 'r[fkl]\(.*\)'`
+	case $i in
+	rf*)	name=rk; blk=2; chr=10;;
+	rk*)	name=rk; blk=0; chr=9;;
+	rl*)	name=rl; blk=8; chr=18;;
+	esac
+	case $unit in
+	0|1|2|3|4|5|6|7)
+		/etc/mknod ${name}${unit} b $blk $unit
+		/etc/mknod r${name}${unit} c $chr $unit
+		;;
+	*)
+		echo bad unit for disk in: $i
+		;;
+	esac
+	;;
+
+dz*)
+	unit=`expr $i : 'dz\(.*\)'`
+	case $unit in
+	0|1|2|3|4|5|6|7)
+		eval `echo $unit | awk ' { u = $1 } END {
+		    for (i = 0; i < 8; i++)
+			printf("/etc/mknod tty%02d c 21 %d; ",u*8+i,u*8+i); }'`
+		;;
+	*)
+		echo bad unit for dz in: $i
+		;;
+	esac
+	;;
+dh*)
+	unit=`expr $i : 'dh\(.*\)'`
+	case $unit in
+	0) ch=h ;; 1) ch=i ;; 2) ch=j ;; 3) ch=k ;;
+	4) ch=l ;; 5) ch=m ;; 6) ch=n ;; 7) ch=o ;;
+	*) echo bad unit for dh in: $i ;;
+	esac
+	case $ch in
+	h|i|j|k|l|m|n|o)
+		eval `echo $ch $unit | awk ' { ch = $1; u = 16 * $2 } END {
+		    for (i = 0; i < 16; i++)
+			printf("/etc/mknod tty%s%x c 4 %d; ",ch,i,u+i); }'`
+		;;
+	esac
+	;;
+
+dl*|kl*)
+	unit=`expr $i : '.l\(.*\)'`
+	/etc/mknod dl$unit c 0 $unit 
+	;;
+
+dn*)
+	unit=`expr $i : 'dn\(.*\)'`
+	/etc/mknod dn$unit c 7 $unit ; chmod 666 dn$unit
+	;;
+
+lp*)
+	unit=`expr $i : 'lp\(.*\)'`
+	/etc/mknod lp$unit c 3 $unit ; chmod 666 lp$unit
+	;;
+
+vp*)
+	unit=`expr $i : 'vp\(.*\)'`
+	/etc/mknod vp$unit c 2 $unit ; chmod 666 vp$unit
+	;;
+
+NOTICE)
+	echo THE REST OF THE ENTRIES ARE SYSTEM DEPENDENT
+	;;
+
+LOCAL)
+	mv rm0c swap
+
+	: DIALUPS
+	mv tty11 ttyd0
+	mv tty12 ttyd1
+	mv tty13 ttyd2
+	mv tty14 ttyd3
+	mv tty15 ttyd4
+	mv tty16 ttyd5
+	mv tty17 ttyd6
+	mv tty18 ttyd7
+	mv tty19 ttyd8
+	mv tty20 ttyd9
+	mv tty21 ttyda
+	;;
+
+*)
+	echo dont know how to MAKE $i
+	;;
+esac
+done

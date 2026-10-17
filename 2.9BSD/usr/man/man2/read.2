@@ -1,0 +1,57 @@
+.TH READ 2 
+.UC
+.SH NAME
+read \- read from file
+.SH SYNOPSIS
+.B read(fildes, buffer, nbytes)
+.br
+.B char *buffer;
+.br
+.B unsigned nbytes;
+.SH DESCRIPTION
+A file descriptor is a word
+returned from a successful
+.I "open, creat, dup,"
+or
+.IR pipe (2)
+call.
+.I Buffer
+is the location of
+.I nbytes
+contiguous
+bytes into which the input will be placed.
+It is not guaranteed
+that all
+.I nbytes
+bytes will be read; for example
+if the file refers to a typewriter at most one line
+will be returned.
+In any event the number of characters read is returned.
+.PP
+If the returned value is 0, then
+end-of-file has been reached.
+.SH ERRORS
+.I Read
+will fail if one or more of the following is true:
+.TP 20
+[EBADF]
+.I Fildes
+is not a valid file descriptor open for reading.
+.TP 20
+[EFAULT]
+.I Buf
+points outside the process's allocated address space.
+.TP 20
+[EINTR]
+A read from a slow device was interrupted (before any data arrived) by
+the delivery of a signal.
+.SH "SEE ALSO"
+creat(2), dup(2), open(2), pipe(2)
+.SH ASSEMBLER
+(read = 3.)
+.br
+(file descriptor in r0)
+.br
+.B sys read; buffer; nbytes
+.br
+(byte count in r0)

@@ -1,0 +1,78 @@
+
+REBOOT(2)           UNIX Programmer's Manual            REBOOT(2)
+
+NAME
+     reboot - reboot system or halt processor
+
+SYNOPSIS
+     #include <sys/types.h>
+     #include <sys/reboot.h>
+
+     reboot(howto, dev)
+     int howto;
+     dev_t dev;
+
+DESCRIPTION
+     _R_e_b_o_o_t is used to cause a system reboot, and is invoked
+     automatically in the event of unrecoverable system failures.
+     _H_o_w_t_o is a mask of options passed to the bootstrap program.
+     When none of these options is given, the system is rebooted
+     from file unix in the file system specified by _d_e_v.
+     Currently, this option is ignored, and the device used is
+     the current root file system.  An automatic consistency
+     check of the disks is then normally performed.
+
+     The bits of _h_o_w_t_o are, in the order interpreted:
+
+     RB_NOSYNC
+          No sync (see _s_y_n_c(2)) is to be done.
+
+     RB_DUMP
+          A dump of memory is produced on the system's dump dev-
+          ice, normally in swap space, as if the system had done
+          a panic.
+
+     RB_HALT
+          The processor is simply halted; no reboot takes place.
+          This should be used with caution.
+
+     RB_ASKNAME
+          Interpreted by the bootstrap program itself, causing it
+          to inquire as to what file should be booted.  Normally,
+          the system is booted from the file xx(0,0)unix without
+          asking, where _x_x corresponds to the root file system
+          device.
+
+     RB_SINGLE
+          Normally, the reboot procedure involves an automatic
+          disk consistency check and then multi-user operations.
+          This prevents the consistency check, rather simply
+          booting the system with a single-user shell on the con-
+          sole.  This switch is interpreted by the _i_n_i_t(8) pro-
+          gram in the newly booted system.
+
+     RB_NOFSCK
+          The normal file system consistency check is omitted
+
+Printed 5/22/83                                                 1
+
+REBOOT(2)           UNIX Programmer's Manual            REBOOT(2)
+
+          after the reboot.  This is used for a fast reboot on a
+          quiet system with no possibility of file system prob-
+          lems.
+
+ERRORS
+     _R_e_b_o_o_t will fail if:
+
+     [EPERM]             The process's effective user ID is not
+                         the super-user.
+
+SEE ALSO
+     crash(8), init(8), reboot(8)
+
+BUGS
+     The device specification is not implemented yet.
+
+Printed 5/22/83                                                 2
+

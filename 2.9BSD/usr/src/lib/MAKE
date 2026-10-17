@@ -1,0 +1,97 @@
+: DESTDIR=
+if [ $DESTDIR ]
+then DD="DESTDIR=$DESTDIR"; export DESTDIR
+fi
+C=all
+case $1 in
+-f)	FP=-f;
+	;;
+-34)	PDP=34;
+	FP=;
+	;;
+-40)	PDP=40;
+	FP=-f;
+	;;
+-70)	PDP=70;
+	FP=;
+	;;
+*)	echo 'Usage: MAKE -40|-34|-70 [ -cp ] [ -f ] name ...';
+	echo ' -40 uses no separate I/D and loads floating point interpreter;';
+	echo ' -34 uses no separate I/D;';
+	echo ' -70 uses separate I/D as appropriate.';
+	echo ' -f loading floating point interpreter;';
+	exit 1;
+	;;
+esac
+shift
+
+for a
+do
+	case $a in
+	-cp)	C=cp
+		echo INSTALLING ...
+		continue ;;
+	esac
+
+	echo ===== $a:
+	case $a in
+
+	F77|libF77) (cd libF77; make $FP $DD libF77.a $C clean)
+		(cd libF77; make -f Ovmakefile $FP $DD libovF77.a $C clean)
+		;;
+
+	I77|libI77)(cd libI77; make $FP $DD libI77.a $C clean)
+		(cd libI77; make -f Ovmakefile $FP $DD libovI77.a $C clean)
+		;;
+
+	U77|libU77)(cd libU77; make $FP $DD libU77.a $C clean)
+		(cd libU77; make -f Ovmakefile $FP $DD libovU77.a $C clean)
+		;;
+
+	c|libc)	if [ $PDP = 40 ]
+		then
+			(cd c; make nonfplib clean)
+			(cd c; [ $C = cp ] && make $DD nonfpinstall)
+		else
+			(cd c; make $DD fplib clean)
+			(cd c; [ $C = cp ] && make $DD fpinstall)
+		fi
+		;;
+
+	curses|libcurses) (set -x; cd curses; make $arg clean)
+		(set -x; cd curses; make -f Ovmakefile $arg clean)
+		;;
+
+	dbm|libdbm) (cd dbm; make $DD libdbm.a $C clean)
+		;;
+
+	fpsim)	echo "Only make fpsim for 40."
+		[ $PDP = 40 ] && (cd fpsim; make $DD libfpsim.a $C clean)
+		;;
+
+	jobs|libjobs) echo "See the README file in jobs;"
+		echo "there are different ways to install."
+		(cd jobs; make $DD libhack.a $C clean)
+		(cd jobs; make -f Ovmakefile $DD libovhack.a $C clean)
+		;;
+
+	m|libm)	(cd m; make $FP $DD libm.a $C clean)
+		(cd m; make -f Ovmakefile $FP $DD libovm.a $C clean)
+		;;
+
+	mp|libmp)	(cd mp; make $FP $DD $C clean)
+		(cd mp; make -f Ovmakefile $FP $DD $C clean)
+		;;
+
+	ape|libape)	(cd ape; make $FP $DD $C clean)
+		(cd ape; make -f Ovmakefile $FP $DD $C clean)
+		;;
+
+	plot|libplot)	(cd plot; make $FP $DD $C clean)
+		(cd plot; make -f Ovmakefile $FP $DD $C clean)
+		;;
+
+	*)	echo "Don't know how to make $b."
+		;;
+	esac
+done

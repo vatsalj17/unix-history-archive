@@ -1,0 +1,55 @@
+.TH RTP 2
+.UC
+.SH NAME
+rtp \- make/unmake a real time process
+.SH SYNOPSIS
+.B rtp(flag)
+.SH DESCRIPTION
+.I Rtp
+changes the notion of the current process from that of a normal
+UNIX process to that of a ``real time'' process.  A real time process
+does not compete for system resources in the normal manner; instead,
+a real time process is considered locked into physical memory
+by the swap scheduler and
+receives exclusive use of the central processor
+from the process scheduler
+whenever the real time process is in a executable state.
+Furthermore, other processes which
+previously were non-preemptable but had the potential of consuming
+relatively large amounts of cpu time are made preemptable by
+.I rtp.
+.PP
+It is the responsibility of the real time process to see to it that
+use of the cpu is relinquished often enough and long enough for
+other normal UNIX processes to run.
+For this reason only the
+super-user
+or members of group 0
+are allowed to change the mode of a process by
+.I rtp.
+.PP
+The
+.I flag
+argument is set to a non-zero value to make a normal process into
+a real time process.
+There can be only one real time process active at any moment.
+.SH ERRORS
+.I Rtp
+will fail if:
+.TP 20
+[EPERM]
+The process's effective user ID is not the super-user and the process's
+effective group ID is nonzero.
+.TP 20
+[EBUSY]
+A real time process already exists.
+.SH "SEE ALSO"
+lock(2), nice(2), renice(2)
+.SH ASSEMBLER
+(rtp = 49.)
+.br
+(flag in r0)
+.br
+.B sys rtp
+.SH AUTHOR
+Thomas Ferrin, University of California, San Francisco

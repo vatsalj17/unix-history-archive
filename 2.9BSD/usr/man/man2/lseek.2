@@ -1,0 +1,85 @@
+.TH LSEEK 2 
+.UC
+.SH NAME
+lseek, tell \- move read/write pointer
+.SH SYNOPSIS
+.B #include <sys/types.h>
+.br
+.B #include <sys/file.h>
+.sp
+.B long lseek(fildes, offset, whence)
+.br
+.B long offset;
+.PP
+.B long tell(fildes)
+.SH DESCRIPTION
+The file
+descriptor refers to a file open for reading or writing.
+The read (resp. write) pointer for the file is set as follows:
+.IP
+If
+.I whence
+is FSEEK_ABSOLUTE, the pointer is set to
+.I offset
+bytes.
+.IP
+If
+.I whence
+is FSEEK_RELATIVE, the pointer is set to its current location plus
+.IR offset .
+.IP
+If
+.I whence
+is FSEEK_EOF, the pointer is set to the size of the
+file plus
+.IR offset .
+.PP
+The returned value is the resulting pointer location.
+.PP
+The obsolete function
+.IR tell ( fildes )
+is identical to
+.IR lseek ( "fildes, 0L, FSEEK_RELATIVE" ).
+.PP
+Seeking far beyond the end of a file, then writing,
+creates a gap or `hole', which occupies no
+physical space and reads as zeros.
+.SH RETURN VALUE
+Upon successful completion, the new file offset returned.  Otherwise, a
+value of \-1 is returned and
+.I errno
+is set to indicate the error.
+.SH ERRORS
+.I Lseek
+will fail and the file pointer will remain unchanged if:
+.TP 20
+[EBADF]
+.I Fildes
+is not an open file descriptor.
+.TP 20
+[ESPIPE]
+.I Fildes
+is associated with a pipe.
+.SH "SEE ALSO"
+creat(2), open(2), fseek(3S)
+.SH BUGS
+.I Lseek
+is a no-op on character special files.
+No bounds check is made on
+.IR offset .
+It is permissible to seek past the end of
+a file open only for reading.
+.SH ASSEMBLER
+(lseek = 19.)
+.br
+(file descriptor in r0)
+.br
+.B sys lseek; offset1; offset2; whence
+.PP
+.I Offset1
+and
+.I offset2
+are the high and low words of 
+.IR offset ;
+r0 and r1 contain
+the pointer upon return.

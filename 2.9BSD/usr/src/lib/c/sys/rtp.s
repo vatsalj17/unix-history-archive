@@ -1,0 +1,24 @@
+/ error	= rtp(flag);
+
+.globl _rtp
+.globl _rtp_	/ F77 call
+.globl cerror
+
+_rtp:
+	mov	r5,-(sp)
+	mov	sp,r5
+	mov	4(sp),r0
+	br	1f
+
+_rtp_:
+	mov	r5,-(sp)
+	mov	sp,r5
+	mov	*4(sp),r0
+1:
+	sys	rtp
+	bec	1f
+	jmp	cerror
+1:
+	clr	r0
+	mov	(sp)+,r5
+	rts	pc

@@ -1,0 +1,143 @@
+
+DELIVERMAIL(8)      UNIX Programmer's Manual       DELIVERMAIL(8)
+
+NAME
+     delivermail - deliver mail to arbitrary people
+
+SYNOPSIS
+     /etc/delivermail [ -[fr] _a_d_d_r_e_s_s ] [ -a ] [ -e_x ] [ -n ] [
+     -m ] [ -s ] [ -i ] [ -h _N ] address ...
+
+DESCRIPTION
+     _D_e_l_i_v_e_r_m_a_i_l delivers a letter to one or more people, routing
+     the letter over whatever networks are necessary.  _D_e_l_i_v_e_r_-
+     _m_a_i_l will do inter-net forwarding as necessary to deliver
+     the mail to the correct place.
+
+     _D_e_l_i_v_e_r_m_a_i_l is not intended as a user interface routine; it
+     is expected that other programs will provide user-friendly
+     front ends, and _d_e_l_i_v_e_r_m_a_i_l will be used only to deliver
+     pre-formatted messages.
+
+     _D_e_l_i_v_e_r_m_a_i_l reads its standard input up to a control-D or a
+     line with a single dot and sends a copy of the letter found
+     there to all of the addresses listed.  If the -i flag is
+     given, single dots are ignored.  It determines the network
+     to use based on the syntax of the addresses.  Addresses con-
+     taining the character `@' or the word at are sent to the
+     ARPANET; addresses containing `!' are sent to the UUCP net,
+     and addresses containing `:' or `.' are sent to the Berkeley
+     network.  Other addresses are assumed to be local.
+
+     Local addresses are looked up in a file constructed by
+     _n_e_w_a_l_i_a_s_e_s(1) from the data file /_u_s_r/_l_i_b/_a_l_i_a_s_e_s and
+     aliased appropriately.  Aliasing can be prevented by preced-
+     ing the address with a backslash or using the -n flag.  Nor-
+     mally the sender is not included in any alias expansions,
+     e.g., if `john' sends to `group', and `group' includes
+     `john' in the expansion, then the letter will not be
+     delivered to `john'.  The -m flag disables this suppression.
+
+     _D_e_l_i_v_e_r_m_a_i_l computes the person sending the mail by looking
+     at your login name.  The from person can be explicitly
+     specified by using the -f flag; or, if the -a flag is given,
+     delivermail looks in the body of the message for a From: or
+     Sender: field in ARPANET format.  The -f and -a flags can be
+     used only by the special users _r_o_o_t and _n_e_t_w_o_r_k, or if the
+     person you are trying to become is the same as the person
+     you are.  The -r flag is entirely equivalent to the -f flag;
+     it is provided for ease of interface only.
+
+     The -e_x flag controls the disposition of error output, as
+     follows:
+
+     e  Print errors on the standard output, and echo a copy of
+        the message when done.  It is assumed that a network
+
+Printed 8/2/83                                                  1
+
+DELIVERMAIL(8)      UNIX Programmer's Manual       DELIVERMAIL(8)
+
+        server will return the message back to the user.
+
+     m  Mail errors back to the user.
+
+     p  Print errors on the standard output.
+
+     q  Throw errors away; only exit status is returned.
+
+     w  Write errors back to the user's terminal, but only if the
+        user is still logged in and write permission is enabled;
+        otherwise errors are mailed back.
+
+     If the error is not mailed back, and if the mail originated
+     on the machine where the error occurred, the letter is
+     appended to the file _d_e_a_d._l_e_t_t_e_r in the sender's home direc-
+     tory.
+
+     If the first character of the user name is a vertical bar,
+     the rest of the user name is used as the name of a program
+     to pipe the mail to.  It may be necessary to quote the name
+     of the user to keep _d_e_l_i_v_e_r_m_a_i_l from suppressing the blanks
+     from between arguments.
+
+     The message is normally edited to eliminate From lines that
+     might confuse other mailers.  In particular, From lines in
+     the header are deleted, and From lines in the body are
+     prepended by `>'.  The -s flag saves From lines in the
+     header.
+
+     The -h flag gives a hop-count, i.e., a measure of how many
+     times this message has been processed by _d_e_l_i_v_e_r_m_a_i_l
+     (presumably on different machines).  Each time _d_e_l_i_v_e_r_m_a_i_l
+     processes a message, it increases the hop-count by one; if
+     it exceeds 30 _d_e_l_i_v_e_r_m_a_i_l assumes that an alias loop has
+     occurred and it aborts the message.  The hop-count defaults
+     to zero.
+
+     _D_e_l_i_v_e_r_m_a_i_l returns an exit status describing what it did.
+     The codes are defined in <sysexits.h>
+        EX_OK            Successful completion on all addresses.
+        EX_NOUSER        User name not recognized.
+        EX_UNAVAILABLE   Catchall meaning necessary resources
+                         were not available.
+        EX_SYNTAX        Syntax error in address.
+        EX_SOFTWARE      Internal software error, including bad
+                         arguments.
+        EX_OSERR         Temporary operating system error, such
+                         as cannot fork.
+        EX_NOHOST        Host name not recognized.
+
+FILES
+     /usr/lib/aliases              raw data for alias names
+
+Printed 8/2/83                                                  2
+
+DELIVERMAIL(8)      UNIX Programmer's Manual       DELIVERMAIL(8)
+
+     /usr/lib/aliases.dir          data base of alias names
+     /usr/lib/aliases.pag
+     /bin/mail                     to deliver uucp mail
+     /usr/net/bin/v6mail           to deliver local mail
+     /usr/net/bin/sendmail         to deliver Berknet mail
+     /usr/lib/mailers/arpa         to deliver ARPANET mail
+     /tmp/mail*                    temp file
+     /tmp/xscript*                 saved transcript
+
+SEE ALSO
+     Mail(1), mail(1), newaliases(1), aliases(5), sysexits(5)
+
+BUGS
+     _D_e_l_i_v_e_r_m_a_i_l sends one copy of the letter to each user; it
+     should send one copy of the letter to each host and distri-
+     bute to multiple users there whenever possible.
+
+     _D_e_l_i_v_e_r_m_a_i_l assumes the addresses can be represented as one
+     word.  This is incorrect according to the ARPANET mail pro-
+     tocol RFC 733 (NIC 41952), but is consistent with the real
+     world.
+
+     It isn't _s_e_n_d_m_a_i_l (this may be a feature).
+
+Printed 8/2/83                                                  3
+

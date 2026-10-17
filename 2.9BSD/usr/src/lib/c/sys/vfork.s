@@ -1,0 +1,29 @@
+/ pid	= vfork();
+/
+/ Since the parent and child share the stack, the return
+/ address for the parent would be overwritten by the child.
+/ Therefore, save the return address in r1 and "return"
+/ by a jump indirect.
+
+.globl	_vfork
+.globl	_par_uid
+.comm	_errno, 2
+
+_vfork:
+	mov	(sp)+,r1		/ save return address
+	sys	vfork
+		br 1f			/ child returns here; if no vfork 
+					/    syscall, parent returns here also.
+
+	bec	2f			/ parent returns here
+0:	mov	r0,_errno		/ vfork failed; can't use cerror
+	mov	$-1,r0
+	jmp	(r1)			/ "return" to saved location
+
+1:	/ child:
+	bes	0b			/ check error here also
+					/    (in case no vfork syscall)
+	mov	r0,_par_uid
+	clr	r0
+2:
+	jmp	(r1)			/ "return" to saved location

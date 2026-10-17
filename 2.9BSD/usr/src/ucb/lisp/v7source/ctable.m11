@@ -1,0 +1,128 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+.page
+	.sbttl character property table-- forrest howard, pdp-11 lisp
+
+
+
+;the purpose of this section is to provide the 
+;character table that is used by patom, the
+;the system lexer, and the macro issep,isbrk,isnum,...when the
+;system is used for am110 instruction
+
+
+
+;the following symbols will be re-defined by the system lex
+;assembly code if the files are all assembled together.
+;otherwise, they are set to constants that will be picked
+;up by the macro expansions of is... .
+
+	.if	ndf,vsep
+		vsep=4
+		vdq=0
+		vnum=10
+		vsq=0
+		vperd=0
+		vlpara!brk=0
+		vrpara!brk=0
+		vlbkta=0
+		vrbkta=0
+		veof=0
+		vchar=2
+		verr=0
+		
+	.endc
+
+;note that the format of the bytes in the system version 
+;is like so
+
+;		  axxxxxxb
+;	with a being 1 if a break of seperator character
+;            b being 1 if on printout the atom containing it 
+;			is to be double-quoted
+;	     xxxxx is the offset from seploop  to which control
+;			is transfered when the character is encountered first in 
+;			a lexeme
+;	     c is 1 if the character is a valid numeric character(0-9)
+
+
+;in the am110 version
+
+;		  a000srcb
+;
+;		with s  1 if a seperator character
+;		with r 1 if  a "normal" character(i.e. not brk,number,...)
+;		and rest as above
+
+
+
+;if this is a data-space only lisp, and onepage is on, and
+;fpsim is on, we want to force ctable into the onepage psect.
+
+.if	eq,multiseg
+  .if	ne,fpsim
+    .if	ne,onepage
+	.psect	onepage
+      .iff
+	.psect	shbydat con
+    .endc
+   .iff
+	.psect	shbydat con
+  .endc
+ .iff
+	.psect	shbydat con
+.endc
+
+
+
+		dqo=1
+		brk=200
+
+ctable:
+      .rept  11
+	.byte	dqo!verr!brk
+      .endr				;above took care of thru backspace
+      .rept	15-10
+	.byte	dqo!brk!vsep
+      .endr				;and characters such as cr,lf
+      .rept	32-15
+	.byte	dqo!verr!brk
+      .endr				;miscelaneous characters
+	.byte	dqo!vsep!brk
+      .rept	37-33
+	.byte	dqo!verr!brk
+      .endr
+	.byte	dqo!vsep!brk		;this corresponds to space
+	.byte	vchar			;for !
+	.byte	dqo!vdq			;for "
+      .rept	46-42
+	.byte	 vchar
+      .endr
+	.byte	dqo!vsq!brk		;for '
+	.byte	dqo!vlpara!brk
+	.byte	dqo!vrpara!brk
+      .rept	54-51
+	.byte	vchar
+      .endr
+	.byte	vnum			;for - this is a strange token, since
+					;  -123  part of number
+					; -   	 atom alone
+					; -??? normal
+					; ab-c normal
+	.byte	dqo!vperd!brk		;for .
+	.byte	vchar			;for /
+      .rept	71-57
+	.byte	vnum
+      .endr				;do the integers
+      .rept	132-71
+	.byte	vchar
+      .endr				;and the characters
+	.byte	dqo!vlbkta!brk		;the bracket
+	.byte	vchar
+	.byte	dqo!vrbkta!brk		;and the other
+      .rept	177-135
+	.byte	vchar
+      .endr				;and now lower case stuff
+	.byte	dqo!veof!brk		;end of file
+	.byte	0			;for even length's sake
+

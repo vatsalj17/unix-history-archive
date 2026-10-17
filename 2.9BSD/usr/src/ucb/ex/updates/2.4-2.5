@@ -1,0 +1,165 @@
+#
+ed - ex.h << '-*-END-*-'
+204d
+151c
+bool	hush;			/* Command line option - was given, hush up! */
+.
+7c
+ * Ex version 2.5
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+553c
+				printf("Version 2.5, May 28, 1979");
+.
+404a
+				putpad(VE);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+217a
+	Peekkey = OPeek;
+.
+213a
+	OPeek = Peekkey; Peekkey = 0;
+.
+187a
+	register int OPeek;
+.
+185,186c
+	register char *sc = cursor;
+	register int (*OP)();
+.
+142a
+	lastvgk = 0;
+.
+73c
+			return (lastvgk = *vglobp++);
+		lastvgk = 0;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vis.h << '-*-END-*-'
+208a
+short	lastvgk;		/* Previous input key, if not from keyboard */
+.
+w
+q
+'-*-END-*-'
+ed - ex_voperate.c << '-*-END-*-'
+366d
+357a
+			/* This is wrong at EOF */
+.
+353,354d
+349a
+		if (opf == vmove) {
+			vmoving = 1;
+			vmovcol = 20000;
+		} else
+			vmoving = 0;
+.
+324d
+309a
+		vmoving = 0;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops2.c << '-*-END-*-'
+594c
+			if (lastvgk)
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops3.c << '-*-END-*-'
+159c
+	else {
+.
+157a
+	}
+.
+73a
+#else
+	else {
+.
+w
+q
+'-*-END-*-'
+ed - ex_vput.c << '-*-END-*-'
+841c
+		} else if (noim)
+			endim();
+		else if (IM && EI) {
+.
+822a
+			i %= value(TABSTOP);
+.
+809c
+			noim = !shft;
+		} else {
+.
+805,806c
+			 * mode; unless the tab has already been expanded
+			 * in which case we MUST use insert mode.
+.
+801c
+		if (inscol + doomed == tabstart) {
+.
+789a
+	register bool noim = 0;
+.
+753c
+		if (i > 0) {
+.
+498a
+		vigoto(c, 0);
+		vprepins();
+.
+'-*-END-*-'
+ed - expreserve.c << '-*-END-*-'
+316,319c
+"This buffer can be retrieved using the \"recover\" command of the editor.\n");
+	fprintf(mf,
+"An easy way to do this is to give the command ``ex -r'' followed by the\n");
+	fprintf(mf,
+"name of file you were editing.  This works for ``edit'' and ``vi'' also.\n");
+.
+312,314c
+"No name was associated with this buffer so it has been named \"LOST\".\n");
+	} else
+		fprintf(mf,
+"A copy of an editor buffer of your file \"%s\"\nwas saved when %s.\n", fname,
+		flag ? "the system went down" : "your phone was hung up");
+.
+307,310c
+"A copy of an editor buffer of yours was saved when %s.\n",
+		flag ? "the system went down" : "your phone was hung up");
+.
+305c
+	if (fname[0] == 0) {
+.
+290c
+notify(uid, fname, flag)
+.
+232,233c
+			notify(H.Uid, H.Savedfile, (int) name);
+.
+230c
+			if (name)
+.
+55c
+	struct dir dirent;
+.
+6c
+#include <dir.h>
+.
+w
+q
+'-*-END-*-'

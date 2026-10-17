@@ -1,0 +1,142 @@
+
+PTRACE(2)           UNIX Programmer's Manual            PTRACE(2)
+
+NAME
+     ptrace  -  process trace
+
+SYNOPSIS
+     #include <signal.h>
+
+     ptrace(request, pid, addr, data)
+     int *addr;
+
+DESCRIPTION
+     _P_t_r_a_c_e provides a means by which a parent process may con-
+     trol the execution of a child process, and examine and
+     change its core image.  Its primary use is for the implemen-
+     tation of breakpoint debugging.  There are four arguments
+     whose interpretation depends on a _r_e_q_u_e_s_t argument.  Gen-
+     erally, _p_i_d is the process ID of the traced process, which
+     must be a child (no more distant descendant) of the tracing
+     process.  A process being traced behaves normally until it
+     encounters some signal whether internally generated like
+     `illegal instruction' or externally generated like `inter-
+     rupt.' See _s_i_g_n_a_l(2) for the list.  Then the traced process
+     enters a stopped state and its parent is notified via
+     _w_a_i_t(2).  When the child is in the stopped state, its core
+     image can be examined and modified using _p_t_r_a_c_e.  If
+     desired, another _p_t_r_a_c_e request can then cause the child
+     either to terminate or to continue, possibly ignoring the
+     signal.
+
+     The value of the _r_e_q_u_e_s_t argument determines the precise
+     action of the call:
+
+     0   This request is the only one used by the child process;
+         it declares that the process is to be traced by its
+         parent.  All the other arguments are ignored.  Peculiar
+         results will ensue if the parent does not expect to
+         trace the child.
+
+     1,2 The word in the child process's address space at _a_d_d_r is
+         returned.  If I and D space are separated, request 1
+         indicates I space, 2 D space.  _A_d_d_r must be even.  The
+         child must be stopped.  The input _d_a_t_a are ignored.
+
+     3   The word of the system's per-process data area
+         corresponding to _a_d_d_r is returned.  _A_d_d_r must be even
+         and less than 512.  This space contains the registers
+         and other information about the process; its layout
+         corresponds to the _u_s_e_r structure in the system.
+
+     4,5 The given _d_a_t_a are written at the word in the process's
+         address space corresponding to _a_d_d_r, which must be even.
+         No useful value is returned.  If I and D space are
+         separated, request 4 indicates I space, 5 D space.
+
+Printed 8/5/83                                                  1
+
+PTRACE(2)           UNIX Programmer's Manual            PTRACE(2)
+
+         Attempts to write in pure procedure fail if another pro-
+         cess is executing the same file.
+
+     6   The process's system data are written, as they are read
+         with request 3.  Only a few locations can be written in
+         this way: the general registers, the floating point
+         status and registers, the current overlay number, and
+         certain bits of the processor status word.
+
+     7   The _d_a_t_a argument is taken as a signal number and the
+         child's execution continues at location _a_d_d_r as if it
+         had incurred that signal.  Normally the signal number
+         will be either 0 to indicate that the signal that caused
+         the stop should be ignored, or that value fetched out of
+         the process's image indicating which signal caused the
+         stop.  If _a_d_d_r is (int *)1 then execution continues from
+         where it stopped.
+
+     8   The traced process terminates.
+
+     9   Execution continues as in request 7; however, as soon as
+         possible after execution of at least one instruction,
+         execution stops again.  The signal number from the stop
+         is SIGTRAP.  (On the PDP-11 the T-bit is used and just
+         one instruction is executed; on the Interdata the stop
+         does not take place until a store instruction is exe-
+         cuted.) This is part of the mechanism for implementing
+         breakpoints.
+
+     As indicated, these calls (except for request 0) can be used
+     only when the subject process has stopped.  The _w_a_i_t call is
+     used to determine when a process stops; in such a case the
+     `termination' status returned by _w_a_i_t has the value 0177 to
+     indicate stoppage rather than genuine termination.
+
+     To forestall possible fraud, _p_t_r_a_c_e inhibits the set-user-id
+     facility on subsequent _e_x_e_c_v_e(2) calls.  If a traced process
+     calls _e_x_e_c, it will stop before executing the first instruc-
+     tion of the new image showing signal SIGTRAP.
+
+     On the Interdata 8/32, `word' means a 32-bit word and `even'
+     means 0 mod 4.
+
+ERRORS
+     [EINVAL]            The request code is invalid.
+
+     [EINVAL]            The specified process does not exist.
+
+     [EINVAL]            The given signal number is invalid.
+
+     [EFAULT]            The specified address is out of bounds.
+
+Printed 8/5/83                                                  2
+
+PTRACE(2)           UNIX Programmer's Manual            PTRACE(2)
+
+     [EPERM]             The specified process cannot be traced.
+
+SEE ALSO
+     adb(1), signal(2), wait(2)
+
+BUGS
+     On the Interdata 8/32, `as soon as possible' (request 7)
+     means `as soon as a store instruction has been executed.'
+
+     The request 0 call should be able to specify signals which
+     are to be treated normally and not cause a stop.
+     The error indication, -1, is a legitimate function value;
+     _e_r_r_n_o, see _i_n_t_r_o(2), can be used to disambiguate.
+
+     It should be possible to stop a process on occurrence of a
+     system call; in this way a completely controlled environment
+     could be provided.
+
+ASSEMBLER
+     (ptrace = 26.)
+     (data in r0)
+     sys ptrace; pid; addr; request
+     (value in r0)
+
+Printed 8/5/83                                                  3
+

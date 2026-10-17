@@ -1,0 +1,100 @@
+
+ACCESS(2)           UNIX Programmer's Manual            ACCESS(2)
+
+NAME
+     access - determine accessibility of file
+
+SYNOPSIS
+     #include <sys/types.h>
+     #include <sys/file.h>
+
+     access(name, mode)
+     char *name;
+
+DESCRIPTION
+     _A_c_c_e_s_s checks the given file _n_a_m_e for accessibility accord-
+     ing to _m_o_d_e, which is FACCESS_READ (read), FACCESS_WRITE
+     (write), or FACCESS_EXECUTE (execute) or a combination
+     thereof.  Specifying FACCESS_EXISTS tests whether the direc-
+     tories leading to the file can be searched and the file
+     exists.
+
+     An appropriate error indication is returned if _n_a_m_e cannot
+     be found or if any of the desired access modes would not be
+     granted.  On disallowed accesses -1 is returned and the
+     error code is in _e_r_r_n_o.  Zero is returned from successful
+     tests.
+
+     The user and group IDs with respect to which permission is
+     checked are the real UID and GID of the process, so this
+     call is useful to set-UID programs.
+
+     Notice that it is only access bits that are checked.  A
+     directory may be announced as writable by _a_c_c_e_s_s, but an
+     attempt to open it for writing will fail (although files may
+     be created there); a file may look executable, but _e_x_e_c will
+     fail unless it is in proper format.
+
+ERRORS
+     _A_c_c_e_s_s to the file is denied if one or more of the following
+     is true:
+
+     [ENOTDIR]           A component of the path prefix is not a
+                         directory.
+
+     [ENOENT]            Read, write, or execute (search) permis-
+                         sion is requested for a null path name
+                         or the named file does not exist.
+
+     [EINVAL]            The _n_a_m_e argument contained a non-ASCII
+                         byte.
+
+     [ELOOP]             Too many symbolic links were encountered
+                         in translating the path name.
+
+     [EROFS]             Write access is requested for a file on
+
+Printed 7/30/83                                                 1
+
+ACCESS(2)           UNIX Programmer's Manual            ACCESS(2)
+
+                         a read-only file system.
+
+     [ETXTBSY]           Write access is requested for a pure
+                         procedure (shared text) file that is
+                         being executed.
+
+     [EACCES]            Permission bits of the file mode do not
+                         permit the requested access; or search
+                         permission is denied on a component of
+                         the path prefix.  The owner of a file
+                         has permission checked with respect to
+                         the ``owner'' read, write, and execute
+                         mode bits.  Members of the file's group
+                         other than the owner have permission
+                         checked with respect to the ``group''
+                         mode bits, and all others have permis-
+                         sions checked with respect to the
+                         ``other'' mode bits.
+
+     [EFAULT]            _N_a_m_e points outside the process's allo-
+                         cated address space.
+
+BUGS
+     The test for execute permission may be successful even
+     though _n_a_m_e is a shared text file which is currently open
+     for reading and therefore not executable.  The super-user is
+     always granted execute permission even though 1) execute
+     permission is meaningful only for directories and regular
+     files, and 2) _e_x_e_c requires that at least one execute mode
+     bit be set for a regular file to be executable.
+
+SEE ALSO
+     chmod(2), execve(2), stat(2)
+
+ASSEMBLER
+     (access = 33.)
+     sys access; name; mode
+
+Printed 7/30/83                                                 2
+

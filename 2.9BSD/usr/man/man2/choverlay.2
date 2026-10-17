@@ -1,0 +1,53 @@
+.TH CHOVERLAY 2 
+.UC
+.SH NAME
+choverlay \- change overlay
+.SH SYNOPSIS
+.B choverlay(ovno)
+.br
+.B int ovno;
+.SH DESCRIPTION
+.I Choverlay
+is an "invisible" system call used by overlaid (type 0430 or 0431)
+programs to remap a fixed segment of the process's text address space
+to one of up to seven different overlay segments. These segments are
+determined by the 
+.IR ld (1)
+utility at the time of program creation.  Similarly,
+.IR ld (1)
+inserts the appropriate 
+.I choverlay
+calls to effect the overlaid execution of the process.
+.PP
+Notice that the
+.I choverlay
+system call is intended only to be used by the overlay mechanism. In
+fact, it is impossible to use this system call in nonoverlaid programs
+because of its implementation. Instead of using the `sys' or `trap' instruction
+as other system calls, this call redefines the `emt' instruction as the
+overlay call. In ordinary (nonoverlaid) programs this ``emulator trap
+instruction'' generates a SIGEMT exception.  In overlaid programs the
+instruction switches to the overlay indicated in general register zero (r0).
+Overlays are numbered 1-7, with 0 indicating that no overlay is to be mapped.
+If the number specified corresponds to
+an overlay that is unused (has zero length),
+no overlay will be mapped.
+If the overlay number is outside of the range of 0-7
+a SIGEMT exception will be generated.
+.PP
+Overlay address regions are mapped by one or more segmentation registers
+in the user text address space, begining with the segmentation
+register following regular text space.
+.SH WARNING
+The
+.I choverlay
+system call is meant to be executed from within the normal text space.
+Unpredictable results will occur if this call is attempted from within
+an overlay.
+.SH "SEE ALSO"
+ld(1), signal(2), a.out(5)
+.SH ASSEMBLER
+.br
+(overlay number r0)
+.br
+\fBemt\fP		/ text address space contents will change

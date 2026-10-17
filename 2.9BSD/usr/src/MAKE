@@ -1,0 +1,61 @@
+CHOWN=chown
+
+for i
+do
+	case $i in
+
+	-34|-40|-70|-f)
+		continue
+		;;
+	modes)
+		echo ========= modes
+		BINF="df iostat login mail mkdir mv passwd ps pstat rmdir su"
+		UBINF="at newgrp"
+		UCBF="checkobj chfn chsh sysline vmstat w"
+		LIBF="atrun ex3.7preserve ex3.7recover"
+		UULIBF="uucp/uuxqt uucp/uucico uucp/uuclean"
+		UUBINF="uucp uux uulog uuname"
+		TMPF="tmp usr/tmp usr/lib/uucp/.XQTDIR usr/msgs"
+		TSPOOL="lpd secretmail uucp uucppublic"
+		MAILDIR="mail"
+		ATDIR="at at/past"
+		cd $DESTDIR/bin; $CHOWN root $BINF; chmod 4755 $BINF
+		cd $DESTDIR/usr/bin; $CHOWN root $UBINF; chmod 4755 $UBINF
+		cd $DESTDIR/usr/ucb; $CHOWN root $UCBF; chmod 4755 $UCBF
+		cd $DESTDIR/usr/lib; $CHOWN root $LIBF; chmod 4755 $LIBF
+		cd $DESTDIR/usr/lib; $CHOWN uucp $UULIBF; chmod 4755 $UULIBF
+		cd $DESTDIR/usr/bin; $CHOWN uucp $UUBINF; chmod 4755 $UUBINF
+		cd $DESTDIR; chmod 1777 $TMPF
+		cd $DESTDIR/usr/spool; chmod 777 $TSPOOL; chmod 755 $ATDIR;\
+		$CHOWN root $ATDIR; chmod 1777 $MAILDIR
+		chmod 111 $DESTDIR/usr/ucb/lock
+
+		;;
+
+	aliases)
+		echo ========= aliases
+		echo Establish alias names.
+		rm -f $DESTDIR/bin/[
+		ln $DESTDIR/bin/test $DESTDIR/bin/[
+		rm -f $DESTDIR/usr/ucb/l $DESTDIR/usr/ucb/f $DESTDIR/usr/ucb/u
+		rm -f $DESTDIR/usr/ucb/page
+		rm -r $DESTDIR/usr/ucb/reset
+		ln $DESTDIR/usr/ucb/ls $DESTDIR/usr/ucb/l
+		ln $DESTDIR/usr/ucb/finger $DESTDIR/usr/ucb/f
+		ln $DESTDIR/usr/ucb/users $DESTDIR/usr/ucb/u
+		ln $DESTDIR/usr/ucb/more $DESTDIR/usr/ucb/page
+		ln $DESTDIR/usr/ucb/tset $DESTDIR/usr/ucb/reset
+		cp $DESTDIR/usr/ucb/ls $DESTDIR/bin/ucbls
+		rm $DESTDIR/usr/bin/uuclean
+		ln $DESTDIR/usr/lib/uucp/uuclean $DESTDIR/usr/bin/uuclean
+		rm -f $DESTDIR/usr/ucb/uptime
+		ln $DESTDIR/usr/ucb/w $DESTDIR/usr/ucb/uptime
+		(cd $DESTDIR/bin ; rm vi view edit e)
+		(cd $DESTDIR/bin ; ln ex vi; ln ex view; ln ex edit; ln ex e  )
+		(cd $DESTDIR/usr/ucb ; rm -f mail ; ln Mail mail)
+		;;
+	*)
+		echo "Don't know how to make $i."
+		;;
+	esac
+done

@@ -1,0 +1,15 @@
+This directory contains a floating point interpreter for a separate I/D
+(11/70, 11/45) machine without floating point.  It is out of date;
+it requires the fetchi system call, which is now a local syscall.
+To  convert, change all instances of
+	sys	fetchi
+to
+	sys	local; fetch
+
+and then put
+
+	.data
+fetch:	sys	fetchi
+
+someplace like fpx.s.  Remove the definition of fetchi, and assemble
+with /usr/include/sys.s.

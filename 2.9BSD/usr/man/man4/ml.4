@@ -1,0 +1,80 @@
+.TH ML 4
+.UC
+.SH NAME
+ml \- RH-11, RH-70/ML-11 solid state disk
+.SH DESCRIPTION
+The standard device names begin with ``ml'' followed by
+the drive number.
+The character ? stands here for a drive number in the range 0-7.
+The size of each ML-11 unit depends on the number of array modules
+installed.  There are 512 512-byte blocks per array module, for
+a maximum size of 8192 blocks per unit.
+The ML-11 may be used for the swap device or perhaps mounted on /tmp.
+.PP
+The ML-11 has switch-selectable transfer rates of 0.25Mb, 0.5Mb,
+1.0Mb, and 2.0Mb per second.  The following transfer rate restrictions
+apply:
+.PP
+.nf
+.ta 0.5i +\w'0000000    'u +\w'0000000    'u
+
+	rate	permissible PDP-11 CPUs
+	0.25 Mb	all
+	0.5  Mb	all
+	1.0  Mb	PDP-11/70 with RH-70 only
+	2.0  Mb	none
+.DT
+.fi
+.PP
+The block files access the disk via the system's normal
+buffering mechanism and may be read and written without regard to
+physical disk records.  There is also a `raw' interface
+which provides for direct transmission between the disk
+and the user's read or write buffer.
+A single read or write call results in exactly one I/O operation
+and therefore raw I/O is considerably more efficient when
+many words are transmitted.  The names of the raw files
+conventionally begin with an extra `r.'
+.PP
+In raw I/O counts should be a multiple of 512 bytes (a disk sector).
+Likewise
+.IR lseek (2)
+calls should specify a multiple of 512 bytes.
+.SH FILES
+.ta 2i
+/dev/ml[0-7]	block files
+.br
+/dev/rml[0-7]	raw files
+.SH "SEE ALSO"
+dvhp(4), hk(4), hp(4), hs(4), rf(4), rk(4), rl(4), rm(4), rp(4), rx2(4), xp(4)
+.SH DIAGNOSTICS
+\fBml%d: hard error bn %d cs2=%b er=%b\fP.  An unrecoverable
+error occured during transfer of the specified sector of the specified
+disk partition.  The contents of the two error registers are also printed
+in octal and symbolically with bits decoded.
+The error was unrecoverable.
+.PP
+\fBML11 xfer rate error\fP.  The selected transfer rate for the ML11
+did not conform to the restrictions above.
+.SH BUGS
+In raw I/O
+.I read
+and
+.IR write (2)
+truncate file offsets to 512-byte block boundaries,
+and
+.I write
+scribbles on the tail of incomplete blocks.
+Thus,
+in programs that are likely to access raw devices,
+.I read, write
+and
+.IR lseek (2)
+should always deal in 512-byte multiples.
+.PP
+DEC-standard error logging should be supported.
+.PP
+The
+.I ml
+disk driver requires that the ML-11 be installed on a separate
+RH-11 or RH-70 MASSBUS disk controller.

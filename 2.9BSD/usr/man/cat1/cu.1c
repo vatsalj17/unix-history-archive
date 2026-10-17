@@ -1,0 +1,134 @@
+
+CU(1C)              UNIX Programmer's Manual               CU(1C)
+
+NAME
+     cu - call UNIX
+
+SYNOPSIS
+     cu telno [ -p ] [ -t ] [ -_n [ -s speed ] [ -a acu ] [ -l
+     line ] [ -b ] [ -h ]
+
+DESCRIPTION
+     _C_u calls up another UNIX system, a terminal, or possibly a
+     non-UNIX system.  It manages an interactive conversation
+     with possible transfers of text files.  _T_e_l_n_o is the tele-
+     phone number, with minus signs at appropriate places for
+     delays.  If the -p option is specified, parity bits are
+     stripped on both send and receive, otherwise the data path
+     from the terminal to the remote system is a full 8 bits.
+     The -t flag is used to dial out to a terminal.  _S_p_e_e_d gives
+     the transmission speed (110, 134, 150, 300, 1200); 300 is
+     the default value.
+
+     The -a and -l values may be used to specify pathnames for
+     the ACU and communications line devices.  They can be used
+     to override the following built-in choices:
+
+     -a /dev/cua0 -l /dev/cul0
+
+     The -_n option, where _n is a single digit, changes the last
+     character of the ACU and communications line to _n.  It is an
+     abbreviation for -a /dev/cua_n -l /dev/cul_n.
+
+     The -b flag specifies that nulls are to be turned into
+     deletes (ascii \177).  This allows the break key (and also
+     control-shift-@) to send an interrupt.
+
+     Finally, the -h option causes local echo of all characters
+     typed, for calling into a half-duplex system.
+
+     After making the connection, _c_u runs as two processes: the
+     _s_e_n_d process reads the standard input and passes most of it
+     to the remote system; the _r_e_c_e_i_v_e process reads from the
+     remote system and passes most data to the standard output.
+     Lines beginning with `~' have special meanings.
+
+     The _s_e_n_d process interprets the following:
+
+     ~.                terminate the conversation.
+     ~EOT              terminate the conversation
+
+     ~<file            send the contents of _f_i_l_e to the remote
+                       system, as though typed at the terminal.
+
+     ~^Z               suspend the cu process.  Note that the
+                       control-Z must be followed by a newline.
+
+Printed 7/22/83                                                 1
+
+CU(1C)              UNIX Programmer's Manual               CU(1C)
+
+     ~#                sends a break.
+
+     ~!                invoke an interactive shell on the local
+                       system.
+
+     ~!cmd ...         run the command on the local system (via
+                       sh -c).
+
+     ~$cmd ...         run the command locally and send its out-
+                       put to the remote system.
+
+     ~%take from [to]  copy file `from' (on the remote system) to
+                       file `to' on the local system.  If `to' is
+                       omitted, the `from' name is used both
+                       places.
+
+     ~%put from [to]   copy file `from' (on local system) to file
+                       `to' on remote system.  If `to' is omit-
+                       ted, the `from' name is used both places.
+
+     ~:                during an output diversion, this toggles
+                       whether the operation of _c_u will be
+                       silent, i.e., whether information received
+                       from the foreign system will be written to
+                       the standard output.  This allows a ``pro-
+                       gress report'' during long transfers.
+
+     ~~...             send the line `~...'.
+
+     Both the _s_e_n_d and _r_e_c_e_i_v_e processes handles output diver-
+     sions of the following form:
+
+     ~>[>][:]file
+     zero or more lines to be written to file
+     ~>
+
+     In any case, output is diverted (or appended, if `>>' used)
+     to the file.  If `:' is used, the diversion is _s_i_l_e_n_t, i.e.,
+     it is written only to the file.  If `:' is omitted, output
+     is written both to the file and to the standard output.  The
+     trailing `~>' terminates the diversion.
+
+     The use of ~%put requires _s_t_t_y and _c_a_t on the remote side.
+     It also requires that the current erase and kill characters
+     on the remote system be identical to the current ones on the
+     local system.  Backslashes are inserted at appropriate
+     places.
+
+     The use of ~%take requires the existence of _e_c_h_o and _t_e_e on
+     the remote system.  Also, stty tabs mode is required on the
+     remote system if tabs are to be copied without expansion.
+
+Printed 7/22/83                                                 2
+
+CU(1C)              UNIX Programmer's Manual               CU(1C)
+
+FILES
+     /dev/cua0
+     /dev/cul0
+     /dev/null
+     /usr/spool/uucp/LCK..cu[al][0-7]
+
+SEE ALSO
+     dn(4), tty(4)
+
+DIAGNOSTICS
+     Exit code is zero for normal exit, nonzero (various values)
+     otherwise.
+
+BUGS
+     Only _M_a_i_l(1) uses syntax anything like the syntax of _c_u.
+
+Printed 7/22/83                                                 3
+

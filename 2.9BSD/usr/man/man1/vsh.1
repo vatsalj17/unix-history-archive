@@ -1,0 +1,714 @@
+.de VS
+.UC
+.I Vsh
+..
+.de UX
+.I Unix
+..
+.TH VSH 1
+.SH NAME
+Vsh \- visual shell
+.SH SYNOPSIS
+.B Vsh
+.SH DESCRIPTION
+.I Vsh
+is a highly interactive, visually oriented shell
+which eases many programming activities.
+Most commands involve only a single keypress.
+These commands cause directories to be displayed,
+editors to be entered,
+and compilers to be invoked.
+.PP
+On entry to
+.I vsh,
+the current directory is plotted on the screen.
+Each member of the directory is labeled with a letter.
+To select a member,
+one presses its corresponding letter.
+What happens after selection depends on the nature of the member.
+If the member is a directory,
+.VS
+changes to that directory.
+Text files are edited.
+Full details are given later in this manual.
+.PP
+.VS
+displays up to twenty files at a time.
+Directories which are larger are broken into
+twenty-file pages.
+There can be ten pages holding a total of two-hundred members.
+To select a page, one presses a digit
+.B 0-9.
+Pages are numbered one through ten with
+.B 0
+selecting page ten.
+.PP
+A well integrated feature of
+.I vsh
+is its connection between compilers and editors.
+To start a compile, one presses
+.B M.
+.I Vsh
+then calls on
+.IR make (1).
+The output of this compile step is saved,
+and one can later review for compile-time errors.
+.I Vsh
+numbers each error.
+One can select an error by typing in its number.
+After selection,
+.I vsh
+calls an editor,
+sending one to the proper file at the offending line.
+One can jump between the editor and
+.I vsh
+until one is ready for another compile.
+.PP
+Because
+.VS
+is unconventional, the best way to understand
+how it works is by using it.
+Because
+.VS
+is menu driven, it is hard to get lost.
+Beginners should find
+.VS
+easier to learn then the conventional shell.
+.SH ENVIRONMENT PARAMETERS
+.PP
+.VS
+takes the following parameters from the global environment:
+.TP 18
+.B HOME
+The home directory.  This parameter is automaticly set by
+.UX
+when one logs in.
+.TP
+.B SHELL
+The users login shell.
+.UX
+also sets this parameter.
+When it is necessary to escape to a shell,
+this parameter selects the program to use.
+.TP
+.B TERM
+The terminal type.
+The terminal must be cursor addressable.
+.PP
+The user must set the
+.B TERM
+parameter himself.
+As an example, to indicate your terminal is an adm3a, from
+.IR csh (1)
+type:
+.PP
+.B \ \ \ \ \ %\ setenv\ TERM\ adm3a
+.PP
+From
+.IR sh (1)
+type:
+.PP
+.B \ \ \ \ \ $\ TERM=adm3a;\ \ export\ TERM
+.PP
+See
+.IR termcap (5)
+for more information about the TERM parameter.
+.br
+.ne 10v
+.SH FILE SELECTION
+.PP
+As indicated before, one selects a file by pressing
+its corresponding letter.
+What happens after selection depends on the nature of the file.
+.TP 18
+.B File type
+.B Action
+.sp
+.TP
+.B Directory
+Change to new directory.
+.TP
+.B Archive
+Print archive directory.  This works for both
+.IR ar (1)
+and
+.IR cpio (1)
+format archives.
+.TP
+.B Object program
+Print name list (external symbols).
+.TP
+.B Core
+Call debugger.
+.TP
+.B Text
+Call editor.
+.TP 
+.B Other
+Selection fails.
+.br
+.ne 10v
+.SH DIRECTORY OPERATIONS
+.PP
+This is a list of the directory commands.
+Before doing anything else, the user should become
+familiar with commands which allow him to
+select files and display directories.
+In directories larger then twenty files,
+the user should be able to display each page.
+.br
+.ne 10v
+.TP 18
+.B Command
+.B Action
+.sp 1
+.TP
+.B ^D
+Leave
+.I vsh.
+.TP
+.B a-t
+Select corresponding file.
+.TP
+.B 1-9
+Select page 1-9.
+.TP
+.B 0
+Select page 10.
+.TP
+.B +
+Select next page.
+.TP
+.B ;
+Same as
+.B +.
+.TP
+.B \-
+Select previous page.
+.TP
+.B ^\ (Home)
+Change to home directory.
+.TP
+.B /
+Change to root directory.
+.TP
+.B ?
+Display help file.
+.TP
+.B !
+Escape to shell.
+.TP
+.B %
+Same as
+.B !.
+.TP
+.B $
+Escape to Bourne shell.
+.TP
+.B -Line\ Feed-
+Change to previous (parent) directory.
+.PP
+.br
+.ne 12v
+.ti -5
+These are convenience commands.
+.TP 18
+.B D
+Display date.
+.TP
+.B I
+DIsplay file.
+.VS
+prompts for a file and displays it as ascii text.
+This is faster than a selection which calls the editor.
+.TP
+.B P
+Process status.  Call /bin/ps.
+.TP
+.B W
+Who.  Display who is logged in.
+.TP
+.B Y
+Yank.  Display free ports.
+.PP
+.ti -5
+These are advanced commands.
+.TP 18
+.B F
+Select file by name.
+.VS
+prompts for a file name.
+.VS
+then selects the specified file.
+.TP
+.B C
+Create a new file.
+.VS
+prompts for a file name and file type.
+One may create text files and directories.
+One may also copy and link from existing files.
+.TP
+.B L
+Long format file listing.
+Next to each file,
+.VS
+displays protection information in the same manner as
+.IR ls (1).
+.TP
+.B O
+Option listing.
+The contents of command and parameter tables are displayed.
+.VS
+then prompts for commands which modify parameters and which
+create, modify, and delete commands.
+.SH REMOVE MODE
+.PP
+Press
+.B R
+to enter
+.I Remove\ mode.
+In
+.I Remove\ mode,
+selecting a file causes it to be marked for removal
+with two slashes, "//."
+Files selected a second time are unmarked.
+Pressing
+.B R
+a second time causes all marked files to be removed.
+The following commands are available in
+.I Remove\ mode:
+.TP 18
+.B Command
+.B Action
+
+.TP
+.B -Return-
+Exit
+.I Remove\ mode
+with out removing marked files.
+.TP
+.B ^D
+Same as
+.B -Return-
+.TP
+.B a-t
+Select corresponding file for removal.
+.TP
+.B *
+Select all files on current page for removal.
+.TP
+.B 0\-9,\ +,\ \-
+Select and display another page.
+These commands are described earlier in the manual in
+the section on directory operations.
+.TP
+.B ?
+Display help file.
+.TP
+.B R
+Remove marked files and exit
+.I Remove\ mode.
+If
+.VS
+cannot remove a file,
+.VS
+displays the reason and waits for a response.
+Press
+.B -Return-
+to continue removing marked files.
+Press
+.B ^D
+to immediately exit from
+.I Remove\ mode.
+.SH MAKE, GREP, AND SHOWFILE
+.PP
+.VS
+interfaces to
+.IR make (1)
+and
+.IR grep (1).
+.VS
+saves output from these programs and allows one to examine the
+results in
+.I showfile\ mode.
+From the directory page, the following commands control
+.I make,\ grep,
+and
+.I showfile.
+.sp 1
+.TP 18
+.B G
+.IR grep (1).
+.VS
+prompts for a pattern and file names, and then run
+.I grep
+with these parameters.
+The results are saved in the file
+.I .grepout
+and displayed in
+.I showfile\ mode.
+.TP
+.B S
+Show previous
+.I grep.
+The output of the last
+.I grep
+is displayed in
+.I showfile\ mode.
+.TP
+.B M
+.IR Make (1)
+.VS
+runs
+.I make.
+Execution is controlled by the
+.I makefile
+in the current directory.
+Output is both displayed on the screen and saved in the file
+.I .makerror.
+When
+.I make
+terminates,
+.VS
+displays
+.I .makerror
+in
+.I showfile\ mode.
+.TP
+.B N
+.IR make (1)
+running independently.
+.I Make
+is run but
+.VS
+does not wait for termination.
+Output is saved in
+.I .makerror,
+but is not displayed on the screen.
+When
+.I make
+terminates,
+the bell on your terminal rings twice.
+Use
+the
+.B E
+command to review the output in
+.I .makerror.
+.TP
+.B E
+Review errors.
+The results of the last
+.I make
+are displayed in
+.I showfile\ mode.
+.br
+.ne 10v
+.SH SHOWFILE MODE
+.PP
+.I Showfile
+displays the results of a
+.I make
+or
+.I grep.
+It is called by the
+.B E
+and
+.B S
+commands.
+.I Showfile
+is called automatically in the course of an
+.B M
+or
+.B G
+command.
+.I Showfile
+is essentially a special editor.
+It has commands which allow one to display a file.
+One can also command
+.I showfile
+to examine a line of the file.
+.I Showfile
+scans this line and attempt to extract a file name
+and line number.
+.I Showfile
+then runs the editor,
+starting it at the specified line.
+.PP
+.br
+.ne 10v
+These are the
+.I showfile
+commands.
+It is not necessary to press -Return- after these commands.
+When a complete command is sensed,
+it is run immediately.
+.TP 18
+.B Command
+.B Action
+.sp
+.TP
+.B number\ p
+Print file starting at specified line.
+.TP
+.B number\ e
+Examine line for a file name and line number.
+If a file name is found, run the editor on this file.
+.TP
+.B -Return-
+Display next twelve lines.
+.TP
+.B number\ -Return-
+Same as
+.B "number e"
+.TP
+.B ^D
+Leave
+.I showfile.
+.TP
+.B q
+Leave
+.I showfile.
+.TP
+.B ?
+Display help file.
+.PP
+All commands from the directory page which might be useful
+are available in
+.I showfile\ mode.
+They include
+.B ^, /, !, %,
+and
+.B A
+through
+.B Z
+except
+.B L
+and
+.B R.
+Particularly useful are
+.B M
+and
+.B G
+which allow new iterations of
+.I make
+and
+.I grep,
+.B %,
+the escape to the shell,
+and
+.B F,
+which allows one to edit files not found in the
+file being shown.
+.SH CONTROL COMMANDS
+.PP
+The operation of
+.VS
+is controled by its parameter and command tables.
+The contents of these tables can be displayed via the
+.B O
+command.
+These tables can be modified with control commands.
+When
+.VS
+is invoked, it searches for the file
+.I .vshrc
+in your home directory.
+Control comands are then read from this file,
+allowing one to create a personalized environment.
+The
+.B O
+command also prompts for control commands,
+allowing for interactive modification of the tables.
+.PP
+These control commands should be presented in the same
+lexical grammer as shell commands.
+Spaces and tabs separate tokens.
+Unquoted newlines terminate each statement.
+A character may be quoted by preceding it with a
+.B
+\\.
+All characters inside single quotes (' ') are quoted except the
+single quote.
+Inside double quotes (" "),
+.B
+\\
+quotes another double quote and
+.B
+\\newline
+is ignored.
+Grave accents (` `) are treated as any other character.
+Macros (such as $HOME) are not available yet.
+The lexical grammer is compatible with that of
+.IR sh (1).
+The grammer is somewhat different from that of
+.IR csh (1).
+One's
+.I .vshrc
+file is essentially appended to the end of
+.I dflt.vshrc.
+.PP
+.br
+.ne 20v
+To change a parameter, use the format:
+.PP
+.B
+\ \ \ \ \ PARAMETER\-NAME\ \  PARAMETER\-VALUE
+.PP
+.B PARAMETER\-NAME
+can be any off the following:
+
+.TP 18
+.B Parameter
+.B Usage
+.sp
+.TP
+.B editor
+Preferred editor.  Default is
+.I /usr/ucb/vi.
+.TP
+.B nm
+Namelist program.  Default is
+.I /bin/nm.
+.TP
+.B db
+Debugging program.  Default is
+.I /bin/adb.
+.TP
+.B make
+Make program.  Default is
+.I /bin/make.
+.TP
+.B grep
+grep program.  Default is
+.I /bin/grep.
+.TP
+.B ar
+Archiving program.  Default is
+.I /bin/ar.
+.sp
+.br
+.ne 10v
+.PP
+To define a command, use the format:
+.PP
+.B
+\ \ \ \ \ CHARACTER\ \  KEYWORD\ \  [PARAMETERS\ ...]
+.PP
+CHARACTER is the character which calls the new command.
+Valid characters are
+.B
+! " # $ % & ' ( ) : * = ^ ~ [ ] { } < > , . / ?
+and
+.B A\-Z.
+.br
+.ne 15v
+.PP
+These are the valid keywords:
+.TP 18
+.B Keyword
+.B Purpose
+.sp
+.TP 18
+.B date
+Display date.
+.TP
+.B showerror
+Show errors from previous
+.I make.
+.TP
+.B showgrep
+Show output from previous
+.I grep.
+.TP
+.B file
+Select a file.  If parameter is present,
+the parameter is selected.  Otherwise,
+.VS
+will prompt for a file name.
+.TP
+.B home
+Change to home directory.
+.TP
+.B grep
+Run
+.I grep.
+.VS
+will prompt for parameters.
+.TP
+.B wmake
+Run
+.I make.
+Wait for termination.
+.TP
+.B fmake
+Run
+.I make.
+Do not wait for termination.
+.TP
+.B remove
+Enter
+.I Remove\ mode.
+.TP
+.B longlist
+Print long format listing of files on the current page.
+.TP
+.B display
+Display the contents of a file.
+If no parameter is present,
+.VS
+will prompt for a file name.
+.TP
+.B options
+Display
+.VS
+options (parameter and command tables).
+Accept commands which modify parameters and
+which create, modify, and delete commands.
+.TP
+.B exec
+Execute a program directly with the exec system call.
+The first parameter must be the program name.
+Directories are not successively searched as in the shell.
+Full path names are necessary.
+Any other parameters become parameters to the program.
+If it is necessary to search several directories for programs,
+to redirect files, to expand macros, or to expand file regular
+expressions, use the
+.B shell
+keyword instead.
+.TP
+.B shell
+If no parameter is present, an interactive shell is spawned.
+If one parameter is present, it is passed to the shell
+and run as a command.  Do not specify more than one parameter.
+Instead, enclose the entire shell command in quotes
+to provide
+.VS
+with only one parameter.
+.TP
+.B create
+.VS
+prompts for a new file name.  The file is created.
+.TP
+.B null
+Delete command.  The command will no longer be active.
+.SH FILES
+.ta 2i
+$HOME/.vshrc	initialization file.
+.br
+/etc/termcap	terminal capability database necessary for addressing cursor.
+.br
+\&.makerror	File used to save the output of
+.IR make .
+.br
+\&.grepout	File used to save the output of
+.IR grep .
+.VS
+tries to first create this file in the working directory.
+If unsuccessful, the home directory is tried.
+.br
+$SHELL	user's shell
+.br
+/bin/pwd	Program which determines the path name of the working directory.
+.br
+/dev/null	data sink

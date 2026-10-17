@@ -1,0 +1,99 @@
+.TH CREAT 2 
+.UC
+.SH NAME
+creat  \-  create a new file
+.SH SYNOPSIS
+.B creat(name, mode)
+.br
+.B char *name;
+.SH DESCRIPTION
+.I Creat
+creates a new file or prepares to rewrite an existing
+file called 
+.I name,
+given as the address of a null-terminated string.
+If the file did not exist, it is given
+mode
+.IR mode ,
+as modified by the process's mode mask (see
+.IR umask (2)).
+Also see
+.IR  chmod (2)
+for the
+construction of the
+.I mode
+argument.
+.PP
+If the file did exist, its mode and owner remain unchanged
+but it is truncated to 0 length.
+.PP
+The file is also opened for writing, and its file descriptor
+is returned.
+.PP
+The
+.I mode
+given is arbitrary; it need not allow
+writing.
+This feature is used by programs which deal with temporary
+files of fixed names.
+The creation is done with
+a mode that forbids writing.
+Then if a second
+instance of the program attempts a
+.I creat,
+an error is
+returned and the program knows that the name is unusable
+for the moment.
+.SH RETURN VALUE
+Upon successful completion, a value of 0 is returned.  Otherwise, a
+value of \-1 is returned and
+.I errno
+is set to indicate the error.
+.SH ERRORS
+.I Creat
+will fail and the file will not be created if:
+.TP 20
+[EINVAL]
+The path name contains a non-ASCII byte.
+.TP 20
+[ENOTDIR]
+A component of the path prefix is not a directory.
+.TP 20
+[EACCES]
+A component of the path prefix denies search permission.
+.TP 20
+[EACCES]
+The directory in which the file is to be created is not writeable by
+the user.
+.TP 20
+[EISDIR]
+The named file is a directory.
+.TP 20
+[EROFS]
+The directory in which the file is to be created is on a read-only
+file system.
+.TP 20
+[EMFILE]
+The maximum number of file descriptors allowed are already open.
+.TP 20
+[ETXTBSY]
+The file is a pure procedure (shared text) file that is being executed.
+.TP 20
+[EQUOT]
+The disk quota for the directory in which the file was
+to be created would have been exceeded.
+.TP 20
+[EFAULT]
+.I Name
+points outside the process's allocated address space.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.SH "SEE ALSO"
+chmod(2), close(2), umask(2), write(2)
+.SH ASSEMBLER
+(creat = 8.)
+.br
+.B sys creat; name; mode
+.br
+(file descriptor in r0)

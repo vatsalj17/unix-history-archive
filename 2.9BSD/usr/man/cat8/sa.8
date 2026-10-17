@@ -1,0 +1,89 @@
+
+SA(8)               UNIX Programmer's Manual                SA(8)
+
+NAME
+     sa, accton - system accounting
+
+SYNOPSIS
+     sa [ -abcjlnrstuv ] [ file ]
+
+     /etc/accton [ file ]
+
+DESCRIPTION
+     With an argument naming an existing _f_i_l_e, _a_c_c_t_o_n causes sys-
+     tem accounting information for every process executed to be
+     placed at the end of the file.  If no arguemnt is given,
+     accounting is turned off.
+
+     _S_a reports on, cleans up, and generally maintains accounting
+     files.
+
+     _S_a is able to condense the information in /_u_s_r/_a_d_m/_a_c_c_t into
+     a summary file /_u_s_r/_a_d_m/_s_a_v_a_c_c_t which contains a count of
+     the number of times each command was called and the time
+     resources consumed.  This condensation is desirable because
+     on a large system _a_c_c_t can grow by 100 blocks per day.  The
+     summary file is read before the accounting file, so the
+     reports include all available information.
+
+     If a file name is given as the last argument, that file will
+     be treated as the accounting file; _s_h_a is the default.
+     There are zillions of options:
+
+     a    Place all command names containing unprintable charac-
+          ters and those used only once under the name
+          `***other.'
+
+     b    Sort output by sum of user and system time divided by
+          number of calls.  Default sort is by sum of user and
+          system times.
+
+     c    Besides total user, system, and real time for each com-
+          mand print percentage of total time over all commands.
+
+     j    Instead of total minutes time for each category, give
+          seconds per call.
+
+     l    Separate system and user time; normally they are com-
+          bined.
+
+     m    Print number of processes and number of CPU minutes for
+          each user.
+
+     n    Sort by number of calls.
+
+     r    Reverse order of sort.
+
+Printed 8/2/83                                                  1
+
+SA(8)               UNIX Programmer's Manual                SA(8)
+
+     s    Merge accounting file into summary file
+          /_u_s_r/_a_d_m/_s_a_v_a_c_c_t when done.
+
+     t    For each command report ratio of real time to the sum
+          of user and system times.
+
+     u    Superseding all other flags, print for each command in
+          the accounting file the user ID and command name.
+
+     v    If the next character is a digit _n, then type the name
+          of each command used _n times or fewer.  Await a reply
+          from the typewriter; if it begins with `y', add the
+          command to the category `**junk**.' This is used to
+          strip out garbage.
+
+FILES
+     /usr/adm/acct       raw accounting
+     /usr/adm/savacct    summary
+     /usr/adm/usracct    per-user summary
+
+SEE ALSO
+     lastcomm(1), acct(2), ac(8)
+
+BUGS
+     Should look up the line clock frequency in the kernel
+     instead of assuming 60HZ.
+
+Printed 8/2/83                                                  2
+

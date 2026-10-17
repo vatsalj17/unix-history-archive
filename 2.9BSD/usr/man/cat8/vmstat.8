@@ -1,0 +1,91 @@
+
+VMSTAT(8)           UNIX Programmer's Manual            VMSTAT(8)
+
+NAME
+     vmstat - report system and memory statistics
+
+SYNOPSIS
+     vmstat [ -sm ] [ interval [ count ] ]
+
+DESCRIPTION
+     _V_m_s_t_a_t delves into the system and normally reports certain
+     statistics kept about process, memory and swap, disk, trap
+     and cpu activity.  If given a -s argument, it instead prints
+     the contents of the _s_u_m structure, giving the total number
+     of several kinds of swap and cpu events which have occurred
+     since boot.  The -m option causes it to print all of the
+     memory usage statistics.  Memory usage is categorized as
+     virtual and real, active and inactive (for more than 20
+     seconds), text and total, and free memory remaining.  Vir-
+     tual memory is the sum of real memory and swap space in use.
+     The interval and count options are the same as below.
+
+     If neither option is given, _v_m_s_t_a_t will report in a (usu-
+     ally) iterative fashion on the activity in the system.  In
+     this case, the optional _i_n_t_e_r_v_a_l argument causes _v_m_s_t_a_t to
+     report once each _i_n_t_e_r_v_a_l seconds; ``vmstat 5'' will print
+     what the system is doing every five seconds; this is a good
+     choice of printing interval since this is how often the
+     statistics are sampled in the system.  If a _c_o_u_n_t is given,
+     the statistics are repeated _c_o_u_n_t times.  The fields are:
+
+     Procs: information about numbers of processes in various
+     states.
+
+     RQ   in run queue
+     DW   disk wait
+     SW   runnable or short sleeper (< 20 secs) but swapped
+
+     Memory: information about the usage of virtual and real
+     memory.  Virtual pages are considered active if they belong
+     to processes which are running or have run in the last 20
+     seconds.  A ``page'' here is 1024 bytes.
+
+     AVM  active virtual pages
+     TX   percent of active pages which are shared text
+     FRE  size of the free list
+
+     Swap: information about the swapping activity of the system.
+
+     I    process swap ins in last 5 seconds
+     O    process swap outs in last 5 seconds
+
+     Disk: operations per second (this field is system depen-
+     dent).
+
+Printed 8/2/83                                                  1
+
+VMSTAT(8)           UNIX Programmer's Manual            VMSTAT(8)
+
+     D0   disk 0
+     D1   disk 1
+     D2   disk 2
+     D3   disk 3
+
+     Faults: trap/interrupt, per second, over last 5 seconds.
+
+     PD   pseudo-DMA interrupts from DZ-11's (per second)
+     IN   device interrupts (per second)
+     SY   system calls (per second)
+     TR   traps (per second)
+     OV   overlay traps (per second)
+     CS   cpu context switch rate (switches/sec)
+
+     Cpu: breakdown of percentage usage of CPU time
+
+     US   user time for normal processes
+     NI   user time for low priority processes
+     SY   system time
+     ID   cpu idle
+
+FILES
+     /dev/kmem
+     /unix
+
+BUGS
+     This program will only work if the information is maintained
+     by the system; some of this is optional and depends on the
+     system configuration.
+
+Printed 8/2/83                                                  2
+

@@ -1,0 +1,38 @@
+
+DZ(4)               UNIX Programmer's Manual                DZ(4)
+
+NAME
+     dz - DZ-11 communications multiplexer
+
+DESCRIPTION
+     A dz-11 provides 8 communication lines with partial modem
+     control, sufficient for UNIX dialup use.  Each line attached
+     to the DZ-11 communications multiplexer behaves as described
+     in _t_t_y(4) and may be set to run at any of 16 speeds; see
+     _t_t_y(4) for the encoding.
+
+     DZ lines for which the corresponding minor device numbers
+     have the 0200 bit set are treated as having no modem con-
+     trol.
+
+FILES
+     /dev/tty[0-9][0-9]
+     /dev/ttyd[0-9a-f]   dialups
+
+SEE ALSO
+     tty(4)
+
+DIAGNOSTICS
+     dz%d: silo overflow.  The 64 character input silo overflowed
+     before it could be serviced.  This can happen if a hard
+     error occurs when the CPU is running with elevated priority,
+     as the system will then print a message on the console with
+     interrupts disabled.  If the Berknet _n_e_t(1) is running on a
+     _d_z line at high speed (e.g. 9600 baud), there is only 1/15th
+     of a second of buffering capacity in the silo, and overrun
+     is possible.  This may cause a few input characters to be
+     lost to users and a network packet is likely to be cor-
+     rupted, but the network will recover.  It is not serious.
+
+Printed 5/17/83                                                 1
+

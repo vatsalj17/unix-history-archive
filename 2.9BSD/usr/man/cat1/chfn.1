@@ -1,0 +1,65 @@
+
+CHFN(1)             UNIX Programmer's Manual              CHFN(1)
+
+NAME
+     chfn - change finger entry
+
+SYNOPSIS
+     chfn [ loginname ]
+
+DESCRIPTION
+     _C_h_f_n is used to change information about users.  This infor-
+     mation is used by the finger program, among others.  It con-
+     sists of the user's "real life" name, office room number,
+     office phone number, and home phone number.  _C_h_f_n prompts
+     the user for each field.  Included in the prompt is a
+     default value, which is enclosed between brackets.  The
+     default value is accepted simply by typing <return>.  To
+     enter a blank field, type the word 'none'.  Below is a sam-
+     ple run:
+
+          Name [Biff Studsworth II]:
+          Room number (Exs: 597E or 197C) []: 521E
+          Office Phone (Ex: 1632) []: 1863
+          Home Phone (Ex: 987532) [5771546]: none
+
+     _C_h_f_n allows phone numbers to be entered with or without
+     hyphens.  Because _f_i_n_g_e_r only knows about UCB extensions,
+     _c_h_f_n will insist upon a four digit number (after the hyphens
+     are removed) for office phone numbers.  Also, room numbers
+     must be in Evans or Cory; again, this is because of _f_i_n_g_e_r.
+
+     It is a good idea to run finger after running _c_h_f_n to make
+     sure everything is the way you want it.
+
+     The optional argument _l_o_g_i_n_n_a_m_e is used to change another
+     person's finger information.  This can only be done by the
+     super-user.
+
+FILES
+     /etc/passwd, /etc/ptmp
+
+SEE ALSO
+     finger(1), passwd(5)
+
+BUGS
+     The encoding of the office and extension information is
+     installation dependent.
+
+     For historical reasons, the user's name, etc are stored in
+     the passwd file.  This is a bad place to store the informa-
+     tion. Rumors are that a data base is being developed to
+     store this information, but don't hold your breath.
+
+Printed 7/22/83                                                 1
+
+CHFN(1)             UNIX Programmer's Manual              CHFN(1)
+
+     Because two users may try to write the passwd file at once,
+     a synchronization method was developed.  On rare occasions,
+     a message that the password file is "busy" will be printed.
+     In this case, _c_h_f_n sleeps for a while and then tries to
+     write to the passwd file again.
+
+Printed 7/22/83                                                 2
+

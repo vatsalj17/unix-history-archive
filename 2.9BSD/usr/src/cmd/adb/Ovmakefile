@@ -1,0 +1,36 @@
+CFLAGS=		-O -V
+CC=
+
+OBJS=		access.o command.o expr.o findfn.o \
+		format.o input.o opset.o main.o \
+		message.o output.o pcs.o print.o \
+		runpcs.o setup.o sym.o
+
+cp:		ovadb
+		cp ovadb ${DESTDIR}/bin/ovadb
+		-strip ${DESTDIR}/bin/ovadb
+
+ovadb:		${OBJS}
+		ld -X -n -o ovadb /lib/fcrt0.o \
+		-Z input.o main.o command.o setup.o expr.o \
+		-Z format.o print.o findfn.o sym.o \
+		-Z message.o output.o opset.o pcs.o runpcs.o \
+		-L access.o -lovc
+
+clean:
+		rm -f *.o
+
+access.o:	defs.h
+command.o:	defs.h
+expr.o:		defs.h
+findrtn.o:	defs.h
+format.o:	defs.h
+input.o:	defs.h
+main.o:		defs.h
+message.o:	mac.h mode.h
+output.o:	defs.h
+pcs.o:		defs.h
+print.o:	defs.h
+runpcs.o:	defs.h
+setup.o:	defs.h
+sym.o:		defs.h

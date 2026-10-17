@@ -1,0 +1,88 @@
+.TH GETGRENT 3
+.SH NAME
+getgrent, getgrgid, getgrnam, setgrent, endgrent \- get group file entry
+.SH SYNOPSIS
+.B #include <grp.h>
+.PP
+.B struct group *getgrent();
+.PP
+.B struct group *getgrgid(gid) int gid;
+.PP
+.B struct group *getgrnam(name) char *name;
+.PP
+.B int setgrent();
+.PP
+.B int endgrent();
+.SH DESCRIPTION
+.I Getgrent,
+.I getgrgid
+and
+.I getgrnam
+each return pointers
+to an object
+with the following structure
+containing the broken-out
+fields of a line in the group file.
+.RS
+.PP
+.nf
+struct	group { /* see getgrent(3) */
+	char	*gr_name;
+	char	*gr_passwd;
+	int	gr_gid;
+	char	**gr_mem;
+};
+.fi
+.RE
+.PP
+The members of this structure are:
+.TP
+gr\_name
+The name of the group.
+.br
+.ns
+.TP
+gr\_passwd
+The encrypted password of the group.
+.br
+.ns
+.TP
+gr\_gid
+The numerical group-ID.
+.br
+.ns
+.TP
+gr\_mem
+Null-terminated vector
+of pointers to the individual
+member names.
+.PP
+.I Getgrent
+reads the next
+line (opening the file if necessary);
+.I setgrent
+rewinds the file;
+.I endgrent
+closes it.
+.PP
+.I Getgrgid
+and
+.I getgrnam
+search from the beginning until a matching
+.I gid
+or
+.I name
+is found
+(or until EOF is encountered).
+.SH FILES
+/etc/group
+.SH "SEE ALSO"
+getlogin(3), getpwent(3), group(5)
+.SH DIAGNOSTICS
+A null pointer
+(0) is returned on EOF or error.
+.SH BUGS
+All information
+is contained in a static area
+so it must be copied if it is
+to be saved.

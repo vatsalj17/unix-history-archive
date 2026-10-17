@@ -1,0 +1,32 @@
+	This is the version of uucp distributed with the 4.1c BSD
+release.  It contains numerous bug fixes and support for additional
+kinds of dialers.  It was quickly converted for PDP11 systems
+and has not been tested much here, but a slightly earlier version of this
+has been in use for some time.  I made a few changes from the 4.1c
+version; uucico was too large to run without separate I/D.
+I commented out the SCCS id's and RCS id's, moved some of the string
+definitions from uucp.h to a new file, extern.c (so multiple uses would
+share one copy of the string), and made rdvec in conn.c an automatic
+array instead of static.
+	The syskludge directory contains a kludge to break up
+the uucp spool directory into subdirectories by intercepting open's,
+etc, and translating the argument before the syscall.  It is all in
+vax asm, but shouldn't be too hard to convert if there are any really
+busy uucp sites out there that want it.
+	There is some support for using the same line as a dialup and
+dialout both.  It was done once, and the code is commented out (dial.c).
+I have been doing something similar for some time.  Since the source
+for the program to actually turn the line off and on isn't here,
+I added one component from my system, the file line.c.  Note that
+uucp must call a separate, setuid-root program to do this, as uucp
+is setuid-uucp.  Line returns the previous value of the line's enable
+code from the ttys file (in binary, e.g. exit(1) for '1'), to be restored
+later; this is necessary with the new format for /etc/ttys.
+	To configure a site, just check MYNAME in <whoami.h>,
+then compile and install.  You will have to set up the L.sys and L-devices
+files as well.  See the uucp documentation and the examples here and
+in /usr/lib/uucp.
+
+		Mike Karels
+		ucbvax!virus!mike
+		March, 1983

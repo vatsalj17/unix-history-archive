@@ -1,0 +1,50 @@
+
+SYMLINK(2)          UNIX Programmer's Manual           SYMLINK(2)
+
+NAME
+     symlink - make symbolic link to a file
+
+SYNOPSIS
+     symlink(name1, name2)
+     char *name1, *name2;
+
+DESCRIPTION
+     A symbolic link to _n_a_m_e_1 is created; the link is the file
+     _n_a_m_e_2, containing the string _n_a_m_e_1.  Either name may be an
+     arbitrary path name; the files need not be on the same file
+     system.
+
+RETURN VALUE
+     Upon successful completion, a zero value is returned.  If an
+     error occurs, the error code is stored in _e_r_r_n_o and a -1
+     value is returned.
+
+ERRORS
+     The symbolic link is made unless on or more of the following
+     are true:
+
+     [EINVAL]            Either _n_a_m_e_1 or _n_a_m_e_2 contains a non-
+                         ASCII byte.
+
+     [ENOTDIR]           A component of the _n_a_m_e_2 prefix is not a
+                         directory.
+
+     [EEXIST]            _N_a_m_e_2 already exists.
+
+     [EACCES]            A component of the _n_a_m_e_2 path previx
+                         denies search permission.
+
+     [EROFS]             The file _n_a_m_e_2 would reside on a read-
+                         only file system.
+
+     [EFAULT]            _N_a_m_e_1 or _n_a_m_e_2 points outside the
+                         process's allocated address space.
+
+     [ELOOP]             Too may symbolic links were encountered
+                         in translating the path name.
+
+SEE ALSO
+     ln(1), link(2), unlink(2)
+
+Printed 5/23/83                                                 1
+

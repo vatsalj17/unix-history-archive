@@ -1,0 +1,73 @@
+
+OPEN(2)             UNIX Programmer's Manual              OPEN(2)
+
+NAME
+     open - open for reading or writing
+
+SYNOPSIS
+     #include <sys/types.h>
+     #include <sys/file.h>
+
+     open(name, mode)
+     char *name;
+
+DESCRIPTION
+     _O_p_e_n opens the file _n_a_m_e for reading (if _m_o_d_e is
+     FATT_RDONLY), writing (if _m_o_d_e is FATT_WRONLY) or for both
+     reading and writing (if _m_o_d_e is FATT_RDWR).  _N_a_m_e is the
+     address of a string of ASCII characters representing a path
+     name, terminated by a null character.
+
+     The file is positioned at the beginning (byte 0).  The
+     returned file descriptor must be used for subsequent calls
+     for other input-output functions on the file.
+
+ERRORS
+     The named file is opened unless one or more of the following
+     is true:
+
+     [EINVAL]            The path name contains a non-ASCII byte.
+
+     [ENOTDIR]           A component of the path prefix is not a
+                         directory.
+
+     [EACCES]            A component of the path prefix denies
+                         search permission.
+
+     [ENOENT]            The named file does not exist.
+
+     [EISDIR]            The named file is a directory and the
+                         arguments specify it is to be opened for
+                         writing.
+
+     [EROFS]             The named file resides on a read-only
+                         file system and the file is to be modi-
+                         fied.
+
+     [EMFILE]            The maximum number of file descriptors
+                         allowed are already open.
+
+     [ETXTBSY]           The file is a pure procedure (shared
+                         text) file that is being executed and
+                         the _o_p_e_n call requests write access.
+
+     [EFAULT]            _N_a_m_e points outside the process's allo-
+                         cated address space.
+
+Printed 5/23/83                                                 1
+
+OPEN(2)             UNIX Programmer's Manual              OPEN(2)
+
+     [ELOOP]             Too many symbolic links were encountered
+                         in translating the path name.
+
+SEE ALSO
+     close(2), creat(2), dup(2), read(2), write(2)
+
+ASSEMBLER
+     (open = 5.)
+     sys open; name; mode
+     (file descriptor in r0)
+
+Printed 5/23/83                                                 2
+

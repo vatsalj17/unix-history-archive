@@ -1,0 +1,98 @@
+.TH MAN 1
+.UC
+.SH NAME
+man \- find manual information by keywords; print out the manual
+.SH SYNOPSIS
+.br
+.B man
+.B \-k
+keyword ...
+.br
+.B man
+.B \-f
+file ...
+.br
+.B man
+[
+.B \-
+] [
+.B \-t
+] [
+section
+]
+title ...
+.SH DESCRIPTION
+.I Man
+is a program which gives information from the programmers manual.
+It can be asked for one line descriptions of commands specified by
+name, or for all commands whose description contains any of a set of
+keywords.  It can also provide on-line access to the sections of the
+printed manual.
+.PP
+When given the option
+.B \-k
+and a set of keywords,
+.I man
+prints out a one line synopsis of each manual sections whose
+listing in the table of contents contains that keyword.
+.PP
+When given the option
+.B \-f
+and a list of file names, \fIman\fP attempts to locate manual
+sections related to those files, printing out the table of contents
+lines for those sections.
+.PP
+When neither
+.B \-k
+nor
+.B \-f
+is specified,
+.I man
+formats a specified set of manual pages.
+If a section specifier is given
+.I man
+looks in the that section of the manual for the given
+.I titles.
+.I Section
+is an Arabic section number, e.g. 3,
+which may be followed by a single letter classifier, e.g. 1g
+indicating a graphics program in section 1.
+If
+.I section
+is omitted,
+.I man
+searches all sections of the manual, giving preference to commands
+over subroutines in system libraries, and printing the first section
+it finds, if any.
+.PP
+If the standard output is a teletype, and if the flag
+.B \-
+is not given, then
+.I man
+prints its output with
+.IR more (1)
+with the
+.B \-s
+option to eliminate multiple blank lines,
+to create proper underlines for different terminals,
+to stop after each page on the screen.
+Hit a space to continue,
+a control-D to scroll 11 more lines when the output stops.
+.PP
+The
+.B \-t
+flag causes
+.I man
+to arrange for the specified section to be
+.IR troff'ed .
+.SH FILES
+.ta 2i
+/usr/man/man?	directories for raw manual pages
+.br
+/usr/man/cat?	directories for formatted manual pages
+.SH SEE\ ALSO
+apropos(1), more(1), whereis(1), catman(8)
+.SH BUGS
+The manual is supposed to be reproducible either on the phototypesetter
+or on a typewriter.
+However, on a typewriter some information is necessarily lost.

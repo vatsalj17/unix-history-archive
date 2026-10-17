@@ -1,0 +1,171 @@
+.TH EXECL 3
+.UC
+.SH NAME
+execl, execv, execle, execlp, execve, execvp, exec, exece, environ \- execute a file
+.SH SYNOPSIS
+.nf
+.B execl(name, arg0, arg1, ..., argn, 0)
+.B char *name, *arg0, *arg1, ..., *argn;
+.PP
+.B execv(name, argv)
+.B char *name, *argv[];
+.PP
+.B "execle(name, arg0, arg1, ..., argn, 0, envp)"
+.B "char *name, *arg0, *arg1, ..., *argn, *envp[];"
+.PP
+.B execve(name, argv, envp)
+.B char *name, *argv[], *envp[];
+.PP
+.B extern char **environ;
+.fi
+.SH DESCRIPTION
+These routines provide various interfaces to the
+.I exece
+system call.  Refer to
+.IR execve (2)
+for a description of their properties; only brief descriptions are provided
+here.
+.PP
+.I Exec
+in all its forms
+overlays the calling process with the named file, then
+transfers to the
+entry point of the core image of the file.
+There can be no return from a successful exec; the calling
+core image is lost.
+.PP
+The
+.I name
+argument
+is a pointer to the name of the file
+to be executed.
+The pointers
+.IR arg [ 0 ],
+.IR arg [ 1 "] ..."
+address null-terminated strings.
+Conventionally
+.IR arg [ 0 ]
+is the name of the
+file.
+.PP
+From C, two interfaces are available.
+.I Execl
+is useful when a known file with known arguments is
+being called;
+the arguments to
+.I execl
+are the character strings
+constituting the file and the arguments;
+the first argument is conventionally
+the same as the file name (or its last component).
+A 0 argument must end the argument list.
+.PP
+The
+.I execv
+version is useful when the number of arguments is unknown
+in advance;
+the arguments to
+.I execv
+are the name of the file to be
+executed and a vector of strings containing
+the arguments.
+The last argument string must be followed
+by a 0 pointer.
+.PP
+When a C program is executed,
+it is called as follows:
+.PP
+.nf
+	main(argc, argv, envp)
+	int argc;
+	char **argv, **envp;
+.fi
+.PP
+where
+.I argc
+is the argument count
+and
+.I argv
+is an array of character pointers
+to the arguments themselves.
+As indicated,
+.I argc
+is conventionally at least one
+and the first member of the array points to a
+string containing the name of the file.
+.PP
+.I Argv
+is directly usable in another
+.I execv
+because
+.IR argv [ argc ]
+is 0.
+.PP
+.I Envp
+is a pointer to an array of strings that constitute
+the
+.I environment
+of the process.
+Each string consists of a name, an \*(lq=\*(rq, and a null-terminated value.
+The array of pointers is terminated by a null pointer.
+The shell
+.IR sh (1)
+passes an environment entry for each global shell variable
+defined when the program is called.
+See
+.IR environ (5)
+for some conventionally
+used names.
+The C run-time start-off routine places a copy of
+.I envp
+in the global cell
+.I environ,
+which is used
+by
+.IR execv " and " execl
+to pass the environment to any subprograms executed by the
+current program.
+.PP
+.I Execlp
+and
+.I execvp
+are called with the same arguments as
+.I execl
+and
+.IR execv ,
+but duplicate the shell's actions in searching for an executable
+file in a list of directories.
+The directory list is obtained from the environment.
+.SH FILES
+.ta 2i
+/bin/sh	shell invoked for command file
+.SH "SEE ALSO"
+csh(1), execve(2), fork(2), vfork(2), environ(5)
+.SH BUGS
+If
+.I execvp
+is called to execute a file that turns out to be a shell
+command file,
+and if it is impossible to execute the shell,
+the values of
+.I argv[0]
+and
+.I argv[\-1]
+will be modified before return.
+.SH DIAGNOSTICS
+If the file cannot be found, if it is not executable, if it does not start
+with a valid magic number (see
+.IR a.out (5)),
+if maximum memory is exceeded or if the arguments require too much space,
+a return constitutes the diagnostic; the return value is \-1.  Even for the
+super-user, at least one of the execute-permission bits must be set for a
+file to be executed.
+.SH BUGS
+If
+.I execvp
+is called to execute a file that turns out to be a shell command file, and
+if it is impossible to execute the shell, the values of
+.IR argv [ 0 ]
+and
+.IR argv [ \-1 ]
+will be modified before return.

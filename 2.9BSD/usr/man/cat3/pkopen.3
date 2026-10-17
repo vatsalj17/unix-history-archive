@@ -1,0 +1,56 @@
+
+PKOPEN(3)           UNIX Programmer's Manual            PKOPEN(3)
+
+NAME
+     pkopen, pkclose, pkread, pkwrite, pkfail - packet driver
+     simulator
+
+SYNOPSIS
+     char *pkopen(fd)
+
+     pkclose(ptr)
+     char *ptr;
+
+     pkread(ptr, buffer, count)
+     char *ptr, *buffer;
+
+     pkwrite(ptr, buffer, count)
+     char *ptr, *buffer;
+
+     pkfail()
+
+DESCRIPTION
+     These routines are a user-level implementation of the full-
+     duplex end-to-end communication protocol described in _p_k(4).
+     If _f_d is a file descriptor open for reading and writing,
+     _p_k_o_p_e_n carries out the initial synchronization and returns
+     an identifying pointer.  The pointer is used as the first
+     parameter to _p_k_r_e_a_d, _p_k_w_r_i_t_e, and _p_k_c_l_o_s_e.
+
+     _P_k_r_e_a_d, _p_k_w_r_i_t_e and _p_k_c_l_o_s_e behave analogously to _r_e_a_d,
+     _w_r_i_t_e and _c_l_o_s_e(2).  However, a write of zero bytes is mean-
+     ingful and will produce a corresponding read of zero bytes.
+
+SEE ALSO
+     pkon(2), pk(4)
+
+DIAGNOSTICS
+     _P_k_f_a_i_l is called upon persistent breakdown of communication.
+     _P_k_f_a_i_l must be supplied by the user.
+
+     _P_k_o_p_e_n returns a null (0) pointer if packet protocol can not
+     be established.
+
+     _P_k_r_e_a_d returns -1 on end of file, 0 in correspondence with a
+     0-length write.
+
+BUGS
+     This simulation of _p_k(4) leaves something to be desired in
+     needing special read and write routines, and in not being
+     inheritable across calls of _e_x_e_c_v_e(2).  Its prime use is on
+     systems that lack _p_k.
+     These functions use _a_l_a_r_m(2); simultaneous use of _a_l_a_r_m for
+     other puposes may cause trouble.
+
+Printed 7/31/83                                                 1
+

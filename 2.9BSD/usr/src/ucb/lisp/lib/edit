@@ -1,0 +1,836 @@
+
+(def w
+ (lambda (n)
+  (cond ((null (numbp n)) (*wkf 1))
+        ((lessp n 0) (*wkb n))
+        (t (*wkf n)))))
+
+(def *wkb
+ (lambda (n)
+  (prog (k)
+        (setq k 0)
+   a    (cond ((eq n k) (return k))
+              ((*wkb1) (setq k (diff k 1)) (go a))
+              (t (return k))))))
+
+(def *wkf
+ (lambda (n)
+  (prog (k)
+        (setq k 0)
+   a    (cond ((eq n k) (return k))
+              ((*wkf1) (setq k (add k 1)) (go a))
+              (t (return k))))))
+
+(def *wkb1
+ (lambda nil
+  (cond ((null *efl) nil)
+        ((eq (car *efl) (quote cdr))
+         (setq *efl (cdr *efl))
+         (setq *epl (cdr *epl))
+         t))))
+
+(def *wkf1
+ (lambda nil
+  (cond
+   ((dtpr (car *epl))
+    (setq *epl (cons (cdar *epl) *epl))
+    (setq *efl (cons (quote cdr) *efl))
+    t))))
+
+(def j
+ (lambda (n)
+  (cond ((null (numbp n)) (*jpi 1))
+        ((lessp n 0) (*jpo n))
+        (t (*jpi n)))))
+
+(def *jpo
+ (lambda (n)
+  (prog (k)
+        (setq k 0)
+   a    (cond ((eq n k) (return k))
+              ((*jpo1) (setq k (diff k 1)) (go a))
+              (t (return k))))))
+
+(def *jpi
+ (lambda (n)
+  (prog (k)
+        (setq k 0)
+   a    (cond ((eq n k) (return k))
+              ((*jpi1) (setq k (add k 1)) (go a))
+              (t (return k))))))
+
+(def *jpo1
+ (lambda nil
+  (prog nil
+   b    (cond ((null *efl) (return nil))
+              ((eq (car *efl) (quote cdr))
+               (setq *efl (cdr *efl))
+               (setq *epl (cdr *epl))
+               (go b))
+              (t (setq *efl (cdr *efl))
+                 (setq *epl (cdr *epl))
+                 (return t))))))
+
+(def *jpi1
+ (lambda nil
+  (cond
+   ((dtpr (car *epl))
+    (cond ((dtpr (caar *epl))
+           (setq *efl (cons (quote car) *efl))
+           (setq *epl (cons (caar *epl) *epl))
+           t)
+          ((null (caar *epl))
+           (setq *efl (cons (quote car) *efl))
+           (setq *epl (cons nil *epl))
+           t))))))
+
+(def c
+ (lambda (n)
+  (cond ((null (numbp n)) (*clf 1))
+        ((lessp n 0) (*clb n))
+        (t (*clf n)))))
+
+(def *clb
+ (lambda (n)
+  (prog (k)
+        (setq k 0)
+   a    (cond ((eq n k) (return k))
+              ((*clb1) (setq k (diff k 1)) (go a))
+              (t (return k))))))
+
+(def *clf
+ (lambda (n)
+  (prog (k)
+        (setq k 0)
+   a    (cond ((eq n k) (return k))
+              ((*clf1) (setq k (add k 1)) (go a))
+              (t (*wkf 1000000) (return k))))))
+
+(def *clb1
+ (lambda nil
+  (cond ((*wkb1) (cond ((*jpi1) (*wkf 1000000) t) (t t)))
+        ((*jpo1) t))))
+
+(def *clf1
+ (lambda nil
+  (cond ((*jpi1) t) ((*wkf1) t) ((*jpo1) (*wkf1)))))
+
+(def b
+ (lambda nil
+  (cond (*efl (setq *efl nil) (setq *epl (cons *emp nil)) t)
+        (t t))))
+
+(def i
+ (lambda (l) (cond (t (ilb (cons l nil)) (*wkf1)))))
+
+(def ic
+ (lambda (l) (cond (t (ilb (cons (copy l) nil)) (*wkf1)))))
+
+(def ib
+ (lambda (l) (ilb (cons l nil))))
+
+(def ibc
+ (lambda (l) (ilb (cons (copy l) nil))))
+
+(def il
+ (lambda (l) (cond (t (*wkf (*rmbr (length l) (ilb l))) t))))
+
+(def ilc
+ (lambda (l) (il (copy l))))
+
+(def ilb
+ (lambda (l)
+  (cond ((null *efl)
+         (prog (t1 t2)
+               (setq t1 (car *epl))
+               (cond ((null (dtpr l)) (return t))
+                     ((dtpr t1)
+                      (*prep l)
+                      (setq t2 (car l))
+                      (rplaca l (car t1))
+                      (rplaca t1 t2)
+                      (setq t2 (cdr l))
+                      (rplacd l (cdr t1))
+                      (rplacd t1 t2)
+                      (*conc t1 l)
+                      (return t))
+                     (t (*conc l t1)
+                        (rplaca *epl (setq t1 *emp))
+                        (*prep l)
+                        (setq t2 (car l))
+                        (rplaca l (car t1))
+                        (rplaca t1 t2)
+                        (setq t2 (cdr l))
+                        (rplacd l (cdr t1))
+                        (rplacd t1 t2)
+                        (return t)))))
+        ((eq (car *efl) (quote cdr))
+         (rplaca *epl
+                 (cdr
+                  (rplacd (cadr *epl) (*conc l (car *epl)))))
+         t)
+        (t (rplaca *epl
+                   (car
+                    (rplaca (cadr *epl) (*conc l (car *epl)))))
+           t))))
+
+(def ilbc
+ (lambda (l) (ilb (copy l))))
+
+(def *prep
+ (lambda (a)
+  (cond
+   ((dtpr a)
+    (cond ((eq (car a) t1) (rplaca a l))
+          (t (*prep (car a))))
+    (cond ((eq (cdr a) t1) (rplacd a l))
+          (t (*prep (cdr a))))))))
+
+(def *equiv
+ (lambda (*x* *y*)
+  (cond ((dtpr *x*)
+         (cond
+          ((dtpr *y*)
+           (and (*equiv (car *x*) (car *y*))
+                (*equiv (cdr *x*) (cdr *y*))))))
+        ((member *x* *dummies) (apply* *x* *y*))
+        (t (eq *x* *y*)))))
+
+(def *equiva
+ (lambda (*x* *y*)
+  (cond ((dtpr *x*)
+         (cond
+          ((dtpr *y*)
+           (and (*equiv (car *x*) (car *y*))
+                (*equiva (cdr *x*) (cdr *y*))))))
+        (t t))))
+
+(def *flush
+ (lambda nil nil))
+
+(def v
+ (lambda (*l*)
+  (and (dtpr (car *epl)) (*equiv *l* (caar *epl) (*flush)))))
+
+
+(def vf
+ (lambda (*l*) (and (null *efl) (vm *l*))))
+
+(def vm
+ (lambda (*l*) (*equiva *l* (car *epl) (*flush))))
+
+(def vl
+ (lambda (*l*) (*equiv *l* (car *epl) (*flush))))
+
+(def sb
+ (lambda (*l* *n*)
+  (cond ((eq *n* 0) t) (t (*s (quote (v *l*)))))))
+
+(def s
+ (lambda (*l* *n*)
+  (cond ((eq *n* 0) t) ((*s (quote (v *l*))) (*wkf1)))))
+
+(def slb
+ (lambda (*l* *n*)
+  (cond ((eq *n* 0) t) (t (*s (quote (vl *l*)))))))
+
+(def sl
+ (lambda (*l* *n*)
+  (cond ((eq *n* 0) t)
+        ((*s (quote (vl *l*))) (*wkf (length *l*)) t))))
+
+(def sfb
+ (lambda (*l* *n*)
+  (cond ((eq *n* 0) t) (t (*s (quote (vf *l*)))))))
+
+(def sf
+ (lambda (*l* *n*)
+  (cond ((eq *n* 0) t)
+        ((*s (quote (vf *l*))) (*wkf (length *l*)) t))))
+
+(def smb
+ (lambda (*l* *n*)
+  (cond ((eq *n* 0) t) (t (*s (quote (vm *l*)))))))
+
+(def sm
+ (lambda (*l* *n*)
+  (cond ((eq *n* 0) t)
+        ((*s (quote (vm *l*))) (*wkf (length *l*)) t))))
+
+(def *s
+ (lambda (p)
+  (prog nil
+        (cond ((null (numbp *n*)) (setq *n* 1) (go b))
+              ((lessp 0 *n*) (go b))
+              ((*clb1) (go d))
+              (t (return nil)))
+   a    (cond ((eq *n* 0) (return t))
+              ((null (*clf1)) (return nil)))
+   b    (cond ((eval p) (setq *n* (diff *n* 1)) (go a))
+              ((*clf1) (go b))
+              (t (return nil)))
+   c    (cond ((eq *n* 0) (return t))
+              ((null (*clb1)) (return nil)))
+   d    (cond ((eval p) (setq *n* (add *n* 1)) (go c))
+              ((*clb1) (go d))
+              (t (return nil))))))
+
+(def *adj
+ (lambda (s)
+  (prog (n1)
+        (cond ((null (numbp i)) (setq i 1)))
+        (cond ((null (numbp j)) (setq j 0)))
+        (cond ((null (numbp k)) (setq k 0)))
+        (cond
+         ((lessp j i) (setq n1 j) (setq j i) (setq i n1)))
+        (cond
+         ((and s (eq k 0))
+          (cond ((and (lessp i 1) (greaterp j -1))
+                 (setq j (add j 1)))
+                ((and (greaterp j 0) (greaterp i 0))
+                 (setq j (add j 1))
+                 (setq i (add i 1))))))
+        (j k)
+        (return (diff j (w i))))))
+
+(def x
+ (lambda (i j k) (*x i j k nil)))
+
+(def xc
+ (lambda (i j k) (*x i j k t)))
+
+(def xa
+ (lambda nil (cond (*efl *emp) (t (car *epl)))))
+
+(def xac
+ (lambda nil (copy (xa))))
+
+(def xd
+ (lambda (i j k) (*xd (*adj nil))))
+
+(def xdc
+ (lambda (i j k) (copy (xd i j k))))
+
+(def xda
+ (lambda nil
+  (cond ((and (b) (dtpr (car *epl))) (rplaca *epl nil) *emp)
+        (t (*rmbr (car *epl) (rplaca *epl nil))))))
+
+(def xdac
+ (lambda nil (copy (xda))))
+
+(def *x
+ (lambda (i j k b)
+  (prog (*opl *ofl)
+        (setq *ofl *efl)
+        (setq *opl *epl)
+        (setq b (*xsbr (*adj nil) (car *epl) b))
+        (setq *efl *ofl)
+        (setq *epl *opl)
+        (return b))))
+
+(def *xsbr
+ (lambda (n l b)
+  (cond ((eq n 0) nil)
+        ((dtpr l)
+         (cond (b
+                (cons (copy (car l))
+                      (*xsbr (diff n 1) (cdr l) b)))
+               (t
+                (cons (car l)
+                      (*xsbr (diff n 1) (cdr l) nil))))))))
+
+(def *xd
+ (lambda (n)
+  (cond ((eq n 0) nil)
+        ((null (dtpr (car *epl))) nil)
+        ((null *efl)
+         (prog (l t1)
+               (setq l (car *epl))
+               (cond ((dtpr (setq t1 (*xdsbr l n)))
+                      (*prep l)
+                      (setq n (car l))
+                      (rplaca l (car t1))
+                      (rplaca t1 n)
+                      (setq n (cdr l))
+                      (rplacd l (cdr t1))
+                      (rplacd t1 n)
+                      (return t1))
+                     (t (rplaca *epl t1) (return *emp)))))
+        ((eq (car *efl) (quote cdr))
+         (*rmbr (car *epl)
+                (rplaca *epl
+                        (cdr
+                         (rplacd (cadr *epl)
+                                 (*xdsbr (car *epl) n))))))
+        (t
+         (*rmbr (car *epl)
+                (rplaca *epl
+                        (car
+                         (rplaca (cadr *epl)
+                                 (*xdsbr (car *epl) n)))))))))
+
+(def *xdsbr
+ (lambda (l n)
+  (prog nil
+   a    (cond ((eq n 1) (return (cdr l) (rplacd l nil)))
+              ((dtpr (cdr l))
+               (setq l (cdr l))
+               (setq n (diff n 1))
+               (go a))
+              (t (return (cdr l) (rplacd l nil)))))))
+
+(def t
+ (lambda (i j k)
+  (cond ((dtpr (xa))
+         (prog (*opl *ofl)
+               (ib *eptr)
+               (setq *opl *epl)
+               (setq *ofl *efl)
+               (ilb (ppl (*xd (*adj t))))
+               (setq *epl *opl)
+               (setq *efl *ofl)
+               (return (*d 1))))
+        (t (ppl (cons *eptr (xa))) t))))
+
+(def ta
+ (lambda nil
+  (cond ((dtpr (xa)) (ib *eptr) (ppl (xa)) (*d 1) t)
+        (t (ppl (cons *eptr (xa))) t))))
+
+(def d
+ (lambda (i j k) (*d (*adj nil))))
+
+(def da
+ (lambda nil (cond ((b) (rplaca *epl nil) t))))
+
+(def *d
+ (lambda (n)
+  (cond ((null *efl)
+         (cond ((dtpr (setq n (*dsbr (car *epl) n)))
+                (rplaca (car *epl) (car n))
+                (rplacd (car *epl) (cdr n))
+                t)
+               (t (rplaca *epl n) t)))
+        ((eq (car *efl) (quote cdr))
+         (rplaca *epl
+                 (cdr
+                  (rplacd (cadr *epl) (*dsbr (car *epl) n))))
+         t)
+        (t (rplaca *epl
+                   (car
+                    (rplaca (cadr *epl) (*dsbr (car *epl) n))))
+           t))))
+
+(def *dsbr
+ (lambda (l n)
+  (prog nil
+   a    (cond ((eq n 0) (return l))
+              ((dtpr l)
+               (setq l (cdr l))
+               (setq n (diff n 1))
+               (go a))
+              (t (return l))))))
+
+(def e
+ (lambda (l)
+  (cond ((dtpr l)
+         (setq *efl nil)
+         (setq *emp l)
+         (setq *epl (cons *emp nil))
+         t)
+        (t (break (quote "cant edit non-dtpr"))))))
+
+(def ec
+ (lambda (l) (e (copy l))))
+
+(def ef
+ (lambda (f)
+  (cond ((dtpr (getd f))
+         (setq *efl nil)
+         (setq *emp (getd f))
+         (setq *epl (cons *emp nil))
+         f)
+        ((null (getd f))
+         (putd f (setq *emp (cons nil nil)))
+         (setq *epl (cons (setq *efl nil) nil))
+         f)
+        ((bcd (getd f)) (break (quote "cant edit bcd"))))))
+
+(def efc
+ (lambda (f)
+  (cond ((dtpr (getd f))
+         (setq *efl nil)
+         (setq *emp (copy (getd f)))
+         (setq *epl (cons *emp nil))
+         f)
+        ((null (getd f)) (en) f)
+        ((bcd (getd f)) (break (quote "cant edit bcd"))))))
+
+(def en
+ (lambda nil
+  (cond
+   (t (setq *epl (cons (setq *efl nil) nil))
+      (setq *emp (cons nil nil))
+      t))))
+
+(def enc
+ (lambda nil (en)))
+
+(def er
+ (lambda (f)
+  (prog (t1)
+        (cond ((setq t1 (get f (quote reserve)))
+               (e t1)
+               (return f))
+              (t (break (quote "no reserve exists")))))))
+
+(def erc
+ (lambda (f)
+  (prog (t1)
+        (cond ((setq t1 (get f (quote reserve)))
+               (ec t1)
+               (return f))
+              (t (break (quote "no reserve exists")))))))
+
+(def gr
+ (lambda (f)
+  (prog (t1)
+        (cond ((setq t1 (getd f))
+               (putprop f t1 (quote reserve))
+               (return f))
+              (t (break (quote "function not defined")))))))
+
+(def grc
+ (lambda (f)
+  (prog (t1)
+        (cond ((setq t1 (getd f))
+               (putprop f (copy t1) (quote reserve))
+               (return f))
+              (t (break (quote "function not defined")))))))
+
+(def rr
+ (lambda (f)
+  (prog (t1)
+        (cond ((setq t1 (get f (quote reserve)))
+               (putd f t1)
+               (return f))
+              (t (break (quote "no reserve exists")))))))
+
+(def rrc
+ (lambda (f)
+  (prog (t1)
+        (cond ((setq t1 (get f (quote reserve)))
+               (putd f (copy t1))
+               (return f))
+              (t (break (quote "no reserve exists")))))))
+
+(def y
+ (lambda nil
+  (cond
+   (t (setq *emp (copy *emp)) (setq *epl (*unrvl *efl)) t))))
+
+(def *unrvl
+ (lambda (fl)
+  (cond ((null fl) (cons (xa) nil))
+        ((eq (car fl) (quote car))
+         (setq fl (*unrvl (cdr fl)))
+         (cons (caar fl) fl))
+        (t (setq fl (*unrvl (cdr fl))) (cons (cdar fl) fl)))))
+
+(def ys
+ (lambda (s)
+  (prog (t1)
+        (setq t1 (gs))
+        (rs s)
+        (y)
+        (setq s (gs))
+        (rs t1)
+        (return s))))
+
+(def gs
+ (lambda nil (list (quote editor*state*triple) *efl *epl *emp)))
+
+(def gsc
+ (lambda nil (ys (gs))))
+
+(def rs
+ (lambda (s)
+  (cond ((eq (car s) (quote editor*state*triple))
+         (setq *efl (cadr s))
+         (setq *epl (car (cddr s)))
+         (setq *emp (cadr (cddr s)))
+         t)
+        (t (break (quote "bad editor state descriptor"))))))
+
+(def rsc
+ (lambda (s) (cond (t (rs s) (y)))))
+
+(def p
+ (lambda (i j k) (i (xd i j k))))
+
+(def pb
+ (lambda (i j k) (ib (xd i j k))))
+
+(def pa
+ (lambda nil (i (xda))))
+
+(def pab
+ (lambda nil (ib (xda))))
+
+(def *blp
+ (lambda nil
+  (and (dtpr (car *epl))
+       (or (null (caar *epl)) (dtpr (caar *epl))))))
+
+(def k
+ (lambda nil (cond ((*blp) (il (car (*xd 1)))))))
+
+(def kb
+ (lambda nil (cond ((*blp) (ilb (car (*xd 1)))))))
+
+(def m
+ (lambda (i n)
+  (cond ((null (numbp i)) (m 1 n))
+        ((null (numbp n)) (m i 1))
+        ((lessp (times i n) 0)
+         (setq i (xd i))
+         (setq n (c n))
+         (cond ((lessp n 1) (il i)) (t (ilb i)))
+         (c (times n -1))
+         t)
+        ((lessp 0 (times i n))
+         (setq n (c n))
+         (setq i (xd i))
+         (c (times n -1))
+         (cond ((lessp n 1) (ilb i)) (t (il i))))
+        (t t))))
+
+(def l
+ (lambda (**p** **l**)
+  (prog nil
+   a    (cond ((null **l**) (return t))
+              (t (ef (car **l**))
+                 (eval **p**)
+                 (setq **l** (cdr **l**))
+                 (go a))))))
+
+(def ppl
+ (lambda (l)
+  (cond (t (linelength 70) (terpri) ($prdf l 0 0) (terpri) l))))
+
+(def ppv
+ (nlambda ($x$)
+   (prog nil
+         (cond
+          ((null
+            (cond ((atom (setq $x$ (car $x$)))
+                   (setq $x$ (eval $x$)))
+                  (t $x$)))
+           (go end)))
+    loop (terpri)
+         ($patom1 (quote "(setq "))
+         (prin1 (car $x$))
+         ($patom1 (quote " (quote"))
+         ($prpr (eval (car $x$)))
+         ($patom1 rpar)
+         ($patom1 rpar)
+         (terpri)
+         (cond ((setq $x$ (cdr $x$)) (go loop)))
+    end)))
+
+(def ppf
+ (lambda (in poport nfl nvl)
+  (prog (s)
+        (cond (poport (outfile poport)))
+        (setq nfl (cons nil nfl))
+        (setq nvl (cons nil nvl))
+        (cond (in (infile in))
+              (t (setq s (quote eof)) (go b)))
+   a    (setq s (read in))
+   b    (cond ((eq s (quote eof))
+               (setq nfl (cdr nfl))
+               (setq nvl (cdr nvl))
+               (pp nfl)
+               (ppv nvl)
+               (cond (in (close in)))
+               (cond (poport (close poport)))
+               (return t))
+              ((null (dtpr s)) (ppl s) (go a))
+              ((eq (car s) (quote def))
+               (cond ((*memd (cadr s) nfl)
+                      (setq s (cadr s))
+                      (cond ((getd s)
+                             (setq s (cons s nil))
+                             (pp s)
+                             (go a))
+                            (t (go a))))
+                     (t (terpri)
+                        ($patom1 (quote "(def "))
+                        (prin1 (cadr s))
+                        ($prpr (cadr (cdr s)))
+                        ($patom1 rpar)
+                        (terpri)
+                        (go a))))
+              ((eq (car s) (quote setq))
+               (cond ((*memd (cadr s) nvl)
+                      (setq s (cadr s))
+                      (cond ((cdr s)
+                             (setq s (cons s nil))
+                             (ppv s)
+                             (go a))
+                            (t (go a))))
+                     (t (terpri)
+                        ($patom1 "(setq ")
+                        (prin1 (cadr s))
+                        ($patom1 " (quote")
+                        ($prpr (cadr (cdr s)))
+                        ($patom1 rpar)
+                        ($patom1 rpar)
+                        (terpri)
+                        (go a))))
+              (t (ppl s) (go a))))))
+
+(def *memd
+ (lambda (a l)
+  (prog (l*)
+        (setq l* (cdr l))
+   a    (cond ((null l*) (return nil))
+              ((eq (car l*) a)
+               (rplacd l (cdr l*))
+               (return t))
+              (t (setq l l*) (setq l* (cdr l)) (go a))))))
+
+(def *rmbr
+ (lambda (x) x))
+
+(def a
+ (lambda (o n) (cond ((sb o) (*d 1) (i n)))))
+
+(def aa
+ (lambda (o n)
+  (prog nil
+        (b)
+   a    (cond ((sb o) (*d 1) (i n) (go a)) (t (return t))))))
+
+(def z
+ (lambda nil (t 0 1 -1)))
+
+(def *conc
+ (lambda (a b)
+  (prog (c)
+        (cond ((dtpr a) (setq c a)) (t (return b)))
+   l    (cond ((dtpr (cdr c)) (setq c (cdr c)) (go l))
+              (t (rplacd c b) (return a))))))
+
+(def *edptr
+ (lambda (l)
+  (cond
+   (t (setq poport (outfile l))
+      (pp *edlist)
+      (ppv (*eptr *edlist))
+      (close l)
+      (setq poport nil)))))
+
+(setq *eptr (quote
+ *))
+
+(setq *edlist (quote
+ (w *wkb
+    *wkf
+    *wkb1
+    *wkf1
+    j
+    *jpo
+    *jpi
+    *jpo1
+    *jpi1
+    c
+    *clb
+    *clf
+    *clb1
+    *clf1
+    b
+    i
+    ic
+    ib
+    ibc
+    il
+    ilc
+    ilb
+    ilbc
+    *prep
+    *equiv
+    *equiva
+    *flush
+    v
+    vf
+    vm
+    vl
+    sb
+    s
+    slb
+    sl
+    sfb
+    sf
+    smb
+    sm
+    *s
+    *adj
+    x
+    xc
+    xa
+    xac
+    xd
+    xdc
+    xda
+    xdac
+    *x
+    *xsbr
+    *xd
+    *xdsbr
+    t
+    ta
+    d
+    da
+    *d
+    *dsbr
+    e
+    ec
+    ef
+    efc
+    en
+    enc
+    er
+    erc
+    gr
+    grc
+    rr
+    rrc
+    y
+    *unrvl
+    ys
+    gs
+    gsc
+    rs
+    rsc
+    p
+    pb
+    pa
+    pab
+    *blp
+    k
+    kb
+    m
+    l
+    ppl
+    ppv
+    ppf
+    *memd
+    *rmbr
+    a
+    aa
+    z
+    *conc
+    *edptr)))
+

@@ -1,0 +1,170 @@
+
+SCANN(3F)           UNIX Programmer's Manual            SCANN(3F)
+
+NAME
+     scann, fscann, sscann - formatted input conversion
+
+SYNTAX
+     integer n, scann
+     character*(L) format
+     n = scann(format [ , arg ] . . .  )
+
+     integer fileid, n, fscann
+     character*(L) format
+     n = fscann(fileid, format [ , arg ] . . .  )
+
+     integer n, sscann
+     character*(L) s, format
+     n = sscann(s, format [ , arg ] . . .  )
+
+DESCRIPTION
+     _S_c_a_n_n reads from the standard input _s_t_d_i_n.  _F_s_c_a_n_n reads
+     from the file associated with _f_i_l_e_i_d.  _S_s_c_a_n_n reads from the
+     character string _s, which should be terminated by a null
+     ('\0') character.  Each function reads characters, inter-
+     prets them according to a format, and stores the results in
+     its arguments.  Each expects as arguments a control string
+     _f_o_r_m_a_t, described below, and a set of arguments into which
+     the converted input is stored.
+
+     The control string usually contains conversion specifica-
+     tions, which are used to direct interpretation of input
+     sequences.  The control string may contain:
+
+     1.  Blanks, tabs or newlines, which match optional white
+         space in the input.
+
+     2.  An ordinary character (not %) which must match the next
+         character of the input stream.
+
+     3.  Conversion specifications, consisting of the character
+         %, an optional assignment suppressing character *, an
+         optional numerical maximum field width, and a conversion
+         character.
+
+     A conversion specification directs the conversion of the
+     next input field; the result is placed in the the
+     corresponding argument, unless assignment suppression was
+     indicated by *.  An input field is defined as a string of
+     non-space characters; it extends to the next inappropriate
+     character or until the field width, if specified, is
+     exhausted.
+
+     The conversion character indicates the interpretation of the
+     input field; the corresponding argument must usually be of a
+     restricted type.  The following conversion characters are
+
+Printed 5/17/83                                                 1
+
+SCANN(3F)           UNIX Programmer's Manual            SCANN(3F)
+
+     legal:
+
+     %   a single `%' is expected in the input at this point; no
+         assignment is done.
+
+     d   a decimal integer is expected; the corresponding argu-
+         ment should be an integer*2.
+
+     o   an octal integer is expected; the corresponding argument
+         should be an integer*2.
+
+     x   a hexadecimal integer is expected; the corresponding
+         argument should be an integer*2.
+
+     n   (Equivalent to 'ld' or 'D'.) A decimal integer is
+         expected; the corresponding argument should be an
+         integer*4.
+
+     s   a character string is expected; the corresponding argu-
+         ment should be a character string large enough to accept
+         the string and a terminating `\0', which will be added.
+         The input field is terminated by a space character or a
+         newline.
+
+     c   a character is expected; the corresponding argument
+         should be a character.  The normal skip over space char-
+         acters is suppressed in this case; to read the next
+         non-space character, try `%1s'.  If a field width is
+         given, the corresponding argument should refer to a
+         character string, and the indicated number of characters
+         is read.
+
+     e99f7   a real number is expected; the next field is converted
+         accordingly and stored through the corresponding argu-
+         ment, which should be a _r_e_a_l.  The input format for real
+         numbers is an optionally signed string of digits possi-
+         bly containing a decimal point, followed by an optional
+         exponent field consisting of an E or e followed by an
+         optionally signed integer.
+
+     [   indicates a string not to be delimited by space charac-
+         ters.  The left bracket is followed by a set of charac-
+         ters and a right bracket; the characters between the
+         brackets define a set of characters making up the
+         string.  If the first character is not circumflex (^),
+         the input field is all characters until the first char-
+         acter not in the set between the brackets; if the first
+         character after the left bracket is ^, the input field
+         is all characters until the first character which is in
+         the remaining set of characters between the brackets.
+         The corresponding argument must point to a character
+         string.
+
+Printed 5/17/83                                                 2
+
+SCANN(3F)           UNIX Programmer's Manual            SCANN(3F)
+
+     The conversion characters d, o and x may be capitalized or
+     preceded by l to indicate that a integer*4 rather than a
+     integer*2 is in the argument list.  Similarly, the conver-
+     sion characters e or f may be capitalized or preceded by l
+     to indicate a double precision rather than a real.
+
+     The _s_c_a_n_n functions return the number of successfully
+     matched and assigned input items.  This can be used to
+     decide how many input items were found.  The constant -1 is
+     returned upon end of input; note that this is different from
+     0, which means that no conversion was done; if conversion
+     was intended, it was frustrated by an inappropriate charac-
+     ter in the input.
+
+     For example, the call:
+
+               integer*2 i; real x; character*50 name;
+               scann( '%d%f%s', i, x, name);
+
+     with the input line:
+
+          25   54.32E-1  thompson
+
+     will assign to _i the value 25, _x the value 5.432, and _n_a_m_e
+     will contain `_t_h_o_m_p_s_o_n_\_0'.  Or,
+
+          integer*2 i; real x; character*50 name;
+          scann('%2d%f%*d%[1234567890]', &i, &x, name);
+
+     with input:
+
+          56789 0123 56a72
+
+     will assign 56 to _i, 789.0 to _x, skip `0123', and place the
+     string `56\0' in _n_a_m_e.  The next call to _g_e_t_c_h_a_r will return
+     `a'.
+
+SEE ALSO
+     atof(3), getc(3F), printn(3F)
+
+DIAGNOSTICS
+     The _s_c_a_n_n functions return -1 on end of input, and a short
+     count for missing or illegal data items.
+
+BUGS
+     The success of literal matches is not directly determinable.
+     Assignment suppression (see _s_c_a_n_f) does not work yet.
+
+AUTHOR
+     Bruce Julian, U.S. Geological Survey, Menlo Park, California
+
+Printed 5/17/83                                                 3
+

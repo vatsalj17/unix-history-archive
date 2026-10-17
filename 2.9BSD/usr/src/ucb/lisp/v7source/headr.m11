@@ -1,0 +1,59 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+
+	.page
+	.list	bin,bex,com,md,mc,me,cnd
+	.title	header
+	.psect	errorm con
+	.globl	headr
+headr:
+
+.macro	makdate	date
+	x =* -1
+	.irp	c,<date>
+		x =* x+1
+		.if	eq,x-1
+			.if	eq,xfer
+				.ascii /AM110 Lisp /
+			 .iff
+				.ascii /Environment Transfer Lisp /
+			.endc
+			.byte c'&0377
+			.if	ne,<c'/400>&377
+				.byte <c'/400>&377
+			.endc
+		.endc
+		.if	eq,x-2
+			.ascii	?/'c'/?
+		.endc
+
+		.if	eq,x-5
+			ii=* -1
+			.irpc	cc,<'c'>
+				ii =* ii + 1
+				.if	ge,ii-2
+					 .ascii	/'cc'/
+				.endc
+			.endr
+		.endc
+
+	.endr
+
+	.byte	0
+	.even
+	.end
+.endm
+
+
+	jan =* '1
+	feb =* '2
+	mar =* '3
+	apr =* '4
+	may =* '5
+	jun =* '6
+	jul =* '7
+	aug =* '8
+	sep =* '9
+	oct =* <'0 * 400> + '1
+	nov =* <'1 * 400> + '1
+	dec =* <'1 * 400> + '2

@@ -1,0 +1,87 @@
+.TH HK 4
+.UC
+.SH NAME
+hk \- RK611/RK06 and RK07 moving head disk
+.SH DESCRIPTION
+Files with minor device numbers 0 through 7 refer to various portions
+of drive 0;
+minor devices 8 through 15 refer to drive 1, etc.
+The standard device names begin with ``hk'' followed by
+the drive number and then a letter a-h for partitions 0-7 respectively.
+The character ? stands here for a drive number in the range 0-7.
+.PP
+The origin and size of the partitions (in 512-byte sectors) on each drive are
+as follows:
+.PP
+.nf
+.ta .5i +\w'000000    'u +\w'000000    'u +\w'000000    'u +\w'0000000    'u
+Partitions:
+	disk	start	length	cyl	function on drive 0
+	hk?a	0	5940	0-89	/
+	hk?b	5940	2376	90-125	swap
+	hk?c	8316	45474	126-814	/usr (rk07)
+	hk?d	8316	18810	126-410	/usr (rk06)
+	hk?g	0	27126	0-410	whole RK06
+	hk?h	0	53790	0-814	whole RK07
+.DT
+.fi
+.PP
+Special files should only be created for the
+partitions that are actually used,
+as the overlap in these addresses could lead to confusion otherwise.
+.PP
+The block files access the disk via the system's normal
+buffering mechanism and may be read and written without regard to
+physical disk records.  There is also a `raw' interface
+which provides for direct transmission between the disk
+and the user's read or write buffer.
+A single read or write call results in exactly one I/O operation
+and therefore raw I/O is considerably more efficient when
+many words are transmitted.  The names of the raw files
+conventionally begin with an extra `r.'
+.PP
+In raw I/O counts should be a multiple of 512 bytes (a disk sector).
+Likewise
+.I lseek
+calls should specify a multiple of 512 bytes.
+.SH FILES
+/dev/hk[0-7][a-h]	block files
+.br
+/dev/rhk[0-7][a-h]	raw files
+.SH "SEE ALSO"
+dvhp(4), hp(4), hs(4), ml(4), rf(4), rk(4), rl(4), rm(4), rp(4), rx2(4), xp(4)
+.SH DIAGNOSTICS
+\fBhk%d%c: hard error bn %d cs2=%b er=%b\fP.  An unrecoverable
+error occured during transfer of the specified sector of the specified
+disk partition.  The contents of the two error registers are printed
+in octal and symbolically with bits decoded.
+The error was either unrecoverable, or a large number of retry attempts
+(including offset positioning and drive recalibration) could not
+recover the error.
+.PP
+\fBhk%d: write locked\fP.  The write protect switch was set on the drive
+when a write was attempted.  The write operation is not recoverable.
+.PP
+\fBhk%d%c: soft ecc bn %d\fP.  A recoverable ECC error occurred on the
+specified sector of the specified disk partition.  This happens normally
+a few times a week.  If it happens more frequently than
+this the sectors where the errors are occuring should be checked to see
+if certain cylinders on the pack, spots on the carriage of the drive
+or heads are indicated.
+.SH BUGS
+In raw I/O
+.I read
+and
+.IR write (2)
+truncate file offsets to 512-byte block boundaries,
+and
+.I write
+scribbles on the tail of incomplete blocks.
+Thus,
+in programs that are likely to access raw devices,
+.I read, write
+and
+.IR lseek (2)
+should always deal in 512-byte multiples.
+.PP
+DEC-standard error logging should be supported.

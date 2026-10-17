@@ -1,0 +1,78 @@
+
+MP(3X)              UNIX Programmer's Manual               MP(3X)
+
+NAME
+     itom, mcmp, m_in, m_out, madd, msub, mult, mdiv, min, mout,
+     pow, gcd, rpow - multiple precision integer arithmetic
+
+SYNOPSIS
+     #include <mp.h>
+
+     typedef struct mint { int len; short *val; } MINT;
+
+     madd(a, b, c)
+     msub(a, b, c)
+     mult(a, b, c)
+     mdiv(a, b, q, r)
+     min(a)
+     mout(a)
+     pow(a, b, m, c)
+     gcd(a, b, c)
+     rpow(a, n, c)
+     msqrt(a, b, r)
+     mcmp(a,b)
+     MINT *a, *b, *c, *m, *q, *r;
+     int n;
+
+     sdiv(a, n, q, r)
+     MINT *a, *q;
+     short *r;
+
+     MINT *itom(n)
+
+     cc ... -lmp
+
+DESCRIPTION
+     These routines perform arithmetic on integers of arbitrary
+     length.  The integers are stored using the defined type
+     _M_I_N_T.  Pointers to a _M_I_N_T can be initialized using the func-
+     tion _i_t_o_m which sets the initial value to _n.  After that
+     space is managed automatically by the routines.
+
+     _m_a_d_d, _m_s_u_b, _m_u_l_t, assign to their third arguments the sum,
+     difference, and product, respectively, of their first two
+     arguments.  _m_d_i_v assigns the quotient and remainder, respec-
+     tively, to its third and fourth arguments.  _s_d_i_v is like
+     _m_d_i_v except that the divisor is an ordinary integer.  _m_s_q_r_t
+     produces the square root and remainder of its first argu-
+     ment.  _r_p_o_w calculates _a raised to the (``regular''
+     integral) power _n, while _p_o_w calculates this (for *_n a _M_I_N_T)
+     reduced modulo _m.  _m_i_n and _m_o_u_t do decimal input and output.
+     More generally, _f_m_i_n and _f_m_o_u_t do decimal input and output
+     from file _f, and _m__i_n and _m__o_u_t do I/O base _n.
+
+     The functions are obtained with the loader option -_l_m_p.
+
+Printed 7/31/83                                                 1
+
+MP(3X)              UNIX Programmer's Manual               MP(3X)
+
+FILES
+     /usr/include/mp.h   include file
+     /usr/lib/libmp.a    object code library
+
+SEE ALSO
+     ape(3X)
+
+DIAGNOSTICS
+     Illegal operations and running out of memory produce mes-
+     sages and core images.
+
+BUGS
+     Bases for input and output should be <= 10.
+
+     The _m_p package has some bugs--users are advised to use _a_p_e
+     instead.
+
+Printed 7/31/83                                                 2
+

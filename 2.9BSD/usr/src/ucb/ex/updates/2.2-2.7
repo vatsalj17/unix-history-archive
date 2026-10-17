@@ -1,0 +1,619 @@
+#
+ed - ex.c << '-*-END-*-'
+252a
+	if (setexit() == 0 && !fast && intty)
+		if ((cp = getenv("HOME")) != 0)
+			source(strcat(strcpy(genbuf, cp), "/.exrc"), 1);
+.
+249,250d
+112,113c
+		erfile = open(erpath, 0);
+		if (erfile < 0) {
+			flush();
+			exit(1);
+		}
+.
+110c
+	erfile = open(erpath+4, 0);
+.
+w
+q
+'-*-END-*-'
+ed - ex.h << '-*-END-*-'
+204d
+151c
+bool	hush;			/* Command line option - was given, hush up! */
+.
+10c
+ * June 1979
+.
+7c
+ * Ex version 2.7
+.
+w
+q
+'-*-END-*-'
+ed - ex_addr.c << '-*-END-*-'
+209a
+				}
+.
+208c
+				if (execute(0, addr)) {
+					if (inline && c == '?') {
+						inline = &linebuf[LBSIZE];
+						goto doques;
+					}
+.
+204c
+error("No match to TOP|Address search hit TOP without matching pattern");
+.
+197c
+error("No match to BOTTOM|Address search hit BOTTOM without matching pattern");
+.
+191a
+			if (inline && execute(0, dot)) {
+				if (c == '/') {
+					while (loc1 <= inline)
+						if (!execute(1))
+							goto nope;
+					break;
+				} else if (loc1 < inline) {
+					char *last;
+doques:
+
+					do {
+						last = loc1;
+						if (!execute(1))
+							break;
+					} while (loc1 < inline);
+					loc1 = last;
+					break;
+				}
+			}
+nope:
+.
+126c
+address(inline)
+	char *inline;
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+552c
+				printf("Version 2.7, June 10, 1979");
+.
+403a
+				putpad(VE);
+.
+346a
+		case 'P':
+.
+153,154d
+80c
+			addr = address(0);
+.
+66c
+			if (!hush && value(PROMPT) && !globp && !noprompt && intty && endline) {
+.
+52c
+error("Offset out-of-bounds|Offset after command too large");
+.
+46c
+		if (pflag ||
+		    lchng != chng && value(AUTOPRINT) && !inglobal && !inopen && endline) {
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds2.c << '-*-END-*-'
+429c
+		 * Of the trailing lp funny business, only dl and dp
+.
+317c
+		error("No write@since last change (:%s! overrides)", Command);
+.
+279c
+serror("Extra chars|Extra characters at end of \"%s\" command", Command);
+.
+22,23c
+	if (wh && isalpha(peekchar()))
+.
+20a
+	register int wh = skipwh();
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmdsub.c << '-*-END-*-'
+510c
+					error("No write@since last change (:tag! overrides)");
+.
+476c
+			if (*lp || !iswhite(*cp))
+.
+241c
+	adt = address(0);
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+819a
+#ifdef TIOCSETC
+	ioctl(i, TIOCSETC, &nttyc);
+#endif
+#endif
+.
+818c
+#endif
+#ifdef USG
+	stty(i, &tty);
+#endif
+#ifndef V6
+#ifndef USG
+.
+815a
+#ifdef USG
+	if (tty.sg_ospeed == B1200)
+		write(1, "", 1);
+#endif
+.
+809a
+#ifdef TIOCGETC
+	ioctl(i, TIOCGETC, &ottyc);
+	nttyc = ottyc;
+#endif
+.
+799a
+#ifdef TIOCGETC
+	if (f == normf)
+		nttyc = ottyc;
+	else
+		nttyc.t_quitc = nttyc.t_startc = nttyc.t_stopc = '\377';
+#endif
+.
+779a
+ * Back into raw mode.
+ */
+vraw()
+{
+
+	tty.sg_flags |= RAW;
+	sTTY(1);
+}
+#endif
+
+/*
+.
+778a
+	tty.sg_flags &= ~RAW;
+	sTTY(1);
+}
+
+.
+777a
+#ifdef USG
+/*
+ * Into cooked mode for interruptibility.
+ */
+vcook()
+{
+.
+737a
+#endif
+#endif
+.
+736a
+#ifdef TIOCGETC
+	nttyc.t_quitc = nttyc.t_startc = nttyc.t_stopc = '\377';
+.
+735c
+#endif
+#ifdef USG
+	tty.sg_flags = (normf &~ (ECHO|CRMOD)) | RAW;
+#endif
+#ifndef V6
+#ifndef USG
+.
+539a
+out:
+	if (plodflg) {
+		outcol = soutcol;
+		outline = soutline;
+	}
+	return(plodcnt);
+.
+538a
+		if (plodcnt < 0)
+			goto out;
+.
+537c
+			plodput(' ');
+.
+535c
+			tputs(ND, 0, plodput);
+.
+529c
+					plodput('\b');
+.
+527c
+					tputs(BC, 0, plodput);
+.
+522c
+				plodput('\t');
+.
+520c
+				tputs(TA, 0, plodput);
+.
+518c
+		if (destcol - outcol > 4 && i < COLUMNS && (BC || BS)) {
+.
+515c
+				plodput('\t');
+.
+513c
+				tputs(TA, 0, plodput);
+.
+508c
+		tputs(UP, 0, plodput);
+		if (plodcnt < 0)
+			goto out;
+.
+504c
+			plodput('\b');
+.
+502c
+			tputs(BC, 0, plodput);
+.
+499a
+		if (plodcnt < 0)
+			goto out;
+		if (BT && outcol - destcol > 4+k) {
+			tputs(BT, 0, plodput);
+			outcol--;
+			outcol &= ~7;
+			continue;
+		}
+.
+498a
+	if (BT)
+		k = strlen(BT);
+.
+495c
+		plodput('\n');
+		if (plodcnt < 0)
+			goto out;
+.
+492a
+dontcr:
+.
+488c
+			plodput('\n');
+.
+484,486c
+	if (BT && outcol > destcol && (j = (((outcol+7) & ~7) - destcol - 1) >> 3)) {
+		j *= (k = strlen(BT));
+		if ((k += (destcol&7)) > 4)
+			j += 8 - (destcol&7);
+		else
+			j += k;
+	} else
+		j = outcol - destcol;
+	/*
+	 * If we will later need a \n which will turn into a \r\n by
+	 * the system or the terminal, then don't bother to try to \r.
+	 */
+	if ((NONL || !pfast) && outline < destline)
+		goto dontcr;
+	/*
+	 * If the terminal will do a \r\n and there isn't room for it,
+	 * then we can't afford a \r.
+	 */
+	if (NC && outline >= destline)
+		goto dontcr;
+	/*
+	 * If it will be cheaper, or if we can't back up, then send
+	 * a return preliminarily.
+	 */
+	if (j > i + 1 || outcol > destcol && !BS && !BC) {
+		plodput('\r');
+.
+480c
+	if (GT)
+.
+474c
+				tputs(LL, 0, plodput);
+.
+469c
+			tputs(HO, 0, plodput);
+.
+449c
+	plodcnt = plodflg = cnt;
+	soutcol = outcol;
+	soutline = outline;
+	if (HO) {
+.
+447a
+	register int soutcol, soutline;
+.
+446a
+
+	if (plodflg)
+		plodcnt--;
+	else
+		putch(c);
+}
+
+plod(cnt)
+{
+.
+445c
+
+static int plodcnt, plodflg;
+
+plodput(c)
+.
+399,439d
+376,383c
+	if (CA && !holdcm)
+		if (plod(costCM) > 0)
+			plod(0);
+		else
+			tputs(tgoto(CM, destcol, destline), 0, putch);
+	else
+		plod(0);
+	outline = destline;
+	outcol = destcol;
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.c << '-*-END-*-'
+690c
+			   !((islower(c) && toupper(c) == *p1) ||
+			   (islower(*p1) && toupper(*p1) == c))))
+.
+671a
+		if (loc1 == loc2)
+			loc2++;
+.
+621c
+cerror("Badly formed re|Missing closing delimiter for regular expression");
+.
+610c
+cerror("Bad \\n|\\n in regular expression with n greater than the number of \\('s");
+.
+600c
+cerror("No newlines in re's|Can't escape newlines into regular expressions");
+.
+578c
+cerror("Bad character class|Empty character class '[]' or '[^]' cannot match");
+.
+564c
+cerror("Illegal *|Can't * a \\n in regular expression");
+.
+562c
+cerror("Illegal *|Can't * a \\( ... \\) in regular expression");
+.
+549c
+error("Replacement pattern contains \\d@- cannot use in re");
+.
+547c
+error("Replacement pattern contains &@- cannot use in re");
+.
+520c
+cerror("Extra \\)|More \\)'s than \\('s in regular expression");
+.
+512c
+cerror("Awash in \\('s!|Too many \\('d subexressions in a regular expression");
+.
+491c
+cerror("Unmatched \\(|More \\('s than \\)'s in regular expression");
+.
+465c
+			error("Badly formed re|Regular expression \\ must be followed by / or ?");
+.
+460c
+error("No previous substitute re|No previous substitute regular expression");
+.
+454c
+error("No previous scan re|No previous scanning regular expression");
+.
+445c
+		error("Regular expressions cannot be delimited by letters or digits");
+.
+w
+q
+'-*-END-*-'
+ed - ex_set.c << '-*-END-*-'
+87c
+error("Can't change type of terminal from within open/visual");
+.
+70c
+error("Digits required@after = when assigning numeric option");
+.
+w
+q
+'-*-END-*-'
+ed - ex_subr.c << '-*-END-*-'
+430c
+	for (markp = (anymarks ? names : &names['z'-'a'+1]);
+	  markp <= &names['z'-'a'+1]; markp++)
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.c << '-*-END-*-'
+94c
+	namp = "albcbtcdceclcmdcdldmdoedeihoicimipllmandpcsesfsosrtaupvbvsve";
+.
+69c
+		CA = 1, costCM = strlen(tgoto(CM, 8, 10));
+.
+28c
+	&AL, &BC, &BT, &CD, &CE, &CL, &CM, &DC, &DL, &DM, &DO, &ED, &EI, &HO,
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.h << '-*-END-*-'
+97a
+
+short	costCM;
+.
+91a
+#ifdef 	TIOCSETC
+struct	tchars ottyc, nttyc;	/* For V7 character masking */
+#endif
+.
+32a
+char	*BT;			/* P  Back tab */
+.
+w
+q
+'-*-END-*-'
+ed - ex_tune.h << '-*-END-*-'
+12,14c
+#define	EXRECOVER	"/usr/lib/ex2.7recover"
+#define	EXPRESERVE	"/usr/lib/ex2.7preserve"
+#define	EXSTRINGS	"/usr/lib/ex2.7strings"
+.
+w
+q
+'-*-END-*-'
+ed - ex_v.c << '-*-END-*-'
+26c
+ * ex_voperate.c   decoding of operator/operand sequences and
+.
+w
+q
+'-*-END-*-'
+ed - ex_vadj.c << '-*-END-*-'
+804c
+		if (l == 0 && state != VISUAL ||
+		    (l < vcnt && (vp->vliny <= p || vp[0].vliny == vp[1].vliny))) {
+.
+641a
+			}
+			FLAGS(l) &= ~VDIRT;
+.
+639,640c
+			if (l != vcline && p + DEPTH(l) - 1 > WBOT) {
+				vscrap();
+.
+589c
+	if (p < 0 /* || p > WECHO */)
+.
+545,547c
+		if (vcline >= vcnt) {
+			register int i = vcline - vcnt + 1;
+
+			dot -= i;
+			vcline -= i;
+			vroll(i);
+		} else
+.
+542c
+	if (vcline >= vcnt || LINE(vcline) > WBOT) {
+.
+193c
+				if (p + o == WTOP) {
+.
+w
+q
+'-*-END-*-'
+ed - ex_vars.h << '-*-END-*-'
+34c
+#define NOPTS		31
+.
+2,32c
+#define AUTOINDENT	0
+#define AUTOPRINT	1
+#define BEAUTIFY	2
+#define DIRECTORY	3
+#define ERRORBELLS	4
+#define IGNORECASE	5
+#define LISP		6
+#define LIST		7
+#define MAGIC		8
+#define NUMBER		9
+#define OPEN		10
+#define OPTIMIZE	11
+#define PARAGRAPHS	12
+#define PROMPT		13
+#define REDRAW		14
+#define REPORT		15
+#define SCROLL		16
+#define SECTIONS	17
+#define SHELL		18
+#define SHIFTWIDTH	19
+#define SHOWMATCH	20
+#define SLOWOPEN	21
+#define TABSTOP		22
+#define TTYTYPE		23
+#define TERM		24
+#define TERSE		25
+#define WARN		26
+#define WINDOW		27
+#define WRAPSCAN	28
+#define WRAPMARGIN	29
+#define WRITEANY	30
+.
+w
+q
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+217a
+	Peekkey = OPeek;
+.
+213a
+	OPeek = Peekkey; Peekkey = 0;
+.
+187a
+	register int OPeek;
+.
+185,186c
+	register char *sc = cursor;
+	register int (*OP)();
+.
+142a
+	lastvgk = 0;
+.
+73c
+			return (lastvgk = *vglobp++);
+		lastvgk = 0;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vis.h << '-*-END-*-'
+210c
+char	*ncols['z'-'a'+2];	/* Cursor positions of marks */
+.
+208a
+short	lastvgk;		/* Previous input key, if not from keyboard */
+.
+179,185c
+#define	HOLDAT		1
+#define	HOLDDOL		2
+#define	HOLDROL		4
+#define	HOLDQIK		8
+#define	HOLDPUPD	16
+#define	HOLDECH		32
+#define HOLDWIG		64
+.
+w
+q
+'-*-END-*-'
+ed - ex_vmain.c << '-*-END-*-'
+925a
+	addr1++;
+.
+924c
+	addr1 = dot;
+.
+w
+q
+'-*-END-*-'
+ed - ex_voperate.c << '-*-END-*-'

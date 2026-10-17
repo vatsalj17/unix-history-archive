@@ -1,0 +1,86 @@
+.TH WAIT2 2J
+.UC
+.SH NAME
+wait2 \- wait for process to terminate
+.SH SYNOPSIS
+.nf
+\fB#include <wait.h>\fP
+.PP
+\fBwait2(&w.w_status, options)\fP
+.B union wait w;
+.B int options;
+.PP
+.B cc ... \-ljobs
+.fi
+.SH DESCRIPTION
+.I Wait2
+is similar to the standard
+.IR wait (2)
+system call, but allow additional options useful with job control.
+They return the process ID of a terminated or stopped child process.
+The
+.I w.w_status
+and
+.I option
+words are described by definitions and macros in the file
+<wait.h>; the union and its bitfield definitions and associated
+macros given there provide
+convenient and mnemonic access to the word of status returned by a
+.I wait2
+call.
+If the call returns a process ID, several macros are
+available to interpret the status word returned.
+If the process is stopped, WIFSTOPPED(w) is true, and the
+signal that caused it to stop is w.w_stopsig.
+If the process is not stopped (has terminated),
+WIFEXITED(w) determines whether it terminated by calling
+.IR exit (2);
+if so, the exit code is w.w_retcode.
+WIFSIGNALED(w) is true if the process was terminated by
+a signal (see
+.IR signal (2));
+the signal causing termination was w.w_termsig, and w.w_coredump
+indicates whether a core dump was produced.
+.PP
+There are two
+.I options,
+which may be combined by
+.IR or ing
+them together.
+The first is WNOHANG which causes the
+.I wait2
+to not hang if there are no
+processes which wish to report status, rather returning a pid of 0 in this
+case as the result of the
+.IR wait2 .
+The second option is WUNTRACED which causes
+.I wait2
+to return information when children of the current process which are
+stopped but not traced (with
+.IR ptrace (2))
+because they received a SIGTTIN, SIGTTOU, SIGTSTP or SIGSTOP signal.
+See
+.IR sigsys (2J)
+for a description of these signals.
+.SH RETURN VALUE
+Returns
+\-1 if there are no children not previously waited for, or 0 if the WNOHANG
+option is given and there are no stopped or exited children.
+.SH ERRORS
+.I Wait2
+will fail and return immediately if one or more of the following is true:
+.TP 20
+[ECHILD]
+The calling process has no unwaited-for child processes.
+.TP 20
+[EFAULT]
+The
+.I w.w_status
+argument points to an address outside the process's allocated address space.
+.SH "SEE ALSO"
+exit(2), fork(2), sigsys(2J), wait(2)
+.SH BUGS
+This call is peculiar to this version of UNIX.
+The options and specifications of this system call and even the call itself
+are subject to change.  It may be replaced by other facilities in future
+versions of the system.

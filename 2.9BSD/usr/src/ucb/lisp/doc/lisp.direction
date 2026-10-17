@@ -1,0 +1,212 @@
+
+
+
+
+
+     On this tape you will find the sources  for  Lisp,  all  the
+on-line  documentation  for  Lisp,  and the library functions for
+Lisp.  You will also find a macro (that knows  about  half-kills)
+and 3 linkr's (see below).
+
+     There  are  some modifications that you will have to make to
+Lisp to run it on your system.  These are the pathnames that  the
+system knows about and the switches that make the particular Lisp
+configuration that you desire.
+
+To get the Lisp you want, set the switches in sparm.m11 and  play
+with linkr and linkr.v6 as follows:
+
+        standard combined space Lisp (Bell 410):
+
+                multiseg = Bell411 = 0;
+                rm support/linkr.v6
+                mv support/linkr source/linkr
+
+        Version 5 Harvard format (5-space I&D):
+		(Not supported since V5 UNIX, 1976)
+
+                multiseg = 1;
+                Bell411 = 0;
+                rm support/linkr.v6
+                mv support/linkr source/linkr
+
+        Bell I&D format (V6 or V7 411)
+
+                multiseg = 1;
+                Bell411 = 1;
+                rm support/linkr
+
+                mv support/linkr.v6 source/linkr
+		OR
+		mv support/linkr.v7 source/linkr
+		(macro and linkr on V7 systems use I/D space)
+		(file "sysmac.sml" should reside in /lib/maclnk)
+
+     There  are  also other switches that you should be concerned
+with:
+
+	version7
+		0=> V6/PWB system using old (2-word-inline) seek
+		1=> V7 system using long seeks
+		(note that version7=1 has only been tested with I/D
+		 and hardware FPP -- s. dyer 3/8/81)
+
+        fpsim   0=> hardware fpp on 11/45
+                1=> 11/40 or no hardware fpp
+
+        gcrec   0=> when Lisp has gc stack overflow, die.
+                1=> when gc stack overflow occurs, recover
+
+        brksig  0=> take no special action when out of dotted pairs
+                ?=> use this signal(interupt) to return to top level when
+                    there are no dotted pairs. At Harvard,  break (13) is used,
+                    but there is no reason that that quit  or the
+                    like couldn't be used.
+
+        onepage (data space only users (410))
+                1=> Arrange things so that the text size is about
+                    4k words.  Do this by making some of the
+                    "pure" text code live in the data segment.
+                    provides about 1800 extra dtpr's at expense
+                    of system overhead.
+
+                0=> put all text in sharable segments.
+
+
+
+
+
+
+
+
+
+
+
+
+     The pathnames that need attention are located in  dstuf.m11.
+Errorfile  is  the  path of the errorfile, which is accessed each
+screw-up. This path should be kept short, in  order  that  system
+overhead will be relatively low.  Secondarly, fix the path of the
+Lisp library directory, if necessary.  The third path (which  has
+to  be  fixed  only if you make an I&D Lisp) is lispbin, which is
+where the saveme function gets its instructions (note  that  mfpi
+doesn't  work  here).  One may also wish to give attention to the
+paths in the shrlisp command file, and to the paths in  the  file
+svlisp.
+
+
+     One is now ready to make a Lisp.  To do this utter:
+
+% shrlisp
+
+which  will  eventually  (about  5-10 minutes) produce a ../l1100
+file (assuming that you didn't change shrlisp).  Then type:
+
+% ../l1100 -
+
+which will run Lisp, and write out the error file (that's why the
+"-").  If the errorfile is ok, the system should respond
+
+AM110 Lisp
+->
+
+If not, something like:
+
+#nnnnnn ->
+
+where nnnnnn is an integer  indicating  the  message  number  re-
+quested.  After you have convinced yourself that Lisp is OK, do a
+
+->(load '"../lib/svlisp")
+nil
+->(sv1)
+
+->
+
+a sequence which will 1) load the saux file and the hacks file 2)
+purge the binding of saveme and 3) leave a file  on  the  current
+directory called code, which is executable and has the pre-loaded
+auxfns contained.  Place this in bin, and you are done.  (You may
+also  wish  to  produce  ed110, which is obtained by loading edit
+before doing the (sv1)).
+
+     In the lib directory, there is the file saux ( which has the
+auxillary  functions,  such  as  pp,  get,  put, etc.) and auxfns
+(which is similar to aux, but has some functions defined that that
+are  now  hand-coded in subr.m11).  The file edit is the L110 in-
+core editor.  The functions of trace and bt  should  be  obvious.
+The  file hack has the teco and tecf stuff, as well as update and
+shell.  If you do not have teco, prehaps this could  be  made  to
+
+
+
+
+
+
+
+
+
+
+work with ed, but I make no promises.
+
+     In the directory doc, there is an lman (lisp user documenta-
+tion), and ed110 manuals.  There is also the description  of  the
+innards  that  we  give our am110 students when they add stuff to
+the interpreter.  There is also a list insertion teco  macro  and
+documentation that is useful if you have teco.
+
+     As  far as I'm aware, Lisp is solid, and has survived over a
+year of use.  Recently, full core allocation overflow  protection
+has  been added, and hopefully is throughly debugged.  However, I
+would appreciate knowing of any problems with the system.
+
+     Good luck, and feel free to contact  me  if  there  are  any
+problems.
+
+
+                                Forrest Howard
+                                95 Baker St
+                                Belmont, MA 02178
+                                617-489-0395
+				(1975 address; presently at
+				 XEROX PARC-MAXC, CA)
+
+(ps  auxfns no longer fits on the tape, so it is not included
+ use saux)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

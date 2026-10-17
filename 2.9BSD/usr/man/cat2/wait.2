@@ -1,0 +1,73 @@
+
+WAIT(2)             UNIX Programmer's Manual              WAIT(2)
+
+NAME
+     wait - wait for process to terminate
+
+SYNOPSIS
+     wait(status)
+     int *status;
+
+     wait((int *) 0)
+
+DESCRIPTION
+     _W_a_i_t causes its caller to delay until a signal is received
+     or one of its child processes terminates.  If any child has
+     died since the last _w_a_i_t, return is immediate; if there are
+     no children, return is immediate with the error bit set
+     (resp. with a value of -1 returned).  The normal return
+     yields the process ID of the terminated child.  In the case
+     of several children several _w_a_i_t calls are needed to learn
+     of all the deaths.
+
+     If (int)_s_t_a_t_u_s is nonzero, the high byte of the word pointed
+     to receives the low byte of the argument of _e_x_i_t when the
+     child terminated.  The low byte receives the termination
+     status of the process.  See _s_i_g_n_a_l(2) for a list of termina-
+     tion statuses (signals); 0 status indicates normal termina-
+     tion.  A special status (0177) is returned for a stopped
+     process which has not terminated and can be restarted.  See
+     _p_t_r_a_c_e(2).  If the 0200 bit of the termination status is
+     set, a core image of the process was produced by the system.
+
+     If the parent process terminates without waiting on its
+     children, the initialization process (process ID = 1) inher-
+     its the children.
+
+RETURN VALUE
+     If _w_a_i_t returns due to the receipt of a signal, a value of
+     -1 is returned to the calling process and the _e_r_r_n_o is set
+     to EINTR.  If _w_a_i_t returns due to a stopped or terminated
+     child process, the process ID of the child is returned to
+     the calling process.  Otherwise, a value of -1 is returned
+     and _e_r_r_n_o is set to indicate the error.
+
+ERRORS
+     _W_a_i_t will fail and return immediately if one or more of the
+     following is true:
+
+     [ECHILD]            The calling process has no unwaited-for
+                         child processes.
+
+     [EFAULT]            The _s_t_a_t_u_s argument points to an address
+                         outside the process's allocated address
+                         space.
+
+Printed 5/22/83                                                 1
+
+WAIT(2)             UNIX Programmer's Manual              WAIT(2)
+
+SEE ALSO
+     exit(2), fork(2), signal(2), wait2(2J)
+
+ASSEMBLER
+     (wait = 7.)
+     sys wait
+     (process ID in r0)
+     (status in r1)
+
+     The high byte of the status is the low byte of r0 in the
+     child at termination.
+
+Printed 5/22/83                                                 2
+

@@ -1,0 +1,72 @@
+.TH MKNOD 2 
+.UC
+.SH NAME
+mknod \- make a directory or a special file
+.SH SYNOPSIS
+.B mknod(name, mode, addr)
+.br
+.B char *name;
+.SH DESCRIPTION
+.I Mknod
+creates a new file
+whose name is the null-terminated string pointed
+to by
+.IR name .
+The mode of the new file
+(including directory and special file bits)
+is initialized from
+.IR mode .
+(The protection part of the mode
+is modified by the process's mode mask; see
+.IR umask (2)).
+The first block pointer of the i-node
+is initialized from
+.IR addr .
+For ordinary files and directories
+.I addr
+is normally zero.
+In the case of a special file,
+.I addr
+specifies which special file.
+.PP
+.I Mknod
+may be invoked only by the super-user.
+.SH RETURN VALUE
+Upon successful completion, a value of 0 is returned.  Otherwise, a
+value of \-1 is returned and
+.I errno
+is set to indicate the error.
+.SH ERRORS
+.I Mknod
+will fail and the file mode will be unchanged if:
+.TP 20
+[EPERM]
+The process's effective user ID is not the super-user.
+.TP 20
+[EINVAL]
+The path name contains a non-ASCII byte.
+.TP 20
+[ENOTDIR]
+A component of the path prefix is not a directory.
+.TP 20
+[ENOENT]
+A component of the path prefix does not exist.
+.TP 20
+[EROFS]
+The named file resides on a read-only file system.
+.TP 20
+[EEXIST]
+The named file exists.
+.TP 20
+[EFAULT]
+.I Name
+points outside the process's allocated address space.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.SH "SEE ALSO"
+mkdir(1), mknod(1), filsys(5)
+.SH ASSEMBLER
+(mknod = 14.)
+.br
+.B sys  mknod; name; mode; addr

@@ -1,0 +1,38 @@
+
+NEWGRP(1)           UNIX Programmer's Manual            NEWGRP(1)
+
+NAME
+     newgrp - log in to a new group
+
+SYNTAX
+     newgrp group
+
+DESCRIPTION
+     _N_e_w_g_r_p changes the group identification of its caller,
+     analogously to _l_o_g_i_n(1).  The same person remains logged in,
+     and the current directory is unchanged, but calculations of
+     access permissions to files are performed with respect to
+     the new group ID.
+
+     If the `SHELL' environment variable is set, _n_e_w_g_r_p will use
+     it as the name of the new shell. The login environment is
+     also initialized for foreign shells. In this way multiple
+     shells can be used on the system interchangably.
+
+     A password is demanded if the group has a password.
+
+     _N_e_w_g_r_p is known to the shell, which executes it directly
+     without a fork.
+
+FILES
+     /etc/group, /etc/passwd
+
+SEE ALSO
+     login(1), group(5)
+
+BUGS
+     Since newgrp starts a new shell, shell context and variables
+     not in the environment are lost.
+
+Printed 7/25/83                                                 1
+

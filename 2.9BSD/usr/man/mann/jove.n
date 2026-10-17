@@ -1,0 +1,330 @@
+.de FN
+.sp 1
+\f3\\$1	\\$2\f1	\" command name, and key binding
+.sp 0	\" To fool the filling
+..
+.TH JOVE LSRHS
+.SH NAME
+jove - Jonathan's Own Version of Emacs
+.SH SYNOPSIS
+.B jove
+[-t tagname] [file1 file2 ... ]
+.SH DESCRIPTION
+.ll 65
+.ad
+.PP
+Jove is an interactive display oriented editor which allows one to
+modify text easily.  Jove stands for \f3Jonathan's Own Version of
+Emacs\f1. This editor is modeled after the EMACS written at MIT by
+Richard  Stallman.  Jove has tried to stick to the conventions of real
+EMACS, but has strayed away from them in several places.  The real EMACS
+is extensible, which means the user can change the way the editor
+behaves to his own liking. He can do this by changing the commands that
+each key invokes or by writing new commands.  Although new commands
+cannot be written in \f3jove\f1, existing commands can be \f3bound\f1
+to any key. There are several concepts a user needs to understand before
+he can use the editor to his full advantage. The three most important
+are \f3buffers\f1, \f3windows\f1 and \f3command binding\f1.
+.PP
+In most cases, Jove is used to edit already existing files.  Jove reads
+files into \f3buffers\f1.  A \f3buffer\f1 is where Jove stores its
+version of the file; changes made in the editor are made to the buffer,
+not the original file.  If the user makes a change but wishes he did
+not,  he can simply reread the file from the disk into a fresh buffer.
+If Jove is given no files to edit it creates an empty buffer with no
+file associated with it.  When the user has finished editing and is
+satisfied with his changes, he can save the buffer to a file with the
+\f3write-named-file\f1 command. This command asks for a file name and
+writes the contents of the buffer to that file.  Once a buffer is
+written to a file, the old version of the file is gone forever, so be
+careful!! Jove complains if the buffer is modified and an attempt is
+made to leave before saving the changes.  It says \f3Modified buffers
+exists.  Leave anyway?\f1.  Answering \f3no\f1 to this question will
+leave the user in the editor so that he can write the buffers he
+wishes.  If he wants to exit, e.g. he made a mistake, he should answer
+\f3yes\f1.
+.PP
+The current position in a buffer is called the \f3point\f1.  The
+\f3point\f1 should not be thought of as being on a character, rather
+as being between two characters, namely the character before the cursor
+and the character under the cursor.
+.PP
+Jove supports multiple buffers.  This means that more than one file can
+be edited at a time, each file having its own buffer.  Jove remembers
+what each buffer looks like while it is not in use.  This makes it
+possible to jump around from one buffer to another without losing any
+previous changes, and without having to save the changes each time a new
+buffer is selected.  Each buffer has its own set of characteristics that
+jove also remembers, so switching from one buffer to another can change
+the way the editor behaves.  Jove uses \f3windows\f1 to show what
+the buffer looks like at any time.
+.PP
+Often files are too large to fit in the terminals screen all at once.
+While in the editor, the screen acts as a \f3window\f1 into a buffer,
+always showing what the buffer looks like.  If the point moves past the
+top or bottom of the window, the window moves to where the point has
+moved.   When a line is too long to fit on the terminal, jove shows this
+by putting an \f3!\f1 at the end of the line.  Moving the point to a
+position that is off the screen horizontally causes the line containing
+the point to be \f3scrolled\f1 to the right or the left such that the
+\f3point\f1 is visible.  Only the current line is ever scrolled.  If the
+line containing the point is scrolled and the point moves to a different
+line, the scrolled line automatically moved back to its normal
+position.  The window reflects what is being done as it is being done, so
+what you see is ALWAYS what you get.
+.PP
+Initially there is only one window, but it is possible to divide a
+window so that there are two smaller windows. The smaller windows are
+exactly the same as the original window except for the amount of the
+buffer each can show at a time. Sometimes the same buffer will be shown
+in more than one window, and other times there will be a different
+buffer in each window.
+.PP
+There are many commands built into jove.  There is a command handler in
+jove that prompts for commands. When the name of a command typed in is
+unambiguous, that command will be executed. Since it is very slow to have
+to type in the name of each command every time it is needed, jove makes
+it possible to \f3bind\f1 commands to keys.  When a command is
+\f3bound\f1 to a key any future hits on that key will invoke that
+command.  All the printing characters are \f3initially\f1 bound to the
+function \f3self-insert\f1 so that typing any one of the printing
+characters causes it to be inserted into the text.  Any of the existing
+commands can be bound to any key.  Since there are more commands than
+there are keys, two keys are treated as \f3prefix\f1 commands.  When a
+key bound to one of the prefix commands is typed, the next character
+typed is interpreted on the basis that it was preceded by one of the
+prefix keys.  Initially \f3^X\f1 and \f3ESC\f1 are the prefix keys, and
+as you will see, many of the built in commands are initially bound to
+these "two stroke" keys.
+.PP
+Users will likely want to modify the default key bindings to his
+liking.  Since it would be quite a pain to have to set up the bindings
+each time jove is started up, jove reads commands from the file
+\f3.joverc\f1 in the user's home directory.  This commands are read as
+if they were typed to the command handler during an edit.  There can
+be only one command per line in the init file.  The \f3source\f1
+command can be used to read commands from a specified file.  This
+means that a macro can be used to change the key bindings, e.g. to
+enter a mode, by reading from a specified file which contains all the
+new bindings.
+.PP
+Jove is invoked by simply typing \f3jove\f1 to either \f3shell\f1 or
+\f3C-shell\f1.  If arguments are provided on the command line, jove
+treats each as a file to be read, and reads it into its own buffer.
+The current buffer will be the first file read in, and the point will be
+at the beginning of the buffer.  There is one exception.  If jove sees a
+\f3-t\f1 on the command line it takes the next word to be a C tag and 
+reads in the file containing that tag.  Inexperienced users need not 
+worry about that though.  At the bottom of each window is the \f3mode
+line\f1 associated with that window.  A typical mode line might look
+like this:
+.sp 1
+.nf
+   \f3JOVE (TE)   Buffer: jove.1   "jove.1" *\f1
+.fi
+.sp 1
+The mode line always says \f3JOVE\f1.  The \f3TE\f1 inside the
+parentheses means the editor is in \f3text-fill\f1 mode (see \f3modes\f1
+below).  In this example the name of the buffer is \f3jove.1\f1 and
+the name inside the quotes is the file.  In this case the file is
+\f3jove.1\f1; in general the buffer name and the file name are the
+same. The \f3*\f1 at the end of the line indicates that the buffer
+has been modified but not saved.  The very bottom line on the screen is
+the \f3message line\f1.  This is where jove prints any messages and
+where jove prompts the user for more input.  For example, when the user
+wants to save his buffer, jove would ask for a file name to use on this
+line.
+.PP
+Once invoked, Jove is ready to accept commands from the user.  Most of
+the editor commands move the point around in the buffer and others
+change what the buffer looks like.  These commands operate on single
+characters, words, lines, and on regions.  One of the more common
+editor commands is the \f3self-insert\f1 command.
+.PP
+The \f3self-insert\f1 command simply inserts the character that invoked it
+into the buffer at the point.  Because the point is really
+between two characters, inserting a character at point pushes all the
+characters, from the point to the end of the line, over to the right to
+make room for the new character. The point moves one to the right
+staying just ahead of the newly inserted character.  This means that if
+the user wants to insert a word, he can just type the word.  If the
+point did not move  as he typed, he would have to move forward a
+character after each letter of the word was typed.  Characters
+which are not self inserting, for example those which are other editor
+commands, also can be inserted but must be \f3quoted\f1 first. This is
+done with the \f3quote-char\f1 command which inserts the next character
+typed no matter what character it is.
+.PP
+\f3CONTROL-Q\f1 (that is the \f3CTRL\f1 key typed with the \f3Q\f1 key
+at the same time) is an example of a \f3control\f1 character.  \f3^Q\f1
+is short hand for \f3CONTROL-Q\f1.  Many of the editor commands are
+\f3bound\f1 to \f3control\f1 keys initially since the rest of the
+characters are \f3self-inserting\f1.  \f3Escape\f1 characters are
+different from \f3control\f1 character in that they are typed in two
+keys strokes, namely the \f3ESC\f1 key followed by any other key.  If
+there is not a command bound to the \f3escape <character>\f1 sequence,
+the editor will complain.
+.PP
+The commands \f3forward-character\f1 and \f3backward-character\f1
+are bound to the keys \f3^F\f1 and \f3^B\f1 respectively.  They move
+forward and backward one character position in the buffer.  The commands
+\f3forward-word\f1 and \f3backward-word\f1 are bound to the keys
+\f3ESCAPE-F\f1 and \f3ESCAPE-B\f1 respectively.  They are the same is
+the \f3^F\f1 and \f3^B\f1 commands except that they operate on
+\f3words\f1.  The commands \f3next-line\f1 and \f3previous-line\f1 are
+examples are commands that operate on lines. There are commands that
+delete text in units of characters, words, and lines also.
+\f3delete-next-character\f1 deletes the character after point and
+\f3delete-previous-character\f1 deletes the character before point.
+\f3delete-next-word\f1 and \f3delete-previous-word\f1 are the same as the
+two delete character functions except that they operate on words.
+.PP
+Sometimes it is useful to run a command a specific number of times, for
+example to move down 10 lines, the sequence \f3ESC-10-^N\f1 will work, if
+the \f3^N\f1 is bound to the \f3next-line\f1 command.  In general,
+\f3ESCAPE\f1 followed by a number, followed by a command, runs that
+command \f3number\f1 times.  This is called giving the command a numeric
+argument, or providing a prefix argument. Some of the commands ignore
+numeric arguments, for example \f3read-file\f1, but most of the commands
+use the numeric argument.
+.PP
+A \f3region\f1 is defined as all the text between two buffer positions.
+\f3Marks\f1 provides a way to remember a position in the buffer other
+than the point.  The \f3set-mark\f1 command sets a mark to where the
+point is at the time the command is invoked.  Once a mark is set, the
+user can move the point anywhere else and later use various commands to
+manipulate the mark.  Aside from delimiting the region, the mark is also
+useful for remembering a spot that you may want to go back to.  To make
+this feature more useful, JOVE remembers 19 previous locations of the
+mark.  Most commands that set the mark push the old mark onto this
+stack.  To return to a marked location, invoking the \f3set-mark\f1
+command with a prefix argument (e.g. \f3^U-^@\f1) will do.  This moves
+the point to where the mark was, and restores the mark from the stack of
+former marks.  So repeated use of this command moves point to all of the
+old marks on the stack, one by one.  Since the stack  is actually a
+ring, enough uses of \f3^U-^@\f1 bring the point back to where it
+was originally.
+PP.
+It is sometimes necessary to get from one place in a buffer to another 
+quickly.  Using the primitive motion commands would work, but would be
+rather slow. \f3Search commands\f1 provide a quick and easy way to move
+over large portions of text.  The user is prompted for a string to
+search for.  The search starts from the point, so forward searches will
+not find any matches that are before the point, and reverse searches
+will not find any matches after the point.  If the search was forward
+and the editor manages to find the string, the point moves to the end of
+the string.  If the search was backward and the editor finds the string,
+the point moves to the beginning of the string. Otherwise the user will
+be informed of the failure and left where he was.  Jove supports
+\f3regular expressions\f1 also, but they are rather complicated. For
+complete documentation see \f3ed(1)\f1 in the UPM. Another useful
+command is the \f3replace-search\f1 command.  This command prompts the
+user for a search string, then prompts for a replacement string, and
+then searches the buffer for the search string replacing all occurrences
+with the replacement string.
+.bp
+Here is a list of all the commands, with a short description of each
+and the key that the command is initially bound to.
+.PP
+.so /u1/jpayne/jove/lib/commands.1
+.ta 4 12
+.sp 2
+.bp
+The following are list of variables which change the way the editor
+behaves.  All the variables, and the effect they have on the behavior of
+the editor, are listed below.  When certain variables are set to non-zero
+values, jove prints their abbreviations (in parentheses) on the mode line.
+.PP
+.ta 30
+.FN allow-^S-and-^Q
+When set to non-zero, jove disables the stop (XOFF) and start (XON)
+characters, thus making it possible to bind editor commands to those
+keys.  Most often, the \f3^S\f1 and \f3^Q\f1 keys are the stop and start
+characters, which means when this variable is set, \f3search-forward\f1
+can be bound to \f3^S\f1, and \f3quote-char\f1 can be bound to \f3^Q\f1,
+like they are supposed to be bound.
+.FN auto-indent (AI)
+This variable affects the way the \f3RETURN\f1 key works. Normally
+typing \f3RETURN\f1 divides the current line at point moving point down
+to the next line. That still happens in this mode but the line is
+automatically indented the same as the previous line. This is useful for
+structure programming languages like C and PASCAL.
+.FN c-mode (C)
+This mode the tab character and the \f3}\f1.  Instead of just inserting
+the tab, the editor determines where the tab ought to be for the C
+language and tabs to there instead.  The same thing happens with the
+close brace.  It is tabbed to the right place and then inserted.
+.FN case-independent-search (CIS)
+This affects the way search works.  When in this mode, jove ignores the
+difference between upper case and lower case so \f3A\f1 matches \f3a\f1
+as well as \f3A\f1.
+.FN internal-tabstop (not-shown)
+This tells jove how many spaces a tab should take up when it is printed.
+The default is 8.
+.FN magic (MA)
+This mode makes regular expression available.  This is not the default
+because for new users because certain characters in the search strijng do
+not always do what they normally would.
+.FN make-all-at-once 
+Tells the editor to run \f3make\f1 with the \f3-k\f1 option when running
+the \f3compile-it\f1 command.
+.FN over-write (OV)
+This mode changes the way self-inserting characters work. Instead of
+pushing the rest of the line over, the character after the point is
+replaced.
+.FN physical-tapstop
+This tells jove how big the tabstops are for the specific terminal.
+When the terminal is in \f3tabs\f1 mode (see \f3stty\f1(1)), jove will
+take advantage of that fact, and optimize the cursor motion using tabs.
+.FN right-margin (not-shown)
+This is used by the \f3justify-paragram\f1 command, and says how long
+it should try to make each line.
+.FN show-match (SM)
+This affects the close parenthesis (brace) characters. When one of those
+is typed in this mode it is inserted normally. Then the cursor flashes
+to the matching open parenthesis (brace) for one second and then move
+back to point. If the match was not on the screen, nothing happens.
+If there is no match the user is informed of the error.
+.FN single-scroll
+This changes the way the editor behaves when the point moves out of the
+range of a window.  Instead of centering the line containing the point,
+the editor leaves the line at the top, or bottom of the screen
+(depending on which end the point moved off).  This is useful if the
+terminal is running at a slow baud rate.
+.FN text-fill (TF)
+When in this mode, the editor will automatically insert carriage returns
+when lines reach the right margin. The default \f3right-margin\f1 is
+72.
+.FN write-files-on-make (not-shown)
+When non-zero, jove writes all the modified buffers when the
+\f3compile-it\f1 command is invoked (default is non-zero).
+.PP
+To put the editor on one of these modes, use the \f3set\f1 command.
+The set command prompts for one of the mode variables to set.  A
+non-zero value means the mode is on, and a value or 0 means the mode is
+off.
+.sp 1
+.nf
+   \f3JOVE (C-SM-AI)   Buffer: jove.c   "jove.c" *\f1
+.fi
+.sp 1
+If in these modes, typing \f3}\f1 would cause the \f3}\f1 to be indented
+before inserted, and then the cursor would flash to the matching
+\f3{\f1.
+.SH FILES
+/usr/tmp     where the temporary files are stored.
+.SH SEE ALSO
+edt(1), ed(1).
+.SH DIAGNOSTICS
+Jove diagnostics are meant to be self explanatory.
+.SH BUGS
+It doesn't garbage collect the tmp file so it could run out of tmp
+space when it doesn't have to.
+.sp 1
+There should be one bind-to-key command that works for both macros and
+built in commands.
+.sp 1
+There should be a way to abort \f3read-file\f1 and the search commands.
+.sp 1
+Jove should not blow up when it tries to source a file which doesn't
+have editor commands in it.

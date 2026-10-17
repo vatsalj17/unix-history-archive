@@ -1,0 +1,38 @@
+
+ALARM(2)            UNIX Programmer's Manual             ALARM(2)
+
+NAME
+     alarm - schedule signal after specified time
+
+SYNTAX
+     alarm(seconds)
+     unsigned seconds;
+
+DESCRIPTION
+     _A_l_a_r_m causes signal SIGALRM (see _s_i_g_n_a_l(2)) to be sent to
+     the invoking process in a number of seconds given by the
+     argument.  Unless caught or ignored, the signal terminates
+     the process.
+
+     Alarm requests are not stacked; successive calls reset the
+     alarm clock.  If the argument is 0, any alarm request is
+     cancelled.  Because the clock has a 1-second resolution, the
+     signal may occur up to one second early; because of schedul-
+     ing delays, resumption of execution of when the signal is
+     caught may be delayed an arbitrary amount.  The longest
+     specifiable delay time is 65535 seconds.
+
+     The return value is the amount of time previously remaining
+     in the alarm clock.
+
+SEE ALSO
+     pause(2), signal(2), sleep(3)
+
+ASSEMBLER
+     (alarm = 27.)
+     (seconds in r0)
+     sys alarm
+     (previous amount in r0)
+
+Printed 7/30/83                                                 1
+

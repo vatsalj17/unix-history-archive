@@ -1,0 +1,39 @@
+.TH PKON 2
+.UC
+.SH NAME
+pkon, pkoff \- establish packet protocol
+.SH SYNOPSIS
+.B pkon(fd, size)
+.PP
+.B pkoff(fd)
+.SH DESCRIPTION
+.I Pkon
+establishes packet protocol (see
+.IR pk (4))
+on the open character special file whose file
+descriptor is
+.I fd.
+.I Size
+is a desired packet size, a power of 2 in the range
+.RI 32\(<= size \(<=4096.
+The size is negotiated with a remote packet driver,
+and a possibly smaller actual packet size is returned.
+.PP
+An asynchronous line used for packet
+communication should be in raw mode;
+see
+.IR tty (4).
+.PP
+.I Pkoff
+turns off the packet driver on the channel whose
+file descriptor is
+.I fd.
+.SH RETURN VALUE
+Upon successful completion, a value of 0 is returned.  Otherwise, a
+value of \-1 is returned and
+.I errno
+is set to indicate the error.
+.SH SEE ALSO
+signal(2), pkopen(3), pk(4), tty(4)
+.SH BUGS
+The packet protocol is not supported by the operating system.

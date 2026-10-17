@@ -1,0 +1,42 @@
+.TH GLDAV 2 
+.UC
+.SH NAME
+gldav \- get load average
+.SH SYNOPSIS
+.B gldav(svec)
+.br
+.B short svec[3];
+.SH DESCRIPTION
+.I Gldav
+returns the load average on the system in internal format.
+The only routine which should call
+.IR gldav " is " loadav (3).
+All user programs should call
+.IR loadav (3),
+which translates the vector into a reasonable format.
+.PP
+The three numbers returned are the contents of the kernel
+variable
+.IR avenrun .
+This variable contains the 1, 5, and 15 minute load averages
+in a psuedo-floating point format.
+The leftmost 8 bits are to the left of the decimal point,
+the rightmost 8 bits are to the right.
+.SH ERRORS
+.I Gldav
+will fail if:
+.TP 20
+[EFAULT]
+.I Svec
+points to an address not in the process's allocated address space.
+.SH "SEE ALSO"
+la(1), w(1), loadav(3)
+.SH ASSEMBLER
+.nf
+(local = 58., gldav = 14.)
+(address of vec in r0)
+.B sys local; 9f
+\&. . .
+.B \&.data
+.B 9: sys gldav
+.fi

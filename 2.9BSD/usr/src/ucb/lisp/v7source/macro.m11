@@ -1,0 +1,537 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+	.nlist
+
+	.page
+	.sbttl	general macro file for lisp-11		fwh
+	;these macros make the creation of the 
+	;start up state of the language easier and more
+	;flexible than hand coding
+
+.sbttl	lower case ascii macro--asclc
+
+.macro .asclc, str
+	.nlist meb
+
+	.irpc x, ^%str%
+
+	.if ge ''x-101
+		.if le ''x-132
+			.byte ''x+40
+		.iff
+			.byte ''x
+		.endc
+	.iff
+	.byte ''x
+	.endc
+
+	.endm
+
+	.byte	0
+	.list meb
+.endm
+
+
+
+.macro	defobl	list
+	obl'list=anil
+.endm
+
+.macro	dumphash	list
+	obl'list
+.endm
+
+
+.if	ndf,mdef
+	mdef=1
+
+
+.macro 	cons	x,y
+	.psect	ddtpr con
+	ddtpr=.
+	x
+	y
+.endm
+.macro 	atom	name,lab,tlb,plist,fnb,funhsh
+	.psect	datom con
+	datom=.
+	.if	nb,lab
+		lab:
+	.endc
+	.if	nb,plist
+	 .ift
+		 plist
+	 .iff
+		 anil
+	.endc
+	.if	nb,tlb
+	 .ift
+		 tlb
+	 .iff
+	anil
+	.endc
+	.if	nb,fnb
+	 .ift
+		 fnb
+	 .iff
+		 anil
+	.endc
+	.asclc	name
+	.even
+	chash=0
+	.irpc char,^%name%
+		atxor	char
+	.endr
+	chash=chash&hashm
+	atom1	\chash
+.if	ne,xfer
+  .if	nb,fnb
+	.psect	bcdmap,con
+
+	.word	fnb,datom
+  .endc
+.endc
+
+.endm
+
+
+.macro	atxor	x
+	.if ge ''x-101
+		.if le ''x-132
+			v= ''x+40
+		.iff
+			v= ''x
+		.endc
+	.iff
+	v= ''x
+	.endc
+
+	chash=<chash&<^c v>>!<v&<^c chash>>
+.endm
+
+
+.macro	atom1	list
+	.if	eq,hash
+	 .ift
+		cons	datom,oblist
+		oblist=ddtpr
+	 .iff
+		cons	datom,obl'list
+		obl'list=ddtpr
+	.endc
+.endm
+
+.macro	car	x,y	;;leaves car of x in y
+	mov	@x,y
+.endm
+.macro	cdr	x,y
+	.ntype	tmp,x
+	.if	eq,tmp&70
+	 mov 2(%<7&tmp>),y
+	.mexit
+	.endc
+	mov	x,y
+	add	#2,y
+	mov	@y,y
+.endm
+.macro subr	x,y
+	atom	x,,,,y
+.endm
+.macro propush	x
+		 push x
+		 inc (sp)
+.endm
+.macro push	x
+	mov	x,-(sp)		;;only good for cstk push;not for npush
+.endm
+.macro 	pop	x
+	mov (sp)+,x
+.endm
+.macro call	x
+	jsr	pc,x
+.endm
+.macro ret
+	rts	pc
+.endm
+.macro pushj	x
+	jsr 	pc,x
+.endm
+.macro popj
+	rts	pc
+.endm
+
+.macro	brifsmalint	a,b
+	.if	eq,smlint
+		.ift
+		.mexit
+		.iff
+		 cmp	a,#-^d1300	;add a few for good measure
+		 bhis	b
+	.endc
+.endm
+.macro unpropop	x
+	.ntype	tmp,x
+	.if	eq,tmp&70
+	 .ift
+	    pop	x
+	    dec	x
+	 .iff
+	    dec  (sp)
+	    pop    x
+	.endc
+.endm
+.macro	cmptype	s,r,v
+	.if	nb,v
+	 mov	s,r
+	 cmpty1	r,v
+	 .mexit
+	.endc
+	cmpty1	s,r
+.endm
+
+.macro	cmpty1	r,v
+	clrb	r
+	swab	r
+	.if	idn,0,v
+	 .ift
+	  tstb	qmap(r)
+	 .iff
+	  cmpb	qmap(r),v
+	 .endc
+.endm
+
+.macro	ldtype	x,y
+	.if	nb,y
+	  mov	x,y
+	  ldtyp1	y
+	  .mexit
+	.endc
+	ldtyp1	x
+.endm
+.macro	ldtyp1	x
+	clrb	x
+	swab	x
+	movb	qmap(x),x
+.endm
+.macro	consa
+	call	xconsa
+.endm
+.macro	consb
+	call	xconsb
+.endm
+.macro	consbnil
+.if	ne,nilas0
+	call	xconsb-2
+  .iff
+	call	xconsb-4
+.endc
+.endm
+.macro	getc
+	call	xgetc
+.endm
+.macro	savec
+	call	xsavec
+.endm
+.macro	jmpifnil	x,y,z
+.if	ne,nilas0
+   .if  b,z
+	tst	x
+    .endc
+.iff
+	cmp	x,#anil
+.endc
+	beq	y
+.endm
+
+.macro	jmpnnil	a,bb,c
+.if	eq,nilas0
+	cmp	a,#anil
+  .iff
+	.if	b,c
+	tst	a
+	.endc
+.endc
+	bne	bb
+.endm
+
+.macro	jmpift	x,y
+	cmp	x,#atrue
+		   beq	y
+.endm
+
+.macro	loadnil	x
+ .if	ne,nilas0
+	clr	x
+  .iff
+	mov	#anil,x
+.endc
+.endm
+.macro	goto	x
+	jmp	x
+.endm
+.macro	npush	x
+	cmp	np,nplim
+	blo	.+6
+	call	nperror
+	tst	(np)+
+.if	ne,nilas0
+	clr	(np)+
+ .iff
+	mov	#anil,(np)+
+.endc
+.if	ne,nilas0
+  .if	idn,x,#anil
+	clr	@np
+      .iff
+	mov	x,@np
+ .endc
+  .iff
+	mov	x,@np
+.endc
+.endm
+.macro	npop	x
+	mov	@np,x
+	cmp	-(np),-(np)
+.endm
+.macro	numga
+	call	xnum1
+.endm
+.macro	numgj1
+	call	xnum2
+.endm
+
+.macro	numga0
+	.globl	xnumg0
+	call xnumg0
+.endm
+
+.macro	numga1
+	.globl	xnumg1
+	call	xnumg1
+.endm
+
+.macro	nmstore
+	call	xnums
+.endm
+.macro	retnil
+.if	ne,nilas0
+	clr	a
+	ret
+  .iff
+	jmp	$retnil
+	.globl	$retnil
+.endc
+.endm
+.macro	rettrue
+	jmp	$rettrue
+.endm
+
+.macro	numstac0
+	.globl	xnumsac0
+	call	xnumsac0
+.endm
+
+.macro	error	msg,where
+	generm	<'msg'>
+	mov	#tmp-<^pl errorm>,a
+	.if	b,where
+	.ift
+	jmp	cantcont
+	.iff
+	push	#where
+	jmp	errort
+.endc
+.endm
+
+
+.macro	getca
+	call	xgetca
+.endm
+.macro	dispatch
+	call	xdispa
+.endm
+.macro outstr	x
+	mov	#'x,b
+	call	putstr		;;to port on top of nstk
+.endm
+
+
+
+.if	eq,multiseg
+ .ift
+  .macro	subrbeg	l,a,b,litlist
+	.rsect	dsubr con
+  l:
+	.if	idn lambda,a
+	 .ift	
+	  subtmp=b*1000
+	 .iff
+	  subtmp=100000!<b*1000>
+	 .endc
+	 subloc=.
+	 .if	nb,litlist
+	  .word	0,litlist
+	 .iff
+	  .word	0,anil
+	 .endc
+  .endm
+
+
+  .macro	subrend
+	tmp=.
+	.=subloc
+	.word	subtmp!<<tmp-subloc>>
+	.=tmp
+
+  .endm
+
+
+.iff
+
+
+  .macro	subrbeg	l,ty,arf,litlist
+	.psect	shrcode
+	tmp=.
+	.psect	dsubr
+	.if	eq,<<.-starbc>&377>-374
+	 .word	0,0
+	.endc
+	.if	idn ty,lambda
+  l:	 .word arf*1000
+	.iff
+  l:	 .word <100000!<arf*1000>>
+	.endc
+	.if	nb,litlist
+	  .word	litlist,tmp
+	.iff
+	  .word	anil,tmp
+	.endc
+	.rsect	shrcode
+.endm
+
+.macro	subrend
+.endm
+
+.endc
+
+.macro	chanl
+	jsr	%7,chanl
+.endm
+
+.macro	chas
+	jsr	%7,chas
+.endm
+
+
+
+.macro	.rsect	sect,con
+	.if	idn,shrcode,sect
+	remsect=0
+	.endc
+	.if	idn,shrcod,sect
+	remsect=0
+	.endc
+	.if	idn,dsubr,sect
+	remsect=1
+	.endc
+	.if	idn,initcd,sect
+	remsect=2
+	.endc
+	.if	idn,onepage,sect
+	remsect=3
+	.endc
+	.psect	sect	con
+.endm
+
+.macro	rsect
+	.if	eq,remsect
+	.psect	shrcode	con
+	.endc
+	.if	eq,remsect-1
+	.psect	dsubr	con
+	.endc
+	.if	eq,remsect-2
+	.psect	initcd	con
+	.endc
+	.if	eq,remsect-3
+	.psect	onepage con
+	.endc
+.endm
+
+.macro	generm	msg
+	.psect	errorm con
+	tmp=* .
+	.asciz	msg
+	rsect
+.endm
+;
+;	;these should only be used if ctable is not
+;	;redifined (as does the system lisp)!!!!!!!!!!!!
+;
+;;isalph branches to where if r (a register) is a-z,and a few others
+;
+;
+;
+;.macro	isalph	r,where
+;	bic	#177400,r
+;	bitb	#2,ctable(r)
+;	bne	where
+;.endm
+;
+;;isnum branches to where if r is number
+;
+;.macro	isnum	r,where
+;	bic	#177400,r
+;	bitb	#10,ctable(r)
+;	bne	where
+;.endm
+;
+;
+;;issep branches to where if space, tab, cr, lf, ...
+;
+;.macro	issep	r,where
+;	bic	#177400,r
+;	bitb	#4,ctable(r)
+;	bne	where
+;.endm
+;
+;;macro isbrk branches to where if sep of (,),.,[,]
+;
+;.macro	isbrk	r,where
+;	bic	#177400,r
+;	tstb	ctable(r)
+;	blt	where
+;.endm
+;
+;
+;;macro isalnum	branches to where if r is a-z and feq others, or 0-9
+;
+;.macro	isalnum	r,where
+;	bic	#177400,r
+;	bitb	#12,ctable(r)
+;	bne	where
+;.endm
+;
+.endc				;match original conditional
+
+	.list
+
+.macro	save1
+	call	xsave1
+.endm
+
+.macro	save2
+	call	xsave2
+.endm
+
+.macro	save3
+	call	xsave3
+.endm
+
+.macro	save4
+	call	xsave4
+.endm
+
+.macro saveret
+	mov	(sp),pc
+.endm

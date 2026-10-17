@@ -1,0 +1,41 @@
+
+SUBMIT(1)           UNIX Programmer's Manual            SUBMIT(1)
+
+NAME
+     submit - protect background jobs
+
+SYNOPSIS
+     submit -c command
+     submit [ -p ] pid
+     submit program arguments
+
+DESCRIPTION
+     _S_u_b_m_i_t protects background jobs from termination when a user
+     logs off.  _I_n_i_t(8) sends a SIGKILL to each unsubmitted back-
+     ground job when a user logs out but processes blessed by
+     _s_u_b_m_i_t are allowed to continue running (at a lower prior-
+     ity).
+
+EXAMPLES
+     There are three ways to use _s_u_b_m_i_t:
+
+     1)        % submit -c command
+          as in
+               % submit -c "a.out <infile >outfile"
+
+     2)        % submit [-p] pid ...
+          as in
+               % a.out < infile > outfile &
+               3457
+               ...
+               % submit [-p] 3457
+
+     3)        % submit program arguments
+          as in
+               % submit cc -O -o zzz zzz.c -lm
+
+SEE ALSO
+     nice(1), renice(1), nice(2), renice(2), submit(2)
+
+Printed 8/5/83                                                  1
+

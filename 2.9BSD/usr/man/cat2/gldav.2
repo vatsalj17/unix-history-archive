@@ -1,0 +1,41 @@
+
+GLDAV(2)            UNIX Programmer's Manual             GLDAV(2)
+
+NAME
+     gldav - get load average
+
+SYNOPSIS
+     gldav(svec)
+     short svec[3];
+
+DESCRIPTION
+     _G_l_d_a_v returns the load average on the system in internal
+     format.  The only routine which should call _g_l_d_a_v is
+     _l_o_a_d_a_v(3).  All user programs should call _l_o_a_d_a_v(3), which
+     translates the vector into a reasonable format.
+
+     The three numbers returned are the contents of the kernel
+     variable _a_v_e_n_r_u_n.  This variable contains the 1, 5, and 15
+     minute load averages in a psuedo-floating point format.  The
+     leftmost 8 bits are to the left of the decimal point, the
+     rightmost 8 bits are to the right.
+
+ERRORS
+     _G_l_d_a_v will fail if:
+
+     [EFAULT]            _S_v_e_c points to an address not in the
+                         process's allocated address space.
+
+SEE ALSO
+     la(1), w(1), loadav(3)
+
+ASSEMBLER
+     (local = 58., gldav = 14.)
+     (address of vec in r0)
+     sys local; 9f
+     . . .
+     .data
+     9: sys gldav
+
+Printed 7/30/83                                                 1
+

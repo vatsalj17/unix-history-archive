@@ -1,0 +1,25 @@
+	This directory contains the sources for the job control library
+libjobs.a.  It also contains new versions of three standard system call
+interfaces (read, write and ioctl).  These new routines place their
+arguments on the stack instead of using a static location.  Thus, they
+are reentrant and allow a read or write in a signal-handling routine
+while there is an outstanding read or write which will be restarted.
+However, the new routines will ONLY work with kernels that support job
+control.  Therefore, you have several choices on how to install them.
+If you intend to run job control all of the time and don't care that
+non-job control binaries aren't runnable without job control in the
+kernel, then install these routines in place of the old versions in the
+C library with a "make installlibc".  This is the preferred
+installation.  If you want to limit use of these routines to programs
+that use libjobs, you could just archive them in libjobs.a.  However,
+they won't get taken from libjobs.a if a program uses only stdio,
+because they won't be undefined until the C library is being searched.
+The final option is to force them to be loaded by combining them with
+signal.s.  This can be done with a "make libhack.a" (sorry, but it
+really is a hack).  The libraries on the distribution tape were made in
+this way, since the C library had to work with and without job control.
+	There is also a new version of sleep; it simply uses sigset
+instead of signal.
+	All of these comments apply to the overlay version also.  Make
+the overlay library with "make -f Ovmakefile libovjobs.a" or
+"make -f Ovmakefile libovhack.a".

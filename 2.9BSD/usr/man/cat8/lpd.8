@@ -1,0 +1,72 @@
+
+LPD(8)              UNIX Programmer's Manual               LPD(8)
+
+NAME
+     lpd - line printer daemon
+
+SYNTAX
+     /usr/lib/lpd
+     /usr/lib/vpd
+
+DESCRIPTION
+     _L_p_d is the line printer for the daemon.  _V_p_d is the Versatec
+     printer/plotter daemon.  _L_p_d uses the directory
+     /_u_s_r/_s_p_o_o_l/_l_p_d (or /_u_s_r/_s_p_o_o_l/_v_p_d in the case of the vpd).
+     A file named _l_o_c_k in that directory prevents two daemons
+     from becoming active.  After the program has successfully
+     set the lock, it forks and the main path exits, thus spawn-
+     ing the daemon.  The spool directory is scanned for files
+     beginning with _d_f.  Each such file is submitted as a job.
+     Each line of a job file must begin with a key character to
+     specify what to do with the remainder of the line.
+
+     L    specifies that the remainder of the line is to be sent
+          as a literal.
+
+     B    specifies that the rest of the line is a file name.
+
+     F    is the same as B except a form feed is prepended to the
+          file.
+
+     U    specifies that the rest of the line is a file name.
+          After the job has been transmitted, the file is
+          unlinked.
+
+     M    is followed by a user ID; after the job is sent, a mes-
+          sage is mailed to the user via the _m_a_i_l(1) command to
+          verify the sending of the job.
+
+     Any error will cause the daemon to wait and start over.
+     Because of this, an improperly constructed _d_f file may cause
+     the same job to be submitted repeatedly.
+
+     _L_p_d is automatically initiated by the line printer command,
+     _l_p_r. Similarily _v_p_d is started by the command _v_p_r.
+
+     To restart _l_p_d (in the case of hardware or software malfunc-
+     tion), it is necessary to first kill the old daemon (if
+     still alive), and remove the lock file before initiating the
+     new daemon.  This is done automatically when the system is
+     brought up, by /_e_t_c/_r_c, in case there were any jobs left in
+     the spooling directory when the system went down last.
+
+FILES
+     /usr/spool/lpd      spooling area for line printer daemon
+     /usr/spool/vpd      spooling area for Versetec daemon
+
+Printed 5/17/83                                                 1
+
+LPD(8)              UNIX Programmer's Manual               LPD(8)
+
+     /usr/spool/lpd/lock lock file for line printer daemon
+     /usr/spool/vpd/lock lock file for Versatec daemon
+     /etc/passwd         to get the user's name for banner
+     /etc/group          to get the user's group name
+     /dev/lp             line printer device
+     /dev/vp0            Versetec printer/plotter device
+
+SEE ALSO
+     lpr(1), vpr(1)
+
+Printed 5/17/83                                                 2
+

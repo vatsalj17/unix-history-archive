@@ -1,0 +1,1095 @@
+
+.tr # {#
+	
+.ls 1
+.bp
+.bl 45
+.ce 1
+L110 Programmer's Manual
+.bl 1
+.ce 1
+Forrest William Howard, Jr.
+.ce 1
+HRSTS
+.ce 1
+Science Center
+.ce 1
+Harvard University
+.ce 1
+September 28,1975
+.he	'''l110 Programming manual'
+.bp
+.fo ''-%-''
+.bl 3
+.ul 1
+Using L110
+.br
+.bl 1
+.bl
+.ti +5
+After you have logged into the HRSTS system , respond
+to the prompting "& " by:
+.bl 1
+##########& l110
+.bl 1
+L110 will respond with a message, and prompt you for input
+with a "->", indicating that you are in eval mode.  Commands
+may now be typed to L110.
+.bl 1
+.bl
+.ti +5
+If one wishes to use the EVALQUOTE feature, then one
+should respond to the prompt with:
+.bl 1
+##########->($MUMBLE T)
+.bl 1
+L110 will then prompt you with "<-" indicating that you are
+in EVALQUOTE mode.  The rules for EVALQUOTE are :
+.bl 1
+##########1.)#A command has the form:
+.br
+#######################F1#(F2#F3#F4#...#Fn)
+.br
+##############where F1,#...,#Fn are arbitrary forms.
+.bl 1
+##########2.)#The form:
+.br
+#######################(F1#(QUOTE2)(QUOTE#F3)...(QUOTE#Fn))
+.br
+##############is#then evaled and the result is printed on
+##############the terminal.
+.bl 1
+.bl
+.ti +5
+Example:
+.bl 1
+##########<-CAR((A B))
+.br
+##########A
+.br
+##########<-CDR((A B C))
+.br
+##########(B C)
+.br
+.bl
+.ti +5
+There are some special characters in L110, namely [, ],
+and "'".  Single quote serves the function of QUOTEing the
+s-expression, atom, or number following, for example:
+.bl 1
+		'A=(QUOTE A)
+.br
+		'(A B C)=(QUOTE (A B C))
+.bl
+.ti +5
+Right bracket serves the function of providing as many
+right parentheses as necessary to close back to either the
+last left bracket or to the beginning of the current
+s-expression.  For example:
+.bl 1
+		(A B C]=(A B C)
+.br
+		(A (B (C ]=(A (B (C)))
+.br
+		(A [B (C])=(A (B (C)))
+.br
+		()=[]=[)=(]=NIL
+.bl
+.ti +5
+The standard editing commands on the HRSTS system work
+with L110, i.e.  CTRL-U erases the current line, RUBOUT
+deletes the last character up to the begining of the line,
+etc.
+.bl 3
+.ul 1
+#Data Types
+.bl 1
+.bl
+.ti +5
+There are 5 data types in L110:
+.bl 1
+.nf 
+.ul 1
+	###Type				Description
+.bl 1
+	Dotted Pair (DTPR)	List element with CAR and CDR.
+.bl 1
+	Integer#(INT)		Number with range +#or#-2^30 -1
+.bl 1
+	Atom#(ATOM)		Unique internal representation  
+					of strings.  Atoms have
+					a Property List (PLIST)
+					a Top Level Binding (TLB) and
+					a Function Binding (FNB).
+.bl 1
+	Binary{Code#(BCD)	Machine instructions.
+.bl 1
+	Ports#(PORT)		Channels for input/output.
+.bl 1
+.br
+.fi
+.bl
+.ti +5
+The CAR and CDR of a dotted pair may point to any other
+system objects, including the DTPR to which they belong.  
+This is true for the PLIST, TLB, and FNB of atoms, although
+these cells are usually reserved for special things (see
+Weissman,C., LISP 1.5 PRIMER).
+.bl 1
+.ti +5
+The name for an atom is a string of up to 64
+characters of the set
+.bl 1
+##########a-z,A-Z,0-9,!,$,",',/,-,+,%,&,<,>,?,*,;,:,","
+.bl 1
+i.e.  all characters except (, ), ".", [, ].  The atom must
+start with a printing character other than (, ), [, ], ".", or
+0-9, and ends with a character from the set (, ), [,
+], ., <space>, <tab>, <cr>, <lf>, <bs>, <ht>, <vt>, <ff>,
+<altmode>.
+When a token begins with a "-", a check is made on the next character to see if it is numeric (0-9); if the second character is numeric, the token is considered an integer.
+Otherwise, the token is made an atom.
+Non-printing or control characters may be imbedded within an atom (but may not start an atom).
+It should be noted that certain character have special meaning in general (^m is a carrige return) or may have special meaning to the Unix monitor (^c, ^d, etc.).
+Only the low order 7 bits of any character are saved; the "parity" bit is disposed of.
+.bl 1
+.ti +5
+A character other than these may be included by
+starting an atom with a double quote; any character other
+than '"' may be included in such an atom.  The atom ends with
+the next occurrence of '"'.
+.bl
+.ti +5
+If two strings are identical, they represent the same
+atom.  Note that upper case atoms (in full or part) are
+different then lower case atoms.  All the atoms that the
+system knows about at the start are lower case.
+.bl
+.ti +5
+The atom "ABC" is equivilent to ABC.
+.bl
+.ti +5
+The cell of the atoms may be referenced by CAR, CDR,
+RPLACA, RPLACD, DEF, PUTD, and GETD, where the "CAR" of an
+atom is its PLIST, and "CDR" of an atom is its TLB.
+.bl
+.ti +5
+In L110, numbers may or may not have a unique
+representation, depending on the value and the version of
+L110 in use.  Please note that EQ always returns T when
+comparing numbers if the value of the numbers are the same,
+whether or not the numbers have the same cell.
+.bl 1
+.ti +5
+The input format for numbers is a string of decimal
+digits, optionally starting with "-".  The number is
+terminated when a non-numeric character is encountered.
+.bl 3
+.ul
+#FUNCTIONS
+.bl 1
+.bl
+.ti +5
+In L110 there are four function types:
+.nf
+.bl 1
+	1.)#BINARY{CODE taking one argument unevaluated.
+.bl 1
+	2.)#BINARY{CODE taking n arguments, each one evaluated.
+.bl 1
+	3.)#Defined LAMBDA taking n arguments, each one evaled.
+.bl 1
+	4.)#Defined NLAMBDA taking one argument, unevaluated.
+.fi
+.bl
+.ti +5
+Expressions used to define functions must start with
+either LAMBDA or NLAMBDA.  Following LAMBDA or NLAMBDA is a
+list of arguments#(possibly null), where each atom of the
+list is the name for an argument for the function defined by
+the expression.  For LAMBDA's, the arguments to the function
+will be evaluated and paired with these argument names.  If
+not enough arguments are supplied, the argument names will
+be initilized to NIL.  If too many arguments are supplied,
+the extra arguments will be evaluated and discarded.  For
+NLAMBDA's, the argument list is bound to the first variable
+in the variable list, and the remaining variables are bound
+to NIL.
+.bl 3
+.ul
+Built-In Functions
+.bl 1
+.bl
+.ti +5
+The functions listed below are built-in functions, i.e.
+they are defined by the basic system.
+.bp
+.nf
+.ul
+FUNCTION	ARGS	DESCRIPTION#(see Weissman)
+.bl 1
+.bl 1
+EXIT		--	Causes return to monitor
+.bl 1
+SYS		--	same as exit
+.bl 1
+DEF		--	(see Weissman)
+.bl 1
+NULL		1	if#ARG=NIL#returns T;#otherwise, return t.
+.bl 1
+PUTD		2	ARG1 must be atomic. Defines the function
+			cell of arg1 to be arg2.
+.bl 1
+GETD		1	ARG##must##be##atomic.## Returns##function
+			definitioni (possibly nil).
+.bl 1
+CONS		2	(pg. 30)
+.bl 1
+CAR		1	(pg. 31)#CAR of an atom is PLIST
+.bl 1
+CDR		1	(pg. 32)#CDR of an atom is TLB
+.bl 1
+ATOM		1	(pg. 74)#(ATOM NIL)=T
+.bl 1
+DTPR		1	Returns T iff arg is DTPR
+.bl 1
+BCD		1	Returns T iff arg is BCD
+.bl 1
+PORT		1	Returns T iff arg is PORT
+.bl 1
+QUOTE		--	(pg. 59)
+.bl 1
+EVAL		1	(pg. 61)
+.bl 1
+PLUS		--	(pg. 83)
+.bl 1
+TIMES		--	(pg. 83)
+.bl 1
+ADD		2	Returns ARG1+ARG2
+.bl 1
+DIFFERENCE	2	(pg. 83)
+.bl 1
+DIFF		2	same as DIFFERENCE
+.bl 1
+QUOTIENT	2	(pg. 83)
+.bl 1
+QUO		2	same as QUOTIENT
+.bl 1
+NUMBERP		1	(pg. 76)
+.bl 1
+NUMBP		1	same as NUMBERP
+.bl 1
+LESSP		2	(pg.#77)
+.bl 1
+GREATERP	2	(pg. 77)
+.bl 1
+RPLACA		2	(pg.#146) value of RPLACA is ARG1
+.bl 1
+RPLACD		2	(pg. 146)#value of RPLACD is ARG1
+.bl 1
+EQ		2	If ARG1 is the same object as ARG2# return
+			T. If ARG1 and ARG2 are both INTs and they
+			are##the##same###value##then###return###T.
+			Otherwise, return NIL.
+.bl 1
+COND		--	(pg. 70)##The####conditional####expression
+			has been##generalized##so##that instead of
+			of doubles it accepts##(M+1)#tuples, where 
+			if the first##element of##the  tuple evals
+			to non-NIL##then##the##2nd##through###m'th
+			elements##are##evaluated.###The##value##of
+			failng a condtional is NIL.
+.bl 1
+PROG		--	(see Weissman) The value##of falling off a
+			PROG is NIL.
+.bl 1
+RETURN		--	RETURN causes control to be transferred to
+			the##function calling the most recent PROG
+			with the value of ARG1 as the value of the
+			PROG.
+.bl 1
+GO		--	If##the##argument###is##non-atomic##it##is
+			evaluated to##(hopefully)##an##atom.  Then
+			all entered##PROGs are##searched##for that
+			label. GO has no value.
+.bl 1
+SETQ		2	(SETQ##ARG1 ARG2)##ARG2 is evaluated.###If
+			ARG1 is atomic, its current binding is set
+			to the result of##evaluating##ARG2; other-
+			wise an error is invoked.
+.bl 1
+SET		2	(set arg1 arg2)
+			Like SETQ, but EVAL'S its arg1.
+.bl
+.fi
+.bl 3
+.ul
+I-O Functions
+.bl 1
+.bl
+.ti +5
+L110 allows 7 ports to be open at once.  
+.bl 1
+.bl 1
+.bl
+.ti +5
+In the functions below, P stands for PORT, which must
+evaluate to either NIL or a PORT returned by INFILE or
+OUTFILE.  Doing I-O to port NIL uses the teletype.  It
+should be noted that the teletype buffer is dumped only when
+PRINT or TERPR is used.  Thus PATOM does not dump the
+buffer.  The result of this is that occasionally characters
+output by PATOM will not show up immediatly.
+.bl 1
+.in 16
+.ti -16
+(INFILE S X)
+.br
+If X is omitted or is NIL then the file (EVAL S) is opened for it.
+If X is non-null, then (EVAL S) in the 
+system library is opened for input.
+The value of INFILE is a PORT.
+.bl 1
+.ti -16
+(OUTFILE S)
+.br
+(EVAL S) is opened for output. 
+The value of OUTFILE is a PORT.
+.bl 1
+.ti -16
+(CLOSE P)
+.br
+The file corresponding to port P is closed.
+.bl 1
+.ti -16
+(DRAIN P)
+.br
+P must be and output port.  The buffer 
+for P is output.  Drain is called implicitly
+by CLOSE, and TERPR and PRINT with NIL as arg.
+.bl 1
+.ti -16
+(RESETIO)
+.br
+All ports are closed. Returns NIL.
+.bl 1
+.ti -16
+(PRINT X P)
+.br
+X is printed on the file corresponding to P.
+.bl 1
+.ti -16
+(PATOM X P)
+.br
+If x is an atom, X is printed without double-quotes to file
+corresponding to P.
+If x is numberic, its low order 8 bits are output to the port specified.
+For teletype raw mode output, attention is called to the function EXEC, applied to the system program stty (though it should be remembered that no input processing is done in raw mode, therefore no ^c's, etc.).
+.bl 1
+.ti -16
+(READ P)
+.br
+One s-expression is read from the file
+corresponding to port P.
+.bl 1
+.ti -16
+(RATOM P)
+.br
+One token is input from the file corresponding to port P.
+On end of file, the special atom "eof" is returned.
+.bl 1
+.ti -16
+(READC X)
+.br
+Reads one character of port X and
+turns that character into an atom.
+The atom eof is returned on end
+of file.
+If input is being taken from the teletype (port nil) then a ^d with no other characters before it will cause "eof" to be returned.
+Otherwise, ^d will cause immediate transmission of the preceeding characters.
+^c works as for ususal teletype input
+.bl
+.ti -16
+(LOAD S X)
+.br
+The file referred to by the algorithm in INFILE
+is opened, and (EVAL(READ)) is performed upon it 
+until end-of-file is encountered.
+.bp
+.ti -16
+.ul
+Debugging Functions
+.bl 1
+.ti -16
+(PROTOCOL X)
+.br
+If X is NIL, the file L110.PROTOCOL is opened.
+Otherwise open the file X.
+Then copy out the input and output done on the 
+teletype to that file.
+.bl
+.ti -16
+(UNPROTOCOL B)
+.br
+Close the PROTOCOL file if it is open.
+If B is non-NIL, then also Print and delete
+the protocol file.
+.bl
+.ti -16
+(BT)
+.br
+Prints history of EVAL activations on the
+teletype.
+.bl 1
+.ti -16
+(RESET)
+.br
+Causes immediate return to top level interpreter;
+current state is lost.
+.bl 1
+.ti -16
+(RETBRK INT)
+.br
+if arg is not an int, return nil. otherwise, if
+arg is >=0, then return to that particular break
+level.  if arg is negative, then return to the
+<current level + n>'th level.
+.bl 1
+.ti -16
+(BREAK X)
+.br
+X is printed on the teletype, and control is 
+transferred to the break package. Break can be
+used to suspend the execution of a program.
+.bl 1
+.ti -16
+(CONT X)
+.br
+Control is transferred to the most recent break.
+If the break was due to a non-continuable error,
+.bl
+.nf
+		CAN'T CONTINUE
+.bl
+.fi
+is printed and control is transferred to the break
+level interpreter.  Otherwise, the value of X is
+used to try to continue, or, if the break was due
+to a call from (BREAK), the value of X becomes
+the value of (BREAK).
+.bl 3
+.ti -16
+.ul
+Special Functions
+.bl 1
+.ti -16
+(CONCATP 'atom)
+.br
+CONCATP concats the string corresponding to the Lisp system's process 
+ID to the atom. Example:
+.bl
+.nf
+		foo becomes foo1234.
+.bl
+.fi
+foo1234 is an atom.
+.bl 1
+.ti -16
+(CONCAT 'atom 'arg)
+.br
+If ARG is an integer, CONCAT results in the
+concatenation of the atom and the 
+string representation of the integer. If
+ARF is an atom, results in the
+concatenation of the two atoms. The
+result is an atom.
+.bl 2
+.ti -16
+(NTHCHAR 'atom int) or
+.br
+.ti -16
+###(NTHCHAR 'atom)
+.br
+If only the atom is supplied, the
+result is an int which corresponds to
+the length of the atom's printname.
+If the int is supplied, an atom with
+only one character is returned.
+that character is the n'th character in
+the original atom, or null ("") if the int
+is out of range.
+.bl
+.ti -16
+(GENSYM arg)
+.br
+If ARG is non-INT, returns an atom such
+as GENSYM9999.  If arg is INT, resets
+gensym number to low 16 bits of arg, and
+returns the INT.
+(GENSYM) decrements its number after
+each call.
+.bl
+.ti -16
+(LINELENGTH X)
+.br
+If X is an INT, it is taken to be the new
+width of the output line in characters.
+If X is not an INT, no action is taken.
+The width of the TTY line at point of return
+is always returned.
+.bl 1
+.ti -16
+(CHARCNT P)
+.br
+The number of characters remaining on
+the current line in port P is returned.
+.bl 1
+.ti -16
+(TERPR P)
+.br
+Prints a linefeed on port P. Resets the
+character count used by CHARCNT. 
+.bl 1
+.ti -16
+(PNTLEN ARG)
+.br
+Returns length of PRINTNAME of ARG1 if it
+is INT or ATOM.
+.bl 1
+.ti -16
+(RECLAIM ARG1 ARG2)
+.br
+ARG1 and ARG2 must be NIL or numeric.
+Sets garbage collection parameters to
+return at least ARG1 DTPRS and ARG2 INTS.
+Invokes garbage collection; returns
+.bl
+.nf
+		(FDTPR.FINT).
+.bl 1
+.fi
+.ti -16
+($MUMBLE A B C)
+.br
+If the type of C is an integer, the namestack
+length is adjusted to provide that many bound
+variable pairs before overflow.
+If B is NIL, then the garbage collector is
+enabled to collect just DTPRS and INTS.
+Otherwise, everything is collected.
+If A is NIL, the EVAL READER is set to be used.
+If A is non-NIL, then EVALQUOTE is set to be used.
+The value of $MUMBLE is A if C is non-numeric.
+If C is numeric, a reset is executed at the
+conclusion of the function call.
+.bl 1
+.nf
+	The prompts are as follows:
+		EVAL		EVALQUOTE
+	Normal	->		<-
+	Break##	nn:>		<nn:
+.bl
+.fi
+where nn is the present break level.
+.bp
+.in 0
+.ul
+Non-Primitive Functions
+.br
+.bl 1
+.bl
+.ti +5
+A number of non-primitive functions, i.e., functions
+defined by LAMBDA and NLAMBDA expressions are available in
+L110.  A complete listing can be obtained by typing the file
+/LIB/LISP/AUXFNS.  In most cases, the semantics for the
+functions can be found in Weissman.
+.bl 1
+.ul
+Property List Functions
+.in 16
+.bl 1
+.ti -16
+(PUTPROP ATOM PROPERTY IND)
+.br
+A LAMBDA. This function puts
+PROPERTY on the PLIST of ATOM
+under IND.  Returns  PROPERTY.
+.bl 1
+.ti -16
+(GET ATOM IND)
+.br
+A LAMBDA. Searches PLIST of ATOM
+for IND, and returns associated property.
+If IND is not found, returns NIL.
+.bl 3
+.ul
+.ti -16
+Extended CAR and CDR
+.bl 2
+CAAR,#CDAR,#CADR,#CDDR
+.bl 3
+.ul
+.ti -16
+Logical Functions
+.bl 2
+AND		pg. 78
+.bl 1
+OR		pg. 78
+.bl 3
+.ul
+.ti -16
+Arithmetic
+.bl 2
+(ADD1 X)	(PLUS X 1)
+.bl 1
+(SUB1 X)	(DIFF X 1)
+.bl 3
+.ul
+.ti -16
+MAP Functions
+.bl 2
+.ti -16
+(MAPCAR FUNC LIST)
+.br
+Applies FUNC to each element of LIST.
+Returns LIST of results.
+.bl 1
+.ti -16
+(MAPC  FUNC LIST)
+.br
+Same as MAPCAR except does not copy LIST.
+.bl 1
+.ti -16
+(FUNCTION F)
+.br
+Used to QUOTE a function argument.
+.bl 1
+.bl 3
+.ul
+.ti -16
+Function Definition
+.bl 2
+.ti -16
+DEFEVQ(ATOM FUNCTION)
+.br
+Same as DEF but used with EVALQUOTE.
+.bl 1
+.ul
+.ti -16
+Pretty Printing
+.bl 1
+.ti -16
+(PP (FUNC1 FUNCN)  or
+.ti -16
+#PPEVQ((FUNC1 FUNCN))
+.br
+Pretty prints the functions specified to
+the port  currently bound to POPORT.
+Thus to PRETTY PRINT to a file,
+.bl 1
+.nf
+.in 0
+			(SETQ POPORT (OUTFILE 'FOO))
+			(pp (update teco))
+			(CLOSE POPORT)
+			(SETQ POPORT NIL)
+.bl 2
+($PRPR form)
+.in 16
+.fi
+.br
+Call to the inner pretty print routines. usefull
+to print out an arbitrary form.
+.bl 2
+.ul
+.ti -16
+User Functions
+.bl 1
+.ti -16
+(EXEC arg1 arg2 ... argn)
+.br
+Exec is a NLAMBDA that takes each
+arguement and passes them to the UNIX
+monitor as strings as described in 
+the EXEC(II) system call.
+Exec returns the value of the process'
+%0 when it died.
+L110 waits until the process dies.
+.bl 1
+.ti -16
+(SHELL)
+.br
+Invokes a sub-shell; return to 
+LISP with BY<e>.
+.bl 1
+.ti -16
+(TECO 'file)
+.br
+Teco is called on the file.
+If teco is exited with an EX or EQ
+the file is not loaded; if exited
+with EG, the file is loaded by LISP.
+.bl 1
+.ti -16
+(TECF (func1 func2 ... funcn)) OR
+.ti -16
+#TECFEVQ((func1.....funcn))
+.br
+TECF creates a temporary file,
+PRETTY PRINTs the named functions
+to the file, then calls TECO
+on it.
+TECO may load the file on return,
+and then in any case the file
+and its backup are deleted.
+.bl 1
+.ti -16
+(UPDATE 'file)
+.br
+UPDATE replaces the definitions of 
+any function defined in the
+current enviroment that occurs in the 
+file. Useful in conjunction with 
+TECF.
+.in 0
+.bp
+.ul
+Loading Functions from Files
+.bl 1
+.fi
+.bl
+.ti +5
+It is recommended that the user prepare on a separate
+file (using TECO) any function definition longer than one or
+two lines.  The reason for this suggestion is that there is
+no way of editing the previous line of a function being
+entered on the teletype.
+.bl
+.ti +5
+The function LOAD (see Primitives) reads and evaluates
+s-exps stored on a file.  In particular, if the s-exps are
+of the form
+.bl 1
+	(DEF ATOM FUNCTION)
+.bl 1
+then the effect of the LOAD will be to define all of the
+functions in the file.
+.bl 1
+.bl
+.ti +5
+To edit a function definition, the user can either
+(EXIT) from L110 or invoke TECO.  To do this:
+.nf
+	->(TECO 'filename)
+	UNIX TECO ...
+	edit....
+	EX$$ 
+ OR
+	EG$$
+ OR
+	EQ$$
+	NIL
+	->
+.br
+.fi
+.bl 1
+If EG is used the file will be loaded; if EX or EQ, the file
+will not be loaded.
+.bl 3
+.ul
+Execution Errors
+.bl 1
+.bl
+.ti +5
+When an error occurs during the evaluation of an L110
+function, the L110 break package is invoked.  The break
+package will print out 1) a descriptive message identifying
+what the error is, a function name indicating where the
+error occurred, and either a :> or <: prompt.  These prompts
+indicate that the stacks are suspended at the point of the
+error, and that the situation may be more thoroughly
+investigated.
+.bl 1
+Example:
+.bl 1
+.nf
+.bl 1
+	->(DEF FOO (LAMBDA(X Y)(PROG() A (CAR X]
+	FOO
+	->(FOO 1)
+	CAN'T FOLLOW CAR OR CDR
+	BREAKING	CAR
+	1:>
+.bl 1
+.fi
+.bl 1
+The error occurred because we can't take the CAR of an INT.
+The user can now type commands just as he would at top
+level; the only difference is that the current bindings are
+available for examination.  To continue with the example:
+.bl 1
+.nf
+.bl 1
+.bl 1
+.bl 1
+	1:>X
+	1
+	1:>Y
+	NIL
+.bl 1
+.fi
+.bl 1
+.bl
+.ti +5
+To leave the break, the user may 1) return to top level
+with (RESET) or RESET(), 2) attempt to continue by (CONT
+'NEWVALUE) or CONT(NEWVALUE).  Thirdly, as in the example
+above, the user may correct the bindings and continue with
+GO.  For example:
+.bl 1
+.nf
+.bl 1
+.bl 1
+	1:>(SETQ X (B C]
+	(B C)
+	1:>(GO A)
+	B
+	->
+.fi
+.bl 3
+.ul
+Setting Breakpoints
+.bl 1
+.bl
+.ti +5
+The L110 break package can be invoked under
+circumstances other than error conditions.  In particular,
+the function BREAK may be called from a user function to set
+a breakpoint at that spot, which is often useful during
+debugging.  Break takes one argument which it evaluates and
+prints on the teletype.
+.bl 1
+.nf
+	->(DEF FUM (LAMBDA(X)
+		(COND ((LESSP X 0)
+			##(BREAK ' "VALUE NEGATIVE")))
+			(T (TIMES 2 X]
+	FUM
+	->(FUM 3)
+	6
+	->(FUM -3)
+	"VALUE NEGATIVE"
+	BREAKING BREAK
+	1:>X
+	-3
+	1:>(CONT (PLUS X 3]
+	0
+	->
+.fi
+.bl 3
+.ul
+"Emergency" Measures
+.bl 1
+.bl
+.ti +5
+CTRL-O and CTRL-C respectively suppress output and
+request L110 to stop prematurely.  Typing CTRL-C causes
+control to pass to the break package; this error may be
+continued, although the value supplied by continue is
+ignored.  Typing CNTRL-C five or six time will cause
+immediate execution of a reset.
+.bl
+.ti +5
+CTRL-B causes a core dump to be taken of the system.
+It is usually not too useful.
+.bl 1
+.ti +5
+If a ctrl-c is typed while reading a form, it will erase the entire form
+being input (even if it is several lines long) and simulate a retbrk to the most recent break level or else top level
+.bl 2
+.ul
+Leaving L110
+.bl 1
+.ti +5
+Typing CTRL-D to the prompt, or evaluating (EXIT) or
+(SYS) will cause return to the parent process.
+.bp
+.ul
+Addition 1
+.bl
+.bl
+.ti +5
+In the LISP that is on the system, AND, ADD1, SUB1, OR,
+CAAR, CADR, CDAR, CDDR, LIST, APPEND, MAPCAR, MAPC, LENGTH,
+APPLY*,MEMBER, NCONC, and CONC are now hardcode.
+.bp
+.ul
+Error Messages
+.bl
+.ti +5
+Below are the error messages of the current implementation.
+.bl 1
+.nf
+.bl 2
+READ LIST ERROR
+		Reader didn't like something you typed in.
+.bl 2
+ARITHMETIC OVERFLOW
+		You tried to make a number that was too large.
+.bl 2
+I-O ERROR
+.fi
+.in 16
+Probably trying to read a port in the wrong direction,
+or else trying to write on a port that you closed.
+.in 0
+.nf
+.bl 2
+CAN'T READ PAST END OF PORT
+		You tried to read past the end of a file.
+.bl 2
+FILE NOT AVAILABLE
+		The file doesn't exist or you have no permission.
+.bl 2
+ATTEMPt TO OPEN TOO MANY FILES
+		You tried to open more than seven files.
+.bl 2
+CANNOT ALLOCATE BUFFER FOR FILE
+.in 16
+.fi
+you are out of space. Try to close some unnecessary files
+and continue.
+.in 0
+.nf
+.bl 2
+5 ^C'S PANIC--RETURN TO LAST TOP LEVEL
+		You typed 5 ^c's.
+.bl 2
+^C DURING TYPE IN
+.in 16
+.fi
+You typed ^c during type in. Return to last top level.
+.in 0
+.nf
+.bl 2
+SEG VIOLATION 
+.in 16
+.fi
+Lisp internal error--mainly intended for use with compiler.
+.in 0
+.nf
+.bl 2
+CONTROL STACK OVERFLOW; RESET GENERATED
+		You had excessive recursion.
+.bp
+***BUSS ERROR DURING GCOL-- LISP EXIT***
+.in 16
+.fi
+A lisp internal error. Please send reports and the core dump
+to Forrest.
+.in 0
+.nf
+.bl 2
+BUS ERROR 
+		Internal bus error. Similar to Seg fault.
+.bl 2
+CAN'T CONTINUE
+.in 16
+.fi
+You attempted to continue from a non-continuable error.
+.in 0
+.nf
+.bl 2
+CANNOT ALLOCATE ANOTHER ATOM PAGE
+.in 16
+.fi
+There is no more space-- try closing extra ports to
+free buffers up, if necessary. Non-continuable.
+.in 0
+.nf
+.bl 2
+NAME STACK OVERFLOW
+HARD NAME STACK OVERFLOW; RESET EXECUTED
+.in 16
+.fi
+You exceeded the name stack size. In the former case, ther was
+room to pass control to the break package--in the latter,
+a reset had to be executed.
+.in 0
+.nf
+.bl 2
+NOT ENOUGH STACK SPACE TO ATTEMPT GCOL
+.in 16
+.fi
+This message may occur after a mumble that leaves very
+little control stack space. Try another $mumble.
+.in 0
+.nf
+.bl 2
+CANNOT RECLAIM REQUIRED AMOUNT OF INTS OR DTPRS
+.in 16
+.fi
+The minimun amount of dtprs and ints (100 and 100 initially)
+are not available. free up space, and continue.
+.in 0
+.nf
+.bl 2
+NO MORE DTPRS--HIT BREAK TO RETURN TO TOP LEVEL
+.in 16
+.fi
+This message is given when there are no more dtprs,
+hence no way to free up dtprs. As advertised, break
+will return to top level.
+.nf
+.in 0
+.bl 2
+ATOM TOO LONG
+.in 16
+.fi
+you tried to make an atom with more than 100 characters.
+.in 0
+.nf
+.bl 2
+ILLEGAL CHARACTER IN ATOM
+		An atom started with a garbage character.
+.bp
+UNDEFINED PROCEDURE
+		Eval could make no sense of your procedure.
+.bl 2
+NO PROG TO GO TO OR RETURN FROM
+.in 16
+.fi
+Return or goto could not find their destinations.
+.in 0
+.nf
+.bl 2
+CAN'T FOLLOW CAR OR CDR
+.in 16
+.fi
+Attempt to take car or cdr of non-atom or non-dtpr.
+.in 0
+.nf
+.bl 2
+IMPROPER USE OF SETQ
+		Set or Setq's first arg is not an atom.
+.bl 2
+ONLY ATOMS HAVE FUNCTION DEFINITIONS
+		You can only def or putd an atom.
+.bl 2
+NON-NUMERIC ARG TO ARITHMETIC SUBR
+		You tried to operate on a non-integer.
+.bl 2
+CANNOT MEET STACK REQUEST
+.in 16
+.fi
+Message from $mumble, telling you that you are greedy
+in your stack request.
+.nf
+.in 0
+.bl 2
+BAD ARG TO SPECIAL SUBR
+.in 16
+.fi
+All purpose message used by concat, linelength, chrct, etc.
+.in 0

@@ -1,0 +1,40 @@
+
+SUBMIT(2)           UNIX Programmer's Manual            SUBMIT(2)
+
+NAME
+     submit - allow a process to run after logout
+
+SYNOPSIS
+     submit(pid);
+
+DESCRIPTION
+     _S_u_b_m_i_t marks the specified process so that it will be
+     allowed to run after the user logs out.  The 0200 bit of the
+     process flags (see _p_s(1)) is used for this mark.
+
+     Use of this call is restricted to the user that created the
+     process, and then only from the same login session.  The
+     super-user may _s_u_b_m_i_t any process.
+
+ERRORS
+     _S_u_b_m_i_t will fail if:
+
+     [EPERM]             The process's effective user ID is not
+                         the same as that of the process speci-
+                         fied by _p_i_d.
+
+     [ESRCH]             The specified process does not exist.
+
+SEE ALSO
+     ps(1)
+
+ASSEMBLER
+     (local = 58., submit = 3.)
+     (pid in r0)
+     sys local;9f
+     . . .
+     .data
+     9: sys submit
+
+Printed 7/30/83                                                 1
+

@@ -1,0 +1,63 @@
+#
+ed - ex_cmds.c << '-*-END-*-'
+599c
+				printf("Version 3.1.1, December 13, 1979");
+.
+w
+q
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+507a
+	if (inopen == -1)	/* don't work inside macros! */
+		return (0);
+.
+466,469c
+	if (canundo) {
+		inopen = -1;	/* no need to save since it had to be 1 or -1 before */
+		otchng = tchng;
+		saveall();
+		vundkind = VMANY;
+	}
+.
+460a
+		canundo = 0;	/* can't undo inside a macro anyway */
+	}
+.
+459c
+	if (vmacp) {
+.
+447a
+int canundo;
+.
+446c
+macpush(st, canundo)
+.
+444a
+ * canundo is 1 iff we want to be able to undo the macro.  This
+ * is false for, for example, pushing back lookahead from fastpeekkey(),
+ * since otherwise two fast escapes can clobber our undo.
+.
+436c
+	macpush(&b[1],0);
+.
+422c
+			macpush(maps[d].mapto,1);
+.
+413c
+						macpush(&b[1],1);
+.
+85d
+83a
+		if (inopen == -1)	/* don't screw up undo for esc esc */
+			vundkind = VMANY;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vmain.c << '-*-END-*-'
+646a
+			forbid (inopen < 0);
+.
+w
+q
+'-*-END-*-'

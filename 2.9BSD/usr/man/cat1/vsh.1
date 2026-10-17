@@ -1,0 +1,435 @@
+
+VSH(1)              UNIX Programmer's Manual               VSH(1)
+
+NAME
+     Vsh - visual shell
+
+SYNOPSIS
+     Vsh
+
+DESCRIPTION
+     _V_s_h is a highly interactive, visually oriented shell which
+     eases many programming activities.  Most commands involve
+     only a single keypress.  These commands cause directories to
+     be displayed, editors to be entered, and compilers to be
+     invoked.
+
+     On entry to _v_s_h, the current directory is plotted on the
+     screen.  Each member of the directory is labeled with a
+     letter.  To select a member, one presses its corresponding
+     letter.  What happens after selection depends on the nature
+     of the member.  If the member is a directory, _V_s_h changes to
+     that directory.  Text files are edited.  Full details are
+     given later in this manual.
+
+     _V_s_h displays up to twenty files at a time.  Directories
+     which are larger are broken into twenty-file pages.  There
+     can be ten pages holding a total of two-hundred members.  To
+     select a page, one presses a digit 0-9. Pages are numbered
+     one through ten with 0 selecting page ten.
+
+     A well integrated feature of _v_s_h is its connection between
+     compilers and editors.  To start a compile, one presses M.
+     _V_s_h then calls on _m_a_k_e(1).  The output of this compile step
+     is saved, and one can later review for compile-time errors.
+     _V_s_h numbers each error.  One can select an error by typing
+     in its number.  After selection, _v_s_h calls an editor, send-
+     ing one to the proper file at the offending line.  One can
+     jump between the editor and _v_s_h until one is ready for
+     another compile.
+
+     Because _V_s_h is unconventional, the best way to understand
+     how it works is by using it.  Because _V_s_h is menu driven, it
+     is hard to get lost.  Beginners should find _V_s_h easier to
+     learn then the conventional shell.
+
+ENVIRONMENT PARAMETERS
+     _V_s_h takes the following parameters from the global environ-
+     ment:
+
+     HOME              The home directory.  This parameter is
+                       automaticly set by _U_n_i_x when one logs in.
+
+     SHELL             The users login shell.  _U_n_i_x also sets
+                       this parameter.  When it is necessary to
+                       escape to a shell, this parameter selects
+
+Printed 8/2/83                                                  1
+
+VSH(1)              UNIX Programmer's Manual               VSH(1)
+
+                       the program to use.
+
+     TERM              The terminal type.  The terminal must be
+                       cursor addressable.
+
+     The user must set the TERM parameter himself.  As an exam-
+     ple, to indicate your terminal is an adm3a, from _c_s_h(1)
+     type:
+
+          % setenv TERM adm3a
+
+     From _s_h(1) type:
+
+          $ TERM=adm3a;  export TERM
+
+     See _t_e_r_m_c_a_p(5) for more information about the TERM parame-
+     ter.
+
+FILE SELECTION
+     As indicated before, one selects a file by pressing its
+     corresponding letter.  What happens after selection depends
+     on the nature of the file.
+
+     File type         Action
+
+     Directory         Change to new directory.
+
+     Archive           Print archive directory.  This works for
+                       both _a_r(1) and _c_p_i_o(1) format archives.
+
+     Object program    Print name list (external symbols).
+
+     Core              Call debugger.
+
+     Text              Call editor.
+
+     Other             Selection fails.
+
+DIRECTORY OPERATIONS
+     This is a list of the directory commands.  Before doing any-
+     thing else, the user should become familiar with commands
+     which allow him to select files and display directories.  In
+     directories larger then twenty files, the user should be
+     able to display each page.
+
+Printed 8/2/83                                                  2
+
+VSH(1)              UNIX Programmer's Manual               VSH(1)
+
+     Command           Action
+
+     ^D                Leave _v_s_h.
+
+     a-t               Select corresponding file.
+
+     1-9               Select page 1-9.
+
+     0                 Select page 10.
+
+     +                 Select next page.
+
+     ;                 Same as +.
+
+     -                 Select previous page.
+
+     ^ (Home)          Change to home directory.
+
+     /                 Change to root directory.
+
+     ?                 Display help file.
+
+     !                 Escape to shell.
+
+     %                 Same as !.
+
+     $                 Escape to Bourne shell.
+
+     -Line Feed-       Change to previous (parent) directory.
+
+These are convenience commands.
+
+     D                 Display date.
+
+     I                 DIsplay file.  _V_s_h prompts for a file and
+                       displays it as ascii text.  This is faster
+                       than a selection which calls the editor.
+
+     P                 Process status.  Call /bin/ps.
+
+     W                 Who.  Display who is logged in.
+
+     Y                 Yank.  Display free ports.
+
+These are advanced commands.
+
+     F                 Select file by name.  _V_s_h prompts for a
+                       file name.  _V_s_h then selects the specified
+                       file.
+
+     C                 Create a new file.  _V_s_h prompts for a file
+
+Printed 8/2/83                                                  3
+
+VSH(1)              UNIX Programmer's Manual               VSH(1)
+
+                       name and file type.  One may create text
+                       files and directories.  One may also copy
+                       and link from existing files.
+
+     L                 Long format file listing.  Next to each
+                       file, _V_s_h displays protection information
+                       in the same manner as _l_s(1).
+
+     O                 Option listing.  The contents of command
+                       and parameter tables are displayed.  _V_s_h
+                       then prompts for commands which modify
+                       parameters and which create, modify, and
+                       delete commands.
+
+REMOVE MODE
+     Press R to enter _R_e_m_o_v_e _m_o_d_e. In _R_e_m_o_v_e _m_o_d_e, selecting a
+     file causes it to be marked for removal with two slashes,
+     "//." Files selected a second time are unmarked.  Pressing R
+     a second time causes all marked files to be removed.  The
+     following commands are available in _R_e_m_o_v_e _m_o_d_e:
+
+     Command           Action
+
+     -Return-          Exit _R_e_m_o_v_e _m_o_d_e with out removing marked
+                       files.
+
+     ^D                Same as -Return-
+
+     a-t               Select corresponding file for removal.
+
+     *                 Select all files on current page for remo-
+                       val.
+
+     0-9, +, -         Select and display another page.  These
+                       commands are described earlier in the
+                       manual in the section on directory opera-
+                       tions.
+
+     ?                 Display help file.
+
+     R                 Remove marked files and exit _R_e_m_o_v_e _m_o_d_e.
+                       If _V_s_h cannot remove a file, _V_s_h displays
+                       the reason and waits for a response.
+                       Press -Return- to continue removing marked
+                       files.  Press ^D to immediately exit from
+                       _R_e_m_o_v_e _m_o_d_e.
+
+MAKE, GREP, AND SHOWFILE
+     _V_s_h interfaces to _m_a_k_e(1) and _g_r_e_p(1).  _V_s_h saves output
+     from these programs and allows one to examine the results in
+     _s_h_o_w_f_i_l_e _m_o_d_e. From the directory page, the following
+
+Printed 8/2/83                                                  4
+
+VSH(1)              UNIX Programmer's Manual               VSH(1)
+
+     commands control _m_a_k_e, _g_r_e_p, and _s_h_o_w_f_i_l_e.
+
+     G                 _g_r_e_p(1).  _V_s_h prompts for a pattern and
+                       file names, and then run _g_r_e_p with these
+                       parameters.  The results are saved in the
+                       file ._g_r_e_p_o_u_t and displayed in
+                       _s_h_o_w_f_i_l_e _m_o_d_e.
+
+     S                 Show previous _g_r_e_p. The output of the last
+                       _g_r_e_p is displayed in _s_h_o_w_f_i_l_e _m_o_d_e.
+
+     M                 _M_a_k_e(1) _V_s_h runs _m_a_k_e. Execution is con-
+                       trolled by the _m_a_k_e_f_i_l_e in the current
+                       directory.  Output is both displayed on
+                       the screen and saved in the file ._m_a_k_e_r_-
+                       _r_o_r. When _m_a_k_e terminates, _V_s_h displays
+                       ._m_a_k_e_r_r_o_r in _s_h_o_w_f_i_l_e _m_o_d_e.
+
+     N                 _m_a_k_e(1) running independently.  _M_a_k_e is
+                       run but _V_s_h does not wait for termination.
+                       Output is saved in ._m_a_k_e_r_r_o_r, but is not
+                       displayed on the screen.  When _m_a_k_e ter-
+                       minates, the bell on your terminal rings
+                       twice.  Use the E command to review the
+                       output in ._m_a_k_e_r_r_o_r.
+
+     E                 Review errors.  The results of the last
+                       _m_a_k_e are displayed in _s_h_o_w_f_i_l_e _m_o_d_e.
+
+SHOWFILE MODE
+     _S_h_o_w_f_i_l_e displays the results of a _m_a_k_e or _g_r_e_p. It is
+     called by the E and S commands.  _S_h_o_w_f_i_l_e is called automat-
+     ically in the course of an M or G command.  _S_h_o_w_f_i_l_e is
+     essentially a special editor.  It has commands which allow
+     one to display a file.  One can also command _s_h_o_w_f_i_l_e to
+     examine a line of the file.  _S_h_o_w_f_i_l_e scans this line and
+     attempt to extract a file name and line number.  _S_h_o_w_f_i_l_e
+     then runs the editor, starting it at the specified line.
+
+     These are the _s_h_o_w_f_i_l_e commands.  It is not necessary to
+     press -Return- after these commands.  When a complete com-
+     mand is sensed, it is run immediately.
+
+     Command           Action
+
+     number p          Print file starting at specified line.
+
+     number e          Examine line for a file name and line
+                       number.  If a file name is found, run the
+                       editor on this file.
+
+Printed 8/2/83                                                  5
+
+VSH(1)              UNIX Programmer's Manual               VSH(1)
+
+     -Return-          Display next twelve lines.
+
+     number -Return-   Same as number e
+
+     ^D                Leave _s_h_o_w_f_i_l_e.
+
+     q                 Leave _s_h_o_w_f_i_l_e.
+
+     ?                 Display help file.
+
+     All commands from the directory page which might be useful
+     are available in _s_h_o_w_f_i_l_e _m_o_d_e. They include ^, /, !, %, and
+     A through Z except L and R. Particularly useful are M and G
+     which allow new iterations of _m_a_k_e and _g_r_e_p, %, the escape
+     to the shell, and F, which allows one to edit files not
+     found in the file being shown.
+
+CONTROL COMMANDS
+     The operation of _V_s_h is controled by its parameter and com-
+     mand tables.  The contents of these tables can be displayed
+     via the O command.  These tables can be modified with con-
+     trol commands.  When _V_s_h is invoked, it searches for the
+     file ._v_s_h_r_c in your home directory.  Control comands are
+     then read from this file, allowing one to create a personal-
+     ized environment.  The O command also prompts for control
+     commands, allowing for interactive modification of the
+     tables.
+
+     These control commands should be presented in the same lexi-
+     cal grammer as shell commands.  Spaces and tabs separate
+     tokens.  Unquoted newlines terminate each statement.  A
+     character may be quoted by preceding it with a \.  All char-
+     acters inside single quotes (' ') are quoted except the sin-
+     gle quote.  Inside double quotes (" "), \ quotes another
+     double quote and \newline is ignored.  Grave accents (` `)
+     are treated as any other character.  Macros (such as $HOME)
+     are not available yet.  The lexical grammer is compatible
+     with that of _s_h(1).  The grammer is somewhat different from
+     that of _c_s_h(1).  One's ._v_s_h_r_c file is essentially appended
+     to the end of _d_f_l_t._v_s_h_r_c.
+
+Printed 8/2/83                                                  6
+
+VSH(1)              UNIX Programmer's Manual               VSH(1)
+
+     To change a parameter, use the format:
+
+          PARAMETER-NAME   PARAMETER-VALUE
+
+     PARAMETER-NAME can be any off the following:
+
+     Parameter         Usage
+
+     editor            Preferred editor.  Default is /_u_s_r/_u_c_b/_v_i.
+
+     nm                Namelist program.  Default is /_b_i_n/_n_m.
+
+     db                Debugging program.  Default is /_b_i_n/_a_d_b.
+
+     make              Make program.  Default is /_b_i_n/_m_a_k_e.
+
+     grep              grep program.  Default is /_b_i_n/_g_r_e_p.
+
+     ar                Archiving program.  Default is /_b_i_n/_a_r.
+
+     To define a command, use the format:
+
+          CHARACTER   KEYWORD   [PARAMETERS ...]
+
+     CHARACTER is the character which calls the new command.
+     Valid characters are ! " # $ % & ' ( ) : * = ^ ~ [ ] { } < >
+     , . / ?  and A-Z.
+
+     These are the valid keywords:
+
+     Keyword           Purpose
+
+     date              Display date.
+
+     showerror         Show errors from previous _m_a_k_e.
+
+     showgrep          Show output from previous _g_r_e_p.
+
+     file              Select a file.  If parameter is present,
+                       the parameter is selected.  Otherwise, _V_s_h
+                       will prompt for a file name.
+
+     home              Change to home directory.
+
+     grep              Run _g_r_e_p. _V_s_h will prompt for parameters.
+
+     wmake             Run _m_a_k_e. Wait for termination.
+
+Printed 8/2/83                                                  7
+
+VSH(1)              UNIX Programmer's Manual               VSH(1)
+
+     fmake             Run _m_a_k_e. Do not wait for termination.
+
+     remove            Enter _R_e_m_o_v_e _m_o_d_e.
+
+     longlist          Print long format listing of files on the
+                       current page.
+
+     display           Display the contents of a file.  If no
+                       parameter is present, _V_s_h will prompt for
+                       a file name.
+
+     options           Display _V_s_h options (parameter and command
+                       tables).  Accept commands which modify
+                       parameters and which create, modify, and
+                       delete commands.
+
+     exec              Execute a program directly with the exec
+                       system call.  The first parameter must be
+                       the program name.  Directories are not
+                       successively searched as in the shell.
+                       Full path names are necessary.  Any other
+                       parameters become parameters to the pro-
+                       gram.  If it is necessary to search
+                       several directories for programs, to
+                       redirect files, to expand macros, or to
+                       expand file regular expressions, use the
+                       shell keyword instead.
+
+     shell             If no parameter is present, an interactive
+                       shell is spawned.  If one parameter is
+                       present, it is passed to the shell and run
+                       as a command.  Do not specify more than
+                       one parameter.  Instead, enclose the
+                       entire shell command in quotes to provide
+                       _V_s_h with only one parameter.
+
+     create            _V_s_h prompts for a new file name.  The file
+                       is created.
+
+     null              Delete command.  The command will no
+                       longer be active.
+
+FILES
+     $HOME/.vshrc        initialization file.
+     /etc/termcap        terminal capability database necessary
+     for addressing cursor.
+     .makerror           File used to save the output of _m_a_k_e.
+     .grepout            File used to save the output of _g_r_e_p.
+     _V_s_h tries to first create this file in the working direc-
+     tory.  If unsuccessful, the home directory is tried.
+     $SHELL              user's shell
+     /bin/pwd            Program which determines the path name
+
+Printed 8/2/83                                                  8
+
+VSH(1)              UNIX Programmer's Manual               VSH(1)
+
+     of the working directory.
+     /dev/null           data sink
+
+Printed 8/2/83                                                  9
+

@@ -1,0 +1,32 @@
+
+CORE(5)             UNIX Programmer's Manual              CORE(5)
+
+NAME
+     core - format of core image file
+
+DESCRIPTION
+     UNIX writes out a core image of a terminated process when
+     any of various errors occur.  See _s_i_g_n_a_l(2) for the list of
+     reasons; the most common are memory violations, illegal
+     instructions, bus errors, and user-generated quit signals.
+     The core image is called _c_o_r_e and is written in the
+     process's working directory (provided it can be; normal
+     access controls apply).
+
+     The first 1024 bytes of the core image are a copy of the
+     system's per-user data for the process, including the regis-
+     ters as they were at the time of the fault; see the system
+     listings for the format of this area.  The remainder
+     represents the actual contents of the user's core area when
+     the core image was written.  If the text segment is write-
+     protected and shared, it is not dumped; otherwise the entire
+     address space is dumped.
+
+     In general the debugger _a_d_b(1) is sufficient to deal with
+     core images.
+
+SEE ALSO
+     adb(1), pstat(1), signal(2)
+
+Printed 5/17/83                                                 1
+

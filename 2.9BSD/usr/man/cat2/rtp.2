@@ -1,0 +1,54 @@
+
+RTP(2)              UNIX Programmer's Manual               RTP(2)
+
+NAME
+     rtp - make/unmake a real time process
+
+SYNOPSIS
+     rtp(flag)
+
+DESCRIPTION
+     _R_t_p changes the notion of the current process from that of a
+     normal UNIX process to that of a ``real time'' process.  A
+     real time process does not compete for system resources in
+     the normal manner; instead, a real time process is con-
+     sidered locked into physical memory by the swap scheduler
+     and receives exclusive use of the central processor from the
+     process scheduler whenever the real time process is in a
+     executable state.  Furthermore, other processes which previ-
+     ously were non-preemptable but had the potential of consum-
+     ing relatively large amounts of cpu time are made preempt-
+     able by _r_t_p.
+
+     It is the responsibility of the real time process to see to
+     it that use of the cpu is relinquished often enough and long
+     enough for other normal UNIX processes to run.  For this
+     reason only the super-user or members of group 0 are allowed
+     to change the mode of a process by _r_t_p.
+
+     The _f_l_a_g argument is set to a non-zero value to make a nor-
+     mal process into a real time process.  There can be only one
+     real time process active at any moment.
+
+ERRORS
+     _R_t_p will fail if:
+
+     [EPERM]             The process's effective user ID is not
+                         the super-user and the process's effec-
+                         tive group ID is nonzero.
+
+     [EBUSY]             A real time process already exists.
+
+SEE ALSO
+     lock(2), nice(2), renice(2)
+
+ASSEMBLER
+     (rtp = 49.)
+     (flag in r0)
+     sys rtp
+
+AUTHOR
+     Thomas Ferrin, University of California, San Francisco
+
+Printed 5/22/83                                                 1
+

@@ -1,0 +1,56 @@
+
+FORK(2)             UNIX Programmer's Manual              FORK(2)
+
+NAME
+     fork  -  spawn new process
+
+SYNOPSIS
+     fork()
+
+DESCRIPTION
+     _F_o_r_k is one of two ways new processes are created.  The new
+     process's core image is a copy of that of the caller of
+     _f_o_r_k.  The only distinction is the fact that the value
+     returned in the old (parent) process contains the process ID
+     of the new (child) process, while the value returned in the
+     child is 0.  Process ID's range from 1 to 30,000.  This pro-
+     cess ID is used by _w_a_i_t(2).
+
+     Files open before the fork are shared, and have a common
+     read-write pointer.  In particular, this is the way that
+     standard input and output files are passed and also how
+     pipes are set up.
+
+RETURN VALUE
+     Upon successful completion, _f_o_r_k returns a value of 0 to the
+     child process and returns the process ID of the child pro-
+     cess to the parent process.  Otherwise, a value of -1 is
+     returned to the parent process, no child process is created,
+     and the global variable _e_r_r_n_o is set to indicate the error.
+
+ERRORS
+     _F_o_r_k will fail and no child process will be created if:
+
+     [EAGAIN]            The system-imposed limit on the total
+                         number of processes under execution
+                         would be exceeded.
+
+     [EAGAIN]            The system-imposed liimit on the total
+                         number of processes under execution by a
+                         single user would be exceeded.
+
+SEE ALSO
+     execve(2), vfork(2), exec(3)
+
+ASSEMBLER
+     (fork = 2.)
+     sys fork
+     (new process return)
+     (old process return, new process ID in r0)
+
+     The return locations in the old and new process differ by
+     one word.  The C-bit is set in the old process if a new pro-
+     cess could not be created.
+
+Printed 5/26/83                                                 1
+

@@ -1,0 +1,49 @@
+.TH GETSYSPR 1
+.UC
+.SH NAME
+getsyspr \- read tables from kernel profiler
+.SH SYNOPSIS
+.B getsyspr
+[
+.B \-\fRincr
+] [ outfile ]
+.SH DESCRIPTION
+.I Getsyspr
+reads the table produced by the kernel profiler from /dev/kmem.
+It produces a file,
+.IR mon.out ,
+which is in the format of the
+.I mon.out
+file produced by
+.IR monitor (3).
+This file is intended to be used with
+.IR prof (1)
+to interpret the system profile.
+.PP
+If
+.I outfile
+is specified,
+.I getsyspr
+saves its output in that instead of in mon.out.
+.PP
+If
+.I incr
+is specified and numeric,
+.I getsyspr
+will report statistics only for the last
+.I incr
+minutes.  If it is non-numeric, it is interpreted as the name of a file
+previously output by
+.IR getsyspr ;
+only the difference between the current statistics and those reported
+in that file are output.
+.SH FILES
+.ta 2i
+/dev/kmem
+.br
+mon.out	default output file
+.SH "SEE ALSO"
+prof(1), sysprof(1), monitor(3)
+.SH BUGS
+This program only works if kernel profiling is enabled in the
+kernel currently being run.  This is not normally the case.

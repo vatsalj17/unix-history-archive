@@ -1,0 +1,74 @@
+
+SETPGRP(2J)         UNIX Programmer's Manual          SETPGRP(2J)
+
+NAME
+     setpgrp, getpgrp - set/get process group
+
+SYNOPSIS
+     int getpgrp(pid)
+
+     setpgrp(pid, pgrp)
+
+     cc ... -ljobs
+
+DESCRIPTION
+     The process group of the specified process is returned by
+     _g_e_t_p_g_r_p. _S_e_t_p_g_r_p sets the process group of the specified
+     process _p_i_d to the specified _p_g_r_p. If _p_i_d is zero, then the
+     call applies to the current process.
+
+     If the invoker is not the super-user, then the affected pro-
+     cess must have the same effective user-id as the invoker or
+     be a descendant of the invoking process.
+
+     This call is used by _c_s_h(1) to create process groups in
+     implementing job control.  The TIOCGPGRP and TIOCSPGRP calls
+     described in _t_t_y(4) are used to get/set the process group of
+     the control terminal.
+
+     See _i_n_t_r_o(3J) for a general discussion of job control.
+
+ERRORS
+     _S_e_t_p_g_r_p will fail and the process group will not be altered
+     if one of the following is true:
+
+     [ESRCH]             The reqoested process does not exist.
+
+     [EPERM]             The effective user ID of the request
+                         process is diferent from that of the
+                         caller and the process is not a descen-
+                         dent of the calling process.
+
+SEE ALSO
+     csh(1), getuid(2), intro(3J), tty(4)
+
+ASSEMBLER (PDP-11)
+     (setpgrp = 39.)
+     (process id in r0)
+     sys setpgrp; newgrp
+
+     (getpgrp is implemented as setpgrp(pid,-1))
+     sys setgrp; -1
+     (process group in r0)
+
+BUGS
+     The job control facilities are not available in standard
+
+Printed 5/27/83                                                 1
+
+SETPGRP(2J)         UNIX Programmer's Manual          SETPGRP(2J)
+
+     version 7 UNIX.  These facilities are still under develop-
+     ment and may change in future releases of the system as
+     better inter-process communication facilities and support
+     for virtual terminals become available.  The options and
+     specifications of these system calls and even the calls
+     themselves are thus subject to change.
+
+     A system call _s_e_t_p_g_r_p has been implemented in other versions
+     of UNIX which are not widely used outside of Bell Labora-
+     tories; these implementations have, in general, slightly
+     different semantics.
+
+Printed 5/27/83                                                 2
+

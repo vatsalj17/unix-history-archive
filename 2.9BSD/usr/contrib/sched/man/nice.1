@@ -1,0 +1,57 @@
+.TH NICE 1
+.SH NAME
+nice, nohup \- run a command at low priority
+.SH SYNOPSIS
+.BR nice " [" - "number] command"
+.PP
+.BR "nice -l" "level command"
+.PP
+.BR "nice -l" level " -p" pid
+.PP
+.BR nohup " command"
+.SH DESCRIPTION
+.I Nice\^
+executes
+.I command\^
+with low scheduling priority.
+If the
+.I number\^
+argument is present,
+the scheduling level of the process is adjusted accordingly (see
+.IR nice (2)).
+The default
+.I number\^
+is 10.
+The superuser may improve process scheduling levels by using a negative
+.IR number ,
+for example,
+.BR \-\-10 .
+.PP
+If the \fB-l\fR flag is present, the number \fIlevel\fR immediately following the
+flag is used to directly set the scheduling base level of the process
+to \fIlevel\fR.  The legal range of \fIlevel\fR is 0 to 31, and only the superuser
+can increase the \fIlevel\fR.
+When the \fB-l\fR option is specified, the \fB-p\fR option may be present instead
+of a \fIcommand\fR.  In this case, the level of the process with number \fIpid\fR
+is changed to \fIlevel\fR.
+The change of \fIlevel\fR is allowed only if the user is the superuser, or
+has the same uid as the process specified.
+.PP
+.I Nohup\^
+executes
+.I command\^
+immune to hangup and terminate signals from the controlling terminal.
+The equivalent of a 'nice -5' is applied to the
+command.
+.I Nohup\^
+should be invoked from the shell with `&' in order to 
+prevent it from responding to interrupts by or
+stealing the input from
+the next person who logs in on the same terminal.
+.SH FILES
+nohup.out -- \fInohup\fR standard output and error file
+.SH "SEE ALSO"
+nice(2), setblev(2).
+.SH DIAGNOSTICS
+.BR "nice \-" "number command"
+returns the exit status of the subject command.

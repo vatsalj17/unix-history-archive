@@ -1,0 +1,38 @@
+
+RENICE(2)           UNIX Programmer's Manual            RENICE(2)
+
+NAME
+     renice - set program priority
+
+SYNOPSIS
+     renice(pid, nice)
+
+DESCRIPTION
+     _R_e_n_i_c_e sets the scheduling priority of the process with id
+     _p_i_d to _n_i_c_e.  The super-user may _r_e_n_i_c_e any process to any
+     value from -127 to 127.  Other users may only increase the
+     nice value of one of their own processes.
+
+ERRORS
+     _R_e_n_i_c_e will fail and the process's scheduling priority will
+     be unaltered if:
+
+     [EPERM]             The named process's effective user ID is
+                         not the same as the calling process and
+                         the process's effective user ID is not
+                         the super-user.
+
+     [ESRCH]             The named process does not exist.
+
+SEE ALSO
+     nice(1), renice(1), nice(2)
+
+ASSEMBLER
+     (local = 58., renice = 17.)
+     sys local; 9f
+     . . .
+     .data
+     9: sys renice; pid; nice
+
+Printed 7/30/83                                                 1
+

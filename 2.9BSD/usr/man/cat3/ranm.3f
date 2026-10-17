@@ -1,0 +1,79 @@
+
+RANM(3F)            UNIX Programmer's Manual             RANM(3F)
+
+NAME
+     ranm, iran, rndmze, ransav, ranres - uniform pseudorandom
+     number generator package
+
+SYNOPSIS
+     double precision function ranm()
+
+     subroutine iran(i1, i2, i3, i4, i5, i6)
+     integer*2 i1, i2, i3, i4, i5, i6
+
+     subroutine rndmze
+
+     subroutine ransav(ivec)
+     integer*2 ivec(269)
+
+     subroutine ranres(ivec)
+     integer*2 ivec(269)
+
+DESCRIPTION
+     _R_a_n_m returns a uniform(0,1) pseudorandom double precision
+     number.
+
+     _I_r_a_n may be called with user specified arguments to initial-
+     ize the generator.  Different inputs to _i_r_a_n result in dif-
+     ferennt output sequences from _r_a_n_m.
+
+     _R_n_d_m_z_e calls _i_r_a_n with unpredictable arguments.
+
+     _R_a_n_s_a_v saves the entire current internal state of the gen-
+     erator into the array _i_v_e_c.
+
+     _R_a_n_r_e_s restores the entire internal state of the generator
+     as previously saved by _r_a_n_s_a_v in the array _i_v_e_c.
+
+     _I_r_a_n, _r_a_n_s_a_v or _r_a_n_r_e_s should not be used in the same pro-
+     gram with _r_n_d_m_z_e.
+
+ALGORITHM
+     _R_a_n_m uses two linear congruential generators and a 64-entry
+     shuffle table.
+
+     On each call, two pseudorandom 31 bit integers are generated
+     by the linear congruential method: N(i+1) = M * N(i) (mod P)
+     where P = 2**31 - 1.  M = 7**13 (mod P) for one generator
+     and 7**23 (mod P) for the other.  (The period of each linear
+     congruential generator is 2**31 - 2.) The resulting 62 bits
+     are used as follows: The first 56 bits form a pseudorandom
+     double precision number in the interval [0,1).  The last 6
+     bits determine a random address in the shuffle table
+     (between 0 and 63) into which to insert the double precision
+     number just formed.
+
+Printed 7/31/83                                                 1
+
+RANM(3F)            UNIX Programmer's Manual             RANM(3F)
+
+     The internal state of _r_a_n_m is the contents of the two linear
+     congruential seeds and of the shuffle table.
+
+     On the first call _r_a_n_m generates 64 double precision numbers
+     and inserts them (randomly, according to the above method)
+     into the shuffle table.
+
+SEE ALSO
+     ranm(3M)
+
+AUTHOR
+     D. W. Hutchinson, David W. Krumme, J. Reeds, F. Rizzardi, D.
+     M. Abrahams, Department of Statistics, U.C. Berkeley.
+
+BUGS
+     All six arguments to _i_r_a_n must be different to ensure a dif-
+     ferent output sequence from _r_a_n_m.
+
+Printed 7/31/83                                                 2
+

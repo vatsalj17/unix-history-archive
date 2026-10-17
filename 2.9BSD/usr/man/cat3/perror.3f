@@ -1,0 +1,82 @@
+
+PERROR(3F)          UNIX Programmer's Manual           PERROR(3F)
+
+NAME
+     perror, gerror, ierrno - get system error messages
+
+SYNOPSIS
+     subroutine perror (string)
+     character*(*) string
+
+     subroutine gerror (string)
+     character*(*) string
+
+     character*(*) function gerror()
+
+     function ierrno()
+
+DESCRIPTION
+     _P_e_r_r_o_r will write a message to fortran logical unit 0
+     appropriate to the last detected system error.  _S_t_r_i_n_g will
+     be written preceding the standard error message.
+
+     _G_e_r_r_o_r returns the system error message in character vari-
+     able _s_t_r_i_n_g. _G_e_r_r_o_r may be called either as a subroutine or
+     as a function.
+
+     _I_e_r_r_n_o will return the error number of the last detected
+     system error.  This number is updated only when an error
+     actually occurs.  Most routines and I/O statements that
+     might generate such errors return an error code after the
+     call; that value is a more reliable indicator of what caused
+     the error condition.
+
+FILES
+     /usr/lib/libU77.a
+
+SEE ALSO
+     intro(2), perror(3), ``Introduction to the f77 I/O Library''
+
+BUGS
+     _S_t_r_i_n_g in the call to _p_e_r_r_o_r can be no longer than 127 char-
+     acters.
+
+     The length of the string returned by _g_e_r_r_o_r is determined by
+     the calling program.
+
+NOTES
+     UNIX system error codes are described in _i_n_t_r_o(2).  The f77
+     I/O error codes and their meanings are:
+
+          100  ``error in format''
+          101  ``illegal unit number''
+          102  ``formatted io not allowed''
+          103  ``unformatted io not allowed''
+          104  ``direct io not allowed''
+
+Printed 7/31/83                                                 1
+
+PERROR(3F)          UNIX Programmer's Manual           PERROR(3F)
+
+          105  ``sequential io not allowed''
+          106  ``can't backspace file''
+          107  ``off beginning of record''
+          108  ``can't stat file''
+          109  ``no * after repeat count''
+          110  ``off end of record''
+          111  ``truncation failed''
+          112  ``incomprehensible list input''
+          113  ``out of free space''
+          114  ``unit not connected''
+          115  ``read unexpected character''
+          116  ``blank logical input field''
+          117  ``'new' file exists''
+          118  ``can't find 'old' file''
+          119  ``unknown system error''
+          120  ``requires seek ability''
+          121  ``illegal argument''
+          122  ``negative repeat count''
+          123  ``illegal operation for unit''
+
+Printed 7/31/83                                                 2
+

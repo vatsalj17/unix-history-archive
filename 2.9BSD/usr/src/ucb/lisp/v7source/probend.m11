@@ -1,0 +1,21 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+
+;this is the end to the prob7, prob8, and ctable files
+;its main function in life is to fill out the "extra bytes" that
+;may be required by the onepage option
+;
+; this code depends on printr being the first label defined
+;  in sharable code
+
+.if	eq, multiseg
+ .if	ne,onepage
+
+	.psect	onepage
+
+	.blkb	<<<.-printr>+377>&<^c 377>>-<.-printr>
+ .endc
+.endc
+
+
+	.end

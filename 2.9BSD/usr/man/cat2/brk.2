@@ -1,0 +1,67 @@
+
+BRK(2)              UNIX Programmer's Manual               BRK(2)
+
+NAME
+     brk, sbrk, break - change core allocation
+
+SYNOPSIS
+     char *brk(addr)
+
+     char *sbrk(incr)
+
+DESCRIPTION
+     _B_r_k sets the system's idea of the lowest location not used
+     by the program (called the break) to _a_d_d_r (rounded up to the
+     next multiple of 64 bytes on the PDP-11, 256 bytes on the
+     Interdata 8/32, 512 bytes on the VAX-11).  Locations not
+     less than _a_d_d_r and below the stack pointer are not in the
+     address space and will thus cause a memory violation if
+     accessed.
+
+     In the alternate function _s_b_r_k, _i_n_c_r more bytes are added to
+     the program's data space and a pointer to the start of the
+     new area is returned.
+
+     When a program begins execution via _e_x_e_c_v_e the break is set
+     at the highest location defined by the program and data
+     storage areas.  Ordinarily, therefore, only programs with
+     growing data areas need to use _b_r_e_a_k.
+
+RETURN VALUE
+     Zero is returned if the break could be set; -1 if the pro-
+     gram requests more memory than the system limit or if too
+     many segmentation registers would be required to implement
+     the break.
+
+ERRORS
+     _S_b_r_k will fail and no additional memory will be allocated
+     if:
+
+     [ENOMEM]            The maximum possible size of a data seg-
+                         ment (compiled into the system) was
+                         exceeded.
+
+     [ENOMEM]            The maximum available memory for a user
+                         process was exceeded.
+
+SEE ALSO
+     execve(2), end(3), malloc(3)
+
+BUGS
+     Setting the break in the range 0177701 to 0177777 (on the
+     PDP-11) is the same as setting it to zero.
+
+ASSEMBLER
+     (break = 17.)
+
+Printed 5/26/83                                                 1
+
+BRK(2)              UNIX Programmer's Manual               BRK(2)
+
+     sys break; addr
+
+     _B_r_e_a_k performs the function of _b_r_k.  The name of the routine
+     differs from that in C for historical reasons.
+
+Printed 5/26/83                                                 2
+

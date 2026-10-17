@@ -1,0 +1,53 @@
+
+KILLPG(2)           UNIX Programmer's Manual            KILLPG(2)
+
+NAME
+     killpg, killbkg - send signal to process group
+
+SYNOPSIS
+     killpg(pgrp, sig);
+
+     killbkg(pgrp, sig);
+
+DESCRIPTION
+     _K_i_l_l_p_g sends the specified signal to all processes in the
+     process group headed by process _p_g_r_p.  _K_i_l_l_b_k_g does the
+     same, but only for processes that have not been marked by
+     _s_u_b_m_i_t(2).
+
+     Use of these calls is restricted to the super-user.
+
+RETURN VALUE
+     Upon successful completion, a value of 0 is returned.  Oth-
+     erwise, a value of -1 is returned and _e_r_r_n_o is set to indi-
+     cate the error.
+
+ERRORS
+     _K_i_l_l_b_k_g will fail and no signal will be sent if any of the
+     following occur:
+
+     [EINVAL]            _S_i_g is not a valid signal number.
+
+     [ESRCH]             No process can be found corresponding to
+                         the process group specified by _p_g_r_p.
+
+     [EPERM]             The caller is not the super-user.
+
+SEE ALSO
+     kill(2), signal(2), submit(2)
+
+ASSEMBLER
+     (local = 58., killpg = 6.)
+     sys local; 9f
+     . . .
+     .data
+     9: sys killpg; pgrp; sig
+
+     (local = 58., killbkg = 5.)
+     sys local; 9f
+     . . .
+     .data
+     9: sys killbkg; pgrp; sig
+
+Printed 7/30/83                                                 1
+

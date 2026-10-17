@@ -1,0 +1,182 @@
+
+PSTAT(8)            UNIX Programmer's Manual             PSTAT(8)
+
+NAME
+     pstat - print system facts
+
+SYNTAX
+     pstat [ -aixptuf ] [ suboptions ] [ file ] [ objfile ]
+
+DESCRIPTION
+     _P_s_t_a_t interprets the contents of certain system tables.  If
+     _f_i_l_e is given, the tables are sought there, otherwise in
+     /_d_e_v/_k_m_e_m (except with -u, which uses /_d_e_v/_m_e_m).  The
+     required namelist is taken from objfile. The default is
+     /_u_n_i_x.  Options are:
+
+     -a    Under -p, describe all process slots rather than just
+           active ones.
+
+     -i    Print the inode table with the these headings:
+
+     LOC   The core location of this table entry.
+     FLAGS Miscellaneous state variables encoded thus:
+           L    locked
+           U    update time _f_i_l_s_y_s(5)) must be corrected
+           A    access time must be corrected
+           M    file system is mounted here
+           W    wanted by another process (L flag is on)
+           T    contains a text file
+           C    changed time must be corrected
+     CNT   Number of open file table entries for this inode.
+     DEV   Major and minor device number of file system in which
+           this inode resides.
+     INO   I-number within the device.
+     MODE  Mode bits, see _c_h_m_o_d(2).
+     NLK   Number of links to this inode.
+     UID   User ID of owner.
+     SIZ/DEV
+           Number of bytes in an ordinary file, or major and
+           minor device of special file.
+
+     -x    Print the text table with these headings:
+
+     LOC   The core location of this table entry.
+     FLAGS Miscellaneous state variables encoded thus:
+           T    _p_t_r_a_c_e(2) in effect
+           W    text not yet written on swap device
+           L    loading in progress
+           K    locked
+           w    wanted (L flag is on)
+     DADDR Disk address in swap, measured in multiples of 512
+           bytes.
+     CADDR Core address, measured in multiples of 64 bytes.
+     SIZE  Size of text segment, measured in multiples of 64
+           bytes.
+
+Printed 8/2/83                                                  1
+
+PSTAT(8)            UNIX Programmer's Manual             PSTAT(8)
+
+     IPTR  Core location of corresponding inode.
+     CNT   Number of processes using this text segment.
+     CCNT  Number of processes in core using this text segment.
+
+     -p    Print process table for active processes with these
+           headings:
+
+     LOC   The core location of this table entry.
+     S     Run state encoded thus:
+           0    no process
+           1    waiting for some event
+           3    runnable
+           4    being created
+           5    being terminated
+           6    stopped under trace
+     F     Miscellaneous state variables, or-ed together:
+           01   loaded
+           02   the scheduler process
+           04   locked
+           010  swapped out
+           020  traced
+           040  used in tracing
+           0100 locked in by _l_o_c_k(2).
+           0200 detached, has no controlling tty
+           0400 using new signal mechanism
+           01000
+                child in vfork
+           02000
+                parent in vfork
+           04000
+                used at vfork termination
+     PRI   Scheduling priority, see _n_i_c_e(2).
+     SIGNAL
+           Signals received (signals 1-16 coded in bits 0-15),
+     UID   Real user ID.
+     TIM   Time resident in seconds; times over 127 coded as 127.
+     CPU   Weighted integral of CPU time, for scheduler.
+     NI    Nice level, see _n_i_c_e(2).
+     PGRP  Process number of root of process group (the opener of
+           the controlling terminal).
+     PID   The process ID number.
+     PPID  The process ID of parent process.
+     ADDR  If in core, the physical address of the `u-area' of
+           the process measured in multiples of 64 bytes.  If
+           swapped out, the position in the swap area measured in
+           multiples of 512 bytes.
+     DADR  The address of the data area of the process, in core
+           or on swap.
+     SADR  The address of the stack area of the process, in core
+           or on swap.
+     DSIZ  Size of process data area in multiples of 64 bytes.
+     SSIZ  Size of process stack area in multiples of 64 bytes.
+
+Printed 8/2/83                                                  2
+
+PSTAT(8)            UNIX Programmer's Manual             PSTAT(8)
+
+     WCHAN Wait channel number of a waiting process.
+     LINK  Link pointer in list of runnable processes.
+     TEXTP If text is pure, pointer to location of text table
+           entry.
+     CLKT  Countdown for _a_l_a_r_m(2) measured in seconds.
+
+     -t    Print table for terminals (DL11, DH11 and DZ11 handled
+           ) with these headings:
+
+     RAW   Number of characters in raw input queue.
+     CAN   Number of characters in canonicalized input queue.
+     OUT   Number of characters in output queue.
+     MODE  See _t_t_y(4).
+     ADDR  Physical device address.
+     DEL   Number of delimiters (newlines) in canonicalized input
+           queue.
+     COL   Calculated column position of terminal.
+     STATE Miscellaneous state variables encoded thus:
+           T    timeout (carrige return or newline delay process-
+                ing)
+           W    waiting for open to complete
+           O    open
+           S    output is stopped by stop character.
+           C    carrier is on
+           B    busy doing output
+           A    process is awaiting output (asleep)
+           X    open for exclusive use
+           M    blocked output (tandem mode, see _t_t_y(4))
+           H    hangup on close
+           Q    control request inprogress
+     PGRP  Process group for which this is controlling terminal.
+     CHAN  Alternate line discipline channnel number
+
+     -u    print information about a user process; the next argu-
+           ment is its address as given by _p_s(1).  The process
+           must be in main memory, or the file used can be a core
+           image and the address 0.
+
+     -f    Print the open file table with these headings:
+
+     LOC   The core location of this table entry.
+     FLG   Miscellaneous state variables encoded thus:
+           R    open for reading
+           W    open for writing
+           P    pipe
+     CNT   Number of processes that know this open file.
+     INO   The location of the inode table entry for this file.
+     OFFS  The file offset, see _l_s_e_e_k(2).
+
+FILES
+     /unix               namelist
+     /dev/kmem           default source of tables
+
+Printed 8/2/83                                                  3
+
+PSTAT(8)            UNIX Programmer's Manual             PSTAT(8)
+
+     /dev/mem            default source of u. areas
+
+SEE ALSO
+     ps(1), stat(2), filsys(5)
+     K. Thompson, _U_N_I_X _I_m_p_l_e_m_e_n_t_a_t_i_o_n
+
+Printed 8/2/83                                                  4
+

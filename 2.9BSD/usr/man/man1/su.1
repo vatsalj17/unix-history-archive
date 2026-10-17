@@ -1,0 +1,37 @@
+.TH SU 1
+.UC
+.SH NAME
+su  \-  substitute user id temporarily
+.SH SYNTAX
+.B su
+[ \- ]
+[ userid ]
+.SH DESCRIPTION
+.I Su
+demands the password of the specified
+.I userid,
+and if it is given,
+changes to that 
+.I userid
+and invokes a shell
+without changing the current directory or the
+user environment.
+The new user ID stays in force until the shell exits.
+If the `SHELL' environment variable is set, it is used as
+the name of the new shell, and, if necessary, the previous
+user environment is restored for that shell. This allows
+for the use of multiple shells with \fIsu\fP.
+If the optional
+.B -
+flag is given, the shell of the specified user will be
+the new shell, the environment is set as for that user,
+and the new shell is started in the new home directory.
+This can be used to simulate the login environment of a specified user.
+.PP
+If no 
+.I userid
+is specified, `root' is assumed.
+To remind the super-user of his responsibilities,
+the shell substitutes `#' for its usual prompt.
+.SH "SEE ALSO"
+csh(1), newgrp(1), sh(1)

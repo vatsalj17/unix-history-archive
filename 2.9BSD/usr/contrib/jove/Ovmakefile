@@ -1,0 +1,16 @@
+CFLAGS = -O
+CC = cc -V
+AS = as -V
+
+OV1 =	jove_case.o jove_c.o jove_curs.o jove_delete.o jove_disp.o
+OV2 =	jove_funcs.o jove_inc.o jove_marks.o
+OV3 =	jove_io.o jove_main.o jove_meta.o
+OV4 =	jove_misc.o jove_re.o
+OV5 =	jove_tag.o jove_temp.o jove_term.o jove_ttout.o jove_wind.o jove_buf.o
+OV6 =	jove_draw.o jove_move.o jove_insert.o jove_screen.o
+OV7 =	jove_proc.o jove_extend.o format.o interface.o
+
+jove:	${OV1} ${OV2} ${OV3} ${OV4} ${OV5} ${OV6} ${OV7}
+	/bin/ld -X -n /lib/crt0.o -o jove \
+		-Z ${OV1} -Z ${OV2} -Z ${OV3} -Z ${OV4} -Z ${OV5} -Z ${OV6} \
+		-Z ${OV7} -lovtermcap -L -lovjobs -lovc

@@ -1,0 +1,1001 @@
+#
+ed - READ_ME << '-*-END-*-'
+43c
+capabilities); and that -t1 is NOT used for compilation.
+.
+10c
+Special installation notes for this version.
+.
+5a
+This is version 3.1 of the editor. It is too large to fit on a pdp-11
+unless you have overlay code. (Such code is expected to be available
+for v7 unix soon.)
+
+.
+1,4d
+w
+q
+'-*-END-*-'
+ed - ex.c << '-*-END-*-'
+257c
+		if (globp = getenv("EXINIT"))
+			commands(1,1);
+		else if ((cp = getenv("HOME")) != 0)
+.
+201a
+		case 'w':
+			defwind = 0;
+			if (av[0][2] == 0) defwind = 3;
+			else for (cp = &av[0][2]; isdigit(*cp); cp++)
+				defwind = 10*defwind + *cp - '0';
+			break;
+
+.
+w
+q
+'-*-END-*-'
+ed - ex.h << '-*-END-*-'
+165a
+short	otchng;			/* Backup tchng to find changes in macros */
+.
+154a
+char	lastmac;		/* Last macro called for ** */
+.
+135c
+short	defwind;		/* -w# change default window size */
+.
+7c
+ * Ex version 3.1
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+625a
+			continue;
+
+/* * */
+/* @ */
+		case '*':
+		case '@':
+			c = getchar();
+			if (c=='\n' || c=='\r')
+				ungetchar(c);
+			if (any(c, "@*\n\r"))
+				c = lastmac;
+			if (isupper(c))
+				c = tolower(c);
+			if (!islower(c))
+				error("Bad register");
+			newline();
+			setdot();
+			cmdmac(c);
+.
+574c
+				printf("Version 3.1, November 11, 1979");
+.
+558c
+			if (peekchar() == 'n') {
+/* unmap */
+				ignchar();
+				if (peekchar() == 'm') {
+					tail2of("unmap");
+					setnoaddr();
+					mapcmd(1);
+					continue;
+				}
+/* undo */
+				tail2of("undo");
+			} else
+				tail("undo");
+.
+556d
+495a
+			/*
+			 * Caution: 2nd char cannot be c, g, or r
+			 * because these have meaning to substitute.
+			 */
+.
+422a
+					putpad(KE);
+				}
+.
+421c
+				else {
+.
+329c
+				tail2of("mark");
+.
+327a
+				ignchar();
+				if (peekchar() == 'p') {
+/* map */
+					tail2of("map");
+					setnoaddr();
+					mapcmd(0);
+					continue;
+				}
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds2.c << '-*-END-*-'
+499a
+		putpad(KE);
+.
+481a
+		putpad(KS);
+.
+434a
+		if (tcommand[0] == 's' && any(c, "gcr"))
+			goto ret;
+.
+161a
+		vglobp = vmacp = 0;
+.
+135a
+		putpad(KE);
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmdsub.c << '-*-END-*-'
+926a
+}
+
+/*
+ * Map command:
+ * map src dest
+ */
+mapcmd(un)
+	int un;	/* true if this is unmap command */
+{
+	char lhs[10], rhs[100];	/* max sizes resp. */
+	register char *p;
+	register char c;
+	char *dname;
+
+	if (skipend()) {
+		int i;
+
+		/* print current mapping values */
+		if (peekchar() != EOF)
+			ignchar();
+		if (inopen)
+			pofix();
+		for (i=0; arrows[i].mapto; i++)
+			if (arrows[i].cap) {
+				lprintf("%s", arrows[i].descr);
+				putchar('\t');
+				lprintf("%s", arrows[i].cap);
+				putchar('\t');
+				lprintf("%s", arrows[i].mapto);
+				putNFL();
+			}
+		return;
+	}
+
+	ignore(skipwh());
+	for (p=lhs; ; ) {
+		c = getchar();
+		if (c == CTRL(v)) {
+			c = getchar();
+		} else if (any(c, " \t")) {
+			if (un)
+				eol();	/* will usually cause an error */
+			else
+				break;
+		} else if (endcmd(c)) {
+			ungetchar(c);
+			if (un) {
+				newline();
+				addmac(lhs, NOSTR, NOSTR);
+				return;
+			} else
+				error("Missing rhs");
+		}
+		*p++ = c;
+	}
+	*p = 0;
+
+	if (skipend())
+		error("Missing rhs");
+	for (p=rhs; ; ) {
+		c = getchar();
+		if (c == CTRL(v)) {
+			c = getchar();
+		} else if (endcmd(c)) {
+			ungetchar(c);
+			break;
+		}
+		*p++ = c;
+	}
+	*p = 0;
+	newline();
+	/*
+	 * Special hack for function keys: #1 means key f1, etc.
+	 * If the terminal doesn't have function keys, we just use #1.
+	 */
+	if (lhs[0] == '#') {
+		char *fnkey;
+		char *fkey();
+		char funkey[3];
+
+		fnkey = fkey(lhs[1] - '0');
+		funkey[0] = 'f'; funkey[1] = lhs[1]; funkey[2] = 0;
+		if (fnkey)
+			strcpy(lhs, fnkey);
+		dname = funkey;
+	} else {
+		dname = lhs;
+	}
+	addmac(lhs,rhs,dname);
+}
+
+/*
+ * Add a macro definition to those that already exist. The sequence of
+ * chars "src" is mapped into "dest". If src is already mapped into something
+ * this overrides the mapping. There is no recursion. Unmap is done by
+ * using NOSTR for dest.
+ */
+addmac(src,dest,dname)
+	register char *src, *dest, *dname;
+{
+	register int slot, zer;
+
+	if (dest) {
+		/* Make sure user doesn't screw himself */
+		/*
+		 * Prevent head and tail recursion. We really should be
+		 * checking to see if src is a prefix or suffix of dest
+		 * but we are too lazy here, so we don't bother unless
+		 * src is only 1 char long.
+		 */
+		if (src[1] == 0 && (src[0] == dest[0] || src[0] == dest[strlen(dest)-1]))
+			error("No recursion");
+		/*
+		 * We don't let the user rob himself of ":", and making
+		 * multi char words is a bad idea so we don't allow it.
+		 * Note that if user sets mapinput and maps all of return,
+		 * linefeed, and escape, he can screw himself. This is
+		 * so weird I don't bother to check for it.
+		 */
+		if (isalpha(src[0]) && src[1] || any(src[0],":"))
+			error("Too dangerous to map that");
+		/*
+		 * If the src were null it would cause the dest to
+		 * be mapped always forever. This is not good.
+		 */
+		if (src[0] == 0)
+			error("Null lhs");
+	}
+
+	/* see if we already have a def for src */
+	zer = -1;
+	for (slot=0; arrows[slot].mapto; slot++) {
+		if (arrows[slot].cap) {
+			if (eq(src, arrows[slot].cap))
+				break;	/* if so, reuse slot */
+		} else {
+			zer = slot;	/* remember an empty slot */
+		}
+	}
+
+	if (dest == NOSTR) {
+		/* unmap */
+		if (arrows[slot].cap) {
+			arrows[slot].cap = NOSTR;
+			arrows[slot].descr = NOSTR;
+		} else {
+			error("Not mapped|That macro wasn't mapped");
+		}
+		return;
+	}
+
+	/* reuse empty slot, if we found one and src isn't already defined */
+	if (zer >= 0 && arrows[slot].mapto == 0)
+		slot = zer;
+
+	/* if not, append to end */
+	if (slot >= MAXNOMACS)
+		error("Too many macros");
+	if (msnext == 0)	/* first time */
+		msnext = mapspace;
+	/* Check is a bit conservative, we charge for dname even if reusing src */
+	if (msnext - mapspace + strlen(dest) + strlen(src) + strlen(dname) + 3 > MAXCHARMACS)
+		error("Too much macro text");
+	CP(msnext, src);
+	arrows[slot].cap = msnext;
+	msnext += strlen(src) + 1;	/* plus 1 for null on the end */
+	CP(msnext, dest);
+	arrows[slot].mapto = msnext;
+	msnext += strlen(dest) + 1;
+	if (dname) {
+		CP(msnext, dname);
+		arrows[slot].descr = msnext;
+		msnext += strlen(dname) + 1;
+	} else {
+		/* default descr to string user enters */
+		arrows[slot].descr = src;
+	}
+}
+
+/*
+ * Implements macros from command mode. c is the buffer to
+ * get the macro from.
+ */
+cmdmac(c)
+char c;
+{
+	char macbuf[BUFSIZ];
+	line *ad, *a1, *a2;
+	char *oglobp;
+	char pk;
+	bool oinglobal;
+
+	lastmac = c;
+	oglobp = globp;
+	oinglobal = inglobal;
+	pk = peekc; peekc = 0;
+	if (inglobal < 2)
+		inglobal = 1;
+	regbuf(c, macbuf, sizeof(macbuf));
+	a1 = addr1; a2 = addr2;
+	for (ad=a1; ad<=a2; ad++) {
+		globp = macbuf;
+		dot = ad;
+		commands(1,1);
+	}
+	globp = oglobp;
+	inglobal = oinglobal;
+	peekc = pk;
+.
+174a
+	if (inopen == -1)
+		return;
+.
+160c
+	if (inopen >= 0 && (inopen || !inglobal)) {
+.
+111c
+	if (inopen >= 0 && (inopen || !inglobal)) {
+.
+74c
+	if (inopen >= 0 && (inopen || !inglobal)) {
+.
+w
+q
+'-*-END-*-'
+ed - ex_data.c << '-*-END-*-'
+39a
+	"mapinput",	"mi",	ONOFF,		0,	0,	0,
+.
+34a
+	"edcompatible",	"ed",	ONOFF,		0,	0,	0,
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+790a
+	putpad(KE);
+.
+775a
+	putpad(KS);
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.c << '-*-END-*-'
+200a
+			if (uselastre)
+				savere(subre);
+			else
+				resre(subre);
+.
+196a
+		case 'r':
+			uselastre = 1;
+			continue;
+
+.
+194c
+			xflag = !xflag;
+.
+190c
+			gsubf = !gsubf;
+.
+182d
+179a
+		uselastre = 1;
+		/* fall into ... */
+	case '&':
+	redo:
+.
+173,178d
+170a
+		gsubf = 0;
+		xflag = 0;
+.
+169c
+		uselastre = 1;
+.
+166c
+		if (endcmd(seof) || any(seof, "gcr")) {
+			ungetchar(seof);
+			goto redo;
+		}
+		if (isalpha(seof) || isdigit(seof))
+.
+159,160c
+	if (!value(EDCOMPATIBLE))
+		gsubf = xflag = 0;
+	uselastre = 0;
+.
+156,157c
+	register int seof, c, uselastre;
+	static int gsubf;
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.h << '-*-END-*-'
+39,40c
+#define	savere(a)	copy(&a, &re, sizeof (struct regexp))
+#define	resre(a)	copy(&re, &a, sizeof (struct regexp))
+.
+w
+q
+'-*-END-*-'
+ed - ex_temp.c << '-*-END-*-'
+537a
+
+/* Register c to char buffer buf of size buflen */
+regbuf(c, buf, buflen)
+char c;
+char *buf;
+int buflen;
+{
+	struct rbuf arbuf;
+	register char *p, *lp;
+
+	rbuf = &arbuf;
+	rnleft = 0;
+	rblock = 0;
+	rnext = mapreg(c)->rg_first;
+	if (rnext==0) {
+		*buf = 0;
+		error("Nothing in register %c",c);
+	}
+	p = buf;
+	while (getREG()==0) {
+		for (lp=linebuf; *lp;) {
+			if (p >= &buf[buflen])
+				error("Register too long@to fit in memory");
+			*p++ = *lp++;
+		}
+		*p++ = '\n';
+	}
+	if (partreg(c)) p--;
+	*p = '\0';
+	getDOT();
+}
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.c << '-*-END-*-'
+129a
+}
+
+char *
+fkey(i)
+	int i;
+{
+	if (0 <= i && i <= 9)
+		return(*fkeys[i]);
+	else
+		return(NOSTR);
+.
+104c
+	namp = "albcbtcdceclcmdcdldmdoedeik0k1k2k3k4k5k6k7k8k9hoicimipkdkekhklkrkskullndpcsesfsosrtatetiupvbvsve";
+.
+64a
+	if (defwind) options[WINDOW].ovalue = defwind;
+.
+62a
+	/*
+	 * Initialize keypad arrow keys.
+	 */
+	arrows[0].cap = KU; arrows[0].mapto = "k"; arrows[0].descr = "up";
+	arrows[1].cap = KD; arrows[1].mapto = "j"; arrows[1].descr = "down";
+	arrows[2].cap = KL; arrows[2].mapto = "h"; arrows[2].descr = "left";
+	arrows[3].cap = KR; arrows[3].mapto = "l"; arrows[3].descr = "right";
+	arrows[4].cap = KH; arrows[4].mapto = "H"; arrows[4].descr = "home";
+.
+46a
+	putpad(TE);
+.
+43d
+34a
+char **fkeys[10] = {
+	&F0, &F1, &F2, &F3, &F4, &F5, &F6, &F7, &F8, &F9
+};
+.
+29c
+	&F0, &F1, &F2, &F3, &F4, &F5, &F6, &F7, &F8, &F9,
+	&HO, &IC, &IM, &IP, &KD, &KE, &KH, &KL, &KR, &KS, &KU, &LL,
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.h << '-*-END-*-'
+107a
+
+#define MAXNOMACS	32	/* max number of macros */
+#define MAXCHARMACS	512	/* max # of chars total in macros */
+struct maps {
+	char *cap;	/* pressing button that sends this.. */
+	char *mapto;	/* .. maps to this string */
+	char *descr;	/* legible description of key */
+};
+struct maps arrows[MAXNOMACS];	/* macro defs - 1st 5 built in */
+char	mapspace[MAXCHARMACS];
+char	*msnext;	/* next free location in mapspace */
+.
+49d
+47a
+char	*KD;			/*    Keypad down arrow */
+char	*KE;			/*    Keypad don't xmit */
+char	*KH;			/*    Keypad home key */
+char	*KL;			/*    Keypad left arrow */
+char	*KR;			/*    Keypad right arrow */
+char	*KS;			/*    Keypad start xmitting */
+char	*KU;			/*    Keypad up arrow */
+.
+43a
+char	*F0,*F1,*F2,*F3,*F4,*F5,*F6,*F7,*F8,*F9;
+				/*    Strings sent by various function keys */
+.
+w
+q
+'-*-END-*-'
+ed - ex_tune.h << '-*-END-*-'
+13,15c
+#define	EXRECOVER	libpath(ex3.1recover)
+#define	EXPRESERVE	libpath(ex3.1preserve)
+#define	EXSTRINGS	libpath(ex3.1strings)
+.
+w
+q
+'-*-END-*-'
+ed - ex_vars.h << '-*-END-*-'
+35c
+#define	NOPTS	35
+.
+6,33c
+#define EDCOMPATIBLE    5
+#define ERRORBELLS      6
+#define HARDTABS        7
+#define IGNORECASE      8
+#define LISP            9
+#define LIST            10
+#define MAPINPUT        11
+#define MAGIC           12
+#define NUMBER          13
+#define OPEN            14
+#define OPTIMIZE        15
+#define PARAGRAPHS      16
+#define PROMPT          17
+#define REDRAW          18
+#define REPORT          19
+#define SCROLL          20
+#define SECTIONS        21
+#define SHELL           22
+#define SHIFTWIDTH      23
+#define SHOWMATCH       24
+#define SLOWOPEN        25
+#define TABSTOP         26
+#define TTYTYPE         27
+#define TERM            28
+#define TERSE           29
+#define WARN            30
+#define WINDOW          31
+#define WRAPSCAN        32
+#define WRAPMARGIN      33
+#define WRITEANY        34
+.
+w
+q
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+385a
+}
+
+/*
+ * fastpeekkey is just like peekkey but insists the character come in
+ * fast (within 1 second). This will succeed if it is the 2nd char of
+ * a machine generated sequence (such as a function pad from an escape
+ * flavor terminal) but fail for a human hitting escape then waiting.
+ */
+fastpeekkey()
+{
+	int trapalarm();
+	register int c;
+
+	signal(SIGALRM, trapalarm);
+	alarm(1);
+	CATCH
+		c = peekkey();
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"[OK]",c);
+#endif
+		alarm(0);
+	ONERR
+		c = 0;
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"[TOUT]",c);
+#endif
+	ENDCATCH
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"[fpk:%o]",c);
+#endif
+	return(c);
+}
+
+trapalarm() {
+	alarm(0);
+	longjmp(vreslab,1);
+.
+367a
+ * Push st onto the front of vmacp. This is tricky because we have to
+ * worry about where vmacp was previously pointing. We also have to
+ * check for overflow (which is typically from a recursive macro)
+ * Finally we have to set a flag so the whole thing can be undone.
+ */
+macpush(st)
+char *st;
+{
+	char tmpbuf[BUFSIZ];
+
+	if (st==0 || *st==0)
+		return;
+#ifdef TRACE
+	if (trace)
+		fprintf(trace, "macpush(%s)",st);
+#endif
+	if (strlen(vmacp) + strlen(st) > BUFSIZ)
+		error("Macro too long@ - maybe recursive?");
+	if (vmacp)
+		strcpy(tmpbuf, vmacp);
+	strcpy(vmacbuf, st);
+	if (vmacp)
+		strcat(vmacbuf, tmpbuf);
+	vmacp = vmacbuf;
+	/* arrange to be able to undo the whole macro */
+	inopen = -1;	/* no need to save since it had to be 1 or -1 before */
+	otchng = tchng;
+	saveall();
+	vundkind = VMANY;
+#ifdef TRACE
+	if (trace)
+		fprintf(trace, "saveall for macro: undkind=%d, unddel=%d, undap1=%d, undap2=%d, dol=%d, unddol=%d, truedol=%d\n", undkind, lineno(unddel), lineno(undap1), lineno(undap2), lineno(dol), lineno(unddol), lineno(truedol));
+#endif
+}
+
+/*
+.
+364c
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"Fail: return %c",c); /* DEBUG */
+#endif
+	macpush(&b[1]);
+	return(c);
+.
+356,362c
+	/*
+	 * Mapping for special keys on the terminal only.
+	 * BUG: if there's a long sequence and it matches
+	 * some chars and then misses, we lose some chars.
+	 *
+	 * For this to work, some conditions must be met.
+	 * 1) Keypad sends SHORT (2 or 3 char) strings
+	 * 2) All strings sent are same length & similar
+	 * 3) The user is unlikely to type the first few chars of
+	 *    one of these strings very fast.
+	 * Note: some code has been fixed up since the above was laid out,
+	 * so conditions 1 & 2 are probably not required anymore.
+	 * However, this hasn't been tested with any first char
+	 * that means anything else except escape.
+	 */
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"map(%c): ",c);
+#endif
+	b[0] = c;
+	b[1] = 0;
+	for (d=0; maps[d].mapto; d++) {
+#ifdef MDEBUG
+		if (trace)
+			fprintf(trace,"d=%d, ",d);
+#endif
+		if (p = maps[d].cap) {
+			for (q=b; *p; p++, q++) {
+#ifdef MDEBUG
+				if (trace)
+					fprintf(trace,"q->b[%d], ",q-b);
+#endif
+				if (*q==0) {
+					/*
+					 * This test is oversimplified, but
+					 * should work mostly. It handles the
+					 * case where we get an ESCAPE that
+					 * wasn't part of a keypad string.
+					 */
+					if ((c=='#' ? peekkey() : fastpeekkey()) == 0) {
+#ifdef MDEBUG
+					if (trace)
+						fprintf(trace,"fpk=0: return %c",c);
+#endif
+						macpush(&b[1]);
+						return(c);
+					}
+					*q = getkey();
+					q[1] = 0;
+				}
+				if (*p != *q)
+					goto contin;
+			}
+			macpush(maps[d].mapto);
+			c = getkey();
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"Success: return %c",c);
+#endif
+			return(c);	/* first char of map string */
+			contin:;
+		}
+.
+354c
+	register char *p, *q;
+	char b[10];	/* Assumption: no keypad sends string longer than 10 */
+.
+351a
+	register struct maps *maps;
+.
+350c
+
+map(c,maps)
+.
+76a
+	if (vmacp) {
+		if (*vmacp)
+			return(*vmacp++);
+		/* End of a macro or set of nested macros */
+		vmacp = 0;
+		inopen = 1;	/* restore old setting now that macro done */
+		vundkind = VMANY;
+	}
+.
+33c
+		if (c==0)
+			beep();
+	} while (c == 0);
+.
+31c
+	do {
+.
+w
+q
+'-*-END-*-'
+ed - ex_vmain.c << '-*-END-*-'
+1010c
+		vmoveitup(1, 1);
+.
+950c
+	if (inopen > 0)
+		vundkind = VMANY;
+.
+946c
+	if (inopen > 0)
+		undap1 = undap2 = dot;
+.
+891a
+			vmacp = 0;
+.
+674a
+
+		/*
+		 * &		Like :&
+		 */
+		 case '&':
+			oglobp = globp;
+			globp = "&";
+			goto gogo;
+.
+406a
+		 * ~	Switch case of letter under cursor
+		 */
+		case '~':
+			{
+				char mbuf[4];
+				mbuf[0] = 'r';
+				mbuf[1] = *cursor;
+				mbuf[2] = cursor[1]==0 ? 0 : ' ';
+				mbuf[3] = 0;
+				if (isalpha(mbuf[1]))
+					mbuf[1] ^= ' ';	/* toggle the case */
+				macpush(mbuf);
+			}
+			continue;
+
+
+		/*
+.
+249a
+		 * ^E		Glitch the screen down (one) line.
+		 *		Cursor left on same line in file.
+		 */
+		case CTRL(e):
+			if (state != VISUAL)
+				continue;
+			if (!hadcnt)
+				cnt = 1;
+			/* Bottom line of file already on screen */
+			forbid(lineDOL()-lineDOT() <= vcnt-1-vcline);
+			ind = vcnt - vcline - 1 + cnt;
+			vdown(ind, ind, 1);
+			vnline(cursor);
+			continue;
+
+		/*
+		 * ^Y		Like ^E but up
+		 */
+		case CTRL(y):
+			if (state != VISUAL)
+				continue;
+			if (!hadcnt)
+				cnt = 1;
+			forbid(lineDOT()-1<=vcline); /* line 1 already there */
+			ind = vcline + cnt;
+			vup(ind, ind, 1);
+			vnline(cursor);
+			continue;
+
+
+		/*
+.
+181a
+		 * @   		Macros. Bring in the macro and put it
+		 *		in vmacbuf, point vglobp there and punt.
+		 */
+		 case '@':
+			c = getkey();
+			if (c == '@')
+				c = lastmac;
+			if (isupper(c))
+				c = tolower(c);
+			forbid(!islower(c));
+			lastmac = c;
+			vsave();
+			CATCH
+				char tmpbuf[BUFSIZ];
+
+				regbuf(c,tmpbuf,sizeof(vmacbuf));
+				macpush(tmpbuf);
+			ONERR
+				lastmac = 0;
+				splitw = 0;
+				getDOT();
+				vrepaint(cursor);
+				continue;
+			ENDCATCH
+			vmacp = vmacbuf;
+			goto reread;
+
+		/*
+.
+173,175c
+		 *		with a little feedback.
+.
+116c
+#ifdef MDEBUG
+		if (trace)
+			fprintf(trace,"pcb=%c,",peekkey());
+#endif
+		op = getkey();
+		do {
+			/*
+			 * Keep mapping the char as long as it changes.
+			 * This allows for double mappings, e.g., q to #,
+			 * #1 to something else.
+			 */
+			c = op;
+			op = map(c,arrows);
+#ifdef MDEBUG
+			if (trace)
+				fprintf(trace,"pca=%c,",c);
+#endif
+			/*
+			 * Maybe the mapped to char is a count. If so, we have
+			 * to go back to the "for" to interpret it. Likewise
+			 * for a buffer name.
+			 */
+			if ((isdigit(c) && c!='0') || c == '"') {
+				ungetkey(c);
+				goto looptop;
+			}
+		} while (c != op);
+.
+111,114c
+		 * by performing a terminal dependent mapping of inputs.
+.
+89a
+looptop:
+#ifdef MDEBUG
+			if (trace)
+				fprintf(trace, "pc=%c",peekkey());
+#endif
+.
+w
+q
+'-*-END-*-'
+ed - ex_voperate.c << '-*-END-*-'
+127c
+	c = map(getesc(),arrows);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops2.c << '-*-END-*-'
+444a
+		if (value(MAPINPUT))
+			while ((ch = map(c, arrows)) != c)
+				c = ch;
+.
+w
+q
+'-*-END-*-'
+ed - makefile << '-*-END-*-'
+1c
+VERSION=3.1
+.
+w
+q
+'-*-END-*-'
+ed - printf.c << '-*-END-*-'
+305c
+_p_emit(s, send)
+.
+234c
+_p_dconv(value, buffer)
+.
+223c
+/* _p_dconv converts the unsigned long integer "value" to
+.
+218c
+				_p_emit(bptr,ptr);
+.
+202c
+				bptr = _p_dconv(num, buf);
+.
+160c
+					*--bptr = ((int) num & mask1) + 060;
+.
+18c
+char *_p_dconv();
+.
+14c
+#define MAXDIGS	10	/* number of digits in BIG */
+.
+3c
+/*
+ * This version of printf is compatible with the Version 7 C
+.
+w
+q
+'-*-END-*-'

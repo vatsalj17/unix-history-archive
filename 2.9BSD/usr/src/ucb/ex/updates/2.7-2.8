@@ -1,0 +1,743 @@
+#
+ed - ex.c << '-*-END-*-'
+430a
+
+/*
+ * Return last component of unix path name p.
+ */
+char *
+tailpath(p)
+register char *p;
+{
+	register char *r;
+
+	for (r=p; *p; p++)
+		if (*p == '/')
+			r = p+1;
+	return(r);
+}
+.
+206,208c
+		if (av[0][1] == '/' || av[0][1]=='?') {
+			firstpat = &av[0][1];
+		} else {
+			firstln = getn(av[0] + 1);
+			if (firstln == 0)
+				firstln = 20000;
+		}
+.
+113,116d
+96c
+		erpath = tailpath(erpath);
+.
+w
+q
+'-*-END-*-'
+ed - ex.h << '-*-END-*-'
+296a
+char	*tailpath();
+.
+192a
+#define ckaw()		{if (chng && value(AUTOWRITE)) wop(0);}
+.
+7c
+ * Ex version 2.8
+.
+w
+q
+'-*-END-*-'
+ed - ex_argv.h << '-*-END-*-'
+17a
+char	*firstpat;		/* From +/pat	*/
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+663a
+				nochng();
+.
+624d
+622c
+				if (inglobal)
+					addr1 = addr2 = dot;
+				else
+					addr1 = addr2 = dot + 1;
+.
+582c
+				wop(1);
+.
+553c
+				printf("Version 2.8, July 18, 1979");
+.
+328a
+			ckaw();
+.
+122a
+choice:
+.
+94a
+				addr1 = addr2 = 0;
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmdsub.c << '-*-END-*-'
+513c
+				strcat(cmdbuf2, filebuf);
+.
+509,510c
+				if (!quick) {
+					ckaw();
+					if (chng)
+						error("No write@since last change (:tag! overrides)");
+				}
+.
+506,507c
+			if (strcmp(filebuf, savedfile) || !edited) {
+				char cmdbuf2[sizeof filebuf + 10];
+.
+486c
+				if (lp < &filebuf[sizeof filebuf - 2])
+.
+484c
+			lp = filebuf;
+.
+441a
+	char filebuf[FNSIZE];
+.
+w
+q
+'-*-END-*-'
+ed - ex_data.c << '-*-END-*-'
+28a
+	"hardtabs",	"ht",	NUMERIC,	8,	8,	0,
+.
+25a
+	"autowrite",	"aw",	ONOFF,		0,	0,	0,
+.
+w
+q
+'-*-END-*-'
+ed - ex_io.c << '-*-END-*-'
+597c
+		if (hush == 0)
+			lprintf("!%s", uxb);
+.
+578a
+	if (warn)
+		ckaw();
+.
+486a
+	if (!dofname) {
+		addr1 = saddr1;
+		addr2 = saddr2;
+	}
+.
+420,427c
+	if (dofname) {
+		if (peekchar() == '!')
+			exclam++, ignchar();
+		ignore(skipwh());
+		while (peekchar() == '>')
+			ignchar(), c++, ignore(skipwh());
+		if (c != 0 && c != 2)
+			error("Write forms are 'w' and 'w>>'");
+		filename('w');
+	} else {
+		saddr1=addr1;
+		saddr2=addr2;
+		addr1=one;
+		addr2=dol;
+		CP(file, savedfile);
+		lprintf("\"%s\"", file);
+	}
+.
+415a
+	line *saddr1, *saddr2;
+.
+413c
+wop(dofname)
+bool dofname;	/* if 1 call filename, else use savedfile */
+.
+366c
+			if (wasalt == 3) {
+				globp = firstpat;
+				firstpat = 0;
+				commands(1,1);
+			} else if (addr >= one) {
+.
+289a
+	else if (firstpat)
+		wasalt = 3; 
+.
+260,262c
+		if (G.argv[0][1] == '/' || G.argv[0][1] == '?') {
+			firstpat = &G.argv[0][1];
+		} else {
+			firstln = getn(G.argv[0] + 1);
+			if (firstln == 0)
+				firstln = 20000;
+		}
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+525c
+	for (;;) {
+		i = (outcol / value(HARDTABS) + 1) * value(HARDTABS);
+		if (i > destcol)
+			break;
+.
+511a
+*/
+.
+505a
+/*
+.
+466a
+*/
+.
+459a
+/*
+.
+457c
+	i = destcol % value(HARDTABS) + destcol / value(HARDTABS);
+.
+435c
+	} else
+.
+430,432c
+	if (destcol >= outcol) {
+		j = destcol / value(HARDTABS) - outcol / value(HARDTABS);
+		if (GT && j)
+			j += destcol % value(HARDTABS);
+.
+427c
+		i = (destcol / value(HARDTABS)) + (destcol % value(HARDTABS));
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.c << '-*-END-*-'
+29c
+	ignore(compile(c, 1));
+.
+w
+q
+'-*-END-*-'
+ed - ex_tune.h << '-*-END-*-'
+12,16c
+#include "local/uparm.h"
+#define	EXRECOVER	libpath(ex2.0recover)
+#define	EXPRESERVE	libpath(ex2.0preserve)
+#define	EXSTRINGS	libpath(ex2.0strings)
+#define	EXHELPDIR	libpath(how_ex)
+#define	MASTERTAGS	libpath(tags)
+.
+w
+q
+'-*-END-*-'
+cat > ex_vars.h << '-*-END-*-'
+#define AUTOINDENT      0
+#define AUTOPRINT       1
+#define AUTOWRITE       2
+#define BEAUTIFY        3
+#define DIRECTORY       4
+#define ERRORBELLS      5
+#define HARDTABS        6
+#define IGNORECASE      7
+#define LISP            8
+#define LIST            9
+#define MAGIC           10
+#define NUMBER          11
+#define OPEN            12
+#define OPTIMIZE        13
+#define PARAGRAPHS      14
+#define PROMPT          15
+#define REDRAW          16
+#define REPORT          17
+#define SCROLL          18
+#define SECTIONS        19
+#define SHELL           20
+#define SHIFTWIDTH      21
+#define SHOWMATCH       22
+#define SLOWOPEN        23
+#define TABSTOP         24
+#define TTYTYPE         25
+#define TERM            26
+#define TERSE           27
+#define WARN            28
+#define WINDOW          29
+#define WRAPSCAN        30
+#define WRAPMARGIN      31
+#define WRITEANY        32
+
+#define	NOPTS	33
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+217c
+	OPeek = Peekkey==CTRL(h) ? 0 : Peekkey; Peekkey = 0;
+.
+211c
+	if (Peekkey != ATTN && Peekkey != QUIT && Peekkey != CTRL(h)) {
+.
+w
+q
+'-*-END-*-'
+ed - ex_voperate.c << '-*-END-*-'
+514a
+	case 'j':
+.
+466a
+	case 'k':
+.
+383a
+	case 'l':
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops2.c << '-*-END-*-'
+484a
+					if (splitw) {
+						/*
+						 * Backspacing over readecho
+						 * prompt. Pretend delete but
+						 * don't beep.
+						 */
+						ungetkey(c);
+						goto vadone;
+					}
+.
+w
+q
+'-*-END-*-'
+ed - ex_vput.c << '-*-END-*-'
+1015a
+	/* Patch to fix problem of >79 chars on echo line: don't echo extras */
+	if (destcol >= WCOLS-1 && splitw && destline == WECHO)
+		return;
+.
+w
+q
+'-*-END-*-'
+ed - expreserve.c << '-*-END-*-'
+115c
+ * Copy file name into usrpath(preserve)/...
+.
+112c
+char	pattern[] =	usrpath(preserve/Exaa`XXXXX);
+.
+55c
+	struct direct dirent;
+.
+14,15c
+ * usrpath(preserve)... this may mean that we will be unable to preserve
+ * stuff there... the danger in doing anything with usrpath(preserve)
+.
+10c
+ * Expreserve - preserve a file in usrpath(preserve)
+.
+7a
+#include "local/uparm.h"
+.
+6c
+#include <sys/dir.h>
+.
+w
+q
+'-*-END-*-'
+ed - exrecover.c << '-*-END-*-'
+411c
+ * to look around in usrpath(preserve) without chdir'ing there) so we
+.
+374c
+	 * Search usrpath(preserve) and, if we can get there, /tmp
+.
+360c
+ * (i.e. usually /tmp) and in usrpath(preserve).
+.
+220c
+	 * Look at the candidate files in usrpath(preserve).
+.
+207c
+	 * Open usrpath(preserve), and go there to make things quick.
+.
+42c
+char	mydir[] =	usrpath(preserve);
+.
+19c
+ * the directory usrpath(preserve) looking for an instance of the specified
+.
+4a
+#include "local/uparm.h"
+.
+w
+q
+'-*-END-*-'
+cp makefile makefile.old
+ed - makefile << '-*-END-*-'
+0a
+VERSION=2.8
+.
+g/2\.0/s//${VERSION}/g
+g/11printf/s//printf/g
+w
+q
+'-*-END-*-'
+ed - makeoptions << '-*-END-*-'
+26d
+23d
+21c
+		!rm -f %; num ex_vars.h >%
+.
+13a
+		set sh=/bin/csh
+.
+w
+q
+'-*-END-*-'
+cp printf.c printf.c.old
+cat > printf.c << '-*-END-*-'
+/* char printf_id[] = "@(#) printf.c:2.2 6/5/79";*/
+#include "varargs.h"
+/* This version of printf is compatible with the Version 7 C
+ * printf. The differences are only minor except that this
+ * printf assumes it is to print through putchar. Version 7
+ * printf is more general (and is much larger) and includes
+ * provisions for floating point.
+ */
+ 
+
+#define MAXOCT	11	/* Maximum octal digits in a long */
+#define MAXINT	32767	/* largest normal length positive integer */
+#define BIG	1000000000  /* largest power of 10 less than an unsigned long */
+#define MAXDIGS 10	/* number of digits in BIG */
+
+static int width, sign, fill;
+
+char *_dconv();
+
+printf(va_alist)
+	va_dcl
+{
+	va_list ap;
+	register char *fmt;
+	char fcode;
+	int prec;
+	int length,mask1,nbits,n;
+	long int mask2, num;
+	register char *bptr;
+	char *ptr;
+	char buf[134];
+
+	va_start(ap);
+	fmt = va_arg(ap,char *);
+	for (;;) {
+		/* process format string first */
+		while ((fcode = *fmt++)!='%') {
+			/* ordinary (non-%) character */
+			if (fcode=='\0')
+				return;
+			putchar(fcode);
+		}
+		/* length modifier: -1 for h, 1 for l, 0 for none */
+		length = 0;
+		/* check for a leading - sign */
+		sign = 0;
+		if (*fmt == '-') {
+			sign++;
+			fmt++;
+		}
+		/* a '0' may follow the - sign */
+		/* this is the requested fill character */
+		fill = 1;
+		if (*fmt == '0') {
+			fill--;
+			fmt++;
+		}
+		
+		/* Now comes a digit string which may be a '*' */
+		if (*fmt == '*') {
+			width = va_arg(ap, int);
+			if (width < 0) {
+				width = -width;
+				sign = !sign;
+			}
+			fmt++;
+		}
+		else {
+			width = 0;
+			while (*fmt>='0' && *fmt<='9')
+				width = width * 10 + (*fmt++ - '0');
+		}
+		
+		/* maybe a decimal point followed by more digits (or '*') */
+		if (*fmt=='.') {
+			if (*++fmt == '*') {
+				prec = va_arg(ap, int);
+				fmt++;
+			}
+			else {
+				prec = 0;
+				while (*fmt>='0' && *fmt<='9')
+					prec = prec * 10 + (*fmt++ - '0');
+			}
+		}
+		else
+			prec = -1;
+		
+		/*
+		 * At this point, "sign" is nonzero if there was
+		 * a sign, "fill" is 0 if there was a leading
+		 * zero and 1 otherwise, "width" and "prec"
+		 * contain numbers corresponding to the digit
+		 * strings before and after the decimal point,
+		 * respectively, and "fmt" addresses the next
+		 * character after the whole mess. If there was
+		 * no decimal point, "prec" will be -1.
+		 */
+		switch (*fmt) {
+			case 'L':
+			case 'l':
+				length = 2;
+				/* no break!! */
+			case 'h':
+			case 'H':
+				length--;
+				fmt++;
+				break;
+		}
+		
+		/*
+		 * At exit from the following switch, we will
+		 * emit the characters starting at "bptr" and
+		 * ending at "ptr"-1, unless fcode is '\0'.
+		 */
+		switch (fcode = *fmt++) {
+			/* process characters and strings first */
+			case 'c':
+				buf[0] = va_arg(ap, int);
+				ptr = bptr = &buf[0];
+				if (buf[0] != '\0')
+					ptr++;
+				break;
+			case 's':
+				bptr = va_arg(ap,char *);
+				if (bptr==0)
+					bptr = "(null pointer)";
+				if (prec < 0)
+					prec = MAXINT;
+				for (n=0; *bptr++ && n < prec; n++) ;
+				ptr = --bptr;
+				bptr -= n;
+				break;
+			case 'O':
+				length = 1;
+				fcode = 'o';
+				/* no break */
+			case 'o':
+			case 'X':
+			case 'x':
+				if (length > 0)
+					num = va_arg(ap,long);
+				else
+					num = (unsigned)va_arg(ap,int);
+				if (fcode=='o') {
+					mask1 = 0x7;
+					mask2 = 0x1fffffffL;
+					nbits = 3;
+				}
+				else {
+					mask1 = 0xf;
+					mask2 = 0x0fffffffL;
+					nbits = 4;
+				}
+				n = (num!=0);
+				bptr = buf + MAXOCT + 3;
+				/* shift and mask for speed */
+				do
+				    if (((int) num & mask1) < 10)
+				        *--bptr = ((int) num & mask1) + 060;
+				    else
+					*--bptr = ((int) num & mask1) + 0127;
+				while (num = (num >> nbits) & mask2);
+				
+				if (fcode=='o') {
+					if (n)
+						*--bptr = '0';
+				}
+				else
+					if (!sign && fill <= 0) {
+						putchar('0');
+						putchar(fcode);
+						width -= 2;
+					}
+					else {
+						*--bptr = fcode;
+						*--bptr = '0';
+					}
+				ptr = buf + MAXOCT + 3;
+				break;
+			case 'D':
+			case 'U':
+			case 'I':
+				length = 1;
+				fcode = fcode + 'a' - 'A';
+				/* no break */
+			case 'd':
+			case 'i':
+			case 'u':
+				if (length > 0)
+					num = va_arg(ap,long);
+				else {
+					n = va_arg(ap,int);
+					if (fcode=='u')
+						num = (unsigned) n;
+					else
+						num = (long) n;
+				}
+				if (n = (fcode != 'u' && num < 0))
+					num = -num;
+				/* now convert to digits */
+				bptr = _dconv(num, buf);
+				if (n)
+					*--bptr = '-';
+				if (fill == 0)
+					fill = -1;
+				ptr = buf + MAXDIGS + 1;
+				break;
+			default:
+				/* not a control character, 
+				 * print it.
+				 */
+				ptr = bptr = &fcode;
+				ptr++;
+				break;
+			}
+			if (fcode != '\0')
+				_emit(bptr,ptr);
+	}
+	va_end(ap);
+}
+
+/* _dconv converts the unsigned long integer "value" to
+ * printable decimal and places it in "buffer", right-justified.
+ * The value returned is the address of the first non-zero character,
+ * or the address of the last character if all are zero.
+ * The result is NOT null terminated, and is MAXDIGS characters long,
+ * starting at buffer[1] (to allow for insertion of a sign).
+ *
+ * This program assumes it is running on 2's complement machine
+ * with reasonable overflow treatment.
+ */
+char *
+_dconv(value, buffer)
+	long value;
+	char *buffer;
+{
+	register char *bp;
+	register int svalue;
+	int n;
+	long lval;
+	
+	bp = buffer;
+	
+	/* zero is a special case */
+	if (value == 0) {
+		bp += MAXDIGS;
+		*bp = '0';
+		return(bp);
+	}
+	
+	/* develop the leading digit of the value in "n" */
+	n = 0;
+	while (value < 0) {
+		value -= BIG;	/* will eventually underflow */
+		n++;
+	}
+	while ((lval = value - BIG) >= 0) {
+		value = lval;
+		n++;
+	}
+	
+	/* stash it in buffer[1] to allow for a sign */
+	bp[1] = n + '0';
+	/*
+	 * Now develop the rest of the digits. Since speed counts here,
+	 * we do it in two loops. The first gets "value" down until it
+	 * is no larger than MAXINT. The second one uses integer divides
+	 * rather than long divides to speed it up.
+	 */
+	bp += MAXDIGS + 1;
+	while (value > MAXINT) {
+		*--bp = (int)(value % 10) + '0';
+		value /= 10;
+	}
+	
+	/* cannot lose precision */
+	svalue = value;
+	while (svalue > 0) {
+		*--bp = (svalue % 10) + '0';
+		svalue /= 10;
+	}
+	
+	/* fill in intermediate zeroes if needed */
+	if (buffer[1] != '0') {
+		while (bp > buffer + 2)
+			*--bp = '0';
+		--bp;
+	}
+	return(bp);
+}
+
+/*
+ * This program sends string "s" to putchar. The character after
+ * the end of "s" is given by "send". This allows the size of the
+ * field to be computed; it is stored in "alen". "width" contains the
+ * user specified length. If width<alen, the width will be taken to
+ * be alen. "sign" is zero if the string is to be right-justified
+ * in the field, nonzero if it is to be left-justified. "fill" is
+ * 0 if the string is to be padded with '0', positive if it is to be
+ * padded with ' ', and negative if an initial '-' should appear before
+ * any padding in right-justification (to avoid printing "-3" as
+ * "000-3" where "-0003" was intended).
+ */
+_emit(s, send)
+	register char *s;
+	char *send;
+{
+	char cfill;
+	register int alen;
+	int npad;
+	
+	alen = send - s;
+	if (alen > width)
+		width = alen;
+	cfill = fill>0? ' ': '0';
+	
+	/* we may want to print a leading '-' before anything */
+	if (*s == '-' && fill < 0) {
+		putchar(*s++);
+		alen--;
+		width--;
+	}
+	npad = width - alen;
+	
+	/* emit any leading pad characters */
+	if (!sign)
+		while (--npad >= 0)
+			putchar(cfill);
+			
+	/* emit the string itself */
+	while (--alen >= 0)
+		putchar(*s++);
+		
+	/* emit trailing pad characters */
+	if (sign)
+		while (--npad >= 0)
+			putchar(cfill);
+}
+'-*-END-*-'

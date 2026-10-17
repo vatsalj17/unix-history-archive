@@ -1,0 +1,20 @@
+This version of refer uses some predefined strings that the original
+version did not; these must be defined by the macro package.
+They are:
+
+	Name	normal value		function
+       -----   -----------------	-----------------------------------
+	>; 	; (nroff only)		semicolon after label=> (label);
+	<; 	; (troff only)		semicolon before label=> ;\ulabel\d
+
+The above two are defined as:
+		.if n .ds >; ;
+		.if t .ds <; ;
+
+The following are used only with the -m flag:
+	(.	\& (			open delim for -m signal
+	.)	)			close delim "  "    "
+	[e 	\\fIet al.\\fP		used when >2 authors
+	&1	&			used between second-to-last and last
+					authors names in reference list
+	&2	&			(auth1 \\*(&2 auth2, year)

@@ -1,0 +1,212 @@
+
+EXEC(2)             UNIX Programmer's Manual              EXEC(2)
+
+NAME
+     execl, execv, execle, execve, execlp, execvp, exec, exece,
+     environ - execute a file
+
+SYNOPSIS
+     execl(name, arg0, arg1, ..., argn, 0)
+     char *name, *arg0, *arg1, ..., *argn;
+
+     execv(name, argv)
+     char *name, *argv[];
+
+     execle(name, arg0, arg1, ..., argn, 0, envp)
+     char *name, *arg0, *arg1, ..., *argn, *envp[];
+
+     execve(name, argv, envp)
+     char *name, *argv[], *envp[];
+
+     extern char **environ;
+
+DESCRIPTION
+     _E_x_e_c in all its forms overlays the calling process with the
+     named file, then transfers to the entry point of the core
+     image of the file.  There can be no return from a successful
+     exec; the calling core image is lost.
+
+     Files remain open across _e_x_e_c unless explicit arrangement
+     has been made; see _i_o_c_t_l(2).  Ignored/held signals remain
+     ignored/held across these calls, but signals that are caught
+     (see _s_i_g_n_a_l(2)) are reset to their default values.
+
+     Each user has a _r_e_a_l user ID and group ID and an _e_f_f_e_c_t_i_v_e
+     user ID and group ID.  The real ID identifies the person
+     using the system; the effective ID determines his access
+     privileges.  _E_x_e_c changes the effective user and group ID to
+     the owner of the executed file if the file has the `set-
+     user-ID' or `set-group-ID' modes.  The real user ID is not
+     affected.
+
+     The _n_a_m_e argument is a pointer to the name of the file to be
+     executed.  The pointers _a_r_g[_0], _a_r_g[_1] ...  address null-
+     terminated strings.  Conventionally _a_r_g[_0] is the name of
+     the file.
+
+     From C, two interfaces are available.  _e_x_e_c_l is useful when
+     a known file with known arguments is being called; the argu-
+     ments to _e_x_e_c_l are the character strings constituting the
+     file and the arguments; the first argument is conventionally
+     the same as the file name (or its last component).  A 0
+     argument must end the argument list.
+
+     The _e_x_e_c_v version is useful when the number of arguments is
+     unknown in advance; the arguments to _e_x_e_c_v are the name of
+
+Printed 4/7/83               4/1/81                             1
+
+EXEC(2)             UNIX Programmer's Manual              EXEC(2)
+
+     the file to be executed and a vector of strings containing
+     the arguments.  The last argument string must be followed by
+     a 0 pointer.
+
+     When a C program is executed, it is called as follows:
+
+          main(argc, argv, envp)
+          int argc;
+          char **argv, **envp;
+
+     where _a_r_g_c is the argument count and _a_r_g_v is an array of
+     character pointers to the arguments themselves.  As indi-
+     cated, _a_r_g_c is conventionally at least one and the first
+     member of the array points to a string containing the name
+     of the file.
+
+     _A_r_g_v is directly usable in another _e_x_e_c_v because _a_r_g_v[_a_r_g_c]
+     is 0.
+
+     _E_n_v_p is a pointer to an array of strings that constitute the
+     _e_n_v_i_r_o_n_m_e_n_t of the process.  Each string consists of a name,
+     an =, and a null-terminated value.  The array of pointers is
+     terminated by a null pointer.  The shell _s_h(1) passes an
+     environment entry for each global shell variable defined
+     when the program is called.  See _e_n_v_i_r_o_n(5) for some conven-
+     tionally used names.  The C run-time start-off routine
+     places a copy of _e_n_v_p in the global cell _e_n_v_i_r_o_n, which is
+     used by _e_x_e_c_v and _e_x_e_c_l to pass the environment to any sub-
+     programs executed by the current program.  The _e_x_e_c routines
+     use lower-level routines as follows to pass an environment
+     explicitly:
+          execve(file, argv, environ);
+          execle(file, arg0, arg1, . . . , argn, 0, environ);
+
+     _E_x_e_c_l_p and _e_x_e_c_v_p are called with the same arguments as
+     _e_x_e_c_l and _e_x_e_c_v, but duplicate the shell's actions in
+     searching for an executable file in a list of directories.
+     The directory list is obtained from the environment.  A sin-
+     gle parameter may be passed the interpreter, specified after
+     the name of the interpreter; its length and the length of
+     the name of the interpreter combined must not exceed 16
+     characters.  The space (or tab) following the '#!' is manda-
+     tory, and the pathname must be explicit (no paths are
+     searched).
+
+FILES
+     /bin/sh  shell, invoked if command file found by _e_x_e_c_l_p or
+     _e_x_e_c_v_p
+
+SEE ALSO
+     fork(2), environ(5), csh(1)
+
+Printed 4/7/83               4/1/81                             2
+
+EXEC(2)             UNIX Programmer's Manual              EXEC(2)
+
+DIAGNOSTICS
+     If the file cannot be found, if it is not executable, if it
+     does not start with a valid magic number (see _a._o_u_t(5)), if
+     maximum memory is exceeded, or if the arguments require too
+     much space, a return constitutes the diagnostic; the return
+     value is -1.  Even for the super-user, at least one of the
+     execute-permission bits must be set for a file to be exe-
+     cuted.
+
+BUGS
+     If _e_x_e_c_v_p is called to execute a file that turns out to be a
+     shell command file, and if it is impossible to execute the
+     shell, the values of _a_r_g_v[_0] and _a_r_g_v[-_1] will be modified
+     before return.
+
+ASSEMBLER (PDP-11)
+     (exec = 11.)
+     sys exec; name; argv
+
+     (exece = 59.)
+     sys exece; name; argv; envp
+
+     Plain _e_x_e_c is obsoleted by _e_x_e_c_e, but remains for historical
+     reasons.
+
+     When the called file starts execution on the PDP11, the
+     stack pointer points to a word containing the number of
+     arguments.  Just above this number is a list of pointers to
+     the argument strings, followed by a null pointer, followed
+     by the pointers to the environment strings and then another
+     null pointer.  The strings themselves follow; a 0 word is
+     left at the very top of memory.
+
+       sp->    nargs
+          arg0
+          ...
+          argn
+          0
+          env0
+          ...
+          envm
+          0
+
+      arg0:    <arg0\0>
+          ...
+      env0:    <env0\0>
+          0
+
+     On the Interdata 8/32, the stack begins at a conventional
+     place (currently 0xD0000) and grows upwards.  After _e_x_e_c,
+     the layout of data on the stack is as follows.
+
+Printed 4/7/83               4/1/81                             3
+
+EXEC(2)             UNIX Programmer's Manual              EXEC(2)
+
+          int  0
+      arg0:    byte ...
+          ...
+     argp0:    int  arg0
+          ...
+          int  0
+     envp0:    int  env0
+          ...
+          int  0
+      %2->     space     40
+          int  nargs
+          int  argp0
+          int  envp0
+      %3->
+
+     This arrangement happens to conform well to C calling con-
+     ventions.
+
+     On a VAX-11, the stack begins at 0x7ffff000 and grows
+     towards lower numbered addresses.  After _e_x_e_c, the layout of
+     data on the stack is as follows.
+
+      ap ->
+      fp ->
+      sp ->  .long nargs
+             .long arg0
+             ...
+             .long argn
+             .long 0
+             .long env0
+             ...
+             .long envn
+             .long 0
+      arg0:  .byte "arg0\0"
+             ...
+      envn:  .byte "envn\0"
+             .long 0
+
+Printed 4/7/83               4/1/81                             4
+

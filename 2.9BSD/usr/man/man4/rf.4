@@ -1,0 +1,69 @@
+.TH RF 4 
+.UC
+.SH NAME
+rf \- RF11/RS11 fixed-head disk
+.SH DESCRIPTION
+This file refers to the
+concatenation of all RS-11 disks.
+.PP
+Each disk contains 1024 512-byte blocks.
+The length of the combined RF file is
+1024\(mu(minor+1) blocks.
+That is, minor device zero
+is taken to be
+1024 blocks long;
+minor device one is 2048 blocks long,
+etc.
+.PP
+The block files
+access the disk via the system's normal
+buffering mechanism
+and may be read and written without regard to
+physical disk records.
+There is also a `raw' interface
+which provides for direct transmission between the disk
+and the user's read or write buffer.
+A single read or write call results in exactly one I/O operation
+and therefore raw I/O is considerably more efficient when
+many words are transmitted.
+The name of the raw files conventionally begin with an extra `r.'
+.PP
+In raw I/O counts should be a multiple of 512 bytes
+(a disk sector).
+Likewise
+.IR lseek (2)
+calls should specify a multiple of 512 bytes.
+.SH FILES
+.ta 2i
+/dev/rf[0-7]	block files
+.br
+/dev/rrf[0-7]	raw files
+.SH "SEE ALSO"
+dvhp(4), hk(4), hp(4), hs(4), ml(4), rk(4), rl(4), rm(4), rp(4), rx2(4), xp(4)
+.SH DIAGNOSTICS
+\fBrf%d: hard error bn %d cs=%b dae=%b\fP.  An unrecoverable
+error occured during transfer of the specified sector of the specified
+disk partition.  The contents of the two error registers are also printed
+in octal and symbolically with bits decoded.
+The error was either unrecoverable, or a large number of retry attempts
+could not recover the error.
+.PP
+\fBrf%d: write locked\fP.  The write protect switch was set on the drive
+when a write was attempted.  The write operation is not recoverable.
+.SH BUGS
+In raw I/O
+.I read
+and
+.IR write (2)
+truncate file offsets to 512-byte block boundaries,
+and
+.I write
+scribbles on the tail of incomplete blocks.
+Thus,
+in programs that are likely to access raw devices,
+.I read, write
+and
+.IR lseek (2)
+should always deal in 512-byte multiples.
+.PP
+DEC-standard error logging should be supported.

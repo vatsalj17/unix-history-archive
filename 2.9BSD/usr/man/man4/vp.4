@@ -1,0 +1,135 @@
+.TH VP 4
+.UC
+.SH NAME
+vp \- Versatec printer-plotter
+.SH DESCRIPTION
+.I Vp0
+is the interface to a Versatec 1200A printer-plotter
+with a Versatec C-PDP-11(DMA) controller.
+In print mode bytes written are interpreted as ASCII characters
+and printed.
+The format is 64 lines of 132 characters each on
+11 by 8.5 inch paper.
+(The printer will perform an automatic form feed at the bottom
+of a page.)
+Only some of the ASCII control characters are interpreted.
+.TP
+NL
+performs the usual new-line function, i.e.
+spaces up the paper and resets to the left margin.
+It is ignored, however, following a CR which ends a non-empty line
+or if the print buffer is already full.
+.TP
+CR
+is ignored if the current line is empty but is otherwise
+like NL.
+.TP
+FF
+resets to the left margin and then to the top of the next page.
+Do not use in SPP mode (see below).
+.TP
+EOT
+resets to the left margin, advances 8 inches, and then performs a FF.
+Do not use in SPP mode.
+.PP
+The \fIioctl\fP\|(2) system call may be used to change the mode of the device.
+Only the first word of the 3-word argument structure is used.
+The bits mean:
+.TP
+0400
+Enter simultaneous print/plot mode.
+.br
+.ns
+.TP
+0200
+Enter plot mode.
+.br
+.ns
+.TP
+0100
+Enter print mode (resets SPP mode, default on open).
+.br
+.ns
+.TP
+040
+Send remote line terminate.
+.br
+.ns
+.TP
+020
+Send remote form-feed. (Illegal in SPP mode.)
+.br
+.ns
+.TP
+010
+Send remote EOT. (Illegal in SPP mode.)
+.br
+.ns
+.TP
+04
+Send remote clear.
+.br
+.ns
+.TP
+02
+Send remote reset.
+.PP
+When the device is opened
+a reset and clear are performed automatically.
+When the device is closed an end-of-transmission signal
+is automatically
+sent to advance the last written page past the
+toner developing bath.
+Notice that the actual device mode control bits
+(PRINT, PLOT, SPP) are not encoded with the remote functions
+and it is therefore required that exactly one of these
+be set for each
+.I ioctl
+call.
+.PP
+In plot mode each byte is interpreted as 8 bits
+with the high-order bit plotted as the leftmost dot;
+a `1' leaves a visible dot.
+A full line of dots is produced by 264 bytes;
+lines are terminated only by count or by sending a
+remote line terminate function.
+There are 200 dots per inch both vertically and horizontally.
+.PP
+Simultaneous print/plot (SPP) operation is provided to
+permit direct overlaying of character data generated
+by the internal character generator, with plotting data
+generated on a dot-by-dot basis.
+.PP
+When simultaneous print-plot mode is entered
+exactly one line of characters, terminated by
+an NL or CR character, or the
+remote line terminate function, should be written.
+The device should then be set to plot mode and
+at least 20 lines of plotting bytes should be sent.
+As the line of characters (which is 20 dots high)
+is printed, the plotting bytes overlay the characters.
+Notice that it is impossible to print characters on baselines
+that differ by fewer than 20 dot-lines.
+New data can only be entered into the print buffer
+after the last scan of the previous line of characters
+is complete.
+.PP
+In print mode lines may be terminated either with
+an appropriate ASCII character or by using the
+remote line terminate function.
+.SH FILES
+/dev/vp0
+.SH "SEE ALSO"
+vpr(1)
+.SH DIAGNOSTICS
+.I Errno
+is set to ENXIO if an
+.IR open (2)
+fails because the device is already in use by another process.
+.PP
+.I Errno
+is set to EIO if
+.IR open " or " write (2)
+fail because the power is off or the paper supply is depleted.
+A diagnostic message is printed on the console terminal
+on the first occurrence of one of these errors.

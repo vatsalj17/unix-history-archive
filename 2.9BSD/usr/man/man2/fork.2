@@ -1,0 +1,62 @@
+.TH FORK 2 
+.UC
+.SH NAME
+fork  \-  spawn new process
+.SH SYNOPSIS
+.B fork()
+.SH DESCRIPTION
+.I Fork
+is one of two ways new processes are created.
+The new process's core image is a copy of
+that of the caller of
+.IR fork .
+The only distinction
+is the fact
+that the value returned in the old (parent) process
+contains the process ID
+of the new (child) process,
+while the value returned in the child is 0.
+Process ID's range from 1 to 30,000.
+This process ID is used by
+.IR wait (2).
+.PP
+Files open before the fork
+are shared, and have a common read-write pointer.
+In particular,
+this is the way that standard input and output
+files are passed and also how
+pipes are set up.
+.SH RETURN VALUE
+Upon successful completion,
+.I fork
+returns a value of 0 to the child process and returns the process ID of the
+child process to the parent process.  Otherwise, a value of \-1 is returned
+to the parent process, no child process is created, and the global variable
+.I errno
+is set to indicate the error.
+.SH ERRORS
+.I Fork
+will fail and no child process will be created if:
+.TP 20
+[EAGAIN]
+The system-imposed limit on the total number of processes under
+execution would be exceeded.
+.TP 20
+[EAGAIN]
+The system-imposed liimit on the total number of processes under
+execution by a single user would be exceeded.
+.SH "SEE ALSO"
+execve(2), vfork(2), exec(3)
+.SH ASSEMBLER
+(fork = 2.)
+.br
+.B sys fork
+.br
+(new process return)
+.br
+(old process return, new process ID in r0)
+.PP
+The return locations in the old and new process
+differ by one word.
+The C-bit is set in the old process if a new
+process could not be created.

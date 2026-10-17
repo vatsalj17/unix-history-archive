@@ -1,0 +1,40 @@
+
+DIR(5)              UNIX Programmer's Manual               DIR(5)
+
+NAME
+     dir - format of directories
+
+SYNOPSIS
+     #include <sys/dir.h>
+
+DESCRIPTION
+     A directory behaves exactly like an ordinary file, save that
+     no user may write into a directory.  The fact that a file is
+     a directory is indicated by a bit in the flag word of its
+     i-node entry see, _f_i_l_s_y_s(5).  The structure of a directory
+     entry as given in the include file is:
+
+          #ifndef DIRSIZ
+          #define DIRSIZ14
+          #endif
+          struct  direct
+          {
+                  ino_t d_ino;
+                  char  d_name[DIRSIZ];
+          };
+
+     By convention, the first two entries in each directory are
+     for `.' and `..'.  The first is an entry for the directory
+     itself.  The second is for the parent directory.  The mean-
+     ing of `..' is modified for the root directory of the master
+     file system and for the root directories of removable file
+     systems.  In the first case, there is no parent, and in the
+     second, the parent will be relative to the mounted-on file.
+     Therefore in both cases `..' has the same inode number as
+     `.'.
+
+SEE ALSO
+     filsys(5)
+
+Printed 4/30/83                                                 1
+

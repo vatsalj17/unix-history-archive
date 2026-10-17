@@ -1,0 +1,38 @@
+#	Ovmakefile	4.5	83/07/09
+#
+ALL=	libovplot libovt4014 libovt300 libovt300s libovt450 libovvt0
+SUBDIRS=plot t4014 t300 t300s t450 vt0
+
+all:	${ALL}
+
+libovplot: FRC
+	cd plot; make -f Ovmakefile
+
+libovt4014: FRC
+	cd t4014; make -f Ovmakefile
+
+libovt300: FRC
+	cd t300; make -f Ovmakefile
+
+libovt300s: FRC
+	cd t300s; make -f Ovmakefile
+
+libovt450: FRC
+	cd t450; make -f Ovmakefile
+
+libovvt0: FRC
+	cd vt0; make -f Ovmakefile
+
+FRC:
+
+cp:	all
+	for i in ${ALL}; do \
+		cp $$i ${DESTDIR}/usr/lib/$$i.a; \
+		ranlib ${DESTDIR}/usr/lib/$$i.a; \
+	done
+
+clean:
+	rm -f ${ALL} errs a.out core
+	for i in ${SUBDIRS}; do \
+		(cd $$i; make -f Ovmakefile clean); \
+	done

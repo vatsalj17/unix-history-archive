@@ -1,0 +1,43 @@
+
+TIMES(2)            UNIX Programmer's Manual             TIMES(2)
+
+NAME
+     times - get process times
+
+SYNOPSIS
+     times(buffer)
+     struct tbuffer *buffer;
+
+DESCRIPTION
+     _T_i_m_e_s returns time-accounting information for the current
+     process and for the terminated child processes of the
+     current process.  All times are in 1/HZ seconds, where HZ=60
+     in North America.
+
+     After the call, the buffer will appear as follows:
+
+     struct tbuffer {
+          long proc_user_time;
+          long proc_system_time;
+          long child_user_time;
+          long child_system_time;
+     };
+
+     The children times are the sum of the children's process
+     times and their children's times.
+
+ERRORS
+     _T_i_m_e_s will fail if:
+
+     [EFAULT]            _B_u_f_f_e_r points to an address outside the
+                         process's allocated address space.
+
+SEE ALSO
+     time(1), time(2)
+
+ASSEMBLER
+     (times = 43.)
+     sys times; buffer
+
+Printed 5/22/83                                                 1
+

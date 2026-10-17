@@ -1,0 +1,39 @@
+.TH VHANGUP 2
+.UC
+.SH NAME
+vhangup \- virtually ``hangup'' the current control terminal
+.SH SYNOPSIS
+.B vhangup()
+.SH DESCRIPTION
+.I Vhangup
+is used by the initialization process
+.IR init (8)
+to arrange that users are given ``clean'' terminals at login,
+by revoking access of the previous users' processes to the terminal.
+To effect this,
+.I vhangup
+searches the system tables for references to the control terminal
+of the invoking process, revoking access permissions
+on each instance of the terminal which it finds.
+Further attempts to access the terminal by the affected processes
+will yield i/o errors (EBADF).
+Finally,
+a hangup signal (SIGHUP) is sent to the process group of the
+control terminal.
+.SH ERRORS
+.I Vhangup
+will fail if:
+.TP 20
+[EPERM]
+The process's effective user ID is not the super-user.
+.SH SEE ALSO
+init(8)
+.SH BUGS
+Access to
+the control terminal via
+.I /dev/tty
+is still possible.
+.PP
+This call is peculiar to this version of UNIX.
+The options and specifications of this system call and even the call itself
+are subject to change.

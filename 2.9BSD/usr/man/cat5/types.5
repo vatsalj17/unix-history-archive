@@ -1,0 +1,53 @@
+
+TYPES(5)            UNIX Programmer's Manual             TYPES(5)
+
+NAME
+     types - primitive system data types
+
+SYNOPSIS
+     #include <sys/types.h>
+
+DESCRIPTION
+     The data types defined in the include file are used in UNIX
+     system code; some data of these types are accessible to user
+     code:
+
+     typedef char           bool_t;     /* Boolean */
+     typedef char *         caddr_t;    /* virtual core address */
+     typedef unsigned short comp_t;     /* "floating pt": 3 bits base 8 exp, 13 bits fraction */
+     typedef long           daddr_t;    /* disk address */
+     typedef short          dev_t;      /* device code */
+     typedef unsigned short ino_t;      /* i-node number */
+     #ifdef  MENLO_KOV
+     typedef short          label_t[7]; /* regs 2-7 and __ovno */
+     #else
+     typedef short          label_t[6]; /* program status */
+     #endif
+     typedef unsigned       memaddr;    /* core or swap address */
+     typedef long           off_t;      /* offset in file */
+     typedef struct {short r[1];}*      physadr;
+     typedef unsigned       size_t;     /* size of process segments */
+     typedef long           time_t;     /* a time */
+     typedef long           ubadr_t;    /* UNIBUS address */
+     typedef unsigned short u_short;
+     typedef short          void;
+
+             /* selectors and constructor for device code */
+     #define major(x)       (short)(((unsigned)(x)>>8))
+     #define minor(x)       (short)((x)&0377)
+     #define makedev(x,y)   (dev_t)((x)<<8|(y))
+
+     The form _d_a_d_d_r__t is used for disk addresses except in an i-
+     node on disk, see _f_i_l_s_y_s(5).  Times are encoded in seconds
+     since 00:00:00 GMT, January 1, 1970.  The major and minor
+     parts of a device code specify kind and unit number of a
+     device and are installation-dependent.  Offsets (_o_f_f__t) are
+     measured in bytes from the beginning of a file.  The _l_a_b_e_l__t
+     variables are used to save the processor state while another
+     process is running.
+
+SEE ALSO
+     adb(1), lseek(2), time(2), filsys(5)
+
+Printed 5/17/83                                                 1
+

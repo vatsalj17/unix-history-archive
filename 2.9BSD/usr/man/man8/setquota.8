@@ -1,0 +1,44 @@
+.TH SETQUOTA 8
+.UC
+.SH NAME
+setquota, sq \- make block quotas
+.SH SYNOPSIS
+.B setquota
+dir [ cur ] max
+.sp
+.B sq
+d1
+.B ...
+dn max
+.SH DESCRIPTION
+.I Setquota
+sets up or modifies the maximum block quota and present block count
+for a directory
+by modifying the file
+.IR dir/.q .
+If
+.I cur
+is not specified,
+the current usage count is unchanged.
+.I Sq
+calculates the current usage for
+.IR d1 ", ..., " dn ,
+and sets the maximum block quota to
+.IR max .
+If a directory currently has no quota associated, either
+.I sq
+should be used or
+.I cur
+must be specified.  Both
+.IR setquota " and " sq
+use units of 1024-byte blocks.  These programs require super-user privileges.
+.SH FILES
+.ta 2i
+\fIdir\fP/.q	quota node for \fIdir\fP
+.SH "SEE ALSO"
+du(1), file(1), ls(1), pq(1), quota(2), qstat(2)
+.SH BUGS
+.I Max
+is an absolute maximum.  Hence programs that write in
+.I dir
+may fail if intermediate usage exceeds the quota.

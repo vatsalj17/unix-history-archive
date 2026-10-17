@@ -1,0 +1,99 @@
+.TH V6 8
+.UC
+.SH NAME
+v6 \- version 6
+UNIX
+file system access utility
+.SH SYNTAX
+.B v6
+[
+.BR \-r ""
+]
+special
+.SH DESCRIPTION
+.I V6
+reads a version 6
+UNIX
+file system present on the block special file
+.I special.
+It reads the root directory of the file system,
+which is then the current directory.
+At any time there is a current version 6 working directory
+in addition to the current version 7 directory
+(that in effect at the time the program was entered).
+.I V6
+allows the user to change version 6 directories, list their entries,
+print the contents of files on the terminal, and copy them
+onto a version 7 file system.
+It does not include any operations that write on or change
+the version 6 file system.
+The
+.BR \-r ""
+option allows examination of a damaged file system; it suppresses
+the reading of the superblock or the root directory.
+.SH COMMANDS
+The available commands are:
+.TP 1.5i
+\fBls\fP [ \fB\-\^i\fP ] [ name ]	
+List entries in directory
+.I name;
+list current directory if no argument.
+.BR \-i ""
+gives inode numbers of files.
+.TP 1.5i
+\fBcd\fP name
+Change to (version 6) directory
+.I name.
+.TP 1.5i
+\fBcat\fP file
+Print version 6 file 
+.I file 
+on terminal
+.TP 1.5i
+\fBcp\fP file1 file2
+Copy version 6 
+.I file1
+to (v7) file 
+.I file2
+.TP 1.5i
+\fBcpdir\fP 
+Copy all files in current v6 directory
+to current version 7 directory
+.TP 1.5i
+\fBprinti\fP inumber ...
+Print the contents of the specified inodes.
+.TP 1.5i
+\fBprintblk\fP blk
+Print the contents of the specified block.
+.TP 1.5i
+\fBcpblk\fP file blk ...
+Copy the specified blocks to v7 file
+.I file.
+The blocks are appended to the file if it exists, otherwise the file
+is created.
+.TP 1.5i
+\fBrootino\fP inumber
+Inode
+.I inumber
+is taken to be that of the root directory, and the corresponding
+directory is read.
+.TP 1.5i
+\fB!\fP 
+Escape to the shell; the rest of the line is passed to the shell.
+.TP 1.5i
+\fB?\fP 
+Print the list of available commmands
+.TP 1.5i
+\fBq\fP or \fB^d\fP 
+Exit from the program
+.SH DIAGNOSTICS
+Invalid command.
+.br
+Input line too long.  Input line limited to 80 characters.
+.SH BUGS
+It believes the superblock, thus results are unpredictable
+if the file system is not healthy.
+.br
+Cpdir is not recursive.
+.SH AUTHOR
+Mike Karels, University of California at Berkeley

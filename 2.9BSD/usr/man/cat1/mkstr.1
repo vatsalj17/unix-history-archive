@@ -1,0 +1,82 @@
+
+MKSTR(1)            UNIX Programmer's Manual             MKSTR(1)
+
+NAME
+     mkstr - create an error message file by massaging C source
+
+SYNTAX
+     mkstr [ - ] messagefile prefix file ...
+
+DESCRIPTION
+     _M_k_s_t_r is used to create files of error messages.  Its use
+     can make programs with large numbers of error diagnostics
+     much smaller, and reduce system overhead in running the pro-
+     gram as the error messages do not have to be constantly
+     swapped in and out.
+
+     _M_k_s_t_r will process each of the specified _f_i_l_e_s, placing a
+     massaged version of the input file in a file whose name con-
+     sists of the specified _p_r_e_f_i_x and the original name.  A typ-
+     ical usage of _m_k_s_t_r would be:
+
+          mkstr pistrings xx *.c
+
+     This command would cause all the error messages from the C
+     source files in the current directory to be placed in the
+     file _p_i_s_t_r_i_n_g_s and processed copies of the source for these
+     files to be placed in files whose names are prefixed with
+     _x_x.
+
+     To process the error messages in the source to the message
+     file _m_k_s_t_r keys on the string `error("' in the input stream.
+     Each time it occurs, the C string starting at the `"' is
+     placed in the message file followed by a null character and
+     a new-line character; the null character terminates the mes-
+     sage so it can be easily used when retrieved, the new-line
+     character makes it possible to sensibly _c_a_t the error mes-
+     sage file to see its contents.  The massaged copy of the
+     input file then contains an _l_s_e_e_k pointer into the file
+     which can be used to retrieve the message, i.e.:
+
+          char efilname[] =  "/usr/lib/pistrings";
+          int  efil = -1;
+
+          error(a1, a2, a3, a4)
+          {
+               char buf[BUFSIZ];
+
+               if (efil < 0) {
+                    efil = open(efilname, FATT_RDONLY);
+                    if (efil < 0) {
+          oops:
+                         perror(efilname);
+                         exit(1);
+                    }
+
+Printed 9/26/83                                                 1
+
+MKSTR(1)            UNIX Programmer's Manual             MKSTR(1)
+
+               }
+               if (lseek(efil, (long) a1, FSEEK_ABSOLUTE)
+                   || read(efil, buf, sizeof buf) <= 0)
+                    goto oops;
+               printf(buf, a2, a3, a4);
+          }
+
+     The optional "-" causes the error messages to be placed at
+     the end of the specified message file for recompiling part
+     of a large program upon which _m_k_s_t_r has already been run.
+
+SEE ALSO
+     xstr(1), lseek(2)
+
+BUGS
+     All the arguments except the name of the file to be pro-
+     cessed are unnecessary.
+
+AUTHORS
+     Bill Joy and Charles Haley
+
+Printed 9/26/83                                                 2
+

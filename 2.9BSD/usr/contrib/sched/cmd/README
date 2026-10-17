@@ -1,0 +1,33 @@
+The nice command has been modified to use a new system call, setblev,
+which is described in the man/setblev.2 document.  This allows you to
+modify the scheduler level of an arbitrary process, subject to security
+constraints.  This is not essential to use of the new scheduler, but it
+certainly is useful.
+
+Ps is extensively changed, partly due to the scheduler differences and
+partly due to the sheer joy of hacking.  In particular, ps now interprets
+the WCHAN field and prints it symbolically.  This feature has nothing
+to do with the new scheduler and could be ripped out if you don't want
+it.  I apologize for not isolating the scheduler-related changes for
+you, but oh well ...
+
+THERE ARE OTHER PROGRAM CHANGES WHICH MUST BE MADE FOR THE SYSTEM TO
+OPERATE PROPERLY WITH THE NEW SCHEDULER.  These changes are the addition
+of setblev calls in init.c and login.c.  Init begins operating at
+a high priority level (15), and should do a setblev to lower its
+priority level to about 4 in the process which is forked off to
+run the /etc/rc shell file.  Login also starts up at level 15 and
+should lower its priority to about 8 just before execing the shell.
+These measures insure that things like CRON which are started from
+/etc/rc do not dominate the system, and that normal user processes
+run at a reasonable level.  Init and login do not run at a lower level
+because it seems to be necessary to give login a special break during
+its highly CPU-bound password computation.  Otherwise logins take
+an unacceptably long time.  I should have given you V7 init.c and login.c
+with these small changes inserted in the appropriate places, but
+unfortunately I don't have vanilla copies of these programs close at
+hand.  Our versions are greatly different and could not be included
+because of the number of other enhancements which they contain.
+The location of the changes is not too critical and should be fairly
+clear.  However, be aware that login.c already contains NICE calls
+which should probably be removed for use with the new scheduler.

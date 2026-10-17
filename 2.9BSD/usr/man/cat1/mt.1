@@ -1,0 +1,103 @@
+
+MT(1)               UNIX Programmer's Manual                MT(1)
+
+NAME
+     mt - magnetic tape manipulating program
+
+SYNOPSIS
+     mt [ -t _t_a_p_e_n_a_m_e ] _c_o_m_m_a_n_d [ _c_o_u_n_t ]
+     mt [ -f _t_a_p_e_n_a_m_e ] _c_o_m_m_a_n_d [ _c_o_u_n_t ]
+
+DESCRIPTION
+     _M_t is used to give commands to nine-track tape.  If a tape
+     name is not specified, the environment variable TAPE is
+     used;  if no such environment variable exists, _m_t uses the
+     device /_d_e_v/_n_r_m_t_1.  Note that _t_a_p_e_n_a_m_e must reference a raw
+     (not block) tape device.  If the optional _c_o_u_n_t is not
+     specified, _m_t uses a count of 1.
+
+     A command can be abbreviated to as few letters as are neces-
+     sary to uniquely identify it. Here are the commands and the
+     types of tape drives they can apply to:
+
+     Command             Description
+     eof, weof           write _c_o_u_n_t end-of-file marks
+     fsf                 space forward _c_o_u_n_t files
+     fsr                 space forward _c_o_u_n_t records
+     bsf                 space backward _c_o_u_n_t files
+     bsr                 space backward _c_o_u_n_t records
+     rewind              rewind tape
+     offline, rewoffl    rewind tape and go offline
+     status              return status of the tape unit
+
+FILES
+     /dev/rmt*           Raw magnetic tape interface
+
+SEE ALSO
+     dd(1), ioctl(2), mt(4), environ(5)
+
+MESSAGES
+     usage: mt [ -f device ] command [ count ]
+               This is a memory jogger message to tell you how to
+               use the _m_t command in the event that you typed
+               something wrong.
+
+     mt: don't grok _c_o_m_m_a_n_d
+               This message indicates that the magnetic tape _c_o_m_-
+               _m_a_n_d that you typed as an argument to _m_t was not
+               in the set of requests it recognizes.  See the
+               list of correct commands above.
+
+     mt: negative repeat count
+               The repeat count for commands such as fsf must be
+               positive.
+
+     _c_o_m_m_a_n_d _n_n_n _d_e_v_i_c_e failed: _s_o_m_e _e_r_r_o_r _m_e_s_s_a_g_e
+
+Printed 7/25/83                                                 1
+
+MT(1)               UNIX Programmer's Manual                MT(1)
+
+               The magnetic tape _c_o_m_m_a_n_d applied to _d_e_v_i_c_e with a
+               repeat count of _n_n_n did not work for some reason.
+               The reason appears as the string
+               _s_o_m_e _e_r_r_o_r _m_e_s_s_a_g_e.  Check that the device name
+               was correct, or that the command is applicable to
+               that device.  For example, the message might
+               appear as:
+
+               fsf 1 f/dev/rmt0 failed: File not found
+
+     mt: _s_o_m_e _e_r_r_o_r _m_e_s_s_a_g_e
+               This message usually means that you are applying
+               the _m_t command to the wrong kind of device, that
+               is, a device that the _m_t command does not recog-
+               nize.  The _s_o_m_e _e_r_r_o_r _m_e_s_s_a_g_e is often cryptic,
+               for example:
+
+               % mt  -f /dev/console  fsf 5
+
+               /dev/console: Inappropriate ioctl for device
+
+     mt: can't open _t_a_p_e_n_a_m_e: _s_o_m_e _e_r_r_o_r _m_e_s_s_a_g_e
+               The _m_t command cannot access the device specified
+               by _t_a_p_e_n_a_m_e.
+
+     mt: can't get status from _t_a_p_e_n_a_m_e: _s_o_m_e _e_r_r_o_r
+               The device specified by _t_a_p_e_n_a_m_e doesn't support
+               the system call necessary to obtain the status of
+               the tape drive.
+
+EXIT CODES
+     0    Successful completion
+
+     1    _M_t did not recognize the command;  the device could not
+          be opened.
+
+     2    The _i_o_c_t_l(2) system call to the tape driver failed.
+
+BUGS
+     Commands are not interruptible.
+
+Printed 7/25/83                                                 2
+

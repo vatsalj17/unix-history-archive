@@ -1,0 +1,30 @@
+.TH SYSTEM 3S
+.UC
+.SH NAME
+system \- issue a shell command 
+.SH SYNTAX
+.B system(string)
+.br
+.B char *string;
+.SH DESCRIPTION
+.I System
+causes the
+.I string
+to be given to
+.IR sh (1)
+as input (as if the string had been typed as a command at a terminal).
+The current process waits until the shell has
+completed, then returns the exit status of the shell.
+.SH "SEE ALSO"
+execve(2), wait(2), exec(3), popen(3S), environ(5)
+.SH DIAGNOSTICS
+Exit status 127 indicates the shell couldn't be executed.
+.SH FILES
+/bin/sh
+.SH BUGS
+.I System
+waits for the shell
+to complete by using
+.IR wait (2).
+This may have the undesired side effect of collecting and discarding
+the exit status of other processes.

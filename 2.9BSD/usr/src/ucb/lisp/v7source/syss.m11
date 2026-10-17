@@ -1,0 +1,1104 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+	.title	system code
+
+.page
+;		 	the major system code file for lisp
+;			forrest howard.
+
+.if	eq,multiseg
+	.psect	startc con,shr 
+
+ .if	ne,nilas0
+	.psect	nil	shr
+ .endc
+
+.if	ne,onepage
+	.psect	onepage con,prv
+.endc
+	.psect	uswdda con,prv
+	.psect	usport con,prv
+	.psect	usbyda con,prv
+	.psect	shbydat con,shr
+	.psect	shrwddat con,shr
+	.psect	shrcode con,shr
+	.psect	dsubr	con,shr
+	.psect	usbyda con,prv
+	.psect	ddtpr con,prv
+	.psect	datom con,prv
+	.psect	initcd	con,prv		;initialization stuff--goes away
+	.psect	errorm	con,prv		;error mssage psect--goes away
+  .if	ne,xfer
+	.psect	bcdmap	con,prv		;also goes away
+    .endc
+
+ .iff
+	.psect	nil	con,prv,dat
+ .if	ne,prvispace
+	.psect	startc	con,prv,ins
+	.psect	shrcode con,prv,ins
+  .iff
+	.psect	startc con,shr,ins
+	.psect	shrcode con,shr,ins
+ .endc
+	.psect	shrwddat con,prv,dat
+	.psect	shbydat con,prv,dat
+	.psect	uswdda	con,prv,dat
+	.psect	usport	con,prv,dat
+	.psect	usbyda  con,prv,dat
+	.psect	dsubr con,prv,dat
+	.psect	ddtpr con,prv,dat
+	.psect	datom   con,prv,dat
+	.psect	initcd	con,shr,ins	;goes away
+	.psect	errorm	con,prv,dat	;ditto
+  .if	ne,xfer
+	.psect	bcdmap	con,prv,dat	;as does this...
+  .endc
+.endc
+
+		.psect	startc con
+frstcl:	jmp	@where		;start things off 
+
+
+
+	.mcall	$exit,$indir,$read,$write,$open,$close,$create,$switch,$sig
+
+
+.if	ne,xfer
+	.mcall	$fork,$exec,$kill,$ptrace,$wait
+.endc
+
+	.psect	shrcode
+
+
+
+
+
+;
+;register restore routines-- the following routines are also
+;snags for various amount of registers on the cstack
+r4rres:
+	mov	sp,j3
+	tst	(j3)+
+	mov	(j3)+,b
+	mov	(j3)+,j1
+	mov	(j3)+,j2
+	mov	(j3),j3
+	add	#12,sp
+	ret
+
+r3rres:
+	mov	sp,j3
+	tst	(j3)+
+	mov	(j3)+,j1
+	mov	(j3)+,j2
+	mov	(j3),j3
+	add	#10,sp
+	ret
+r2rres:
+	mov	2(sp),j2
+	mov	4(sp),j3
+	add	#6,sp
+	ret
+
+r1rres:
+	mov	2(sp),j3
+	add	#4,sp
+	ret
+
+
+
+
+	.rsect	shrcode con
+progsnag:	halt
+brksna:		halt
+.if	ne,xfer
+	.globl	eexit1
+ eexit1:	halt
+.endc
+
+
+eexit:
+.if	df,noeval
+	tstb	tracfl
+	beq	1$
+	npush	#anil
+	propush	a
+	call	printr
+	outstr	linefeed
+ .if	df,width
+	clrb	poport+1
+ .endc
+	unpropop	a
+1$:
+.endc
+	tst	(sp)+		;flush func
+	mov	ltop,np		;;fix up name stack and
+	pop	ltop
+	tst	(sp)+		;and c stack for real return
+	ret			;and take it
+
+
+
+
+
+	.rsect	shrcode	con
+
+
+	;evalquote makes lisp appear as an evalquote 
+	;machine
+
+.if	eq,xfer			;evalquote needs a little more smarts
+				;in xfer case
+evalquote: call	readr		;get token
+	cmp	a,#atme		;if e, then call readr directly
+	beq	readr
+	propush	a
+	call	readr
+	jmpifnil a,4$		;see if rest of list nil
+	cmptype	a,j1,#ndtpr	;if not nil,better be
+	bne	2$
+	propush	a		;save to protect it
+	mov	a,j2		;and get it in right place
+5$:	jmpifnil j2,3$
+	car	j2,a		;get first thing needing quoting
+	consbnil		;make (foo)
+	mov	#aquote,a	;get quote and
+	consa			;make (quote foo)
+	mov	a,(j2)+		;smash old list, and get ready for
+	mov	(j2),j2		; cdr in this instruction
+	br	5$		;and loop
+4$:	mov	a,b		;set up for nil case
+	br	6$
+3$:	unpropop	b
+6$:	unpropop	a
+	consa
+	ret
+2$:	error	</read list error/>
+
+
+
+ .iff
+
+evalquote: call	readr		;get a form
+	cmp	a,#atme		;is it the magic e
+	bne	1$		;no, skip around
+	call	readr
+	ret			;this is necessary so we know we've seen e
+1$:	propush	a		;stick a away
+	call	readr		;and get form
+	jmpifnil a,10$		;if nil, then just cons
+	cmptype a,j1,#ndtpr	;in not nil, gotta be dtpr
+	bne	40$		;so scream
+	propush a		;we have to copy here, so save it
+	call	20$		;this gets quoted list in a
+	tst	(sp)+		;flush protecting form
+10$:	mov	a,b		;get form
+	unpropop a		;and future car
+	consa			;melt them together
+	ret			;and quit
+
+20$:	cmptype a,j1,#ndtpr	;end of list???
+	bne	23$
+	mov	(a)+,-(sp)	;push car (already protected) and get cdrp
+	mov	(a),a		;change cdrp to cdr
+	call	20$		;do rest
+	pop	j1		;old form to j1
+	propush	a		;gotta protect this
+	mov	j1,a		;get form
+	consbnil		;make (form)
+	mov	#aquote,a	;move in quote
+	consa			;and make 'form
+	unprop	b		;get back rest
+	consa			;and cons the world
+23$:	ret			;and return
+
+40$:	error	</Evalquote Read List Error/>
+
+.endc
+
+	.rsect	shrcode con
+	;readr takes port on top of name stack
+	;and returns form in a
+	;ratomr clobers j1-j4,therefore so does readr
+
+readr:	clr	rbktf		;set flag for super right paren(])
+	call	29$		;call routine
+	mov	b,a		;leave result in right place
+	ret			;and go home
+
+29$:	call	xratm2	 	;xratm1 knows about ]'s becomming )^n
+30$:	cmp	a,#lpara 	;is (?
+	beq	1$		;yes, then...
+	cmp	a,#rpara 	;is )
+	beq	32$		;yes, then error
+	cmp	a,#lbkta 	;is [
+	beq	31$		;if so, go same a ( via a little extra code
+	cmp	a,#perda 	;is period
+	beq	32$		;yes, error
+	cmp	a,#asquote	;is it "'"???
+	bne	40$		;if not, skip around
+	call	readr		;do recursive call
+	consbnil		;make (form)
+	mov	#aquote,a	;get quote atom
+	consa			;make (quote form)
+40$:	mov	a,b		;and return it in right place
+	ret
+
+
+1$:	call	xratm2	 	;now get rest of list
+	cmp	a,#rpara 	;is the list ()?
+	bne	2$		;if not br ahead
+	loadnil	b		;yes, return nil
+	ret
+
+2$:	call	30$		;read a list as a car of the list we're on
+	propush	b		;save it
+	call	xratm1		;get a token
+	cmp	a,#rpara 	;are we done?
+	beq	3$		;yes, goto 3
+	cmp	a,#perda 	;is this explicit dotted pair
+	beq	4$		;yes, goto 4
+	call	2$	 	;now get rest of list
+	unpropop a
+	consb			;cons car and rest of list together
+	ret			;send home a good list
+
+3$:	unpropop a		;here if we see )
+	consbnil		;provide last nil
+	ret			;and go home
+
+4$:	call	29$		;we read period,need new token
+	unpropop a
+	consb
+	propush	a		;save it (for sake of b and xfer)
+	call	xratm1		;next thing better be )
+	cmp	a,#rpara
+	bne	32$		;if not, error
+	unpropop a		;and get form back
+	ret
+
+31$:	call	1$		;this takes care of [-pretend
+	clr	rbktf		;but flush )^n when back to proper level
+	ret			;and return
+
+32$:	error	</read list error/>		;read list error
+
+
+;register save routines......
+;called by macros 	save1,save2,save3,save4
+
+xsave1:
+	mov	#r1rres,-(sp)	;leave pointer to reg save routine
+	mov	2(sp),-(sp)	;and get address to return to
+	mov	j3,4(sp)	;restore the register
+	ret			;and go home
+
+xsave2:
+	mov	(sp),-(sp)		;fill with ok thing for second
+	mov	#r2rres,-(sp)		;and put on snag
+	mov	j2,2(sp)
+	mov	4(sp),j2
+	mov	j3,4(sp)
+	jmp	(j2)			;and go home
+
+xsave3:
+	mov	(sp),-(sp)
+	mov	(sp),-(sp)	;make 3 register slots
+	mov	#r3rres,-(sp)	;stack snag
+	mov	j3,6(sp)
+	mov	sp,j3
+	tst	(j3)+
+	mov	j1,(j3)+
+	mov	(j3),j1
+	mov	j2,(j3)
+	jmp	@j1		;and simulate return
+
+
+xsave4:
+	mov	(sp),-(sp)
+	mov	(sp),-(sp)
+	mov	(sp),-(sp)
+	mov	#r4rress,-(sp)
+	mov	j3,10(sp)
+	mov	sp,j3
+	tst	(j3)+
+	mov	b,(j3)+
+	mov	j1,(j3)+
+	mov	(j3),j1
+	mov	j2,(j3)
+	jmp	@j1
+
+
+;evalb	takes a list for subr or lambda
+;and puts it in name stack elements
+
+
+evalb:	jmpifnil b,29$		;if nothing to stack, go home
+	mov	(b)+,a		;if some work to do, then get form
+	mov	@b,-(sp)	;and save rest (is protected by fun block)
+	call	eval
+	npush	a		;put it on stack
+	pop	b		;get others
+	br	evalb		;and do it again
+29$:
+1$:	ret
+
+;stkb takes a list of atom names in b, and 
+;pairs them with the evaled name stack entrys...uses j3,j4
+
+
+stkb:	mov	np,j3		;get np copy
+	mov	ltop,np		;and new np
+	sub	np,j3		;figure out args
+	blos	1$		;no args.....
+	asr	j3		;stack entrys to words
+	asr	j3
+3$:	jmpifnil	b,2$	;any more args???
+	tst	(np)+		;yes, so...
+	mov	(b)+,(np)+	;push name and kick
+	mov	(b),b		;and get cdr
+	sob	j3,3$		;and loop
+1$:	jmpifnil	b,2$	;any that we supply args for
+	npush	#anil
+	mov	(b)+,-2(np)	;push name
+	mov	(b),b
+	br	1$
+2$:	ret
+
+;lookup uses j3,np, and finds current binding of
+;thing in a
+;leaves a so that cdr(a)=desired binding
+
+lookup:	push	np		;save np
+	mov	np,j3		;get np and copy
+	sub	npbottom,j3	;figure out i length of name  stack
+	blos	1$		;if name stack is empty, go home
+	asr	j3
+	asr	j3		;make words
+2$:	cmp	-(np),a		;is this ns entry our choice?
+	beq	3$		;if yes, then go
+	tst	-(np)		;get ready for next try
+	sob	j3,2$		;and if anything left, do it again
+1$:	pop	np
+	ret			;return atom
+3$:	mov	np,a
+	br	1$		;return a pointer to the ns cell
+
+
+
+
+
+
+;chas and 
+chanl:	mov	#4,a	;nlambda's always have one
+	br	chas1	;now go to the common code
+chas:	movb	1(a),a	;a has pointer to header of bcd
+	bic	#177700,a	;clear bits
+	asl	a	;and get in right form
+chas1:	add	ltop,a	;get where ns should be
+1$:	cmp	np,a	;is it?
+	blt	2$	;it bigger or equal--that's ok
+	mov	a,np	;just return the right thing
+	rts	%7	;and go home
+2$:	npush	#anil	;otherwise push nil
+	br	1$	;and see if that was enough
+
+
+
+
+
+
+
+
+
+
+;stuff to output terminal forms
+
+portout:mov	#sportsym,b
+	jmp	putstr
+
+bcdout:	mov	#sbcdout,b
+	jmp	putstr
+
+atmout:	add	#6,a			;point to string
+	mov	a,j3			;move to j3
+	movb	(j3)+,b			;get char
+	beq	40$			;null atom print as ""
+	cmpb	b, #'-			;minus sign??
+	bne	10$			;no, go to 10$
+	movb	(j3)+,b			;next char
+	beq	20$			; atom with one minus is atom
+	cmpb	b, #'-			;this one - also???
+	beq	20$			;20$ is where we scan string
+10$:	cmpb	ctable(b),#vnum		;numeric otherwise
+	beq	40$			;yes, so "" out
+20$:	mov	a,j3			;get fresh atom name
+21$:	movb	(j3)+,b			;get char
+	beq	50$			;string is clean if we get here
+	bitb	#1,ctable(b)		;ok...check for funny out
+	beq	21$			;not funny, loop
+40$:	outstr	dq			;must be funny
+	mov	a,b			;now name
+	call	putstr			;dump name
+	mov	#dq,b			; and last '"'
+	br	51$
+50$:	mov	a,b			;get string
+51$:	jmp	putstr
+
+xpatom:	mov	a,b		;print atom without "
+	add	#6,b
+	jmp	putstr
+
+
+
+
+
+.if	eq,fpsim
+
+	.rsect	shrcode con
+;numstr takes number in a, and leaves ptr to string in b
+;uses ac0,ac1,ac2,ac3,ac4
+
+numstr:	mov	#<strbuf+30>,b	;pointer to result left in b
+	mov	#2$,-(sp)	;set normal return
+	clrb	-(b)		;input in a
+	numga0			;leaves binary number(in floating formi
+				; in ac0
+	cfcc			;copy codes
+	absd	ac0
+	bge	10$		;fix up if neg.
+	mov	#3$,(sp)	;and set negative return
+10$:
+	seti
+	modf	ac5,ac0		;mul by .1, int part in ac1
+	stf	ac0,ac2		;fract in ac0
+	addf	#37114,ac2	;fudge good enough for bell labs.....
+	modf	ac4,ac2		;mult fract by 10
+	stcfi	ac3,a		;convert int part to integer
+	add	#60,a		;convert it to char
+	movb	a,-(b)		;and store it
+	ldf	ac1,ac0		;sets float cc vs stf which sets ccs
+	cfcc			;are we done?(i.e. ac1=0)
+	bne	10$		;no,loop
+	ret
+
+3$:	movb	#'-,-(b)
+2$:	setl			;convert back to long integer mode
+	retnil			;and clean up a
+
+
+
+
+
+
+
+;reminder
+;ten=41040,0,0,0
+;tenth=037314,146314,146314,146315
+ .iff
+	.rsect	shrcode
+
+;numstr here converts a int to string by using the idiv routine
+;only register a+b killed.....
+
+numstr:	save3			;save j1-j3
+	mov	#strbuf+30,j3
+	mov	#3$,-(sp)	;use to return with correct sign
+	numga
+	clrb	-(j3)
+	tst	a
+	bge	1$
+	com	a
+	com	b
+	mov	#2$,(sp)
+	add	#1,b
+	adc	a
+1$:
+	clr	j1
+	mov	#10.,j2
+	call	idiv
+	add	#'0,j2
+	movb	j2,-(j3)
+	tst	a
+	bne	1$
+	tst	b
+	bne	1$
+	ret
+
+2$:
+	movb	#'-,-(j3)
+3$:
+	mov	j3,b
+	loadnil	a
+	saveret
+.endc
+	
+
+numout:	mov	#putstr,-(sp)
+	br	numstr		;call routines
+
+
+
+.rsect	shrcode con
+;sratm1 converts ] to )^n
+
+	.enabl	lsb
+xratm1:	mov	rbktf,a
+	bne	2$
+xratm2:	call	ratomr
+	cmp	a,#rbkta
+	beq	1$
+	ret
+1$:	mov	#rpara,a
+	mov	a,rbktf
+2$:	ret
+	.dsabl	lsb
+
+;consa,consb,consbnil macros call these routines 
+;these protect a and b in case of garbage collection
+
+
+	.rsect	shrcode con
+xconsa:
+.if	ne,nilas0
+	tst	fdtpr
+
+.iff
+	cmp	fdtpr,#anil
+.endc
+	bne	1$
+	call	xconscom
+1$:	push	a
+	mov	fdtpr,a
+	car	a,fdtpr
+	pop	(a)
+	mov	b,2(a)
+	ret
+
+	loadnil	b
+xconsb:
+.if	ne,nilas0
+	tst	fdtpr
+.iff
+	cmp	fdtpr,#anil
+.endc
+	bne	1$
+	call	xconscom
+1$:	push	b
+	mov	fdtpr,b
+	car	b,fdtpr
+	pop	2(b)
+	mov	a,(b)
+	ret
+
+xconscom:	propush	a
+	propush	b
+	call	gcol
+	unpropop	b
+	unpropop	a
+	ret
+
+
+;dispatch macro calls xdispatch
+;call	dispatch
+;;;;	jmp if number
+;	jmp if#dtpr
+;	jmp if#atom
+;	jmp if#bcd
+;	jmp if#port
+;note that jmps must be used
+;also note that disastor will befall
+;the system if it gets ahold of something other than 
+;these things
+
+
+	.rsect	shrcode con
+
+xdispatch:	push	j3	;be nice to user
+	ldtype	a,j3
+	ash	#2,j3
+	add	j3,2(sp)
+	pop	j3
+	ret
+
+	.if	eq,fpsim
+
+
+
+;strnum takes a number in strbuf 
+;and converts it to binary stored in core pointed to by a
+
+	.rsect	shrcode con
+
+
+strnum:	mov	#b4$,-(sp)	;normal return
+	mov	#strbuf,j2	;string is in strbuf
+	clrd	ac0		;use fac0
+	seti			;integer mode
+	cmpb	(j2),#'-	;is neg?
+	bne	b1$		;no, jmp around
+	inc	j2		;point after - sign
+	mov	#b3$,(sp)	;push on negate address
+b1$:	movb	(j2)+,j3	;get the char
+	beq	b8$		;if zero, we're done
+	bicb	#177760,j3	;strip extra info
+	ldcid	j3,ac2
+	muld	ac4,ac0
+	cfcc
+	addd	ac2,ac0
+	bvc	b1$
+b2$:	error	</arithemetic overflow/>		;arithmetic overflow
+
+b3$:	negd	ac0
+b4$:
+b7$:	setl
+
+	numstac0		;store the number
+b8$:	ret			;and go home
+
+
+
+
+
+	.iff
+
+	.rsect	shrcode
+
+;strnum takes a number in strbuf, and converts it to an internal
+;int
+
+;this version uses imul routine....
+
+strnum:
+	mov	#3$,-(sp)	;store normal exit
+	mov	#strbuf,j3
+	clr	a
+	clr	b
+	cmpb	(j3),#'-
+	bne	1$
+	inc	j3
+	mov	#2$,(sp)	;set negate return
+1$:
+	tstb	(j3)
+	beq	8$
+	mov	#10.,j2
+	clr	j1
+	call	imul
+	bvs	5$
+	movb	(j3)+,j2
+	sub	#'0,j2
+	add	j2,b
+	adc	a
+	bvs	5$
+	br	1$
+
+2$:	com	a
+	com	b
+	add	#1,b
+	adc	a
+3$:
+	nmstore
+8$:	ret
+
+5$:
+	error	</number too large />
+
+.endc
+	.rsect	shrcode con
+	
+
+;this section of code handles nice things like ports. since
+;there are at most at any time numports, where numports is an assembly
+;parameter (about 15), and ports 1,2,and 3 are the tty ports, it
+;does not make much sense to have an entire page allocated to them.
+;except for the tty ports, the ports are 512 bytes long, starting on an
+;even word boundary(even a512 word boundry)
+
+;a port for output looks like this
+;		.byte	count,200!<portnum*2>!gcbit
+;		.word	nextchar
+;		.word	firstchar
+;		.word	charsleft
+;		.word	bufferlength
+
+;where count is used by chrct and linelength, and the purpose of the rest should be fairly obvious
+
+
+;a port for input looks like
+;		.byte	savedc,<portnum*2>!gcbit
+;		.word	nextchar
+;		.word	firstchar	;start o buffer
+;		.word	charsleft
+;		.word	bufferlength
+
+;where savedc is the character saved by last savec
+
+
+;**************************
+;
+;it is up to the using routine to guarantee that the thing on top of
+;the np (the arguement to all these things) is either a port or nil!!!
+;destruction will result if abused!!!!!!
+;
+;**************************
+
+;savec saves character for next lex.
+;mungs no registers!!!!
+;makes no check on port's validity
+
+	.rsect		shrcode con
+
+xsavec:	save1
+	mov	@np,j3
+	jmpnnil	j3,2$,nl
+	movb	char,piport+1
+	saveret
+2$:	movb	char,1(j3)
+	saveret
+
+
+;putstr takes a string pointed to by b and
+;outputs it on the port pointed to by the top of
+;the np
+;mungs no registers
+	.rsect	shrcode con
+
+putstr:	save3
+	mov	@np,j2		;is @np nil?
+	jmpnnil	j2,1$,nl	;if nil use poport
+	mov	#poport,j2
+1$:	tstb	(j2)		;if not nil, check tosee if output port
+	bge	30$		;if this byte is positive, then
+				; not output port
+2$:	movb	(b)+,@2(j2)	;b has pointer to string that we're putting
+				;and ports are output when full, so always room
+				;for one more char
+	beq	10$		;if zero,we're done
+	incb	1(j2)		;update width
+3$:	inc	2(j2)		;update pointer to buffer
+	dec	6(j2)		;update count
+.if	df,width
+	bgt	20$		;char  ok...see about linefeed
+  .iff
+	bgt	2$		;if non-zero, we do it again
+.endc
+	call	wrbop		;write-buffer-of-port
+.if	df,width
+20$:	jmpnnil	(np),2$		;only concerned about poport
+	cmpb	1(j2),lnleng	;are  we past right margin??
+	ble	2$		;we're ok...
+	movb	#12,@2(j2)	;output lf
+	clrb	1(j2)		;and clear port count
+	br	3$		;and go to middle of loop
+ .iff
+	br	2$
+.endc
+10$:	loadnil	b		;return nil in b
+	saveret
+30$:
+erm5p:	error </i-o error/>	
+;wrbop outputs a buffer
+;it is called either with dmpport or implicitly by putstr
+;it should not be used otherwise
+
+	.rsect	shrcode con
+wrbop:	mov	4(j2),$$write+2	;set up write system call
+	mov	2(j2),j1	;j2 points to port; put f.c. in r0
+	sub	4(j2),j1	;get length
+	blos	1$		;if less  or = zero then don't bother
+	mov	j1,$$write+4
+	mov	(j2),j1		;now the file cookie
+	bic	#177701,j1
+	asr	j1
+	$indir			;trap indirect
+	$$write
+	bcc	10$		;if error-free, skip a bit
+	 cmp	j1,#4		;otherwise, ^c???
+	 bne	erm5p		;if is not ^c, scream
+10$:	tst	protocell
+	beq	1$
+	cmp	j2,#poport
+	beq	3$
+	cmp	j2,#erport
+	bne	1$
+3$:	mov	b,j3		;save for a minute
+	mov	$$write+2,b
+	add	$$write+4,b
+	clrb	@b
+	mov	$$write+2,b
+	npush	protocell
+	call	putstr
+	cmp	-(np),-(np)
+	mov	j3,b		;and get back b
+1$:	mov	4(j2),2(j2)
+	mov	10(j2),6(j2)
+	ret
+
+
+
+
+
+;	note--by rights one should make sure that ^c is only
+;	allowable on the command port (np)==nil.
+;	however, it is not clear what to do in the case when 
+;	^c is gotten on another port.  i.e., do we print a 
+;	message, and continue??? or do we 
+;	just let the ^c handeler take care of it???
+;dmpport outputs buffer whether full or not
+;saves all registers
+
+	.rsect	shrcode con
+
+dmpport:
+	save4
+	mov	@np,j2
+	jmpnnil	j2,2$,nl
+	mov	#poport,j2
+2$:	tstb	(j2)
+	bge	erm5p
+	call	wrbop	;set up j2 with ptr(port), then call wrbop
+	saveret
+
+
+	.enabl	lsb
+	.globl	$death
+	.rsect	shrcode con
+
+		;getc
+		;returns in char the next character in the port on np
+		;this has had so many additions, that it is getting
+		;kludgy, and should be re-written
+
+
+xgetc:	save4
+	mov	@np,j2
+	jmpnnil	j2,10$,nl
+	mov	#piport,j2
+	incb	keybin		;say we're in keyboard input
+	br	11$
+10$:	bic	#1,(j2)		;turn off the gc bit
+	tstb	(j2)
+	ble	5$		;all this does is get valid input port
+11$:	movb	1(j2),char	;is savec non-zero??
+	bgt	2$		;no, then go through mung
+	blt	32$		;means we got past eof
+1$:	dec	6(j2)		;is anything left in  port?
+	blt	4$		;no, then get some chars
+	movb	@2(j2),char	;get next char in port
+	inc	2(j2)		;kick pointer
+2$:	clrb	1(j2)		;set savec to zero
+	bicb	#177600,char	;clear out high bits
+3$:	clrb	keybin		;turn off flag
+	saveret			;and go home
+4$:	mov	4(j2),$$read+2	;set up system call
+	mov	10(j2),$$read+4
+	mov	(j2),j1		;savec is zero!!
+	asr	j1
+	$indir			;get indirect
+	$$read
+	bcs	erm5p		;error?
+				;prehaps a check should be made
+				;for ^c here (assuming one opened
+				; /dev/tty? or something)
+				;however, this will be left
+				;for now
+	mov	4(j2),2(j2)	;reset port
+	mov	%0,6(j2)	;save number of chars got
+	beq	21$		;if not zero,all set
+	tst	protocell	;protocol?
+	beq	1$
+	jmpnnil	@np,1$
+	mov	#tib,b
+	clrb	tib(%0)		;turn into asciz string
+	npush	protocell
+	call	putstr
+	cmp	-(np),-(np)
+	br	1$
+21$:	tstb	keybin		;if is > zero, we want
+	bgt	ssy31$		;to do funnies on ^d and ^c
+	blt	22$		;if less than zero, no savec
+	movb	#200,1(j2)	;indicate eof in savec
+22$:	movb	#200,char	;if zero, return eof char
+	br	3$		;and return, clearing keybin
+
+5$:	error	</not a port for input/>
+32$:	error	</can't read past end of port/>		;past	eof
+
+
+ssy31$:	jmp	$death		;user typed ^d
+
+xgetca:	call	xgetc		;get char
+	clr	a
+	bisb	char,a		;and the character in a
+	ret			;and go home
+
+	.dsabl	lsb
+
+
+
+;fixname is called from opeen and load
+; takes two args on nstack and constructs path
+;from them. if second (top) arg is non-nil,
+;the path is in the system library.
+;if nil, the file itself is used
+
+
+	.rsect	shrcode con
+
+fixname: npop	a		;get top arg
+	jmpifnil a,fixnm1	;if nil, just use first
+	mov	#strbuf,a	;make name in stringbuf
+	mov	#master,j1
+1$:	movb	(j1)+,(a)+
+	bne	1$
+	dec	a
+	mov	@np,j1
+	cmptype	j1,j2,#natom	;make sure this is atom
+	bne	filerror	;then complain
+	add	#6,j1		;get pname
+2$:	movb	(j1)+,(a)+
+	bne	2$
+	mov	#strbuf,a	;strbuf is first ptr instring
+	ret
+fixnm1: mov	@np,a		;here if to use only path
+	cmptype	a,j1,#natom
+	bne	filerror
+	add	#6,a
+	ret
+
+
+filerror: error	</file not available/>
+filer1:	$close		;close
+	error	</attempt to open too many files/>
+
+;openc is code that is called by openr and openw
+;it gets buffer and sets up common parts of ports
+
+
+openc:	bcs	filerror
+	cmp	%0,#<nports-1>
+	bgt	filer1
+	asl	j1
+	mov	j1,a
+	ash	#2,a
+	add	j1,a
+	add	#piport,a
+	mov	#400,10(a)
+	mov	j1,(a)		;save cookie
+	mov	a,-(sp)		;save port
+tryba:	call	globalc
+	tst	a
+	beq	nobuf
+	movb	#-2,qmap(a)
+	swab	a
+	mov	a,j3
+	mov	(sp)+,a
+	mov	j3,2(a)
+	mov	j3,4(a)
+	ret
+nobuf:
+.if	ne,xfer
+	mov	(sp)+,a
+	clr	2(a)
+	clr	4(a)
+	call	@(sp)+		;co-routine call to openr/openw
+	call	noroom
+	call	noroom
+nroomf:
+.iff
+	error	</cannot allocate buffer for file/>,tryba
+.endc
+
+
+
+
+;openr takes ptr to asciz string in a
+;and opens the file if possible
+
+openr:	mov	a,$$open+2
+	$indir
+	$$open
+	call	openc
+	clr	6(a)	;peculiars of read open
+	ret
+
+
+;openw takse string n a and opens file for output
+
+openw:	mov	a,$$create+2
+	$indir
+	$$create
+	call	openc
+	mov	#400,6(a)	;peculair to write ports
+	bis	#40200,(a)
+	ret
+
+
+
+
+
+	.rsect	shrcode con
+;close closes the (hopefully) port on np
+
+close:	mov	@np,a
+	mov	4(a),j1
+	swab	j1
+	movb	#-3,qmap(j1)	;give back buffer
+	mov	(a),j1
+	asr	j1
+	bic	#177700,j1
+	clr	(a)
+	$close
+	ret
+
+
+
+
+
+	.rsect	shrcode
+
+;ncomp compares the two numbers on ttop of np
+;call and return
+
+;	call 	ncomp
+;	return if not number
+;	return if number with condition codes set
+;	clobers all registers (at least in some cases)
+;
+;type checking is done
+
+.if	eq,fpsim
+
+
+ncomp:	mov	@np,a
+	cmptype	a,j1,0
+	bne	12$
+	numga1
+	mov	-4(np),a
+	cmptype	a,j1,0
+	bne	12$
+	numga0
+	cmpd	ac0,ac1
+	add	#2,(sp)
+	cfcc
+12$:	ret
+ .iff
+
+ncomp:	mov	(np),a		;get right arg
+	cmptype	a,b,0		;is int
+	bne	22$		;no.....
+	numgj1			;get int
+	mov	-4(np),a
+	cmptype	a,b,0
+	bne	22$
+	numga			;got them
+	add	#2,(sp)		;make good return
+	sub	j1,a		;subtract the high order
+	sub	j2,b		;we don't care about codes of low order
+	sbc	a		;and get the borrow
+	bne	22$		;if result is non-zero, we're cool
+	cmp	b,a		;we know a is zero, and gotta set the v bit
+22$:	ret
+
+.endc

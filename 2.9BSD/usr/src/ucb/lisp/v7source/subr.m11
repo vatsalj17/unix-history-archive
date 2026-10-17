@@ -1,0 +1,1823 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+
+		;pdp11 lisp subr file
+		;8/1/74
+
+	.sbttl	subrs 
+subrbeg	xquote nlambda,1
+	chanl
+	mov	@np,a
+	jmpifnil	a,1$,no ;(quote)=nil
+	car	a,a
+1$:	ret
+subrend
+
+
+
+atom	read,aread,,,xreadc
+
+subrbeg	xreadc lambda,1
+	chas
+	mov	@np,a
+	jmpifnil	a,1$,t 	;see if valid port
+	cmptype	a,#nport
+	bne	read2$
+1$:	jmp	readr		;if ok, then do it
+read2$:	jmp	erm5er
+subrend
+
+
+atom	evalquote,aevquote,,,xevqc
+
+subrbeg	xevqc,lambda,1
+	chas
+	mov	@np,a
+	jmpifnil	a,1$,t	;see if valid port
+	cmptype	a,#nport
+	bne	read2$
+1$:	jmp	evalquote
+subrend
+
+atom	ratom,,,,xcrtm
+
+subrbeg	xcrtm lambda,1
+	chas
+	mov	@np,a
+	jmpifnil	a,1$,t ;see if valid port
+	cmptype	a,#nport
+	bne	2$
+1$:	jmp	ratomr
+2$:	jmp	erm5er
+subrend
+
+
+atom	print,aprint,,,xprintc
+
+subrbeg xprintc lambda,2
+	chas
+	mov	-4(np),a
+	mov	@np,j2
+	jmpifnil	j2,1$,t ;is good port
+	cmptype	j2,#nport
+	bne	2$
+	jmp	printr
+1$:	call	printr
+	jmp	dmpport
+2$:	jmp	erm5er
+subrend
+
+
+atom	patom,,,,xptmc
+
+subrbeg	xptmc lambda,2
+	chas
+	mov	(np),j2		;check out port
+	jmpifnil j2,1$,nl	;nil is good port
+	cmptype	j2,#nport	;is port???
+	bne	30$		;no, scream
+1$:	mov	-4(np),a	;get token
+	ldtype	a,j2		;get its type code
+	cmp	j2,#natom	;is this an atom
+	beq	10$		;yes, we know what to do
+	tst	j2		;what about int???
+	bne	20$		;no, scream
+	numgj1			;get the number
+	mov	#strbuf+1,b	;get space
+	clrb	(b)		;null termination
+	movb	j2,-(b)		;and our friend
+	jmp	putstr
+10$:	jmp	xpatom
+20$:
+30$:
+erm5er:
+	error	</i-o error/>
+
+subrend
+
+
+atom	infile,,,,infile
+
+subrbeg	infile lambda,2
+chas
+	call	fixname	;leaves a ptr to name in a
+	call	openr	;opens file;leaves port in a
+	ret
+subrend
+
+atom	outfile,,,,outfile
+
+subrbeg	outfile lambda,1
+chas
+	call	fixnm1	;leaves name in a
+	call	openw	;open port;leave in a
+	ret
+subrend
+
+
+atom	close,,,,subclose
+
+subrbeg	subclose lambda,1
+chas
+	mov	@np,a
+	jmpifnil	a,1$,t	;can't close nil
+	cmptype	a,j1,#nport
+	bne	2$		;better be port
+	tstb	(a)		;see if open
+	bge	3$		;if not,...
+	call	dmpport		;output all chars in buffer
+3$:	call	close		;close it
+1$:	retnil			;and go home 
+2$:	jmp	erm5er
+subrend
+
+atom	load,,,,load
+subrbeg	load lambda,2
+	chas
+	call	fixname	;get name
+	call	openr	;open it
+	mov	a,@np	;put it on np
+1$:	call	readr	;read
+	cmp	a,#aeof	;done?
+	beq	2$	;yes,clean up
+	call	eval	;eval thing
+	br	1$	;and loop
+2$:	call	close	;close port
+	retnil		;and go home 
+subrend
+
+
+atom	cont,,,,cont
+subrbeg	cont lambda,1
+	chas
+1$:	cmp	(sp),#brksnag 	;search for snag
+	beq	2$		;yes, then take care of
+	tst	(sp)+
+	cmp	sp,cptop
+	blo	1$
+	jmp	lsploo		;otherwise,reset
+2$:	mov	sp,a		;get other stack ptr
+	cmp	(a)+,(a)+	;point to ltop
+	mov	(a)+,ltop
+	mov	(a)+,j3
+	mov	(a)+,j2
+	mov	(a)+,j1
+	mov	(a)+,b
+	mov	@np,a		;return top of ns
+	mov	2(sp),np	;and old ns
+	add	#16,sp		;to return
+	dec	brkl+2		;decrement count
+	ret			;and try to continue with new a
+subrend
+
+
+atom	terpr,,,,terpr
+
+subrbeg	terpr lambda,1
+	chas
+	mov	#linefeed,b	;set up in anticipation
+	mov	@np,j3
+	jmpifnil	j3,20$,t	;is nil?
+	cmptype	j3,j2,#nport	;if not, better be port
+	bne	2$		;signal error
+1$:	call	putstr		;output cr
+	clrb	1(j3)		;reset linelength port
+	br	3$
+20$:	call	putstr		;output string
+	call	dmpport		;print line
+	clrb	poport+1	;reset char count
+3$:	mov	b,a		;mov nil to a 
+	ret
+2$:	error	</i-o error/>
+subrend
+
+
+
+atom	drain,,,,drain
+
+subrbeg	drain,lambda,1
+	chas
+	mov	@np,j3
+	jmpifnil	j3,20$,t
+	cmptype	j3,#nport
+	bne	2$
+20$:	call	dmpport
+	retnil
+2$:	jmp	erm5er
+subrend
+
+atom	break,,,,break
+
+subrbeg	break lambda,1
+	chas
+	push	#br2$	;push return
+	mov	@np,a	;print message
+	loadnil	@np
+	call	printr
+	generm	</	/>
+	mov	#tmp-<^pl errorm>,a
+	jmp	errort
+br2$:	ret
+
+subrend
+
+
+atom	prog,,,,prog
+
+subrbeg	prog nlambda,1
+	chanl
+	mov	(np),a		;get prog body
+	push	ltop		;save state of world for goto
+
+	cdr	a,-(sp)		;push function list
+	car	a,a		;get prog vars
+
+3$:	jmpifnil	a,1$,t	;if none, then go to next stage
+2$:	npush	#anil
+	mov	(a)+,-2(np)
+	mov	@a,a		;get rest of  vars
+	br	3$		;and goto loop
+1$:	push	np		;save np for goto restoration
+	mov	2(sp),-(sp)	;get function list
+	push	#progsnag	;and mark stack
+progloop:mov	2(sp),a		;get current function list
+	jmpifnil	a,1$ 	;if nil, go home
+	cdr	a,2(sp)		;store part of list we don't care about
+	car	a,a		;and get our function
+	cmptype	a,j1,#ndtpr	;if not dtpr,
+	bne	progloop	;don't eval
+	call	eval
+	br	progloop
+1$:	add	#10,sp		;flush back sp
+	pop	ltop		;restore ltop
+	ret			;and let eexit do rest
+
+subrend
+
+
+atom	return,,,,return
+
+
+subrbeg	return lambda,1
+	chanl
+	call	fdprog
+	add	#6,sp
+	pop	ltop
+	mov	@np,a
+	ret
+
+fdprog:
+	mov	(sp),j1		;save return addr
+2$:	cmp	(sp),#brksna	;gotta bypass breaks
+	beq	36$
+	cmp	(sp),#r4rres
+	beq	34$
+	cmp	(sp),#r3rres
+	beq	33$
+	cmp	(sp),#r2rres
+	beq	32$
+	cmp	(sp),#r1rres
+	beq	31$
+	cmp	(sp)+,#progsnag		;search for prog
+	bne	30$			;go to test
+	jmp	(j1)			;return to calling routine
+36$:	dec	brkl+2
+	cmp	(sp)+,(sp)+		;+4
+34$:	tst	(sp)+			;+2
+33$:	tst	(sp)+			;+2
+32$:	tst	(sp)+			;+2
+31$:	cmp	(sp)+,(sp)+		;+4
+30$:	cmp	sp,cptop
+	blo	2$
+	error	</no prog to go to or return from/>,lsploop
+subrend
+
+
+atom	go,,,,xgoto
+subrbeg	xgoto,nlambda,1
+	chanl
+	mov	@np,a
+	car	a,a
+	cmptype	a,j1,#natom	;if value isn't atom, then
+				; eval to get atom
+	beq	go1$
+	call	eval
+go1$:	call	fdprog
+	mov	4(sp),j3	;now see if label there
+3$:	jmpifnil	j3,go1$	;if list nil, then get next prog
+	mov	(j3)+,j2	;get car
+	mov	@j3,j3		;and cdr
+	cmp	a,j2		;are things equal
+	bne	3$		;no, then try again
+	mov	j3,(sp)		;set up prog block
+	mov	2(sp),np	;and flush back to progvars
+	jmp	progloop-4	;and go to progloop
+subrend
+
+atom	car,,,,xccar
+
+subrbeg	xccar lambda,1
+	chas
+care1:	mov	@np,a
+care:
+.if	eq,multiseg
+ .if	ne,nilas0
+	beq	cdd12$		;is ignored if nil#0
+ .endc
+.endc
+
+	ldtype	a,j1
+	dec	j1		;is dtpr?
+	beq	1$		;yes,...
+	dec	j1		;is atom?
+	bne	2$		;yes,...
+1$:	car	a,a
+	ret
+erm9er=* .
+2$:	error	</can't follow car or cdr/>
+.if eq,multiseg
+  .if	ne,nilas0
+cdd12$:	mov	atmnil,a
+	ret
+ .endc
+.endc
+subrend
+
+atom	cdr,,,,xccdr
+
+subrbeg	xccdr lambda,1
+	chas
+cdre1:	mov	@np,a
+cdre:
+.if	eq,multiseg
+ .if	ne,nilas0
+	beq	cddd12$		;is ignored if nil"#0
+.endc
+.endc
+	ldtype	a,j1
+	dec	j1
+	beq	1$		;make sure dtpr or atom
+	dec	j1
+	bne	2$
+1$:	cdr	a,a
+	ret
+2$:	br	erm9er
+.if	eq,multiset
+ .if	ne,nilas0
+cddd12$:	mov	atmnil+2,a
+	ret
+.endc
+.endc
+subrend
+
+atom	caar,,,,caar
+
+subrbeg	caar,lambda,1
+	chanl
+	call	care1
+	br	care
+subrend
+
+atom	cadr,,,,cadr
+subrbeg	cadr,lambda,1
+	chanl
+	call	cdre1
+	br	care
+subrend
+
+atom	cddr,,,,cddr
+
+subrbeg	cddr,lambda,1
+	chanl
+	call	cdre1
+	br	cdre
+subrend
+
+atom	cdar,,,,cdar
+
+subrbeg	cdar,lambda,1
+	chanl
+	call	care1
+	br	cdre
+subrend
+
+
+atom	and,,,,andc
+
+subrbeg	andc,nlambda,1
+	chanl
+1$:	mov	@np,j1
+	jmpifnil	j1,2$,nl
+	mov	(j1)+,a
+	mov	(j1),@np
+	call	eval
+.if	eq,nilas0
+	cmp	a,#anil
+  .iff
+	tst	a
+.endc
+	bne	1$
+	retnil
+2$:	rettrue
+
+subrend
+
+atom	or,,,,orc
+
+subrbeg	orc,nlambda,1
+	chanl
+1$:	mov	@np,j1
+	jmpifnil	j1,2$,nl
+	mov	(j1)+,a
+	mov	(j1),@np
+	call	eval
+	jmpifnil	a,1$
+	rettrue
+2$:	retnil
+subrend
+
+
+atom	cons,,,,xccons
+
+subrbeg	xccons,lambda,2
+	chas
+	call	gdtpr
+	mov	@np,2(a)
+	mov	-4(np),@a
+	ret
+subrend
+
+atom	oblist,,,,xcobl
+
+subrbeg	xcobl,nlambda,0
+	nop
+	nop		;where chas would usually go
+	mov	xoblist,a
+	ret
+subrend
+
+atom	setq,,,,setq
+subrbeg setq,nlambda,1
+	chanl
+	mov	@np,a
+	jmpifnil	a,1$,t	;(setq)=> error!
+	mov	@2(a),a		;cadr
+	call	eval		;eval it
+	mov	a,j1		;save in j1
+	mov	@np,a		;get atom name
+	car	a,a
+.if eq,multiseg
+ .if	ne,nilas0
+	bne	2$		;is alway taken if nil#0
+	mov	#atmnil,a
+	br	3$
+ .endc
+.endc
+2$:	cmptype	a,j3,#natom	;better be atom
+	bne	1$
+	call	lookup		;get current binding cell
+3$:	mov	j1,2(a)		;smash it 
+	mov	j1,a		;and return right thing
+	ret
+erm11er=* .
+1$:	error	</improper use of setq/>
+subrend
+
+atom	set,,,,set
+
+subrbeg	set,lambda,2
+	chas
+	mov	-4(np),a	;get atom
+.if	eq,multiseg
+ .if	ne,nilas0
+	bne	2$
+	mov	#atmnil,a
+2$:
+ .endc
+.endc
+	cmptype	a,j1,#natom
+	bne	1$
+	call	lookup
+	mov	a,j1
+	mov	@np,a
+	mov	a,2(j1)
+	ret
+1$:	br	erm11er
+subrend
+
+
+
+atom	cond,,,,cond
+
+subrbeg	cond,nlambda,1
+	chanl
+	mov	@np,a		;get thing in a
+10$:	jmpifnil	a,1$,t	;if nil, return nil
+	mov	@(a)+,a		;get caar
+	call	eval		;eval it
+.cond1=* .			;for xfer lisp
+	jmpnnil	a,2$		;if not nil, then.....
+	mov	@np,a		;advance through body
+	cdr	a,a
+	mov	a,@np		;store for future use
+	br	10$		;and loop
+2$:	mov	@np,j1		;now we want to eval the consequences
+	car	j1,j1		;get car
+	cdr	j1,j1		;and get cdr(list of consequences)
+4$:	jmpifnil	j1,1$,t		;if nil, then return
+	mov	(j1)+,a		;get car for evaling
+	mov	@j1,@np		;store cdr for latter reference
+	call	eval
+.cond2=* .			;again for xfer lisp
+	mov	@np,j1		;get back np
+	br	4$		;and loop
+1$:	ret			;go home
+subrend
+
+
+
+
+atom	eval,aeval,,,xceval
+
+subrbeg	xceval,lambda,1
+	chanl
+	mov	@np,a
+	jmp	eval
+subrend
+
+
+	.enabl	lsb
+
+atom	numbp,,,,numbp
+atom	numberp,,,,numbp
+
+subrbeg	numbp,lambda,1
+	chas
+	clr	j2
+1$:	mov	@np,j1
+	cmptype	j1,j2
+2$:	bne	10$
+3$:	rettrue
+10$:	retnil
+subrend
+
+atom	atom,,,,xatomc
+atom	atomp,,,,xatomc
+
+subrbeg xatomc,lambda,1
+	chas
+	ldtype	(np),j1
+	tst	j1
+	beq	3$		;if number, is considered atom
+	cmp	j1,#natom
+	br	2$		;let branch above decide
+subrend
+
+atom	dtpr,,,,xdtpr
+
+subrbeg	xdtpr,lambda,1
+	chas
+	mov	#ndtpr,j2
+	br	1$
+subrend
+
+atom	bcd,,,,xbcd
+
+subrbeg	xbcd,lambda,1
+	chas
+	mov	#nbcd,j2
+	br	1$
+subrend
+
+atom	port,,,,xportc
+
+subrbeg	xportc,lambda,1
+	chas
+	mov	#nport,j2
+	br	1$
+subrend
+
+	.dsabl	lsb
+
+
+
+atom	reset,,,,xreset
+
+subrbeg	xreset,lambda,1
+	nop
+	nop
+	jmp	lsploo
+subrend
+
+atom	def,,,,xcdef
+
+subrbeg	xcdef,nlambda,1
+	chanl
+	mov	@np,j2
+	car	j2,a
+.if	eq,multiset
+ .if	ne,nilas0
+	beq	def12$
+.endc
+.endc
+	cmptype	a,j1,#natom	;make sure is atom
+	bne	1$
+	mov	@2(j2),4(a)	;store function binding
+	ret
+erm16er=* .
+1$:	error	</only atoms have function definitions/>
+.if	eq,multiseg
+ .if	ne,nilas0
+def12$:	mov	@2(j2),atmnil+4
+	ret
+.endc
+.endc
+subrend
+
+atom	getd,,,,xcgetdef
+
+subrbeg	xcgetdef,lambda,1
+	chanl
+	mov	@np,a
+.if	ne,nilas0
+ .if	eq,multiseg
+	beq	12$
+ .endc
+.endc
+	cmptype	a,j1,#natom	;make sure atom
+	bne	1$
+	mov	4(a),a		;get fnb
+	ret
+1$:	br	erm16er
+.if	eq,multiseg
+ .if	ne,nilas0
+12$:	mov	atmnil+4,a
+	ret
+ .endc
+.endc
+subrend
+
+atom ddt,,,,odt
+
+subrbeg	odt,nlambda,0
+	nop
+	nop
+	tst	#frstcl	;is non-zero if ddt loadedd
+	beq	1$
+	bpt
+1$:	retnil
+subrend
+
+atom	lessp,,,,xlessp
+
+subrbeg	xlessp,lambda,2
+	chas
+	call	ncomp
+	br	1$
+	blt	2$
+	retnil
+2$:	rettrue
+1$:	jmp	erm10e
+subrend
+
+atom	greaterp,,,,xgreatp
+
+subrbeg	xgreatp,lambda,2
+	chas
+	call	ncomp
+	br	1$
+	bgt	2$
+	retnil
+2$:	rettrue
+1$:	error	</non-numeric arg to arithmetic subr/>
+subrend
+
+
+atom	eq,,,,xeqc
+
+subrbeg	xeqc,lambda,2
+	chas
+	mov	np,j1
+	cmp	(j1),-4(j1)	;try quick test
+	beq	1$
+	call	ncomp
+	br	2$		;not number
+	beq	1$		;equal
+2$:	retnil			;and return appropriatly
+1$:	rettrue
+subrend
+
+
+
+atom	rplaca,,,,rplaca
+
+
+subrbeg		rplaca,lambda,2
+	chas
+	mov	-4(np),a
+.if	eq,multiseg
+ .if	ne,nilas0
+	beq	ra12$
+.endc
+.endc
+	ldtype	a,j2	;make sure atom or dtpr
+	dec	j2
+	beq	1$
+	dec	j2
+	bne	2$
+1$:	mov	(np),(a)
+	ret
+2$:	jmp	erm9er
+.if	eq,multiseg
+.if ne,nilas0
+ra12$:	mov	(np),atmnil
+	ret
+.endc
+.endc
+subrend
+
+atom	rplacd,,,,rplacd
+
+subrbeg	rplacd,lambda,2
+	chas
+	mov	-4(np),a
+.if	eq,multiseg
+ .if	ne,nilas0
+	beq	rd12$
+ .endc
+.endc
+	ldtype	a,j2
+	dec	j2	;make sure atom or dtpr
+	beq	1$
+	dec	j2
+	bne	2$
+1$:	mov	(np),2(a)
+	ret
+2$:	jmp	erm9er
+.if	eq,multiseg
+ .if	ne,nilas0
+rd12$:	mov	(np),atmnil+2
+	ret
+ .endc
+.endc
+subrend
+
+atom	linelength,,,,xlnlen
+
+subrbeg	xlnlen,lambda,1
+	chanl
+	cmptype	@np,a,0		;if handed int, make it new linelength
+	beq	1$
+	mov	lnleng,b	;otherwise return current
+	clr	a		;linelength
+	nmstore
+	ret
+1$:	mov	@np,a		;store low order of int in 
+	numgj1
+.if	df,width
+	cmpb	j2,#5		;eliminate rediculous widths
+	blo	2$
+.endc
+	mov	j2,lnleng	;linelength
+2$:	ret
+subrend
+
+atom	charcnt,,,,xchrct
+
+subrbeg	xchrct,lambda,1
+	chanl
+	mov	@np,j2
+	jmpifnil	j2,1$,t
+	cmptype	j2,j3,#nport	;port?
+	bne	2$
+	tstb	(j2)		;output?
+	blt	3$
+2$:	jmp	erm17e
+1$:	mov	#poport,j2	;if was nil, map to poport
+3$:	mov	lnleng,b	;caculate chars  left
+	movb	1(j2),a
+	sub	a,b
+	sxt	a
+	nmstore			;andd return that
+	ret
+subrend
+
+atom	$mumble,,,,xmums
+
+.if	ne,xfer
+ subrbeg	xmums,lambda,4,elists
+.iff
+ subrbeg	xmums,lambda,4
+.endc
+	chas
+	clr	b
+.if	eq,nilas0
+	clrb	tracflg
+	jmpifnil	(np),27$
+	incb	tracflg
+	.iff
+	movb	1(np),tracflg
+	.iftf
+mumscon=* .
+27$:	cmptype	-4(np),a,0	;if int, then make new nstk length
+	bne	1$
+	mov	-4(np),a
+	numgj1
+	incb	noint		;no interupts, please!!!!
+	ash	#2,j2
+	mov	npres,j3
+	sub	j2,j3
+	mov	j3,j1		;see about core
+	sub	#300.,j1	;insure some stack room
+	mov	j1,j2		;get copy
+	bic	#17777,j2	;get to bottom of seg
+	cmp	j2,$$break+2	;better be above this
+	blo	52$
+	mov	sp,j2		;mov sp to j2
+	mov	j1,sp		;and get new low stack
+	$sig
+		11.
+		51$		;see about overflow...
+	tst	(sp)		;wellllllllll.....
+	$sig
+		11.
+	segfault
+	mov	j3,cptop
+	inc	b		;set flag for reset
+1$:
+	.ift
+	clrb	supcol		;see about supercollect
+	jmpifnil -10(np),2$	;if non-nil,then set supcol
+	incb	supcol
+	.iff
+	movb	-7(np),supcol
+	.iftf
+2$:	mov	-14(np),a
+.if	ne,nilas0
+	beq	3$
+   .iff
+	jmpifnil	a,3$
+.endc
+	mov	#eqprompt,prompt
+	mov	#beqprompt,bprompt	;set up prompts
+.if	ne,xfer
+	mov	#eqlist,readh		;make list (...(evalquote nil]
+.iff
+	mov	#evalqu,readh
+.endc
+	br	4$
+3$:	mov	#eprompt,prompt
+	mov	#beprompt,bprompt
+.if	ne,xfer
+	mov	#elist,readh
+.iff
+	mov	#readr,readh
+.endc
+4$:	tst	b		;if j3#0, then reset
+	bne	5$
+	ret
+5$:	jmp lsploo
+.endc
+
+51$:	$sig
+		11.
+	segfault
+	mov	j2,sp
+52$:	decb	noint			;interupts are now ok
+	error	</cannot meet stack request/>,mumscon
+
+subrend
+
+atom	quo,,,,xdivc
+atom	quotient,,,,xdivc
+
+subrbeg	xdivc,lambda,2
+	chas
+	mov	(np),a
+	cmptype	a,b,0	;again, check for number
+	bne	xdiv2$
+.if	eq,fpsim
+	numga1		;put numb in floating ac1
+	cfcc
+ .iff
+	numgj1
+	tst	j2
+	bne	16$
+	tst	j1
+ .iftf
+	beq	xdiv3$
+ .iff
+16$:
+
+.endc
+	mov	-4(np),a
+	cmptype	a,b,0	;here too
+	bne	xdiv2$
+.if	eq,fpsim
+	numga0		;numb into floating ac0
+	divd	ac1,ac0	;divide
+	numsta0		;store floating number
+ .iff
+	numga
+
+	.globl	idiv,imul
+
+	call	idiv
+	nmstore
+ .endc
+
+	ret
+xdiv2$:	jmp	erm10er
+xdiv3$:	jmp	erm18er
+subrend
+
+.if	ne,multiseg
+
+
+
+atom	getadr,,,,xgetad
+
+subrbeg	xgetad,lambda,1
+	chanl
+	mov	@np,b
+	clr	a
+	nmstore
+	ret
+subrend
+
+
+
+;gettyp maps types into pdp11 internal codes
+atom	gettyp,,,,xgettyp
+
+subrbeg	xgettyp,lambda,1
+	chanl
+	mov	@np,b
+	ldtype	b
+10$:	clr	a
+	nmstore
+	ret
+subrend
+
+
+;routines to access imem
+
+;atom	readimem,,,,xrim
+;
+;subrbeg xrim,lambda,1
+;	chanl
+;	mov	@np,a
+;	numga
+;	.word 006513		;mfpi	(b)
+;	pop	b
+;	clr	a
+;	nmstore
+;	ret
+;subrend
+
+
+;atom	writeimem,,,,xwim
+;
+;subrbeg xwim,lambda,2
+;	chas
+;	mov	(np),a
+;	numgj1
+;	mov	-4(np),a
+;	numga
+;	push	b
+;	mtpi	(j2)
+;	retnil
+;subrend
+;
+;
+;;and to get contents of dspace
+.endc
+;
+.if df,notrap
+atom	readdmem,,,,xrdm
+
+subrbeg	xrdm,lambda,1
+	chanl
+	mov	@np,a
+	numga
+	bit	#1,b
+	bne	1$
+	mov	(b),b
+	br	2$
+1$:	mov	np,b
+	tst	a
+	bge	2$
+	mov	sp,b
+2$:
+	clr	a
+	nmstore
+	ret
+subrend
+
+
+.endc
+
+atom	reclaim,,,,xreclaim
+
+subrbeg	xreclaim,lambda,2
+	chas
+	mov	(np),a
+	jmpifnil	a,1$,t	;see if args are being given
+	numgj1			;get int
+	cmp	j2,#20		;enforce minimum
+	bhi	10$
+	mov	#20,j2
+10$:	mov	j2,mfnumber	;store low ordder
+1$:	mov	-4(np),a
+	jmpifnil	a,2$,t
+	numgj1			;get number
+	cmp	j2,#20
+	bhi	11$
+	mov	#20,j2		;enforce min
+11$:	mov	j2,mfdtpr	;and store
+2$:	call	gcol
+	mov	cnumber,b	;return (fddtpr.fnumbr)
+	clr	a
+	nmstore
+	push	a
+	mov	cdtpr,b
+	clr	a
+	nmstore
+	pop	b
+	jmp	xconsa
+subrend
+
+atom	null,,,,nulls
+
+subrbeg	nulls,lambda,1
+	chanl
+	mov	@np,a
+	jmpifnil	a,1$,t
+	retnil
+1$:	rettrue
+subrend
+
+
+
+atom	putd,,,,xputd
+
+subrbeg	xputd,lambda,2
+	chas
+	mov	-4(np),a
+.if	eq,multiseg
+ .if	ne,nilas0
+	beq	12$
+.endc
+.endc
+	cmptype	a,b,#natom	;make sure is atom
+	bne	1$
+	mov	(np),4(a)
+	ret
+1$:	jmp	erm16er
+.if	eq,multiseg
+.if	ne,nilas0
+12$:	mov	(np),atmnil+4
+	ret
+ .endc
+.endc
+subrend
+
+atom	pntlen,,,,xpntln
+
+subrbeg	xpntln,lambda,1
+	chanl
+	mov	@np,a
+	dispatch	;dispatch on type
+	br	pnt1$
+	.word	0
+	br	2$
+	.word	0
+	br	pnt3$
+	.word	0
+	br	2$
+	.word	0
+erm17e=* .
+2$:	error	</bad arg to special subr/>	;these things don't have lengths on name strings
+
+pnt1$:	call numstr		;convert to string
+	neg	b		;and caculate length
+	add	#<strbuf+27>,b
+	br	pnt4$
+pnt3$:	add	#6,a	;go down string till zero seen
+	mov	a,b
+5$:	tstb	(b)+
+	bne	5$
+	dec	b
+	sub	a,b
+pnt4$:	clr	a
+	nmstore
+	ret
+subrend
+
+
+;new plus,times,diff,difference,sub,sub1,add,add1
+
+
+atom	add1,,,,xadd1
+
+subrbeg	xadd1,lambda,1
+	chas
+	mov	#1,j2
+	clr	j1
+	br	pickplus
+subrend
+
+atom	sub1,,,,xsub1
+
+subrbeg xsub1,lambda,1
+	chas
+	mov	#-1,j1
+	mov	j1,j2
+	br	pickplus
+
+subrend
+
+atom	add,,,,xadd
+
+subrbeg	xadd,lambda,2
+	chas
+	br	ppickplus
+subrend
+
+atom	diff,,,,xsub
+atom	difference,,,,xsub
+
+subrbeg	xsub,lambda,2
+	chas
+	mov	np,j3
+	mov	(j3),a
+	cmp	-(j3),-(j3)
+	cmptype	a,b,0
+	bne	erm10er
+	numgj1
+	com	j1
+	com	j2
+	add	#1,j2
+	adc	j1
+	br	.pickplus
+subrend
+
+
+atom	plus,,,,plusc
+
+subrbeg	plusc,lambda,0
+	nop
+	nop
+ppickplus:
+	clr	j1
+	clr	j2
+pickplus:
+	mov	np,j3
+.pickplus:
+	cmp	j3,ltop
+	blos	2$
+	mov	@j3,a
+	cmp	-(j3),-(j3)
+	cmptype	a,b,0
+	bne	erm10e
+	numga
+	add	b,j2
+	adc	j1
+	bvs	erm18er
+	add	a,j1
+	bvs	erm18er
+	br	.pickplus
+2$:	mov	j1,a
+	mov	j2,b
+	nmstore
+	ret
+erm10e:	error	</non-numeric arg to arithmetic subr/>
+erm18e:	error	</arithmetic overflow/>
+
+subrend
+
+
+atom	times,,,,xtimes
+
+subrbeg	xtimes,lambda,0
+	nop
+	nop
+.if	eq,fpsim
+	ldd	#^f1.0,ac0
+	mov	np,j3
+1$:	cmp	j3,ltop
+	blos	2$
+	mov	@j3,a
+	cmp	-(j3),-(j3)
+	cmptype	a,j1,0
+	bne	erm10er
+	numga1
+	muld	ac1,ac0
+	cfcc
+	bvs	erm18er
+	br	1$
+2$:	numstac0
+	ret
+
+ .iff
+	mov	#1,j2
+	clr	j1
+	mov	np,j3
+1$:	cmp	j3,ltop
+	blos	2$
+	mov	@j3,a
+	cmp	-(j3),-(j3)
+	cmptype	a,b,0
+	bne	erm10er
+	numga
+	call	imul
+	bvs	erm18er
+	mov	b,j2
+	mov	a,j1
+	br	1$
+2$:
+	mov	j2,b
+	mov	j1,a
+	nmstore
+	ret
+.endc
+subrend
+	.globl	$death
+
+
+atom exit,,,,xexitc
+atom	sys,,,,xexitc
+
+subrbeg xexitc,nlambda,0
+	nop
+	nop
+$death:	call	dmppro		;clean up protocol
+	clr	%0		;clean up for going home
+	clr	%1
+	$exit			;and he'll never return
+subrend
+
+
+
+
+
+;close all ports
+atom	resetio,,,,xrstio
+
+subrbeg	xrstio,nlambda,0
+	nop
+	nop
+xrestio:	clr	protocell
+	mov	#erport,b
+	mov	#nports-3,j2
+2$:	add	#12,b
+	movb	(b),j1
+	beq	1$		;if 0, then isn't open
+	asr	j1		;get port number
+	bic	#177700,j1
+	$close
+	clr	(b)		;indicate as closed
+	mov	4(b),j1		;and return buffer
+	swab	j1
+	movb	#-3,qmap(j1)
+1$:	sob	j2,2$
+.if	ne,nilas0
+	clr	a		;return nil
+  .iff
+	mov	#anil,a
+.endc
+	mov	a,b
+	ret
+subrend
+
+
+atom	bt,,,,xbtc
+
+subrbeg	xbtc,nlambda,1
+	chanl
+	loadnil	@np
+	mov	sp,j1
+	cmp	(j1)+,(j1)+	;want to get past this frame...
+1$:	call	findframe
+	br	10$		;nothing left
+	push	j1		;is even...
+	call	printr		;form in a
+	mov	#linefeed,b	
+	call	putstr
+.if	df,width
+	clrb	poport+1
+.endc
+	pop	j1
+	br	1$
+10$:	retnil
+subrend
+;	subrs for frame manipulation added by john burruss
+
+.if	ne,jcbms
+
+;	bframe -- subr to search up control stack to find last entered
+;	frame, returning the calling form.  starts at current frame
+;	if arg is not nil, else starts from val(frmptr) --
+;	a ptr to the last frame found (5/3/75)
+
+atom	bframe,,,,frmfnd
+
+subrbeg frmfnd,lambda,1
+	chanl
+	jmpifnil (np),1$		;if nil use old fp
+	mov	sp,frmptr
+1$:	mov	frmptr,j1
+	cmp	j1,sp
+	blo	10$		;if lower than sp, problems...
+	call	findframe	;get frame
+	br	10$		;none left
+	mov	j1,frmptr	;save for next time
+	ret
+10$:	retnil
+subrend
+
+.endc
+
+
+
+atom	protocol,atmpro,,,proto
+
+subrbeg	proto,lambda,1
+	chanl
+	tst	protocell
+	bne	2$
+	mov	#protostr,a
+.if	ne,multiseg
+	mov	@np,proto+2	;save name for future.....
+.iff
+	mov	@np,atmpro
+.endc
+	jmpifnil	@np,1$,t
+	call	fixnm1
+1$:	call	openw
+	mov	a,protocell
+2$:	retnil
+
+subrend
+
+atom	unprotocol1,,,,unproto
+
+subrbeg	unproto,nlambda,1
+	chas
+dmppro:	mov	protocell,@np
+	beq	1$
+	call	dmpport
+	call	close
+	clr	protocell
+.if	ne,multiseg
+	mov	proto+2,a
+	loadnil	proto+2
+	.iff
+	mov	atmpro,a
+	loadnil	atmpro
+.endc
+	ret
+1$:	retnil
+subrend
+
+
+
+
+
+
+
+
+;this routine  saves lisp in a re-runable format(i hope)
+
+atom	saveme,,,,saveme
+
+subrbeg	saveme,lambda,1
+
+
+ .if	ne,multiseg			;this forces the saveme  into initcd
+	.globl	lispbin
+
+	.psect	initcde,con,shr
+	tmp =* .			;save place
+
+	.psect	dsubr
+
+	.=.-2				;back up one
+
+	.word	tmp			;and dump new locatiom
+	.psect	initcd
+
+ .iftf					;the following are true in any case
+	nop
+	nop
+ .ift
+	mov	#lsploo,saveme+4	;save address gets clobbered
+
+ .iftf
+	incb	noint
+	call	xrestio
+	mov	$$break+2,a		;high data limit
+ .ift
+	$open
+	.word	lispbin,0		;for reading
+	bcs	1$			;go error
+	mov	%0,j2
+	$create
+	.word	savenm			;name
+	.word	755			;rx,rwx
+	bcs	1$
+	mov	%0,j3
+
+;so j2 has read cookie
+;   j3 has write cookie
+;a has high address of lisp
+
+	mov	j2,%0
+	$read
+	strbuf
+	20
+;no v7 mods for this following code, cause harv411 doesn't exist
+.if	eq,bell411			;i.e. write harv 411 file
+	mov	#strbuf+4,j1		;get pointer to pd
+	add	#20,(j1)
+	mov	(j1),$$seek+2		;get pointer to isection
+	mov	a,(j1)+			;fix
+	clr	(j1)+
+	mov	#<^ph shrcode>,(j1)+	;install new high si limit
+	clr	(j1)+			;and clear pi
+	clr	(j1)+			;no symbols
+	mov	j3,%0
+	$write
+	strbuf
+	20
+	clr	$$write+2		;write from 0
+	mov	a,$$write+4
+	mov	j3,%0
+	$indir
+	$$write
+;ok, now write i-mem.....
+	clr	$$seek+4		;absolute seek...
+	mov	j2,%0
+	$indir
+	$$seek
+	mov	#<^ph shrcode>,a	;amount to write
+ .iff					;ie this is bell 411
+	mov	#strbuf+2,j1		;ptr to tsize
+	mov	#<^ph shrcode>,(j1)+ 	;write out new tsize
+	mov	a,(j1)+			;and new data size
+	clr	(j1)+			;and write bss size
+	clr	(j1)			;clear symbols
+	mov	j3,%0			;set up write
+	$write
+	strbuf
+	20
+	mov	a,-(sp)			;save a
+	mov	#<^ph shrcode>,a	;amount to copy
+
+
+ .iftf
+;now we just loop till done......
+21$:	mov	#strbuf,$$write+2
+22$:	tst	a
+	beq	23$		;if zero, we're done
+	mov	j2,%0
+	$read
+	strbuf
+	strlen			;read stuff...
+	cmp	a,%0
+	bhi	24$		;is larger???
+	mov	a,%0		;only write a bytes
+24$:	mov	%0,$$write+4	;write out amount
+	sub	%0,a		;and fix up count
+	mov	j3,%0		;set up write cookie...
+	$indir
+	$$write
+	br	22$
+23$:
+ .iff				;back to bell type 411
+
+	mov	(sp)+,$$write+4	;amount of d to write
+	clr	$$write+2		;and location
+	mov	j3,%0		;get cookie
+	$indir
+	$$write
+ .iftf				;time to close
+	mov	j2,%0		
+	$close
+	mov	j3,%0
+	$close
+	jmp	lsploo
+
+1$:	jmp	xresetio	;close all ports...
+
+ .endc			;of harv vs bell
+
+.iff
+;ie if we have a non-i&d......
+
+
+;all we do is output header, output sd, and then non-sd.
+;we loose symbols.....
+
+	sub	#<<^pl uswdda>&<^c17777>>,a	;and is for case of onepage=1
+	$create
+	.word	savenm,705	;open output
+	bcs	1$
+	mov	%0,j3
+;now we gotta build file header......
+	mov	#strbuf,j2
+	mov	#410,(j2)+
+	mov	#<^ph dsubr>,(j2)+
+	mov	a,(j2)+
+	clr	(j2)+
+	clr	(j2)+
+	clr	(j2)+
+	clr	(j2)+
+	mov	#1,(j2)+
+	$write
+	strbuf
+	20			;write header
+	mov	j3,%0
+	$write
+	0
+	<^ph dsubr>		;wrote share stuff
+
+	mov	a,$$write+4
+	mov	#<<^pl uswdda>&<^c 17777>>,$$write+2
+	mov	j3,%0
+	$indir
+	$$write
+;done. now close
+	mov	j3,%0
+	$close
+	jmp	lsploo
+1$:	retnil
+.endc
+subrend
+;retbrk-- return to n'th break level;
+;	if arg is positive, return to that level;
+;	if arg is -, then return to curlevel+arg
+;
+;	retbk1 is alternate entry to return to previous level, or tl.
+;
+
+
+atom	retbrk,,,,retbrk
+
+subrbeg	retbrk,lambda,1
+	chas
+	mov	@np,a
+	cmptype	a,j1,0
+	bne	10$
+	numga		;ignore except low order bits
+	tst	b
+	bge	1$	;if neg...
+4$:	add	brkl+2,b
+1$:	cmp	sp,cptop
+	bhis	11$	;we're done
+	clr	a	;use a for count of levels
+	cmp	(sp),#brksna
+	beq	26$
+	cmp	(sp),#r4rres
+	beq	25$
+	cmp	(sp),#r3rres
+	beq	24$
+	cmp	(sp),#r2rres
+	beq	23$
+	cmp	(sp),#r1rres
+	beq	22$
+	tst	(sp)+
+	br	1$
+26$:	cmp	brkl+2,b	;are we done
+	bgt	27$
+	mov	#4,b
+	add	2(sp),b
+	mov	b,np
+	mov	4(sp),ltop
+	jmp	errloop
+27$:	dec	brkl+2
+	cmp	(a)+,(a)+
+25$:	tst	(a)+
+24$:	tst	(a)+
+23$:	tst	(a)+
+22$:	cmp	(a)+,(a)+
+	add	a,sp
+	br	1$
+10$:	retnil
+11$:	jmp	lsploop
+retbk1= .
+	clr	b
+	br	4$
+subrend
+
+
+
+atom	append,,,,apend
+
+subrbeg	apend,lambda,2
+
+	chas
+	mov	-4(np),a
+2$:	cmptype	a,j1,#ndtpr
+	bne	1$
+;inner  loop
+	mov	(a)+,-(sp)
+	mov	(a),a
+	call	2$
+	mov	a,b
+	pop	a
+	consa
+	ret
+1$:	mov	@np,a
+	ret
+subrend
+
+
+atom	member,,,,member
+
+subrbeg	member,lambda,2
+	chas
+	mov	(np),a
+	mov	-4(np),j3		;comparee
+3$:	cmptype	a,j1,#ndtpr
+	bne	1$
+	cmp	(a)+,j3
+	beq	2$
+	mov	(a),a
+	br	3$
+1$:	retnil
+2$:	rettrue
+subrend
+
+
+atom	conc,,,,nconc
+atom	nconc,,,,nconc
+
+subrbeg	nconc,lambda,2
+	chas
+	mov	-4(np),a
+	mov	a,b
+	mov	b,j1
+	cmptype	j1,j2,#ndtpr
+	bne	1$
+11$:	cmptype	j1,j2,#ndtpr
+	bne	2$
+	mov	j1,b
+	cdr	j1,j1
+	br	11$
+2$:	mov	(np),2(b)
+	ret
+1$:	mov	(np),a
+	ret
+subrend
+
+
+atom	list,,,,list
+
+subrbeg	list,lambda,0
+	nop
+	nop
+	loadnil	a
+	mov	np,j3
+1$:	cmp	j3,ltop
+	blos	2$
+	mov	a,b
+	mov	@j3,a
+	cmp	-(j3),-(j3)
+	consa
+	br	1$
+2$:	ret
+subrend
+
+
+
+atom	length,,,,length
+
+subrbeg	length,lambda,1
+	chanl
+	clr	b
+	mov	@np,a
+1$:	cmptype	a,j1,#ndtpr
+	bne	2$
+	inc	b
+	cdr	a,a
+	br	1$
+2$:	clr	a
+	nmstore
+	ret
+subrend
+
+
+
+atom	<apply*>,,,,applstar
+
+subrbeg	applstar,nlambda,1
+	chanl
+	mov	@np,a
+	car	a,a
+	call	eval
+	mov	@np,b
+	cdr	b,b
+	consa
+	jmp	eval
+subrend
+
+
+atom	last,,,,last
+
+subrbeg	last,lambda,1
+	chanl
+	mov	@np,a
+	mov	a,b
+1$:	cmptype	a,j1,#ndtpr
+	bne	2$
+	mov	a,b
+	cdr	b,a
+	br	1$
+2$:	mov	b,a
+	ret
+subrend
+
+
+
+atom	mapc,,,,mapc
+
+subrbeg	mapc,lambda,2
+	chas
+	loadnil	a
+1$:	mov	@np,j1
+	cmptype	j1,j2,#ndtpr
+	bne	2$
+	mov	(j1)+,a
+	mov	(j1),@np
+	consbnil
+	mov	#aquote,a
+	consa
+	consbnil
+	mov	-4(np),a
+	consa
+	call	eval
+	br	1$
+2$:	ret
+subrend
+
+
+atom	mapcar,,,,mapcar
+
+subrbeg	mapcar,lambda,2
+	chas
+	call	1$
+	ret
+1$:	mov	@np,j1
+	loadnil	a
+	cmptype	j1,j2,#ndtpr
+	bne	2$
+	mov	(j1)+,a
+	mov	(j1),(np)
+	consbnil
+	mov	#aquote,a
+	consa
+	consbnil
+	mov	-4(np),a
+	consa
+	call	eval
+	propush	a
+	call	1$
+	mov	a,b
+	unpropop	a
+	consa
+2$:	ret
+
+subrend
+
+
+atom	function,,,,xfunc
+
+subrbeg	xfunc,nlambda,1
+	chanl
+	mov	@np,a
+	car	a,a	;get car of arg list
+	cmptype	a,j1,#natom
+	bne	1$
+	mov	4(a),a	;return function d
+1$:	ret
+subrend
+
+atom	copy,,,,copyc
+
+subrbeg	copyc,lambda,1
+	chanl
+	mov	@np,a
+1$:	cmptype	a,j1,#ndtpr
+	bne	2$
+	mov	(a)+,-(sp)	;no pro needed
+	mov	(a),a
+	call	1$
+	mov	(sp)+,b
+	propush	a
+	mov	b,a
+	call	1$
+	unpropop	b
+	consa
+2$:	ret
+subrend

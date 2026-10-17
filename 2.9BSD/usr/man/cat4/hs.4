@@ -1,0 +1,56 @@
+
+HS(4)               UNIX Programmer's Manual                HS(4)
+
+NAME
+     hs - RH11, RH70/RS03, RS04 fixed-head disk
+
+DESCRIPTION
+     The files _h_s_0 ... _h_s_7 refer to RS03 disk drives 0 through 7.
+     The files _h_s_8 ... _h_s_1_5 refer to RS04 disk drives 0 through
+     7.  The RS03 drives are each 1024 512-byte blocks long and
+     the RS04 drives are 2048 512-byte blocks long.
+
+     The block files access the disk via the system's normal
+     buffering mechanism and may be read and written without
+     regard to physical disk records.  There is also a `raw'
+     inteface which provides for direct transmission between the
+     disk and the user's read or write buffer.  A single read or
+     write call results in exactly one I/O operation and there-
+     fore raw I/O is considerably more efficient when many words
+     are transmitted.  The names of the raw files conventionally
+     begin with an extra `r.'
+
+     In raw I/O counts should be a multiple of 512 bytes (a disk
+     sector).  Likewise, _l_s_e_e_k calls should specify a multiple of
+     512 bytes.
+
+FILES
+     /dev/hs??           block files
+     /dev/rhs??          raw files
+
+SEE ALSO
+     dvhp(4), hk(4), hp(4), ml(4), rf(4), rk(4), rl(4), rm(4),
+     rp(4), rx2(4), xp(4)
+
+DIAGNOSTICS
+     hs%d: hard error bn %d cs1=%b cs2=%b.  An unrecoverable
+     error occured during transfer of the specified sector of the
+     specified disk partition.  The contents of the two error
+     registers are also printed in octal and symbolically with
+     bits decoded.  The error was either unrecoverable, or a
+     large number of retry attempts could not recover the error.
+
+BUGS
+     In raw I/O _r_e_a_d and _w_r_i_t_e(2) truncate file offsets to 512-
+     byte block boundaries, and _w_r_i_t_e scribbles on the tail of
+     incomplete blocks.  Thus, in programs that are likely to
+     access raw devices, _r_e_a_d, _w_r_i_t_e and _l_s_e_e_k(2) should always
+     deal in 512-byte multiples.
+
+     DEC-standard error logging should be supported.
+
+     A program to analyze the logged error information (even in
+     its present reduced form) is needed.
+
+Printed 4/30/83                                                 1
+

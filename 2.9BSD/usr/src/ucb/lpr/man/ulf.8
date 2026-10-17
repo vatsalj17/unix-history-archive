@@ -1,0 +1,47 @@
+.TH ULF 8
+.UC
+.SH NAME
+ulf \- universal lineprinter filter
+.SH SYNOPSIS
+.B ``invokename'' username
+.SH DESCRIPTION
+Output is sent through
+.I ulf
+before it is allowed to hit the lineprinter.
+
+.I Ulf
+filters out control characters, and buffers up lines for devices like
+diablos.  Accounting records are written in /usr/adm/lpacct by
+.I ulf
+at the time of completion of each job.
+.PP
+.I Ulf
+checks to see what name it has been called by so that it will know
+what entry to look up in /etc/printcap.  The account name of the
+user that was responsible
+for this invocation of
+.I ulf
+is passed as its one and only argument.
+This argument is needed to determine who to bill the pages to.
+.I Ulf
+supports diablos and dumb (LA180, LA120) ``lineprinters''
+.PP
+.I Ulf
+uses a ``line_structure'' that is a linked list of arrays to
+hold enough characters for one physical line on the lineprinter.  The
+first array contains the characters of the line, and all subsequent arrays
+hold overprinting characters.  Blanks are left as zero's, so that they
+don't have to be printed, just move the printhead whatever way is easiest.
+.SH AUTHOR
+Cliff Matthews, University of New Mexico
+.SH FILES
+/etc/printcap
+.SH DIAGNOSTICS
+Are sent to wherever /etc/printcap specifies with the lf field.
+I like to see them go to /dev/null, because they tend to be generated in
+large quantities, and can fill up a filesystem very quickly.  If the software
+doesn't work, the errors should be dumped to disk and examined.  After the
+source of the trouble has been fixed, it is advisable to have the errors
+routed back to /dev/null.
+.SH SEE ALSO
+lpr(1), printcap(5), lpd(8)

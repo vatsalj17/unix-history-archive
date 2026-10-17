@@ -1,0 +1,67 @@
+
+QUOTA(2)            UNIX Programmer's Manual             QUOTA(2)
+
+NAME
+     quota - set quota parameters
+
+SYNOPSIS
+     #include <sys/types.h>
+
+     quota(name, current, max)
+     char *name;
+     daddr_t current, max;
+
+DESCRIPTION
+     _N_a_m_e points to a null-terminated string naming a quota file;
+     _c_u_r_r_e_n_t and _m_a_x are integers which describe the current and
+     maximum usage in disk sectors (512-byte blocks).
+
+     This system call is used for setting quota information and
+     may be executed only by the super-user.
+
+ERRORS
+     _Q_u_o_t_a will fail and no quota node will be created if:
+
+     [EINVAL]            The path name contains a non-ASCII byte.
+
+     [EPERM]             The process's effective user ID is not
+                         the super-user.
+
+     [ENOTDIR]           A component of the path prefix is not a
+                         directory.
+
+     [EACCES]            A component of the path prefix denies
+                         search permission.
+
+     [EACCES]            The named file is not a quota node.
+
+     [ENOENT]            The named file does not exist.
+
+     [EISDIR]            The named file is a directory.
+
+     [EROFS]             The directory in which the file is to be
+                         created is on a read-only file system.
+
+     [EFAULT]            _N_a_m_e points outside the process's allo-
+                         cated address space.
+
+     [ELOOP]             Too many symbolic links were encountered
+                         in translating the path name.
+
+SEE ALSO
+     du(1), file(1), ls(1), pq(1), mknod(2), qfstat(2), qstat(2),
+     setquota(8)
+
+Printed 5/23/83                                                 1
+
+QUOTA(2)            UNIX Programmer's Manual             QUOTA(2)
+
+ASSEMBLER
+     (local = 58., quota = 10.)
+     sys local; 9f
+     . . .
+     .data
+     9: sys quota; name; current; max
+
+Printed 5/23/83                                                 2
+

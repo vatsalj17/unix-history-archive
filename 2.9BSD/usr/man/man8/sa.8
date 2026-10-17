@@ -1,0 +1,114 @@
+.TH SA 8
+.UC
+.SH NAME
+sa, accton \- system accounting
+.SH SYNOPSIS
+.B sa
+[
+.B \-abcjlnrstuv
+] [ file ]
+.PP
+.B /etc/accton 
+[ file ]
+.SH DESCRIPTION
+With an argument naming an existing
+.I file,
+.I accton
+causes system accounting information for
+every process executed to be placed at the end of the file.
+If no arguemnt is given, accounting is turned off.
+.PP
+.I Sa
+reports on, cleans up, and generally maintains
+accounting files.
+.PP
+.I Sa
+is able to condense
+the information in
+.I /usr/adm/acct
+into a summary file
+.I /usr/adm/savacct
+which contains a count of the
+number of times each command was called and the time resources
+consumed.
+This condensation is desirable because on a large system
+.I acct
+can grow by 100 blocks per day.
+The summary file is read before the accounting file,
+so the reports include all available information.
+.PP
+If a file name is given as the last argument,
+that file will be treated
+as the accounting file;
+.I sha
+is the default.
+There are zillions of options:
+.PP
+.TP
+.B a
+Place all command names containing unprintable characters
+and those used only once under the name `***other.'
+.TP
+.B b
+Sort output by sum of user and system time divided by number of
+calls.
+Default sort is by sum of user and system times.
+.TP
+.B c
+Besides total user, system, and real time for each command print percentage
+of total time over all commands.
+.TP
+.B j
+Instead of total minutes time for each category,
+give seconds per call.
+.TP
+.B l
+Separate system and user time; normally they are combined.
+.TP
+.B m
+Print number of processes and number of CPU minutes for each user.
+.TP
+.B n
+Sort by number of calls.
+.TP
+.B r
+Reverse order of sort.
+.TP
+.B s
+Merge accounting file into summary file
+.I /usr/adm/savacct
+when done.
+.TP
+.B t
+For each command report ratio of real time to the sum of user and
+system times.
+.TP
+.B u
+Superseding all other flags,
+print for each command in the accounting file the
+user ID and command name.
+.TP
+.B v
+If the next character is a digit
+.I n,
+then type the name of
+each command used
+.I n
+times or fewer.
+Await a reply from the typewriter;
+if it begins with `y', add the command to
+the category `**junk**.'
+This is used to strip out garbage.
+.dt
+.SH FILES
+.ta 2i
+/usr/adm/acct	raw accounting
+.br
+/usr/adm/savacct	summary
+.br
+/usr/adm/usracct	per-user summary
+.SH "SEE ALSO"
+lastcomm(1), acct(2), ac(8)
+.SH BUGS
+Should look up the line clock frequency in the kernel
+instead of assuming 60HZ.

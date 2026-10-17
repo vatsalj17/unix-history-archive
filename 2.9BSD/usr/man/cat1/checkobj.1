@@ -1,0 +1,49 @@
+
+CHECKOBJ(1)         UNIX Programmer's Manual          CHECKOBJ(1)
+
+NAME
+     checkobj - check an object file to see whether it can be
+     executed
+
+SYNTAX
+     checkobj [ -s ] [ -f ] [ -40 ] [ file ... ]
+
+DESCRIPTION
+     _C_h_e_c_k_o_b_j attempts to determine whether the named files are
+     valid executable binary files.  It checks for size restric-
+     tions, including those due to the granularity of memory
+     management on the PDP11.  It is especially useful for over-
+     laid object files, where there are a number of constraints.
+     If a file is too large or improperly laid out, _c_h_e_c_k_o_b_j
+     attempts to point out format changes that would allow the
+     program to run.
+
+OPTIONS
+     Several options control the checks:
+
+     -s   Check for the use of separate I/D.  If the file is
+          separate executable, an error is flagged, and an
+          appropriate way to load for a nonseparate machine is
+          suggested if possible.
+
+     -f   Check for the use of floating point arithmetic without
+          inclusion of the floating-point interpreter.
+
+     -40  Combine the -s and -f options, to check for suitability
+          for an 11/40-class PDP11.
+
+BUGS
+     The test for floating point is simple-minded.  It is based
+     on the definition of ``fltused'' by the C compiler and
+     ``fptrap'' in the floating-point simulator.  This test does
+     not work if the object has been stripped.
+
+DIAGNOSTICS
+     The exit status is 0 if all named files are runnable with
+     the specified options, nonzero otherwise.
+
+AUTHOR
+     Mike Karels, University of California, Berkeley
+
+Printed 7/22/83                                                 1
+

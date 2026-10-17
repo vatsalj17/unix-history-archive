@@ -1,0 +1,33 @@
+.TH NEWGRP 1
+.SH NAME
+newgrp \- log in to a new group
+.SH SYNTAX
+.B newgrp
+group
+.SH DESCRIPTION
+.I Newgrp
+changes the group identification of its caller,
+analogously to \fIlogin\fP\|(1).
+The same person remains logged in,
+and the current directory is unchanged,
+but calculations of access permissions to files are
+performed with respect to the
+new group ID.
+.PP
+If the `SHELL' environment variable is set, \fInewgrp\fP will use it
+as the name of the new shell. The login environment is also initialized
+for foreign shells. In this way multiple shells can be used on the
+system interchangably.
+.PP
+A password is demanded if the group has
+a password.
+.PP
+.I Newgrp
+is known to the shell, which executes it directly without a fork.
+.SH FILES
+/etc/group, /etc/passwd
+.SH "SEE ALSO"
+login(1), group(5)
+.SH "BUGS"
+Since newgrp starts a new shell, shell context and variables not
+in the environment are lost.

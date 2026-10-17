@@ -1,0 +1,49 @@
+(quote (once again to nancy))
+
+
+(def btup
+ (lambda (x n poport) (cond (t (linelength 70) ($prdf x 1 0)))))
+
+(def bt
+ (lambda (n)
+  (prog (form i)
+        (bframe t)
+        (bframe)
+        (bframe)
+        (cond ((null (numbp n)) (setq n 0)))
+	(setq i 0)
+   loop (cond
+         ((setq form (bframe))
+	(patom '"entry ")
+	(print (setq i (add1 i)))
+	(patom '" @  ")
+          (cond
+           ((eq n 0)
+            (print
+             (cond ((dtpr form) (car form)) (t form)))
+            (terpr)
+            (go loop)))
+          (cond ((getd (quote $prdf))
+                 (btup form)
+                 (terpr)
+                 (setq n (diff n  1))
+                 (go loop))
+                (t (print form)
+                   (terpr)
+                   (setq n (diff n   1))
+                   (go loop))))))))
+
+(def flushbt
+ (lambda nil
+  (prog nil
+        ($flushlist *btfns)
+        (setq *btfns)
+        ($mumble nil t)
+        (reclaim)
+        ($mumble))))
+
+
+(setq *btfns (quote (btup bt flushbt)))
+
+
+(quote (packaged by jcb))

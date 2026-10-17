@@ -1,0 +1,77 @@
+
+WAIT2(2J)           UNIX Programmer's Manual            WAIT2(2J)
+
+NAME
+     wait2 - wait for process to terminate
+
+SYNOPSIS
+     #include <wait.h>
+
+     wait2(&w.w_status, options)
+     union wait w;
+     int options;
+
+     cc ... -ljobs
+
+DESCRIPTION
+     _W_a_i_t_2 is similar to the standard _w_a_i_t(2) system call, but
+     allow additional options useful with job control.  They
+     return the process ID of a terminated or stopped child pro-
+     cess.  The _w._w__s_t_a_t_u_s and _o_p_t_i_o_n words are described by
+     definitions and macros in the file <wait.h>; the union and
+     its bitfield definitions and associated macros given there
+     provide convenient and mnemonic access to the word of status
+     returned by a _w_a_i_t_2 call.  If the call returns a process ID,
+     several macros are available to interpret the status word
+     returned.  If the process is stopped, WIFSTOPPED(w) is true,
+     and the signal that caused it to stop is w.w_stopsig.  If
+     the process is not stopped (has terminated), WIFEXITED(w)
+     determines whether it terminated by calling _e_x_i_t(2); if so,
+     the exit code is w.w_retcode.  WIFSIGNALED(w) is true if the
+     process was terminated by a signal (see _s_i_g_n_a_l(2)); the sig-
+     nal causing termination was w.w_termsig, and w.w_coredump
+     indicates whether a core dump was produced.
+
+     There are two _o_p_t_i_o_n_s, which may be combined by _o_ring them
+     together.  The first is WNOHANG which causes the _w_a_i_t_2 to
+     not hang if there are no processes which wish to report
+     status, rather returning a pid of 0 in this case as the
+     result of the _w_a_i_t_2.  The second option is WUNTRACED which
+     causes _w_a_i_t_2 to return information when children of the
+     current process which are stopped but not traced (with
+     _p_t_r_a_c_e(2)) because they received a SIGTTIN, SIGTTOU, SIGTSTP
+     or SIGSTOP signal.  See _s_i_g_s_y_s(2J) for a description of
+     these signals.
+
+RETURN VALUE
+     Returns -1 if there are no children not previously waited
+     for, or 0 if the WNOHANG option is given and there are no
+     stopped or exited children.
+
+ERRORS
+     _W_a_i_t_2 will fail and return immediately if one or more of the
+     following is true:
+
+     [ECHILD]            The calling process has no unwaited-for
+
+Printed 7/30/83                                                 1
+
+WAIT2(2J)           UNIX Programmer's Manual            WAIT2(2J)
+
+                         child processes.
+
+     [EFAULT]            The _w._w__s_t_a_t_u_s argument points to an
+                         address outside the process's allocated
+                         address space.
+
+SEE ALSO
+     exit(2), fork(2), sigsys(2J), wait(2)
+
+BUGS
+     This call is peculiar to this version of UNIX.  The options
+     and specifications of this system call and even the call
+     itself are subject to change.  It may be replaced by other
+     facilities in future versions of the system.
+
+Printed 7/30/83                                                 2
+

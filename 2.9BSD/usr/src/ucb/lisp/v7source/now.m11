@@ -1,0 +1,675 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+
+	.rsect	shrcode con
+
+;this routine handles errors
+;the message is in register a
+;and the return  is on the stack
+
+
+errort:	inc	brkl+2		;increment break level
+	clrb	intflg		;get ok
+	mov	np,-(sp)	;push on 7 "safe" words
+	mov	np,-(sp)
+	mov	np,-(sp)
+	mov	np,-(sp)
+	mov	np,-(sp)
+	mov	np,-(sp)
+	mov	#brksnag,-(sp)	;and put on snag safely
+	mov	b,14(sp)	;now really save b
+	mov	sp,b
+	add	#14,b
+	mov	j1,-(b)		;and safely save the other registers
+	mov	j2,-(b)
+	mov	j3,-(b)
+	mov	ltop,-(b)
+				;and np is already there
+	call	geterr  	;get message in b so putstr can output it
+	npush	#anil		;set tty port
+	call	dmpport
+	mov	#erport,@np	;set error port
+	call	putstr		;output message
+	mov	sp,j1		;this is to set up for call to ...
+	call	findframe
+	br	12$		;error return (no frame...)
+	mov	#broken,b
+	call	putstr
+	call	printr		;findframe returned form
+12$:	call	dmpport
+	loadnil	@np		;set up port for break level
+errloop= .
+1$:	mov	#linefeed,b	;go into break loop
+	call	putstr
+	mov	#brkl,a
+	call	numout
+	mov	bprompt,b	
+	call	putstr		;output prompt
+	call	dmpport
+.if	df,width
+	clrb	poport+1	;reset line width to zero!!!!
+.endc
+		;below, if regular lisp, just call the read/eval/print
+		;routines. if transfer lisp, put in the top level form
+		; and call eval.
+
+.if	eq,xfer
+	call	@readh		;call proper readr
+	call	eval		;eval it
+	call	printr		;and print it
+.iff
+	mov	readh,a		;get read control list
+	call	eval		;an eval it
+.endc
+	br	1$		;and go forever
+	
+
+
+;findframe takes arg in j1 (assumed to point into stack)
+;returns in a the previous form
+;j1 points to stack at correct place for next findframe
+
+;
+; if this is xfer lisp, it ignores the driver forms, feval1,feval2
+; fevq1,feq2
+
+findframe:
+	cmp	j1,cptop
+	bhis	10$
+	cmp	(j1),#brksnag	;skip over the special frames
+	beq	11$
+	cmp	(j1),#r4rres
+	beq	12$
+	cmp	(j1),#r3rres
+	beq	13$
+	cmp	(j1),#r2rres
+	beq	14$
+	cmp	(j1),#r1rres
+	beq	15$
+.if	ne,xfer
+	cmp	(j1),#eexit1
+	beq	40$
+ .iftf
+	cmp	(j1)+,#eexit
+	bne	findframe
+ .ift
+	br	41$
+  40$:	tst	(j1)+
+  41$:
+.endc
+	cmp	(j1)+,(j1)+	;adjust j1 to get to form
+	mov	(j1)+,a
+
+.if	ne,xfer
+	cmp	a,#feval1
+	beq	findframe
+	cmp	a,#feval2
+	beq	findframe
+	cmp	a,#fevq1
+	beq	findframe
+	cmp	a,#fevq2
+	beq	findframe
+	cmp	a,#fevq3
+	beq	findframe
+	cmp	a,#feval3
+	beq	findframe
+
+	.globl	feval1,feval2,fevq1,fevq2,feval3,fevq3
+
+.endc
+
+	add	#2,(sp)
+10$:	ret
+11$:	cmp	(j1)+,(j1)+	;adjust stack for the size of different frames
+12$:	tst	(j1)+
+13$:	tst	(j1)+
+14$:	tst	(j1)+
+15$:	cmp	(j1)+,(j1)+
+	br	findframe
+
+	.rsect	shrcode
+once:
+ .if	eq,bell411
+	mov	%1,pidsav		;save process id
+ .iff
+	.mcall	$getpid
+
+	$getpid				;use system call
+	mov	%0,pidsav
+.endc
+	mov	sp,nptop		;save unix handed sp
+	sub	#npresc,sp
+	mov	sp,npres
+	sub	#nplen,sp		;figure out allocation for nstack
+	mov	sp,cptop
+	tst	(sp)			;force monitor to allocate enough
+	mov	npbottom,np
+	loadnil	@np
+	$indir
+	$$break				;set our high core allocation
+	mov	#headr-<^pl errorm>,a
+	call	geterr
+	call	putstr
+
+	.rsect	shrcode
+lsploop:
+ .if	eq,fpsim
+	$sig
+		^d8		;trap for floating error
+		1
+.endc
+
+	$sig
+		2		;and ^c trap
+	inthandler
+
+ .if	ndf,notrap
+	$sig
+	^d10
+	buserr			;and signal for buss error + segfault
+ .endc
+
+	$sig
+	^d11
+	segfault
+
+ .if	ne,brksig
+	$sig
+	brksig
+	1.			;reset break
+ .endc
+
+	clr	brkl+2		;set break level to zero
+	clrb	intflg		;clear the flags
+	clrb	noint
+	clrb	nsext
+
+ .if	eq,fpsim
+	ldfps	#300		;set floating point status
+	ldd	ten,ac0		;and load constants
+	ldd	tenth,ac1	;in floating ac's
+	std	ac0,ac4
+	std	ac1,ac5
+.endc
+
+	mov	cptop,sp	;set up stack ptr
+	tst	(sp)		;make sure core for from mon.
+	mov	cptop,np	;and nstack
+	mov	npres,nplim	;set up top of np
+	npush	#anil		;set standard ports
+	mov	np,ltop		;and initilize ltop
+1$:	mov	prompt,b
+	call	putstr		;write prompt
+	loadnil	a		;leave nice things in ac's so no problems
+	mov	a,b		;occur
+	call	dmpport		;write prompt
+.if	df,width
+	clrb	poport+1
+.endc
+.if	eq,xfer
+	call	@readh
+	call	eval
+	call	printr
+.iff
+	mov	readh,a
+	call	eval		;and do the eval
+.endc
+;2$:	mov	xoblist,a
+;	call	printr
+	br	1$
+
+
+
+
+	.rsect	shrcode
+inthandler: push  %0
+		$sig
+		   2		;reset trap
+	   inthandler
+	   pop	%0
+	   incb	intflg
+	   tstb	noint
+	   bne	10$
+	   cmpb	intflg,#5	;panic???
+	   bge	1$
+10$:	   tstb	keybin		;^c during type in
+	   bne	int$11
+	   rti
+1$:	   generm	</5 ^c's panic--return to last top level/>
+	   mov	#tmp-<^pl errorm>,a
+int$12:	   loadnil	@np
+	   call	geterr
+	   call	putstr
+	   clrb	intflg
+	   cmp	(sp)+,(sp)+	;flush of ps word
+	   jmp	retbk1
+int$11:
+
+	   clrb	keybin
+	   generm	</^c during type in/>
+	   mov 	#tmp-<^pl errorm>,a
+	   br	int$12
+
+
+	.rsect	shrcode
+segfault:
+			;we want to figure out if is real mf or
+			;just a stack overflow
+			;what we'll do is arm for m.f. and push stuff on
+			;stack, and see what happens
+
+	$sig			;signal
+	11.			;mem fault
+	seger1			;below
+	cmp	-(sp),-(sp)	;double dose
+	cmp	(sp)+,(sp)+	;if we're here, was real m.f.
+	mov	(sp)+,j3	;flush off "test word", and leave
+	mov	(sp)+,j2	;pc+ps in j2+j3 for db (if core dump)
+	$sig
+	11.
+	0			;rearm to d.s.a
+	error	</seg violation />
+
+seger1:
+	tst	gcolf		;gcol stack oflow
+	beq	seger2
+	jmp	gcolovr
+seger2:
+	mov	cptop,sp
+	generm	</control stack overflow; reset generated/>
+	mov	#tmp-<^pl errorm>,a
+	jmp	hnstko
+buserr:
+	tst	gcolf		;are we in gcol???
+	beq	ber1$		;no, skip around
+	mov	np,-(sp)
+	mov	npbottom,np	;leave so db can possibly help
+	loadnil	@np		;clear out
+	call	dmpport		;try to get message out
+	generm	<//<12>/***buss error during gcol-- lisp exit***/<12>/***********/>
+	mov	#tmp-<^pl errorm>,a
+	call	geterr
+	clr	%0
+	$write
+	strbuf
+	50.
+	iot			;and leave a core dump behind
+ber1$:
+	mov	(sp)+,j3
+	mov	(sp)+,j2	;ps and pc to j3 and j2
+	error	</bus error />
+
+	.rsect	shrcode
+
+;	geterr is called with location of error in file in a.
+;	returns with b pointing to string, or indicating error #
+
+geterr:
+.if	eq,	version7
+.ift					; i.e. version7==0 (V6, PWB) seek
+	mov	a,$$seek+2
+	clr	$$seek+4		;want to seek absolutely
+.iff					; i.e. version7==1 V7 long seek
+	clr	$$seek+2		; 16-bit only, clear hiword
+	mov	a,$$seek+4
+	clr	$$seek+6		;want to seek absolutely
+.endc
+	push	%0
+	$open
+	erf
+	0
+	bcs	29$
+	mov	%0,a
+	$indir
+	$$seek
+	mov	#strbuf,b
+	mov	a,%0
+	$read
+	strbuf
+	strlen
+	mov	a,%0
+	$close
+	br	39$
+29$:				;here we have no file; print error
+	incb	noint
+.if	eq, version7
+.ift				;V6/PWB index
+	mov	$$seek+2,-(sp)
+.iff				;V7 index
+	mov	$$seek+4,-(sp)
+.endc
+	clr	-(sp)
+	mov	sp,a
+	call	numstr
+	cmp	(sp)+,(sp)+
+	decb	noint
+	movb	#'#,-(b)
+39$:	loadnil	a
+	pop	%0
+	ret
+	.psect	initcd	con
+
+init:	mov	(sp),%3
+	mov	%1,-(sp)
+	dec	%3
+	beq	50$
+	$create
+	erf
+	604			;rw--r
+	bcs 50$
+	mov	%0,-(sp)
+	$write
+	<^pl errorm>
+	<^ph errorm>-<^pl errorm>
+	mov	(sp)+,%0
+	$close
+50$:
+
+.if	ne,xfer
+	.globl	xbcdm
+	$create
+	xbcdm			;the bcd map
+	604			;rw--r
+	bcs	51$
+	mov	%0,-(sp)
+	$write
+	<^pl bcdmap>
+	<^ph bcdmap> - <^pl bcdmap>
+	mov	(sp)+,%0
+	$close
+51$:
+
+.endc
+	mov	#once,where	;only once for this code
+	mov	#qmap,a
+22$:	movb	#3,(a)+
+	cmp	a,#qmap+<<frstdtpr/400>&377>	;watch out for sign...
+	blo	22$
+2$:	movb	#1,(a)+
+	cmp	a,#qmap+<<<^pl datom>/400>&377>
+	blo	2$
+32$:	movb	#2,(a)+
+	cmp	a,#qmap+<<<^ph datom>/400>&377>
+	blo	32$
+3$:	movb	#-5,(a)+
+.if ne,smlint
+	cmp	a,#qmap+377-5
+	blo	3$
+33$:	clrb	(a)+
+	cmp	a,#qmap+377
+	bne	33$
+.iff
+	cmp	a,#qmap+377
+	bne	3$
+.endc
+4$:	movb	#4,qmap+<<<piport/400>&377>>
+	movb	#4,qmap+<<<piport+<nports*10>>/400>&377>
+.if	ne,nilas0
+	movb	#2,qmap
+.endc
+	mov	(sp)+,%1
+	jmp	once
+
+.if	eq,fpsim
+	.psect	shrwddat con
+ten:	.word	41040,0,0,0
+tenth:	.word	37314,146314,146314,146315
+
+.endc
+
+
+	.rsect	shrcode con
+cantcont:	call	errort
+	error	</can't continue/>
+
+
+	.globl	$rettrue
+
+$rettrue:
+	mov	#atrue,a
+	ret
+
+.if	eq,nilas0
+
+	.globl	$retnil
+
+$retnil:
+	loadnil	a
+	ret
+.endc
+
+;gatom is called with the number of words in the printname
+;(i.e. int((length(name(atom))+2)/2)) in a.
+;return atom initilized to nil,nil,nil in a
+;no regiaters killed.
+
+gatom:	add	#3,a		;get real word length
+	save4
+1$:	mov	#fratom,j1	;get atom freelist
+2$:	mov	(j1),j2		;get entry we're interested in
+	jmpifnil	j2,10$,nl
+	cmp	2(j2),a		;see about lengths
+	blt	5$		;;if too small,loop
+	mov	2(j2),b		;now get length
+	sub	a,b		;see how much left
+	cmp	b,#4		;if less than four words left
+	bge	4$		;throw piece away
+	mov	(j2),(j1)	;with this instruction
+4$:	mov	b,2(j2)		;now fix length of freelist entry
+	asl	b  		;convert freelist entry to bytes
+	add	b,j2		;and get the end of the entry
+	mov	j2,a		;which is our atom
+	loadnil	(j2)+
+	loadnil	(j2)+
+	loadnil	(j2)
+	saveret		;and go home
+5$:	mov	j2,j1		;move to next entry
+	br	2$		;and loop
+10$:	mov	a,j3		;allocate a new page
+	call	globalc
+	tst	a
+	beq	19$		;correct return???
+	movb	#2,qmap(a)	;and set the type properly
+	swab	a		;get address
+	mov	fratom,(a)	;fix up freelist
+	mov	#200,2(a)	;and fix up entry
+	mov	a,fratom	;put entry first on list
+	mov	j3,a		;move a back
+	br	1$		;and do it again
+
+
+;here we have no room; do error stuff
+
+19$:
+
+.if	ne,xfer
+	call	noroom
+nrooma:
+
+.iff
+	error	</cannot allocate another atom page/>
+	;must be non-cont since strbuff will be clobbered!!!!
+.endc
+
+
+
+;globallc is called
+;returns in a the page number of the allocated page
+;which is converted to an address by swab
+;to give a page back simply set the qmap bit to 
+;-3
+;if no more room is present, returns 0 in a
+
+	.rsect	shrcode
+globallc:
+	clr	a
+	save1
+10$:	cmpb	qmap(a),#-3	;simply search map till
+	beq	2$		;we find a free page
+	blt	3$		;or we find monitor core
+	incb	a
+	bne	10$		;loop till done
+	br	4$
+3$:	mov	a,j3		;and get good addr
+	swab	j3
+	add	#400,j3		;with proper address
+	bit	#17777,j3	;see about bits
+	bne	30$		;if all are zero, we gotta worry
+	add	#400,j3		;if was last page, force first page on next seg
+30$:	mov	$$break+2,-(sp)	;save old address
+	mov	j3,$$break+2	;and put in new
+	mov	(sp)+,j3	;re-recover old
+	$indir
+	$$break
+	bcc	32$		;if error, complain
+	mov	j3,$$break+2	;reset old address
+4$:	clr	a		;and set error return
+32$:
+2$:	saveret
+
+
+
+;xnums stores a number in core from regiser a&b
+
+xnums:
+.if	eq,smlint
+	 br	3$
+.endc
+	tst	a		;see if in small int range, ie +/-xxx
+	beq	2$
+	cmp	a,#-1
+	bne	3$
+	cmp	b,#-^d319
+	blo	3$
+4$:	mov	b,a		;now make small int
+	asl	a
+	add	#-^d640,a
+17$:	mov	a,b
+	ret
+
+2$:	cmp	b,#^d319
+	blo	4$
+3$:	asl	a		;shift high order word
+	bvs	xnumer
+7$:	jmpnnil	frnumber,6$	;any cells???
+	call	gcol
+6$:	mov	frnumber,-(sp)	;move cell ptr to stack
+	mov	@(sp),frnumber	;and fix free list
+	mov	a,@(sp)		;put in a
+	mov	(sp)+,a		;and get ptr to cell
+	mov	b,2(a)		;load second word
+	br	17$
+
+xnumer: error	</arithmetic overflow/>
+
+
+.if	eq,fpsim
+
+
+
+xnumsac0:
+	incb	noint		;no 5 ^c's for a minute
+	stcdl	ac0,-(sp)
+	mov	(sp)+,a
+	mov	(sp)+,b
+	decb	noint		;turn back on
+	cfcc
+	bcs	xnumer
+	br	xnums
+.endc
+ .if eq,fpsim
+	.globl	xnumg0,xnumg1,xnumsac
+
+
+xnumg0:brifsmalint	a,f1$
+	asr	(a)	;fix representation
+	ldcld	(a),ac0	;and load in ac0
+	asl	(a)	;restore int
+	ret		;;;and go home
+f1$:	push	a
+	sub	#-^d640,a
+	asr	a
+	seti
+	ldcid	a,ac0
+	setl
+	pop	a
+	ret
+
+.endc
+
+	.rsect	shrcode con
+nperror:	cmp	np,nptop
+	bhis	npe1$
+	mov	nptop,nplim
+	save1			;save register a
+	mov	a,j3
+	error	</name stack overflow/>,npe2$
+npe2$:	mov	j3,a
+	mov	2(sp),j3
+	cmp	(sp)+,(sp)+
+	ret
+npe1$:
+	generm	</hard name stack overflow; reset executed/>
+	mov	#tmp-<^pl errorm>,a
+hnstko:
+	mov	npbottom,np
+	call	geterr
+	loadnil	@np
+	call	putstr
+	jmp	lsploo
+
+
+
+	.rsect	shrcode con
+;;gets a doted pair
+gdtpr:	jmpifnil	frdtpr,10$
+	mov	frdtpr,a
+	mov	(a),frdtpr
+	ret
+10$:	call	gcol
+	br	gdtpr
+
+ .if	eq,fpsim
+; counterpart of xnumg0
+
+xnumg1: brifsmalint	a,g1$
+	asr	(a)
+	ldcld	(a),ac1
+	asl	(a)
+	ret
+g1$:	push	a
+	sub	#-^d640,a
+	asr	a
+	seti	
+	ldcid	a,ac1
+	setl
+	pop	a
+	ret
+
+ .endc
+
+;xnum1 pputs number in register a&b
+
+xnum1: brifsmalint	a,1$
+	mov	2(a),b
+	mov	(a),a
+	asr	a
+	ret
+1$:	mov	a,b
+	sub	#-^d640,b
+	asr	b
+	sxt	a
+	ret
+;num2 puts register in j1&j2
+xnum2: brifsmalint	a,1$
+	mov	2(a),j2
+	mov	(a),j1
+	asr	j1
+	ret
+1$:	mov	a,j2
+	sub	#-^d640,j2
+	asr	j2
+	sxt	j1
+	ret
+
+

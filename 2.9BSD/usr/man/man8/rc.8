@@ -1,0 +1,54 @@
+.TH RC 8
+.UC
+.SH NAME
+rc \- command script for auto-reboot and daemons
+.SH SYNOPSIS
+.B /etc/rc
+[
+.B autoboot | fastboot
+[
+.B powerfail
+] ]
+.SH DESCRIPTION
+.I Rc
+is the command script which controls the automatic reboot.
+.PP
+When an automatic reboot is in progress,
+.I rc
+is invoked by \fI/etc/init\fP with the first argument
+.I autoboot
+and runs
+.I fsck
+with option
+.B \-p
+to ``preen'' all the disks of minor inconsistencies resulting
+from the last system shutdown and to check for serious inconsistencies
+caused by hardware or software failure.
+If this auto-check and repair succeeds, then the second part of
+.I rc
+is run.
+.PP
+The second part of
+.I rc,
+which is run after a auto-reboot filesystem check succeeds and also if
+.I rc
+is invoked when a single user shell terminates (see
+.IR init (8)),
+starts all the daemons on the system, preserves editor files
+and clears the scratch directory
+.I /tmp.
+.IR Savecore (8)
+will be run to check for a system core dump,
+and, if found, save the dump in /usr/sys.
+The second argument may be
+.I powerfail
+if the system went down due to a power failure.
+.SH SEE ALSO
+init(8), reboot(8)
+.SH BUGS
+After making changes to the root file system,
+the system must be rebooted to keep the incore copy of the super-block
+from corrupting the newly computed super-block.
+.PP
+It should be possible to print a message about power failure
+much earlier than from /etc/rc.

@@ -1,0 +1,11 @@
+: Bourne shell script to convert csh diffdirs to sh diffdirs.
+for i
+do
+	ed - $i << 'xxYYzz'
+	1d
+	1,$s;'-.-END-.-';'xXyY';
+	1,$s;^'xXyY';xXyY;
+	w
+	q
+xxYYzz
+done

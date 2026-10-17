@@ -1,0 +1,34 @@
+
+SETQUOTA(8)         UNIX Programmer's Manual          SETQUOTA(8)
+
+NAME
+     setquota, sq - make block quotas
+
+SYNOPSIS
+     setquota dir [ cur ] max
+
+     sq d1 ... dn max
+
+DESCRIPTION
+     _S_e_t_q_u_o_t_a sets up or modifies the maximum block quota and
+     present block count for a directory by modifying the file
+     _d_i_r/._q.  If _c_u_r is not specified, the current usage count is
+     unchanged.  _S_q calculates the current usage for _d_1, ..., _d_n,
+     and sets the maximum block quota to _m_a_x.  If a directory
+     currently has no quota associated, either _s_q should be used
+     or _c_u_r must be specified.  Both _s_e_t_q_u_o_t_a and _s_q use units of
+     1024-byte blocks.  These programs require super-user
+     privileges.
+
+FILES
+     _d_i_r/.q              quota node for _d_i_r
+
+SEE ALSO
+     du(1), file(1), ls(1), pq(1), quota(2), qstat(2)
+
+BUGS
+     _M_a_x is an absolute maximum.  Hence programs that write in
+     _d_i_r may fail if intermediate usage exceeds the quota.
+
+Printed 8/2/83                                                  1
+

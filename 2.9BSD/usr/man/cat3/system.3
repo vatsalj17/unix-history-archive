@@ -1,0 +1,80 @@
+
+SYSTEM(3)           UNIX Programmer's Manual            SYSTEM(3)
+
+NAME
+     system - issue a shell command
+
+SYNTAX
+     C:  system(string)
+         char *string;
+
+     F:  call system(string,return)
+          character*? string
+          integer*2 return
+
+DESCRIPTION
+     _s_y_s_t_e_m causes the _s_t_r_i_n_g to be given to _s_h(1) as input as if
+     the string had been typed as a command at a terminal.  The
+     current process waits until the shell has completed, then
+     returns the exit status of the shell.
+
+SEE ALSO
+     pkopen(3), exec(2), wait(2)
+
+DIAGNOSTICS
+     Exit status 127 indicates the shell couldn't be executed.
+
+EXAMPLE
+           character*20 name
+           call system("pwd",i)
+           write(6,1)i
+         1 format("    System returns",i5)
+           name="print it"
+           call system(name,i)
+           write(6,1)i
+           name="pwd" // "\0"
+           call system(name,i)
+           write(6,1)i
+           end
+
+     Results in:
+
+          /usr/src/libF77
+              System returns    0
+          print: can't open it
+              System returns  512
+          /usr/src/libF77
+              System returns    0
+
+         char name[] = "pwd";
+
+         main()
+         {
+             int returns;
+             returns = system(name);
+
+Printed 12/7/82                                                 1
+
+SYSTEM(3)           UNIX Programmer's Manual            SYSTEM(3)
+
+                 printf("    System returns %d.\n",returns);
+             returns = system("cd ..;pwd");
+                 printf("    System returns %d.\n",returns);
+             returns = system("pwd");
+                 printf("    System returns %d.\n",returns);
+         }
+
+     Results in:
+
+         /usr/src/libF77
+             System returns 0.
+         /usr/src
+             System returns 0.
+         /usr/src/libF77
+             System returns 0.
+
+     Note that changing a directory within system affects only
+     that call to system.
+
+Printed 12/7/82                                                 2
+

@@ -1,0 +1,57 @@
+
+DIFF3(1)            UNIX Programmer's Manual             DIFF3(1)
+
+NAME
+     diff3 - 3-way differential file comparison
+
+SYNOPSIS
+     diff3 [ -ex3 ] file1 file2 file3
+
+DESCRIPTION
+     _D_i_f_f_3 compares three versions of a file, and publishes
+     disagreeing ranges of text flagged with these codes:
+
+     ====            all three files differ
+
+     ====1           _f_i_l_e_1 is different
+
+     ====2           _f_i_l_e_2 is different
+
+     ====3           _f_i_l_e_3 is different
+
+     The type of change suffered in converting a given range of a
+     given file to some other is indicated in one of these ways:
+
+     _f : _n_1 a        Text is to be appended after line number _n_1
+                     in file _f, where _f = 1, 2, or 3.
+
+     _f : _n_1 , _n_2 c   Text is to be changed in the range line _n_1
+                     to line _n_2.  If _n_1 = _n_2, the range may be
+                     abbreviated to _n_1.
+
+     The original contents of the range follows immediately after
+     a c indication.  When the contents of two files are identi-
+     cal, the contents of the lower-numbered file is suppressed.
+
+     Under the -e option, _d_i_f_f_3 publishes a script for the editor
+     _e_d that will incorporate into _f_i_l_e_1 all changes between
+     _f_i_l_e_2 and _f_i_l_e_3, _i._e.  the changes that normally would be
+     flagged ==== and ====3.  Option -x (-3) produces a script to
+     incorporate only changes flagged ==== (====3).  The follow-
+     ing command will apply the resulting script to `file1'.
+
+                (cat script; echo '1,$p') | ed - file1
+
+FILES
+     /tmp/d3?????
+     /usr/lib/diff3
+
+SEE ALSO
+     diff(1)
+
+BUGS
+     Text lines that consist of a single `.' will defeat -e.
+     Files longer than 64K bytes won't work.
+
+Printed 12/7/82                                                 1
+

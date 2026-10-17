@@ -1,0 +1,55 @@
+
+TM(4)               UNIX Programmer's Manual                TM(4)
+
+NAME
+     tm - TM-11/TE-10 magtape interface
+
+DESCRIPTION
+     The TM-11/TE-10 combination provides a standard tape drive
+     interface as described in _m_t(4).  The standard DEC TM-11
+     operates only at 800 bpi.  Other controllers of this type
+     may also allow operation at 1600 bpi, under software control
+     or by switching manually.
+
+SEE ALSO
+     mt(1), tar(1), tp(1), ht(4), mt(4), ts(4)
+
+DIAGNOSTICS
+     te%d: no write ring.  An attempt was made to write on the
+     tape drive when no write ring was present; this message is
+     written on the terminal of the user who tried to access the
+     tape.
+
+     te%d: not online.  An attempt was made to access the tape
+     while it was offline; this message is written on the termi-
+     nal of the user who tried to access the tape.
+
+     te%d: can't switch density in mid-tape.  An attempt was made
+     to write on a tape at a different density than is already
+     recorded on the tape.  This message is written on the termi-
+     nal of the user who tried to switch the density.
+
+     te%d: hard error bn%d er=%b.   A tape error occurred at
+     block _b_n; the TM error register is printed in octal with the
+     bits symbolically decoded.  Any error is fatal on non-raw
+     tape; when possible the driver will have retried the opera-
+     tion which failed several times before reporting the error.
+
+     te%d: lost interrupt.  A tape operation did not complete
+     within a reasonable time, most likely because the tape was
+     taken off-line during rewind or lost vacuum.  The controller
+     should, but does not, give an interrupt in these cases.  The
+     device will be made available again after this message, but
+     any current open reference to the device will return an
+     error as the operation in progress aborts.
+
+BUGS
+     If any non-data error is encountered on non-raw tape, it
+     refuses to do anything more until closed.
+
+     The system should remember which controlling terminal has
+     the tape drive open and write error messages to that termi-
+     nal rather than on the console.
+
+Printed 5/17/83                                                 1
+

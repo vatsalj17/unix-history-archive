@@ -1,0 +1,115 @@
+
+FIND(1)             UNIX Programmer's Manual              FIND(1)
+
+NAME
+     find - find files
+
+SYNTAX
+     find pathname-list  expression
+
+DESCRIPTION
+     _F_i_n_d recursively descends the directory hierarchy for each
+     pathname in the _p_a_t_h_n_a_m_e-_l_i_s_t (i.e., one or more pathnames)
+     seeking files that match a boolean _e_x_p_r_e_s_s_i_o_n written in the
+     primaries given below.  In the descriptions, the argument _n
+     is used as a decimal integer where +_n means more than _n, -_n
+     means less than _n and _n means exactly _n.
+
+     -name filename
+               True if the _f_i_l_e_n_a_m_e argument matches the current
+               file name.  Normal shell argument syntax may be
+               used if escaped (watch out for `[', `?' and `*').
+
+     -perm onum
+               True if the file permission flags exactly match
+               the octal number _o_n_u_m (see _c_h_m_o_d(1)).  If _o_n_u_m is
+               prefixed by a minus sign, more flag bits (017777,
+               see _s_t_a_t(2)) become significant and the flags are
+               compared: (_f_l_a_g_s&_o_n_u_m)==_o_n_u_m.
+
+     -type c   True if the type of the file is _c, where _c is b,
+               c, d, l, q or f for block special file, character
+               special file, directory, symbolic link, quota, or
+               plain file.
+
+     -links n  True if the file has _n links.
+
+     -user uname
+               True if the file belongs to the user _u_n_a_m_e (login
+               name or numeric user ID).
+
+     -group gname
+               True if the file belongs to group _g_n_a_m_e (group
+               name or numeric group ID).
+
+     -size n   True if the file is _n blocks long (1024 bytes per
+               block).
+
+     -inum n   True if the file has inode number _n.
+
+     -atime n  True if the file has been accessed in _n days.
+
+     -mtime n  True if the file has been modified in _n days.
+
+     -exec command
+               True if the executed command returns a zero value
+
+Printed 8/2/83                                                  1
+
+FIND(1)             UNIX Programmer's Manual              FIND(1)
+
+               as exit status.  The end of the command must be
+               punctuated by an escaped semicolon.  A command
+               argument `{}' is replaced by the current pathname.
+
+     -ok command
+               Like -exec except that the generated command is
+               written on the standard output, then the standard
+               input is read and the command executed only upon
+               response y.
+
+     -print    Always true; causes the current pathname to be
+               printed.
+
+     -newer file
+               True if the current file has been modified more
+               recently than the argument _f_i_l_e.
+
+     The primaries may be combined using the following operators
+     (in order of decreasing precedence):
+
+     1)  A parenthesized group of primaries and operators
+         (parentheses are special to the shell and must be
+         escaped).
+
+     2)  The negation of a primary (`!' is the unary _n_o_t opera-
+         tor).
+
+     3)  Concatenation of primaries (the _a_n_d operation is implied
+         by the juxtaposition of two primaries).
+
+     4)  Alternation of primaries (`-o' is the _o_r operator).
+
+EXAMPLE
+     To remove all files named `a.out' or `*.o' that have not
+     been accessed for a week:
+
+       find / \( -name a.out -o -name '*.o' \) -atime +7 -exec rm
+       {} \;
+
+     To find a file named man.1 and print the absolute pathname:
+
+       find /usr -name man.1 -exec ls {} \;
+
+FILES
+     /etc/passwd
+     /etc/group
+
+SEE ALSO
+     sh(1), test(1), filsys(5)
+
+BUGS
+     The syntax is painful.
+
+Printed 8/2/83                                                  2
+

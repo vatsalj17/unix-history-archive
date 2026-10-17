@@ -1,0 +1,230 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+
+; the exec function is a nlambda that takes a bunch of atom
+; names and does and exec call on them...
+
+
+
+atom exec,,,,execc
+
+subrbeg execc,nlambda,1
+	chanl
+	npush	#anil		;first, let's dump port
+	call	dmpport
+	cmp	-(np),-(np)	;get np back in place
+	$sig			;and signal to ignore ^b, ^c
+		2.
+		1
+	$sig
+		3.
+		1
+
+
+ .if	ne,brksig		;if break is enabled, ignore also
+	$sig
+	 brksig
+		1
+	mov	r0,$$sig+4
+ .endc
+
+
+	$fork			;now do the fork
+	br	1$		;the child
+	mov	%0,j3		;save child number
+10$:	$wait			;and twiddle our bits
+	bcs	11$		;if carry set, nothing to wait for
+	cmp	%0,j3		;check which child returned
+	bne	10$		;insist on correct child
+11$:	swab	%1		;return high order byte of child's r0
+	movb	%1,b
+	sxt	a
+	nmstore
+	$sig			;go through the littany of signals
+	3.
+	0
+	$sig
+		2.
+	inthandler
+
+
+ .if	ne,brksig
+	mov	#brksig,$$sig+2
+	$indir
+	$$sig
+ .endc
+
+	ret			;and leave
+
+
+
+1$:				;new process
+	call	xrestio		;close all
+	mov	#strbuf,a	;exec call will be the first 3 wrds of strbuf
+	mov	#6,j3		;6 is an often used constant
+	mov	(pc)+,(a)+	;(pc)+ picks up below
+	  $exec
+	mov	@np,np		;and get arg--we can kill core at will
+	mov	(np),(a)	;the name
+	add	j3,(a)+
+	mov	sp,(a)+		;and the args
+2$:	jmpifnil	np,3$	;any more???
+	mov	(np)+,(sp)	;yes, stack em
+	add	j3,(sp)+
+	mov	(np),np
+	br	2$
+3$:	clr	(sp)		;zero the list
+	$indir			;and do it
+	strbuf
+				;and die if unsuccessful
+	mov	#-1234,%0
+	$exit
+	
+subrend
+
+
+
+;this is the stuff to play with strings
+;routines use each other
+
+atom	readc,,,,readxc
+
+subrbeg	readxc,lambda,1		;takes port
+	chanl
+	jmpifnil	@np,1$
+	cmptype	@np,a,#nport
+	beq	10$
+2$:	jmp	erm5er
+1$:	movb	#-5,keybin	;cheat, so that getc thinks this is non-kbd
+10$:	getca			;get char
+	cmpb	a,#200		;eof
+	beq	20$		;yes, return aeof
+readce=* .
+	mov	#strbuf,b
+	movb	a,(b)+
+	clrb	(b)+
+	mov	a,j2
+	jmp	find			;get attom
+20$:	mov	#aeof,a
+	ret				;return eof atom
+subrend
+atom	nthchar,,,,nthchar
+
+subrbeg	nthchar,lambda,2
+	chas
+	mov	@np,a
+	cmptype	a,b,0
+	bne	1$
+	numgj1
+	mov	-4(np),a
+	cmptype	a,j3,#natom
+	bne	2$
+	add	#6,a
+4$:	movb	(a)+,j3
+	beq	3$
+	dec	j2
+	bgt	4$
+3$:	mov	j3,a
+	jmp	readce
+2$:	jmp	er17er
+1$:	mov	-4(np),a
+	cmptype	a,j1,#natom
+	bne	2$
+	add	#6,a
+	clr	b
+5$:	tstb	(a)+
+	beq	6$
+	inc	b
+	br	5$
+6$:	clr	a
+	nmstore
+	ret
+subrend
+
+
+
+
+atom	gensym,,,,gens
+
+subrbeg	gens,lambda,1
+	chanl
+	mov	@np,a
+	jmpifnil	a,1$,nl
+	numgj1
+	mov	j2,gennum+2
+	ret
+
+1$:	mov	#genstr-6,b
+	mov	#gennum,a
+	dec	2(a)
+numlp=* .
+	push	b
+	call	numstr
+	pop	a
+	mov	#strbend,j3
+2$:	movb	(b)+,(j3)+
+	bne	2$
+	mov	#strbend-6,b
+	br	lp3
+subrend
+
+
+
+
+atom	concatp,,,,concatp
+
+subrbeg	concatp,lambda,1
+	mov	@np,b
+	cmptype	b,a,#natom
+	bne	1$
+	mov	#pidsav-2,a
+	br	numlp
+er17er=*  .
+1$:	jmp	erm17e
+
+subrend
+
+atom	concat,,,,conca
+
+subrbeg	conca,lambda,2
+	chas
+	mov	(np),b
+	mov	-4(np),a
+	cmptype	a,j1,#natom
+	bne	11$
+	cmptype	b,j1,#natom
+	beq	lp3
+	cmptype	b,j1,0
+	bne	11$
+	mov	b,j1
+	mov	a,b
+	mov	j1,a
+	br	numlp		;get number as int
+11$:	jmp	er17er
+
+lp3:	;here, back with a havein ptr to string 1-6
+	;		 b			"
+
+	mov	#strbuf,j1
+	add	#6,a
+	add	#6,b
+	clr	j2
+1$:	movb	(a)+,j3
+	beq	atmp2$
+	movb	j3,(j1)+
+	xor	j3,j2
+	cmp	j1,#strbend
+	blo	1$
+atmp3$:	error	</atom too long/>
+
+atmp2$:	movb	(b)+,j3
+	xor	j3,j2
+	movb	j3,(j1)+
+	beq	4$
+	cmp	j1,#strbend
+	blo	atmp2$
+	br	atmp3$
+4$:	clrb	(j1)+
+	mov	j1,b
+	jmp	find		;and away
+subrend

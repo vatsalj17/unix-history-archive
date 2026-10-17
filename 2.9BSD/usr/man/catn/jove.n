@@ -1,0 +1,1062 @@
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+NAME
+     jove - Jonathan's Own Version of Emacs
+
+SYNOPSIS
+     jove [-t tagname] [file1 file2 ... ]
+
+DESCRIPTION
+     Jove is an interactive display oriented editor which  allows
+     one  to  modify text easily.  Jove stands for Jonathan's Own
+     Version of Emacs. This editor is  modeled  after  the  EMACS
+     written  at  MIT  by  Richard   Stallman.  Jove has tried to
+     stick to the conventions of real EMACS, but has strayed away
+     from  them in several places.  The real EMACS is extensible,
+     which means the user can change the way the  editor  behaves
+     to  his  own liking. He can do this by changing the commands
+     that each key invokes or by writing new commands.   Although
+     new  commands  cannot  be written in jove, existing commands
+     can be bound to any key. There are several concepts  a  user
+     needs to understand before he can use the editor to his full
+     advantage. The three most important are buffers, windows and
+     command binding.
+
+     In most cases, Jove is used to edit already existing  files.
+     Jove  reads  files  into  buffers.   A  buffer is where Jove
+     stores its version of the file; changes made in  the  editor
+     are  made to the buffer, not the original file.  If the user
+     makes a change but wishes he did not,  he can simply  reread
+     the  file  from  the  disk  into a fresh buffer.  If Jove is
+     given no files to edit it creates an empty  buffer  with  no
+     file associated with it.  When the user has finished editing
+     and is satisfied with his changes, he can save the buffer to
+     a  file with the write-named-file command. This command asks
+     for a file name and writes the contents  of  the  buffer  to
+     that file.  Once a buffer is written to a file, the old ver-
+     sion of the file is gone forever, so be careful!! Jove  com-
+     plains  if  the buffer is modified and an attempt is made to
+     leave before saving the changes.  It says  Modified  buffers
+     exists.   Leave anyway?.  Answering no to this question will
+     leave him in the editor so that he can write the buffers  he
+     wishes.   If  he  wants  to exit, e.g. he made a mistake, he
+     should answer yes.
+
+     The current position in a buffer is called the  point.   The
+     point  should  not  be  thought  of as being on a character,
+     rather as being between two characters, namely the character
+     before the cursor and the character under the cursor.
+
+     Jove supports multiple buffers.  This means that  more  than
+     one  file  can be edited at a time, each file having its own
+     buffer.  Jove remembers what each buffer looks like while it
+     is  not  in use.  This makes it possible to jump around from
+     one buffer to another without losing any  previous  changes,
+
+Printed 6/1/83                                                  1
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     and  without  having  to  save  the  changes each time a new
+     buffer is selected.  Each buffer has its own set of  charac-
+     teristics  that  jove  also remembers, so switching from one
+     buffer to another can change the  way  the  editor  behaves.
+     Jove  uses windows to show what the buffer looks like at any
+     time.
+
+     Often files are too large to fit in the terminal screen  all
+     at  once.   While in the editor, the screen acts as a window
+     into a buffer, always showing what the  buffer  looks  like.
+     If the point moves past the top or bottom of the window, the
+     window moves to where the point has moved.   When a line  is
+     too  long to fit on the terminal, jove shows this by putting
+     an ! at the end of the line.  Moving the point to a position
+     that is off the screen horizontally causes the line contain-
+     ing the point to be scrolled to the right or the  left  such
+     that  the  point  is visible.  Only the current line is ever
+     scrolled.  If the line containing the point is scrolled  and
+     the  point  moves  to  a  different  line, the scrolled line
+     automatically moved back to its normal position.  The window
+     reflects what is being done as it is being done, so what you
+     see is ALWAYS what you get.
+
+     Initially there is only one window, but it  is  possible  to
+     divide  a  window so that there are two smaller windows. The
+     smaller windows are exactly the same as the original  window
+     except for the amount of the buffer each can show at a time.
+     Sometimes the same buffer will be shown  in  more  than  one
+     window,  and other times there will be a different buffer in
+     each window.
+
+     There are many commands built into jove.  There is a command
+     handler  in jove that prompts for commands. When the name of
+     a command typed in is unambiguous, that command will be exe-
+     cuted.  Since it is very slow to have to type in the name of
+     each command every time it is needed, jove makes it possible
+     to  bind commands to keys.  When a command is bound to a key
+     any future hits on that key will invoke that  command.   All
+     the  printing characters are initially bound to the function
+     self-insert so that typing any one of the  printing  charac-
+     ters  causes  it  to  be inserted into the text.  Any of the
+     existing commands can be bound to any key.  Since there  are
+     more  commands  than there are keys, two keys are treated as
+     prefix commands.  When a key bound to one of the prefix com-
+     mands  is  typed, the next character typed is interpreted on
+     the basis that it was preceded by one of  the  prefix  keys.
+     Initially  ^X  and  ESC are the prefix keys, and as you will
+     see, many of the built in commands are  initially  bound  to
+     these "two stroke" keys.
+
+     Users will likely want to modify the default key bindings to
+     his  liking.   Since it would be quite a pain to have to set
+
+Printed 6/1/83                                                  2
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     up the bindings each time jove is  started  up,  jove  reads
+     commands  from  the  file  if they were typed to the command
+     handler during an edit.  There can be only one  command  per
+     line  in  the  init file.  The source command can be used to
+     read commands from a specified  file.   This  means  that  a
+     macro  can be used to change the key bindings, e.g. to enter
+     a mode, by reading from a specified file which contains  all
+     the new bindings.
+
+     Jove is invoked by simply typing jove to either shell or  C-
+     shell.   If arguments are provided on the command line, jove
+     treats each as a file to be read, and reads it into its  own
+     buffer.   The current buffer will be the first file read in,
+     and the point will be at the beginning of the buffer.  There
+     is  one exception.  If jove sees a -t on the command line it
+     takes the next word to be a C tag and reads in the file con-
+     taining  that tag.  Inexperienced users need not worry about
+     that though.  At the bottom of each window is the mode  line
+     associated with that window.  A typical mode line might look
+     like this:
+
+        JOVE (TE)   Buffer: jove.1   "jove.1" *
+
+     The  mode  line  always  says  JOVE.   The  TE  inside   the
+     parentheses means the editor is in text-fill mode (see modes
+     below).  In this example the name of the  buffer  is  jove.1
+     and  the  name  inside the quotes is the file.  In this case
+     the file is jove.1; in general the buffer name and the  file
+     name  are  the  same. The * at the end of the line indicates
+     that the buffer has been modified but not saved.   The  very
+     bottom  line  on  the  screen  is the message line.  This is
+     where jove prints any messages and where  jove  prompts  the
+     user  for  more  input.  For example, when the user wants to
+     save his buffer, jove would ask for a file name  to  use  on
+     this line.
+
+     Once invoked, Jove is ready  to  accept  commands  from  the
+     user.   Most of the editor commands move the point around in
+     the buffer and others change what  the  buffer  looks  like.
+     These  commands  operate on single characters, words, lines,
+     and on regions.  One of the more common editor  commands  is
+     the self-insert command.
+
+     The self-insert command simply inserts  the  character  that
+     invoked  it into the buffer at the point.  Because the point
+     is really between two characters, inserting a  character  at
+     point  pushes  all the characters, from the point to the end
+     of the line, over to the right to  make  room  for  the  new
+     character.  The  point  moves  one to the right staying just
+     ahead of the newly inserted character.  This means  that  if
+     the  user wants to insert a word, he can just type the word.
+     If the point did not move  as he typed,  he  would  have  to
+
+Printed 6/1/83                                                  3
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     move  forward  a character after each letter of the word was
+     typed.  Characters which are not self inserting, for example
+     those  which are other editor commands, also can be inserted
+     but must be quoted first. This is done with  the  quote-char
+     command  which  inserts  the  next character typed no matter
+     what character it is.
+
+     CONTROL-Q (that is the CTRL key typed with the Q key at  the
+     same  time)  is  an  example  of a control character.  ^Q is
+     short hand for CONTROL-Q.  Many of the editor  commands  are
+     bound  to control keys initially since the rest of the char-
+     acters are self-inserting.  Escape characters are  different
+     from  control  character  in that they are typed in two keys
+     strokes, namely the ESC key followed by any other  key.   If
+     there  is  not  a  command  bound  to the escape <character>
+     sequence, the editor will complain.
+
+     The commands forward-character  and  backward-character  are
+     bound to the keys ^F and ^B respectively.  They move forward
+     and backward one character position in the buffer.  The com-
+     mands  forward-word  and backward-word are bound to the keys
+     ESCAPE-F and ESCAPE-B respectively.  They are  the  same  is
+     the  ^F  and  ^B commands except that they operate on words.
+     The commands next-line and previous-line  are  examples  are
+     commands  that  operate  on  lines.  There are commands that
+     delete text in units of characters, words, and  lines  also.
+     delete-next-character  deletes the character after point and
+     delete-previous-character  deletes  the   character   before
+     point.   delete-next-word  and  delete-previous-word are the
+     same as the two delete character functions except that  they
+     operate on words.
+
+     Sometimes it is useful to run a command a specific number of
+     times,  for example to move down 10 lines, the sequence ESC-
+     10-^N will work, if the ^N is bound to  the  next-line  com-
+     mand.   In general, ESCAPE followed by a number, followed by
+     a command, runs that command number times.  This  is  called
+     giving the command a numeric argument, or providing a prefix
+     argument. Some of the commands ignore numeric arguments, for
+     example  read-file, but most of the commands use the numeric
+     argument.
+
+     A region is defined as all the text between two buffer posi-
+     tions.   A mark provides a way to remember a position in the
+     buffer other than the point.  The set-mark  command  sets  a
+     mark  to  where  the  point  is  at  the time the command is
+     invoked.  Once a mark is set, the user can  move  the  point
+     anywhere  else  and later use various commands to manipulate
+     the mark.  Each buffer can have any number of marks but usu-
+     ally  two suffice. Each mark has a number differentiating it
+     from other marks. Providing a numeric argument to mark  com-
+     mand uses the mark whose number is the numeric argument.  If
+
+Printed 6/1/83                                                  4
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     no argument is specified, the zero'th mark is assumed.   For
+     example,  to delete the region between mark 4 and the point,
+     the  command  ESC-4-^W  will   work   (assuming   delete-to-
+     killbuffer is bound to the key ^W).
+
+     It is sometimes necessary to get from one place in a  buffer
+     to  another  quickly.   Using  the primitive motion commands
+     would work, but would be rather slow. Search  commands  pro-
+     vide  a  quick  and  easy way to move over large portions of
+     text.  The user is prompted for a string to search for.  The
+     search  starts  from the point, so forward searches will not
+     find any matches that are  before  the  point,  and  reverse
+     searches  will not find any matches after the point.  If the
+     search was forward  and  the  editor  manages  to  find  the
+     string,  the  point  moves to the end of the string.  If the
+     search was backward and the editor  finds  the  string,  the
+     point  moves  to  the beginning of the string. Otherwise the
+     user will be informed of the failure and left where he  was.
+     Jove  supports regular expressions also, but they are rather
+     complicated. For complete documentation  see  ed(1)  in  the
+     UPM.  Another  useful command is the replace-search command.
+     This command prompts the user  for  a  search  string,  then
+     prompts  for  a  replacement  string,  and then searches the
+     buffer for the search string replacing all occurrences  with
+     the replacement string.
+
+Printed 6/1/83                                                  5
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     Here is a list of all the commands, with a short description
+     of each and the key that the command is initially bound to.
+
+     Prefix-1                      ESC
+     The next character typed will be interpreted  on  the  basis
+     that  it  was preceded by the command Prefix-1.  This is one
+     of two such commands whose purpose in life  is  to  increase
+     the  number  of  commands that can be bound to keys and thus
+     easily invoked.
+
+     Prefix-2                      ^X
+     The next character typed will be interpreted  on  the  basis
+     that  it  was preceded by the command Prefix-2.  This is one
+     of two such commands whose purpose in life  is  to  increase
+     the  number  of  commands that can be bound to keys and thus
+     easily invoked.
+
+     append-region                 [unbound]
+     Appends the region bounded by the  point  and  mark  to  the
+     named file.  If the file does not exist it is created.
+
+     backward-character            ^B
+     Moves the point backward one character in  the  buffer.   If
+     the  point  is  at the beginning of the line, it moves it to
+     the end of the previous line.
+
+     backward-paren                ESC-^B
+     This moves  the  point  to  the  matching  open  parenthesis
+     (brace)  of  the  close  parenthesis (brace) just before the
+     point.  If there is no match, an error is reported  and  the
+     point remains unchanged.
+
+     backward-word                 ESC-B
+     If in the middle of a word, the point moves to the beginning
+     of  the word.  Otherwise it moves the point to the beginning
+     of the previous word.
+
+     beginning-of-file             ESC-<
+     Moves the point to the beginning of the  current  buffer  so
+     that the character after the point is the first character of
+     the buffer.
+
+     beginning-of-line             ^A
+     Moves the point to the beginning of the current line.
+
+     beginning-of-sentence         ESC-A
+     Moves the point to the beginning of the current sentence.
+
+     beginning-of-window           ESC-,
+     Moves the point to the first character in the window.
+
+     bind-macro-to-key             [unbound]
+
+Printed 6/1/83                                                  6
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     Binds a macro to a key so that future hits on that key  will
+     run the macro.
+
+     bind-to-key                   [unbound]
+     Binds a command to a key so that future  hits  on  that  key
+     will run the command.  For example, the command next-line is
+     bound to the key ^N.
+
+     buffer-position               [unbound]
+     Prints the line and column  of  the  point  in  the  current
+     buffer.
+
+     case-region-lower             ^X-^L
+     Changes all the letters between the point and mark to  lower
+     case.
+
+     case-region-upper             ^X-^U
+     Changes all the letters between the point and mark to  upper
+     case.
+
+     case-word-capitalize          ESC-C
+     If the point is in the middle of a word, it capitalizes  the
+     letter  after  the point and changes the rest of the word to
+     lower case.  Otherwise it capitalizes the  first  letter  of
+     the  next  word  and  changes the rest of this word to lower
+     case.  In any case the point is left at the end of the word.
+
+     case-word-lower               ESC-L
+     If the point is in the middle of a word, it changes the rest
+     of  the  word  to lower case.  Otherwise it changes the next
+     word to lower case.  In either case the point is left at the
+     end of the effected word.
+
+     case-word-upper               ESC-U
+     If the point is in the middle of a word, it changes the rest
+     of  the  word  to upper case.  Otherwise it changes the next
+     word to upper case.  In either case the point is left at the
+     end of the effected word.
+
+     char-to-octal-insert          [unbound]
+     Reads a character from the terminal and  inserts  its  octal
+     value  preceded  by  a  back-slash '\', into the text at the
+     point.  For example if  the  character  ESC  is  typed,  the
+     string \033 is inserted.
+
+     clear-and-redraw              ESC-^L
+     Clears and redraws the screen without  changing  the  screen
+     orientation.   This is useful if the screen gets garbaged by
+     output from another program or by someone writing you.
+
+     compile-it                    ^X-^E
+     Writes all the modified buffers and runs  the  UNIX  program
+
+Printed 6/1/83                                                  7
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     make  into  a  buffer called Errors.  After the make is com-
+     pleted, the buffer is parsed for C type error messages to be
+     used by the next-error command.
+
+     copy-region                   ESC-W
+     Does a pretend kill of the region bounded by the  point  and
+     mark.   The  next  call  to  yank  will yank the region just
+     copied.
+
+     c-tab                         [unbound]
+     When in c-mode, the command c-tab is automatically bound  to
+     the  tab  key,  and when invoked, the point is tabbed to the
+     "right" place for C programs.
+
+     delete-next-char              ^D
+     The character after the point is deleted moving the rest  of
+     the  line  to the left one, leaving the point unchanged.  If
+     at the end of the line, the line boundary is deleted joining
+     the current line with the next line.
+
+     delete-next-word              ESC-D
+     If the point is in the middle of a word, it deletes  to  the
+     end of the word.  Otherwise it deletes the entire next word.
+     In either case, the point doesn't move, and the deleted text
+     is saved in the kill buffer.
+
+     delete-other-windows          ^X-1
+     Makes the current window the only window by deleting all the
+     other windows.  The window grows to fill the screen as it is
+     when the editor starts up.
+
+     delete-previous-char          DELETE
+     Deletes the character before the point moving  the  rest  of
+     the  line to the left one.  If the point is at the beginning
+     of a line, the previous line is joined with the current line
+     and  the  point  is  moved to what used to be the end of the
+     previous line.
+
+     delete-previous-word          ESC-DELETE
+     If the point is in the middle of a word, it deletes  to  the
+     beginning  of  that  word.   Otherwise it deletes the entire
+     previous word.  In either case, the deleted text is saved in
+     the kill buffer.
+
+     delete-to-killbuffer          ^W
+     Deletes all the text between the point and mark,  saving  it
+     in  the  kill-buffer.   This  is one of the the ways to move
+     text from place in the buffer to another.  The yank  command
+     will  insert  the  most  recently deleted text at the point.
+     Jove remembers 10 separate kills in a kill ring.  The  yank-
+     pop  command  can  be  used  to go through the ring one at a
+     time.
+
+Printed 6/1/83                                                  8
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     delete-white-space            ESC-\f1
+     Deletes all tabs and space around the point on  the  current
+     line.  This does not work over line boundaries.
+
+     describe-command              [unbound]
+     Prompts for the name of a command  and  describes  what  the
+     command does into a buffer.
+
+     describe-key                  [unbound]
+     Prompts for a key and prints the command that  is  bound  to
+     that key.
+
+     delete-current-window         ^X-D
+     If there is more than one window on the screen, the  current
+     window  is  deleted and is moved to neighboring window.  The
+     space from the deleted window is given to  the  new  current
+     window.
+
+     end-of-file                   ESC->
+     Moves the point to the end of the buffer making the  charac-
+     ter before the point the last character in the buffer.
+
+     end-of-line                   ^E
+     Moves the point to the end of the current line.
+
+     end-of-sentence               ESC-E
+     Moves the point to the end of the sentence.
+
+     end-of-window                 ESC-.
+     Moves the point to the last character in the window.
+
+     exchange-point-and-mark       ^X-^X
+     Sets the specified mark to the point and set  the  point  to
+     the  mark.  A mark is referenced by a numerical argument; if
+     none is given the zero'th mark is assumed.
+
+     execute-extended-command      ESC-X
+     Prompts for a command to run using command completion.  This
+     is  how all commands would be run if not for the bind-to-key
+     command.
+
+     execute-keyboard-macro        [unbound]
+     All the characters that  were  remembered  with  the  start-
+     remembering  command  are  executed as if they were typed at
+     the keyboard.
+
+     execute-macro                 [unbound]
+     This is the same as execute-keyboard-macro  except  that  it
+     prompts for the name of a macro to execute.
+
+     exit-jove                     ^X-^C
+     Exits jove.  It asks  for  confirmation  if  there  are  any
+
+Printed 6/1/83                                                  9
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     modified buffers which have not been saved.
+
+     filter-region                 [unbound]
+     Prompts for a UNIX command to send a region to.  The  region
+     will  be  replaced  with  the  output from the command.  For
+     example to format a C procedure, a region  around  the  pro-
+     cedure  should be defined and the filter-region command used
+     to send the region through the UNIX C beautifier.
+
+     find-file                     ^X-^F
+     Prompts for a file to find.  If that file is not already  in
+     a  buffer,  it  creates a new buffer and reads the file into
+     that buffer.  If the file is already in another buffer, that
+     buffer  will  be selected instead.  In any event the current
+     buffer becomes buffer with that file in it.
+
+     find-file-into-other-window   ^X-4
+     Do a find file into another window.  If there  is  only  one
+     window,  is split.  If there is more than one window, one of
+     the windows that is not the current window is used instead.
+
+     find-tag                      ^X-^T
+     Finds the file with the C tag which is  prompted  for.   The
+     UNIX  program  ctags(1)  should be used to create a database
+     with the necessary information to find the file  which  con-
+     tains  the  tag.   If the tag cannot be found, the point and
+     buffer are unchanged.
+
+     first-non-blank               ESC-M
+     Moves the point to the first  non  blank  character  in  the
+     current line.
+
+     forward-char                  ^F
+     Moves the point forward one character in the buffer.  If  at
+     the end of the current line the point is moved to the begin-
+     ning of the next line.
+
+     forward-paren                 ESC-^B
+     Moves the point to the matching close parenthesis (brace) of
+     the  open  parenthesis  (brace)  right  after the point.  If
+     there is no match,  an  error  is  reported  and  the  point
+     remains unchanged.
+
+     forward-word                  ESC-F
+     If the point is in the middle of a word, it moves to the end
+     of  the  current word.  Otherwise it moves to the end of the
+     next word.
+
+     four-times                    ^U
+     Multiple the numeric argument by four.  The sequence  ^U-^U-
+     ^N runs the command next-line 16 times.
+
+Printed 6/1/83                                                 10
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     goto-line                     ESC-G
+     Moves the point to the numeric argument line in the  buffer.
+     If no argument is supplied, the the point moves to the first
+     line in the buffer.
+
+     grow-window                   ^X-^
+     Makes the current window one line larger if it  can.   There
+     has  to  be more than one window, and the window which would
+     get smaller has to be big enough to get smaller.
+
+     i-search-forward              [unbound]
+     Incremental search forward.  See the EMACS Manual for TWENEX
+     Users if you care about this command.  I do not have time to
+     explain it right now.
+
+     i-search-reverse              [unbound]
+     Incremental search reverse.  See the EMACS Manual for TWENEX
+     Users if you care about this command.  I do not have time to
+     explain it right now.
+
+     insert-file                   ^X-^I
+     If the named file exists and can be read, its  contents  are
+     inserted into the current buffer at the point.  Otherwise an
+     error is reported and the point is unchanged.
+
+     init-bindings                 [unbound]
+     Initialize the bindings to the way they were at  the  begin-
+     ning of the edit.
+
+     justify-paragraph             ESC-J
+     Justifys a paragraph.  Paragraphs are bounded by blank lines
+     or  lines that begin with a period.  The margin-length vari-
+     able determines the length of each line in the paragraph.
+
+     kill-buffer                   ^X-K
+     Deletes a named buffer.  This  command  is  not  reversible;
+     once  the buffer is deleted, it is gone forever.  It is use-
+     ful when the editor runs out of space and there is a  buffer
+     which you do not care about.
+
+     kill-to-end-of-line           ^K
+     Kill all the text from the point to the end of the line.  If
+     the  point  is  at  the end of the line, the current line is
+     joined with the next line.  If a numeric count is given,  an
+     internal  mark  is  set at the point, the point moves to the
+     beginning of a line count below the current  line,  and  the
+     region is deleted to the kill-buffer.  The saved test can be
+     yanked  back  with  the   yank   command   (see   delete-to-
+     killbuffer).   If this command is run several times in a row
+     all the kills are merged into the same kill ring entry, thus
+     running  the yank command will yank all of them back instead
+     of just the last one.
+
+Printed 6/1/83                                                 11
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     list-buffers                  ^X-^B
+     Creates a buffer called Buffer list that contains a list  of
+     all the buffers jove currently knows about.  Each line tells
+     each buffer's number, type, file  associated  with  it,  its
+     name, and a * if the buffer is modified.
+
+     logo-exit-jove                [unbound]
+     This is LSHRS specific.  It tells jove to exit non-zero even
+     though there is no error.
+
+     make-buffer-unmodified        ESC-~
+     Makes the editor forget that the buffer has  been  modified.
+     The * on the mode line will disappear if it is there.
+
+     newline                       [unbound]
+     Divides the current line at the point moving  the  point  to
+     the  beginning  of  the  newly  created line.  It is usually
+     bound to the return key.
+
+     newline-and-backup            ^O
+     Divides the current line at the point like the newline  com-
+     mand, but leaves the point unchanged.
+
+     newline-and-indent            [unbound]
+     Same as newline except that it inserts white  space  at  the
+     beginning  of the newline copying the indent of the previous
+     line.
+
+     next-error                    ^X-^N
+     Takes the next error message (as returned by the parse  com-
+     mands), finds the file in which the error occurred, and sets
+     the the point to the line on which the error occurred.   The
+     error  message  will  be  displayed at the top of the errors
+     buffer.  (The  compile-it  command  automatically  runs  the
+     parse-C-errors and the next-error commands).
+
+     next-line                     ^N
+     Moves the point to the next line keeping the column as close
+     to the current column as possible.
+
+     next-page                     ^V
+     Puts the bottom line of the window at the top of the window,
+     moving  the point to the top of the window and to the begin-
+     ning of the line.
+
+     next-window                   ^X-N
+     Moves to the next window in the screen.  If the current win-
+     dow is the last window, it moves to the first window.  It is
+     an error to move to the next window when there is  only  one
+     window on the screen.
+
+     number-lines-in-window        [unbound]
+
+Printed 6/1/83                                                 12
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     Each line in the current window is displayed with  its  line
+     number to the left.  The number isn't part of the buffer and
+     will disappear when this command is executed again (it  tog-
+     gles).
+
+     page-next-window              ESC-^V
+     This command does a next-page on the next window.  If  there
+     is only one window the editor complains.
+
+     paren-flash                   [unbound]
+     When  the  variable  show-match  is  non-zero,   the   close
+     parenthesis/brace  keys  are  bound  to  this command.  When
+     invoked, this command inserts the character typed  and  tem-
+     porarily  flashes to the matching open parenthesis/brace for
+     about one second.
+
+     parse-C-errors                [unbound]
+     This command takes C compiler (or similar in format)  errors
+     and  sets  the  editor  up for subsequent invocations of the
+     next-error command.  Giving the UNIX command grep(1) the  -n
+     option  prints  the  output in the same format as the C com-
+     piler, thus running this command into a buffer makes it pos-
+     sible to parse its output. This is a very useful way to look
+     at all the occurrences of certain strings in several files.
+
+     parse-LINT-errors             [unbound]
+     This is the  same  as  parse-C-errors  excepts  parses  lint
+     errors.
+
+     pause-jove                    [unbound]
+     If the system has the Berkeley job control features, control
+     is  returned  to  the superior shell.  Otherwise an inferior
+     shell is spawned.
+
+     previous-line                 ^P
+     Moves the point to the previous  line  trying  to  keep  the
+     column the same.
+
+     previous-page                 ESC-V
+     Moves the top line in the window to the bottom line leaving,
+     the  point  at the top of the window and at the beginning of
+     the line.
+
+     previous-window               ^X-P
+     Move to the previous window in the screen.  If currently  in
+     the  first window, moves to the last window.  It is an error
+     to move to the previous window when there is only one window
+     on the screen.
+
+     print                         [unbound]
+     Prompts for a variable name and prints its value.
+
+Printed 6/1/83                                                 13
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     query-replace-search          ESC-Q
+     Upon receipt of a search and replacement string, the  editor
+     replaces  all  occurrences  of  the  search  string with the
+     replacement string.  For each occurrence, Jove asks the user
+     what to do.  At this point there are several possibilities:
+             <SPACE>   to replace this occurrence
+             <DEL>     to skip this occurrence and move to the next one
+             <CR>      to stop and return to where the search began
+             r         to recursive edit (see below)
+             p         to replace this occurrence and any others without
+                             asking
+     Recursive edit makes it possible to stop in  the  middle  of
+     the  query-replace-search, do some editing, and the continue
+     the replace.  Invoking exit-jove will return from the recur-
+     sive  edit and continue the replace.  When there are no more
+     occurrences, the point moves back to its initial position.
+
+     quote-char                    ^Q
+     Quotes the next character typed for insertion.  This is used
+     to  insert special characters which normally would be inter-
+     preted as commands.
+
+     read-file                     ^X-^R
+     Prompts for a file to read into the current buffer.  It will
+     erase  the  old contents so if the buffer has been modified,
+     but not saved, jove complains and ask for confirmation.
+
+     read-macros-from-file         [unbound]
+     Prompts for a file that  was  previously  written  with  the
+     write-macros-to-file  command,  and reads them back into the
+     editor.
+
+     redraw-display                ^L
+     Redraws the window with the current line in the middle.   If
+     a  numeric argument is provided the current line is moved to
+     the argument line. If the current line is in the same  place
+     as before, the window is cleared and redrawn.
+
+     replace-search                ESC-R
+     This is the same as query-replace-search except  the  editor
+     does not ask whether to replace it; it always does.
+
+     ring-the-bell                 ^G
+     Exactly what is says.  Its useful when it  is  not  apparent
+     what the editor is currently doing.
+
+     scroll-one-line-down          ESC-Z
+     Scrolls the current window down one line.   If  the  current
+     line  moves off the bottom of the window, it is moved to the
+     middle of the window.
+
+     scroll-one-line-up            ^Z
+
+Printed 6/1/83                                                 14
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     Scrolls the current window up one line.  If the current line
+     moves  off the bottom of the window, it is moved to the mid-
+     dle of the window.
+
+     search-forward                ^S
+     Prompts for a string to search for and searches for the next
+     instance of that string in the buffer (see searching above).
+
+     search-reverse                ^R
+     Prompts for a string to search for and searches for the pre-
+     vious  instance  of that string in the buffer (see searching
+     above).
+
+     select-buffer                 ^X-B
+     Prompts for a buffer name and makes that buffer the  current
+     buffer.   If  the  buffer  does  not  exist  a new buffer is
+     created with nothing in it.  If a number is supplied instead
+     of  a name and a buffer exists with that number, that buffer
+     is selected.  Otherwise a new buffer is  created  with  that
+     number as a name.
+
+     self-insert                   [very-bound]
+     This is bound to all the keys that should be  inserted  when
+     typed.   This  commands does not work unless bound to a key.
+     Running this command manually will probably cause  a  random
+     character to be inserted.
+
+     set                           [unbound]
+     Prompts for a variable name and a value, and sets the  vari-
+     able to that value.
+
+     set-mark                      ^@
+     Sets a mark at the current  buffer  location.   If  given  a
+     numeric  argument, it sets a mark whose name is that number.
+     Otherwise it sets the zero'th mark.
+
+     shell-command                 ^X-!
+     Prompts for a UNIX shell command to be run placing the  out-
+     put from the command into a buffer called Command execution.
+     If the a numeric argument is provided, the  buffer  is  left
+     alone  before  the  UNIX  command is started.  Otherwise the
+     buffer is emptied.
+
+     shell-command-to-buffer       [unbound]
+     The same as shell-command except that it asks for a specific
+     buffer to place the output in instead of Command execution.
+
+     source                        [unbound]
+     This prompts for a file name which contains a bunch of  edi-
+     tor  commands.   These  commands  typically set variables or
+     bind commands to keys.  Running source on a file which  does
+     not  have editor commands in it will likely cause the editor
+
+Printed 6/1/83                                                 15
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     to crash.  This is a serious bug.
+
+     shrink-window                 [unbound]
+     Shrink the current window by one line if the resulting  win-
+     dow would not be too small.  It is an error to run this com-
+     mand when there is only one window.
+
+     spell-buffer                  [unbound]
+     Sends the entire buffer to the  UNIX  spell  program.   Jove
+     will go through the list of spelling errors and asks whether
+     or not a word is spelled correctly.   If  it  is  not,  jove
+     remembers  where  each occurrence of the misspelled word is.
+     The point in the buffer being spelled is positioned  at  the
+     end  of  the current misspelled word. The next-error command
+     moves to the next occurrence of the current word, or to  the
+     first occurrence of the next word.
+
+     split-current-window          ^X-2
+     Splits the current window into two smaller windows,  if  the
+     resulting  windows  would not be too small.  The two windows
+     have the same buffer associated with them,  namely  the  one
+     that the original window had.
+
+     start-remembering             [unbound]
+     This tells jove to start remembering all the following keys-
+     trokes  until the stop-remembering command is executed.  The
+     saved commands are saved in the keyboard macro, and  can  be
+     re-executed  with  the execute-keyboard-macro command.  This
+     is useful when it is necessary to run the same command  lots
+     of times.
+
+     stop-remembering              [unbound]
+     This terminates the  definition  of  a  macro.   See  start-
+     remembering for more details.
+
+     string-length                 ^X-C
+     Prints, on  the  message  line,  the  number  of  characters
+     between  two quotes. The point must be between two quotes or
+     the editor complains.  This  is  useful  for  C  programmers
+     especially.
+
+     suspend-jove                  [unbound]
+     Same as pause-jove.
+
+     text-insert                   [unbound]
+     When the variable text-fill  is  non-zero,  the  self-insert
+     keys  are  bound  to  this command.  This inserts characters
+     like self-insert does but when the line gets  to  a  certain
+     length,  a newline is automatically inserted.  This makes it
+     possible to type in a paper without having  to  remember  to
+     hit return, i.e the editor does it automatically.
+
+Printed 6/1/83                                                 16
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     transpose-char                ^T
+     Switches the characters on  opposite  sides  of  the  point,
+     namely  the  character  before  the cursor and the character
+     under the cursor.
+
+     unbound                       [unbound]
+     The unbound function is bound to all the keys that don't run
+     commands.  It is essentially a no-op.
+
+     vt100-arrow-keys              [unbound]
+     This makes the arrow keys work on the vt100 terminal.
+
+     write-current-file            ^X-^S
+     This writes the current buffer to the file  associated  with
+     the  buffer,  without asking.  If there is currently no file
+     associated with the buffer, the editor complains.  (See  the
+     write-named-file command below).
+
+     write-macros-to-file          [unbound]
+     Prompts for a file and writes all the current defined macros
+     to  that  file.  The macros can be read back into the editor
+     with the read-macros-from-file command.
+
+     write-modified-files          ^X-^M
+     Writes all the buffers that have been modified but not  been
+     saved.
+
+     write-named-file              ^X-^W
+     Prompts for a file name and writes  the  current  buffer  to
+     that file. If the file already exists and is not the current
+     file name, the user is informed and asked if he really wants
+     to  do  it.   Writing  a file erases the old contents of the
+     file.
+
+     write-region                  [unbound]
+     Takes the region between the point and mark and writes it to
+     a named file.
+
+     yank                          ^Y
+     Inserts, at the point, all the text that was  most  recently
+     deleted with a delete command that saves the text it deleted
+     to the kill ring.   The  point  moves  to  the  end  of  the
+     inserted region.
+
+     yank-pop                      ESC-Y
+     Goes through the kill ring inserting each  entry  one  at  a
+     time.   The  previous command has to have been the yank com-
+     mand or the yank-pop command.
+
+Printed 6/1/83                                                 17
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     The following are list of variables which change the way the
+     editor behaves.  All the variables, and the effect they have
+     on the behavior of the editor, are listed below.  When  cer-
+     tain variables are set to non-zero values, jove prints their
+     abbreviations (in parentheses) on the mode line.
+
+     auto-indent                   (AI)
+     This variable affects the way the RETURN key works. Normally
+     typing RETURN divides the current line at point moving point
+     down to the next line. That still happens in this  mode  but
+     the  line is automatically indented the same as the previous
+     line. This is useful  for  structure  programming  languages
+     like C and PASCAL.
+
+     c-mode                        (C)
+     This mode the tab character and  the  }.   Instead  of  just
+     inserting the tab, the editor determines where the tab ought
+     to be for the C language and tabs  to  there  instead.   The
+     same  thing  happens  with the close brace.  It is tabbed to
+     the right place and then inserted.
+
+     case-independent-search       (CIS)
+     This affects the way search works.  When in this mode,  jove
+     ignores  the difference between upper case and lower case so
+     A matches a as well as A.
+
+     internal-tabstop              (not-shown)
+     This tells jove how many spaces a tab should take up when it
+     is printed.  The default is 8.
+
+     magic                         (MA)
+     This mode makes regular expression available.  This  is  not
+     the default because for new users because certain characters
+     in the search strijng do not always do  what  they  normally
+     would.
+
+     make-all-at-once
+     Tells the editor to run make with the -k option when running
+     the compile-it command.
+
+     over-write                    (OV)
+     This mode changes the way  self-inserting  characters  work.
+     Instead  of pushing the rest of the line over, the character
+     after the point is replaced.
+
+     physical-tapstop
+     This tells jove how big the tabstops are  for  the  specific
+     terminal.   When the terminal is in tabs mode (see stty(1)),
+     jove will take advantage of that fact, and optimize the cur-
+     sor motion using tabs.
+
+     right-margin                  (not-shown)
+
+Printed 6/1/83                                                 18
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     This is used by the justify-paragram command, and  says  how
+     long it should try to make each line.
+
+     show-match                    (SM)
+     This affects the close parenthesis (brace) characters.  When
+     one  of those is typed in this mode it is inserted normally.
+     Then the cursor flashes to  the  matching  open  parenthesis
+     (brace)  for  one second and then move back to point. If the
+     match was not on the screen, nothing happens.  If  there  is
+     no match the user is informed of the error.
+
+     single-scroll
+     This changes the way the editor behaves when the point moves
+     out of the range of a window.  Instead of centering the line
+     containing the point, the editor leaves the line at the top,
+     or  bottom  of  the screen (depending on which end the point
+     moved off).  This is useful if the terminal is running at  a
+     slow baud rate.
+
+     text-fill                     (TF)
+     When in this mode, the editor will automatically insert car-
+     riage returns when lines reach the right margin. The default
+     right-margin is 72.
+
+     write-files-on-make           (not-shown)
+     When non-zero, jove writes all the modified buffers when the
+     compile-it command is invoked (default is non-zero).
+
+     To put the editor on one of these modes, use  the  set  com-
+     mand.  The set command prompts for one of the mode variables
+     to set.  A non-zero value means the mode is on, and a  value
+     or 0 means the mode is off.
+
+        JOVE (C-SM-AI)   Buffer: jove.c   "jove.c" *
+
+     If in these modes, typing } would cause the } to be indented
+     before  inserted,  and  then  the  cursor would flash to the
+     matching {.
+
+FILES
+     /usr/tmp     where the temporary files are stored.
+
+SEE ALSO
+     edt(1), ed(1).
+
+DIAGNOSTICS
+     Jove diagnostics are meant to be self explanatory.
+
+BUGS
+     It doesn't garbage collect the tmp file so it could run  out
+     of tmp space when it doesn't have to.
+
+Printed 6/1/83                                                 19
+
+JOVE(LSRHS)         UNIX Programmer's Manual          JOVE(LSRHS)
+
+     There should be one bind-to-key command that works for  both
+     macros and built in commands.
+
+     There should be a way to abort read-file and the search com-
+     mands.
+
+     Jove should not blow up when it tries to source a file which
+     doesn't have editor commands in it.
+
+Printed 6/1/83                                                 20
+

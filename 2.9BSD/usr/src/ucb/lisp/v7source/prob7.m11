@@ -1,0 +1,313 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+.page
+
+
+	.title	lexer and printr and evaler
+			;forrest w. howard, jr
+			;center for research in computing technology
+			;aiken computation lab.
+			;cambridge, ma. 02138
+
+	;code for the print routine
+	;code for lexer
+	;code for strat
+	;code for make
+
+
+;if the onepage option of sparm.m11 is on, and this is
+;a data-space only lisp, then we want to arrange for this
+;entire set of code (and possibly shrdata) to be in 
+;private data space.  we have to round its length up
+;to a multiple of 400(8) bytes, so that all else will
+;fit in smoothly
+
+;if this is i&d, we ignore this stuff
+
+.macro	.sharable
+
+	.rsect	shrcode,con
+
+.endm
+
+	;we will redefine this macro if necessary
+
+.if	eq,multiseg
+ .if	ne,onepage
+
+	.macro	.sharable
+
+		.rsect	onepage,con
+	.endm
+ .endc
+.endc
+
+
+
+	.sharable
+	.enabl	lsb
+
+printr:	propush	a
+	call 71$		;this is the entry to the output routine
+	tst	(sp)+
+	retnil		;print returns nil
+
+
+
+
+71$:	tstb	intflg		;bothered by ^c???
+	beq	100$		;no, skip around
+	push	a
+	error	</^c received during print out/>,99$
+99$:	pop	a		;get a back
+100$:	dispatch		;branch according to what we have
+	jmp	numout		;print the number
+	br	4$		;print the list/s-expr
+	.word	0
+	jmp	atmout		;print the atom(double quoted)
+	jmp	bcdout		;print the symbol for bcd
+	jmp	portout		;print the symbol for port
+
+
+
+
+4$:	outstr	slp		;output a  left-paren
+73$:	cdr	a,-(sp)		;save the rest of the list
+	car	a,a		;get the car
+	call	71$		;print the car
+	pop	a		;get the cdr back
+	jmpifnil	a,22$,nl
+	outstr	sspc
+	dispatch		;branch on what the cdr is
+	br	 2$		;if number, then need dot
+	.word	0
+	br	 73$		;for dtpr, continue on list
+	.word	0
+	br	 21$		;for atom, see if nil and then print dot
+				; if necessary
+	.word	0
+	br	 2$		;for bcd
+	.word	0
+	br	 2$		;for port
+
+
+
+
+
+21$:
+2$:	outstr	spersda		;print  ". "
+	call	71$		;print the thing
+22$:	outstr	srp		;output a  ")"
+	ret			;go back
+
+
+
+
+	.dsabl	lsb
+
+
+
+	.sharable
+
+;ratomr		leaves result in a
+		;mungs b,j1-j3
+
+
+ratomr:
+seploop:	getca			;leaves next char on port in char and a
+	movb	ctable(a),j3		;lets branch on bits 2-6 of byte
+	bic	#177601,j3
+	jmp	seploop(j3)
+
+
+
+
+rperd:	mov	#perda,a
+	ret
+rlpara:	mov	#lpara,a		;all these return the token
+	ret
+rrpara:	mov	#rpara,a
+	ret
+rlbkta:	mov	#lbkta,a
+	ret
+rrbkta:	mov	#rbkta,a
+	ret
+reof:	mov	#aeof,a
+	ret
+rnum:	br	ratnum			;note that the range of 5 bits is not
+rerr:	br	bcerror			; enough to 
+
+rdq:	br	ratdq
+ratm:	br	ratatm
+
+
+rsqc:	mov	#asquote,a
+	ret
+
+ratnum:	mov	#strbuf,b		;accept a number, and pass
+					; it to strnum
+	movb	a,(b)+			;stash char
+	cmpb	a,#'-			;is it minus
+	bne	20$			;no, so no problems
+	mov	a,j2			;set up hash code
+	getca				;get next char
+	cmpb	a,#'-			;is it -- ???
+	beq	ratent			;-- is an atom
+	cmpb	ctable(a),#vnum		;is next char number??
+	bne	ratent			;if this is not numeric, go to ratentry
+11$:	cmp	b,#strbend		;overflow of buffer
+	bhis	raterr			;yes
+	movb	a,(b)+			;pack a in buffer
+20$:	getca				;get a new char
+	cmpb	a,#'-			;minus sign???
+	beq	12$
+	cmpb	ctable(a),#vnum
+	beq	11$			;if not loop
+12$:	savec				;if is save it(who knows what it might	
+					; be)
+	clrb	(b)
+	jmp	strnum			;and convert
+raterr:	error	</atom too long/>
+bcerror:error	</illegal character in atom/>
+
+
+
+ratdq:	mov	#strbuf,b		;here we do "funny" atoms
+	clr	j2			;clear for hashing
+21$:	getca		
+	cmpb	a,#'"			;is new char  "
+	beq	finup+4
+22$:	movb	a,(b)+			;otherwise push it in puffer
+	xor	a,j2			;form hash code
+	cmp	b,#strbend		;see if buffer is ok
+	blo	21$			;single error
+	br	raterr
+ratatm:	clr	j2			;this is for regular atoms
+	mov	#strbuf,b		;set up buffer pointer
+31$:	movb	a,(b)+			;store char
+	cmp	b,#strbend		;check for overflow
+	bhis	raterr			;single error
+	xor	a,j2			;form hash code
+	getca				;get next char
+ratent=* .
+	tstb	ctable(a)		;see if a sep or break
+	bge	31$			;if not,loop
+finup:	savec				;if so,save it
+	clrb	(b)+			;move two null bytes into buffer
+	clrb	(b)+
+;	jmp	find			;a
+
+	vsep=0		;redefinitions for the ctable
+	vdq=rdq-seploop
+	vnum=rnum-seploop
+	vsq=rsqc-seploop
+	vperd=rperd-seploop
+	vlpara=rlpara-seploop
+	vrpara=rrpara-seploop
+	vlbkta=rlbkta-seploop
+	vrbkta=rrbkta-seploop
+	veof=reof-seploop
+	vchar=ratm-seploop
+	verr=rerr-seploop
+
+
+
+
+;this  is stuff for new rivest oblist switching
+
+	.sharable
+
+find:	sub	#strbuf,b
+	asr	b
+
+.if	eq,hash
+	mov	xoblist,-(sp)
+ .iff
+	bic	#<^c hashm>,j2
+	asl	j2
+	mov	hasht(j2),-(sp)
+.endc
+
+
+;recall at this point we have a,j1,j3 to play with
+;b is the length of atom
+;j2 is the hash code
+
+	mov	(sp),j1		;copy
+1$:	jmpifnil j1,20$,nl	;are we done?
+	car	j1,j3
+	add	#6,j3		;get ptr to string
+	mov	#strbuf,a
+2$:	cmp	(j3)+,(a)	;are they equal?
+	bne	10$		;no
+	inc	a		;now see if high order byte 0
+	tstb	(a)+		;is it?
+	bne	2$		;no!!
+
+;here we have success
+
+	car	j1,a		;get answer
+	incb	noint		;don't want to lose atoms
+	car	(sp),(j1)	;switch things
+	mov	a,@(sp)+	;and move our atom one forward
+	decb	noint		;and let things back to normal
+
+.if	ne,nilas0		;in non-i&d case,
+ .if	eq,multiseg
+	cmp	a,#atmnil	;see if we actually mean nil (0)
+	bne	13$
+	loadnil	a
+13$:
+.endc
+.endc
+	ret
+
+
+10$:				;this is were we go for more
+	mov	j1,(sp)		;move ptrs
+	cdr	j1,j1
+	br	1$
+
+20$:				;failure
+	tst	(sp)+
+;	jmp	strat
+
+
+
+
+
+
+		;strat takes in b the number of words in the printname,
+		;and in j2 the hash-code for  the atom
+		;(if hashing is implemented)
+
+	.sharable
+
+
+
+strat:	mov	b,a		;now we have to make the atom
+	call	gatom		;get a blankatom with a char words
+	mov	a,j1		;get place where chars go
+	add	#6,j1
+	mov	#strbuf,j3	;get our character buffer
+1$:	mov	(j3)+,(j1)+	;move two chars
+	sob	b,1$		;go back if not done
+	mov	a,b		;get atom safe
+	call	gdtpr		;and get dtpr
+.if	eq,hash
+	.ift
+	mov	xoblist,2(a)
+	mov	b,(a)
+	mov	a,xoblist
+	mov	b,a		;and return atom
+	 ret
+	.iff
+	 mov	hasht(j2),2(a)
+	mov	b,(a)
+	 mov	a,hasht(j2)
+	mov	b,a		;again, return atom,...
+	 ret
+.endc
+
+
+

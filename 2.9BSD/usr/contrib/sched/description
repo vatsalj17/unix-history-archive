@@ -1,0 +1,51 @@
+            General Description of Scheduling Scheme
+
+The scheduler consists of two major parts, the CPU dispatcher and
+the swap scheduler.
+
+The CPU dispatcher maintains a ready  list  of  processes  called
+"ready"  which is sorted by the scheduling priority level.  31 is
+the highest (best) priority level and 0  is  the  lowest  (worst)
+priority  level.   The  CPU dispatcher "swtch" simply selects the
+highest level in-core process and starts it running.
+
+The swap scheduler consists of a loop with two  decision  points.
+The  first  decision  is  to  select  a  process to swap in.  The
+process selected is simply the first swapped-out runnable process
+in  the  "ready" list.  Thus, unlike the standard UNIX scheduler,
+there is direct sharing of information between the CPU dispatcher
+and the swap scheduler.  The swap-in decision selects exactly the
+process that the CPU dispatcher would most like to run, among the
+set of swapped-out runnable processes.
+
+The second decision point in the swap scheduler is the choice  of
+what  process(es)  to  swap  out  to  make  room for the incoming
+process, if there  is  not  enough  free  core  available.   This
+decision is still made in a rather crude fashion.  I am currently
+experimenting with a method that keeps a memory map of  processes
+and  texts  as  well  as free holes, and makes swap-out decisions
+based on the size of the hole that will exist when the process or
+text is moved out of core.
+
+One point to note about the swap scheduler is that it has  no  "n
+seconds  in/m  seconds  out"  rule like the standard scheduler to
+arbitrarily limit swapping.  This means that the  swap  scheduler
+will  swap  "as fast as it has to".  On high-performance SMD-type
+disks this has caused no problem, and is part of the  reason  for
+good  editing  response  under  load.   However,  it  may  create
+problems on a slower disk system, where the swapping  load  might
+badly  impact  filesystem  traffic.   A  few  rules  of thumb are
+incorporated in the  "swapok"  subroutine  of  slp.c  to  control
+thrashing.   Among  these heuristics are (1) don't swap a process
+which is performing an EXEC and (2) don't swap out a  process  in
+the  ready  list  in  order  to make room for an incoming process
+further down the ready list.
+
+The priority of each process  is  kept  in  p_level  and  is  set
+relative  to  a "base level" p_baslev.  Each instance of terminal
+input moves the process  to  p_baslev  +  6.   Each  instance  of
+terminal  output  moves  the process to p_baslev + 4.  Each other
+sleep/wakeup moves the process to p_baslev +  2.   Finally,  each
+quantum fully used by the process moves the level down one toward
+the p_baslev.  The setblev system call allows the p_baslev to  be
+set by a program.

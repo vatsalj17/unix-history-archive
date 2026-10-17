@@ -1,0 +1,116 @@
+.TH AT 1
+.UC
+.SH NAME
+at \- execute commands at a later time
+.SH SYNTAX
+.B at
+[ \-m ] time
+[
+day
+]
+[
+file
+]
+.SH DESCRIPTION
+.I At
+squirrels away a copy of the named
+.I file
+(standard input default)
+to be used as input to \fIsh\fP\|(1) or \fIcsh\fP\|(1) 
+at a specified later time.
+A csh script must have a '\fB#\fP' as
+the first character.
+If no file is given input is taken from the standard input and the
+shell is determined by the SHELL environment variable.
+A \fIcd\fP\|(1)
+command to the current directory is inserted
+at the beginning,
+followed by assignments to all environment variables except TERMCAP.
+In \fIcsh\fP, the
+users .cshrc file is then run.  
+When the script is run, it uses the user and group ID
+of the creator of the copy file.
+Mail is sent to that user stating
+when the file ran and giving any output on stdout or stdin.
+The \fB\-m\fP
+flag causes no mail to be sent.
+.PP
+The
+.I time
+is 1 to 4 digits, with an optional following
+`A', `P', `N' or `M' for
+AM, PM, noon or midnight.  The letters may be upper or lower case.  
+One and two digit numbers are taken to be hours, three and four digits
+to be hours and minutes.
+If no letters follow the digits, a 24 hour clock time is understood.
+.PP
+The optional
+.I day
+is either
+(1) a month name followed by a day number,
+or
+(2) a day of the week; if the word `week' follows
+invocation is moved seven days further off.
+If no day is specified, today is assumed if the time is 
+after the current time.
+If the time is before the current
+time, tomorrow is assumed.
+Names of months and days may be recognizably truncated.
+Examples of legitimate commands are:
+.IP
+\fBat 8am jan 24
+.br
+at 1530 fr week\fP
+.PP
+.I At
+scripts are executed by periodic execution
+of the command
+.I /usr/lib/atrun
+from \fIcron\fP\|(8) typically every 5 minutes.
+.SH FILES
+.ns
+.TP "\w'/usr/lib/atrun\ \ 'u"
+/usr/spool/at/yy.ddd.hhhh.uu
+activity to be performed at hour
+.I hhhh
+of year day
+.I ddd
+of year
+.IR yy .
+.I uu
+is a unique number.
+.ns
+.TP
+/usr/spool/at/lasttimedone
+contains \fIhhhh\fP for last hour of atrun executed.
+.ns
+.TP
+/usr/spool/at/past
+directory of activities now in progress
+.ns
+.TP
+/usr/lib/atrun
+program that executes activities that
+are due
+.ns
+.TP
+\fIpwd\fP\|(1)
+To find current directory
+.TP
+.IR Mail (1)
+To mail output of script
+.SH "SEE ALSO"
+calendar(1),
+cron(8)
+.SH DIAGNOSTICS
+Complains about various syntax errors and times out of range.
+.br
+If the process dies during execution look in \fI/usr/spool/at/past\fP for
+the executing file.  The mail file is the same name as the executing file
+except the first number has been changed to 'M'.
+.SH BUGS
+Scripts beginning with a '#' are assumed to be csh scripts;
+this may be inappropriate for scripts that start with "#!/bin/sh".
+.SH AUTHOR
+UNIX Version 7.  Modified for \fBcsh\fP and \fBmail\fP by Peter L. Ward,
+U.S. Geological Survey, Menlo Park, California.

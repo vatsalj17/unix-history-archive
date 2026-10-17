@@ -1,0 +1,17 @@
+FP =			# use -f if no floating point
+CFLAGS = -V -O ${FP}
+CC =	cc
+
+OBJS =	asin.o atan.o hypot.o jn.o j0.o j1.o pow.o fabs.o gamma.o \
+	log.o sin.o sqrt.o tan.o tanh.o sinh.o exp.o floor.o
+
+libovm.a:${OBJS}
+	-rm -f libovm.a
+	ar rc libovm.a ${OBJS}
+
+cp: libovm.a
+	cp libovm.a ${DESTDIR}/usr/lib/libovm.a
+	ranlib ${DESTDIR}/usr/lib/libovm.a
+
+clean:
+	-rm -f *.o libovm.a

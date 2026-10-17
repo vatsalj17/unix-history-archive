@@ -1,0 +1,82 @@
+.TH CAT 1 
+.UC
+.SH NAME
+cat \- catenate and print
+.SH SYNOPSIS
+.B cat
+[
+.B \-
+] [
+.B \-b
+] [
+.B \-e
+] [
+.B \-n
+] [
+.B \-s
+] [
+.B \-t
+] [
+.B \-u
+] [
+.B \-v
+]
+file ...
+.br
+.SH DESCRIPTION
+.I Cat
+reads each
+.I file
+in sequence
+and writes it on the standard output.
+Thus
+.PP
+.ti+15n
+cat file
+.PP
+prints the file, and
+.PP
+.ti+15n
+cat file1 file2 >file3
+.PP
+concatenates the first two files and places the result on the third.
+By default, output is buffered in 1024-byte blocks unless the standard
+output is a termiinal, in which case it is line buffered.
+Optiions are:
+.TP
+.B \-
+Read from standard input.
+.TP
+.B \-\^b
+This, together with
+.B \-\^n
+cause numbers to be omitted from blank lines.
+.TP
+.B \-\^e
+Follow ends of lines with the $ character.
+.TP
+.B \-\^n
+Number each line.
+.TP
+.B \-\^s
+Cause the output to be single spaced by omitting multiple adjacent
+blank lines.
+.TP
+.B \-\^t
+Print tabs as ^I.
+.TP
+.B \-\^u
+Do not buffer the output.
+.TP
+.B \-\^v
+Print non-printing characters in a visible way.  Control characters
+are printed as ^X (for control-x); the delete character (octal 0177)
+is printed as ^?.  Non-ascii characters (those with 0200 bit set)
+are printed as M- (for meta) followed by the character represented by
+the low order 7 bits.
+(for meta) followed by the character of the low 7 bits.
+.SH "SEE ALSO"
+cp(1), ex(1), more(1), od(1), pr(1), tail(1)
+.SH BUGS
+Beware of `cat a b >a' and `cat a b >b', which destroy
+the input files before reading them.

@@ -1,0 +1,104 @@
+
+VGRIND(1)           UNIX Programmer's Manual            VGRIND(1)
+
+NAME
+     vgrind - grind nice listings of programs
+
+SYNOPSIS
+     vgrind [-f] [-] [-t] [-n] [-x] [-W] [-sn] [-h header] [-d
+     <description file>] [-l<language>] name ...
+
+DESCRIPTION
+     _V_g_r_i_n_d formats the program sources which are arguments in a
+     nice style using _t_r_o_f_f(_1) Comments are placed in italics,
+     keywords in bold face, and the name of the current function
+     is listed down the margin of each page as it is encountered.
+
+     _V_g_r_i_n_d runs in two basic modes, filter mode or regular mode.
+     In filter mode _v_g_r_i_n_d acts as a filter in a manner similar
+     to _t_b_l(_1).  The standard input is passed directly to the
+     standard output except for lines bracketed by the _t_r_o_f_f-_l_i_k_e
+     macros:
+
+     .vS  - starts processing
+
+     .vE  - ends processing
+
+     These lines are formatted as described above.  The output
+     from this filter can be passed to _t_r_o_f_f for output.  There
+     need be no particular ordering with _e_q_n(_1) or _t_b_l(_1).
+
+     In regular mode _v_g_r_i_n_d accepts input files, processes them,
+     and passes them to _t_r_o_f_f(_1) for output.
+
+     In both modes _v_g_r_i_n_d passes any lines beginning with a
+     decimal point without conversion.
+
+     The options are:
+
+     -f   forces filter mode
+
+     -    forces input to be taken from standard input (default
+          if -f is specified )
+
+     -t   similar to the same option in _t_r_o_f_f causing formatted
+          text to go to the standard output
+
+     -n   forces no keyword bolding
+
+     -x   processes an index file.  To create an index, it is
+          only necessary to create an empty file _i_n_d_e_x in the
+          current directory.  As you run _v_g_r_i_n_d, the index will
+          automatically be kept up to date.  The index of func-
+          tion definitions can then be run off by giving _v_g_r_i_n_d
+          the -x option and the file _i_n_d_e_x as argument.
+
+Printed 8/5/83                                                  1
+
+VGRIND(1)           UNIX Programmer's Manual            VGRIND(1)
+
+     -W   forces output to the (wide) Versatec printer rather
+          than the (narrow) Varian
+
+     -s   specifies a point size to use on output (exactly the
+          same as the argument of a .ps)
+
+     -h   specifies a particular header to put on every output
+          page (default is the file name)
+
+     -d   specifies the language definitions file (default is
+          /usr/lib/vgrindefs)
+
+     -l   specifies the language to use.  Currently known are
+          PASCAL (-lp), MODEL (-lm), C (-lc or the default), and
+          ISP (-li).
+
+FILES
+     index                    file where source for index is
+     created
+     /usr/lib/tmac/tmac.vgrindmacro package
+     /usr/lib/vfontedpr       preprocessor
+     /usr/lib/vgrindefs       language descriptions
+
+AUTHOR
+     Dave Presotto & William Joy
+
+SEE ALSO
+     vtroff(1) vgrindefs(5)
+
+BUGS
+     The basic format of a procedure must be:
+
+          <string matching the start of a procedure>
+          <block begin> <block end>
+
+     This works all right in most cases.  However, in PASCAL
+     vgrind can't distinguish between a procedure start and a
+     procedure variable.  Therefore vgrind requires a slight
+     modification of the procedure and function variable declara-
+     tions.  Putting a comment in the declaration between the
+     keyword and the name (e.g. function {} junk) should be suf-
+     ficient.  Sorry if this looks strange.
+
+Printed 8/5/83                                                  2
+

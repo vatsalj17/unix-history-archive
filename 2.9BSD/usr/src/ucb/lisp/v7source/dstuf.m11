@@ -1,0 +1,241 @@
+; Copyright (c) 1981 Harvard-Radcliffe Student Timesharing System
+; Science Center, Harvard University
+
+.page
+	.title	early	data
+;this file is the data segment of pdp-11 lisp
+;it contains the sharable and non-sharable data
+;
+;	forrest w howard, jr.
+;
+;Version 7 conditional code added 3/4/81 by s. dyer harvard science center
+
+	.mcall	$exit,$fork,$read,$write,$open,$create,$exec,$break,$seek
+	.mcall	$indir,$close,$wait,$sig,$stty,$gtty
+
+	.psect	dsubr con 
+
+
+starbc=.
+.if	ne,multiseg
+	firpage=.
+.endc
+
+
+	.psect	ddtpr con
+.if	eq,multiseg
+	firpage=.
+.endc
+	frstdtpr=.
+
+	.psect	datom con
+	frstatom=.
+
+	oblist=anil		;initial oblist assignment
+	i=0
+.rept	hash
+	defobl	\i
+	i=i+1
+.endr
+;this is for nil=0 hack
+.if	ne,nilas0
+	.psect	nil
+anil=0
+.if	ne,multiseg
+	anil
+	anil
+.endc
+	anil
+	.asclc	nil
+	.even
+	.iff
+	anil=atmnil
+.endc
+
+	.psect	usbydat con
+char:	.byte	0
+nsext:	.byte	0	;non zero if we're using nstk reserve
+intflg:	.byte	0	;non zero if we've been interpupted
+noint:	.byte	0	;1 if cannot do panic inter
+tracflg:.byte	0	;1 if traceing stuff
+keybin:	.byte	0	;1 if getting user input
+.if	ne,fpsim
+ sign:	.byte	0	;sign indicator
+.endc
+
+
+
+	.psect	uswddat con
+
+
+where:	.word	init		;where to jump to
+prompt:	.word	eprompt		;-> or4 <-
+bprompt:.word	beprompt	;:> of <:
+.if	ne,xfer
+ readh:	.word	elist		;use the list approach
+.iff
+ readh:	.word	readr		;readr or evalquote
+.endc
+protocell: .word	0	;for protocol
+rbktf:	.word	0		;for right bracket
+gcolf:	.word	0		;if non zero, gcol in process
+fltdmp:	.word 0,0		;for floating point stuff
+gennum:	.word	0,177777	;for gensym
+	.word	0		;top of pidsav
+pidsav:	.word	0		;for process id
+brkl:	.word	0,0		;break level
+;itop:	.word	lastiloc+2	;for imem management
+.if	ne,jcbms
+frmptr:	.word	0	;for spaghetti stacks
+.endc
+.if	ne,fpsim
+ fpstuf:	.word 0,0,0
+	.globl	sign,fpstuf
+.endc
+
+;system indirect call setups
+
+$$seek:	$seek
+	.word	0,0
+.if	ne, version7		; i.e. V7 seek ## s. dyer. 3/4/81
+	.word	0		; has three in-line words
+.endc
+
+$$break: $break
+	.word	<^ph datom>	; datom has 2 added to end, to prevent
+				; stack colission!!
+
+$$open:	$open
+	.word	0,0
+$$create: $create
+	.word	0,755
+$$read:	$read
+	.word	0
+	.word	0
+
+$$write:	$write
+	.word	0,0
+$$sig: $sig
+	.word	0,0
+
+saveloc:.word	0		;for temporary storage
+nptop:	.word	0		;top of name stack
+nplength: .word nplen		;lenth of namestack
+npbottom:
+cptop:	.word	0		;highest loc in cstk, lowest in nstk
+npres:	.word	0		;where overflow nstk starts
+ltop:	.word	0		;for recursive func calls
+
+
+
+frdtpr:				;free lists
+fdtpr:	anil
+mfdtpr:	^d50			;minimum from gcol return
+mfnumb:	^d50
+cnumber:.word	0		;count used by gcol
+cdtpr:	.word	0
+fratom:
+fatom:	onlyatom
+frnumber:
+fnumber:	anil
+fbcd:
+frbcd:	anil
+
+
+
+
+
+
+	.psect	uswdda
+
+nplim:	.word	0		;used by nstk overflow
+lnleng:	.word	^d67		;initial length of line
+
+	.psect	usbydat con
+	.even
+strbuf:	.blkb	strlen
+strbend: .blkb	30
+	.even
+tib:	.blkb	tblen		;tty input buffer
+	.even
+	.word 0			;allow for slight overflow
+tob:	.blkb	tblen		;tty output buffer
+	.even
+	.word	0
+eob:	.blkb	^d22		;standard error output buffer
+	.word	0
+qmap:	.blkb	^d256		;store types of pages
+
+	.psect	usport con
+piport:	.word	0,tib,tib,0,tblen
+poport:	.word	202,tob,tob,tblen,tblen
+erport:	.word	204,eob,eob,^d20,^d20
+.rept	nports-3
+	.blkw	5
+.endr
+
+
+
+	.psect	usbydat con
+supcol:	.byte	0		;in system, used to tell whether full collection on
+
+
+
+	.psect	shrwdda	con
+
+master:		.asciz	?/usr/lib/lisp/?
+;erf:		.ascii ?/sys/lisp/bin/?
+erf:		.ascii ?/usr/ucb/lisp/?
+.if	ne,xfer
+;terf:		.asciz	?errorfil.xout?
+terf:		.asciz	?xlisp.err?
+.iff
+;terf:		.asciz ?errorfil.out?
+terf:		.asciz ?lisp.err?
+.endc
+eprompt:	.byte	12
+		.asciz	/->/
+beprompt:	.asciz	/:>/
+eqprompt:	.byte	12
+		.asciz	/<-/
+beqprompt:	.asciz	/<:/
+linefeed:	.byte	12,0
+genstr:		.asciz	/gensym/
+protostr:	.asciz	/l110.protocol/
+.if	ne,multiseg
+	.globl	lispbin
+lispbin:	.asciz ?./l1100.out?
+.endc
+broken:		.asciz	<12>/breaking	/
+sportsym:	.asciz	/port/
+sbcdout:	.ascii /binary#/
+savenm:		.asciz	/code/
+sspc:		.asciz / /
+spersda:	.asciz /. /
+dq:		.asciz /"/
+
+
+
+.if	df,gctrace
+	.globl	gcex,gcem
+
+
+gcex:		.asciz	<12>/leaving gcol/<12>
+gcem:		.asciz	<12>/entering gcol/<12>
+
+.endc
+.if	ne,xfer
+	.psect	shrwdda
+
+	.globl	xprog,xfile,xvect,xbcdm
+
+xprog:	.asciz	?/sys/lisp/bin/xprog?
+xbcdm:	.asciz	?/sys/lisp/bin/bcdmap?
+	.even
+xvect:	.word	xprog,xfile,0
+
+	.psect	usbyda
+
+xfile:	.asciz	/******/
+
+.endc

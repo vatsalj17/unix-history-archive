@@ -1,0 +1,46 @@
+
+LASTCOMM(1)         UNIX Programmer's Manual          LASTCOMM(1)
+
+NAME
+     lastcomm - show last commands executed in reverse order
+
+SYNOPSIS
+     lastcomm [ command name ] ... [user name] ...
+
+DESCRIPTION
+     _L_a_s_t_c_o_m_m gives information on previously executed commands.
+     _L_a_s_t_c_o_m_m with no arguments prints information about all the
+     commands recorded during the current accounting file's life-
+     time.  If called with arguments, only those accounting
+     entries whose command name or user name matches one of the
+     arguments are printed.  So, for example,
+          lastcomm a.out
+     would produce a listing of all the executions of commands
+     named a.out, and
+          lastcomm root
+     would produce a listing of all the commands executed by user
+     root.
+
+     For each process entry, the following are printed.
+          The name of the user who ran the process.
+          The command name under which the process was called.
+          The amount of cpu time used by the process (in
+     seconds).
+          The time the process exited.
+
+AUTHOR
+     Len Edmondson
+
+FILES
+     /etc/passwd         to find user names
+     /usr/adm/acct       raw accounting data
+
+SEE ALSO
+     last(1)
+
+BUGS
+     Should look up the line clock frequency in the kernel
+     instead of assuming 60HZ.
+
+Printed 7/31/83                                                 1
+

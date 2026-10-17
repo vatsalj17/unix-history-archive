@@ -1,0 +1,115 @@
+#
+# Unix version 7.
+#
+# Sccs Id = "@(#)Makefile.11	1.3 10/27/82";
+#
+#
+# Mail is too large to fit on a nonseparate I/D machine without
+# text overlays; use Ovmakefile to do this.
+#
+# If you do not have a vfork system call or do not support
+# job control, you must change the definition of OPTIONS,
+#	SIGRETROSRC, and SIGRETROOBJ.
+#
+
+OPTIONS=	-DV7 -DVMUNIX			# vfork and job control
+#OPTIONS=	-DV7				# no vfork or no job control
+
+LDFLAGS=	-i
+
+CFLAGS=		-O ${OPTIONS} ${INCLUDES}
+
+LIBES=		-ljobs -lc
+
+SIGRETROSRC=					# for those with job control
+SIGRETROOBJ=					# for those with job control
+#SIGRETROSRC=	sigretro.c			# for those without job control
+#SIGRETROOBJ=	sigretro.o			# for those without job control
+
+XSTR=		/usr/ucb/xstr
+CTAGS=		/usr/ucb/ctags -w
+ED=		-ed
+AS=		-as
+RM=		-rm
+OBJS=aux.o cmd1.o cmd2.o cmd3.o cmdtab.o collect.o config.o edit.o fio.o \
+	getname.o head.o v7.local.o lock.o lex.o list.o main.o \
+	names.o optim.o popen.o quit.o send.o strings.o temp.o tty.o \
+	vars.o version.o ${SIGRETROOBJ} str.o
+
+SRCS=aux.c cmd1.c cmd2.c cmd3.c cmdtab.c collect.c config.c edit.c fio.c \
+	getname.c head.c v7.local.c lock.c lex.c list.c main.c \
+	names.c optim.c popen.c quit.c send.c strings.c temp.c tty.c vars.c \
+	version.c ${SIGRETROSRC}
+
+HDRS=rcv.h configdefs.h def.h glob.h v7.local.h local.h
+
+S = $(SRCS) $(HDRS)
+
+#
+# Special massaging of C files for sharing of strings
+#
+.c.o:
+	${CC} -E ${CFLAGS} $*.c | ${XSTR} -c -
+	${CC} -c ${CFLAGS} x.c 
+	mv x.o $*.o
+	@$(RM) -f x.c
+
+all:	Mail fmt
+
+cp:	Mail fmt
+	-strip Mail fmt
+	cp Mail ${DESTDIR}/usr/ucb
+	cp fmt ${DESTDIR}/usr/ucb
+	cp misc/Mail.help* ${DESTDIR}/usr/lib
+#	cd ${DESTDIR}/usr/ucb; rm -f mail; ln Mail mail
+	rm Mail fmt *.o
+
+cmp:	Mail fmt
+	cmp Mail ${DESTDIR}/usr/ucb
+	cmp fmt ${DESTDIR}/usr/ucb
+	rm *.o
+
+Mail:	$S $(OBJS)
+	$(RM) -f Mail
+	@echo Loading ...
+	@${CC} ${LDFLAGS} -o Mail ${OBJS} ${LIBES}
+	@size Mail
+
+$S:
+	sccs get $@;
+
+srcs:	$S
+
+tags:	$(SRCS)
+	${CTAGS} $(SRCS);
+
+clean:
+	$(RM) -f *.o
+	rm -f a.out fmt x.c xs.c core
+	cp /dev/null strings
+
+lint:
+	lint $(CFLAGS) $(SRCS)
+
+fmt:	fmt.c head.c
+	$(CC) fmt.c head.c -O -o fmt
+	$(RM) fmt.o head.o
+	size fmt
+
+str.o: strings
+	$(XSTR)
+	$(CC) -c $(CFLAGS) xs.c
+	mv xs.o str.o
+	$(RM) xs.c
+
+config.o:	config.c
+	$(CC) -c $(CFLAGS) config.c
+
+cmdtab.o: cmdtab.c
+	$(CC) -c $(CFLAGS) cmdtab.c
+
+wc:
+	@wc rcv.h def.h glob.h local.h v7.local.h $(SRCS)
+
+sc:
+	@grep -c \; rcv.h def.h glob.h local.h v7.local.h $(SRCS)

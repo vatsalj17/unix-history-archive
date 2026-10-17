@@ -1,0 +1,51 @@
+
+WRITE(2)            UNIX Programmer's Manual             WRITE(2)
+
+NAME
+     write - write on a file
+
+SYNOPSIS
+     write(fildes, buffer, nbytes)
+     char *buffer;
+     unsigned nbytes;
+
+DESCRIPTION
+     A file descriptor is a word returned from a successful _o_p_e_n,
+     _c_r_e_a_t, _d_u_p, or _p_i_p_e(2) call.
+
+     _B_u_f_f_e_r is the address of _n_b_y_t_e_s contiguous bytes which are
+     written on the output file.  The number of characters actu-
+     ally written is returned.  It should be regarded as an error
+     if this is not the same as requested.
+
+     Writes which are multiples of 1024 characters long and begin
+     on a 1024-byte boundary in the file are more efficient than
+     any others.
+
+ERRORS
+     _W_r_i_t_e will fail if one or more of the following is true:
+
+     [EBADF]             _F_i_l_d_e_s is not a valid descriptor open
+                         for writing.
+
+     [EPIPE]             Ann attempts is made to write to a piipe
+                         that is not open for reading by any pro-
+                         cess.
+
+     [EFBIG]             An attempt was made to write a file that
+                         exceeds the maximum file size.
+
+     [EQUOT]             An attempt was made to write a file that
+                         exceeds a quota governing the file.
+
+SEE ALSO
+     creat(2), open(2), pipe(2)
+
+ASSEMBLER
+     (write = 4.)
+     (file descriptor in r0)
+     sys write; buffer; nbytes
+     (byte count in r0)
+
+Printed 5/22/83                                                 1
+

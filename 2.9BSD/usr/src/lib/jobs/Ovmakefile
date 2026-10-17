@@ -1,0 +1,39 @@
+INCLUDE= /usr/include
+CFLAGS= -O -I${INCLUDE}
+CC=	cc -V
+AS=	as -V
+OBJS=	sleep.o killpg.o setpgrp.o ovsignal.o sigset.o wait2.o
+NEWLIBC= read.o write.o ioctl.o
+LIBC=	${DESTDIR}/usr/lib/libovc.a
+
+all: libovjobs.a newlibc
+
+libovjobs.a: ${OBJS}
+# Sorry, OBJS must be listed here in order; tsort can't hack this
+	ar cr libovjobs.a sleep.o killpg.o setpgrp.o \
+	sigset.o ovsignal.o wait2.o
+
+newlibc: ${NEWLIBC}
+	@echo "New read, write and ioctl must be installed in C library"
+	@echo "or libovjobs.a.  See the READ_ME file."
+
+cp: libovjobs.a
+	cp libovjobs.a $(DESTDIR)/usr/lib
+	ranlib $(DESTDIR)/usr/lib/libovjobs.a
+
+installlibc:
+	ar r ${LIBC} ${NEWLIBC}
+	ranlib ${LIBC}
+
+clean:
+	rm *.o libovjobs.a
+
+libovhack.a: sleep.o killpg.o setpgrp.o sigset.o sigovhack.o wait2.o
+	ar cr libovjobs.a sleep.o killpg.o setpgrp.o sigset.o \
+	sigovhack.o wait2.o
+
+sigovhack.o:
+	${AS} -o sigovhack.o ${INCLUDE}/sys.s ovsignal.s read.s write.s ioctl.s
+
+.s.o:
+	${AS} -o $*.o ${INCLUDE}/sys.s $*.s

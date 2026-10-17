@@ -1,0 +1,122 @@
+
+REFER(1)            UNIX Programmer's Manual             REFER(1)
+
+NAME
+     refer, lookbib - find and insert literature references in
+     documents
+
+SYNTAX
+     refer [ option ] ... [file] ...
+
+     lookbib [ keyword ] ...
+
+DESCRIPTION
+     _L_o_o_k_b_i_b accepts keywords from the standard input and
+     searches a bibliographic data base for references that con-
+     tain those keywords anywhere in title, author, journal name,
+     etc.  Matching references are printed on the standard out-
+     put.  Blank lines are taken as delimiters between queries.
+
+     _R_e_f_e_r is a preprocessor for _n_r_o_f_f or _t_r_o_f_f(1) that finds and
+     formats references.  The input files (standard input
+     default) are copied to the standard output, except for lines
+     between .[ and .] command lines, which are assumed to con-
+     tain keywords as for _l_o_o_k_b_i_b, and are replaced by informa-
+     tion from the bibliographic data base.  The user may avoid
+     the search, override fields from it, or add new fields.  The
+     reference data, from whatever source, are assigned to a set
+     of _t_r_o_f_f strings.  Macro packages such as _m_s(7) print the
+     finished reference text from these strings.  A flag is
+     placed in the text at the point of reference; by default the
+     references are indicated by numbers.
+
+     The following options are available for refer:
+
+     -a_r   Reverse the first _r author names (Jones, J. A. instead
+           of J. A. Jones).  If _r is omitted all author names are
+           reversed.
+
+     -b    Bare mode: do not put any flags in text (neither
+           numbers nor labels).
+
+     -c_s_t_r_i_n_g
+           Capitalize (with CAPS SMALL CAPS) the fields whose
+           key-letters are in _s_t_r_i_n_g.
+
+     -e    Instead of leaving the references where encountered,
+           accumulate them until a sequence of the form
+                     .[
+                     $LIST$
+                     .]
+           is encountered, and then write out all references col-
+           lected so far.  Collapse references to the same
+           source.
+
+     -k_x   Instead of numbering references, use labels as
+
+Printed 7/25/83                                                 1
+
+REFER(1)            UNIX Programmer's Manual             REFER(1)
+
+           specified in a reference data line beginning %_x; by
+           default _x is L.
+
+     -l_m,_n Instead of numbering references, use labels made from
+           the senior author's last name and the year of publica-
+           tion.  Only the first _m letters of the last name and
+           the last _n digits of the date are used.  If either _m
+           or ,_n is omitted the entire name or date respectively
+           is used.
+
+     -m_n   Instead of numbering references, use labels made from
+           the authors' names and the year of publication; if
+           there are more than two authors, only the first is
+           printed, followed by et. al.  Examples: (Jones, 1971;
+           Smith and Jones, 1975; Smith _e_t. _a_l, 1980).  If _n is
+           present, only the last _n digits of the date are used.
+
+     -p    Take the next argument as a file of references to be
+           searched.  The default file is searched last.  This
+           option is available with _l_o_o_k_b_i_b also.
+
+     -n    Do not search the default file.
+
+     -s_k_e_y_s
+           Sort references by fields whose key-letters are in the
+           _k_e_y_s string; permute reference numbers in text accord-
+           ingly.  Implies -e.  The key-letters in _k_e_y_s may be
+           followed by a number to indicate how many such fields
+           are used, with + taken as a very large number.  The
+           default is AD which sorts on the senior author and
+           then date; to sort, for example, on all authors and
+           then title use -sA+T.
+
+     To use your own references, put them in the format described
+     in _p_u_b_i_n_d_e_x(1) They can be searched more rapidly by running
+     _p_u_b_i_n_d_e_x(1) on them before using _r_e_f_e_r; failure to index
+     results in a linear search.
+
+     When _r_e_f_e_r is used with _e_q_n, _n_e_q_n or _t_b_l, _r_e_f_e_r should be
+     first, to minimize the volume of data passed through pipes.
+
+BUGS
+     _L_o_o_k_b_i_b is implemented as a csh script, thus /bin/sh will
+     not understand.  Use "csh /usr/bin/lookbib ...".
+
+FILES
+     /usr/dict/papers    directory of default publication lists
+     and indexes
+     /usr/lib/refer      directory of programs
+
+SEE ALSO
+     pubindex(1)
+
+Printed 7/25/83                                                 2
+
+REFER(1)            UNIX Programmer's Manual             REFER(1)
+
+     M. E. Lesk, _S_o_m_e _A_p_p_l_i_c_a_t_i_o_n_s _o_f _I_n_v_e_r_t_e_d _I_n_d_e_x_e_s _o_n _t_h_e
+     _U_N_I_X _S_y_s_t_e_m
+
+Printed 7/25/83                                                 3
+

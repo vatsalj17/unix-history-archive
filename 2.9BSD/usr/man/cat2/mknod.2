@@ -1,0 +1,65 @@
+
+MKNOD(2)            UNIX Programmer's Manual             MKNOD(2)
+
+NAME
+     mknod - make a directory or a special file
+
+SYNOPSIS
+     mknod(name, mode, addr)
+     char *name;
+
+DESCRIPTION
+     _M_k_n_o_d creates a new file whose name is the null-terminated
+     string pointed to by _n_a_m_e.  The mode of the new file
+     (including directory and special file bits) is initialized
+     from _m_o_d_e.  (The protection part of the mode is modified by
+     the process's mode mask; see _u_m_a_s_k(2)).  The first block
+     pointer of the i-node is initialized from _a_d_d_r.  For ordi-
+     nary files and directories _a_d_d_r is normally zero.  In the
+     case of a special file, _a_d_d_r specifies which special file.
+
+     _M_k_n_o_d may be invoked only by the super-user.
+
+RETURN VALUE
+     Upon successful completion, a value of 0 is returned.  Oth-
+     erwise, a value of -1 is returned and _e_r_r_n_o is set to indi-
+     cate the error.
+
+ERRORS
+     _M_k_n_o_d will fail and the file mode will be unchanged if:
+
+     [EPERM]             The process's effective user ID is not
+                         the super-user.
+
+     [EINVAL]            The path name contains a non-ASCII byte.
+
+     [ENOTDIR]           A component of the path prefix is not a
+                         directory.
+
+     [ENOENT]            A component of the path prefix does not
+                         exist.
+
+     [EROFS]             The named file resides on a read-only
+                         file system.
+
+     [EEXIST]            The named file exists.
+
+     [EFAULT]            _N_a_m_e points outside the process's allo-
+                         cated address space.
+
+     [ELOOP]             Too many symbolic links were encountered
+                         in translating the path name.
+
+SEE ALSO
+     mkdir(1), mknod(1), filsys(5)
+
+Printed 5/23/83                                                 1
+
+MKNOD(2)            UNIX Programmer's Manual             MKNOD(2)
+
+ASSEMBLER
+     (mknod = 14.)
+     sys mknod; name; mode; addr
+
+Printed 5/23/83                                                 2
+

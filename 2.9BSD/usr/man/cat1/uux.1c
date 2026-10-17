@@ -1,0 +1,75 @@
+
+UUX(1C)             UNIX Programmer's Manual              UUX(1C)
+
+NAME
+     uux - unix to unix command execution
+
+SYNOPSIS
+     uux [ - ] command-string
+
+DESCRIPTION
+     _U_u_x will gather 0 or more files from various systems, exe-
+     cute a command on a specified system and send standard out-
+     put to a file on a specified system.
+
+     The _c_o_m_m_a_n_d-_s_t_r_i_n_g is made up of one or more arguments that
+     look like a shell command line, except that the command and
+     file names may be prefixed by system-name!.  A null system-
+     name is interpreted as the local system.
+
+     File names may be one of
+
+          (1) a full pathname;
+
+          (2) a pathname preceded by ~_x_x_x; where _x_x_x is a userid
+          on the specified system and is replaced by that user's
+          login directory;
+
+          (3) anything else is prefixed by the current directory.
+
+     The `-' option will cause the standard input to the _u_u_x com-
+     mand to be the standard input to the _c_o_m_m_a_n_d-_s_t_r_i_n_g.
+
+     For example, the command
+
+          uux "!diff usg!/usr/dan/f1 pwba!/a4/dan/f1 > !fi.diff"
+
+     will get the f1 files from the usg and pwba machines, exe-
+     cute a _d_i_f_f command and put the results in f1.diff in the
+     local directory.
+
+     Any special shell characters such as <>;| should be quoted
+     either by quoting the entire _c_o_m_m_a_n_d-_s_t_r_i_n_g, or quoting the
+     special characters as individual arguments.
+
+FILES
+     /usr/uucp/spool     spool directory
+     /usr/uucp/*         other data and programs
+
+SEE ALSO
+     uucp(1C)
+     D. A. Nowitz, _U_u_c_p _I_m_p_l_e_m_e_n_t_a_t_i_o_n _D_e_s_c_r_i_p_t_i_o_n
+
+WARNING
+     An installation may, and for security reasons generally
+     will, limit the list of commands executable on behalf of an
+
+Printed 8/5/83                                                  1
+
+UUX(1C)             UNIX Programmer's Manual              UUX(1C)
+
+     incoming request from _u_u_x. Typically, a restricted site will
+     permit little other than the receipt of mail via _u_u_x.
+
+BUGS
+     Only the first command of a shell pipeline may have a
+     system-name!.  All other commands are executed on the system
+     of the first command.
+     The use of the shell metacharacter * will probably not do
+     what you want it to do.
+     The shell tokens << and >> are not implemented.
+     There is no notification of denial of execution on the
+     remote machine.
+
+Printed 8/5/83                                                  2
+

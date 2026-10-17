@@ -1,0 +1,115 @@
+
+ (quote (this trace package is dedicated to nancy))
+
+(def trace
+ (lambda ($fn $flag $inform $outform)
+  (prog ($a $b $c)
+        (cond ((numbp $flag) nil) (t (setq $flag 0)))
+        (setq tracelist (cons $fn tracelist))
+        (setq $a (getd $fn))
+        (setq $b (copy (cadr $a)))
+        (rplacd (cdr $a)
+                (list
+                 (list (quote prog)
+                       (quote ($result))
+                       (list (quote patom)
+                             (list (quote quote)
+                                   (quote "entering ")))
+                       (list (quote print)
+                             (list (quote quote) $fn))
+                       (quote (terpr))
+                       (cond
+                        ((or (eq $flag 2) (eq $flag 4))
+                         (list (quote mapc)
+                               (quote
+                                (function
+                                 (lambda ($d)
+                                  (prog nil
+                                        (print $d)
+                                        (patom (quote =))
+                                        (print (eval $d))
+                                        (terpr)))))
+                               (list (quote quote) $b))))
+                       (cond
+                        ((lessp 2 $flag)
+                         (quote (break (quote trace)))))
+                       $inform
+                       (list (quote setq)
+                             (quote $result)
+                             (car (cddr $a)))
+                       (quote (patom (quote "returning from ")))
+                       (list (quote print)
+                             (list (quote quote) $fn))
+                       (quote (patom (quote "   ")))
+                       (cond
+                        ((or (eq $flag 2) (eq $flag 4))
+                         (quote (print $result))))
+                       $outform
+                       (cond
+                        ((lessp 2 $flag)
+                         (quote (break (quote trace)))))
+                       (quote (terpr))
+                       (quote (return $result))))))))
+
+(def untrace
+ (lambda ($fn)
+  (prog ($a)
+        (cond ((null (setq $a (getd $fn))) (go error))
+              ((eq $fn (car tracelist))
+               (setq tracelist (cdr tracelist)))
+              (t
+               (prog (a b)
+                     (setq a tracelist)
+                loop (setq b (cdr a))
+                     (cond ((null b) (go error))
+                           ((eq $fn (car b))
+                            (rplacd a (cdr b))
+                            (return)))
+                     (setq a b)
+                     (go loop))))
+        (rplacd (cdr $a)
+                (cddr
+                 (cadr
+                  (cddr (cddr (cddr (cdar (cddr $a))))))))
+        (return)
+   error(print $fn)
+        (patom (quote " wasn't traced"))
+        (terpr))))
+
+(def untraceall
+ (lambda nil (mapc (getd (quote untrace)) tracelist)))
+
+(def untracel
+ (nlambda ($l) (mapc (getd (quote untrace)) $l)))
+
+(def trace2
+ (lambda ($fn) (trace $fn $traceflag)))
+
+(def tracel
+ (nlambda ($l)
+   (prog ($traceflag)
+         (setq $traceflag (car $l))
+         (cond ((numbp $traceflag)
+                (mapc (getd (quote trace2)) (cdr $l)))
+               (t (setq $traceflag 0)
+                  (mapc (getd (quote trace2)) $l))))))
+
+(def flushtrace
+ (lambda nil
+  (prog nil
+        ($flushlist *tracefns)
+        (setq *tracefns)
+        ($mumble nil t)
+        (reclaim)
+        ($mumble))))
+
+ (setq *tracefns
+       (quote
+        (trace tracel
+               trace2
+               untrace
+               untracel
+               untraceall
+               flushtrace)))
+
+ (quote (these functions put up on unix by john))

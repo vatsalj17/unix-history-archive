@@ -1,0 +1,70 @@
+
+GETFSENT(3)         UNIX Programmer's Manual          GETFSENT(3)
+
+NAME
+     getfsent, getfsspec, getfsfile, setfsent, endfsent - get
+     file system descriptor file entry
+
+SYNOPSIS
+     #include <fstab.h>
+
+     struct fstab *getfsent()
+
+     struct fstab *getfsspec(name)
+     char *name;
+
+     struct fstab *getfsfile(name)
+     char *name;
+
+     int setfsent()
+
+     int endfsent()
+
+DESCRIPTION
+     _G_e_t_f_s_e_n_t, _g_e_t_f_s_s_p_e_c and _g_e_t_f_s_f_i_l_e each return a pointer to
+     an object with the following structure containing the
+     broken-out fields of a line in the file system description
+     file, /_u_s_r/_i_n_c_l_u_d_e/_f_s_t_a_b._h.
+
+          #define   FSNMLG    16
+
+          struct fstab{
+               char fs_spec[FSNMLG];
+               char fs_file[FSNMLG];
+               char fs_type[3];
+               int  fs_freq;
+               int  fs_passno;
+          };
+
+     The fields have meanings described in _f_s_t_a_b(5).
+
+     _G_e_t_f_s_e_n_t reads the next line of the file, opening  the  file
+     if necessary.
+
+     _S_e_t_f_s_e_n_t opens and rewinds the file.
+
+     _E_n_d_f_s_e_n_t closes the file.
+
+     _G_e_t_f_s_s_p_e_c and _g_e_t_f_s_f_i_l_e sequentially search from the  begin-
+     ning  of the file until a matching special file name or file
+     system file name is found, or until EOF is encountered.
+
+FILES
+     /etc/fstab
+
+Printed 5/27/83                                                 1
+
+GETFSENT(3)         UNIX Programmer's Manual          GETFSENT(3)
+
+SEE ALSO
+     fstab(5)
+
+DIAGNOSTICS
+     Null pointer returned on EOF or error.
+
+BUGS
+     All information is contained in a static area so it must  be
+     copied if it is to be saved.
+
+Printed 5/27/83                                                 2
+

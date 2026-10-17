@@ -1,0 +1,59 @@
+.TH UNLINK 2 
+.UC
+.SH NAME
+unlink \- remove directory entry
+.SH SYNOPSIS
+.B unlink(name)
+.br
+.B char *name;
+.SH DESCRIPTION
+.I Unlink
+removes the entry for the file pointed to by
+.I name
+from its directory.
+If this entry was the last link to the file,
+the contents of the file are freed and the file is destroyed.
+If, however, the file was open in any process, the actual
+destruction is delayed until it is closed, even though
+the directory entry has disappeared.
+.SH ERRORS
+.I Unlink
+will succeed unless:
+.TP 20
+[EINVAL]
+The path name contains a non-ASCII byte.
+.TP 20
+[ENOTDIR]
+A component of the path prefix is not a directory.
+.TP 20
+[ENOENT]
+The named file does not exist.
+.TP 20
+[EACCES]
+Search permission is denied for a component of the path prefix.
+.TP 20
+[EACCES]
+Write permission is denied on the directory containing the link to be removed.
+.TP 20
+[EPERM]
+The named file is a directory and the process's effective user ID
+is not the super-user.
+.TP 20
+[EBUSY]
+The entry to be unlinked is the mount point for a mounted file system.
+.TP 20
+[EROFS]
+The named file resides on a read-only file system.
+.TP 20
+[EFAULT]
+.I Name
+points to an address outside the process's allocated address space.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.SH "SEE ALSO"
+rm(1), link(2)
+.SH ASSEMBLER
+(unlink = 10.)
+.br
+.B sys  unlink; name

@@ -1,0 +1,77 @@
+.TH ACCT 2 
+.UC
+.SH NAME
+acct \- turn accounting on or off
+.SH SYNOPSIS
+.B acct(file)
+.br
+.B char *file;
+.SH DESCRIPTION
+The system is prepared to write a record
+in an accounting
+.I file
+for each process as it terminates.
+This
+call, with a null-terminated string naming an existing file
+as argument, turns on accounting;
+records for each terminating process are appended to
+.IR file .
+.I File
+must already exist.
+An argument of 0 causes accounting to be turned off.
+.PP
+The accounting file format is given in
+.IR acct (5).
+.PP
+This call is permitted only to the super-user.
+.SH DIAGNOSTICS
+Upon successful completion, a value of 0 is returned.  Otherwise, a value
+of \-1 is returned and
+.I errno
+is set to indicate the error.
+.SH ERRORS
+.I Acct
+will fail if one of the following is true:
+.TP 20
+[EPERM]
+The caller is not the super-user.
+.TP 20
+[EINVAL]
+The path name contains a non-ASCII byte.
+.TP 20
+[ENOTDIR]
+A component of the path prefix is not a directory.
+.TP 20
+[ENOENT]
+The named file does not exist.
+.TP 20
+[EISDIR]
+The named file is a directory.
+.TP 20
+[EROFS]
+The named file resides on a read-only file system.
+.TP 20
+[EFAULT]
+.I File
+points outside the process's allocated address space.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.TP 20
+[EACCES]
+.I File
+is not a regular file.
+.TP 20
+[EBUSY]
+An attempt is made to turn on accounting when it is already on.
+.SH BUGS
+No accounting is produced for programs running
+when a crash occurs.
+In particular nonterminating programs are never
+accounted for.
+.SH "SEE ALSO"
+acct(5), sa(8)
+.SH ASSEMBLER
+(acct = 51.)
+.br
+.B sys acct; file

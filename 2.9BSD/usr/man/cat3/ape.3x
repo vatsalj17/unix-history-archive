@@ -1,0 +1,217 @@
+
+APE(3X)             UNIX Programmer's Manual              APE(3X)
+
+NAME
+     ape - arbitrary precision integer arithmetic routines
+
+SYNOPSIS
+     #include <ape.h>
+
+     cc ... -lape
+     f77 ... -lape
+
+DESCRIPTION
+     The _a_p_e library is a set of routines for arbitrary precision
+     integral arithmetic which may be called by either C or F77
+     programs.
+
+     The routines work on the structure MINT (``multiprecision
+     integer'') defined by
+
+          typedef struct mint {
+                  int len;
+                  short *val;
+          }  MINT, *PMINT;
+
+     The member _l_e_n is an integer whose sign is the sign of the
+     number represented, and whose magnitude is the number of
+     words (short integers) needed to store it.  The (absolute
+     value of) the number itself is stored base 2^15 as an array
+     of short ints pointed to by _v_a_l. Space for this array is
+     managed by calls to _m_a_l_l_o_c(3) and _f_r_e_e.  The size of the
+     numbers representable is limited only by the amount of core
+     available; on a PDP-11/45, numbers of 40,000 digits have
+     been successfully dealt with.
+
+     The routines themselves may be grouped into four categories:
+
+INITIALIZATION AND REMOVAL
+     MINT pointers (PMINTs) must be initialized before they can
+     be used by the other routines.  Methods for doing this
+     include:
+
+          new(pa)            PMINT *pa;
+
+          PMINT shtom(sn)    short sn;
+          PMINT itom(n)      int n;
+          PMINT ltom(ln)     long ln;
+          PMINT stom(s)      char *s;
+
+     _N_e_w(&_a) creates a zero MINT which _a points to.  The other
+     functions return pointers to MINTs with values equal to
+     their arguments (or to the numeric equivalent of its argu-
+     ment for _s_t_o_m).  _S_t_o_m follows the usual C conventions for
+     determining the input base.
+
+Printed 8/1/83                                                  1
+
+APE(3X)             UNIX Programmer's Manual              APE(3X)
+
+     For freeing storage, two routines are provided:
+
+          xfree(a)
+          afree(a)        PMINT a;
+
+     _X_f_r_e_e(_a) frees what _a->_v_a_l points to, zeroing _a; _a_f_r_e_e(_a)
+     also frees what _a points to.
+
+ARITHMETIC
+     For the following conceptual descriptions, assume these type
+     declarations:
+
+          PMINT a,b,c,d,q,r;
+          int m,n;
+          long ln;
+          short *R;
+
+          _R_o_u_t_i_n_e              _R_e_s_u_l_t
+          madd(a,b,c)          c = a + b
+          msub(a,b,c)          c = a - b
+          mult(a,b,c)          c = a * b
+          sdiv(a,m,q,R)        q = a / m;  R = a mod m
+          mdiv(a,b,q,r)        q = a / b;  r = a mod b
+          gcd(a,b,c)           c = gcd(a,b)
+          reciprocal(a,n,b)    b = 10^n / a
+          msqrt(a,b,r)         b = sqrt(a);  r = a - b*b
+                               [r's length is returned]
+          pow(a,b,c,d)         d = a^b mod c
+          rpow(a,n,b)          b = a^n
+          lpow(n,ln,b)         b = n^ln
+
+     In all cases, calls like _m_a_d_d(_a,_b,_a) are allowed and give
+     the expected results.  The routines dealing with ints will
+     all work properly no matter what the relationship between
+     short and int except _s_d_i_v which needs the int _m to be no
+     larger than the largest short.  _R_e_c_i_p_r_o_c_a_l is the closest
+     thing provided to decimal fractions.
+
+     Comparisons may be done with the function _m_c_m_p.  _M_c_m_p(_a,_b)
+     returns something positive if _a>_b, negative if _a<_b, and zero
+     if _a=_b.
+
+INPUT AND OUTPUT
+     The following routines do input and output:
+
+          PMINT a;
+          int n;  /* must have _n > 1 */
+          FILE *f;
+          char *s;
+
+          m_in(a,n,f)
+                  input a number base _n from file _f into _a
+
+Printed 8/1/83                                                  2
+
+APE(3X)             UNIX Programmer's Manual              APE(3X)
+
+          sm_in(a,n,s)
+                  input a number base _n from string _s into _a
+          m_out(a,n,f)
+                  output _a base _n onto file _f
+          sm_out(a,n,s)
+                  output _a base _n onto string _s
+
+     _M__i_n returns 0 on normal termination, and EOF when the end
+     of the input file is reached.
+
+     Special versions of these routines are provided for bases 8
+     and 10.  They are:
+
+          PMINT a;
+          FILE *f;
+
+          Base 8
+
+          om_in(a,f)
+          omin(a)        [f=stdin]
+          om_out(a,f)
+          omout(a)       [f=stdout]
+
+          Base 10
+
+          fmin(a,f)
+          minput(a)      [f=stdin]
+          fmout(a,f)
+          mout(a)        [f=stdout]
+
+F77 USAGE
+     ``Frontend'' subroutines are provided to allow F77 programs
+     to use the _a_p_e routines.  The calling program's integers are
+     cast into PMINTs by these subroutines and then passed to the
+     appropriate _a_p_e routine.
+
+     The names and syntax of these subroutines are generally the
+     same as their C counterparts.  Exceptions are:
+
+          _f_7_7 _v_e_r_s_i_o_n           _C _v_e_r_s_i_o_n
+
+          integer n,a           int n;  PMINT a;
+          character*M s         char s[M];
+
+          call new(a)           new(&a);
+          call itom(n,a)        a = itom(n);
+          call stom(s,a)        a = stom(s);
+
+          call minput(a,n)      n = minput(a);
+
+Printed 8/1/83                                                  3
+
+APE(3X)             UNIX Programmer's Manual              APE(3X)
+
+          call omin(a,n)        n = omin(a);
+          call mout(a)          mout(a);
+          call omout(a)         mout(a);
+          (no other I/O routines are provided)
+
+     Subroutines are also provided for conversions between the
+     MINT structure and the Fortran-manipulable version of an
+     integer and an array of integer*2's:
+
+          integer a, length       [_a represents a PMINT]
+          integer*2 vector(N)     [must have abs(length) .le. N]
+
+          call mtovec(a,length,vector)
+              results in:
+                  length = a->len
+                  for i = 1 to abs(length)
+                      vector(i) = a->val[i-1]
+
+          call vectom(length,vector,a)
+              results in:
+                  a->len = length
+                  for i = 1 to abs(length)
+                      a->val[i-1] = vector(i)
+
+     The latter is actually a method of initialization.
+
+FILES
+     /usr/include/ape.h      include file
+     /usr/lib/libape.a       object code library
+
+SEE ALSO
+     bc(1), dc(1), malloc(3), mp(3X)
+
+DIAGNOSTICS
+     Improper operations and running out of memory produce self-
+     explanatory messages and gratuitous core dumps.
+
+BUGS
+     Input bases should be <= 35.
+     Octal input is slower than it need be.
+     Syntax is odd and storage management is a pain.
+
+AUTHOR
+     Mark Carson
+
+Printed 8/1/83                                                  4
+

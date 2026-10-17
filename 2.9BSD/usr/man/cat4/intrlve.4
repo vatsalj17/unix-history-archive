@@ -1,0 +1,34 @@
+
+INTRLVE(4)          UNIX Programmer's Manual           INTRLVE(4)
+
+NAME
+     intrlve - file system interleaving
+
+DESCRIPTION
+     File system interleaving is achieved by encoding information
+     in the minor device numbers of the disks across which the
+     interleaving is to take place.
+
+     The octal representation of the minor device number is
+     encoded _i_d_p, where _i is an interleave flag, _d is a physical
+     drive number, and _p is a partition (subsection) within a
+     physical unit.  If _i is 0, no interleaving takes place.  If
+     _i is 1, the minor device consists of the specified partition
+     on drives number 0 through _d-_1 and successively numbered
+     blocks are distributed across the drives in rotation.
+
+SEE ALSO
+     dvhp(4), hk(4), hp(4), rm(4), rp(4), xp(4)
+
+DIAGNOSTICS
+     None.
+
+BUGS
+     Raw device drivers don't work on interleaved devices.  Thus
+     any file system maintainance program must refer to disk
+     files by their block (non-raw) names.  Some programs (not-
+     ably _f_s_c_k(8)) automatically translate a block device name to
+     its raw counterpart and will fail miserably.
+
+Printed 5/17/83                                                 1
+

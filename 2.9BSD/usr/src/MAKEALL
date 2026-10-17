@@ -1,0 +1,113 @@
+trap "" 1
+CHOWN=chown
+DESTDIR=${DESTDIR-/}
+if [ ! -d $DESTDIR/bin ] 
+then
+: make sure directory hierarchy exists
+(	cd $DESTDIR
+	echo "Make directory hierarchy"
+	for i in bin etc lib sys usr
+	do	if [ ! -d $i ]
+		then mkdir $i
+		fi
+	done
+	cd $DESTDIR/usr
+	for i in bin dict games include lib net spool ucb vpd
+	do	if [ ! -d $i ]
+		then mkdir $i
+		fi
+	done
+	cd $DESTDIR/usr/include
+	for i in local sys
+	do	if [ ! -d $i ]
+		then mkdir $i
+		fi
+	done
+	cd $DESTDIR/usr/lib
+	for i in learn lex lisp lint refer struct term tmac uucp
+	do	if [ ! -d $i ]
+		then mkdir $i
+		fi
+	done
+	cd $DESTDIR/usr/spool
+	for i in lpd mail secretmail uucp uucppublic
+	do	if [ ! -d $i ]
+		then mkdir $i
+		fi
+	done
+)
+fi
+
+case $1 in
+-f)	FP=-f;
+	;;
+-34)	PDP=34;
+	;;
+-40)	PDP=40;
+	;;
+-70)	PDP=70;
+	;;
+*)	echo 'Usage: MAKEALL -40|-34|-70' [ -f ];
+	echo ' -40 uses no separate I/D and loads floating point interpreter;';
+	echo ' -34 uses no separate I/D;';
+	echo ' -70 uses separate I/D as appropriate.';
+	echo ' -f loads floating point interpreter;';
+	exit 1;
+	;;
+esac
+echo "============== MAKE LIBRARIES ======================"
+(cd lib; MAKE -$PDP -cp $FP *)
+echo "============== MAKE STANDARD COMMANDS ======================"
+(cd cmd; MAKE -$PDP -cp $FP *)
+echo "============== MAKE UCB COMMANDS ======================"
+(cd ucb; MAKE -$PDP -cp $FP *)
+
+for i in modes aliases
+do 	echo "	======== $i"
+
+	case $i in
+
+	modes)
+		BINF="	df login mail mkdir mv passwd rmdir su ps"
+		UBINF="	at newgrp"
+		UCBF=" w chfn chsh"
+		LIBF="	atrun ex3.7preserve ex3.7recover"
+		UULIBF="uucp/uuxqt uucp/uucico uucp/uuclean"
+		UUBINF="uucp uux uulog uuname"
+		TMPF="	tmp usr/tmp usr/lib/uucp/.XQTDIR usr/msgs"
+		TSPOOL="lpd mail secretmail uucp uucppublic"
+		ATDIR="at at/past"
+		BNETBF="v6mail"
+		cd $DESTDIR/bin; $CHOWN root $BINF; chmod 4755 $BINF
+		cd $DESTDIR/usr/bin; $CHOWN root $UBINF; chmod 4755 $UBINF
+		cd $DESTDIR/usr/ucb; $CHOWN root $UCBF; chmod 4755 $UCBF
+		cd $DESTDIR/usr/lib; $CHOWN root $LIBF; chmod 4755 $LIBF
+		cd $DESTDIR/usr/lib; $CHOWN uucp $UULIBF; chmod 4755 $UULIBF
+		cd $DESTDIR/usr/bin; $CHOWN uucp $UUBINF; chmod 4755 $UUBINF
+		cd $DESTDIR; chmod 777 $TMPF
+		cd $DESTDIR/usr/spool; chmod 777 $TSPOOL; chmod 755 $ATDIR;\
+		$CHOWN root $ATDIR
+
+		;;
+
+	aliases)
+		echo Establish alias names.
+		rm -f $DESTDIR/bin/[
+		ln $DESTDIR/bin/test $DESTDIR/bin/[
+		rm -f $DESTDIR/usr/ucb/l $DESTDIR/usr/ucb/f $DESTDIR/usr/ucb/u
+		rm -f $DESTDIR/usr/ucb/page
+		ln $DESTDIR/usr/ucb/ls $DESTDIR/usr/ucb/l
+		ln $DESTDIR/usr/ucb/finger $DESTDIR/usr/ucb/f
+		ln $DESTDIR/usr/ucb/users $DESTDIR/usr/ucb/u
+		ln $DESTDIR/usr/ucb/more $DESTDIR/usr/ucb/page
+		cp $DESTDIR/usr/ucb/ls $DESTDIR/bin/ucbls
+		rm $DESTDIR/usr/bin/uuclean
+		ln $DESTDIR/usr/lib/uucp/uuclean $DESTDIR/usr/bin/uuclean
+		rm -f $DESTDIR/usr/ucb/uptime
+		ln $DESTDIR/usr/ucb/w $DESTDIR/usr/ucb/uptime
+		(cd $DESTDIR/bin ; rm vi view edit e)
+		(cd $DESTDIR/bin ; ln ex vi; ln ex view; ln ex edit; ln ex e  )
+		(cd $DESTDIR/usr/ucb ; rm -f mail ; ln Mail mail)
+		;;
+	esac
+done

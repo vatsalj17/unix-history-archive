@@ -1,0 +1,72 @@
+.TH "CHDIR" 2
+.UC
+.SH NAME
+chdir, chroot \- change default directory
+.SH SYNOPSIS
+.B chdir(dirname)
+.br
+.B char *dirname;
+.PP
+.B chroot(dirname)
+.br
+.B char *dirname;
+.SH DESCRIPTION
+.I Dirname
+is the address of the path name of a directory, terminated by a null byte.
+.I Chdir
+causes this directory
+to become the current working directory,
+the starting point for path names not beginning with `/'.
+.PP
+.I Chroot
+sets the root directory, the
+starting point for path names beginning with `/'.
+The call is restricted to the super-user.
+.SH RETURN VALUE
+Upon successful completion, a value of 0 is returned.
+Otherwise, a value of \-1 is returned
+and
+.I errno
+is set to indicate the error.
+.SH ERRORS
+.IR Chdir " (respectively " chroot )
+will fail and the current working directory (starting point for path
+names beginning with `/') will be unchanged if one or
+more of the following is true:
+.TP 20
+[ENOTDIR]
+A component of the path name is not a directory.
+.TP 20
+[ENOENT]
+The named directory does not exist.
+.TP 20
+[EINVAL]
+The
+.I dirname
+contained a non-ASCII byte.
+.TP 20
+[EACCES]
+Search permission is denied for any component of the path name.
+.TP 20
+[EFAULT]
+.I Dirname
+points outside the process's allocated address space.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.PP
+.I Chroot
+will also fail if:
+.TP 20
+[EPERM]
+The user is not the super-user.
+.SH "SEE ALSO"
+cd(1)
+.SH ASSEMBLER
+(chdir = 12.)
+.br
+.B sys chdir; dirname
+.PP
+(chroot = 61.)
+.br
+.B sys chroot; dirname

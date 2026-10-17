@@ -1,0 +1,199 @@
+
+LS(1)               UNIX Programmer's Manual                LS(1)
+
+NAME
+     ls - list contents of directory
+
+SYNOPSIS
+     ls [ -abcdfgilmnqrstux1ACFR ] name ...
+     l [ _l_s options ] name ...
+
+DESCRIPTION
+     For each directory argument, _l_s lists the contents of the
+     directory; for each file argument, _l_s repeats its name and
+     any other information requested.  The output is sorted
+     alphabetically by default.  When no argument is given, the
+     current directory is listed.  When several arguments are
+     given, the arguments are first sorted appropriately, but
+     file arguments appear before directories and their contents.
+
+     There are three possible listing formats.  The format chosen
+     depends on whether the output is going to a teletype, and
+     may also be controlled by option flags.  The default format
+     for a teletype is to list the contents of directories in
+     multi-column format, with the entries sorted down the
+     columns.  (See also the -F and -x options below.) If the
+     standard output is not a teletype, the default format is to
+     list one entry per line.  Finally, there is a stream output
+     format in which files are listed across the page, separated
+     by `,' characters.  The -m flag enables this format.
+
+     When invoked as _l the default is -m .
+
+     Note: Files which are not the contents of a directory being
+     interpreted are always sorted across the page rather than
+     down the page in columns.  This is because the individual
+     file names may be arbitrarily long.
+
+     There are several thousand options:
+
+     -l   List in long format, giving mode, number of links,
+          owner, size in bytes, and time of last modification for
+          each file.  (See below.) If the file is a special file
+          the size field will instead contain the major and minor
+          device numbers.  If the file is a quota node, the
+          current usage, quota, and percentage of quota in use
+          are printed.
+
+     -t   Sort by time modified (latest first) instead of by
+          name, as is normal.
+
+     -a   List all entries; usually filenames beginning with `.'
+          are suppressed.
+
+     -A   List `.' entries; but suppress `.' and `..'.
+
+Printed 7/25/83                                                 1
+
+LS(1)               UNIX Programmer's Manual                LS(1)
+
+     -s   Give size in blocks (1024 bytes), including indirect
+          blocks, for each entry.
+
+     -d   If argument is a directory, list only its name, not its
+          contents (mostly used with -l to get status on direc-
+          tory).
+
+     -r   Reverse the order of sort to get reverse alphabetic or
+          oldest first as appropriate.
+
+     -u   Use time of last access instead of last modification
+          for sorting (-t) or printing (-l).
+
+     -c   Use time of file creation for sorting or printing.
+
+     -i   Print i-number in first column of the report for each
+          file listed.
+
+     -f   Force each argument to be interpreted as a directory
+          and list the name found in each slot.  This option
+          turns off -l, -t, -s, and -r, and turns on -a; the
+          order is the order in which entries appear in the
+          directory.
+
+     -g   Give group instead of owner in long listing.
+
+     -n   With -l or -g gives group-ID or owner-ID instead of
+          owner or group name.
+
+     -m   force stream output format
+
+     -1   force one entry per line output format, e.g. to a tele-
+          type
+
+     -C   force multi-column output, e.g. to a file or a pipe
+
+     -q   force printing of non-graphic characters in file names
+          as the character `?'; this normally happens only if the
+          output device is a teletype
+
+     -b   force printing of non-graphic characters to be in the
+          \ddd notation, in octal.
+
+     -x   force columnar printing to be sorted across rather than
+          down the page; this is the default if the last charac-
+          ter of the name the program is invoked with is an `x'.
+
+     -F   cause directories to be marked with a trailing `/' and
+          executable files to be marked with a trailing `*'; this
+          is the default if the last character of the name the
+          program is invoked with is a `f'.
+
+Printed 7/25/83                                                 2
+
+LS(1)               UNIX Programmer's Manual                LS(1)
+
+     -R   recursively list subdirectories encountered.
+
+     The mode printed under the -l option contains 11 characters
+     which are interpreted as follows: the first character is
+
+     b  if the entry is a block-type special file;
+     c  if the entry is a character-type special file;
+     d  if the entry is a directory;
+     l  if the entry is a symbolic link;
+     q  if the entry is a quota;
+     -  if the entry is a plain file.
+
+     The next 9 characters are interpreted as three sets of three
+     bits each.  The first set refers to owner permissions; the
+     next to permissions to others in the same user-group; and
+     the last to all others.  Within each set the three charac-
+     ters indicate permission respectively to read, to write, or
+     to execute the file as a program.  For a directory, `exe-
+     cute' permission is interpreted to mean permission to search
+     the directory for a specified file.  The permissions are
+     indicated as follows:
+
+     r  if the file is readable;
+     w  if the file is writable;
+     x  if the file is executable;
+     -  if the indicated permission is not granted.
+
+     The group-execute permission character is given as s if the
+     file has set-group-ID mode; likewise the user-execute per-
+     mission character is given as s if the file has set-user-ID
+     mode.
+
+     The last character of the mode (normally `x' or `-') is t if
+     the 1000 bit of the mode is on.  See _c_h_m_o_d(1) for the mean-
+     ing of this mode.
+
+     When the sizes of the files in a directory are listed, a
+     total count of blocks, including indirect blocks is printed.
+
+FILES
+     /etc/passwd         to get user ID's for `ls -l'.
+     /etc/group          to get group ID's for `ls -g'.
+
+SEE ALSO
+     file(1), pq(1), stat(2)
+
+BUGS
+     Newline and tab are considered printing characters in file
+     names.
+
+     The output device is assumed to be 80 columns wide.  Columns
+     are basically 15 characters wide, 20 characters wide if -i
+
+Printed 7/25/83                                                 3
+
+LS(1)               UNIX Programmer's Manual                LS(1)
+
+     or -s is specified, 25 characters wide if both -i and -s are
+     specified.  In any case where -l or -n is specified, we
+     assume only one entry will fit per line.
+
+     The option setting based on whether the output is a teletype
+     is undesirable as:
+
+          ls -s | lpr
+
+     is much different from
+
+          ls -s
+
+     On the other hand, not doing this setting would make old
+     shell scripts which used _l_s almost certain losers, and then
+     one could no longer do, e.g.:
+
+          ls -s | sort -nr
+
+     but would have to do
+
+          ls -s -1 | sort -nr
+
+     Column widths choices are poor for terminals which can tab.
+
+Printed 7/25/83                                                 4
+

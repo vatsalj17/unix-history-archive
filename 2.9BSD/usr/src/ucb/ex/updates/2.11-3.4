@@ -1,0 +1,4014 @@
+ed - ex.c << '-*-END-*-'
+473d
+458d
+452,453c
+# endif
+.
+449c
+
+# ifdef TRACE
+.
+423a
+#ifdef TIOCLGET
+		if (dosusp)
+			signal(SIGTSTP, onsusp);
+#endif
+	}
+.
+418c
+	if (ruptible) {
+.
+365,367c
+	signal(SIGINT, SIG_IGN);
+	signal(SIGHUP, SIG_IGN);
+.
+363c
+	 * USG tty driver can send multiple HUP's!!
+.
+361d
+345a
+        if(xflag) {
+                xtflag = 1;
+                makekey(key, tperm);
+        }
+.
+342a
+#endif
+.
+341d
+339c
+#ifndef USG
+.
+261,263c
+			commands(1,1);
+		else {
+			globp = 0;
+			if ((cp = getenv("HOME")) != 0 && *cp)
+				source(strcat(strcpy(genbuf, cp), "/.exrc"), 1);
+		}
+.
+213a
+	if(xflag){
+		key = getpass(KEYPROMPT);
+		kflag = crinit(key, perm);
+	}
+
+.
+202a
+		case 'w':
+			defwind = 0;
+			if (av[0][2] == 0) defwind = 3;
+			else for (cp = &av[0][2]; isdigit(*cp); cp++)
+				defwind = 10*defwind + *cp - '0';
+			break;
+
+		case 'x':
+			/* -x: encrypted mode */
+			xflag = 1;
+			break;
+
+.
+197d
+188d
+171,176d
+150a
+		case 'R':
+			value(READONLY) = 1;
+			break;
+
+.
+126a
+#ifdef TIOCLGET
+	if (signal(SIGTSTP, SIG_IGN) == SIG_DFL)
+		signal(SIGTSTP, onsusp), dosusp++;
+#endif
+.
+114c
+#ifndef VMUNIX
+	erfile = open(erpath+4, 0);
+	if (erfile < 0) {
+		erfile = open(erpath, 0);
+	}
+#endif
+.
+110a
+	 * For debugging take files out of . if name is a.out.
+	 */
+	if (av[0][0] == 'a')
+		erpath = tailpath(erpath);
+#endif
+	/*
+.
+109a
+#ifndef VMUNIX
+.
+103,104c
+	if (any('d', av[0])) {	/* "edit" */
+.
+99,101c
+	ivis = any('v', av[0]);	/* "vi" */
+	if (any('w', av[0]))	/* "view" */
+.
+97c
+	 * Figure out how we were invoked: ex, edit, vi, view.
+.
+94a
+	/*
+	 * Defend against d's, v's, w's, and a's in directories of
+	 * path leading to our true name.
+	 */
+	av[0] = tailpath(av[0]);
+.
+73a
+#endif
+.
+72a
+#ifndef VMUNIX
+.
+62,67c
+ * in the routine commands.  We are entered as either "ex", "edit", "vi"
+ * or "view" and the distinction is made here.  Actually, we are "vi" if
+ * there is a 'v' in our name, "view" is there is a 'w', and "edit" if
+ * there is a 'd' in our name.  For edit we just diddle options;
+ * for vi we actually force an early visual command.
+.
+54a
+ * ex_unix.c		Routines for the ! command and its variations.
+ *
+.
+w
+q
+'-*-END-*-'
+ed - ex.h << '-*-END-*-'
+336a
+int	onsusp();
+.
+280a
+ * Various miscellaneous flags and buffers needed by the encryption routines.
+ */
+#define	KSIZE   9       /* key size for encryption */
+#define	KEYPROMPT       "Key: "
+int	xflag;		/* True if we are in encryption mode */
+int	xtflag;		/* True if the temp file is being encrypted */
+int	kflag;		/* True if the key has been accepted */
+char	perm[768];
+char	tperm[768];
+char	*key;
+char	crbuf[CRSIZE];
+char	*getpass();
+
+/*
+.
+226,228c
+char	direct[ONMSZ];		/* Temp file goes here */
+char	shell[ONMSZ];		/* Copied to be settable */
+char	ttytype[ONMSZ];		/* A long and pretty name */
+.
+218d
+202a
+			/*
+			 * FIXUNDO: do we want to mung undo vars?
+			 * Usually yes unless in a macro or global.
+			 */
+#define FIXUNDO		(inopen >= 0 && (inopen || !inglobal))
+.
+197c
+int	xchng;			/* Suppresses multiple "No writes" in !cmd */
+.
+193c
+int	tchng;			/* If nonzero, then [Modified] */
+.
+182a
+int	otchng;			/* Backup tchng to find changes in macros */
+.
+178c
+int	notecnt;		/* Count for notify (to visual from cmd) */
+.
+170a
+char	lastmac;		/* Last macro called for ** */
+.
+162a
+bool	inappend;		/* in ex command append mode */
+.
+156a
+#endif
+.
+155a
+#ifndef VMUNIX
+.
+151,152c
+short	defwind;		/* -w# change default window size */
+int	dirtcnt;		/* When >= MAXDIRT, should sync temporary */
+#ifdef TIOCLGET
+bool	dosusp;			/* Do SIGTSTP in visual when ^Z typed */
+#endif
+.
+149c
+int	chng;			/* Warn "No write" */
+.
+123c
+# endif
+.
+121c
+# ifdef	VMUNIX
+#	define	BUFSIZ	1024
+# else
+.
+67a
+#else
+typedef	int	line;
+#endif
+.
+66a
+#ifndef VMUNIX
+.
+53c
+ *	The presence of the symbol USG3TTY will indicate the new code:
+.
+10a
+ * November 1979
+.
+7c
+ * Ex version 3 (see exact version in ex_cmds.c, search for /Version/)
+.
+w
+q
+'-*-END-*-'
+ed - ex_addr.c << '-*-END-*-'
+204a
+						if (loc1 == loc2)
+							loc2++;
+.
+197a
+					}
+.
+195c
+					while (loc1 <= inline) {
+						if (loc1 == loc2)
+							loc2++;
+.
+w
+q
+'-*-END-*-'
+ed - ex_argv.h << '-*-END-*-'
+17c
+int	firstln;		/* From +lineno */
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+725a
+			vmacchng(0);
+.
+713,714c
+				vclrech(1);	/* vcontin(0); */
+.
+709c
+				pofix();
+.
+703a
+				vmacchng(0);
+.
+696a
+			if (inglobal == 2)
+				pofix();
+.
+644a
+/* * */
+/* @ */
+		case '*':
+		case '@':
+			c = getchar();
+			if (c=='\n' || c=='\r')
+				ungetchar(c);
+			if (any(c, "@*\n\r"))
+				c = lastmac;
+			if (isupper(c))
+				c = tolower(c);
+			if (!islower(c))
+				error("Bad register");
+			newline();
+			setdot();
+			cmdmac(c);
+			continue;
+
+.
+632a
+			vmacchng(0);
+.
+605a
+				pofix();
+.
+578c
+				printf("Version 3.4, June 24, 1980");
+.
+562c
+			if (peekchar() == 'n') {
+				ignchar();
+				switch(peekchar()) {
+/* unmap */
+				case 'm':
+					tail2of("unmap");
+					setnoaddr();
+					mapcmd(1, 0);
+					continue;
+/* unabbreviate */
+				case 'a':
+					tail2of("unabbreviate");
+					setnoaddr();
+					mapcmd(1, 1);
+					anyabbrs = 1;
+					continue;
+				}
+/* undo */
+				tail2of("undo");
+			} else
+				tail("undo");
+.
+560d
+556a
+			vmacchng(0);
+.
+555d
+545d
+538a
+			vmacchng(0);
+.
+527a
+#ifdef TIOCLGET
+/* stop */
+			case 't':
+				tail("stop");
+				if (!ldisc)
+					error("Old tty driver|Not using new tty driver/shell");
+				c = exclam();
+				eol();
+				if (!c)
+					ckaw();
+				eol();
+				onsusp();
+				continue;
+#endif
+
+.
+515d
+497a
+			/*
+			 * Caution: 2nd char cannot be c, g, or r
+			 * because these have meaning to substitute.
+			 */
+.
+481a
+			vmacchng(0);
+.
+423a
+					putpad(KE);
+					*/
+				}
+.
+422c
+				else {
+					tostop();
+					/* replaced by tostop
+.
+372a
+				vmacchng(0);
+.
+334a
+			vmacchng(0);
+.
+330c
+				tail2of("mark");
+.
+328a
+				ignchar();
+				if (peekchar() == 'p') {
+/* map */
+					tail2of("map");
+					setnoaddr();
+					mapcmd(0, 0);
+					continue;
+				}
+.
+297a
+			vmacchng(0);
+.
+285a
+			inappend = 0;
+.
+284a
+			inappend = 1;
+.
+282a
+			vmacchng(0);
+.
+264a
+*/
+.
+263a
+/*
+.
+229a
+			vmacchng(0);
+.
+218a
+			inappend = 0;
+.
+217a
+			inappend = 1;
+.
+215a
+			vmacchng(0);
+.
+167a
+				vmacchng(0);
+.
+158a
+			inappend = 0;
+.
+157a
+			inappend = 1;
+.
+155a
+			vmacchng(0);
+.
+140c
+			switch(peekchar()) {
+			case 'b':
+/* abbreviate */
+				tail("abbreviate");
+				setnoaddr();
+				mapcmd(0, 1);
+				anyabbrs = 1;
+				continue;
+			case 'r':
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds2.c << '-*-END-*-'
+528a
+		putpad(KE);
+		*/
+.
+527a
+		tostop();
+		/* replaced by the ostop above
+.
+524d
+520d
+507,508c
+		vclrech(1);
+		if (Peekkey != ':') {
+			putpad(TI);
+			tostart();
+			/* replaced by ostart.
+			putpad(VS);
+			putpad(KS);
+			*/
+		}
+.
+505a
+			}
+.
+504c
+			if(getkey() == ':') {
+				/* Ugh. Extra newlines, but no other way */
+				putch('\n');
+				outline = WECHO;
+.
+487d
+465d
+456c
+ * Continue after a : command from open/visual.
+.
+442a
+		if (tcommand[0] == 's' && any(c, "gcr"))
+			goto ret;
+.
+235a
+	isalt = (strcmp(altfile, args)==0) + 1;
+.
+231a
+	extern short isalt;	/* defined in ex_io.c */
+.
+191d
+188d
+175,176d
+164a
+		if (str)
+			noonl();
+.
+162d
+160a
+	inappend = inglobal = 0;
+	globp = vglobp = vmacp = 0;
+.
+136a
+		putpad(KE);
+		*/
+.
+135a
+		/* ostop should be doing this
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmdsub.c << '-*-END-*-'
+941a
+}
+
+/*
+ * Map command:
+ * map src dest
+ */
+mapcmd(un, ab)
+	int un;	/* true if this is unmap command */
+	int ab;	/* true if this is abbr command */
+{
+	char lhs[100], rhs[100];	/* max sizes resp. */
+	register char *p;
+	register char c;
+	char *dname;
+	struct maps *mp;	/* the map structure we are working on */
+
+	mp = ab ? abbrevs : exclam() ? immacs : arrows;
+	if (skipend()) {
+		int i;
+
+		/* print current mapping values */
+		if (peekchar() != EOF)
+			ignchar();
+		if (un)
+			error("Missing lhs");
+		if (inopen)
+			pofix();
+		for (i=0; mp[i].mapto; i++)
+			if (mp[i].cap) {
+				lprintf("%s", mp[i].descr);
+				putchar('\t');
+				lprintf("%s", mp[i].cap);
+				putchar('\t');
+				lprintf("%s", mp[i].mapto);
+				putNFL();
+			}
+		return;
+	}
+
+	ignore(skipwh());
+	for (p=lhs; ; ) {
+		c = getchar();
+		if (c == CTRL(v)) {
+			c = getchar();
+		} else if (!un && any(c, " \t")) {
+			/* End of lhs */
+			break;
+		} else if (endcmd(c) && c!='"') {
+			ungetchar(c);
+			if (un) {
+				newline();
+				*p = 0;
+				addmac(lhs, NOSTR, NOSTR, mp);
+				return;
+			} else
+				error("Missing rhs");
+		}
+		*p++ = c;
+	}
+	*p = 0;
+
+	if (skipend())
+		error("Missing rhs");
+	for (p=rhs; ; ) {
+		c = getchar();
+		if (c == CTRL(v)) {
+			c = getchar();
+		} else if (endcmd(c) && c!='"') {
+			ungetchar(c);
+			break;
+		}
+		*p++ = c;
+	}
+	*p = 0;
+	newline();
+	/*
+	 * Special hack for function keys: #1 means key f1, etc.
+	 * If the terminal doesn't have function keys, we just use #1.
+	 */
+	if (lhs[0] == '#') {
+		char *fnkey;
+		char *fkey();
+		char funkey[3];
+
+		fnkey = fkey(lhs[1] - '0');
+		funkey[0] = 'f'; funkey[1] = lhs[1]; funkey[2] = 0;
+		if (fnkey)
+			strcpy(lhs, fnkey);
+		dname = funkey;
+	} else {
+		dname = lhs;
+	}
+	addmac(lhs,rhs,dname,mp);
+}
+
+/*
+ * Add a macro definition to those that already exist. The sequence of
+ * chars "src" is mapped into "dest". If src is already mapped into something
+ * this overrides the mapping. There is no recursion. Unmap is done by
+ * using NOSTR for dest.  Dname is what to show in listings.  mp is
+ * the structure to affect (arrows, etc).
+ */
+addmac(src,dest,dname,mp)
+	register char *src, *dest, *dname;
+	register struct maps *mp;
+{
+	register int slot, zer;
+
+#ifdef TRACE
+	if (trace)
+		fprintf(trace, "addmac(src='%s', dest='%s', dname='%s', mp=%x\n", src, dest, dname, mp);
+#endif
+	if (dest && mp==arrows) {
+		/* Make sure user doesn't screw himself */
+		/*
+		 * Prevent tail recursion. We really should be
+		 * checking to see if src is a suffix of dest
+		 * but this makes mapping involving escapes that
+		 * is reasonable mess up.
+		 */
+		if (src[1] == 0 && src[0] == dest[strlen(dest)-1])
+			error("No tail recursion");
+		/*
+		 * We don't let the user rob himself of ":", and making
+		 * multi char words is a bad idea so we don't allow it.
+		 * Note that if user sets mapinput and maps all of return,
+		 * linefeed, and escape, he can screw himself. This is
+		 * so weird I don't bother to check for it.
+		 */
+		if (isalpha(src[0]) && src[1] || any(src[0],":"))
+			error("Too dangerous to map that");
+	}
+	else if (dest) {
+		/* check for tail recursion in input mode: fussier */
+		if (eq(src, dest+strlen(dest)-strlen(src)))
+			error("No tail recursion");
+	}
+	/*
+	 * If the src were null it would cause the dest to
+	 * be mapped always forever. This is not good.
+	 */
+	if (src == NOSTR || src[0] == 0)
+		error("Missing lhs");
+
+	/* see if we already have a def for src */
+	zer = -1;
+	for (slot=0; mp[slot].mapto; slot++) {
+		if (mp[slot].cap) {
+			if (eq(src, mp[slot].cap) || eq(src, mp[slot].mapto))
+				break;	/* if so, reuse slot */
+		} else {
+			zer = slot;	/* remember an empty slot */
+		}
+	}
+
+	if (dest == NOSTR) {
+		/* unmap */
+		if (mp[slot].cap) {
+			mp[slot].cap = NOSTR;
+			mp[slot].descr = NOSTR;
+		} else {
+			error("Not mapped|That macro wasn't mapped");
+		}
+		return;
+	}
+
+	/* reuse empty slot, if we found one and src isn't already defined */
+	if (zer >= 0 && mp[slot].mapto == 0)
+		slot = zer;
+
+	/* if not, append to end */
+	if (slot >= MAXNOMACS)
+		error("Too many macros");
+	if (msnext == 0)	/* first time */
+		msnext = mapspace;
+	/* Check is a bit conservative, we charge for dname even if reusing src */
+	if (msnext - mapspace + strlen(dest) + strlen(src) + strlen(dname) + 3 > MAXCHARMACS)
+		error("Too much macro text");
+	CP(msnext, src);
+	mp[slot].cap = msnext;
+	msnext += strlen(src) + 1;	/* plus 1 for null on the end */
+	CP(msnext, dest);
+	mp[slot].mapto = msnext;
+	msnext += strlen(dest) + 1;
+	if (dname) {
+		CP(msnext, dname);
+		mp[slot].descr = msnext;
+		msnext += strlen(dname) + 1;
+	} else {
+		/* default descr to string user enters */
+		mp[slot].descr = src;
+	}
+}
+
+/*
+ * Implements macros from command mode. c is the buffer to
+ * get the macro from.
+ */
+cmdmac(c)
+char c;
+{
+	char macbuf[BUFSIZ];
+	line *ad, *a1, *a2;
+	char *oglobp;
+	char pk;
+	bool oinglobal;
+
+	lastmac = c;
+	oglobp = globp;
+	oinglobal = inglobal;
+	pk = peekc; peekc = 0;
+	if (inglobal < 2)
+		inglobal = 1;
+	regbuf(c, macbuf, sizeof(macbuf));
+	a1 = addr1; a2 = addr2;
+	for (ad=a1; ad<=a2; ad++) {
+		globp = macbuf;
+		dot = ad;
+		commands(1,1);
+	}
+	globp = oglobp;
+	inglobal = oinglobal;
+	peekc = pk;
+.
+904a
+#ifdef TRACE
+	if (trace)
+		vudump("after undo");
+#endif
+.
+903c
+	/*
+	 * Defensive programming - after a munged undadot.
+	 * Also handle empty buffer case.
+	 */
+	if ((dot <= zero || dot > dol) && dot != dol)
+.
+900,901c
+		} else
+			undkind = UNDCHANGE;
+.
+796a
+#ifdef TRACE
+	if (trace)
+		vudump("before undo");
+#endif
+.
+707d
+677d
+673d
+659d
+624d
+621d
+619d
+598d
+567a
+	if (!FIXUNDO)
+		error("Can't yank inside global/macro");
+.
+559a
+	}	/* end of "for each file in path" */
+	if (tfcount <= 0)
+		error("No tags file");
+	else
+		serror("%s: No such tag@in tags file", lasttag);
+}
+.
+543,558c
+			value(MAGIC) = omagic;
+			return;
+		}	/* end of "for each tag in file" */
+
+		/*
+		 * No such tag in this file.  Close it and try the next.
+		 */
+#ifdef VMUNIX
+		fclose(iof);
+#else
+		close(io);
+.
+539a
+			if (samef)
+				markpr(dot);
+			/*
+			 * BUG: if it isn't found (user edited header
+			 * line) we get left in nomagic mode.
+			 */
+			value(MAGIC) = 0;
+.
+536,538c
+			globp = cmdbuf;
+.
+534a
+			strcpy(cmdbuf, cp);
+			if (strcmp(filebuf, savedfile) || !edited) {
+				char cmdbuf2[sizeof filebuf + 10];
+
+				/* Different file.  Do autowrite & get it. */
+				if (!quick) {
+					ckaw();
+					if (chng && dol > zero)
+						error("No write@since last change (:tag! overrides)");
+				}
+				oglobp = globp;
+				strcpy(cmdbuf2, "e! ");
+				strcat(cmdbuf2, filebuf);
+				globp = cmdbuf2;
+				d = peekc; ungetchar(0);
+				commands(1, 1);
+				peekc = d;
+				globp = oglobp;
+				value(MAGIC) = omagic;
+				samef = 0;
+			}
+
+			/*
+			 * Look for pattern in the current file.
+			 */
+.
+530,533c
+			if (*cp == 0)
+				goto badtags;
+			if (dol != zero) {
+				/*
+				 * Save current position in 't for ^^ in visual.
+				 */
+				names['t'-'a'] = *dot &~ 01;
+				if (inopen) {
+					extern char *ncols['z'-'a'+2];
+					extern char *cursor;
+
+					ncols['t'-'a'] = cursor;
+				}
+.
+525,528c
+			*lp++ = 0;
+.
+523c
+			/* name of file */
+			while (*cp && iswhite(*cp))
+				cp++;
+			if (!*cp)
+badtags:
+				serror("%s: Bad tags file entry", lasttag);
+			lp = filebuf;
+			while (*cp && *cp != ' ' && *cp != '\t') {
+				if (lp < &filebuf[sizeof filebuf - 2])
+					*lp++ = *cp;
+				cp++;
+.
+518,521c
+#ifdef VMUNIX
+			fclose(iof);
+#else
+			close(io);
+#endif
+			/* Rest of tag if abbreviated */
+			while (!iswhite(*cp))
+				cp++;
+.
+516c
+			 * We found the tag.  Decode the line in the file.
+.
+500,514d
+496,498c
+#ifdef VMUNIX
+			mid = (top + bot) / 2;
+			fseek(iof, mid, 0);
+			if (mid > 0)	/* to get first tag in file to work */
+				fgets(linebuf, sizeof linebuf, iof);	/* scan to next \n */
+			fgets(linebuf, sizeof linebuf, iof);	/* get a line */
+			linebuf[strlen(linebuf)-1] = 0;	/* was '\n' */
+#endif
+			while (*cp && *lp == *cp)
+				cp++, lp++;
+			if ((*lp || !iswhite(*cp)) && (value(TAGLENGTH)==0 || lp-lasttag < value(TAGLENGTH))) {
+#ifdef VMUNIX
+				if (*lp > *cp)
+					bot = mid + 1;
+				else
+					top = mid - 1;
+#endif
+				/* Not this tag.  Try the next */
+				continue;
+			}
+.
+494c
+		tfcount++;
+		setbuf(iof, iofbuf);
+		fstat(fileno(iof), &sbuf);
+		top = sbuf.st_size;
+		if (top == 0L || iof == NULL)
+			top = -1L;
+		bot = 0L;
+		while (top >= bot) {
+#else
+		/*
+		 * Avoid stdio and scan tag file linearly.
+		 */
+		io = open(fn, 0);
+		if (io<0)
+			continue;
+		tfcount++;
+		while (getfile() == 0) {
+#endif
+			/* loop for each tags file entry */
+			register char *cp = linebuf;
+			register char *lp = lasttag;
+			char *oglobp;
+.
+490,492c
+	/*
+	 * Loop once for each file in tags "path".
+	 */
+	CP(tagfbuf, svalue(TAGS));
+	fne = tagfbuf - 1;
+	while (fne) {
+		fn = ++fne;
+		while (*fne && *fne != ' ')
+			fne++;
+		if (*fne == 0)
+			fne = 0;	/* done, quit after this time */
+		else
+			*fne = 0;	/* null terminate filename */
+#ifdef VMUNIX
+		iof = fopen(fn, "r");
+		if (iof == NULL)
+.
+482,488d
+459c
+	int tfcount = 0;
+	int omagic;
+	char *fn, *fne;
+#ifdef VMUNIX
+	/*
+	 * We have lots of room so we bring in stdio and do
+	 * a binary search on the tags file.
+	 */
+# undef EOF
+# include <stdio.h>
+# undef getchar
+# undef putchar
+	FILE *iof;
+	char iofbuf[BUFSIZ];
+	long mid;	/* assumed byte offset */
+	long top, bot;	/* length of tag file */
+	struct stat sbuf;
+#endif
+.
+456a
+	char tagfbuf[128];
+.
+447d
+404c
+	if(FIXUNDO)
+.
+339a
+	if (!FIXUNDO)
+		error("Cannot put inside global/macro");
+.
+301,310c
+		if(FIXUNDO) {
+			if (cflag) {
+				undap1 = addrt + 1;
+				undap2 = undap1 + lines;
+				deletenone();
+			} else {
+				undkind = UNDMOVE;
+				undap1 = addr1;
+				undap2 = addr2;
+				unddel = addrt;
+				squish();
+			}
+.
+177,182c
+	if(FIXUNDO) {
+		if (inopen == -1)
+			return;
+		if (a1 < a2 && a2 < a3)
+			do
+				*a1++ = *a2++;
+			while (a2 < a3);
+		truedol -= unddol - dol;
+		unddol = dol;
+	}
+.
+162c
+	if(FIXUNDO) {
+.
+113c
+	if(FIXUNDO) {
+.
+76c
+	if(FIXUNDO) {
+.
+46c
+				if (FIXUNDO && f == getsub) {
+.
+32,39c
+	if(FIXUNDO && !inopen && f!=getsub) {
+.
+w
+q
+'-*-END-*-'
+ed - ex_data.c << '-*-END-*-'
+59a
+	"timeout",	"to",	ONOFF,		1,	1,	0,
+	"ttytype",	"tty",	OTERM,		0,	0,	ttytype,
+.
+57c
+	"tags",		"tag",	STRING,		0,	0,	tags,
+.
+47a
+	"remap",	0,	ONOFF,		1,	1,	0,
+.
+40a
+	"mesg",		0,	ONOFF,		1,	1,	0,
+.
+34a
+	"edcompatible",	"ed",	ONOFF,		0,	0,	0,
+.
+23c
+char	tags[ONMSZ] = {
+	't', 'a', 'g', 's', ' ',
+	'/', 'u', 's', 'r', '/', 'l', 'i', 'b', '/', 't', 'a', 'g', 's'
+};
+char	ttytype[ONMSZ] =
+.
+21c
+char	sections[ONMSZ] = {
+	'N', 'H', 'S', 'H',				/* -ms macros */
+	'H', ' ', 'H', 'U'				/* -mm macros */
+};
+char	shell[ONMSZ] =
+.
+12,16c
+char	paragraphs[ONMSZ] = {
+.
+10c
+char	direct[ONMSZ] =
+.
+8a
+ *
+ * These initializations are done char by char instead of as strings
+ * to confuse xstr so it will leave them alone.
+.
+w
+q
+'-*-END-*-'
+ed - ex_get.c << '-*-END-*-'
+42c
+		if (!globp && c == CTRL(d))
+.
+28c
+	while (!globp && c == CTRL(d));
+.
+15,19c
+	ignore(getchar());
+.
+w
+q
+'-*-END-*-'
+ed - ex_io.c << '-*-END-*-'
+664a
+	if (slevel <= 0)
+		ttyindes = saveinp;
+.
+652c
+short slevel;
+short ttyindes;
+.
+628a
+	if(kflag)
+		crblock(perm, genbuf, nib, cntch);
+.
+614a
+                		if(kflag)
+                                        crblock(perm, genbuf, nib, cntch);
+.
+586d
+568a
+			while(fp < &genbuf[ninbuf]) {
+				if (*fp++ & 0200) {
+					if (kflag)
+						crblock(perm, genbuf, ninbuf+1,
+cntch);
+					break;
+				}
+			}
+			fp = genbuf;
+			cntch += ninbuf+1;
+.
+562a
+					lp++;
+.
+494a
+*/
+.
+493a
+/*
+.
+487a
+
+.
+394c
+		if(FIXUNDO)
+			undkind = UNDNONE;
+.
+351c
+	if (FIXUNDO && inopen && c == 'r')
+.
+346d
+323a
+		if (xflag)
+			break;
+.
+307d
+251c
+		error("No match");
+.
+220a
+		close(2);	/* so errors don't mess up the screen */
+		open("/dev/null", 1);
+.
+87,90d
+82a
+			if (value(READONLY))
+				printf(" [Read only]");
+.
+42a
+		if (c == 'e' || c == 'E')
+			altdot = lineDOT();
+.
+41c
+		wasalt = (isalt > 0) ? isalt-1 : 0;
+		isalt = 0;
+.
+21a
+#else
+int	cntln;
+#endif
+.
+20a
+#ifndef VMUNIX
+.
+18a
+short	isalt;
+.
+16,17c
+int	altdot;
+int	oldadot;
+.
+w
+q
+'-*-END-*-'
+ed - ex_put.c << '-*-END-*-'
+1012a
+}
+
+#ifdef TIOCLGET
+/*
+ * We have just gotten a susp.  Suspend and prepare to resume.
+ */
+onsusp()
+{
+	ttymode f;
+
+	f = setty(normf);
+	vnfl();
+	putpad(TE);
+	flush();
+
+	signal(SIGTSTP, SIG_DFL);
+	kill(0, SIGTSTP);
+
+	/* the pc stops here */
+
+	signal(SIGTSTP, onsusp);
+	vcontin(0);
+	setty(f);
+	if (!inopen)
+		error(0);
+	else {
+		if (vcnt < 0) {
+			vcnt = -vcnt;
+			if (state == VISUAL)
+				vclear();
+			else if (state == CRTOPEN)
+				vcnt = 0;
+		}
+		vdirty(0, LINES);
+		vrepaint(cursor);
+	}
+.
+999a
+# ifdef TIOCLGET
+	ioctl(i, TIOCSLTC, &nlttyc);
+# endif
+
+.
+994,997c
+	/* Update the other random chars while we're at it. */
+.
+992a
+
+.
+987c
+	/* Don't flush typeahead if we don't have to */
+.
+985a
+
+.
+982a
+	/* Bug in USG tty driver, put out a DEL as a patch. */
+.
+979,981d
+971,972c
+ * sTTY: set the tty modes on file descriptor i to be what's
+ * currently in global "tty".  (Also use nttyc if needed.)
+.
+967c
+	if ((tn=ttyname(0)) == NULL && (tn=ttyname(1)) == NULL && (tn=ttyname(2)) == NULL)
+		tn = "/dev/tty";
+	strcpy(ttynbuf, tn);
+	stat(ttynbuf, &sbuf);
+	ttymesg = sbuf.st_mode & 0777;
+.
+963a
+# ifdef TIOCLGET
+	ioctl(i, TIOCGLTC, &olttyc);
+	nlttyc = olttyc;
+# endif
+.
+962a
+	nttyc = ottyc;
+.
+957a
+	char *tn;
+	struct stat sbuf;
+.
+943c
+# ifdef TIOCLGET
+		nlttyc = olttyc;
+# endif
+	} else
+.
+941c
+	if (f == normf) {
+.
+888a
+	putpad(KE);
+	if (!value(MESG))
+		chmod(ttynbuf, ttymesg);
+.
+887a
+	tostop();
+}
+
+/* Actions associated with putting the terminal in the right mode. */
+tostop()
+{
+.
+859c
+	tty.c_cc[VQUIT] = '\377';
+.
+852a
+# ifdef TIOCLGET
+	nlttyc.t_suspc = '\377';	/* ^Z */
+	nlttyc.t_dsuspc = '\377';	/* ^Y */
+	nlttyc.t_flushc = '\377';	/* ^O */
+	nlttyc.t_lnextc = '\377';	/* ^V */
+# endif
+.
+845a
+#ifdef TIOCGETC
+.
+839c
+/* actions associated with putting the terminal in open mode */
+tostart()
+{
+	putpad(VS);
+	putpad(KS);
+	if (!value(MESG))
+		chmod(ttynbuf, 0611);	/* 11 = urgent only allowed */
+}
+
+.
+834c
+	tostart();
+.
+571c
+		i = tabcol(outcol, value(HARDTABS));
+.
+533,537c
+		if (xNL && pfast)
+			tputs(xNL, 0, plodput);
+		else
+.
+524d
+520d
+517d
+513c
+		/*
+		 * BUG: this doesn't take the (possibly long) length
+		 * of xCR into account.
+		 */
+.
+483c
+		i = destcol % value(HARDTABS)
+		    + destcol / value(HARDTABS);
+.
+481c
+	} else
+	/*
+	 * No home and no up means it's impossible, so we return an
+	 * incredibly big number to make cursor motion win out.
+	 */
+		if (!UP && destline < outline)
+			return (500);
+.
+475c
+			if (i + k + 2 < j && (k<=0 || UP)) {
+.
+473a
+			/*
+			 * Quickly consider homing down and moving from there.
+			 * Assume cost of LL is 2.
+			 */
+.
+470c
+
+		/*
+		 * Decision.  We may not have a choice if no UP.
+		 */
+		if (i + destline < j || (!UP && destline < outline)) {
+			/*
+			 * Cheaper to home.  Do it now and pretend it's a
+			 * regular local motion.
+			 */
+.
+465c
+				j = i + 1; /* impossibly expensive */
+
+		/* k is the absolute value of vertical distance */
+.
+463c
+				i = j = outcol - destcol; /* cheaper to backspace */
+.
+461c
+		} else
+			/* leftward motion only works if we can backspace. */
+.
+455,458c
+		/*
+		 * j is cost to move locally without homing
+		 */
+		if (destcol >= outcol) {	/* if motion is to the right */
+			j = destcol / value(HARDTABS) - outcol / value(HARDTABS);
+			if (GT && j)
+				j += destcol % value(HARDTABS);
+.
+452c
+			i = (destcol / value(HARDTABS)) + (destcol % value(HARDTABS));
+.
+450a
+		/*
+		 * i is the cost to home and tab/space to the right to
+		 * get to the proper column.  This assumes ND space costs
+		 * 1 char.  So i+destcol is cost of motion with home.
+		 */
+.
+449a
+	/*
+	 * Consider homing and moving down/right from there, vs moving
+	 * directly with local motions to the right spot.
+	 */
+.
+392d
+388d
+386a
+			 *
+			 * Superbee glitch:  in the middle of the screen we
+			 * have to use esc B (down) because linefeed screws up
+			 * in "Efficient Paging" (what a joke) mode (which is
+			 * essential in some SB's because CRLF mode puts garbage
+			 * in at end of memory), but you must use linefeed to
+			 * scroll since down arrow won't go past memory end.
+			 * I turned this off after recieving Paul Eggert's
+			 * Superbee description which wins better.
+.
+357d
+353d
+351d
+347d
+197,202c
+static	char linb[66];
+static	char *linp = linb;
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.c << '-*-END-*-'
+692,695d
+403c
+			error("Line overflow@in substitute");
+.
+200a
+			if (uselastre)
+				savere(subre);
+			else
+				resre(subre);
+.
+196a
+		case 'r':
+			uselastre = 1;
+			continue;
+
+.
+194c
+			cflag = !cflag;
+.
+190c
+			gsubf = !gsubf;
+.
+178,183d
+176d
+173a
+	redo:
+		if (re.Expbuf[0] == 0)
+			error("No previous re|No previous regular expression");
+.
+172a
+	case '~':
+		uselastre = 1;
+		/* fall into ... */
+.
+170a
+		gsubf = 0;
+		cflag = 0;
+.
+169c
+		uselastre = 1;
+.
+166c
+		if (endcmd(seof) || any(seof, "gcr")) {
+			ungetchar(seof);
+			goto redo;
+		}
+		if (isalpha(seof) || isdigit(seof))
+.
+159,160c
+	if (!value(EDCOMPATIBLE))
+		gsubf = cflag = 0;
+	uselastre = 0;
+.
+156,157c
+	register int seof, c, uselastre;
+	static int gsubf;
+.
+118c
+	if(FIXUNDO)
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.h << '-*-END-*-'
+39,40c
+#define	savere(a)	copy(&a, &re, sizeof (struct regexp))
+#define	resre(a)	copy(&re, &a, sizeof (struct regexp))
+.
+w
+q
+'-*-END-*-'
+ed - ex_set.c << '-*-END-*-'
+94a
+			if (op == &options[WINDOW])
+				vsetsiz(value(WINDOW));
+.
+w
+q
+'-*-END-*-'
+ed - ex_subr.c << '-*-END-*-'
+761d
+677a
+/*
+ * Return the column number that results from being in column col and
+ * hitting a tab, where tabs are set every ts columns.  Work right for
+ * the case where col > COLUMNS, even if ts does not divide COLUMNS.
+ */
+tabcol(col, ts)
+int col, ts;
+{
+	int offset, result;
+
+	if (col >= COLUMNS) {
+		offset = COLUMNS * (col/COLUMNS);
+		col -= offset;
+	} else
+		offset = 0;
+	result = col + ts - (col % ts) + offset;
+	return (result);
+}
+
+.
+604a
+# endif
+.
+603a
+# ifdef VMUNIX
+char	*std_errlist[] = {
+# else
+.
+533a
+#ifdef TRACE
+	if (trace)
+		vudump("after save");
+#endif
+.
+517a
+	if (!FIXUNDO)
+		return;
+#ifdef TRACE
+	if (trace)
+		vudump("before save");
+#endif
+.
+451c
+	*addr = n | oldglobmk;
+.
+445a
+	oldglobmk = *addr & 1;
+.
+444a
+	register oldglobmk;
+.
+369a
+#endif
+.
+366a
+#ifdef VMUNIX
+	strcpy(linebuf, seekpt);
+#else
+.
+363a
+# endif
+.
+362a
+# ifdef lint
+	char *seekpt;
+# else
+.
+360c
+#ifdef VMUNIX
+.
+339a
+# endif
+.
+338a
+# ifdef lint
+	char *seekpt;
+# else
+.
+336c
+#ifdef VMUNIX
+.
+72c
+}
+.
+w
+q
+'-*-END-*-'
+ed - ex_temp.c << '-*-END-*-'
+538a
+}
+
+/* Register c to char buffer buf of size buflen */
+regbuf(c, buf, buflen)
+char c;
+char *buf;
+int buflen;
+{
+	struct rbuf arbuf;
+	register char *p, *lp;
+
+	rbuf = &arbuf;
+	rnleft = 0;
+	rblock = 0;
+	rnext = mapreg(c)->rg_first;
+	if (rnext==0) {
+		*buf = 0;
+		error("Nothing in register %c",c);
+	}
+	p = buf;
+	while (getREG()==0) {
+		for (lp=linebuf; *lp;) {
+			if (p >= &buf[buflen])
+				error("Register too long@to fit in memory");
+			*p++ = *lp++;
+		}
+		*p++ = '\n';
+	}
+	if (partreg(c)) p--;
+	*p = '\0';
+	getDOT();
+}
+
+/*
+ * Encryption routines.  These are essentially unmodified from ed.
+ */
+
+/*
+ * crblock: encrypt/decrypt a block of text.
+ * buf is the buffer through which the text is both input and
+ * output. nchar is the size of the buffer. permp is a work
+ * buffer, and startn is the beginning of a sequence.
+ */
+crblock(permp, buf, nchar, startn)
+char *permp;
+char *buf;
+int nchar;
+long startn;
+{
+	register char *p1;
+	int n1;
+	int n2;
+	register char *t1, *t2, *t3;
+
+	t1 = permp;
+	t2 = &permp[256];
+	t3 = &permp[512];
+
+	n1 = startn&0377;
+	n2 = (startn>>8)&0377;
+	p1 = buf;
+	while(nchar--) {
+		*p1 = t2[(t3[(t1[(*p1+n1)&0377]+n2)&0377]-n2)&0377]-n1;
+		n1++;
+		if(n1==256){
+			n1 = 0;
+			n2++;
+			if(n2==256) n2 = 0;
+		}
+		p1++;
+	}
+}
+
+/*
+ * makekey: initialize buffers based on user key a.
+ */
+makekey(a, b)
+char *a, *b;
+{
+       register int i;
+	long t;
+	char temp[KSIZE + 1];
+
+	for(i = 0; i < KSIZE; i++)
+		temp[i] = *a++;
+	time(&t);
+	t += getpid();
+	for(i = 0; i < 4; i++)
+		temp[i] ^= (t>>(8*i))&0377;
+	crinit(temp, b);
+}
+
+/*
+ * crinit: besides initializing the encryption machine, this routine
+ * returns 0 if the key is null, and 1 if it is non-null.
+ */
+crinit(keyp, permp)
+char    *keyp, *permp;
+{
+       register char *t1, *t2, *t3;
+	register i;
+	int ic, k, temp;
+	unsigned random;
+	char buf[13];
+	long seed;
+
+	t1 = permp;
+	t2 = &permp[256];
+	t3 = &permp[512];
+	if(*keyp == 0)
+		return(0);
+	strncpy(buf, keyp, 8);
+	while (*keyp)
+		*keyp++ = '\0';
+
+	buf[8] = buf[0];
+	buf[9] = buf[1];
+	domakekey(buf);
+
+	seed = 123;
+	for (i=0; i<13; i++)
+		seed = seed*buf[i] + i;
+	for(i=0;i<256;i++){
+		t1[i] = i;
+		t3[i] = 0;
+	}
+	for(i=0; i<256; i++) {
+		seed = 5*seed + buf[i%13];
+		random = seed % 65521;
+		k = 256-1 - i;
+		ic = (random&0377) % (k+1);
+		random >>= 8;
+		temp = t1[k];
+		t1[k] = t1[ic];
+		t1[ic] = temp;
+		if(t3[k]!=0) continue;
+		ic = (random&0377) % k;
+		while(t3[ic]!=0) ic = (ic+1) % k;
+		t3[k] = ic;
+		t3[ic] = k;
+	}
+	for(i=0; i<256; i++)
+		t2[t1[i]&0377] = i;
+	return(1);
+}
+
+/*
+ * domakekey: the following is the major nonportable part of the encryption
+ * mechanism. A 10 character key is supplied in buffer.
+ * This string is fed to makekey (an external program) which
+ * responds with a 13 character result. This result is placed
+ * in buffer.
+ */
+domakekey(buffer)
+char *buffer;
+{
+       int pf[2];
+
+	if (pipe(pf)<0)
+		pf[0] = pf[1] = -1;
+	if (fork()==0) {
+		close(0);
+		close(1);
+		dup(pf[0]);
+		dup(pf[1]);
+		execl("/usr/lib/makekey", "-", 0);
+		execl("/lib/makekey", "-", 0);
+		exit(1);
+	}
+	write(pf[1], buffer, 10);
+	if (wait((int *)NULL)==-1 || read(pf[0], buffer, 13)!=13)
+		error("crypt: cannot generate key");
+	close(pf[0]);
+	close(pf[1]);
+	/* end of nonportable part */
+.
+411d
+404c
+	cnt = append(getREG, addr2);
+.
+400a
+		if (!FIXUNDO) {
+			splitw++; vclean(); vgoto(WECHO, 0); vreg = -1;
+			error("Can't put partial line inside macro");
+		}
+.
+280a
+#endif
+.
+279a
+#ifdef VMUNIX
+short	rused[256];
+#else
+.
+176,177c
+	if (oblock >= 0) {
+		if(xtflag) {
+			/*
+			 * Encrypt block before writing, so some devious
+			 * person can't look at temp file while editing.
+			 */
+			p1 = obuff;
+			p2 = crbuf;
+			n = CRSIZE;
+			while(n--)
+				*p2++ = *p1++;
+			crblock(tperm, crbuf, CRSIZE, (long)0);
+			blkio(oblock, crbuf, write);
+		} else
+			blkio(oblock, obuff, write);
+	}
+.
+173a
+		if(xtflag)
+			crblock(tperm, ibuff, CRSIZE, (long)0);
+.
+170a
+		}
+.
+169c
+		if (ichanged) {
+			if(xtflag)
+				crblock(tperm, ibuff, CRSIZE, (long)0);
+.
+164a
+			if(xtflag)
+				crblock(tperm, ibuff2, CRSIZE, (long)0);
+.
+161a
+			}
+.
+160c
+			if (ichang2) {
+				if(xtflag)
+					crblock(tperm, ibuff2, CRSIZE, (long)0);
+.
+139a
+        register char *p1, *p2;
+        register int n;
+.
+w
+q
+'-*-END-*-'
+ed - ex_temp.h << '-*-END-*-'
+97a
+#else
+	int	Flines;
+#endif
+.
+96a
+#ifndef VMUNIX
+.
+73a
+#else
+int	tline;
+#endif
+.
+72a
+#ifndef VMUNIX
+.
+51,52c
+ * Basically, the editor deals with the file as a sequence of BUFSIZ character
+ * blocks.  Each block contains some number of lines (and lines
+.
+38,45c
+#define	BLKMSK	077777
+#define	BNDRY	2
+#define	INCRMT	02000
+#define	LBTMSK	01776
+#define	NMBLKS	077770
+#define	OFFBTS	10
+#define	OFFMSK	01777
+#define	SHFT	0
+.
+28,36c
+#ifndef VMUNIX
+#define	BLKMSK	0777		/* 01777 */
+#define	BNDRY	8		/* 16 */
+#define	INCRMT	0200		/* 0100 */
+#define	LBTMSK	0770		/* 0760 */
+#define	NMBLKS	506		/* 1018 */
+#define	OFFBTS	7		/* 6 */
+#define	OFFMSK	0177		/* 077 */
+#define	SHFT	2		/* 3 */
+.
+24,26c
+ * For VMUNIX you get more than you could ever want.
+ * VMUNIX uses long (32 bit) integers giving much more
+ * space in the temp file and no waste.  This doubles core
+ * requirements but allows files of essentially unlimited size to be edited.
+.
+7,9c
+ * is packed into 16 bits (32 on VMUNIX).  All but the low bit index the temp
+ * file; the last is used by global commands.  The parameters below control
+ * how much the other bits are shifted left before they index the temp file.
+.
+w
+q
+'-*-END-*-'
+ed - ex_tty.c << '-*-END-*-'
+143a
+}
+
+char *
+fkey(i)
+	int i;
+{
+	if (0 <= i && i <= 9)
+		return(*fkeys[i]);
+	else
+		return(NOSTR);
+.
+118c
+	namp = "albcbtcdceclcmcrdcdldmdoedeik0k1k2k3k4k5k6k7k8k9hoicimipkdkekhklkrkskullndnlpcsesfsosrtatetiupvbvsve";
+.
+93,97d
+78a
+	if (defwind) options[WINDOW].ovalue = defwind;
+.
+77a
+#ifdef TIOCLGET
+	/*
+	 * Now map users susp char to ^Z, being careful that the susp
+	 * overrides any arrow key, but only for hackers (=new tty driver).
+	 */
+	{
+		static char sc[2];
+		int i, fnd;
+
+		ioctl(0, TIOCGETD, &ldisc);
+		if (ldisc == NTTYDISC) {
+			sc[0] = olttyc.t_suspc;
+			sc[1] = 0;
+			if (olttyc.t_suspc == CTRL(z)) {
+				for (i=0; i<=4; i++)
+					if (arrows[i].cap[0] == CTRL(z))
+						addmac(sc, NULL, NULL, arrows);
+			} else
+				addmac(sc, "\32", "susp", arrows);
+		}
+	}
+#endif
+
+.
+76a
+	/*
+	 * Initialize keypad arrow keys.
+	 */
+	arrows[0].cap = KU; arrows[0].mapto = "k"; arrows[0].descr = "up";
+	arrows[1].cap = KD; arrows[1].mapto = "j"; arrows[1].descr = "down";
+	arrows[2].cap = KL; arrows[2].mapto = "h"; arrows[2].descr = "left";
+	arrows[3].cap = KR; arrows[3].mapto = "l"; arrows[3].descr = "right";
+	arrows[4].cap = KH; arrows[4].mapto = "H"; arrows[4].descr = "home";
+.
+63c
+		CP(ltcbuf, "xx|dumb:");
+.
+60a
+	putpad(TE);
+.
+57d
+48a
+char **fkeys[10] = {
+	&F0, &F1, &F2, &F3, &F4, &F5, &F6, &F7, &F8, &F9
+};
+.
+42c
+	&F0, &F1, &F2, &F3, &F4, &F5, &F6, &F7, &F8, &F9,
+	&HO, &IC, &IM, &IP, &KD, &KE, &KH, &KL, &KR, &KS, &KU, &LL,
+.
+35c
+	NONL = (tty.c_oflag & OCRNL) == 0;
+.
+1d
+w
+q
+'-*-END-*-'
+ed - ex_tty.h << '-*-END-*-'
+135a
+
+#ifdef VMUNIX
+# define MAXNOMACS	128	/* max number of macros of each kind */
+# define MAXCHARMACS	2048	/* max # of chars total in macros */
+#else
+# define MAXNOMACS	32	/* max number of macros of each kind */
+# define MAXCHARMACS	512	/* max # of chars total in macros */
+#endif
+struct maps {
+	char *cap;	/* pressing button that sends this.. */
+	char *mapto;	/* .. maps to this string */
+	char *descr;	/* legible description of key */
+};
+struct maps arrows[MAXNOMACS];	/* macro defs - 1st 5 built in */
+struct maps immacs[MAXNOMACS];	/* for while in insert mode */
+struct maps abbrevs[MAXNOMACS];	/* for word abbreviations */
+int	ldisc;			/* line discipline for ucb tty driver */
+char	mapspace[MAXCHARMACS];
+char	*msnext;	/* next free location in mapspace */
+int	maphopcnt;	/* check for infinite mapping loops */
+bool	anyabbrs;	/* true if abbr or unabbr has been done */
+char	ttynbuf[20];	/* result of ttyname() */
+int	ttymesg;	/* original mode of users tty */
+.
+128c
+bool	normtty;		/* Have to restore normal mode from normf */
+.
+126a
+
+.
+125a
+# ifdef		TIOCLGET	/* Berkeley */
+   struct	ltchars olttyc, nlttyc;	/* More of tchars style stuff */
+# endif
+
+.
+117,124c
+#ifdef	USG3TTY			/* USG V3 */
+  struct	termio tty;	/* Use this one structure to change modes */
+  typedef	struct termio ttymode;	/* Mode to contain tty flags */
+
+#else				/* All others */
+  struct	sgttyb tty;	/* Always stty/gtty using this one structure */
+  typedef	int ttymode;	/* Mode to contain tty flags */
+# ifdef 	TIOCSETC	/* V7 */
+   struct	tchars ottyc, nttyc;	/* For V7 character masking */
+.
+109a
+ * (5)  Berkeley:	has ltchars in addition to all of V7.
+.
+104c
+ * (1)	V6:		no CBREAK, no ioctl.  (Include PWB V1 here).
+.
+83c
+bool	XX;			/* Tektronix 4025 insert line */
+.
+80c
+bool	XB;			/* Beehive (no escape key, simulate with f1) */
+.
+50d
+48a
+char	*KD;			/*    Keypad down arrow */
+char	*KE;			/*    Keypad don't xmit */
+char	*KH;			/*    Keypad home key */
+char	*KL;			/*    Keypad left arrow */
+char	*KR;			/*    Keypad right arrow */
+char	*KS;			/*    Keypad start xmitting */
+char	*KU;			/*    Keypad up arrow */
+.
+44a
+char	*F0,*F1,*F2,*F3,*F4,*F5,*F6,*F7,*F8,*F9;
+				/*    Strings sent by various function keys */
+.
+w
+q
+'-*-END-*-'
+ed - ex_tune.h << '-*-END-*-'
+77a
+#else
+#define	TUBELINES	66
+#define	TUBECOLS	160
+#define	TUBESIZE	6600	/* 66 * 100 */
+#endif
+.
+75c
+#ifndef VMUNIX
+#define	TUBELINES	40	/* Number of screen lines for visual */
+.
+68c
+ * and then never freed by the system.  Thus if you have no terminals
+.
+63c
+#define	NCARGS	LBSIZE		/* Maximum arglist chars in "next" */
+#else
+#define	NCARGS	5120
+#define	NARGS	(NCARGS/6)
+#endif
+.
+61a
+#ifndef VMUNIX
+.
+54c
+ * Except on VMUNIX, these are a ridiculously small due to the
+.
+48c
+#define	HBLKS		1		/* struct header fits in BUFSIZ*HBLKS */
+#else
+#define	LBLKS		900
+#define	HBLKS		2
+#endif
+.
+46a
+#ifndef VMUNIX
+.
+42c
+#define	ONMSZ		64		/* Option name size */
+.
+38d
+35,36c
+#define	LBSIZE		512		/* Line length */
+#define	ESIZE		128		/* Size of compiled re */
+#define CRSIZE		512
+.
+30,33c
+#ifdef VMUNIX
+#define	LBSIZE		1024
+#define	ESIZE		512
+#define CRSIZE		1024
+.
+26c
+ * Most other definitions are quite generous.
+.
+9,12c
+#include "local/uparm.h"
+#define	EXRECOVER	libpath(ex3.4recover)
+#define	EXPRESERVE	libpath(ex3.4preserve)
+#ifndef VMUNIX
+#define	EXSTRINGS	libpath(ex3.4strings)
+#endif
+.
+7a
+ *
+ * Only exstrings is looked at "+4", i.e. if you give
+ * "/usr/lib/..." here, "/lib" will be tried only for strings.
+.
+w
+q
+'-*-END-*-'
+ed - ex_unix.c << '-*-END-*-'
+256c
+		if(FIXUNDO)
+			undap1 = undap2 = addr2+1;
+.
+202a
+#ifdef TIOCLGET
+	if (dosusp)
+		signal(SIGTSTP, onsusp);
+#endif
+.
+174a
+#endif
+.
+173a
+#ifndef VMUNIX
+.
+132a
+#ifdef TIOCLGET
+	if (dosusp)
+		signal(SIGTSTP, SIG_DFL);
+#endif
+.
+w
+q
+'-*-END-*-'
+ed - ex_v.c << '-*-END-*-'
+393d
+390d
+322d
+318d
+311d
+292d
+281a
+	if (undadot <= zero || undadot > dol)
+		undadot = zero+1;
+.
+200d
+198d
+196a
+	if (NS && !SF) {
+		if (initev)
+			goto toopen;
+		error("Visual requires scrolling");
+	}
+.
+187,195d
+185d
+182d
+178d
+175d
+171d
+163d
+117d
+58,60d
+w
+q
+'-*-END-*-'
+ed - ex_vadj.c << '-*-END-*-'
+1072d
+1061d
+853,856c
+		if (l == 0 && state != VISUAL ||
+.
+834,836d
+831,832c
+	if (state == HARDOPEN || splitw)
+.
+694,698c
+	if (state == VISUAL && p <= WBOT) {
+.
+625,627d
+622,623c
+	if (state == HARDOPEN || splitw)
+.
+537d
+534d
+532d
+530d
+521,525c
+	if (vcnt == 0 || vcline < 0 || vcline > vcnt || holdupd && state != VISUAL) {
+.
+423d
+418d
+375,379c
+	if (splitw && (state == VISUAL || state == CRTOPEN))
+.
+196,200c
+			if (state == VISUAL && WTOP - ZERO >= need && AL && DL) {
+.
+159d
+143d
+124a
+#ifdef TRACE
+	if (trace)
+		fprintf(trace, "after pline in vreopen\n");
+#endif
+.
+123a
+#ifdef TRACE
+	if (trace)
+		fprintf(trace, "before pline in vreopen\n");
+#endif
+.
+68,72c
+	if (state == VISUAL && vcline == 0 && vcnt > 1 && p > ZERO) {
+.
+50d
+33d
+w
+q
+'-*-END-*-'
+ed - ex_vars.h << '-*-END-*-'
+37c
+#define	NOPTS	40
+.
+6,35c
+#define EDCOMPATIBLE    5
+#define ERRORBELLS      6
+#define HARDTABS        7
+#define IGNORECASE      8
+#define LISP            9
+#define LIST            10
+#define MAGIC           11
+#define MESG            12
+#define NUMBER          13
+#define OPEN            14
+#define OPTIMIZE        15
+#define PARAGRAPHS      16
+#define PROMPT          17
+#define READONLY        18
+#define REDRAW          19
+#define REMAP           20
+#define REPORT          21
+#define SCROLL          22
+#define SECTIONS        23
+#define SHELL           24
+#define SHIFTWIDTH      25
+#define SHOWMATCH       26
+#define SLOWOPEN        27
+#define TABSTOP         28
+#define TAGLENGTH       29
+#define TAGS            30
+#define TERM            31
+#define TERSE           32
+#define TIMEOUT         33
+#define TTYTYPE         34
+#define WARN            35
+#define WINDOW          36
+#define WRAPSCAN        37
+#define WRAPMARGIN      38
+#define WRITEANY        39
+.
+w
+q
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+425a
+}
+
+/*
+ * fastpeekkey is just like peekkey but insists the character come in
+ * fast (within 1 second). This will succeed if it is the 2nd char of
+ * a machine generated sequence (such as a function pad from an escape
+ * flavor terminal) but fail for a human hitting escape then waiting.
+ */
+fastpeekkey()
+{
+	int trapalarm();
+	register int c;
+
+	/*
+	 * If the user has set notimeout, we wait forever for a key.
+	 * If we are in a macro we do too, but since it's already
+	 * buffered internally it will return immediately.
+	 * In other cases we force this to die in 1 second.
+	 * This is pretty reliable (VMUNIX rounds it to .5 - 1.5 secs,
+	 * but UNIX truncates it to 0 - 1 secs) but due to system delays
+	 * there are times when arrow keys or very fast typing get counted
+	 * as separate.  notimeout is provided for people who dislike such
+	 * nondeterminism.
+	 */
+	if (value(TIMEOUT) && inopen >= 0) {
+		signal(SIGALRM, trapalarm);
+		alarm(1);
+	}
+	CATCH
+		c = peekkey();
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"[OK]",c);
+#endif
+		alarm(0);
+	ONERR
+		c = 0;
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"[TOUT]",c);
+#endif
+	ENDCATCH
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"[fpk:%o]",c);
+#endif
+	return(c);
+}
+
+trapalarm() {
+	alarm(0);
+	longjmp(vreslab,1);
+.
+407a
+ * Push st onto the front of vmacp. This is tricky because we have to
+ * worry about where vmacp was previously pointing. We also have to
+ * check for overflow (which is typically from a recursive macro)
+ * Finally we have to set a flag so the whole thing can be undone.
+ * canundo is 1 iff we want to be able to undo the macro.  This
+ * is false for, for example, pushing back lookahead from fastpeekkey(),
+ * since otherwise two fast escapes can clobber our undo.
+ */
+macpush(st, canundo)
+char *st;
+int canundo;
+{
+	char tmpbuf[BUFSIZ];
+
+	if (st==0 || *st==0)
+		return;
+#ifdef notdef
+	if (!value(UNDOMACRO))
+		canundo = 0;
+#endif
+#ifdef TRACE
+	if (trace)
+		fprintf(trace, "macpush(%s), canundo=%d\n",st,canundo);
+#endif
+	if ((vmacp ? strlen(vmacp) : 0) + strlen(st) > BUFSIZ)
+		error("Macro too long@ - maybe recursive?");
+	if (vmacp) {
+		strcpy(tmpbuf, vmacp);
+		if (!FIXUNDO)
+			canundo = 0;	/* can't undo inside a macro anyway */
+	}
+	strcpy(vmacbuf, st);
+	if (vmacp)
+		strcat(vmacbuf, tmpbuf);
+	vmacp = vmacbuf;
+	/* arrange to be able to undo the whole macro */
+	if (canundo) {
+#ifdef notdef
+		otchng = tchng;
+		vsave();
+		saveall();
+		inopen = -1;	/* no need to save since it had to be 1 or -1 before */
+		vundkind = VMANY;
+#endif
+		vch_mac = VC_NOCHANGE;
+	}
+}
+
+#ifdef TRACE
+visdump(s)
+char *s;
+{
+	register int i;
+
+	if (!trace) return;
+
+	fprintf(trace, "\n%s: basWTOP=%d, basWLINES=%d, WTOP=%d, WBOT=%d, WLINES=%d, WCOLS=%d, WECHO=%d\n",
+		s, basWTOP, basWLINES, WTOP, WBOT, WLINES, WCOLS, WECHO);
+	fprintf(trace, "   vcnt=%d, vcline=%d, cursor=%d, wcursor=%d, wdot=%d\n",
+		vcnt, vcline, cursor-linebuf, wcursor-linebuf, wdot-zero);
+	for (i=0; i<TUBELINES; i++)
+		if (vtube[i] && *vtube[i])
+			fprintf(trace, "%d: '%s'\n", i, vtube[i]);
+	tvliny();
+}
+
+vudump(s)
+char *s;
+{
+	register line *p;
+
+	if (!trace) return;
+
+	fprintf(trace, "\n%s: undkind=%d, vundkind=%d, unddel=%d, undap1=%d, undap2=%d,\n",
+		s, undkind, vundkind, lineno(unddel), lineno(undap1), lineno(undap2));
+	fprintf(trace, "  undadot=%d, dot=%d, dol=%d, unddol=%d, truedol=%d\n",
+		lineno(undadot), lineno(dot), lineno(dol), lineno(unddol), lineno(truedol));
+	fprintf(trace, "  [");
+	for (p=zero+1; p<=truedol; p++)
+		fprintf(trace, "%o ", *p);
+	fprintf(trace, "]\n");
+}
+#endif
+
+/*
+.
+404c
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"Fail: push(%s), return %c", &b[1], c);
+#endif
+	macpush(&b[1],0);
+	return(c);
+.
+396,402c
+	/*
+	 * Mapping for special keys on the terminal only.
+	 * BUG: if there's a long sequence and it matches
+	 * some chars and then misses, we lose some chars.
+	 *
+	 * For this to work, some conditions must be met.
+	 * 1) Keypad sends SHORT (2 or 3 char) strings
+	 * 2) All strings sent are same length & similar
+	 * 3) The user is unlikely to type the first few chars of
+	 *    one of these strings very fast.
+	 * Note: some code has been fixed up since the above was laid out,
+	 * so conditions 1 & 2 are probably not required anymore.
+	 * However, this hasn't been tested with any first char
+	 * that means anything else except escape.
+	 */
+#ifdef MDEBUG
+	if (trace)
+		fprintf(trace,"map(%c): ",c);
+#endif
+	/*
+	 * If c==0, the char came from getesc typing escape.  Pass it through
+	 * unchanged.  0 messes up the following code anyway.
+	 */
+	if (c==0)
+		return(0);
+
+	b[0] = c;
+	b[1] = 0;
+	for (d=0; maps[d].mapto; d++) {
+#ifdef MDEBUG
+		if (trace)
+			fprintf(trace,"\ntry '%s', ",maps[d].cap);
+#endif
+		if (p = maps[d].cap) {
+			for (q=b; *p; p++, q++) {
+#ifdef MDEBUG
+				if (trace)
+					fprintf(trace,"q->b[%d], ",q-b);
+#endif
+				if (*q==0) {
+					/*
+					 * Is there another char waiting?
+					 *
+					 * This test is oversimplified, but
+					 * should work mostly. It handles the
+					 * case where we get an ESCAPE that
+					 * wasn't part of a keypad string.
+					 */
+					if ((c=='#' ? peekkey() : fastpeekkey()) == 0) {
+#ifdef MDEBUG
+						if (trace)
+							fprintf(trace,"fpk=0: return '%c'",c);
+#endif
+						/*
+						 * Nothing waiting.  Push back
+						 * what we peeked at & return
+						 * failure (c).
+						 *
+						 * We want to be able to undo
+						 * commands, but it's nonsense
+						 * to undo part of an insertion
+						 * so if in input mode don't.
+						 */
+						macpush(&b[1],maps == arrows);
+						return(c);
+					}
+					*q = getkey();
+					q[1] = 0;
+				}
+				if (*p != *q)
+					goto contin;
+			}
+			macpush(maps[d].mapto,maps == arrows);
+			c = getkey();
+#ifdef MDEBUG
+			if (trace)
+				fprintf(trace,"Success: push(%s), return %c",maps[d].mapto, c);
+#endif
+			return(c);	/* first char of map string */
+			contin:;
+		}
+.
+394c
+	register char *p, *q;
+	char b[10];	/* Assumption: no keypad sends string longer than 10 */
+.
+391a
+	register struct maps *maps;
+.
+390c
+
+map(c,maps)
+.
+366d
+363d
+361d
+358d
+337,341c
+	if (notecnt < 2 || !must && state == VISUAL)
+.
+266c
+	if (vglobp || vmacp)
+.
+240a
+	if (Outchar == termchar)
+		putchar('\n');
+.
+195a
+	case ATTN:
+	case QUIT:
+		ungetkey(c);
+		return (0);
+
+.
+187,190d
+111d
+109a
+			Peek2key = 0;
+			break;
+.
+107c
+			Peek2key = 0;
+			break;
+.
+105c
+		case 'C':	/* SPOW mode sometimes sends \EC for space */
+.
+100c
+	if (XB && slevel==0 && c == ESCAPE) {
+.
+93c
+	if (read(slevel == 0 ? 0 : ttyindes, &ch, 1) != 1) {
+.
+87,90c
+	if (vmacp) {
+		if (*vmacp)
+			return(*vmacp++);
+		/* End of a macro or set of nested macros */
+		vmacp = 0;
+		if (inopen == -1)	/* don't screw up undo for esc esc */
+			vundkind = VMANY;
+		inopen = 1;	/* restore old setting now that macro done */
+		vch_mac = VC_NOTINMAC;
+	}
+.
+66a
+	extern short slevel, ttyindes;
+.
+63a
+#define BEEHIVE
+.
+33c
+		if (c==0)
+			beep();
+	} while (c == 0);
+.
+31c
+	do {
+.
+w
+q
+'-*-END-*-'
+ed - ex_vis.h << '-*-END-*-'
+219c
+int	vSCROLL;		/* Number lines to scroll on ^D/^U */
+.
+208c
+int	lastcnt;		/* Count for last command */
+.
+197,198c
+int	Vlines;			/* Number of file lines "before" vi command */
+int	Xcnt;			/* External variable holding last cmd's count */
+.
+139a
+ * State information for undoing of macros.  The basic idea is that
+ * if the macro does only 1 change or even none, we don't treat it
+ * specially.  If it does 2 or more changes we want to be able to
+ * undo it as a unit.  We remember how many changes have been made
+ * within the current macro.  (Remember macros can be nested.)
+ */
+#define VC_NOTINMAC	0	/* Not in a macro */
+#define VC_NOCHANGE	1	/* In a macro, no changes so far */
+#define VC_ONECHANCE	2	/* In a macro, one change so far */
+#define VC_MANYCHANGE	3	/* In a macro, at least 2 changes so far */
+
+short	vch_mac;	/* Change state - one of the above */
+
+/*
+.
+22d
+19d
+3c
+ * Ex version 3
+.
+w
+q
+'-*-END-*-'
+ed - ex_vmain.c << '-*-END-*-'
+1128d
+1116d
+1113d
+1110d
+1108d
+1094d
+1085d
+1066c
+		vmoveitup(1, 1);
+.
+1060d
+1017c
+	if (FIXUNDO && vundkind == VCHNG || vundkind == VCAPU) {
+.
+1005c
+	if (FIXUNDO)
+		vundkind = VMANY;
+.
+1002a
+	if (FIXUNDO)
+		undap1 = undap2 = dot;
+.
+1001d
+946a
+			vmacp = 0;
+			inopen = 1;	/* might have been -1 */
+.
+935c
+			vundo(1);
+.
+913,916c
+			if (state == VISUAL) {
+.
+892c
+					}
+.
+889,890c
+					else if (state == CRTOPEN) {
+.
+887d
+885d
+872d
+864,869c
+			if (i < 0 || i >= vcnt && i >= -vcnt || state != VISUAL && dot != addr) {
+.
+833a
+			shouldpo = 0;
+.
+831a
+				shouldpo = 1;
+.
+823c
+			if (FIXUNDO && tchng && tchng != i)
+.
+760a
+			if (shouldpo) {
+				/*
+				 * So after a "Hit return..." ":", we do
+				 * another "Hit return..." the next time
+				 */
+				pofix();
+				shouldpo = 0;
+			}
+.
+745a
+			getDOT();
+.
+732a
+		 * ^Z:	suspend editor session and temporarily return
+		 * 	to shell.  Only works on Berkeley tty driver.
+		 */
+		case CTRL(z):
+			forbid(dosusp == 0 || !ldisc);
+			vsave();
+			oglobp = globp;
+			globp = "stop";
+			goto gogo;
+#endif
+
+		/*
+.
+731a
+#ifdef TIOCLGET
+.
+716c
+
+		/*
+		 * &		Like :&
+		 */
+		 case '&':
+			oglobp = globp;
+			globp = "&";
+			goto gogo;
+.
+706d
+696d
+689d
+670d
+650,658c
+				/*
+				 * After a put want current line first line,
+				 * and dot was made the last line put in code
+				 * run so far.  This is why we increment vcline
+				 * above and decrease dot here.
+				 */
+				dot -= nlput - 1;
+			}
+#ifdef TRACE
+			if (trace)
+				fprintf(trace, "vreplace(%d, %d, %d), undap1=%d, undap2=%d, dot=%d\n", vcline, i, nlput, lineno(undap1), lineno(undap2), lineno(dot));
+#endif
+			vreplace(vcline, i, nlput);
+.
+648c
+				nlput--;
+.
+646c
+				if (FIXUNDO)
+					undap1++, undap2++;
+.
+639a
+			nlput = dol - addr + 1;
+.
+628a
+			addr = dol;	/* old dol */
+.
+595a
+			vmacchng(1);
+.
+594a
+			/*
+			 * If we just did a macro the whole buffer is in
+			 * the undo save area.  We don't want to put THAT.
+			 */
+			forbid (vundkind == VMANY && undkind==UNDALL);
+.
+577a
+#ifdef notdef
+			forbid (!vreg && value(UNDOMACRO) && inopen < 0);
+#endif
+.
+562,563c
+			
+.
+556c
+		 case 'Z':
+.
+554c
+		 * ZZ		Like :x
+.
+552c
+
+.
+549a
+			/*
+			 * If we are in the middle of a macro, throw away
+			 * the rest and fix up undo.
+			 * This code copied from getbr().
+			 */
+			if (vmacp) {
+				vmacp = 0;
+				if (inopen == -1)	/* don't screw up undo for esc esc */
+					vundkind = VMANY;
+				inopen = 1;	/* restore old setting now that macro done */
+			}
+.
+542a
+			/* fall into... */
+.
+541d
+487c
+			if(FIXUNDO)
+				vundkind = VCHNG;
+			vmoving = 0;
+.
+481a
+			vmacchng(1);
+.
+441d
+438d
+423a
+		 * ~	Switch case of letter under cursor
+		 */
+		case '~':
+			{
+				char mbuf[4];
+				setLAST();
+				mbuf[0] = 'r';
+				mbuf[1] = *cursor;
+				mbuf[2] = cursor[1]==0 ? 0 : ' ';
+				mbuf[3] = 0;
+				if (isalpha(mbuf[1]))
+					mbuf[1] ^= ' ';	/* toggle the case */
+				macpush(mbuf, 1);
+			}
+			continue;
+
+
+		/*
+.
+410a
+			vmacchng(1);
+.
+375a
+			vmacchng(1);
+.
+349d
+347d
+340d
+338d
+323d
+300c
+		 *		Count repeats.
+.
+297d
+264a
+		 * ^E		Glitch the screen down (one) line.
+		 *		Cursor left on same line in file.
+		 */
+		case CTRL(e):
+			if (state != VISUAL)
+				continue;
+			if (!hadcnt)
+				cnt = 1;
+			/* Bottom line of file already on screen */
+			forbid(lineDOL()-lineDOT() <= vcnt-1-vcline);
+			ind = vcnt - vcline - 1 + cnt;
+			vdown(ind, ind, 1);
+			vnline(cursor);
+			continue;
+
+		/*
+		 * ^Y		Like ^E but up
+		 */
+		case CTRL(y):
+			if (state != VISUAL)
+				continue;
+			if (!hadcnt)
+				cnt = 1;
+			forbid(lineDOT()-1<=vcline); /* line 1 already there */
+			ind = vcline + cnt;
+			vup(ind, ind, 1);
+			vnline(cursor);
+			continue;
+
+
+		/*
+.
+258d
+255d
+253d
+251d
+238d
+235d
+233d
+231d
+188a
+		 * @   		Macros. Bring in the macro and put it
+		 *		in vmacbuf, point vglobp there and punt.
+		 */
+		 case '@':
+			c = getesc();
+			if (c == 0)
+				continue;
+			if (c == '@')
+				c = lastmac;
+			if (isupper(c))
+				c = tolower(c);
+			forbid(!islower(c));
+			lastmac = c;
+			vsave();
+			CATCH
+				char tmpbuf[BUFSIZ];
+
+				regbuf(c,tmpbuf,sizeof(vmacbuf));
+				macpush(tmpbuf, 1);
+			ONERR
+				lastmac = 0;
+				splitw = 0;
+				getDOT();
+				vrepaint(cursor);
+				continue;
+			ENDCATCH
+			vmacp = vmacbuf;
+			goto reread;
+
+		/*
+.
+180,182c
+		 *		with a little feedback.
+.
+163d
+151c
+			if (c == CTRL(l) || (KR && *KR==CTRL(l))) {
+				vclear();
+				vdirty(0, vcnt);
+			}
+.
+149a
+		case CTRL(l):
+.
+148a
+		 *		On terminals where the right arrow key sends
+		 *		^L we make ^R act like ^L, since there is no
+		 *		way to get ^L.  These terminals (adm31, tvi)
+		 *		are intelligent so ^R is useless.  Soroc
+		 *		will probably foul this up, but nobody has
+		 *		one of them.
+.
+141,144d
+121c
+#ifdef MDEBUG
+		if (trace)
+			fprintf(trace,"pcb=%c,",peekkey());
+#endif
+		op = getkey();
+		maphopcnt = 0;
+		do {
+			/*
+			 * Keep mapping the char as long as it changes.
+			 * This allows for double mappings, e.g., q to #,
+			 * #1 to something else.
+			 */
+			c = op;
+			op = map(c,arrows);
+#ifdef MDEBUG
+			if (trace)
+				fprintf(trace,"pca=%c,",c);
+#endif
+			/*
+			 * Maybe the mapped to char is a count. If so, we have
+			 * to go back to the "for" to interpret it. Likewise
+			 * for a buffer name.
+			 */
+			if ((isdigit(c) && c!='0') || c == '"') {
+				ungetkey(c);
+				goto looptop;
+			}
+			if (!value(REMAP))
+				break;
+			if (++maphopcnt > 256)
+				error("Infinite macro loop");
+		} while (c != op);
+.
+116,119c
+		 * by performing a terminal dependent mapping of inputs.
+.
+94a
+looptop:
+#ifdef MDEBUG
+			if (trace)
+				fprintf(trace, "pc=%c",peekkey());
+#endif
+.
+82,84c
+			} else if (i == 3)
+.
+77d
+67d
+65d
+25a
+	vch_mac = VC_NOTINMAC;
+
+.
+23c
+	int ind, nlput;
+	int shouldpo = 0;
+.
+w
+q
+'-*-END-*-'
+ed - ex_voperate.c << '-*-END-*-'
+671d
+668d
+654d
+651d
+643a
+		if (*globp) {
+			/* random junk after the pattern */
+			beep();
+			goto slerr;
+		}
+.
+642c
+		if (any(*globp, "^+-."))
+.
+632a
+		if (*globp == ';') {
+			/* /foo/;/bar/ */
+			globp++;
+			dot = addr;
+			cursor = loc1;
+			goto fromsemi;
+		}
+		dot = odot;
+.
+622a
+			dot = odot;
+			cursor = ocurs;
+.
+621a
+slerr:
+.
+606c
+		d = peekc;
+fromsemi:
+		ungetchar(0);
+		fixech();
+.
+599a
+		odot = dot;
+.
+413a
+		vmacchng(1);
+.
+305a
+		}
+.
+301,304c
+		if (!subop) {
+			i = getesc();
+			if (i == 0)
+				return;
+.
+282c
+		i = lastFCHR;
+.
+262c
+		i = lastFCHR;
+.
+127c
+	c = map(getesc(),arrows);
+.
+112a
+	vmacchng(1);
+.
+107a
+		vmacchng(1);
+.
+29a
+	line *odot;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops.c << '-*-END-*-'
+822c
+		if (FIXUNDO)
+			vundkind = VNONE;
+.
+796c
+	if (FIXUNDO)
+		vundkind = VCHNG;
+.
+679a
+	/*
+	 * BUG: we shouldn't be depending on what undap2 and undap1 are,
+	 * since we may be inside a macro.  What's really wanted is the
+	 * number of lines we read from the filter.  However, the mistake
+	 * will be an overestimate so it only results in extra work,
+	 * it shouldn't cause any real screwups.
+	 */
+.
+635d
+632d
+591d
+589d
+582d
+577,578c
+	if (FIXUNDO)
+		vundkind = VMANY;
+.
+535d
+524d
+521d
+519d
+510d
+508d
+504d
+500d
+493d
+491d
+447d
+437d
+305d
+299d
+275d
+270d
+245d
+213d
+161a
+	if (!vmacp)
+		vch_mac = VC_NOTINMAC;
+#ifdef TRACE
+	if (trace)
+		fprintf(trace, "vmacchng, vch_mac=%d, linebuf='%s', *dot=%o\n", vch_mac, linebuf, *dot);
+#endif
+	if (vmacp && fromvis)
+		vsave();
+#ifdef TRACE
+	if (trace)
+		fprintf(trace, "after vsave, linebuf='%s', *dot=%o\n", linebuf, *dot);
+#endif
+	switch(vch_mac) {
+	case VC_NOCHANGE:
+		vch_mac = VC_ONECHANGE;
+		break;
+	case VC_ONECHANGE:
+		/* Save current state somewhere */
+#ifdef TRACE
+		vudump("before vmacchng hairy case");
+#endif
+		savedot = dot; savedol = dol; savecursor = cursor;
+		nlines = dol - zero;
+		while ((line *) endcore - truedol < nlines)
+			morelines();
+		copyw(truedol+1, zero+1, nlines);
+		truedol += nlines;
+
+#ifdef TRACE
+		visdump("before vundo");
+#endif
+		/* Restore state as it was at beginning of macro */
+		vundo(0);
+#ifdef TRACE
+		visdump("after vundo");
+		vudump("after vundo");
+#endif
+
+		/* Do the saveall we should have done then */
+		saveall();
+#ifdef TRACE
+		vudump("after saveall");
+#endif
+
+		/* Restore current state from where saved */
+		more = savedol - dol; /* amount we shift everything by */
+		if (more)
+			(*(more>0 ? copywR : copyw))(savedol+1, dol+1, truedol-dol);
+		unddol += more; truedol += more;
+
+		truedol -= nlines;
+		copyw(zero+1, truedol+1, nlines);
+		dot = savedot; dol = savedol ; cursor = savecursor;
+		vch_mac = VC_MANYCHANGE;
+
+		/* Arrange that no further undo saving happens within macro */
+		otchng = tchng;	/* Copied this line blindly - bug? */
+		inopen = -1;	/* no need to save since it had to be 1 or -1 before */
+		vundkind = VMANY;
+#ifdef TRACE
+		vudump("after vmacchng");
+#endif
+		break;
+	case VC_NOTINMAC:
+	case VC_MANYCHANGE:
+		/* Nothing to do for various reasons. */
+		break;
+.
+160a
+		break;
+	}
+}
+
+/*
+ * Routine to handle a change inside a macro.
+ * Fromvis is true if we were called from a visual command (as
+ * opposed to an ex command).  This has nothing to do with being
+ * in open/visual mode as :s/foo/bar is not fromvis.
+ */
+vmacchng(fromvis)
+bool fromvis;
+{
+	line *savedot, *savedol;
+	char *savecursor;
+	int nlines, more;
+	register line *a1, *a2;
+	char ch;	/* DEBUG */
+	int copyw(), copywR();
+
+	if (!inopen)
+.
+157c
+		break;
+.
+138d
+136c
+			break;
+.
+130d
+128a
+		if (!show)
+			break;
+.
+118c
+		break;
+.
+115,116c
+		if (show) {
+			vcline = cnt;
+			vrepaint(vmcurs);
+		}
+.
+105,111c
+		if (cnt < 0 || cnt > vcnt || state != VISUAL) {
+			if (show)
+				vjumpto(dot, NOSTR, '.');
+			break;
+.
+101c
+		if (show && (vundkind != VMCHNG || addr != dot))
+.
+94,98c
+		if (show)
+			if (undkind == UNDMOVE)
+				vdirty(0, LINES);
+			else
+				vreplace(undap1 - addr, undap2 - undap1,
+				    undkind == UNDPUT ? 0 : unddol - dol);
+.
+87c
+			break;
+.
+59c
+vundo(show)
+bool show;	/* if true update the screen */
+.
+52d
+47d
+w
+q
+'-*-END-*-'
+ed - ex_vops2.c << '-*-END-*-'
+793c
+ * LBSIZE characters and also does hacks for the R command.
+.
+754c
+	if (Outchar != termchar)
+		Outchar = OO;
+.
+740a
+			flush();
+.
+695d
+682,688c
+					 * BUG:		Don't hack ^T except
+					 *		right after initial
+					 *		white space.
+.
+673d
+664d
+659d
+624c
+
+		/*
+		 * Word abbreviation mode.
+		 */
+		cstr[0] = c;
+		if (anyabbrs && gcursor > ogcursor && !wordch(cstr) && wordch(gcursor-1)) {
+				int wdtype, abno;
+
+				cstr[1] = 0;
+				wdkind = 1;
+				cp = gcursor - 1;
+				for (wdtype = wordch(cp - 1);
+				    cp > ogcursor && wordof(wdtype, cp - 1); cp--)
+					;
+				*gcursor = 0;
+				for (abno=0; abbrevs[abno].mapto; abno++) {
+					if (eq(cp, abbrevs[abno].cap)) {
+						macpush(cstr, 0);
+						macpush(abbrevs[abno].mapto);
+						goto vbackup;
+					}
+				}
+		}
+
+.
+622a
+		dontbreak:;
+.
+619,621c
+			if (/* c <= ' ' && */ value(WRAPMARGIN) &&
+				outcol >= OCOLUMNS - value(WRAPMARGIN)) {
+				/*
+				 * At end of word and hit wrapmargin.
+				 * Move the word to next line and keep going.
+				 */
+				wdkind = 1;
+				*gcursor++ = c;
+				*gcursor = 0;
+				/*
+				 * Find end of previous word if we are past it.
+				 */
+				for (cp=gcursor; cp>ogcursor && isspace(cp[-1]); cp--)
+					;
+				if (outcol - (gcursor-cp) >= OCOLUMNS - value(WRAPMARGIN)) {
+					/*
+					 * Find beginning of previous word.
+					 */
+					for (; cp>ogcursor && !isspace(cp[-1]); cp--)
+						;
+					if (cp <= ogcursor) {
+						/*
+						 * There is a single word that
+						 * is too long to fit.  Just
+						 * let it pass, but beep for
+						 * each new letter to warn
+						 * the luser.
+						 */
+						c = *--gcursor;
+						*gcursor = 0;
+						beep();
+						goto dontbreak;
+					}
+					/*
+					 * Save it for next line.
+					 */
+					macpush(cp, 0);
+					cp--;
+				}
+				macpush("\n", 0);
+				/*
+				 * Erase white space before the word.
+				 */
+				while (cp > ogcursor && isspace(cp[-1]))
+					cp--;	/* skip blank */
+				gobblebl = 3;
+				goto vbackup;
+.
+614,615c
+		if (c != NL && !splitw) {
+			if (c == ' ' && gobblebl) {
+.
+609d
+572c
+				    || c == tty.c_cc[VKILL]) {
+.
+465a
+		maphopcnt = 0;
+		if (vglobp == 0 && Peekkey == 0)
+			while ((ch = map(c, immacs)) != c) {
+				c = ch;
+				if (!value(REMAP))
+					break;
+				if (++maphopcnt > 256)
+					error("Infinite macro loop");
+			}
+.
+426a
+	char cstr[2];
+.
+386d
+383d
+381d
+379d
+365d
+363d
+356d
+352d
+339c
+		if (FIXUNDO && vundkind == VCHNG) {
+.
+295d
+293d
+284d
+282d
+209,213c
+	if (*cursor == 0 || state == CRTOPEN)
+.
+130d
+114d
+40c
+	if (FIXUNDO)
+		vundkind = VCHNG, CP(vutmp, linebuf);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vput.c << '-*-END-*-'
+1132,1136c
+		if (d == (c & TRIM) && !insmode && (state != HARDOPEN || OS)) {
+.
+1085,1089c
+		if (!insmode && !IN && (state != HARDOPEN || OS) && (*tp&TRIM) == 0) {
+.
+645c
+		if (inssiz >= doomed + tabcol(tabstart, value(TABSTOP)) - tabstart) {
+.
+569c
+		inssiz = tabcol(inscol, value(TABSTOP)) - inscol;
+.
+470c
+	if (p < 0 || vtube[p] == cp)
+.
+430c
+	while (--i);
+.
+426c
+	register int i = tabcol(destcol, value(TABSTOP)) - destcol;
+.
+331d
+303d
+164d
+159d
+129c
+				 * the cursor on it's magic cookie.
+.
+56d
+53d
+w
+q
+'-*-END-*-'
+ed - ex_vwind.c << '-*-END-*-'
+407d
+404d
+392d
+389d
+386d
+383d
+282d
+276d
+266,270c
+	if (state != HARDOPEN && state != ONEOPEN && i >= 0 && i < vcnt) {
+.
+247d
+240d
+228d
+225d
+222d
+219d
+196,198c
+	else switch (where) {
+.
+193d
+169,173c
+	if (state == VISUAL && scroll) {
+.
+157,161c
+		if (state != VISUAL || cnt - tot > 0 || vfit(dot, cnt) > tot / 3 + 1) {
+.
+105,109c
+	if (state != VISUAL || (!AL && !SR) || (!scroll && (cnt > tot || vfit(dot - cnt, cnt) > tot / 3 + 1))) {
+.
+97,101c
+	if (state == VISUAL && !AL && !SR &&
+.
+w
+q
+'-*-END-*-'
+ed - expreserve.c << '-*-END-*-'
+205c
+	if (lseek(0, 0l, 0)) {
+.
+193c
+	if (H.Blocks[0] != HBLKS || H.Blocks[1] != HBLKS+1) {
+.
+189c
+		fprintf(stderr, "Negative number of lines\n");
+.
+176c
+	ignorl(lseek(0, 0l, 0));
+.
+170d
+165,168d
+119d
+114,117d
+112d
+107,110d
+52d
+50d
+36a
+#else
+	int	Flines;
+#endif
+.
+35a
+#ifndef VMUNIX
+.
+30a
+#else
+#define	LBLKS	900
+#endif
+.
+29a
+#ifndef VMUNIX
+.
+12a
+#ifdef VMUNIX
+#define	HBLKS	2
+#else
+#define	HBLKS	1
+#endif
+
+.
+2,4d
+w
+q
+'-*-END-*-'
+ed - exrecover.c << '-*-END-*-'
+746c
+	if ((*iofcn)(tfile, buf, BUFSIZ) != BUFSIZ)
+.
+572c
+			*ip = ((HBLKS*BUFSIZ)-8) >> SHFT;
+.
+530c
+	maxt = (size >> SHFT) | (BNDRY-1);
+.
+496c
+	ignorl(lseek(tfile, (long)(BUFSIZ*HBLKS-8), 0));
+.
+w
+q
+'-*-END-*-'
+ed - makefile << '-*-END-*-'
+136,137c
+	@${PR} -h sys/stat.h ${INCLUDE}/sys/stat.h
+	@${PR} -h sys/types.h ${INCLUDE}/sys/types.h
+.
+123,125c
+	lint ${CFLAGS} ex.c ex_?*.c
+	lint ${CFLAGS} -u exrecover.c
+	lint ${CFLAGS} expreserve.c
+.
+115,120c
+# move from /usr/new to /usr/ucb
+newucb: a.out
+	-rm -f ${DESTDIR}${BINDIR}/ex
+	-rm -f ${DESTDIR}${BINDIR}/vi
+	-rm -f ${DESTDIR}${BINDIR}/edit
+	-rm -f ${DESTDIR}${BINDIR}/e
+	-rm -f ${DESTDIR}/usr/bin/ex
+	mv ${DESTDIR}${NBINDIR}/ex ${DESTDIR}${NBINDIR}/ex
+	-rm -f ${DESTDIR}${NBINDIR}/vi
+	ln ${DESTDIR}${BINDIR}/ex ${DESTDIR}${BINDIR}/edit
+	ln ${DESTDIR}${BINDIR}/ex ${DESTDIR}${BINDIR}/e
+	ln ${DESTDIR}${BINDIR}/ex ${DESTDIR}${BINDIR}/vi
+	ln ${DESTDIR}${BINDIR}/ex ${DESTDIR}/usr/bin/ex
+	chmod 1755 ${DESTDIR}${BINDIR}/ex
+.
+105,113c
+# install in standard place (/usr/ucb)
+install: a.out exrecover expreserve
+	-rm -f ${DESTDIR}${BINDIR}/ex
+	-rm -f ${DESTDIR}${BINDIR}/vi
+	-rm -f ${DESTDIR}${BINDIR}/view
+	-rm -f ${DESTDIR}${BINDIR}/edit
+	-rm -f ${DESTDIR}${BINDIR}/e
+	-rm -f ${DESTDIR}/usr/bin/ex
+	cp a.out ${DESTDIR}${BINDIR}/ex
+#	cp ex${VERSION}strings ${DESTDIR}/${LIBDIR}/ex${VERSION}strings
+	ln ${DESTDIR}${BINDIR}/ex ${DESTDIR}${BINDIR}/edit
+	ln ${DESTDIR}${BINDIR}/ex ${DESTDIR}${BINDIR}/e
+	ln ${DESTDIR}${BINDIR}/ex ${DESTDIR}${BINDIR}/vi
+	ln ${DESTDIR}${BINDIR}/ex ${DESTDIR}${BINDIR}/view
+	ln ${DESTDIR}${BINDIR}/ex ${DESTDIR}/usr/bin/ex
+	chmod 1755 ${DESTDIR}${BINDIR}/ex
+	cp exrecover ${DESTDIR}${LIBDIR}/ex${VERSION}recover
+	cp expreserve ${DESTDIR}${LIBDIR}/ex${VERSION}preserve
+	chmod 4755 ${DESTDIR}${LIBDIR}/ex${VERSION}recover ${DESTDIR}${LIBDIR}/ex${VERSION}preserve
+# The following line normally fails.  This is OK.
+	mkdir ${DESTDIR}/usr/preserve
+.
+99,103c
+	-rm -f ${DESTDIR}${NBINDIR}/ex ${DESTDIR}${NBINDIR}/vi ${DESTDIR}${NBINDIR}/view
+	cp a.out ${DESTDIR}${NBINDIR}/ex
+#	-cp ex${VERSION}strings ${LIBDIR}/ex${VERSION}strings
+	ln ${DESTDIR}${NBINDIR}/ex ${DESTDIR}${NBINDIR}/vi
+	ln ${DESTDIR}${NBINDIR}/ex ${DESTDIR}${NBINDIR}/view
+	chmod 1755 ${DESTDIR}${NBINDIR}/ex
+.
+97a
+# install a new version for testing in /usr/new
+.
+94,95c
+	-rm -f a.out exrecover expreserve strings core errs trace
+.
+90c
+	${CC} ${CFLAGS} -c -O expreserve.c
+.
+87c
+	${CC} expreserve.o -o expreserve
+.
+83,84c
+exrecover.o: exrecover.c
+	${CC} ${CFLAGS} -c -O exrecover.c
+.
+81c
+	${CC} ${CFLAGS} exrecover.o -o exrecover
+.
+67a
+tags:	/tmp
+	${CTAGS} -w ex.[hc] ex_*.[hc]
+
+.
+65,66c
+all:	a.out exrecover expreserve tags
+.
+63d
+55,57c
+#	${MKSTR} - ex${VERSION}strings x $*.c
+	${CC} -E ${CFLAGS} $*.c | ${XSTR} -c -
+#	rm -f x$*.c
+.
+52,53d
+50c
+	printf.o strings.o
+.
+44,48c
+OBJS=	ex.o ex_addr.o ex_cmds.o ex_cmds2.o ex_cmdsub.o \
+	ex_data.o ex_get.o ex_io.o ex_put.o ex_re.o \
+	ex_set.o ex_subr.o ex_temp.o ex_tty.o ex_unix.o \
+	ex_v.o ex_vadj.o ex_vget.o ex_vmain.o ex_voperate.o \
+.
+36,38c
+DEB=	${NONDEBUGFLAGS}	# or ${DEBUGFLAGS} to to debug
+CFLAGS=	-DTABS=8 -DLISPCODE -DCHDIR -DUCVISUAL -DVFORK -DVMUNIX ${DEB}
+.
+33d
+22c
+# which is like fork but the two processes have only one data space until the
+.
+11,19c
+# chdir command.)  VMUNIX makes ex considerably larger, raising many limits
+# and improving speed and simplicity of maintenance.  It is suitable only
+# for a VAX or other large machine, and then probably only in a paged system.
+.
+7,8c
+# Ex is very large - this version will not fit on PDP-11's without overlay
+# software.  Things that can be turned off to save
+.
+1c
+VERSION=3.4
+.
+w
+q
+'-*-END-*-'
+ed - printf.c << '-*-END-*-'
+40a
+	while ((lval = value - BIG) >= 0) {
+		value = lval;
+		n++;
+	}
+	
+	/* stash it in buffer[1] to allow for a sign */
+	bp[1] = n + '0';
+	/*
+	 * Now develop the rest of the digits. Since speed counts here,
+	 * we do it in two loops. The first gets "value" down until it
+	 * is no larger than MAXINT. The second one uses integer divides
+	 * rather than long divides to speed it up.
+	 */
+	bp += MAXDIGS + 1;
+	while (value > MAXINT) {
+		*--bp = (int)(value % 10) + '0';
+		value /= 10;
+	}
+	
+	/* cannot lose precision */
+	svalue = value;
+	while (svalue > 0) {
+		*--bp = (svalue % 10) + '0';
+		svalue /= 10;
+	}
+	
+	/* fill in intermediate zeroes if needed */
+	if (buffer[1] != '0') {
+		while (bp > buffer + 2)
+			*--bp = '0';
+		--bp;
+	}
+	return(bp);
+}
+
+/*
+ * This program sends string "s" to putchar. The character after
+ * the end of "s" is given by "send". This allows the size of the
+ * field to be computed; it is stored in "alen". "width" contains the
+ * user specified length. If width<alen, the width will be taken to
+ * be alen. "sign" is zero if the string is to be right-justified
+ * in the field, nonzero if it is to be left-justified. "fill" is
+ * 0 if the string is to be padded with '0', positive if it is to be
+ * padded with ' ', and negative if an initial '-' should appear before
+ * any padding in right-justification (to avoid printing "-3" as
+ * "000-3" where "-0003" was intended).
+ */
+_p_emit(s, send)
+	register char *s;
+	char *send;
+{
+	char cfill;
+	register int alen;
+	int npad;
+	
+	alen = send - s;
+	if (alen > width)
+		width = alen;
+	cfill = fill>0? ' ': '0';
+	
+	/* we may want to print a leading '-' before anything */
+	if (*s == '-' && fill < 0) {
+		putchar(*s++);
+		alen--;
+		width--;
+	}
+	npad = width - alen;
+	
+	/* emit any leading pad characters */
+	if (!sign)
+		while (--npad >= 0)
+			putchar(cfill);
+			
+	/* emit the string itself */
+	while (--alen >= 0)
+		putchar(*s++);
+		
+	/* emit trailing pad characters */
+	if (sign)
+		while (--npad >= 0)
+			putchar(cfill);
+.
+35,39c
+	
+	/* develop the leading digit of the value in "n" */
+	n = 0;
+	while (value < 0) {
+		value -= BIG;	/* will eventually underflow */
+		n++;
+.
+27,33c
+	register char *bp;
+	register int svalue;
+	int n;
+	long lval;
+	
+	bp = buffer;
+	
+	/* zero is a special case */
+	if (value == 0) {
+		bp += MAXDIGS;
+		*bp = '0';
+		return(bp);
+.
+21,25c
+/* _p_dconv converts the unsigned long integer "value" to
+ * printable decimal and places it in "buffer", right-justified.
+ * The value returned is the address of the first non-zero character,
+ * or the address of the last character if all are zero.
+ * The result is NOT null terminated, and is MAXDIGS characters long,
+ * starting at buffer[1] (to allow for insertion of a sign).
+ *
+ * This program assumes it is running on 2's complement machine
+ * with reasonable overflow treatment.
+ */
+char *
+_p_dconv(value, buffer)
+	long value;
+	char *buffer;
+.
+18c
+	va_list ap;
+	register char *fmt;
+	char fcode;
+	int prec;
+	int length,mask1,nbits,n;
+	long int mask2, num;
+	register char *bptr;
+	char *ptr;
+	char buf[134];
+
+	va_start(ap);
+	fmt = va_arg(ap,char *);
+	for (;;) {
+		/* process format string first */
+		while ((fcode = *fmt++)!='%') {
+			/* ordinary (non-%) character */
+			if (fcode=='\0')
+				return;
+			putchar(fcode);
+		}
+		/* length modifier: -1 for h, 1 for l, 0 for none */
+		length = 0;
+		/* check for a leading - sign */
+		sign = 0;
+		if (*fmt == '-') {
+			sign++;
+			fmt++;
+		}
+		/* a '0' may follow the - sign */
+		/* this is the requested fill character */
+		fill = 1;
+		if (*fmt == '0') {
+			fill--;
+			fmt++;
+		}
+		
+		/* Now comes a digit string which may be a '*' */
+		if (*fmt == '*') {
+			width = va_arg(ap, int);
+			if (width < 0) {
+				width = -width;
+				sign = !sign;
+			}
+			fmt++;
+		}
+		else {
+			width = 0;
+			while (*fmt>='0' && *fmt<='9')
+				width = width * 10 + (*fmt++ - '0');
+		}
+		
+		/* maybe a decimal point followed by more digits (or '*') */
+		if (*fmt=='.') {
+			if (*++fmt == '*') {
+				prec = va_arg(ap, int);
+				fmt++;
+			}
+			else {
+				prec = 0;
+				while (*fmt>='0' && *fmt<='9')
+					prec = prec * 10 + (*fmt++ - '0');
+			}
+		}
+		else
+			prec = -1;
+		
+		/*
+		 * At this point, "sign" is nonzero if there was
+		 * a sign, "fill" is 0 if there was a leading
+		 * zero and 1 otherwise, "width" and "prec"
+		 * contain numbers corresponding to the digit
+		 * strings before and after the decimal point,
+		 * respectively, and "fmt" addresses the next
+		 * character after the whole mess. If there was
+		 * no decimal point, "prec" will be -1.
+		 */
+		switch (*fmt) {
+			case 'L':
+			case 'l':
+				length = 2;
+				/* no break!! */
+			case 'h':
+			case 'H':
+				length--;
+				fmt++;
+				break;
+		}
+		
+		/*
+		 * At exit from the following switch, we will
+		 * emit the characters starting at "bptr" and
+		 * ending at "ptr"-1, unless fcode is '\0'.
+		 */
+		switch (fcode = *fmt++) {
+			/* process characters and strings first */
+			case 'c':
+				buf[0] = va_arg(ap, int);
+				ptr = bptr = &buf[0];
+				if (buf[0] != '\0')
+					ptr++;
+				break;
+			case 's':
+				bptr = va_arg(ap,char *);
+				if (bptr==0)
+					bptr = "(null pointer)";
+				if (prec < 0)
+					prec = MAXINT;
+				for (n=0; *bptr++ && n < prec; n++) ;
+				ptr = --bptr;
+				bptr -= n;
+				break;
+			case 'O':
+				length = 1;
+				fcode = 'o';
+				/* no break */
+			case 'o':
+			case 'X':
+			case 'x':
+				if (length > 0)
+					num = va_arg(ap,long);
+				else
+					num = (unsigned)va_arg(ap,int);
+				if (fcode=='o') {
+					mask1 = 0x7;
+					mask2 = 0x1fffffffL;
+					nbits = 3;
+				}
+				else {
+					mask1 = 0xf;
+					mask2 = 0x0fffffffL;
+					nbits = 4;
+				}
+				n = (num!=0);
+				bptr = buf + MAXOCT + 3;
+				/* shift and mask for speed */
+				do
+				    if (((int) num & mask1) < 10)
+					*--bptr = ((int) num & mask1) + 060;
+				    else
+					*--bptr = ((int) num & mask1) + 0127;
+				while (num = (num >> nbits) & mask2);
+				
+				if (fcode=='o') {
+					if (n)
+						*--bptr = '0';
+				}
+				else
+					if (!sign && fill <= 0) {
+						putchar('0');
+						putchar(fcode);
+						width -= 2;
+					}
+					else {
+						*--bptr = fcode;
+						*--bptr = '0';
+					}
+				ptr = buf + MAXOCT + 3;
+				break;
+			case 'D':
+			case 'U':
+			case 'I':
+				length = 1;
+				fcode = fcode + 'a' - 'A';
+				/* no break */
+			case 'd':
+			case 'i':
+			case 'u':
+				if (length > 0)
+					num = va_arg(ap,long);
+				else {
+					n = va_arg(ap,int);
+					if (fcode=='u')
+						num = (unsigned) n;
+					else
+						num = (long) n;
+				}
+				if (n = (fcode != 'u' && num < 0))
+					num = -num;
+				/* now convert to digits */
+				bptr = _p_dconv(num, buf);
+				if (n)
+					*--bptr = '-';
+				if (fill == 0)
+					fill = -1;
+				ptr = buf + MAXDIGS + 1;
+				break;
+			default:
+				/* not a control character, 
+				 * print it.
+				 */
+				ptr = bptr = &fcode;
+				ptr++;
+				break;
+			}
+			if (fcode != '\0')
+				_p_emit(bptr,ptr);
+	}
+	va_end(ap);
+.
+15,16c
+#define MAXOCT	11	/* Maximum octal digits in a long */
+#define MAXINT	32767	/* largest normal length positive integer */
+#define BIG	1000000000  /* largest power of 10 less than an unsigned long */
+#define MAXDIGS	10	/* number of digits in BIG */
+
+static int width, sign, fill;
+
+char *_p_dconv();
+
+printf(va_alist)
+	va_dcl
+.
+10,13c
+ 
+.
+4,8c
+ * This version of printf is compatible with the Version 7 C
+ * printf. The differences are only minor except that this
+ * printf assumes it is to print through putchar. Version 7
+ * printf is more general (and is much larger) and includes
+ * provisions for floating point.
+.
+1,2c
+/* char printf_id[] = "@(#) printf.c:2.2 6/5/79";*/
+#include "varargs.h"
+.
+w
+q
+'-*-END-*-'

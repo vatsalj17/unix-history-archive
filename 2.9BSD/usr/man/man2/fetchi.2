@@ -1,0 +1,41 @@
+.TH FETCHI 2
+.UC
+.SH NAME
+fetchi \- fetch from user I-space
+.SH SYNOPSIS
+.B fetchi(addr)
+.br
+.B int *addr;
+.SH DESCRIPTION
+.I Fetchi
+fetches the word at
+.I addr
+from user I-space.
+This system call is required
+on machines with separate instruction
+and data spaces because the
+.I mfpi
+instruction reads from
+D-space if the current
+and previous modes in the
+program status word are
+both user.
+.SH ERRORS
+.I Fetchi
+will fail if:
+.TP 20
+[EFAULT]
+.I Addr
+points to an address not in the process's allocated instruction space.
+.SH ASSEMBLER
+.nf
+(local = 58., fetchi = 8.)
+(addr in r0)
+.B sys local; 9f
+\&. . .
+.B \&.data
+.B 9: sys fetchi
+.fi
+.SH BUGS
+This is a kludge and exists only to circumvent an alleged
+security feature on some DEC processors.

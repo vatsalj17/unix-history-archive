@@ -1,0 +1,325 @@
+
+INTRO(3J)           UNIX Programmer's Manual            INTRO(3J)
+
+NAME
+     intro - summary of job control facilities
+
+SYNOPSIS
+     #include <sys/ioctl.h>
+     #include <signal.h>
+     #include <wait.h>
+
+     int fildes, signo;
+     short pid, pgrp;
+     union wait status;
+
+     ioctl(fildes, TIOCSPGRP, &pgrp)
+     ioctl(fildes, TIOCGPGRP, &pgrp)
+
+     sigset(signo, action)
+     sighold(signo)
+     sigrelse(signo)
+     sigpause(signo)
+     sigsys(signo, action)
+
+     wait2(&status, options)
+
+     cc ... -ljobs
+
+DESCRIPTION
+     The facilities described here are used to support the job
+     control implemented in _c_s_h(1), and may be used in other pro-
+     grams to provide similar facilities.  Because these facili-
+     ties are not standard in UNIX and because the signal mechan-
+     isms are also slightly different, the associated routines
+     are not in the standard C library, but rather in the -ljobs
+     library.
+
+     For descriptions of the individual routines see the various
+     sections listed in SEE ALSO below.  This section attempt
+     only to place these facilities in context, not to explain
+     the semantics of the individual calls.
+
+     Terminal arbitration mechanisms.
+
+     The job control mechanism works by associating with each
+     process a number called a _p_r_o_c_e_s_s _g_r_o_u_p ; related processes
+     (e.g. in a pipeline) are given the same process group.  The
+     system assigns a single process group number to each termi-
+     nal.  Processes running on a terminal are given read access
+     to that terminal only if they are in the same process group
+     as that terminal.
+
+     Thus a command interpreter may start several jobs running in
+     different process groups and arbitrate access to the termi-
+     nal by controlling which, if any, of these processes is in
+
+Printed 5/22/83                                                 1
+
+INTRO(3J)           UNIX Programmer's Manual            INTRO(3J)
+
+     the same process group as the terminal.  When a process
+     which is not in the process group of the terminal tries to
+     read from the terminal, all members of the process group of
+     the process receive a SIGTTIN signal, which normally then
+     causes them to stop until they are continued with a SIGCONT
+     signal.  (See _s_i_g_s_y_s(2J) for a description of these signals;
+     _t_t_y(4) for a description of process groups.)
+
+     If a process which is not in the process group of the termi-
+     nal attempts to change the terminals mode, the process group
+     of that process is sent a SIGTTOU signal, causing the pro-
+     cess group to stop.  A similar mechanism is (optionally)
+     available for output, causing processes to block with
+     SIGTTOU when they attempt to write to the terminal while not
+     in its process group; this is controlled by the LTOSTOP bit
+     in the tty mode word, enabled by stty tostop and disabled
+     (the default) by stty -tostop.  (The LTOSTOP bit is
+     described in _t_t_y(4)).
+
+     How the shell manipulates process groups.
+
+     A shell which is interactive first establishes its own pro-
+     cess group and a process group for the terminal; this
+     prevents other processes from being inadvertantly stopped
+     while the terminal is under its control.  The shell then
+     assigns each job it creates a distinct process group.  When
+     a job is to be run in the foreground, the shell gives the
+     terminal to the process group of the job using the TIOCSPGRP
+     ioctl (See _i_o_c_t_l(2) and _t_t_y(4)).  When a job stops or com-
+     pletes, the shell reclaims the terminal by resetting the
+     terminals process group to that of the shell using TIOCSPGRP
+     again.
+
+     Shells which are running shell scripts or running non-
+     interactively do not manipulate process groups of jobs they
+     create.  Instead, they leave the process group of sub-
+     processes and the terminal unchanged.  This assures that if
+     any sub-process they create blocks for terminal i/o, the
+     shell and all its sub-processes will be blocked (since they
+     are a single process group).  The first interactive parent
+     of the non-interactive shell can then be used to deal with
+     the stoppage.
+
+     Processes which are orphans (whose parents have exited), and
+     descendants of these processes are protected by the system
+     from stopping, since there can be no interactive parent.
+     Rather than blocking, reads from the control terminal return
+     end-of-file and writes to the control terminal are permitted
+     (i.e. LTOSTOP has no effect for these processes.) Similarly
+     processes which ignore or hold the SIGTTIN or SIGTTOU signal
+     are not sent these signals when accessing their control ter-
+     minal; if they are not in the process group of the control
+
+Printed 5/22/83                                                 2
+
+INTRO(3J)           UNIX Programmer's Manual            INTRO(3J)
+
+     terminal reads simply return end-of-file.  Output and mode
+     setting are also allowed.
+
+     Before a shell _s_u_s_p_e_n_d_s itself, it places itself back in the
+     process group in which it was created, and then sends this
+     original group a stopping signal, stopping the shell and any
+     other intermediate processes back to an interactive parent.
+     The shell also restores the process group of the terminal
+     when it finishes, as the process which then resumes would
+     not necessarily be in control of the terminal otherwise.
+
+     Naive processes.
+
+     A process which does not alter the state of the terminal,
+     and which does no job control can invoke subprocesses nor-
+     mally without worry.  If such a process issues a _s_y_s_t_e_m(3S)
+     call and this command is then stopped, both of the processes
+     will stop together.  Thus simple processes need not worry
+     about job control, even if they have shell escapes or invoke
+     other processes.
+
+     Processes which modify the terminal state.
+
+     When first setting the terminal into an unusual mode, the
+     process should check, with the stopping signals held, that
+     it is in the foreground.  It should then change the state of
+     the terminal, and set the catches for SIGTTIN, SIGTTOU and
+     SIGTSTP.  The following is a sample of the code that will be
+     needed, assuming that unit 2 is known to be a terminal.
+
+          short     tpgrp;
+          ...
+
+     retry:
+          sigset(SIGTSTP, SIG_HOLD);
+          sigset(SIGTTIN, SIG_HOLD);
+          sigset(SIGTTOU, SIG_HOLD);
+          if (ioctl(2, TIOCGPGRP, &tpgrp) != 0)
+               goto nottty;
+          if (tpgrp != getpgrp(0)) { /* not in foreground */
+               sigset(SIGTTOU, SIG_DFL);
+               kill(0, SIGTTOU);
+               /* job stops here waiting for SIGCONT */
+               goto retry;
+          }
+          ..._s_a_v_e _o_l_d _t_e_r_m_i_n_a_l _m_o_d_e_s _a_n_d _s_e_t _n_e_w _m_o_d_e_s...
+          sigset(SIGTTIN, onstop);
+          sigset(SIGTTOU, onstop);
+          sigset(SIGTSTP, onstop);
+
+     It is necessary to ignore SIGTSTP in this code because oth-
+     erwise our process could be moved from the foreground to the
+
+Printed 5/22/83                                                 3
+
+INTRO(3J)           UNIX Programmer's Manual            INTRO(3J)
+
+     background in the middle of checking if it is in the fore-
+     ground.  The process holds all the stopping signals in this
+     critical section so no other process in our process group
+     can mess us up by blocking us on one of these signals in the
+     middle of our check.  (This code assumes that the command
+     interpreter will not move a process from foreground to back-
+     ground without stopping it; if it did we would have no way
+     of making the check correctly.)
+
+     The routine which handles the signal should clear the catch
+     for the stop signal and _k_i_l_l(2) the processes in its process
+     group with the same signal.  The statement after this _k_i_l_l
+     will be executed when the process is later continued with
+     SIGCONT.
+
+     Thus the code for the catch routine might look like:
+
+          ...
+          sigset(SIGTSTP, onstop);
+          sigset(SIGTTIN, onstop);
+          sigset(SIGTTOU, onstop);
+          ...
+
+     onstop(signo)
+          int signo;
+     {
+          ... _r_e_s_t_o_r_e _o_l_d _t_e_r_m_i_n_a_l _s_t_a_t_e ...
+          sigset(signo, SIG_DFL);
+          kill(0, signo);
+          /* stop here until continued */
+          sigset(signo, onstop);
+          ... _r_e_s_t_o_r_e _o_u_r _s_p_e_c_i_a_l _t_e_r_m_i_n_a_l _s_t_a_t_e ...
+     }
+
+     This routine can also be used to simulate a stop signal.
+
+     If a process does not need to save and restore state when it
+     is stopped, but wishes to be notified when it is continued
+     after a stop it can catch the SIGCONT signal; the SIGCONT
+     handler will be run when the process is continued.
+
+     Processes which lock data bases such as the password file
+     should ignore SIGTTIN, SIGTTOU, and SIGTSTP signals while
+     the data bases are being manipulated.  While a process is
+     ignoring SIGTTIN signals, reads which would normally have
+     hung will return end-of-file; writes which would normally
+     have caused SIGTTOU signals are instead permitted while
+     SIGTTOU is ignored.
+
+     Interrupt-level process handling.
+
+Printed 5/22/83                                                 4
+
+INTRO(3J)           UNIX Programmer's Manual            INTRO(3J)
+
+     Using the mechanisms of _s_i_g_s_e_t(3J) it is possible to handle
+     process state changes as they occur by providing an
+     interrupt-handling routine for the SIGCHLD signal which
+     occurs whenever the status of a child process changes.  A
+     signal handler for this signal is established by:
+
+          sigset(SIGCHLD, onchild);
+
+     The shell or other process would then await a change in
+     child status with code of the form:
+
+     recheck:
+          sighold(SIGCHLD);        /* start critical section */
+          if (_n_o _c_h_i_l_d_r_e_n _t_o _p_r_o_c_e_s_s) {
+               sigpause(SIGCHLD);  /* release SIGCHLD and pause */
+               goto recheck;
+          }
+          sigrelse(SIGCHLD);       /* end critical region */
+          /* now have a child to process */
+
+     Here we are using _s_i_g_h_o_l_d to temporarily block the SIGCHLD
+     signal during the checking of the data structures telling us
+     whether we have a child to process.  If we didn't block the
+     signal we would have a race condition since the signal might
+     corrupt our decision by arriving shortly after we had fin-
+     ished checking the condition but before we paused.
+
+     If we need to wait for something to happen, we call _s_i_g_p_a_u_s_e
+     which automically releases the hold on the SIGCHLD signal
+     and waits for a signal to occur by starting a _p_a_u_s_e(2).
+     Otherwise we simply release the SIGCHLD signal and process
+     the child.  _S_i_g_p_a_u_s_e is similar to the PDP-11 _w_a_i_t instruc-
+     tion, which returns the priority of the processor to the
+     base level and idles waiting for an interrupt.
+
+     It is important to note that the long-standing bug in the
+     signal mechanism which would have lost a SIGCHLD signal
+     which occurred while the signal was blocked has been fixed.
+     This is because _s_i_g_h_o_l_d uses the SIG_HOLD signal set of
+     _s_i_g_s_y_s(2J) to prevent the signal action from being taken
+     without losing the signal if it occurs.  Similarly, a signal
+     action set with _s_i_g_s_e_t has the signal held while the action
+     routine is running, much as a the interrupt priority of the
+     processor is raised when a device interrupt is taken.
+
+     In this interrupt driven style of termination processing it
+     is necessary that the _w_a_i_t calls used to retrieve status in
+     the SIGCHLD signal handler not block.  This is because a
+     single invocation of the SIGCHLD handler may indicate an
+     arbitrary number of process status changes: signals are not
+     queued.  This is similar to the case in a disk driver where
+     several drives on a single controller may report status at
+
+Printed 5/22/83                                                 5
+
+INTRO(3J)           UNIX Programmer's Manual            INTRO(3J)
+
+     once, while there is only one interrupt taken.  It is even
+     possible for no children to be ready to report status when
+     the SIGCHLD handler is invoked, if the signal was posted
+     while the SIGCHLD handler was active, and the child was
+     noticed due to a SIGCHLD initially sent for another process.
+     This causes no problem, since the handler will be called
+     whenever there is work to do; the handler just has to col-
+     lect all information by calling _w_a_i_t_3 until it says no more
+     information is available.  Further status changes are
+     guaranteed to be reflected in another SIGCHLD handler call.
+
+     Restarting system calls.
+
+     In older versions of UNIX slow system calls were interrupted
+     when signals occurred, returning EINTR.  The new signal
+     mechanism _s_i_g_s_e_t(3J) normally restarts such calls rather
+     than interrupting them.  To summarize: _p_a_u_s_e and _w_a_i_t return
+     error EINTR (as before), _i_o_c_t_l and _w_a_i_t_3 restart, and _r_e_a_d
+     and _w_r_i_t_e restart unless some data was read or written in
+     which case they return indicating how much data was read or
+     written.  In programs which use the older _s_i_g_n_a_l(2) mechan-
+     isms, all of these calls return EINTR if a signal occurs
+     during the call.
+
+SEE ALSO
+     csh(1), ioctl(2), killpg(2), setpgrp(2), sigsys(2J),
+     wait2(2J), signal(2), tty(4)
+
+BUGS
+     The job control facilities are not available in standard
+     version 7 UNIX.  These facilities are still under develop-
+     ment and may change in future releases of the system as
+     better inter-process communication facilities and support
+     for virtual terminals become available.  The options and
+     specifications of these system calls and even the calls
+     themselves are thus subject to change.
+
+Printed 5/22/83                                                 6
+

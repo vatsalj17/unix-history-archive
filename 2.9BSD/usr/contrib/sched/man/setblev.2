@@ -1,0 +1,65 @@
+.TH SETBLEV 2
+.SH NAME
+setblev \- set scheduling priority level for specified process
+.SH SYNOPSIS
+.B int setblev (pid, level)
+.br
+.B int pid;
+.br
+.B int level;
+.SH DESCRIPTION
+.IR Setblev
+is used to set the scheduling
+.I base level
+of a process specified by
+.I pid.
+The specified
+.I level
+must lie in the range 0 to 31; if it is outside this range, it will
+be set to 0, or to 31 (whichever is closer).
+.PP
+If
+.I pid
+is negative, the
+.I setblev
+call applies to the current process.
+.PP
+.IR Setblev
+will fail if:
+.IP
+The
+.I pid
+is positive and no process exists with that
+.I pid.
+.SM
+\%[ESRCH]
+.IP
+The current process is not the superuser, and either
+the specified
+.I level
+is greater than the current level, or the
+effective user ID of the current process is not the same as that of the
+process indicated by
+.I pid.
+.SM
+\%[EPERM]
+.SH RETURN VALUE
+Zero is returned normally; -1 is returned in the event of error.
+.SH COMMENTS
+This call is actually implemented via a common "utssys" entry point,
+also used by
+.I uname, ustat, halt, getctty, wracct,
+and
+.I reboot.
+.SH "SEE ALSO
+nice(1), nice(2).
+.SH COMPATIBILITY
+The
+.IR setblev
+system call is not in any standard UNIX system (UNIX/V7, System III,
+or VM/UNIX).
+It should not be used if portability is a primary consideration.
+The
+.I nice (2)
+call is less powerful, and is somewhat inappropriate for the
+UNIMAX scheduler, but it may be used if portability is important.

@@ -1,0 +1,469 @@
+.de FN
+.sp 1
+\f3\\$1	\\$2\f1	\" command name, and key binding
+.sp 0	\" To fool the filling
+..
+.ll 65
+.ta 30
+.ad
+.in 5
+.FN Prefix-1 ESC
+The next character typed will be interpreted on the basis that it was
+preceded by the command \f3Prefix-1\f1.  This is one of two such commands
+whose purpose in life is to increase the number of commands that can be
+bound to keys and thus easily invoked.
+.FN Prefix-2 ^X
+The next character typed will be interpreted on the basis that it was
+preceded by the command \f3Prefix-2\f1.  This is one of two such commands
+whose purpose in life is to increase the number of commands that can be
+bound to keys and thus easily invoked.
+.FN append-region [unbound]
+Appends the region bounded by the point and mark to the named file.  If
+the file does not exist it is created.
+.FN backward-character ^B
+Moves the point backward one character in the buffer.  If the point is
+at the beginning of the line, it moves it to the end of the previous line.
+.FN backward-paren ESC-^B
+This moves the point to the matching open parenthesis (brace) of the
+close parenthesis (brace) just before the point.  If there is no match,
+an error is reported and the point remains unchanged.
+.FN backward-word ESC-B
+If in the middle of a word, the point moves to the beginning of the
+word.  Otherwise it moves the point to the beginning of the previous
+word.
+.FN beginning-of-file ESC-<
+Moves the point to the beginning of the current buffer so that the
+character after the point is the first character of the buffer.
+.FN beginning-of-line ^A
+Moves the point to the beginning of the current line.
+.FN beginning-of-sentence ESC-A
+Moves the point to the beginning of the current sentence.
+.FN beginning-of-window ESC-,
+Moves the point to the first character in the window.
+.FN bind-macro-to-key [unbound]
+Binds a macro to a key so that future hits on that key will run the
+macro.
+.FN bind-to-key [unbound]
+Binds a command to a key so that future hits on that key will run the
+command.  For example, the command \f3next-line\f1 is bound to the key
+\f3^N\f1.
+.FN buffer-position [unbound]
+Prints the line and column of the point in the current buffer.
+.FN case-region-lower ^X-^L
+Changes all the letters between the point and mark to lower case.
+.FN case-region-upper ^X-^U
+Changes all the letters between the point and mark to upper case.
+.FN case-word-capitalize ESC-C
+If the point is in the middle of a word, it capitalizes the letter after
+the point and changes the rest of the word to lower case.  Otherwise it
+capitalizes the first letter of the next word and changes the rest of
+this word to lower case.  In any case the point is left at the end of
+the word.
+.FN case-word-lower ESC-L
+If the point is in the middle of a word, it changes the rest of the word
+to lower case.  Otherwise it changes the next word to lower case.  In
+either case the point is left at the end of the effected word.
+.FN case-word-upper ESC-U
+If the point is in the middle of a word, it changes the rest of the word
+to upper case.  Otherwise it changes the next word to upper case.  In
+either case the point is left at the end of the effected word.
+.FN char-to-octal-insert [unbound]
+Reads a character from the terminal and inserts its octal value preceded
+by a back-slash '\\', into the text at the point.  For example if the
+character ESC is typed, the string \f3\\033\f1 is inserted.
+.FN clear-and-redraw ESC-^L
+Clears and redraws the screen without changing the screen orientation.
+This is useful if the screen gets garbaged by output from another program
+or by someone writing you.
+.FN compile-it ^X-^E
+Writes all the modified buffers and runs the UNIX program \f3make\f1
+into a buffer called \f3Errors\f1.  After the make is completed, the
+buffer is parsed for C type error messages to be used by the
+\f3next-error\f1 command.
+.FN copy-region ESC-W
+Does a pretend kill of the region bounded by the point and mark.  The
+next call to \f3yank\f1 will yank the region just copied.
+.FN c-tab [unbound]
+When in \f3c-mode\f1, the command \f3c-tab\f1 is automatically bound to
+the tab key, and when invoked, the point is tabbed to the "right" place
+for C programs.
+.FN delete-next-char ^D
+The character after the point is deleted moving the rest of the line to
+the left one, leaving the point unchanged.  If at the end of the line,
+the line boundary is deleted joining the current line with the next
+line.
+.FN delete-next-word ESC-D
+If the point is in the middle of a word, it deletes to the end of the
+word.  Otherwise it deletes the entire next word.  In either case, the
+point doesn't move, and the deleted text is saved in the kill buffer.
+.FN delete-other-windows ^X-1
+Makes the current window the only window by deleting all the other
+windows.  The window grows to fill the screen as it is when the editor
+starts up.
+.FN delete-previous-char DELETE
+Deletes the character before the point moving the rest of the line to
+the left one.  If the point is at the beginning of a line, the previous
+line is joined with the current line and the point is moved to what used
+to be the end of the previous line.
+.FN delete-previous-word ESC-DELETE
+If the point is in the middle of a word, it deletes to the beginning of
+that word.  Otherwise it deletes the entire previous word.  In either
+case, the deleted text is saved in the kill buffer.
+.FN delete-to-killbuffer ^W
+Deletes all the text between the point and mark, saving it in the
+\f3kill-buffer\f1.  This is one of the the ways to move text from
+place in the buffer to another.  The \f3yank\f1 command will insert the
+most recently deleted text at the point.  Jove remembers 10 separate
+kills in a kill ring.  The \f3yank-pop\f1 command can be used to go
+through the ring one at a time.
+.FN delete-white-space ESC-\\
+Deletes all tabs and space around the point on the current line.  This
+does not work over line boundaries.
+.FN describe-command [unbound]
+Prompts for the name of a command and describes what the command does
+into a buffer.
+.FN describe-key [unbound]
+Prompts for a key and prints the command that is bound to that key.
+.FN delete-current-window ^X-D
+If there is more than one window on the screen, the current window is
+deleted and is moved to neighboring window.  The space from the deleted
+window is given to the new current window.
+.FN end-of-file ESC->
+Moves the point to the end of the buffer making the character before the
+point the last character in the buffer.
+.FN end-of-line ^E
+Moves the point to the end of the current line.
+.FN end-of-sentence ESC-E
+Moves the point to the end of the sentence.
+.FN end-of-window ESC-.
+Moves the point to the last character in the window.
+.FN erase-buffer [unbound]
+Prompts for a buffer name, and deletes all the text in that buffer.  If
+the buffer is modified, the user is asked for confirmation.
+.FN exchange-point-and-mark ^X-^X
+Sets the mark to the point and the point to the mark.  
+.FN execute-extended-command ESC-X
+Prompts for a command to run using command completion.  This is how all
+commands would be run if not for the \f3bind-to-key\f1 command.
+.FN execute-keyboard-macro [unbound]
+All the characters that were remembered with the \f3start-remembering\f3
+command are executed as if they were typed at the keyboard.
+.FN execute-macro [unbound]
+This is the same as \f3execute-keyboard-macro\f1 except that it prompts
+for the name of a macro to execute.
+.FN exit-jove ^X-^C
+Exits jove.  It asks for confirmation if there are any modified buffers
+which have not been saved.
+.FN filter-region [unbound]
+Prompts for a UNIX command to send a region to.  The region will be
+replaced with the output from the command.  For example to format a C
+procedure, a region around the procedure should be defined and the 
+filter-region command used to send the region through the UNIX C
+beautifier.
+.FN find-file ^X-^F
+Prompts for a file to find.  If that file is not already in a buffer, it
+creates a new buffer and reads the file into that buffer.  If the
+file is already in another buffer, that buffer will be selected instead.
+In any event the current buffer becomes buffer with that file in it.
+.FN find-file-into-other-window ^X-4
+Do a find file into another window.  If there is only one window, is
+split.  If there is more than one window, one of the windows that is
+not the current window is used instead.
+.FN find-tag ^X-^T
+Finds the file with the C tag which is prompted for.  The UNIX program
+\f3ctags(1)\f1 should be used to create a database with the necessary
+information to find the file which contains the tag.  If the tag cannot
+be found, the point and buffer are unchanged.
+.FN first-non-blank ESC-M
+Moves the point to the first non blank character in the current line.
+.FN forward-char ^F
+Moves the point forward one character in the buffer.  If at the end of
+the current line the point is moved to the beginning of the next line.
+.FN forward-paren ESC-^B
+Moves the point to the matching close parenthesis (brace) of the open
+parenthesis (brace) right after the point.  If there is no match,
+an error is reported and the point remains unchanged.
+.FN forward-word ESC-F
+If the point is in the middle of a word, it moves to the end of the
+current word.  Otherwise it moves to the end of the next word.
+.FN four-times ^U
+Multiple the numeric argument by four.  The sequence \f3^U-^U-^N\f1 runs
+the command \f3next-line\f1 16 times.
+.FN goto-line ESC-G
+Moves the point to the numeric argument line in the buffer.  If no
+argument is supplied, the the point moves to the first line in the
+buffer.
+.FN grow-window ^X-^
+Makes the current window one line larger if it can.  There has to be more
+than one window, and the window which would get smaller has to be big
+enough to get smaller.
+.FN i-search-forward [unbound]
+Incremental search forward.  See the EMACS Manual for TWENEX Users if
+you care about this command.  I do not have time to explain it right
+now.
+.FN i-search-reverse [unbound]
+Incremental search reverse.  See the EMACS Manual for TWENEX Users if
+you care about this command.  I do not have time to explain it right
+now.
+.FN insert-file ^X-^I
+If the named file exists and can be read, its contents are inserted
+into the current buffer at the point.  Otherwise an error is reported
+and the point is unchanged.
+.FN init-bindings [unbound]
+Initialize the bindings to the way they were at the beginning of the
+edit.
+.FN justify-paragraph ESC-J
+Justifys a paragraph.  Paragraphs are bounded by blank lines or lines
+that begin with a period.  The \f3margin-length\f1 variable determines
+the length of each line in the paragraph.
+.FN kill-buffer ^X-K
+Deletes a named buffer.  This command is not reversible; once the
+buffer is deleted, it is gone forever.  It is useful when the editor
+runs out of space and there is a buffer which you do not care about.
+.FN kill-to-end-of-line ^K
+Kill all the text from the point to the end of the line.  If the point
+is at the end of the line, the current line is joined with the next
+line.  If a numeric count is given, the next count lines are deleted.
+The saved test can be yanked back with the \f3yank\f1 command (see
+\f3delete-to-killbuffer\f1).  If this command is run several times in a
+row all the kills are merged into the same kill ring entry, thus running
+the yank command will yank all of them back instead of just the last
+one.
+.FN list-buffers ^X-^B
+Creates a buffer called \f3Buffer list\f1 that contains a list of all
+the buffers jove currently knows about.  Each line tells each buffer's
+number, type, file associated with it, its name, and a \f3*\f1 if the
+buffer is modified.
+.FN make-buffer-unmodified ESC-~
+Makes the editor forget that the buffer has been modified.  The \f3*\f1
+on the mode line will disappear if it is there.
+.FN name-keyboard-macro [unbound]
+A new macro is defined with the name supplied by the user.  The current
+definition of the keyboard macro is copied into this new macro, making
+it possible change the keyboard macro without losing the old version.
+Now it is possible to run the new macro by binding the macro to a key,
+or with the \f3execute-macro\f1 command.  Note that only named macros
+are saved with the \f3write-macros-to-file\f1 command, so to remember
+macros from one jove to another, one must give the macro a name, execute
+the \f3write-macros-to-file\f1 command, and upon invokation of a new
+jove, the \f3read-macros-from-file" command should be executed.
+.FN newline [unbound]
+Divides the current line at the point moving the point to the beginning
+of the newly created line.  It is usually bound to the return key.
+.FN newline-and-backup ^O
+Divides the current line at the point like the \f3newline\f1 command, but
+leaves the point unchanged.
+.FN newline-and-indent [unbound]
+Same as \f3newline\f1 except that it inserts white space at the
+beginning of the newline copying the indent of the previous line.
+.FN next-error ^X-^N
+Takes the next error message (as returned by the parse commands), finds
+the file in which the error occurred, and sets the the point to the line
+on which the error occurred.  The error message will be displayed at the
+top of the \f3errors\f1 buffer.  (The \f3compile-it\f1 command
+automatically runs the \f3parse-C-errors\f3 and the \f3next-error\f1
+commands).
+.FN next-line ^N
+Moves the point to the next line keeping the column as close to the current
+column as possible.
+.FN next-page ^V
+Puts the bottom line of the window at the top of the window, moving the
+point to the top of the window and to the beginning of the line.
+.FN next-window ^X-N
+Moves to the next window in the screen.  If the current window is the
+last window, it moves to the first window.  It is an error to move to the
+next window when there is only one window on the screen.
+.FN number-lines-in-window [unbound]
+Each line in the current window is displayed with its line number to
+the left.  The number isn't part of the buffer and will disappear when
+this command is executed again (it toggles).
+.FN page-next-window ESC-^V
+This command does a \f3next-page\f1 on the next window.  If there is
+only one window the editor complains.
+.FN paren-flash [unbound]
+When the variable \f3show-match\f1 is non-zero, the close
+parenthesis/brace keys are bound to this command.  When invoked, this
+command inserts the character typed and temporarily flashes to the
+matching open parenthesis/brace for about one second.
+.FN parse-C-errors [unbound]
+This command takes C compiler (or similar in format) errors and sets
+the editor up for subsequent invocations of the \f3next-error\f1
+command.  Giving the UNIX command \f3grep(1)\f1 the \f3-n\f1 option prints
+the output in the same format as the C compiler, thus running this
+command into a buffer makes it possible to parse its output. This is a
+very useful way to look at all the occurrences of certain strings in
+several files.
+.FN parse-LINT-errors [unbound]
+This is the same as \f3parse-C-errors\f1 excepts parses lint errors.
+.FN pause-jove [unbound]
+If the system has the Berkeley job control features, control is
+returned to the superior shell.  Otherwise an inferior shell is spawned.
+.FN previous-line ^P
+Moves the point to the previous line trying to keep the column the
+same.
+.FN previous-page ESC-V
+Moves the top line in the window to the bottom line leaving, the point
+at the top of the window and at the beginning of the line.
+.FN previous-window ^X-P
+Move to the previous window in the screen.  If currently in the first
+window, moves to the last window.  It is an error to move to the previous
+window when there is only one window on the screen.
+.FN print [unbound]
+Prompts for a variable name and prints its value.
+.FN query-replace-search ESC-Q
+Upon receipt of a search and replacement string, the editor replaces all
+occurrences of the search string with the replacement string.  For each
+occurrence the editor asks the user what to do.  The choices are:
+.nf
+.sp 1
+        ' '     to replace this occurrence.
+	'.'	to replace and stop.
+        DELETE  to skip this occurrence.
+        'r'     to recursive edit.
+        'p'     to proceed to replace all occurrences.
+        RETURN  to stop
+.sp 1
+.fi
+When there are no more occurrences, the point is moves back to its
+initial position.  Recursive edit makes it possible to temporarily
+suspend the \f3query-replace-search\f1, let the user go off and do
+some editing, and then return to the search after the editing is
+finished.  Executing the command \f3exit-jove\f1 returns from the
+recursive edit.
+.FN quote-char ^Q
+Quotes the next character typed for insertion.  This is used to insert
+special characters which normally would be interpreted as commands.
+.FN read-file ^X-^R
+Prompts for a file to read into the current buffer.  It will erase the
+old contents so if the buffer has been modified, but not saved, jove
+complains and ask for confirmation.
+.FN read-macros-from-file [unbound]
+Prompts for a file that was previously written with the
+\f3write-macros-to-file\f1 command, and reads them back into the editor.
+.FN redraw-display ^L
+Redraws the window with the current line in the middle.  If a numeric
+argument is provided the current line is moved to the \f3argument\f1
+line. If the current line is in the same place as before, the window is
+cleared and redrawn.
+.FN reinitialize-terminal
+If the value of the variable \f3allow-^S-and-^Q\f1 is changed, this
+command should be called to make the necessary changes to the terminal.
+.FN replace-search ESC-R
+This is the same as \f3query-replace-search\f1 except the editor does
+not ask whether to replace it; it always does.
+.FN ring-the-bell ^G
+Exactly what is says.  Its useful when it is not apparent what the
+editor is currently doing.
+.FN scroll-one-line-down ESC-Z
+Scrolls the current window down one line.  If the current line moves off the
+bottom of the window, it is moved to the middle of the window.
+.FN scroll-one-line-up ^Z
+Scrolls the current window up one line.  If the current line moves off
+the bottom of the window, it is moved to the middle of the
+window.
+.FN search-forward ^S
+Prompts for a string to search for and searches for the next instance of
+that string in the buffer (see \f3searching\f1 above).
+.FN search-reverse ^R
+Prompts for a string to search for and searches for the previous instance
+of that string in the buffer (see \f3searching\f1 above).
+.FN select-buffer ^X-B
+Prompts for a buffer name and makes that buffer the current buffer.  If
+the buffer does not exist a new buffer is created with nothing in
+it.  If a number is supplied instead of a name and a buffer exists with
+that number, that buffer is selected.  Otherwise a new buffer is created
+with that number as a name.
+.FN self-insert [very-bound]
+This is bound to all the keys that should be inserted when typed.  This
+commands does not work unless bound to a key.  Running this command
+manually will probably cause a random character to be inserted.
+.FN set [unbound]
+Prompts for a variable name and a value, and sets the variable to that
+value.
+.FN set-mark ^@
+Sets mark to the current buffer location.
+.FN shell-command ^X-!
+Prompts for a UNIX shell command to be run placing the output from the
+command into a buffer called \f3Command execution\f1.  If the a numeric
+argument is provided, the buffer is left alone before the UNIX command
+is started.  Otherwise the buffer is emptied.
+.FN shell-command-to-buffer [unbound]
+The same as \f3shell-command\f1 except that it asks for a specific buffer
+to place the output in instead of \f3Command execution\f1.
+.FN source [unbound]
+This prompts for a file name which contains a bunch of editor
+commands.  These commands typically set variables or bind commands to
+keys.  Running source on a file which does not have editor commands in
+it will likely cause the editor to crash.  This is a serious bug.
+.FN shrink-window [unbound]
+Shrink the current window by one line if the resulting window would not
+be too small.  It is an error to run this command when there is only one
+window.
+.FN spell-buffer [unbound]
+Sends the entire buffer to the UNIX spell program.  Jove will go through
+the list of spelling errors and asks whether or not a word is spelled
+correctly.  If it is not, jove remembers where each occurrence of the
+misspelled word is.  The point in the buffer being spelled is positioned
+at the end of the current misspelled word. The \f3next-error\f1 command
+moves to the next occurrence of the current word, or to the first
+occurrence of the next word.
+.FN split-current-window ^X-2
+Splits the current window into two smaller windows, if the resulting
+windows would not be too small.  The two windows have the same buffer
+associated with them, namely the one that the original window had.
+.FN start-remembering [unbound]
+This tells jove to start remembering all the following keystrokes until
+the stop-remembering command is executed.  The saved commands are saved
+in the keyboard macro, and can be re-executed with the
+\f3execute-keyboard-macro\f1 command.  This is useful when it is
+necessary to run the same command lots of times.
+.FN stop-remembering [unbound]
+This terminates the definition of a macro.  See \f3start-remembering\f1
+for more details.
+.FN string-length ^X-C
+Prints, on the message line, the number of characters between two
+quotes. The point must be between two quotes or the editor
+complains.  This is useful for C programmers especially.
+.FN suspend-jove [unbound]
+Same as \f3pause-jove\f1.
+.FN text-insert [unbound]
+When the variable \f3text-fill\f1 is non-zero, the self-insert keys
+are bound to this command.  This inserts characters like \f3self-insert\f1
+does but when the line gets to a certain length, a newline is automatically
+inserted.  This makes it possible to type in a paper without having to
+remember to hit return, i.e the editor does it automatically.
+.FN transpose-char ^T
+Switches the characters on opposite sides of the point, namely the
+character before the cursor and the character under the cursor.
+.FN unbound [unbound]
+The \f3unbound\f1 function is bound to all the keys that don't run
+commands.  It is essentially a no-op.
+.FN vt100-arrow-keys [unbound]
+This makes the arrow keys work on the vt100 terminal.
+.FN write-current-file ^X-^S
+This writes the current buffer to the file associated with the buffer,
+without asking.  If there is currently no file associated with the
+buffer, the editor complains. (See the \f3write-named-file\f1 command
+below).
+.FN write-macros-to-file [unbound]
+Prompts for a file and writes all the current defined macros to that
+file.  The macros can be read back into the editor with the
+\f3read-macros-from-file\f1 command.
+.FN write-modified-files ^X-^M
+Writes all the buffers that have been modified but not been saved.
+.FN write-named-file ^X-^W
+Prompts for a file name and writes the current buffer to that file. If
+the file already exists and is not the current file name, the user is
+informed and asked if he really wants to do it.  Writing a file erases
+the old contents of the file.
+.FN write-region [unbound]
+Takes the region between the point and the mark and writes it to a named
+file.
+.FN yank ^Y
+Inserts, at the point, all the text that was most recently deleted with
+a delete command that saves the text it deleted to the kill ring.  The
+point moves to the end of the inserted region.
+.FN yank-pop ESC-Y
+Goes through the kill ring inserting each entry one at a time.  The
+previous command has to have been the \f3yank\f1 command or the
+\f3yank-pop\f1 command.

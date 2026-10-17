@@ -1,0 +1,73 @@
+
+REBOOT(8)           UNIX Programmer's Manual            REBOOT(8)
+
+NAME
+     reboot - UNIX bootstrapping procedures
+
+SYNOPSIS
+     /etc/reboot [ -n ] [ -q ] [ -f ] [ -a ] [ -h ] [ -d ]
+
+DESCRIPTION
+     UNIX is started by placing it in memory at location zero and
+     transferring to zero.  Since the system is not reentrant, it
+     is necessary to read it in from disk or tape each time it is
+     to be bootstrapped.
+
+     Rebooting a running system. When a UNIX is running and a
+     reboot is desired, _s_h_u_t_d_o_w_n(8) is normally used.  If there
+     are no users then /_e_t_c/_r_e_b_o_o_t can be used.  _R_e_b_o_o_t normally
+     causes the disks to be synced, and then a multi-user reboot
+     (as described below) is initiated.  This causes a system to
+     be booted and an automatic disk check to be performed.  If
+     all this succeeds without incident, the system is then
+     brought up multiuser.
+
+     Options to _r_e_b_o_o_t are:
+
+     -n   option avoids the sync.  It is necessary to reboot
+          without a sync after rebuilding the root file system.
+
+     -q   reboots quickly and ungracefully, without shutting down
+          running processes first.
+
+     -f   fast boot, omitting the automatic file system con-
+          sistency check.
+
+     -a   _b_o_o_t(8) will ask for the name of the system to be
+          booted, rather than immediately booting the default
+          system.
+
+     -h   halt the system rather than rebooting.
+
+     -d   dump memory onto the dump device, usually part of swap,
+          before rebooting.  The dump is done in the same way as
+          after a panic.
+
+     Power fail and crash recovery. The system will normally
+     reboot itself after crashes and power failures (if the con-
+     tents of low memory are intact).  An automatic consistency
+     check of the file systems will be performed and unless this
+     fails the system will resume multiuser operations.
+
+     Cold starts. These are processor dependent.  See _b_o_o_t(8).
+
+FILES
+     /unix                    system code
+
+Printed 8/2/83                                                  1
+
+REBOOT(8)           UNIX Programmer's Manual            REBOOT(8)
+
+     /usr/src/sys/mdec/xxboot block 0 bootstrap for boot device
+     xx
+     /boot                    system bootstrap, on boot disk file
+     system
+     /etc/init
+     /etc/rc                  script to check file systems and
+     bring the system up
+
+SEE ALSO
+     crash(8), fsck(8), init(8), rc(8), shutdown(8)
+
+Printed 8/2/83                                                  2
+

@@ -1,0 +1,46 @@
+.TH SUBMIT 1
+.UC
+.SH NAME
+submit \- protect background jobs
+.SH SYNOPSIS
+.B submit
+.B \-c
+command
+.br
+.B submit
+[
+.B \-p
+] pid
+.br
+.B submit
+program arguments
+.SH DESCRIPTION
+.I Submit
+protects background jobs from termination when a user logs off.
+.IR Init (8)
+sends a SIGKILL
+to each unsubmitted background job when a user logs out
+but processes blessed by
+.I submit
+are allowed to continue running (at a lower priority).
+.SH EXAMPLES
+There are three ways to use
+.IR submit :
+.nf
+.IP 1)
+	% submit \-c command
+as in
+	% submit \-c "a.out <infile >outfile"
+.IP 2)
+	% submit [\-p] pid ...
+as in
+	% a.out < infile > outfile &
+	3457
+	...
+	% submit [\-p] 3457
+.IP 3)
+	% submit program arguments
+as in
+	% submit cc \-O \-o zzz zzz.c \-lm
+.SH SEE ALSO
+nice(1), renice(1), nice(2), renice(2), submit(2)

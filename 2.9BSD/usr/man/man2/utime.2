@@ -1,0 +1,61 @@
+.TH UTIME 2
+.UC
+.SH NAME
+utime \- set file times
+.SH SYNOPSIS
+.B #include <sys/types.h>
+.sp
+.B utime(file, timep)
+.br
+.B char *file;
+.br
+.B time\_t timep[2];
+.SH DESCRIPTION
+The
+.I utime
+call
+uses the
+`accessed' and `updated' times in that order
+from the
+.I timep
+vector
+to set the corresponding recorded times for
+.I file.
+.PP
+The caller must be the owner of the file or the super-user.
+The ``inode-changed'' time of the file is set to the current time.
+.SH ERRORS
+.I Utime
+will fail if one or more of the following is true:
+.TP 20
+[EINVAL]
+The path name contains a non-ASCII byte.
+.TP 20
+[ENOENT]
+The named file does not exist.
+.TP 20
+[ENOTDIR]
+A component of the path prefix is not a directory.
+.TP 20
+[EACCES]
+A component of the path prefix denies search permission.
+.TP 20
+[EPERM]
+The process's effective user ID is not the super-user and not the same
+as the owner of the file.
+.TP 20
+[EROFS]
+The named file is located on a read-only file system.
+.TP 20
+[EFAULT]
+.I Timep
+points to an address outside the process's allocated address space.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.SH SEE ALSO
+stat (2)
+.SH ASSEMBLER
+(utime = 30.)
+.br
+.B sys utime; file; timep

@@ -1,0 +1,36 @@
+.TH RENICE 2
+.UC
+.SH NAME
+renice \- set program priority
+.SH SYNOPSIS
+.B renice(pid, nice)
+.SH DESCRIPTION
+.I Renice 
+sets the scheduling priority of the process with id
+.I pid
+to
+.IR nice .
+The super-user may
+.I renice
+any process to any value from \-127 to 127.  Other users may
+only increase the nice value of one of their own processes.
+.SH ERRORS
+.I Renice
+will fail and the process's scheduling priority will be unaltered if:
+.TP 20
+[EPERM]
+The named process's effective user ID is not the same as the calling process
+and the process's effective user ID is not the super-user.
+.TP 20
+[ESRCH]
+The named process does not exist.
+.SH SEE ALSO
+nice(1), renice(1), nice(2)
+.SH ASSEMBLER
+.nf
+(local = 58., renice = 17.)
+.B sys local; 9f
+\&. . .
+.B \&.data
+.B 9: sys renice; pid; nice
+.fi

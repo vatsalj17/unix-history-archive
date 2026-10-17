@@ -1,0 +1,110 @@
+.TH IOSTAT 8
+.UC
+.SH NAME
+iostat \- report I/O statistics
+.SH SYNTAX
+.B iostat
+[ option ] ...
+[ interval [ count ] ]
+.SH DESCRIPTION
+.I Iostat
+delves into the system and reports certain statistics kept about
+input-output activity.
+Information is kept about different disks
+and about terminal ports.
+For each disk, I/O completions and number of words transferred
+are counted; for terminal ports collectively, the number
+of input and output characters are counted.
+Also, each sixtieth of a second,
+the state of each disk is examined
+and a tally is made if the disk is active.
+The state of the system is also examined and placed in
+one of four categories, depending on whether the system is
+executing in user mode, in `nice' (background)
+user mode, in system mode, or idle.
+From all these numbers and from the known transfer rates
+of the devices it is possible to determine
+information such as the degree of I/O overlap
+and average seek times for each device.
+.PP
+The optional
+.I interval
+argument causes
+.I iostat
+to report once each
+.I interval
+seconds.
+The first report is for  all time since a reboot and each
+subsequent report is for the last interval only.
+.PP
+The optional
+.I count
+argument restricts the number of reports.
+.PP
+With no option argument
+.I iostat
+reports the number of characters of terminal I/O per second,
+for each disk the number of transfers per minute,
+the milliseconds per average seek,
+and the milliseconds per data transfer exclusive of seek time.
+It also gives the percentage of time the system has
+spend in each of the four categories mentioned above.
+.PP
+The following options are available:
+.TP
+.B \-\^i
+Report the percentage of time spent in each
+of the four categories mentioned above,
+the percentage of time spent in `I/O wait'
+(iowt: idle, but with a disk active),
+the percentage of time any disk was active (iact),
+and the percentage of time each disk was active
+(seeking, dks, or transferring, dkx).
+.TP
+.B \-\^o
+Omit the headers and first line (data since boottime).
+.TP
+.B \-\^s
+Report the raw timing information: 8 numbers indicating
+the percentage of time spent in each of the possible
+configurations of 4 system states with I/O active or not active,
+and a number of I/O states (2**n for n disks) reflecting the combinations
+of disks active at each sampling point.
+.TP
+.B \-\^b
+Report on the usage of I/O buffers.
+.TP
+.B \-\^d
+Print the date and time before each listing.
+.TP
+.B \-\^a
+Print the actual time elapsed before each listing.
+.TP
+.B \-\^u
+Print UNIBUS map allocation statistics.
+.SH "PROGRAM CONFIGURATION"
+The iostat program must be modified for each hardware configuration
+for the disk monitoring to work correctly.
+This must correspond to the way
+the kernel maintains the disk metering information.
+There are NDISK (param.c) disks monitored,
+and the identity of each disk is determined by the definition
+of \fIXX\fP_DKN in the appropriate disk driver header file.
+The disk with \fIXX\fP_DKN of 0 will appear first in the output listings, etc.
+SMD-type disk drivers (hp, rp, rm) use one entry for each disk's seeks,
+from \fIXX\fP_DKN to \fIXX\fP_DKN + NDR \- 1, with NDR drives.
+The entry \fIXX\fP_DKN + NDR is
+used for the controller's transfers.
+No other driver should be assigned a \fIXX\fP_DKN in this range.
+Iostat expects that if there is an SMD driver, its \fIXX\fP_DKN will be 0.
+In the iostat source,
+the defined constant LAST_DRV should be set to the entry number of the
+last slot used for drive seeks, e.g. 1 for use with 2 hp drives, or \-1 with
+no SMD drives.
+Also, the transfer rates of each controller must be entered in
+the appropriate element of the array xf;
+this is used to determine the transfer times printed.
+.SH FILES
+/unix
+.br
+/dev/kmem

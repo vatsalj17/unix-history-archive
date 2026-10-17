@@ -1,0 +1,177 @@
+
+TAR(1)              UNIX Programmer's Manual               TAR(1)
+
+NAME
+     tar - tape archiver
+
+SYNOPSIS
+     tar [ key ] [ name ... ]
+
+DESCRIPTION
+     _T_a_r saves and restores multiple files on a single file (usu-
+     ally a magnetic tape, but it can be any file).  _T_a_r's
+     actions are controlled by the _k_e_y argument.  The _k_e_y is a
+     string of characters containing at most one function letter
+     and possibly one or more function modifiers.  Other argu-
+     ments to _t_a_r are file or directory names specifying which
+     files to dump or restore.  In all cases, appearance of a
+     directory name refers to the files and (recursively) sub-
+     directories of that directory.
+
+     The function portion of the key is specified by one of the
+     following letters:
+
+     r       The named files are written on the end of the tape.
+             The c function implies this.
+
+     x       The named files are extracted from the tape.  If the
+             named file matches a directory whose contents had
+             been written onto the tape, this directory is
+             (recursively) extracted.  The owner, modification
+             time, and mode are restored (if possible; but see
+             the p flag below).  If no file argument is given,
+             the entire content of the tape is extracted.  Note
+             that if multiple entries specifying the same file
+             are on the tape, the last one overwrites all ear-
+             lier.
+
+     t       The names of the specified files are listed each
+             time they occur on the tape.  If no file argument is
+             given, all of the names on the tape are listed.
+
+     u       The named files are added to the tape if either they
+             are not already there or have been modified since
+             last put on the tape.
+
+     c       Create a new tape; writing begins on the beginning
+             of the tape instead of after the last file.  This
+             command implies r.
+
+     C       Compare the files on the tape to the named files; do
+             comparisons for all files on the tape if there are
+             no arguments.
+
+     X       The following argument is taken to be the name of a
+             directory whose contents are compared to the named
+
+Printed 7/25/83                                                 1
+
+TAR(1)              UNIX Programmer's Manual               TAR(1)
+
+             files, or all files on the tape if there are no
+             additional arguments.  The files are extracted, com-
+             pared to those in the specified directory, and if
+             they are identical to those in the other directory,
+             they are linked to the corresponding files there.
+             The named directory must be on the same mounted
+             filesystem as the current directory.
+
+     The following characters may be used in addition to the
+     letter which selects the function desired.
+
+     0, ..., 7 This modifier selects an alternate drive on which
+               the tape is mounted.  The default is drive 0 at
+               1600 bpi, which is normally /dev/rmt1.
+
+     v         Normally _t_a_r does its work silently.  The v (ver-
+               bose) option make _t_a_r type the name of each file
+               it treats preceded by the function letter.  With
+               the t function, the verbose option gives more
+               information about the tape entries than just their
+               names.
+
+     w         _T_a_r prints the action to be taken followed by file
+               name, then wait for user confirmation.  If a word
+               beginning with `y' is given, the action is done.
+               Any other input means don't do it.
+
+     f         _T_a_r uses the next argument as the name of the
+               archive instead of /dev/rmt?.  If the name of the
+               file is `-', tar writes to standard output or
+               reads from standard input, whichever is appropri-
+               ate.  Thus, _t_a_r can be used as the head or tail of
+               a filter chain.  _T_a_r can also be used to move
+               hierarchies with the command
+                 cd fromdir; tar cf - . | (cd todir; tar xf -)
+
+     b         _T_a_r uses the next argument as the blocking factor
+               for tape records.  The default is 20 (the maximum)
+               for tape files, 2 otherwise.  This option should
+               only be used with raw magnetic tape archives (See
+               f above).  The block size is determined automati-
+               cally when reading tapes (key letters `r', `x' and
+               `t').
+
+     l         tells _t_a_r to complain if it cannot resolve all of
+               the links to the files dumped.  If this is not
+               specified, no error messages are printed.
+
+     m         tells _t_a_r not to restore the modification times.
+               The modification time will be the time of extrac-
+               tion.
+
+Printed 7/25/83                                                 2
+
+TAR(1)              UNIX Programmer's Manual               TAR(1)
+
+     o         Tar normally places information specifying owner
+               and modes of directories in the archive.  Former
+               versions of tar, when encountering this informa-
+               tion will give error message of the form
+                    ``<name>/: cannot create''.
+               This option will suppress the directory informa-
+               tion.
+
+     p         Preserve all of the mode information.  Files are
+               restored to their original modes, ignoring the
+               present _u_m_a_s_k(2).  Setuid and sticky information
+               will also be restored for the super-user.
+
+     h         Force _t_a_r to follow symbolic links as if they were
+               normal files or directories.  Normally, _t_a_r does
+               not follow symbolic links.
+
+     When creating an archive, a -C_d_i_r_e_c_t_o_r_y embedded in the list
+     of filenames instructs _t_a_r to perform a _c_h_d_i_r(2) to the
+     named _d_i_r_e_c_t_o_r_y before continuing to the next file.  This
+     allows multiple directories not related by a close common
+     parent to be archived using short relative path names.  For
+     example, to archive files from /usr/include and from /etc,
+     one might use
+          tar c -C /usr include -C / etc
+
+     Previous restrictions dealing with _t_a_r's inability to prop-
+     erly update blocked archives have been lifted.  This is
+     dependent on the use of system tape handlers that support
+     tape backspace operations.  Archives on disk can be updated,
+     but the blocking factor used must agree with that used to
+     create the archive (which is difficult to determine); such
+     operations are therefore somewhat risky.  This version of
+     _t_a_r uses a blocking factor of 2 by default for both creating
+     and updating disk archives.
+
+FILES
+     /dev/rmt?
+     /tmp/tar*
+
+DIAGNOSTICS
+     Complaints about bad key characters and tape read/write
+     errors.
+     Complaints if enough memory is not available to hold the
+     link tables.
+
+BUGS
+     There is no way to ask for the _n-th occurrence of a file.
+     Use the w option to extract the desired file.
+     Tape errors are handled ungracefully.
+     The u, C and X options can be slow.
+     The current limit on file name length is 100 characters.
+
+Printed 7/25/83                                                 3
+
+TAR(1)              UNIX Programmer's Manual               TAR(1)
+
+     There is no way to selectively follow symbolic links.
+
+Printed 7/25/83                                                 4
+

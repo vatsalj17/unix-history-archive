@@ -1,0 +1,310 @@
+/*
+ * static char sccsid[] = "@(#)dial.c	4.1	(Berkeley)	9/11/82";
+ */
+
+/***********************************************************************
+* dial: do the stuff for the various autodialers                            *
+***********************************************************************/
+
+#include "uucp.h"
+#include <signal.h>
+#include <sgtty.h>
+#include <setjmp.h>
+#include <ctype.h>
+#include <utmp.h>
+#include <sys/types.h>
+#include <sys/timeb.h>
+
+/*
+ * static char SiD[] = "@(#)dial  1.0";
+ */
+
+#define	MODEMWAIT	5
+
+int alarmtr();
+
+/*****************************************************************************
+* decdial: dial a DEC DF-03                                                  *
+*****************************************************************************/
+
+decdial(dialer, dev, phone, speed)
+char *dialer, *dev, *phone;
+int speed;
+{
+	printf("DECDIAL %s on %s at %d\n", phone, dev, speed);
+	return(-1);
+}
+
+/*
+ * Code to handle Vadic AD3451P's
+ * Note: this assumes sendthem() terminates messages with CR, not NL
+ *  Uses two names for device:
+ *    the "dev" name should be set up so that opens complete without carrier.
+ *    the "line" name should be set up so that carrier loss will be noticed.
+ *  Opens the acu first; after connection, switches to the normal device.
+ */
+
+vad3451P(dialer, dev, phone, speed, line)
+char *dialer, *dev, *phone, *line;
+{
+	int dcf, i;
+	extern int Dnf;
+	int nw, ng;
+	extern errno;
+	register char *p;
+	int delay, bad;
+	char sendnum[32];
+	char *strcat(), *strcpy();
+
+	/* check phone number, calculate dialing time */
+	delay = 5+30;	/* 5 sec dial tone delay, 30 sec for carrier det. */
+	bad = 0;
+	for (p = phone; *p != '\0'; ++p)
+		switch (*p) {
+		case '0': case '1': case '2': case '3': case '4':
+		case '5': case '6': case '7': case '8': case '9':
+			delay += 2;	/* up to 1 sec for digit, 3/4 sec */
+			break;		/* interdigit space */
+		case 'k':
+		case 'K':
+			delay += 5;	/* 5 sec additional delay */
+			break;
+		case ' ':
+		case '-':
+			break;
+		default:
+			++bad;
+		}
+
+	if (bad || strlen(phone) > sizeof(sendnum)-3) {
+		logent(phone, "BAD PHONE NUMBER");
+		DEBUG(4, "BAD PHONE NUMBER %s\n", phone);
+		return(FAIL);
+	}
+
+	if ((Dnf = open(dialer, 2)) < 0) {
+		logent(dialer, "OPEN FAILED");
+		DEBUG(4, "OPEN %s FAILED, errno=%d\n", dialer, errno);
+		return(FAIL);
+	}
+	fixline(Dnf, speed);
+
+	/* get the modem's attention and set its speed */
+	sendthem("\005\\d", Dnf);
+	if (expect("HELLO: I'M READY\r\n*", Dnf, MODEMWAIT))
+		goto fail;
+
+	sendthem("D\\d", Dnf);
+	if (expect("NUMBER?\r\n", Dnf, MODEMWAIT))
+		goto fail;
+
+	/* build phone number sent to the modem */
+	strcpy(sendnum, phone);
+	for (p = sendnum; *p != '\0'; ++p)
+		if (*p == 'k')
+			*p = 'K';		/* echo is upper case */
+	sendthem(sendnum, Dnf);
+	strcat(sendnum, "\r\n");
+	if (expect(sendnum, Dnf, MODEMWAIT))
+		goto fail;
+	sendthem("", Dnf);
+	if (expect("DIALING:  ", Dnf, MODEMWAIT))
+		goto fail;
+	if (expect("ON LINE\r\n", Dnf, delay)) {
+		logent(dev, "DIAL FAILED");
+		DEBUG(4, "%s DIAL FAILED\n", dev);
+		sendthem("I", Dnf);
+		close(Dnf);
+		return(FAIL);
+	}
+	dcf = open(dev, 2);
+	DEBUG(4, "dcf is %d\n", dcf);
+	if (dcf < 0) {
+		DEBUG(1, "Line open %s\n", "failed");
+		logent("DIALUP LINE open", "FAILED");
+		sendthem("I", Dnf);
+		close(Dnf);
+		return(FAIL);
+	}
+	return(dcf);
+
+fail:
+	logent(dev, "DIALER PROBLEM");
+	DEBUG(4, "%s DIALER PROBLEM\n", dev);
+	sendthem("I", Dnf);
+	close(Dnf);
+	return(FAIL);
+}
+
+ven212(dialer, dev, phone, speed)
+char *dialer, *dev, *phone;
+int speed;
+{
+	int dcf;
+	int realflags;
+	struct sgttyb ttbuf;
+ /*     static struct TTY_delays vtdelays = { 0, 0205, 0, 0 };  */
+ /*     static struct TTY_delays nodelays = { 0, 0, 0, 0 };     */
+	static struct timeb loctime;
+        char *erc = "error code %d\n";
+	extern errno;
+
+	dcf = open(dev, 2);
+	if(dcf < 0) {
+		logent(dev, "OPEN FAILED");
+		DEBUG(4, "OPEN %d FAILED\n", errno);
+		return(FAIL);
+	}
+	/* set speeds, etc. */
+	fixline(dcf, speed);
+	/* now doctor the speeds */
+	ASSERT(!ioctl(dcf, TIOCGETP, &ttbuf), erc, errno);
+	realflags = ttbuf.sg_flags;
+	ttbuf.sg_flags = ODDP|EVENP|CBREAK;
+	ASSERT(!ioctl(dcf, TIOCSETN, &ttbuf), erc, errno);
+	/* IS-1 crockola
+	ASSERT(!ioctl(dcf, TIOCSDEL, &vtdelays), erc, errno);
+	*/
+
+	/* now try to get its attention */
+	DEBUG(4, "POKE VENTEL, ", 0);
+
+	/* IS-1 way
+	write(dcf, "\r\r", 2);
+	*/
+	ftime(&loctime);
+	write(dcf, "\r",1);
+	{register i = loctime.millitm;
+	   while (abs(loctime.millitm - i)<250) ftime(&loctime);
+	}
+        write(dcf, "\r",1);
+
+        DEBUG(4, "IS VENTEL THERE?\n", 0);
+	if(expect("\r\n$", dcf, MODEMWAIT)) {
+dead:
+		DEBUG(4, "DIAL DEAD %s\n", dev);
+		logent(dev, "DIALLER DEAD");
+		close(dcf);
+		return(FAIL);
+	}
+
+	/* now dial the number */
+	ioctl(dcf, TIOCSETP, &ttbuf);    /* discard buffered stuff */
+	write(dcf, "K", 1);
+	if(expect("DIAL: ", dcf, MODEMWAIT))
+		goto dead;
+
+	write(dcf, phone, strlen(phone));
+	write(dcf, "\r", 1);
+	if(expect("ONLINE!", dcf, 60))	/* should be calculated delay */
+		goto dead;
+
+	/* have connection */
+	ttbuf.sg_flags = realflags;
+	ioctl(dcf, TIOCSETN, &ttbuf);
+	/*      IS-1
+	ioctl(dcf, TIOCSDEL, &nodelays);
+	*/
+        return(dcf);
+}
+
+/*****************************************************************************
+* disable and reenable:   allow a single line to be turned around so as to   *
+* work both for dialin and dialout.                                          *
+*****************************************************************************/
+
+#ifdef	DISABLE
+#define	LINE	"/usr/lib/uucp/line"	/* enable/disable program */
+int	LineMode;
+#endif
+
+char enbdev[30];        /* disabled device */
+
+disable(dev)
+char *dev;
+{
+	int i;
+	struct utmp u;
+#ifdef	DISABLE
+	static char cmd[50];
+	/*
+	 * Use the LINE program to verify that no one is using
+	 * this line, and turn it off for dialup use.
+	 * return status:
+	 *  0   line was not in use
+	 *  1-9 line was in use, mode 1-9 (first char of ttys line)
+	 *  10  line is busy
+	 *  >10 error
+	 */
+	sprintf(cmd, "%s %s 0", LINE, dev);
+	i = system(cmd);
+	DEBUG(4,"LINE 0 returned %d\n",i);
+	if ((i&0377) || ((i>>8) > 9)) {
+		if ((i>>8) != 10)
+			logent(dev, "Error turning off");
+		return(FAIL);
+	}
+	LineMode = i >> 8;		/* exit status */
+	if (LineMode>1) {
+		strcpy(enbdev, dev);
+		sleep(2);		/* wait for getty to die */
+	}
+	return(SUCCESS);
+#endif
+
+	return;
+/*      DEBUG(4, "Disable %s\n", dev);
+/*        i = open("/etc/utmp", 0);
+/*        if(i < 0)
+/*                return;         /* tough */
+/*        while(read(i, &u, sizeof(u)) == sizeof(u)) {
+/*                if(strcmp(u.ut_line, dev))
+/*                        continue;
+/*                if(u.ut_stat == ENABLE) {
+/*                        DEBUG(4, "Was enabled: %s\n", dev);
+/*                          enbcall("disable", dev);
+/*                        logent(dev, "DISABLED LOGIN");
+/*                        strcpy(enbdev, dev);
+/*                        break;
+/*                }
+/*        }
+/*        close(i);
+*/
+}
+
+reenable()
+{
+#ifdef	DISABLE
+	/*
+	 * If we disabled a dialup, turn it back on.
+	 */
+	char cmd[50];
+	if (enbdev[0]) {
+		sprintf(cmd, "%s %s %d", LINE, enbdev, LineMode);
+		system(cmd);
+	}
+	enbdev[0] = 0;
+#endif
+	return;
+/*        if(!enbdev[0])
+/*                return;         /* nothing to reenable */
+/*        DEBUG(4, "Reenable %s\n", enbdev);
+/*        enbcall("enable", enbdev);
+/*        logent(enbdev, "REENABLED LOGIN");
+/*        enbdev[0] = 0;
+*/
+}
+
+/* enbcall(type, dev)
+/* char *type;
+/* char *dev;
+/* {
+/*	int pid;
+/*
+/*	if((pid = fork()) == 0) {
+/*		execl("/priv/enable", type, dev, 0);
+/*		exit(99);
+/*	}
+/*	while(wait(0) != pid);
+/*}
+*/

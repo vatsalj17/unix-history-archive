@@ -1,0 +1,44 @@
+.TH SUBMIT 2
+.UC
+.SH NAME
+submit \- allow a process to run after logout
+.SH SYNOPSIS
+.B submit(pid);
+.SH DESCRIPTION
+.I Submit
+marks the specified process so that
+it will be allowed to run after the user
+logs out.
+The 0200 bit of the process flags
+(see
+.IR ps (1))
+is used for this mark.
+.PP
+Use of this call is restricted to the
+user that created the process, and
+then only from the same login session.
+The super-user may
+.I submit
+any process.
+.SH ERRORS
+.I Submit
+will fail if:
+.TP 20
+[EPERM]
+The process's effective user ID is not the same as that of the process
+specified by
+.IR pid .
+.TP 20
+[ESRCH]
+The specified process does not exist.
+.SH SEE ALSO
+ps(1)
+.SH ASSEMBLER
+.nf
+(local = 58., submit = 3.)
+(pid in r0)
+.B sys local;9f
+\&. . .
+.B \&.data
+.B 9: sys submit
+.fi

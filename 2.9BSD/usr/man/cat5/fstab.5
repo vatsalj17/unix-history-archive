@@ -1,0 +1,86 @@
+
+FSTAB(5)            UNIX Programmer's Manual             FSTAB(5)
+
+NAME
+     fstab - static information about the file systems
+
+SYNOPSIS
+     #include <fstab.h>
+
+DESCRIPTION
+     The file /_e_t_c/_f_s_t_a_b contains descriptive information about
+     the various file systems.  /_e_t_c/_f_s_t_a_b is only _r_e_a_d by pro-
+     grams, and not written; it is the duty of the system
+     administrator to properly create and maintain this file.
+
+     These programs use /_e_t_c/_f_s_t_a_b: _m_o_u_n_t, _u_m_o_u_n_t, _f_s_c_k and _d_f.
+     The order of records in /_e_t_c/_f_s_t_a_b is important, for _f_s_c_k,
+     _m_o_u_n_t, and _u_m_o_u_n_t sequentially iterate through /_e_t_c/_f_s_t_a_b
+     doing their thing.
+
+     The special file name is the block special file name, and
+     not the character special file name.  If a program needs the
+     character special file name, the program must create it by
+     appending a ``r'' after the last ``/'' in the special file
+     name.
+
+     If _f_s__t_y_p_e is ``rw'' or ``ro'' then the file system whose
+     name is given in the _f_s__f_i_l_e field is normally mounted
+     read-write or read-only on the specified special file.  The
+     _f_s__f_r_e_q field is used for these file systems by the _d_u_m_p(8)
+     command to determine which file systems need to be dumped
+     (this feature is not currently available on all PDP11s due
+     to size restrictions).  The _f_s__p_a_s_s_n_o field is used by the
+     _f_s_c_k(8) program (with the -p option) to determine the order
+     in which file system checks are done at reboot time.  The
+     root file system should be specified with a _f_s__p_a_s_s_n_o of 1,
+     and other file systems should have larger numbers.  File
+     systems within a drive should have distinct numbers, but
+     file systems on different drives can be checked on the same
+     pass to utilize parallelism available in the hardware.
+
+     If _f_s__t_y_p_e is ``sw'' then the special file is assumed to be
+     used for swapping.  The fields other than _f_s__s_p_e_c and
+     _f_s__t_y_p_e are not used in this case.
+
+     _F_s__t_y_p_e may be specified as ``xx'' to cause an entry to be
+     ignored.  This is useful to show disk partitions which are
+     currently not used but will be used later.
+
+     #define FSTAB                  "/etc/fstab"
+     #define FSNMLG                 16
+
+     #define FSTABFMT    "%16s:%16s:%2s:%d:%d\n"
+     #define FSTABARG(p) (p)->fs_spec, (p)->fs_file, \
+                         (p)->fs_type, &(p)->fs_freq, &(p)->fs_passno
+
+Printed 7/30/83                                                 1
+
+FSTAB(5)            UNIX Programmer's Manual             FSTAB(5)
+
+     #define FSTABNARGS  5
+
+     #define FSTAB_RW    "rw"       /* read write device */
+     #define FSTAB_RO    "ro"       /* read only device */
+     #define FSTAB_SW    "sw"       /* swap device */
+     #define FSTAB_XX    "xx"       /* ignore totally */
+
+     struct fstab {
+             char  fs_spec[FSNMLG]; /* block special device name */
+             char  fs_file[FSNMLG]; /* file system path prefix */
+             char  fs_type[3];      /* rw,ro,sw or xx */
+             int   fs_freq;         /* dump frequency, in days */
+             int   fs_passno;       /* pass number on parallel dump */
+     };
+
+     The proper way to read records from /_e_t_c/_f_s_t_a_b is to use the
+     routines getfsent(), getfsspec() or getfsfile().
+
+FILES
+     /etc/fstab
+
+SEE ALSO
+     getfsent(3)
+
+Printed 7/30/83                                                 2
+

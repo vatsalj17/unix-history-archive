@@ -1,0 +1,41 @@
+
+CRON(8)             UNIX Programmer's Manual              CRON(8)
+
+NAME
+     cron - clock daemon
+
+SYNOPSIS
+     /etc/cron
+
+DESCRIPTION
+     _C_r_o_n executes commands at specified dates and times accord-
+     ing to the instructions in the file /_u_s_r/_l_i_b/_c_r_o_n_t_a_b.  Since
+     _c_r_o_n never exits, it should only be executed once.  This is
+     best done by running _c_r_o_n from the initialization process
+     through the file /etc/rc; see _i_n_i_t(8).
+
+     Crontab consists of lines of six fields each.  The fields
+     are separated by spaces or tabs.  The first five are integer
+     patterns to specify the minute (0-59), hour (0-23), day of
+     the month (1-31), month of the year (1-12), and day of the
+     week (1-7 with 1=monday).  Each of these patterns may con-
+     tain a number in the range above; two numbers separated by a
+     minus meaning a range inclusive; a list of numbers separated
+     by commas meaning any of the numbers; or an asterisk meaning
+     all legal values.  The sixth field is a string that is exe-
+     cuted by the Shell at the specified times.  A percent char-
+     acter in this field is translated to a new-line character.
+     Only the first line (up to a % or end of line) of the com-
+     mand field is executed by the Shell.  The other lines are
+     made available to the command as standard input.
+
+     Crontab is examined by _c_r_o_n every minute.
+
+FILES
+     /usr/lib/crontab    programs for _c_r_o_n to run
+
+SEE ALSO
+     sh(1)
+
+Printed 5/17/83                                                 1
+

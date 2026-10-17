@@ -1,0 +1,38 @@
+
+GETLOGIN(3)         UNIX Programmer's Manual          GETLOGIN(3)
+
+NAME
+     getlogin - get login name
+
+SYNOPSIS
+     char *getlogin();
+
+DESCRIPTION
+     _G_e_t_l_o_g_i_n returns a pointer to the login name as found in
+     /_e_t_c/_u_t_m_p.  It may be used in conjunction with _g_e_t_p_w_n_a_m to
+     locate the correct password file entry when the same userid
+     is shared by several login names.
+
+     If _g_e_t_l_o_g_i_n is called within a process that is not attached
+     to a typewriter, it returns NULL.
+
+FILES
+     /etc/utmp
+
+SEE ALSO
+     getpwent(3), getgrent(3), utmp(5)
+
+DIAGNOSTICS
+     Returns NULL if name not found.
+
+BUGS
+     The return values point to static data whose contents are
+     overwritten by each call.  _G_e_t_l_o_g_i_n is almost useless.  It
+     attempts to determine the user name by first determining
+     whether file descriptors 0, 1, or 2 are attached to ttys.
+     If so, /etc/utmp is used to associate a user name.  The
+     deficiencies of this method are clear.  _G_e_t_l_o_g_i_n should
+     never be used when security is a consideration.
+
+Printed 6/29/83                                                 1
+

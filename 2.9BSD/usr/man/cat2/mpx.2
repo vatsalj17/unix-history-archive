@@ -1,0 +1,259 @@
+MPX(2)              UNIX Programmer's Manual               MPX(2)
+
+NAME
+     mpx - create and manipulate multiplexed files
+
+SYNOPSIS
+     mpx(name, access) char *name;
+
+     join(fd, xd)
+
+     chan(xd)
+
+     extract(i, xd)
+
+     attach(i, xd)
+
+     detach(i, xd)
+
+     connect(fd, cd, end)
+
+     npgrp(i, xd, pgrp)
+
+     ckill(i, xd, signal)
+
+     #include <sys/mx.h>
+     mpxcall(cmd, vec)
+     int *vec;
+
+DESCRIPTION
+     mpxcall(cmd, vec) is the system call shared by the library
+     routines described below.  _C_m_d selects a command using
+     values defined in <_s_y_s/_m_x._h>.  _V_e_c is the address of a
+     structure containing the arguments for the command.
+
+     mpx(name, access)
+
+     _M_p_x creates and opens the file _n_a_m_e with access permission
+     _a_c_c_e_s_s (see _c_r_e_a_t(2)) and returns a file descriptor avail-
+     able for reading and writing.  A -1 is returned if the file
+     cannot be created, if _n_a_m_e already exists, or if the file
+     table or other operating system data structures are full.
+     The file descriptor is required for use with other routines.
+
+     If _n_a_m_e designates a null string, a file descriptor is
+     returned as described but no entry is created in the file
+     system.
+
+     Once created an mpx file may be opened (see _o_p_e_n(2)) by any
+     process.  This provides a form of interprocess communication
+     whereby a process B can `call' process A by opening an mpx
+     file created by A.  To B, the file is ordinary with one
+     exception: the _c_o_n_n_e_c_t primitive could be applied to it.
+     Otherwise the functions described below are used only in
+     process A and descendants that inherit the open mpx file.
+
+Printed 9/10/82                                                 1
+
+MPX(2)              UNIX Programmer's Manual               MPX(2)
+
+     When a process opens an mpx file, the owner of the file
+     receives a control message when the file is next read.  The
+     method for `answering' this kind of call involves using
+     _a_t_t_a_c_h and _d_e_t_a_c_h as described in more detail below.
+
+     Once B has opened A's mpx file it is said to have a _c_h_a_n_n_e_l
+     to A.  A channel is a pair of data streams: in this case,
+     one from B to A and the other from A to B.  Several
+     processes may open the same mpx file yielding multiple chan-
+     nels within the one mpx file.  By accessing the appropriate
+     channel, A can communicate with B and any others.  When A
+     reads (see _r_e_a_d(2)) from the mpx file data written to A by
+     the other processes appears in A's buffer using a record
+     format described in _m_p_x_i_o(5).  When A writes (see _w_r_i_t_e(2))
+     on its mpx file the data must be formatted in a similar way.
+
+     The following commands are used to manipulate mpx files and
+     channels.
+
+          _j_o_i_n- adds a new channel on an mpx file to an open file
+          F.  I/O on the new channel is I/O on F.
+          _c_h_a_n- creates a new channel.
+          _e_x_t_r_a_c_t- file descriptor maintenance.
+          _c_o_n_n_e_c_t- similar to join except that the open file F is
+          connected to an existing channel.
+          _a_t_t_a_c_h and _d_e_t_a_c_h- used with call protocol.
+          _n_p_g_r_p- manipulates process group numbers so that a
+          channel can act as a control terminal (see _t_t_y(4)).
+          _c_k_i_l_l- send signal (see _s_i_g_n_a_l(2)) to process group
+          through channel.
+
+     A maximum of 15 channels may be connected to an mpx file.
+     They are numbered 0 through 14.  _J_o_i_n may be used to make
+     one mpx file appear as a channel on another mpx file.  A
+     hierarchy or tree of mpx files may be set up in this way.
+     In this case one of the mpx files must be the root of a tree
+     where the other mpx files are interior nodes.  The maximum
+     depth of such a tree is 4.
+
+     An _i_n_d_e_x is a 16-bit value that denotes a location in an mpx
+     tree other than the root: the path through mpx `nodes' from
+     the root to the location is expressed as a sequence of 4-bit
+     nibbles.  The branch taken at the root is represented by the
+     low-order 4-bits of an index.  Each succeeding branch is
+     specified by the next higher-order nibble.  If the length of
+     a path to be expressed is less than 4, then the illegal
+     channel number, 15, must be used to terminate the sequence.
+     This is not strictly necessary for the simple case of a tree
+     consisting of only a root node: its channels can be
+     expressed by the numbers 0 through 14.  An index _i and file
+     descriptor _x_d for the root of an mpx tree are required as
+     arguments to most of the commands described below.  Indices
+
+Printed 9/10/82                                                 2
+
+MPX(2)              UNIX Programmer's Manual               MPX(2)
+
+     also serve as channel identifiers in the record formats
+     given in _m_p_x_i_o(5).  Since -1 is not a valid index, it can be
+     returned as a error indication by subroutines that normally
+     return indices.
+
+     The operating system informs the process managing an mpx
+     file of changes in the status of channels attached to the
+     file by generating messages that are read along with data
+     from the channels.  The form and content of these messages
+     is described in _m_p_x_i_o(5).
+
+     join(fd, xd) establishes a connection (channel) between an
+     mpx file and another object.  _F_d is an open file descriptor
+     for a character device or an mpx file and _x_d is the file
+     descriptor of an mpx file.  _J_o_i_n returns the index for the
+     new channel if the operation succeeds and -1 if it does not.
+
+     Following  join, _f_d may still be used in any system call
+     that would have been meaningful before the join operation.
+     Thus a process can read and write directly to _f_d as well as
+     access it via _x_d. If the number of channels required for a
+     tree of mpx files exceeds the number of open files permitted
+     a process by the operating system, some of the file descrip-
+     tors can be released using the standard _c_l_o_s_e(2) call.  Fol-
+     lowing a close on an active file descriptor for a channel or
+     internal mpx node, that object may still be accessed through
+     the root of the tree.
+
+     chan(xd) allocates a channel and connects one end of it to
+     the mpx file represented by file descriptor _x_d. _C_h_a_n returns
+     the index of the new channel or a -1 indicating failure.
+     The _e_x_t_r_a_c_t primitive can be used to get a non-multiplexed
+     file descriptor for the free end of a channel created by
+     _c_h_a_n.
+
+     Both _c_h_a_n and _j_o_i_n operate on the mpx file specified by _x_d.
+     File descriptors for interior nodes of an mpx tree must be
+     preserved or reconstructed with _e_x_t_r_a_c_t for use with _j_o_i_n or
+     _c_h_a_n.  For the remaining commands described here, _x_d denotes
+     the file descriptor for the root of an mpx tree.
+
+     Extract(i, xd) returns a file descriptor for the object with
+     index _i on the mpx tree with root file descriptor _x_d. A -1
+     is returned by extract if a file descriptor is not available
+     or if the arguments do not refer to an existing channel and
+     mpx file.
+
+     attach(i, xd)
+     detach(i, xd).  If a process A has created an mpx file
+     represented by file descriptor _x_d, then a process B can open
+     (see _o_p_e_n(2)) the mpx file.  The purpose is to establish a
+     channel between A and B through the mpx file.  _A_t_t_a_c_h and
+
+Printed 9/10/82                                                 3
+
+MPX(2)              UNIX Programmer's Manual               MPX(2)
+
+     _D_e_t_a_c_h are used by A to respond to such opens.
+
+     An open request by B fails immediately if a new channel can-
+     not be allocated on the mpx file, if the mpx file does not
+     exist, or if it does exist but there is no process (A) with
+     a multiplexed file descriptor for the mpx file (i.e.  _x_d as
+     returned by _m_p_x(2)).  Otherwise a channel with index number
+     _i is allocated.  The next time A reads on file descriptor
+     _x_d, the WATCH control message (see _m_p_x_i_o(5)) will be
+     delivered on channel _i. A  responds to this message with
+     _a_t_t_a_c_h or _d_e_t_a_c_h. The former causes the open to complete and
+     return a file descriptor to B.  The latter deallocates chan-
+     nel _i and causes the open to fail.
+
+     One mpx file may be placed in `listener' mode.  This is done
+     by writing _i_o_c_t_l(_x_d, _M_X_L_S_T_N, _0) where _x_d is an mpx file
+     descriptor and MXLSTN is defined in /_u_s_r/_i_n_c_l_u_d_e/_s_g_t_t_y._h.
+     The semantics of listener mode are that all file names
+     discovered by _o_p_e_n(2) to have the syntax _s_y_s_t_e_m!_p_a_t_h_n_a_m_e
+     (see _u_u_c_p(1)) are treated as opens on the mpx file.  The
+     operating system sends the listener process an OPEN message
+     (see _m_p_x_i_o(5)) which includes the file name being opened.
+     _A_t_t_a_c_h and _d_e_t_a_c_h then apply as described above.
+
+     _D_e_t_a_c_h has two other uses: it closes and releases the
+     resources of any active channel it is applied to, and should
+     be used to respond to a CLOSE message (see _m_p_x_i_o(5)) on a
+     channel so the channel may be reused.
+
+     connect(fd, cd, end).  _F_d is a character file descriptor and
+     _c_d is a file descriptor for a channel, such as might be
+     obtained via _e_x_t_r_a_c_t( _c_h_a_n(_x_d), _x_d) or by _o_p_e_n(2) followed
+     by _a_t_t_a_c_h. _C_o_n_n_e_c_t splices the two streams together.  If _e_n_d
+     is negative, only the output of _f_d is spliced to the input
+     of _c_d. If _e_n_d is positive, the output of _c_d is spliced to
+     the input of _f_d. If _e_n_d is zero, then both splices are made.
+
+     npgrp(i, xd, pgrp).  If _x_d is negative _n_p_g_r_p applies to the
+     process executing it, otherwise _i and _x_d are interpreted as
+     a channel index and mpx file descriptor and _n_p_g_r_p is applied
+     to the process on the non-multiplexed end of the channel.
+     If _p_g_r_p is zero, the process group number of the indicated
+     process is set to the process number of that process, other-
+     wise the value of _p_g_r_p is used as the process group number.
+
+     _N_p_g_r_p normally returns the new process group number.  If _i
+     and _x_d specify  a nonexistant channel, _n_p_g_r_p returns -1.
+
+     ckill(i, xd, signal) sends the specified signal (see _s_i_g_-
+     _n_a_l(2)) through the channel specified by _i and _x_d. If the
+     channel is connected to anything other than a process, _c_k_i_l_l
+     is a null operation.  If there is a process at the other end
+
+Printed 9/10/82                                                 4
+
+MPX(2)              UNIX Programmer's Manual               MPX(2)
+
+     of the channel, the process group will be interrupted (see
+     _s_i_g_n_a_l(2), _k_i_l_l(2)).  _C_k_i_l_l normally returns _s_i_g_n_a_l. If _c_h
+     and _x_d specify a nonexistent channel, _c_k_i_l_l returns -1.
+
+FILES
+     /usr/include/sys/mx.h
+     /usr/include/sgtty.h
+
+SEE ALSO
+     mpxio(5)
+
+BUGS
+     Mpx files are an experimental part of the operating system
+     more subject to change and prone to bugs than other parts.
+     Maintenance programs, e.g.  _i_c_h_e_c_k(1), diagnose mpx files as
+     an illegal mode.  Channels may only be connected to objects
+     in the operating system that are accessible through the line
+     discipline mechanism.  Higher performace line disciplines
+     are needed.  The maximum tree depth restriction is not
+     really checked.  A non-destructive _d_i_s_c_o_n_n_e_c_t primitive
+     (inverse of _c_o_n_n_e_c_t) is not provided.  A non-blocking flow
+     control strategy based on messages defined in _m_p_x_i_o(5)
+     should not be attempted by novices; the enabling _i_o_c_t_l com-
+     mand should be protected.  The _j_o_i_n operation could be sub-
+     sumed by _c_o_n_n_e_c_t. A mechanism is needed for moving a channel
+     from one location in an mpx tree to another.
+
+Printed 9/10/82                                                 5
+

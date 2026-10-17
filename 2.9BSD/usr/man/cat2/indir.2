@@ -1,0 +1,23 @@
+INDIR(2)            UNIX Programmer's Manual             INDIR(2)
+
+NAME
+     indir - indirect system call
+
+ASSEMBLER
+     (indir = 0.)
+     sys indir; call
+
+     The system call at the location _c_a_l_l is executed.  Execution
+     resumes after the _i_n_d_i_r call.
+
+     The main purpose of _i_n_d_i_r is to allow a program to store
+     arguments in system calls and execute them out of line in
+     the data segment.  This preserves the purity of the text
+     segment.
+
+     If _i_n_d_i_r is executed indirectly, it is a no-op.  If the
+     instruction at the indirect location is not a system call,
+     _i_n_d_i_r returns error code EINVAL; see _i_n_t_r_o(2).
+
+Printed 9/10/82                                                 1
+

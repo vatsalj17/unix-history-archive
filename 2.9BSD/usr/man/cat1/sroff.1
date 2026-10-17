@@ -1,0 +1,98 @@
+
+SROFF(1)            UNIX Programmer's Manual             SROFF(1)
+
+NAME
+     sroff - text formatting for Sanders printer
+
+SYNTAX
+     sroff [ option ] ...  [ file ] ...
+
+DESCRIPTION
+     _S_r_o_f_f formats text in the named  _f_i_l_e_s  for  printing  on  a
+     Sanders  Media  12/7  printer  and  is  similar to _n_r_o_f_f and
+     _t_r_o_f_f, from which it is  derived.   The  _N_r_o_f_f/_T_r_o_f_f  _u_s_e_r'_s
+     _m_a_n_u_a_l  applies  to _s_r_o_f_f as well, with exceptions listed in
+     the _S_r_o_f_f _R_e_f_e_r_e_n_c_e _M_a_n_u_a_l. In general,  _s_r_o_f_f  works  simi-
+     larly  to  _t_r_o_f_f, although it has some of the limitations of
+     _n_r_o_f_f.
+
+     If no _f_i_l_e argument is present, the standard input is  read.
+     An  argument consisting of a single minus (-) is taken to be
+     a file  name  corresponding  to  the  standard  input.   The
+     options,  which  may  appear  in  any  order so long as they
+     appear before the files, are:
+
+     -o_l_i_s_t Print only pages whose page  numbers  appear  in  the
+            comma-separated  _l_i_s_t of numbers and ranges.  A range
+            _N-_M means pages _N through _M; an initial -_N means from
+            the  beginning to page _N; and a final _N- means from _N
+            to the end.
+
+     -n_N    Number first generated page _N.
+
+     -m_n_a_m_e Use the macro package _n_a_m_e by  prepending  the  macro
+            file /usr/lib/tmac/tmac._n_a_m_e to the input _f_i_l_e_s.
+
+     -r_a_N   Set register _a (one-character) to _N.
+
+     -i     Read  standard  input  after  the  input  files   are
+            exhausted.
+
+     -q     Invoke the simultaneous input-output mode of  the  rd
+            request.
+
+     -F_n_a_m_e Mount set of fonts _n_a_m_e. This option is dependent  on
+            the  fonts  mounted in the printer.  Examples are H10
+            for Helvesan 10 point Regular and Italic and M12  for
+            Messenger 12 (underlining when in font 2).
+
+     -d     Use  draft  mode,  substituting  fast-printing  draft
+            fonts whenever available.
+
+     -c     Set up for continuous (roll or  fanfold)  paper.   In
+            particular,   no  top  margin  is  generated  by  the
+            printer.
+
+Printed 7/25/83                                                 1
+
+SROFF(1)            UNIX Programmer's Manual             SROFF(1)
+
+     -nroff Define n rather than t to emulate _n_r_o_f_f. This can  be
+            useful  for making macro packages work as with _n_r_o_f_f,
+            _e_s_p_e_c_i_a_l_l_y _w_h_e_n _u_s_i_n_g _a _t_y_p_e_w_r_i_t_e_r or a set of  fonts
+            with no italics.
+
+     -t     Direct output to the standard output instead  of  the
+            sanders printer.
+
+     -w     Wait until printer is available, if currently busy.
+
+     -b     Report whether the printer is busy or available.   No
+            text processing is done.
+
+     -z     Suppress output, just  produce  any  diagnostic  mes-
+            sages.
+
+     -S     Notify the user when printing  finishes.   Used  when
+            _s_r_o_f_f is run in background.
+
+FILES
+     /tmp/ta*              temporary file
+     /usr/lib/tmac/tmac.*  standard macro files
+     /usr/lib/sfont/*      font width tables for _s_r_o_f_f
+     /dev/sanders          printer
+
+SEE ALSO
+     Michael Karels, _S_r_o_f_f _R_e_f_e_r_e_n_c_e _M_a_n_u_a_l
+     J. F. Ossanna, _N_r_o_f_f/_T_r_o_f_f _u_s_e_r'_s _m_a_n_u_a_l
+     B. W. Kernighan, _A _T_R_O_F_F _T_u_t_o_r_i_a_l
+     seqn(1), tbl(1)
+
+BUGS
+     Large backward vertical motions may not work with the  paper
+     feeder.   Vertical  lines frequently fail, especially on the
+     right-hand side of the page;  this  usually  prevents  boxed
+     tables from printing correctly.
+
+Printed 7/25/83                                                 2
+

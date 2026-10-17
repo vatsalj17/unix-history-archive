@@ -1,0 +1,29 @@
+To make jove simply type "make jove".  You should look at the file
+jove_tune.h to set things up for your particular site.  Compile the
+lib/findcom.c and leave the binary there.
+
+Jove should be about this size: 52200+5410+7026 = 63636b = 0174224b on
+the PDP11. The standary library stuff should not be dragged into this at
+all.  The data will go up by at least 1024 bytes (2048 for the VAX) and
+the I space will increase by about 3k.  The only routine that needed to
+be modified was _strout in format.c.
+
+The manual and the program for describing commands are in the directory
+lib.  Everything should be up to date.  Good luck and all that stuff ...
+If you have any problems, you can mail me at jpayne@bbn-unix at least
+for a month.
+
+When making changes to jove, be weary of using genbuf or linebuf.
+Until there is a complete understanding of how everything works, linebuf
+should NEVER be written into BEFORE a call to lsave() is made. lsave()
+ensures that the disk version of the line is up to date.  (A getDOT()
+will probably want to be done later).  Genbuf is a different story.  It
+is a GENeral BUFfer which means that procedures can generally use it
+when they want to (this is unfortunate).  Just be careful not to use
+genbuf when somebody else is using is.  Lots of times it is just used
+where a local array could have been used.  
+
+	Jonathan Payne
+
+P.S.	Good luck! and I hope you like JOVE.
+

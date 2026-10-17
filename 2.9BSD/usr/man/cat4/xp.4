@@ -1,0 +1,148 @@
+
+XP(4)               UNIX Programmer's Manual                XP(4)
+
+NAME
+     xp - RP04, RP05, RP06, RM02, RM03, RM05, Diva moving-head
+     disk
+
+DESCRIPTION
+     The _x_p driver is designed to be used when more than one
+     class of disks is present on one or more controllers of the
+     SMD type.  The drives are numbered from 0 to _n on controller
+     0, from _n+1 to _m on controller 1, etc.  The drives may have
+     different or nonstandard geometry if the driver's data
+     structures are initialized, allowing use of drives such as
+     the Fujitsu 160 Mb.
+
+     Files with minor device numbers 0 through 7 refer to various
+     portions of drive 0; minor devices 8 through 15 refer to
+     drive 1, etc.  The standard device names begin with ``xp''
+     followed by the drive number and then a letter a-h for par-
+     titions 0-7 respectively.  The character ? stands here for a
+     drive number in the range 0-7.
+
+     The origin and size of the partitions (in 512-byte sectors)
+     on each drive are as follows:
+
+     RP04/RP05/RP06 partitions:
+          disk      start     length    cyls      function on drive 0
+          xp?a      0         9614      0-22      /
+          xp?b      9614      8779      23-43     swap
+          xp?c      18392     153406    44-410    /usr (RP04, RP05)
+          xp?d      171798    168872    411-814   rest of RP06
+          xp?e      18392     322278    44-814    alternate, RP06
+          xp?g      0         171798    0-410     whole RP04/5
+          xp?h      0         322278    0-814     whole RP06
+
+     RM02/RM03 partitions:
+          disk      start     length    cyls      function on drive 0
+          xp?a      0         4800      0-29      /
+          xp?b      4800      4800      30-59     swap
+          xp?c      9600      122080    60-822    /usr
+          xp?d      9600      62720     60-451    alternate
+          xp?e      72320     59360     452-822   alternate
+          xp?h      0         131680    0-822     whole pack
+
+     RM05 partitions:
+          disk      start     length    cyls      function on drive 0
+          xp?a      0         9120        0-14    /
+          xp?b      9120      9120       15-29    swap
+          xp?c      18240     234080     30-414
+          xp?d      252320    248064    415-822
+          xp?e      18240     164160     30-299   /usr
+          xp?f      182400    152000    300-549
+          xp?g      334400    165376    550-822
+          xp?h      0         500384      0-822   whole pack
+
+Printed 7/31/83                                                 1
+
+XP(4)               UNIX Programmer's Manual                XP(4)
+
+     Diva Comp V / Ampex 9300 partitions:
+          disk      start     length    cyls      function on drive 0
+          xp?a      0         9405      0-14      /
+          xp?b      9405      9405      15-29     swap
+          xp?c      18810     241395    30-414
+          xp?d      260205    250800    415-814
+          xp?e      18810     169290    30-299    /usr
+          xp?f      188100    156750    300-549
+          xp?g      313500    165528    550-814
+          xp?h      0         511005    0-814     whole pack
+
+     Special files should only be created for the partitions that
+     are actually used, as the overlap in these addresses could
+     lead to confusion otherwise.
+
+     The block files access the disk via the system's normal
+     buffering mechanism and may be read and written without
+     regard to physical disk records.  There is also a `raw'
+     interface which provides for direct transmission between the
+     disk and the user's read or write buffer.  A single read or
+     write call results in exactly one I/O operation and there-
+     fore raw I/O is considerably more efficient when many words
+     are transmitted.  The names of the raw files conventionally
+     begin with an extra `r.'
+
+     In raw I/O counts should be a multiple of 512 bytes (a disk
+     sector).  Likewise _l_s_e_e_k calls should specify a multiple of
+     512 bytes.
+
+FILES
+     /dev/xp[0-7][a-h]   block files
+     /dev/rxp[0-7][a-h]  raw files
+
+SEE ALSO
+     dvhp(4), hk(4), hp(4), hs(4), ml(4), rf(4), rk(4), rl(4),
+     rm(4), rp(4), rx2(4)
+
+DIAGNOSTICS
+     xp%d%c: hard error bn %d cs2=%b er1=%b.  An unrecoverable
+     error occured during transfer of the specified sector of the
+     specified disk partition.  The contents of the two error
+     registers are also printed in octal and symbolically with
+     bits decoded.  The error was either unrecoverable, or a
+     large number of retry attempts (including offset positioning
+     and drive recalibration) could not recover the error.
+
+     xp%d: write locked.  The write protect switch was set on the
+     drive when a write was attempted.  The write operation is
+     not recoverable.
+
+     xp%d%c: soft ecc bn %d.  A recoverable ECC error occurred on
+     the specified sector of the specified disk partition.  This
+
+Printed 7/31/83                                                 2
+
+XP(4)               UNIX Programmer's Manual                XP(4)
+
+     happens normally a few times a week.  If it happens more
+     frequently than this the sectors where the errors are occur-
+     ing should be checked to see if certain cylinders on the
+     pack, spots on the carriage of the drive or heads are indi-
+     cated.
+
+     xp%d: unknown device type 0%o.  The number in the drive's
+     drive type register is unknown to the xp driver.
+
+BUGS
+     In raw I/O _r_e_a_d and _w_r_i_t_e(2) truncate file offsets to 512-
+     byte block boundaries, and _w_r_i_t_e scribbles on the tail of
+     incomplete blocks.  Thus, in programs that are likely to
+     access raw devices, _r_e_a_d, _w_r_i_t_e and _l_s_e_e_k(2) should always
+     deal in 512-byte multiples.
+
+     DEC-standard error logging should be supported.
+
+     The partition tables for the file systems should be read off
+     of each pack, as they are never quite what any single
+     installation would prefer, and this would make packs more
+     portable.
+
+     If the drive types and parameters are not initialized, the
+     _x_p driver uses drive type registers to discern the type of
+     disk attached to each drive.  Because of numbering con-
+     flicts, foreign disks and/or controllers frequently cause
+     this automatic recognition scheme to fail.
+
+Printed 7/31/83                                                 3
+

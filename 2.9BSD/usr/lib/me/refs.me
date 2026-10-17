@@ -1,0 +1,124 @@
+.\" REFER macros .... citations
+.\" This version has had comments stripped; an unstripped version is available.
+.if n .ds [. " [
+.if t .ds [. \s-2\v'-.4m'\f1
+.if n .ds .] ]
+.if t .ds .] \v'.4m'\s+2\fP
+.ds (. " (
+.ds .) )
+.ds [e \\fIet al.\\fP
+.ds &1 &
+.ds &2 &
+.if n .ds >. .
+.if t .ds <. .
+.if n .ds >, ,
+.if t .ds <, ,
+.if n .ds >; ;
+.if t .ds <; ;
+.de ][
+.if \\$1>5 .tm Bad reference type
+.[\\$1
+..
+.de [0 \" other
+.[<
+.if \\n([F .ip "\\n([F.\0"
+.if !"\\*([A"" \{.nr [: 1
+\\*([A\c\}
+.if !"\\*([T"" \{.if \\n([:>0 ,
+.nr [: 1
+\\f2\\*([T\\f1\c\}
+.if !"\\*([O""\{.if \\n([:>0 ,
+.nr [: 1
+.if \\n([O>0 .nr [: 0
+\\*([O\c
+.if \\n([O>0 \& \c\}
+.ie !"\\*([D"" \{.if \\n([:>0 ,
+.nr [: 1
+\\*([D\c\}
+.if \\n([:>0 \&.
+.[>
+..
+.de [1
+.[<
+.if !"\\*([A"" \\*([A
+.if !"\\*([D"" (\\*([D)
+.if \\n(T] .if !"\\*([T"" \\*(lq\\*([T.\\*(rq
+\\f2\\*([J\\f1\\c
+.if !"\\*([V"" \& \\f3\\*([V\\f1\\c
+.if !"\\*([P"" \& \\*([P\\c
+\&.
+.if !"\\*([O"" \\*([O
+.[>
+..
+.de [2
+.[<
+.if !"\\*([A"" \\*([A
+.if !"\\*([D"" (\\*([D)
+.if !"\\*([T"" \\f2\\*([T\\f1
+(\\*([I\\c
+.if !"\\*([C"" , \\*([C\\c
+)\\c
+.if !"\\*([V"" \& Vol. \\*([V\\c
+.if !"\\*([V"" .if !"\\*([P"" ,\\c
+.if !"\\*([P"" \& pp. \\*([P\\c
+\&.
+.if !"\\*([O"" \\*([O
+.[>
+..
+.de [3
+.[<
+.if !"\\*([A"" \\*([A
+.if !"\\*([D"" \& (\\*([D)\\c
+.if \\n(T] .if !"\\*([T"" \\*(lq\\*([T,\\*(rq
+in \\f2\\*([B\\f1\\c
+.if !"\\*([E"" , ed. \\*([E\\c
+.ie !"\\*([I"" \{\
+.ie !"\\*([C"" , (\\*([I, \\*([C)\c
+.el  \&(\\*([I) \c\}
+.el \{\
+.ie !"\\*([C"" (\\*([C)\c
+.el \c\}
+.if !"\\*([V"" \& Vol. \\*([V,\\c
+.if !"\\*([P"" \{\
+.ie \\n([P>0 , pp.\c
+.el , p.\c
+ \\*([P\c\}
+\&.
+.if !"\\*([O"" \\*([O
+.[>
+..
+.de [4
+.[<
+\\*([A, \\*(lq\\*([T,\\*(rq
+\\*([R\\c
+.if !"\\*([G"" \& (\\*([G)\\c
+.if !"\\*([I"" ,  \\*([I\\c
+.if !"\\*([C"" ,  \\*([C\\c
+.if !"\\*[D"" \& (\\*[D)\\c
+\&.
+.if !"\\*([O"" \\*([O
+.[>
+..
+.de [5
+.[<
+\\*([A, \\f2\\*([T\\f1,
+.ie \\n(TN \\*([M.
+.el Bell Laboratories internal memorandum (\\*([D).
+.[>
+..
+.de ]-
+.rm [V [P [A [T
+.rm [N [C [B [O
+.rm [R [I [E [D
+..
+.de [<
+.(f
+.ip "\\n([F.\0"
+..
+.de [>
+.)f
+..
+.de ]<
+.lp
+.rm (f )f
+..

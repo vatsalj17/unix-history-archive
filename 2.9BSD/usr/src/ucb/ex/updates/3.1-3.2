@@ -1,0 +1,469 @@
+#
+ed - ex.c << '-*-END-*-'
+121a
+#endif
+.
+117a
+#ifndef VMUNIX
+.
+103a
+#endif
+.
+101a
+#ifndef VMUNIX
+.
+73a
+#endif
+.
+72a
+#ifndef VMUNIX
+.
+w
+q
+'-*-END-*-'
+ed - ex.h << '-*-END-*-'
+182c
+int	xchng;			/* Suppresses multiple "No writes" in !cmd */
+.
+178c
+int	tchng;			/* If nonzero, then [Modified] */
+.
+167c
+int	otchng;			/* Backup tchng to find changes in macros */
+.
+163c
+int	notecnt;		/* Count for notify (to visual from cmd) */
+.
+140a
+#endif
+.
+139a
+#ifndef VMUNIX
+.
+136c
+int	dirtcnt;		/* When >= MAXDIRT, should sync temporary */
+.
+133c
+int	chng;			/* Warn "No write" */
+.
+107a
+#endif
+.
+106a
+#ifdef	VMUNIX
+#	define	BUFSIZ	1024
+#else
+.
+53a
+#else
+typedef	int	line;
+#endif
+.
+52a
+#ifndef VMUNIX
+.
+w
+q
+'-*-END-*-'
+ed - ex_argv.h << '-*-END-*-'
+17c
+int	firstln;		/* From +lineno */
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmds.c << '-*-END-*-'
+599c
+				printf("Version 3.2, January 4, 1980");
+.
+263a
+*/
+.
+262a
+/*
+.
+w
+q
+'-*-END-*-'
+ed - ex_cmdsub.c << '-*-END-*-'
+1039,1040c
+		if (src[1] == 0 && src[0] == dest[strlen(dest)-1])
+			error("No tail recursion");
+.
+1034,1035c
+		 * Prevent tail recursion. We really should be
+		 * checking to see if src is a suffix of dest
+.
+543a
+			value(MAGIC) = 0;
+.
+536a
+				value(MAGIC) = omagic;
+.
+533a
+				/*
+				 * BUG: if it isn't found (user edited header
+				 * line) we get left in nomagic mode.
+				 */
+				value(MAGIC) = 0;
+.
+459d
+w
+q
+'-*-END-*-'
+ed - ex_data.c << '-*-END-*-'
+42a
+	"mapinput",	"mi",	ONOFF,		0,	0,	0,
+.
+41d
+w
+q
+'-*-END-*-'
+ed - ex_io.c << '-*-END-*-'
+692a
+#endif
+.
+691a
+#ifndef VMUNIX
+.
+479a
+*/
+.
+478a
+/*
+.
+21a
+#else
+int	cntln;
+#endif
+.
+20a
+#ifndef VMUNIX
+.
+16,17c
+int	altdot;
+int	oldadot;
+.
+w
+q
+'-*-END-*-'
+ed - ex_re.c << '-*-END-*-'
+413c
+			error("Line overflow@in substitute");
+.
+w
+q
+'-*-END-*-'
+ed - ex_subr.c << '-*-END-*-'
+587a
+#endif
+.
+586a
+#ifdef VMUNIX
+char	*std_errlist[] = {
+#else
+.
+352a
+#endif
+.
+349a
+#ifdef VMUNIX
+	strcpy(linebuf, seekpt);
+#else
+.
+346a
+# endif
+.
+345a
+# ifdef lint
+	char *seekpt;
+# else
+.
+343c
+#ifdef VMUNIX
+.
+322a
+# endif
+.
+321a
+# ifdef lint
+	char *seekpt;
+# else
+.
+319c
+#ifdef VMUNIX
+.
+w
+q
+'-*-END-*-'
+ed - ex_temp.c << '-*-END-*-'
+30,32c
+	tline = INCRMT * (HBLKS+2);
+	blocks[0] = HBLKS;
+	blocks[1] = HBLKS+1;
+.
+26c
+	if (tline == INCRMT * (HBLKS+2))
+.
+w
+q
+'-*-END-*-'
+ed - ex_temp.h << '-*-END-*-'
+86a
+#else
+	int	Flines;
+#endif
+.
+85a
+#ifndef VMUNIX
+.
+62a
+#else
+int	tline;
+#endif
+.
+61a
+#ifndef VMUNIX
+.
+40,41c
+ * Basically, the editor deals with the file as a sequence of BUFSIZ character
+ * blocks.  Each block contains some number of lines (and lines
+.
+35a
+#else
+#define	BLKMSK	077777
+#define	BNDRY	2
+#define	INCRMT	02000
+#define	LBTMSK	01776
+#define	NMBLKS	077770
+#define	OFFBTS	10
+#define	OFFMSK	01777
+#define	SHFT	0
+#endif
+.
+27a
+#ifndef VMUNIX
+.
+24,26c
+ * For VMUNIX you get more than you could ever want.
+ * VMUNIX uses long (32 bit) integers giving much more
+ * space in the temp file and no waste.  This doubles core
+ * requirements but allows files of essentially unlimited size to be edited.
+.
+7,9c
+ * is packed into 16 bits (32 on VMUNIX).  All but the low bit index the temp
+ * file; the last is used by global commands.  The parameters below control
+ * how much the other bits are shifted left before they index the temp file.
+.
+w
+q
+'-*-END-*-'
+ed - ex_tune.h << '-*-END-*-'
+73c
+#define	TUBESIZE	3400	/* Maximum screen size for visual */
+#else
+#define	TUBELINES	66
+#define	TUBECOLS	160
+#define	TUBESIZE	6600	/* 66 * 100 */
+#endif
+.
+71c
+#ifndef VMUNIX
+#define	TUBELINES	40	/* Number of screen lines for visual */
+.
+64c
+ * and then never freed by the system.  Thus if you have no terminals
+.
+59c
+#define	NCARGS	LBSIZE		/* Maximum arglist chars in "next" */
+#else
+#define	NCARGS	5120
+#define	NARGS	(NCARGS/6)
+#endif
+.
+57a
+#ifndef VMUNIX
+.
+50c
+ * Except on VMUNIX, these are a ridiculously small due to the
+.
+44a
+#define	HBLKS		1		/* struct header fits in BUFSIZ*HBLKS */
+#else
+#define	LBLKS		900
+#define	HBLKS		2
+#endif
+.
+43a
+#ifndef VMUNIX
+.
+35a
+#endif
+.
+33a
+#ifdef VMUNIX
+#define	LBSIZE		1024
+#define	ESIZE		512
+#else
+.
+30c
+ * Most other definitions are quite generous.
+.
+13,15c
+#define	EXRECOVER	libpath(ex3.2recover)
+#define	EXPRESERVE	libpath(ex3.2preserve)
+#ifndef VMUNIX
+#define	EXSTRINGS	libpath(ex3.2strings)
+#endif
+.
+w
+q
+'-*-END-*-'
+ed - ex_vars.h << '-*-END-*-'
+12,13c
+#define MAGIC           11
+#define MAPINPUT        12
+.
+w
+q
+'-*-END-*-'
+ed - ex_vget.c << '-*-END-*-'
+507a
+	if (inopen == -1)	/* don't work inside macros! */
+		return (0);
+.
+466,469c
+	if (canundo) {
+		inopen = -1;	/* no need to save since it had to be 1 or -1 before */
+		otchng = tchng;
+		vsave();
+		saveall();
+		vundkind = VMANY;
+	}
+.
+460a
+		canundo = 0;	/* can't undo inside a macro anyway */
+	}
+.
+459c
+	if (vmacp) {
+.
+447a
+int canundo;
+.
+446c
+macpush(st, canundo)
+.
+444a
+ * canundo is 1 iff we want to be able to undo the macro.  This
+ * is false for, for example, pushing back lookahead from fastpeekkey(),
+ * since otherwise two fast escapes can clobber our undo.
+.
+436c
+	macpush(&b[1],0);
+.
+422c
+			macpush(maps[d].mapto,1);
+.
+413c
+						macpush(&b[1],1);
+.
+85d
+83a
+		if (inopen == -1)	/* don't screw up undo for esc esc */
+			vundkind = VMANY;
+.
+w
+q
+'-*-END-*-'
+ed - ex_vis.h << '-*-END-*-'
+217c
+int	vSCROLL;		/* Number lines to scroll on ^D/^U */
+.
+206c
+int	lastcnt;		/* Count for last command */
+.
+195,196c
+int	Vlines;			/* Number of file lines "before" vi command */
+int	Xcnt;			/* External variable holding last cmd's count */
+.
+w
+q
+'-*-END-*-'
+ed - ex_vmain.c << '-*-END-*-'
+1002a
+			inopen = 1;	/* might have been -1 */
+.
+765c
+			if (value(AUTOWRITE))
+				globp = "e! #";
+			else
+				globp = "e #";
+.
+646a
+			forbid (inopen < 0);
+.
+w
+q
+'-*-END-*-'
+ed - ex_vops2.c << '-*-END-*-'
+755c
+ * LBSIZE characters and also does hacks for the R command.
+.
+w
+q
+'-*-END-*-'
+ed - expreserve.c << '-*-END-*-'
+173c
+	if (H.Blocks[0] != HBLKS || H.Blocks[1] != HBLKS+1) {
+.
+33a
+#else
+	int	Flines;
+#endif
+.
+32a
+#ifndef VMUNIX
+.
+27a
+#else
+#define	LBLKS	900
+#endif
+.
+26a
+#ifndef VMUNIX
+.
+9a
+#ifdef VMUNIX
+#define	HBLKS	2
+#else
+#define	HBLKS	1
+#endif
+
+.
+w
+q
+'-*-END-*-'
+ed - exrecover.c << '-*-END-*-'
+741c
+	if ((*iofcn)(tfile, buf, BUFSIZ) != BUFSIZ)
+.
+567c
+			*ip = ((HBLKS*BUFSIZ)-8) >> SHFT;
+.
+525c
+	maxt = (size >> SHFT) | (BNDRY-1);
+.
+491c
+	ignorl(lseek(tfile, (long)(BUFSIZ*HBLKS-8), 0));
+.
+w
+q
+'-*-END-*-'
+ed - makefile << '-*-END-*-'
+1c
+VERSION=3.2
+.
+w
+q
+'-*-END-*-'

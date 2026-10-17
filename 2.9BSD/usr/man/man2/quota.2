@@ -1,0 +1,73 @@
+.TH QUOTA 2
+.UC
+.SH NAME
+quota \- set quota parameters
+.SH SYNOPSIS
+.ft B
+#include <sys/types.h>
+.sp
+quota(name, current, max)
+.br
+char *name;
+.br
+daddr_t current, max;
+.ft R
+.SH DESCRIPTION
+.I Name
+points to a null-terminated string naming
+a quota file;
+.I current
+and
+.I max
+are integers which describe the current and maximum usage in disk
+sectors (512-byte blocks).
+.sp
+This system call is used for setting quota information
+and may be executed only by the super-user.
+.SH ERRORS
+.I Quota
+will fail and no quota node will be created if:
+.TP 20
+[EINVAL]
+The path name contains a non-ASCII byte.
+.TP 20
+[EPERM]
+The process's effective user ID is not the super-user.
+.TP 20
+[ENOTDIR]
+A component of the path prefix is not a directory.
+.TP 20
+[EACCES]
+A component of the path prefix denies search permission.
+.TP 20
+[EACCES]
+The named file is not a quota node.
+.TP 20
+[ENOENT]
+The named file does not exist.
+.TP 20
+[EISDIR]
+The named file is a directory.
+.TP 20
+[EROFS]
+The directory in which the file is to be created is on a read-only
+file system.
+.TP 20
+[EFAULT]
+.I Name
+points outside the process's allocated address space.
+.TP 20
+[ELOOP]
+Too many symbolic links were encountered in translating the path name.
+.SH "SEE ALSO"
+du(1), file(1), ls(1), pq(1), mknod(2), qfstat(2), qstat(2), setquota(8)
+.SH ASSEMBLER
+(local = 58., quota = 10.)
+.br
+.B sys local; 9f
+.br
+\&. . .
+.br
+.B \&.data
+.br
+.B 9: sys quota; name; current; max

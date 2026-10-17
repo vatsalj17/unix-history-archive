@@ -1,0 +1,74 @@
+
+KILLPG(2J)          UNIX Programmer's Manual           KILLPG(2J)
+
+NAME
+     killpg - send signal to a process or a process group
+
+SYNOPSIS
+     killpg(pgrp, sig)
+
+     cc ... -ljobs
+
+DESCRIPTION
+     _K_i_l_l_p_g sends the signal _s_i_g to the specified process group.
+     See _s_i_g_s_y_s(2) for a list of signals; see _i_n_t_r_o(3J) for an
+     explanation of process groups.
+
+     The sending process and members of the process group must
+     have the same effective user ID, otherwise this call is res-
+     tricted to the super-user.  As a single special case the
+     continue signal SIGCONT may be sent to any process which is
+     a descendant of the current process.  This allows a command
+     interpreter such as _c_s_h(1) to restart set-user-id processes
+     stopped from the keyboard with a stop signal.
+
+     The calls
+
+          killpg(0, sig)
+
+     and
+
+          kill(0, sig)
+
+     have identical effects, sending the signal to all members of
+     the invoker's process group (including the process itself).
+     It is preferable to use the call involving _k_i_l_l in this
+     case, as it is portable to other UNIX systems.
+
+RETURN VALUE
+     Upon successful completion, a value of 0 is returned.  Oth-
+     erwise, a value of -1 is returned and _e_r_r_n_o is set to indi-
+     cate the error.
+
+ERRORS
+     _K_i_l_l_p_g will fail and no signal will be sent if any of the
+     following occur:
+
+     [EINVAL]            _S_i_g is not a valid signal number.
+
+     [ESRCH]             No process can be found corresponding to
+                         the process group specified by _p_g_r_p.
+
+SEE ALSO
+     csh(1), kill(1), kill(2), signal(2), sigsys(2J), intro(3J)
+
+Printed 7/30/83                                                 1
+
+KILLPG(2J)          UNIX Programmer's Manual           KILLPG(2J)
+
+ASSEMBLER (PDP-11)
+     (kill =37.)
+     (process number in r0)
+     sys kill; -sig (negative signal number means killpg)
+
+BUGS
+     The job control facilities are not available in standard
+     version 7 UNIX.  These facilities are still under develop-
+     ment and may change in future releases of the system as
+     better inter-process communication facilities and support
+     for virtual terminals become available.  The options and
+     specifications of this system call and even the call itself
+     are thus subject to change.
+
+Printed 7/30/83                                                 2
+

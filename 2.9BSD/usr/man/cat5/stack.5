@@ -1,0 +1,128 @@
+
+STACK(5)            UNIX Programmer's Manual             STACK(5)
+
+NAME
+     stack -  PDP-11 C stack frame conventions
+
+DESCRIPTION
+     There are two standard C stack frame layouts.  For non-
+     overlaid programs:
+
+          ------------------
+          |...nth argument |              push arguments in reverse order
+          ------------------
+          |second argument |
+          ------------------
+          | first argument |
+          ------------------              JSR PC,*$_FOO
+          | return address |
+          ------------------              JSR R5,CSV
+          |  old R5 value  | <-----
+          ------------------      |
+          |       r4       |      |
+          ------------------      |
+          |       r3       |      |
+          ------------------      |
+          |       r2       |      |
+          ------------------      |
+          | first local var|      | This is the top of the stack
+          ------------------      | when the called routine ``starts''
+          |     routine    |      |
+          |    allocates   |      |
+          |     storage    |      |       SUB $n,SP
+          |    temporary   |      |
+          ------------------      |
+          | push arguments |      |
+          | of next routine|      |
+          ------------------      |       JSR PC,*$_BAR
+          | return address |      |
+          ------------------      |       JSR R5,CSV
+          | old R5 value---+-------
+          ------------------      ^
+          | r4/43/r2/...   |      |
+          ------------------
+          | and so on..... |
+
+     For overlaid programs:
+
+          ------------------
+          |...nth argument |              push arguments in reverse order
+          ------------------
+          |second argument |
+          ------------------
+          | first argument |
+          ------------------              JSR PC,*$_FOO
+          | return address |
+
+Printed 5/30/83                                                 1
+
+STACK(5)            UNIX Programmer's Manual             STACK(5)
+
+          ------------------              JSR R5,CSV
+          |  old R5 value  | <-----
+          ------------------      |
+          |previous overlay|      |
+          |     number     |      |
+          ------------------      |
+          |       r4       |      |
+          ------------------      |
+          |       r3       |      |
+          ------------------      |
+          |       r2       |      |
+          ------------------      |
+          | first local var|      | This is the top of the stack
+          ------------------      | when the called routine ``starts''
+          |     routine    |      |
+          |    allocates   |      |
+          |     storage    |      |       SUB $n,SP
+          |    temporary   |      |
+          ------------------      |
+          | push arguments |      |
+          | of next routine|      |
+          ------------------      |       JSR PC,*$_BAR
+          | return address |      |
+          ------------------      |       JSR R5,CSV
+          | old R5 value---+-------
+          ------------------      ^
+          |previous overlay|      |
+          |     number     |      |
+          ------------------      |
+          | r4/43/r2/...   |      |
+          ------------------
+          | and so on..... |
+
+     Functions returning integers leave their return value in R0;
+     functions returning floating constants use FR0;  functions
+     returning longs leave return values in R1/R0; functions
+     returning structures leave a pointer to bss storage (one
+     chunk of which is allocated for each such routine) in R0,
+     and the caller will copy from that bss storage to the local
+     destination.
+
+     Local variables are allocated in such a way that they are
+     referred to as ``-N(R5)'', arguments are referred to as
+     ``+N(R5)''; arguments start at 4(R5), the first integer
+     local declared will be at -10(R5).  SP always points to the
+     next available stack word.  If the function has no local
+     variables and calls no functions, it will allocate no stack
+     and the word labelled ``first local var'' will be unused.
+
+     It is important to note that routines know how many argu-
+     ments they pass to a function, and will adjust the stack
+
+Printed 5/30/83                                                 2
+
+STACK(5)            UNIX Programmer's Manual             STACK(5)
+
+     accordingly after a function returns.
+
+NOTE
+     Newer systems implement the c-save by JSR R0,CSV, which is a
+     more bullet-proof version of the old call sequence.  The
+     stack winds up looking the same.
+
+AUTHOR
+     John F. Woods, MIT Concouse Computer Center
+
+Printed 5/30/83                                                 3
+

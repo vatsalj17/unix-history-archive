@@ -1,0 +1,98 @@
+
+IOSTAT(8)           UNIX Programmer's Manual            IOSTAT(8)
+
+NAME
+     iostat - report I/O statistics
+
+SYNTAX
+     iostat [ option ] ...  [ interval [ count ] ]
+
+DESCRIPTION
+     _I_o_s_t_a_t delves into the system and reports certain statistics
+     kept about input-output activity.  Information is kept about
+     different disks and about terminal ports.  For each disk,
+     I/O completions and number of words transferred are counted;
+     for terminal ports collectively, the number of input and
+     output characters are counted.  Also, each sixtieth of a
+     second, the state of each disk is examined and a tally is
+     made if the disk is active.  The state of the system is also
+     examined and placed in one of four categories, depending on
+     whether the system is executing in user mode, in `nice'
+     (background) user mode, in system mode, or idle.  From all
+     these numbers and from the known transfer rates of the dev-
+     ices it is possible to determine information such as the
+     degree of I/O overlap and average seek times for each dev-
+     ice.
+
+     The optional _i_n_t_e_r_v_a_l argument causes _i_o_s_t_a_t to report once
+     each _i_n_t_e_r_v_a_l seconds.  The first report is for  all time
+     since a reboot and each subsequent report is for the last
+     interval only.
+
+     The optional _c_o_u_n_t argument restricts the number of reports.
+
+     With no option argument _i_o_s_t_a_t reports the number of charac-
+     ters of terminal I/O per second, for each disk the number of
+     transfers per minute, the milliseconds per average seek, and
+     the milliseconds per data transfer exclusive of seek time.
+     It also gives the percentage of time the system has spend in
+     each of the four categories mentioned above.
+
+     The following options are available:
+
+     -i   Report the percentage of time spent in each of the four
+          categories mentioned above, the percentage of time
+          spent in `I/O wait' (iowt: idle, but with a disk
+          active), the percentage of time any disk was active
+          (iact), and the percentage of time each disk was active
+          (seeking, dks, or transferring, dkx).
+
+     -o   Omit the headers and first line (data since boottime).
+
+     -s   Report the raw timing information: 8 numbers indicating
+          the percentage of time spent in each of the possible
+          configurations of 4 system states with I/O active or
+          not active, and a number of I/O states (2**n for n
+
+Printed 10/9/83                                                 1
+
+IOSTAT(8)           UNIX Programmer's Manual            IOSTAT(8)
+
+          disks) reflecting the combinations of disks active at
+          each sampling point.
+
+     -b   Report on the usage of I/O buffers.
+
+     -d   Print the date and time before each listing.
+
+     -a   Print the actual time elapsed before each listing.
+
+     -u   Report UNIBUS allocation statistics.
+
+PROGRAM CONFIGURATION
+     The iostat program must be modified for each hardware confi-
+     guration for the disk monitoring to work correctly.  This
+     must correspond to the way the kernel maintains the disk
+     metering information.  There are NDISK (param.c) disks moni-
+     tored, and the identity of each disk is determined by the
+     definition of _X_X_DKN in the appropriate disk driver header
+     file.  The disk with _X_X_DKN of 0 will appear first in the
+     output listings, etc.  SMD-type disk drivers (hp, rp, rm)
+     use one entry for each disk's seeks, from _X_X_DKN to _X_X_DKN +
+     NDR - 1, with NDR drives.  The entry _X_X_DKN + NDR is used
+     for the controller's transfers.  No other driver should be
+     assigned a _X_X_DKN in this range.  Iostat expects that if
+     there is an SMD driver, its _X_X_DKN will be 0.  In the iostat
+     source, the defined constant LAST_DRV should be set to the
+     entry number of the last slot used for drive seeks, e.g. 1
+     for use with 2 hp drives, or -1 with no SMD drives.  Also,
+     the transfer rates of each controller must be entered in the
+     appropriate element of the array xf; this is used to deter-
+     mine the transfer times printed.
+
+FILES
+     /unix
+     /dev/kmem
+
+Printed 10/9/83                                                 2
+

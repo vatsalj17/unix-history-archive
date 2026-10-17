@@ -1,0 +1,96 @@
+.TH LPD 8
+.UC
+.SH NAME
+lpd \- line printer daemon
+.SH SYNTAX
+.B /usr/lib/lpd
+.br
+.B /usr/lib/vpd
+.SH DESCRIPTION
+.I Lpd
+is the line printer for the daemon.
+.I Vpd 
+is the Versatec printer/plotter daemon.
+.I Lpd
+uses the directory
+.IR /usr/spool/lpd
+(or
+.IR /usr/spool/vpd
+in the case of the vpd).
+A file named 
+.I lock
+in that directory
+prevents two daemons from becoming active.
+After the program has successfully set the lock,
+it forks and the main path exits, thus
+spawning the daemon.
+The spool directory is scanned for files
+beginning with
+.IR df .
+Each such file is submitted as a job.
+Each line of a job file must begin with a key
+character to specify what to do with the remainder
+of the line.
+.TP 5
+.B  L
+specifies that the remainder of the line is to
+be sent as a literal.
+.TP 5
+.B  B
+specifies that the rest of the line
+is a file name.
+.TP 5
+.B  F
+is the same as
+.B B
+except a form feed is prepended to the file.
+.TP 5
+.B  U
+specifies that the rest of the line
+is a file name.
+After the job has been transmitted,
+the file is unlinked.
+.TP 5
+.B  M
+is followed by a user ID; after the job is sent,
+a message is
+mailed to the user via the
+.IR mail (1)
+command
+to verify the sending of the job.
+.PP
+Any error will cause the daemon to
+wait and start over.
+Because of this, an improperly constructed
+.I df
+file may cause the same job to be submitted
+repeatedly.
+.PP
+\fILpd\fP is automatically initiated by the line printer command, \fIlpr\fP.  
+Similarily \fIvpd\fP is started by the command \fIvpr\fP.
+.PP
+To restart \fIlpd\fP (in the case of hardware or software malfunction),
+it is necessary to first kill the old daemon (if still alive),
+and remove the lock file before initiating the new daemon.
+This is done automatically when the system is brought up,
+by \fI/etc/rc\fP, in case there were any jobs left in the spooling
+directory when the system went down last.
+.SH FILES
+.ta 2i
+/usr/spool/lpd	spooling area for line printer daemon
+.br
+/usr/spool/vpd	spooling area for Versetec daemon
+.br
+/usr/spool/lpd/lock	lock file for line printer daemon
+.br
+/usr/spool/vpd/lock	lock file for Versatec daemon
+.br
+/etc/passwd	to get the user's name for banner
+.br
+/etc/group	to get the user's group name
+.br
+/dev/lp	line printer device
+.br
+/dev/vp0	Versetec printer/plotter device
+.SH "SEE ALSO"
+lpr(1), vpr(1)

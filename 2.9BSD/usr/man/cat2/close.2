@@ -1,0 +1,39 @@
+
+CLOSE(2)            UNIX Programmer's Manual             CLOSE(2)
+
+NAME
+     close  -  close a file
+
+SYNOPSIS
+     close(fildes)
+
+DESCRIPTION
+     Given a file descriptor such as returned from an _o_p_e_n,
+     _c_r_e_a_t, _d_u_p or _p_i_p_e(2) call, _c_l_o_s_e closes the associated
+     file.  A close of all files is automatic on _e_x_i_t, but since
+     there is a limit on the number of open files per process,
+     _c_l_o_s_e is necessary for programs which deal with many files.
+
+     Files are closed upon termination of a process, and certain
+     file descriptors may be closed by _e_x_e_c_v_e(2) (see _i_o_c_t_l(2)).
+
+RETURN VALUE
+     Upon successful completion, a value of 0 is returned.  Oth-
+     erwise, a value of -1 is returned and _e_r_r_n_o is set to indi-
+     cate the error.
+
+ERRORS
+     _C_l_o_s_e will fail if:
+
+     [EBADF]             _F_i_l_d_e_s is not an active descriptor.
+
+SEE ALSO
+     creat(2), execve(2), ioctl(2), open(2), pipe(2)
+
+ASSEMBLER
+     (close = 6.)
+     (file descriptor in r0)
+     sys close
+
+Printed 8/5/83                                                  1
+
