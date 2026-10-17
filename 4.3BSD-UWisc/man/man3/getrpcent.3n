@@ -1,0 +1,109 @@
+.\" @(#)getrpcent.3n 1.1 85/12/28 SMI;
+.TH GETRPCENT 3N "26 September 1985"
+.SH NAME
+getrpcent, getrpcbyname, getrpcbynumber \- get rpc entry
+.SH SYNOPSIS
+.nf
+.ft B
+#include <netdb.h>
+.PP
+.ft B
+struct rpcent *getrpcent()
+.PP
+.ft B
+struct rpcent *getrpcbyname(name)
+char *name;
+.PP
+.ft B
+struct rpcent *getrpcbynumber(number)
+int number;
+.PP
+.ft B
+setrpcent(stayopen)
+int stayopen
+.PP
+.ft B
+endrpcent()
+.fi
+.IX  "get rpc program entry"
+.IX  "set rpc program entry"
+.IX  "rpc program entry"  get
+.IX  "rpc entry"  get
+.IX  "getrpcent function"  ""  "\fLgetrpcent\fP \(em get rpcice entry"
+.IX  "getrpcbynumber function"  ""  "\fLgetrpcbynumber\fP \(em get rpc entry"
+.IX  "getrpcbyname function"  ""  "\fLgetrpcbyname\fP \(em get rpc entry"
+.IX  "setrpcent function"  ""  "\fLsetrpcent\fP \(em get rpc entry"
+.IX  "endrpcent function"  ""  "\fLendrpcent\fP \(em get rpc entry"
+.SH DESCRIPTION
+.IR Getrpcent ,
+.IR getrpcbyname ,
+and
+.I getrpcbynumber
+each return a pointer to an object with the
+following structure
+containing the broken-out
+fields of a line in the rpc program number data base,
+.IR /etc/rpc .
+.RS
+.PP
+.nf
+struct	rpcent {
+	char	*r_name;	/* name of server for this rpc program */
+	char	**r_aliases;	/* alias list */
+	long	r_number;	/* rpc program number */
+};
+.ft R
+.ad
+.fi
+.RE
+.PP
+The members of this structure are:
+.TP \w'r_aliases'u+2n
+r_name
+The name of the server for this rpc program.
+.TP \w'r_aliases'u+2n
+r_aliases
+A zero terminated list of alternate names for the rpc program.
+.TP \w'r_aliases'u+2n
+r_number
+The rpc program number for this service.
+.PP
+.I Getrpcent
+reads the next line of the file, opening the file if necessary.
+.PP
+.I Setrpcent
+opens and rewinds the file.  If the
+.I stayopen
+flag is non-zero,
+the net data base will not be closed after each call to 
+.I getrpcent
+(either directly, or indirectly through one of
+the other \*(lqgetrpc\*(rq calls).
+.PP
+.I Endrpcent
+closes the file.
+.PP
+.I Getrpcbyname
+and
+.I getrpcbynumber
+sequentially search from the beginning
+of the file until a matching
+rpc program name or
+program number is found,
+or until EOF is encountered.
+.SH FILES
+.nf
+/etc/rpc
+.RI /etc/yp/ domainname /rpc.bynumber
+.fi
+.SH "SEE ALSO"
+rpc(5), rpcinfo(8), ypservices(8)
+.SH DIAGNOSTICS
+Null pointer
+(0) returned on EOF or error.
+.SH BUGS
+All information
+is contained in a static area
+so it must be copied if it is
+to be saved.
+

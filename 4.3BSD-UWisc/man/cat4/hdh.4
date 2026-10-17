@@ -1,0 +1,66 @@
+
+
+
+HDH(4)              UNIX Programmer's Manual               HDH(4)
+
+
+
+NAME
+     hdh - ACC IF-11/HDH IMP interface
+
+SYNOPSIS
+     pseudo-device imp
+     device hdh0 at uba0 csr 166740 vector hdhintr
+
+DESCRIPTION
+     The _h_d_h device provides an HDLC Host (HDH) interface to an
+     IMP.  It is normally used when participating in the DARPA
+     Internet.  The controller itself is not accessible to users,
+     but instead provides the hardware support to the IMP inter-
+     face described in _i_m_p(4).  When configuring, the _i_m_p
+     pseudo-device must also be included.
+
+DIAGNOSTICS
+     hdh%d: not alive.  The initialization routine was entered
+     even though the device did not autoconfigure.  This indi-
+     cates a system problem.
+
+     hdh%d: cannot get chan %d uba resources.  Insufficient
+     UNIBUS resources existed to initialize the device.  This is
+     likely to be a shortage of UNIBUS mapping registers.
+
+     hdh%d: LINE UP.  This indicates that both the HDLC and HDH
+     protocols have declared the link to the IMP alive.
+
+     hdh%d: LINE DOWN.  This indicates that the link to the IMP
+     has died.
+
+     hdh%d: HOST SEQUENCE ERROR
+     hdh%d: IMP SEQUENCE ERROR
+     hdh%d: HOST DATA ERROR
+     hdh%d: TIMEOUT
+     These errors indicate that an HDH protocol error has been
+     detected.
+
+     hdh%d: cannot get supervisor cmnd buffer.  This error indi-
+     cates that an _m_b_u_f could not be allocated to send a command
+     to the IF-11/HDH.
+
+     Any other error message from hdh%d: indicates a serious
+     error detected by either the driver or the IF-11/HDH
+     firmware.
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         August 8, 1985                         1
+
+
+

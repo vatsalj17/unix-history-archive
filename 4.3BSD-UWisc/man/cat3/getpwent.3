@@ -1,0 +1,132 @@
+
+
+
+GETPWENT(3)         UNIX Programmer's Manual          GETPWENT(3)
+
+
+
+NAME
+     getpwent, getpwuid, getpwnam, setpwent, endpwent, setpwfile
+     - get password file entry
+
+SYNOPSIS
+     #include <pwd.h>
+
+     struct passwd *getpwuid(uid)
+     int uid;
+
+     struct passwd *getpwnam(name)
+     char *name;
+
+     struct passwd *getpwent()
+
+     setpwent()
+
+     endpwent()
+
+     setpwfile(name)
+     char *name;
+
+DESCRIPTION
+     _G_e_t_p_w_e_n_t, _g_e_t_p_w_u_i_d and _g_e_t_p_w_n_a_m each return a pointer to an
+     object with the following structure containing the broken-
+     out fields of a line in the password file.
+
+          /*
+           * RCS Info
+           *   $Header: pwd.h,v 1.1 86/09/05 08:02:44 tadl Exp $
+           *   $Locker: tadl $
+           */
+          /*   pwd.h     4.1  83/05/03  */
+
+          struct    passwd { /* see getpwent(3) */
+               char *pw_name;
+               char *pw_passwd;
+               int  pw_uid;
+               int  pw_gid;
+               int  pw_quota;
+               char *pw_comment;
+               char *pw_gecos;
+               char *pw_dir;
+               char *pw_shell;
+          };
+
+          struct passwd *getpwent(), *getpwuid(), *getpwnam();
+
+     The fields _p_w__q_u_o_t_a and _p_w__c_o_m_m_e_n_t are  unused;  the  others
+     have meanings described in _p_a_s_s_w_d(5).
+
+
+
+
+
+Printed 12/27/86          May 15, 1986                          1
+
+
+
+
+
+
+GETPWENT(3)         UNIX Programmer's Manual          GETPWENT(3)
+
+
+
+     Searching of the password file is done using the _n_d_b_m  data-
+     base access routines.  _S_e_t_p_w_e_n_t opens the database; _e_n_d_p_w_e_n_t
+     closes it.  _G_e_t_p_w_u_i_d and _g_e_t_p_w_n_a_m search the database (open-
+     ing  it  if  necessary)  for a matching _u_i_d or _n_a_m_e.  EOF is
+     returned if there is no entry.
+
+     For programs wishing to read the entire  database,  _g_e_t_p_w_e_n_t
+     reads the next line (opening the database if necessary).  In
+     addition to opening the database, _s_e_t_p_w_e_n_t can  be  used  to
+     make  _g_e_t_p_w_e_n_t  begin  its  search from the beginning of the
+     database.
+
+     _S_e_t_p_w_f_i_l_e changes the default password  file  to  _n_a_m_e  thus
+     allowing  alternate password files to be used.  Note that it
+     does _n_o_t close the  previous  file.   If  this  is  desired,
+     _e_n_d_p_w_e_n_t should be called prior to it.
+
+FILES
+     /etc/passwd
+
+SEE ALSO
+     getlogin(3), getgrent(3), passwd(5)
+
+DIAGNOSTICS
+     The routines _g_e_t_p_w_e_n_t, _g_e_t_p_w_u_i_d, and _g_e_t_p_w_n_a_m, return a null
+     pointer (0) on EOF or error.
+
+BUGS
+     All information is contained in a static area so it must  be
+     copied if it is to be saved.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 15, 1986                          2
+
+
+

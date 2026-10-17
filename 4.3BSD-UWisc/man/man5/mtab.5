@@ -1,0 +1,39 @@
+.\" @(#)mtab.5 1.1 85/12/28 SMI;
+.TH MTAB 5 "28 August 1985"
+.SH NAME
+/etc/mtab \- mounted file system table
+.SH SYNOPSIS
+.B #include <mntent.h>
+.SH DESCRIPTION
+.IX  "mtab file"  ""  "\fLmtab\fP \(em mounted file system table"
+.IX  "mounted file system table"  ""  "mounted file system table \(em \fLmtab\fP"
+.IX  "file system"  "mounted table"  ""  "mounted table \(em \fLmtab\fP"
+.I Mtab
+resides in the
+.I /etc
+directory, and contains a table of filesystems currently mounted by the
+.I mount
+command.
+.I Umount
+removes entries from this file.
+.PP
+The file contains a line of information for each mounted filesystem,
+structurally identical to the contents of
+.IR /etc/fstab ,
+described in
+.IR fstab (5).
+There are a number of lines of the form:
+.sp .5
+	\fIfsname dir type opts freq passno\fR
+.sp .5
+for example:
+.sp .5v
+	/dev/xy0a / 4.2 rw,noquota 1 2
+.PP
+The file is accessed by programs using
+.IR getmntent (3),
+and by the system administrator using a text editor.
+.SH FILES
+/etc/mtab
+.SH "SEE ALSO"
+getmntent(3), fstab(5), mount(8)

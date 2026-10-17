@@ -1,0 +1,132 @@
+
+
+
+DN(4)               UNIX Programmer's Manual                DN(4)
+
+
+
+NAME
+     dn - DN-11 autocall unit interface
+
+SYNOPSIS
+     device dn0 at uba? csr 0160020 vector dnintr
+
+DESCRIPTION
+     The _d_n device provides an interface through a DEC DN-11 (or
+     equivalent such as the Able Quadracall) to an auto-call unit
+     (ACU).  To place an outgoing call one forks a sub-process
+     which opens the appropriate call unit file, /_d_e_v/_c_u_a? and
+     writes the phone number on it.  The parent process then
+     opens the corresponding modem line /_d_e_v/_c_u_l?.  When the con-
+     nection has been established, the open on the modem line,
+     /_d_e_v/_c_u_l? will return and the process will be connected.  A
+     timer is normally used to timeout the opening of the modem
+     line.
+
+     The codes for the phone numbers are:
+
+     0-9    dial 0-9
+     *      dial * (`:' is a synonym)
+     #      dial # (`;' is a synonym)
+     -      delay 20 milliseconds
+     <      end-of-number (`e' is a synonym)
+     =      delay for a second dial tone (`w' is a synonym)
+     f      force a hangup of any existing connection
+
+     The entire telephone number must be presented in a single
+     _w_r_i_t_e system call.
+
+     By convention, even numbered call units are for 300 baud
+     modem lines, while odd numbered units are for 1200 baud
+     lines.  For example, /_d_e_v/_c_u_a_0 is associated with a 300 baud
+     modem line, /_d_e_v/_c_u_l_0, while /_d_e_v/_c_u_a_1 is associated with a
+     1200 baud modem line, /_d_e_v/_c_u_l_1.  For devices such as the
+     Quadracall which simulate multiple DN-11 units, the minor
+     device indicates which outgoing modem to use.
+
+FILES
+     /dev/cua? call units
+     /dev/cul? associated modem lines
+
+SEE ALSO
+     tip(1C)
+
+DIAGNOSTICS
+     Two error numbers are of interest at open time.
+
+     [EBUSY]   The dialer is in use.
+
+     [ENXIO]   The device doesn't exist, or there's no power to
+
+
+
+Printed 12/27/86          May 15, 1985                          1
+
+
+
+
+
+
+DN(4)               UNIX Programmer's Manual                DN(4)
+
+
+
+               it.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 15, 1985                          2
+
+
+

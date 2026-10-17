@@ -1,0 +1,132 @@
+
+
+
+TANI(LOCAL)         UNIX Programmer's Manual          TANI(LOCAL)
+
+
+
+NAME
+     tani - interpret a compiled Tanenbaum microcode program.
+
+SYNOPSIS
+     tani datafile [ -f tanfile ] [ -d ]
+
+DESCRIPTION
+     _T_a_n_i is the interpreter for the Tanenbaum microcode
+     language. It takes two forms of input: program and data.
+
+     The program input, _t_a_n_f_i_l_e, must be output from the Tanen-
+     baum compiler, _t_a_n_c(_1).  The information in this file is in
+     binary format and is currently not portable across CPU
+     types.  If the -f option is not specified, _t_a_n._o_u_t is used
+     as the program input.
+
+     The data is given in _d_a_t_a_f_i_l_e and is loaded into the _h_o_s_t
+     machine memory before beginning interpretation.  Each line
+     of the data file contains information to be placed in a host
+     machine memory location and may be in one of the following
+     formats:
+
+     o+ A number.  Numbers are presumed to be signed decimal
+       unless preceeded by a '0' in which case they are read as
+       unsigned octal.
+
+     o+ A string enclosed in angle brackets (<>).  The string is
+       copied into host memory with two characters per location.
+       Newlines are represented as \n.  For the _p_r_i_n_t_s instruc-
+       tion to work, strings must be terminated by a null (\0).
+
+     o+ A directive of the form
+                 .=. + number
+       indicating how much (in host memory words) the current
+       memory location should be incremented.  Again, the number
+       is taken as decimal unless preceded by a '0'.
+
+     o+ Comments start with a '/' and continue until the end of
+       the line.  They may start anywhere on a line.
+
+     The -d flag may be specified to observe the internal state
+     of the interpreter as it runs.
+
+AUTHOR
+     Brian Pinkerton
+
+FILES
+     tan.out        default program input file
+
+SEE ALSO
+     tanc(l)
+
+
+
+
+Printed 1/10/87            7 June 1986                          1
+
+
+
+
+
+
+TANI(LOCAL)         UNIX Programmer's Manual          TANI(LOCAL)
+
+
+
+BUGS
+     Debugging output is not well structured but still may make
+     it too easy to debug these programs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 1/10/87            7 June 1986                          2
+
+
+

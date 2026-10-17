@@ -1,0 +1,132 @@
+
+
+
+WRITE(1)            UNIX Programmer's Manual             WRITE(1)
+
+
+
+NAME
+     write - write to another user
+
+SYNOPSIS
+     write [ -f ] user [ ttyname ]
+
+DESCRIPTION
+     _W_r_i_t_e copies lines from your terminal to that of another
+     user.  When first called, it sends the message
+
+          Message from yourname@yoursystem on yourttyname at
+     time...
+
+     The recipient of the message should write back at this
+     point.  Communication continues until an end of file is read
+     from the terminal or an interrupt is sent.  At that point
+     _w_r_i_t_e writes `EOT' on the other terminal and exits.
+
+     If you want to write to a user who is logged in more than
+     once, the _t_t_y_n_a_m_e argument may be used to indicate the
+     appropriate terminal name.
+
+     Permission to write may be denied or granted by use of the
+     _m_e_s_g command.  At the outset writing is allowed.  Certain
+     commands, in particular _n_r_o_f_f and _p_r(1) disallow messages in
+     order to prevent messy output.
+
+     If the character `!' is found at the beginning of a line,
+     _w_r_i_t_e calls the shell to execute the rest of the line as a
+     command.
+
+     The following protocol is suggested for using _w_r_i_t_e: when
+     you first write to another user, wait for him to write back
+     before starting to send.  Each party should end each message
+     with a distinctive signal-(o) for `over' is conventional-
+     that the other may reply.  (oo) for `over and out' is sug-
+     gested when conversation is about to be terminated.
+
+     _w_r_i_t_e will not allow you to write to someone else if either
+     you or he has write permission turned off.  This restriction
+     may be overridden with the -f option.  This is most often
+     used by the superuser to write to a user who has their write
+     permission off or by a regular user to write to someone when
+     the writer has his own write permissions turned off.  Note
+     that it is considered poor etiquette to write to someone
+     when you have write permission off.
+
+FILES
+     /etc/utmp to find user
+     /bin/sh        to execute `!'
+
+
+
+
+
+Printed 12/27/86           May 5, 1986                          1
+
+
+
+
+
+
+WRITE(1)            UNIX Programmer's Manual             WRITE(1)
+
+
+
+SEE ALSO
+     mesg(1), who(1), mail(1)
+
+LOCAL MODS
+     Added the "-f" option.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86           May 5, 1986                          2
+
+
+

@@ -1,0 +1,66 @@
+
+
+
+RWALL(1)            UNIX Programmer's Manual             RWALL(1)
+
+
+
+NAME
+     rwall - write to all users over a network
+
+SYNOPSIS
+     rwall host1 host2 ...
+     rwall -n netgroup1 netgroup2 ...
+     rwall -h host -n netgroup
+
+DESCRIPTION
+     _R_w_a_l_l reads a message from standard input until end-of-file.
+     It then sends this message, preceded by the line ``Broadcast
+     Message ...'', to all users logged in on the specified host
+     machines.  With the -n option, it sends to the specified
+     network groups, which are defined in _n_e_t_g_r_o_u_p(5).
+
+     A machine can only receive such a message if it is running
+     _r_w_a_l_l_d(8), which is normally started up from /_e_t_c/_s_e_r_v_e_r_s by
+     the daemon _i_n_e_t_d(8).
+
+FILES
+     /etc/servers
+
+SEE ALSO
+     wall(1), netgroup(5), rwalld(8), shutdown(8)
+
+BUGS
+     The timeout is fairly short in order to be able to send to a
+     large group of machines (some of which may be down) in a
+     reasonable amount of time.  Thus the message may not get
+     thru to a heavily loaded machine.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         1 February 1985                        1
+
+
+

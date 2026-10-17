@@ -1,0 +1,132 @@
+
+
+
+NP(4)               UNIX Programmer's Manual                NP(4)
+
+
+
+NAME
+     np - Interlan Np100 10 Mb/s Ethernet interface
+
+SYNOPSIS
+     device np0 at uba0 csr 166000 vector npintr
+
+DESCRIPTION
+     The _N_P device provides access to an Interlan Np100 Ethernet
+     interface for control functions.
+
+     This interface is unusual in that it requires loading
+     firmware into the controller before it may be used as a net-
+     work link-level interface.  This is accomplished by opening
+     a character special device, and writing data to it.  It is
+     also possible to do post-mortem debugging of firmware
+     failures by reading the local memory of the device.
+
+     A program to load the image is provided in
+     /usr/src/new/np100.  The sequence of commands would be:
+
+          # ./npload np.image [/dev/np00]
+          # sleep 10
+          # ifconfig ix0 ...
+
+     Multiple control processes are allowed by opening separate
+     minor devices; secondary interfaces are specified by shift-
+     ing the interface number by 4 bits.
+
+     The device also responds to commands passed through the
+     driver by the following ioctls:
+
+     NPRESET
+          kills off all active network processes.
+
+     NPSTART
+          begins execution of the board at the specified address
+          (usually 0x400).
+
+     NPNETBOOT
+          downloads the image from a server on the network.
+          [Contact MICOM-INTERLAN for details.]
+
+DIAGNOSTICS
+     np%d: Bad Maintenance command: %x!.  An invalid ioctl was
+     passed to the np driver.
+
+     np%d: Panic NP100 bad buffer chain.  An error occurred in an
+     read or write operation causing it to run out of buffers
+     before it finished the operation.  This indicates a kernel
+     failure rather than a device failure.
+
+
+
+
+
+Printed 12/27/86          May 21, 1986                          1
+
+
+
+
+
+
+NP(4)               UNIX Programmer's Manual                NP(4)
+
+
+
+     NP100 unit %d not found!.  A failure occurred during ini-
+     tialization, such that the unibus address expected for the
+     board was found to be bad.  Probably indicates hardware
+     problems with the board, as do the following:
+
+
+     NP100 Unit %d timed out!
+
+     NP100 Unit %d Failed diagnostics!
+     Status from CSR0: %x.
+
+     Panic from NP100 unit %d!\nPanic Message: %s.  An occurrence
+     on the board was deemed serious enough to have the vax print
+     it out.
+
+     NP100 unit #%d available!.  The board was successfully
+     loaded and started.
+
+     np%d: Bad Req: %x..  The board made a maintenance request to
+     the vax that it did not understand.
+
+     np%d: No more room on Command Queue!.  The np driver allowed
+     an internal resource to be exhausted.  This should never
+     happen.
+
+     There are 110 other diagnostic messages that can be enabled
+     by setting bits in a debugging mask.  Consult the driver for
+     details.
+
+SEE ALSO
+     intro(4N), inet(4F), arp(4P), ix(4)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 21, 1986                          2
+
+
+

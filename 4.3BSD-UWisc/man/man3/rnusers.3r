@@ -1,0 +1,85 @@
+.\" @(#)rnusers.3r 1.1 85/12/28 SMI; new on release 3.0
+.TH RNUSERS 3R "10 August 1985"
+.SH NAME
+rnusers, rusers \- return information about users on remote machines
+.SH SYNOPSIS
+.ft B
+.nf
+#include <rpcsvc/rusers.h>
+.sp .5
+rnusers(host)
+	char *host
+.sp .5
+rusers(host, up)
+	char *host
+	struct utmpidlearr *up;
+.SH DESCRIPTION
+.I Rnusers
+returns the number of users logged on to
+.I host
+(\-1 if it cannot determine that number).
+.I Rusers
+fills the
+.I utmpidlearr
+structure with data about
+.IR host ,
+and returns 0 if successful.
+The relevant structures are:
+.PP
+.nf
+struct utmparr {			/* RUSERSVERS_ORIG */
+	struct utmp **uta_arr;
+	int uta_cnt
+};
+.sp .5
+struct utmpidle {
+	struct utmp ui_utmp;
+	unsigned ui_idle;
+};
+.sp .5
+struct utmpidlearr {		/* RUSERSVERS_IDLE */
+	struct utmpidle **uia_arr;
+	int uia_cnt
+};
+.fi
+.SH RPC INFO
+.nf
+program number:
+	RUSERSPROG
+.sp .5
+xdr routines:
+	int xdr_utmp(xdrs, up)
+		XDR *xdrs;
+		struct utmp *up;
+	int xdr_utmpidle(xdrs, ui);
+		XDR *xdrs;
+		struct utmpidle *ui;
+	int xdr_utmpptr(xdrs, up);
+		XDR *xdrs;
+		struct utmp **up;
+	int xdr_utmpidleptr(xdrs, up);
+		XDR *xdrs;
+		struct utmpidle **up;
+	int xdr_utmparr(xdrs, up);
+		XDR *xdrs;
+		struct utmparr *up;
+	int xdr_utmpidlearr(xdrs, up);
+		XDR *xdrs;
+		struct utmpidlearr *up;
+.sp .5
+procs:
+	RUSERSPROC_NUM
+		No arguments, returns number of users as an \fIunsigned long\fP.
+	RUSERSPROC_NAMES
+		No arguments, returns \fIutmparr\fP or \fIutmpidlearr\fP, depending on version number.
+	RUSERSPROC_ALLNAMES
+		No arguments, returns \fIutmparr\fP or \fIutmpidlearr\fP, depending on version number.
+		Returns listing even for \fIutmp\fP entries satisfying \fInonuser()\fP in \fIutmp.h\fP.
+versions:
+	RUSERSVERS_ORIG
+	RUSERSVERS_IDLE
+
+structures:
+.fi
+.SH SEE ALSO
+rusers(1), rusersd(8c)

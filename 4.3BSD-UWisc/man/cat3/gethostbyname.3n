@@ -1,0 +1,198 @@
+
+
+
+GETHOSTBYNAME(3N)   UNIX Programmer's Manual    GETHOSTBYNAME(3N)
+
+
+
+NAME
+     gethostbyname, gethostbyaddr, gethostent, sethostent,
+     endhostent - get network host entry
+
+SYNOPSIS
+     #include <netdb.h>
+
+     extern int h_errno;
+
+     struct hostent *gethostbyname(name)
+     char *name;
+
+     struct hostent *gethostbyaddr(addr, len, type)
+     char *addr; int len, type;
+
+     struct hostent *gethostent()
+
+     sethostent(stayopen)
+     int stayopen;
+
+     endhostent()
+
+DESCRIPTION
+     _G_e_t_h_o_s_t_b_y_n_a_m_e and _g_e_t_h_o_s_t_b_y_a_d_d_r each return a pointer to an
+     object with the following structure.  This structure con-
+     tains either the information obtained from the name server,
+     _n_a_m_e_d(8), or broken-out fields from a line in /_e_t_c/_h_o_s_t_s.
+     If the local name server is not running these routines do a
+     lookup in /_e_t_c/_h_o_s_t_s.
+
+          struct    hostent {
+               char *h_name;  /* official name of host */
+               char **h_aliases;   /* alias list */
+               int  h_addrtype;    /* host address type */
+               int  h_length; /* length of address */
+               char **h_addr_list; /* list of addresses from name server */
+          };
+          #define   h_addr  h_addr_list[0]   /* address, for backward compatibility */
+
+     The members of this structure are:
+
+     h_name       Official name of the host.
+
+     h_aliases    A zero terminated array of alternate names  for
+                  the host.
+
+     h_addrtype   The type of address being  returned;  currently
+                  always AF_INET.
+
+     h_length     The length, in bytes, of the address.
+
+     h_addr_list  A zero terminated array  of  network  addresses
+
+
+
+Printed 12/27/86          May 20, 1986                          1
+
+
+
+
+
+
+GETHOSTBYNAME(3N)   UNIX Programmer's Manual    GETHOSTBYNAME(3N)
+
+
+
+                  for  the  host.  Host addresses are returned in
+                  network byte order.
+
+     h_addr       The first address in h_addr_list; this  is  for
+                  backward compatiblity.
+
+     _S_e_t_h_o_s_t_e_n_t allows a request  for  the  use  of  a  connected
+     socket  using TCP for queries.  If the _s_t_a_y_o_p_e_n flag is non-
+     zero, this sets the option to send all queries to  the  name
+     server  using  TCP  and  to retain the connection after each
+     call to _g_e_t_h_o_s_t_b_y_n_a_m_e or _g_e_t_h_o_s_t_b_y_a_d_d_r.
+
+     _E_n_d_h_o_s_t_e_n_t closes the TCP connection.
+
+DIAGNOSTICS
+     Error return status from _g_e_t_h_o_s_t_b_y_n_a_m_e and _g_e_t_h_o_s_t_b_y_a_d_d_r  is
+     indicated by return of a null pointer.  The external integer
+     _h__e_r_r_n_o may then be checked to see whether this  is  a  tem-
+     porary failure or an invalid or unknown host.
+
+     _h__e_r_r_n_o can have the following values:
+
+          HOST_NOT_FOUND  No such host is known.
+
+          TRY_AGAIN       This is usually a temporary  error  and
+                          means  that  the  local  server did not
+                          receive a response from  an  authorita-
+                          tive  server.   A  retry  at some later
+                          time may succeed.
+
+          NO_RECOVERY     This is a non-recoverable error.
+
+          NO_ADDRESS      The requested name is  valid  but  does
+                          not  have  an IP address; this is not a
+                          temporary  error.  This  means  another
+                          type of request to the name server will
+                          result in an answer.
+
+FILES
+     /etc/hosts
+
+SEE ALSO
+     hosts(5), resolver(3), named(8)
+
+CAVEAT
+     _G_e_t_h_o_s_t_e_n_t is defined, and  _s_e_t_h_o_s_t_e_n_t  and  _e_n_d_h_o_s_t_e_n_t  are
+     redefined,  when  _l_i_b_c  is built to use only the routines to
+     lookup in /_e_t_c/_h_o_s_t_s and not the name server.
+
+     _G_e_t_h_o_s_t_e_n_t reads the next line of  /_e_t_c/_h_o_s_t_s,  opening  the
+     file if necessary.
+
+
+
+
+Printed 12/27/86          May 20, 1986                          2
+
+
+
+
+
+
+GETHOSTBYNAME(3N)   UNIX Programmer's Manual    GETHOSTBYNAME(3N)
+
+
+
+     _S_e_t_h_o_s_t_e_n_t is redefined to open and rewind the file.  If the
+     _s_t_a_y_o_p_e_n  argument is non-zero, the hosts data base will not
+     be closed after each call to _g_e_t_h_o_s_t_b_y_n_a_m_e or _g_e_t_h_o_s_t_b_y_a_d_d_r.
+     _E_n_d_h_o_s_t_e_n_t is redefined to close the file.
+
+BUGS
+     All information is contained in a static area so it must  be
+     copied if it is to be saved.  Only the Internet address for-
+     mat is currently understood.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 20, 1986                          3
+
+
+

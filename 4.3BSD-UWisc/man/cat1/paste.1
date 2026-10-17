@@ -1,0 +1,132 @@
+
+
+
+PASTE(1)            UNIX Programmer's Manual             PASTE(1)
+
+
+
+NAME
+     paste - merge same lines of several files or subsequent
+     lines of one file
+
+SYNOPSIS
+     paste file1 file2 ...
+     paste -dlist file1 file2 ...
+     paste -s [-dlist] file1 file2 ...
+
+DESCRIPTION
+     In the first two forms, _p_a_s_t_e concatenates corresponding
+     lines of the given input files _f_i_l_e_1, _f_i_l_e_2, etc.  It treats
+     each file as a column or columns of a table and pastes them
+     together horizontally (parallel merging).  If you will, it
+     is the counterpart of _c_a_t(1) which concatenates vertically,
+     i.e., one file after the other.  In the last form above,
+     _p_a_s_t_e subsumes the function of an older command with the
+     same name by combining subsequent lines of the input file
+     (serial merging).  In all cases, lines are glued together
+     with the _t_a_b character, or with characters from an option-
+     ally specified _l_i_s_t.  Output is to the standard output, so
+     it can be used as the start of a pipe, or as a filter, if -
+     is used in place of a file name.
+
+     The meanings of the options are:
+
+     -d   Without this option, the new-line characters of each
+          but the last file (or last line in case of the -s
+          option) are replaced by a _t_a_b character.  This option
+          allows replacing the _t_a_b character by one or more
+          alternate characters (see below).
+
+     _l_i_s_t One or more characters immediately following -d replace
+          the default _t_a_b as the line concatenation character.
+          The list is used circularly, i. e. when exhausted, it
+          is reused.  In parallel merging (i. e. no -s option),
+          the lines from the last file are always terminated with
+          a new-line character, not from the _l_i_s_t.  The list may
+          contain the special escape sequences: \n (new-line), \t
+          (tab), \\ (backslash), and \0 (empty string, not a null
+          character).  Quoting may be necessary, if characters
+          have special meaning to the shell (e.g. to get one
+          backslash, use "" -_d"_\_\_\_\" ).
+
+     -s   Merge subsequent lines rather than one from each input
+          file.  Use _t_a_b for concatenation, unless a _l_i_s_t is
+          specified with -d option.  Regardless of the _l_i_s_t, the
+          very last character of the file is forced to be a new-
+          line.
+
+     -    May be used in place of any file name, to read a line
+          from the standard input.  (There is no prompting).
+
+
+
+Printed 12/27/86                                                1
+
+
+
+
+
+
+PASTE(1)            UNIX Programmer's Manual             PASTE(1)
+
+
+
+EXAMPLES
+     ls | paste -d" " -
+                    list directory in one column
+
+     ls | paste - - - -
+                    list directory in four columns
+
+     paste -s -d"\t\n" file
+                    combine pairs of lines into lines
+
+SEE ALSO
+     grep(1), cut(1),
+     pr(1): pr -t -m...  works similarly, but creates extra
+     blanks, tabs and new-lines for a nice page layout.
+
+DIAGNOSTICS
+     _l_i_n_e _t_o_o _l_o_n_g
+               Output lines are restricted to 511 characters.
+
+     _t_o_o _m_a_n_y _f_i_l_e_s
+               Except for -s option, no more than 12 input files
+               may be specified.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86                                                2
+
+
+

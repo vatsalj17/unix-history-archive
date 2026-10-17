@@ -1,0 +1,132 @@
+
+
+
+MKFS(8)             UNIX Programmer's Manual              MKFS(8)
+
+
+
+NAME
+     mkfs - construct a file system
+
+SYNOPSIS
+     /etc/mkfs [ -N ] special size [ nsect [ ntrack [ blksize [
+     fragsize [ ncpg [ minfree [ rps [ nbpi [ opt ] ] ] ] ] ] ] ]
+     ]
+
+DESCRIPTION
+     N.B.: file system are normally created with the _n_e_w_f_s(8)
+     command.
+
+     _M_k_f_s constructs a file system by writing on the special file
+     _s_p_e_c_i_a_l unless the -N flag has been specified.  The numeric
+     size specifies the number of sectors in the file system.
+     _M_k_f_s builds a file system with a root directory and a
+     _l_o_s_t+_f_o_u_n_d directory.  (see _f_s_c_k(8)) The number of i-nodes
+     is calculated as a function of the file system size.  No
+     boot program is initialized by _m_k_f_s (see _n_e_w_f_s(8).)
+
+     The optional arguments allow fine tune control over the
+     parameters of the file system.  Nsect specify the number of
+     sectors per track on the disk.  Ntrack specify the number of
+     tracks per cylinder on the disk.  Blksize gives the primary
+     block size for files on the file system.  It must be a power
+     of two, currently selected from 4096 or 8192.  Fragsize
+     gives the fragment size for files on the file system.  The
+     fragsize represents the smallest amount of disk space that
+     will be allocated to a file.  It must be a power of two
+     currently selected from the range 512 to 8192.  Ncpg speci-
+     fies the number of disk cylinders per cylinder group.  This
+     number must be in the range 1 to 32.  Minfree specifies the
+     minimum percentage of free disk space allowed.  Once the
+     file system capacity reaches this threshold, only the
+     super-user is allowed to allocate disk blocks.  The default
+     value is 10%.  If a disk does not revolve at 60 revolutions
+     per second, the rps parameter may be specified.  If a file
+     system will have more or less than the average number of
+     files the nbpi (number of bytes per inode) can be specified
+     to increase or decrease the number of inodes that are
+     created.  Space or time optimization preference can be
+     specified with opt values of ``s'' for space or ``t'' for
+     time.  Users with special demands for their file systems are
+     referred to the paper cited below for a discussion of the
+     tradeoffs in using different configurations.
+
+SEE ALSO
+     fs(5), dir(5), fsck(8), newfs(8), tunefs(8)
+
+     M. McKusick, W. Joy, S. Leffler, R. Fabry, ``A Fast File
+     System for UNIX'', _A_C_M _T_r_a_n_s_a_c_t_i_o_n_s _o_n _C_o_m_p_u_t_e_r _S_y_s_t_e_m_s _2,
+     3.  pp 181-197, August 1984.  (reprinted in the System
+
+
+
+Printed 12/27/86          May 21, 1986                          1
+
+
+
+
+
+
+MKFS(8)             UNIX Programmer's Manual              MKFS(8)
+
+
+
+     Manager's Manual, SMM:14)
+
+BUGS
+     There should be some way to specify bad blocks.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 21, 1986                          2
+
+
+

@@ -1,0 +1,128 @@
+
+
+
+RNUSERS(3R)         UNIX Programmer's Manual          RNUSERS(3R)
+
+
+
+NAME
+     rnusers, rusers - return information about users on remote
+     machines
+
+SYNOPSIS
+     #include <rpcsvc/rusers.h>
+9     rnusers(host)
+          char *host
+9     rusers(host, up)
+          char *host
+          struct utmpidlearr *up;
+
+DESCRIPTION
+     _R_n_u_s_e_r_s returns the number of users logged on to _h_o_s_t (-1 if
+     it cannot determine that number).  _R_u_s_e_r_s fills the
+     _u_t_m_p_i_d_l_e_a_r_r structure with data about _h_o_s_t, and returns 0 if
+     successful.  The relevant structures are:
+
+     struct utmparr {              /* RUSERSVERS_ORIG */
+          struct utmp **uta_arr;
+          int uta_cnt
+     };
+9     struct utmpidle {
+          struct utmp ui_utmp;
+          unsigned ui_idle;
+     };
+9     struct utmpidlearr {          /* RUSERSVERS_IDLE */
+          struct utmpidle **uia_arr;
+          int uia_cnt
+     };
+
+RPC INFO
+     program number:
+          RUSERSPROG
+9     xdr routines:
+          int xdr_utmp(xdrs, up)
+               XDR *xdrs;
+               struct utmp *up;
+          int xdr_utmpidle(xdrs, ui);
+               XDR *xdrs;
+               struct utmpidle *ui;
+          int xdr_utmpptr(xdrs, up);
+               XDR *xdrs;
+               struct utmp **up;
+          int xdr_utmpidleptr(xdrs, up);
+               XDR *xdrs;
+               struct utmpidle **up;
+          int xdr_utmparr(xdrs, up);
+               XDR *xdrs;
+               struct utmparr *up;
+
+
+
+Printed 12/27/86         10 August 1985                         1
+
+
+9
+
+
+RNUSERS(3R)         UNIX Programmer's Manual          RNUSERS(3R)
+
+
+
+          int xdr_utmpidlearr(xdrs, up);
+               XDR *xdrs;
+               struct utmpidlearr *up;
+9     procs:
+          RUSERSPROC_NUM
+               No arguments, returns number of users as an _u_n_s_i_g_n_e_d _l_o_n_g.
+          RUSERSPROC_NAMES
+               No arguments, returns _u_t_m_p_a_r_r or _u_t_m_p_i_d_l_e_a_r_r, depending on version number.
+          RUSERSPROC_ALLNAMES
+               No arguments, returns _u_t_m_p_a_r_r or _u_t_m_p_i_d_l_e_a_r_r, depending on version number.
+               Returns listing even for _u_t_m_p entries satisfying _n_o_n_u_s_e_r() in _u_t_m_p._h.
+     versions:
+          RUSERSVERS_ORIG
+          RUSERSVERS_IDLE
+
+     structures:
+
+SEE ALSO
+     rusers(1), rusersd(8c)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+9
+
+
+Printed 12/27/86         10 August 1985                         2
+
+
+

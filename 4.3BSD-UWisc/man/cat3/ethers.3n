@@ -1,0 +1,129 @@
+
+
+
+ETHERS(3N)          UNIX Programmer's Manual           ETHERS(3N)
+
+
+
+NAME
+     ether_ntoa, ether_aton, ether_ntohost, ether_hostton,
+     ether_line - ethernet address mapping operations
+
+SYNOPSIS
+     #include <sys/types.h>
+     #include <sys/socket.h>
+     #include <net/if.h>
+     #include <netinet/in.h>
+     #include <netinet/if_ether.h>
+9     char *
+     ether_ntoa(e)
+          struct ether_addr *e;
+9     struct ether_addr *
+     ether_aton(s)
+          char *s;
+9     ether_ntohost(hostname, e)
+          char *hostname;
+          struct ether_addr *e;
+9     ether_hostton(hostname, e)
+          char *hostname;
+          struct ether_addr *e;
+9     ether_line(l, e, hostname)
+          char *l;
+          struct ether_addr *e;
+          char *hostname;
+
+DESCRIPTION
+     These routines are useful for mapping 48 bit ethernet
+     numbers to their ASCII representations or their correspond-
+     ing host names, and vice versa.
+
+     The function _e_t_h_e_r__n_t_o_a converts a 48 bit ethernet number
+     pointed to by _e to its standard ACSII representation; it
+     returns a pointer to the ASCII string.  The representation
+     is of the form: ``x:x:x:x:x:x'' where _x is a hexadecimal
+     number between 0 and ff.  The function _e_t_h_e_r__a_t_o_n converts
+     an ASCII string in the standard representation back to a 48
+     bit ethernet number;  the function returns NULL if the
+     string cannot be scanned successfully.
+
+     The function _e_t_h_e_r__n_t_o_h_o_s_t maps an ethernet number (pointed
+     to by _e) to its associated hostname.  The string pointed to
+     by _h_o_s_t_n_a_m_e must be long enough to hold the hostname and a
+     null character.  The function returns zero upon success and
+     non-zero upon failure.  Inversely, the function
+     _e_t_h_e_r__h_o_s_t_t_o_n maps a hostname string to its corresponding
+     ethernet number; the function modifies the ethernet number
+     pointed to by _e.  The function also returns zero upon suc-
+     cess and non-zero upon failure.
+
+
+
+Printed 12/27/86           8 July 1985                          1
+
+
+9
+
+
+ETHERS(3N)          UNIX Programmer's Manual           ETHERS(3N)
+
+
+
+     The function _e_t_h_e_r__l_i_n_e scans a line (pointed to by _l) and
+     sets the hostname and the ethernet number (pointed to by _e).
+     The string pointed to by _h_o_s_t_n_a_m_e must be long enough to
+     hold the hostname and a null character.  The function
+     returns zero upon success and non-zero upon failure.  The
+     format of the scanned line is described by _e_t_h_e_r_s(5).
+
+FILES
+     /etc/ethers    (or the yellowpages' maps ethers.byaddr and
+     ethers.byname)
+
+SEE ALSO
+     ethers(5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86           8 July 1985                          2
+
+
+

@@ -1,0 +1,198 @@
+
+
+
+NAMED(8)            UNIX Programmer's Manual             NAMED(8)
+
+
+
+NAME
+     named - Internet domain name server
+
+SYNOPSIS
+     named [ -d _d_e_b_u_g_l_e_v_e_l ] [ -p _p_o_r_t# ] [ _b_o_o_t_f_i_l_e ]
+
+DESCRIPTION
+     _N_a_m_e_d is the Internet domain name server (see RFC883 for
+     more details).  Without any arguments, _n_a_m_e_d will read the
+     default boot file /_e_t_c/_n_a_m_e_d._b_o_o_t, read any initial data and
+     listen for queries.
+
+     Options are:
+
+     -d   Print debugging information.  A number after the ``d''
+          determines the level of messages printed.
+
+     -p   Use a different port number.  The default is the stan-
+          dard port number as listed in /etc/services.
+
+     Any additional argument is taken as the name of the boot
+     file.  The boot file contains information about where the
+     name server is to get its initial data.  The following is a
+     small example:
+
+          ;
+          ;    boot file for name server
+          ;
+          ; type         domain         source file or host
+          ;
+          domain         berkeley.edu
+          primary        berkeley.edu    named.db
+          secondary      cc.berkeley.edu 10.2.0.78 128.32.0.10
+          cache          .               named.ca
+
+     The first line specifies that ``berkeley.edu'' is the domain
+     for which the server is authoritative.  The second line
+     states that the file ``named.db'' contains authoritative
+     data for the domain ``berkeley.edu''. The file ``named.db''
+     contains data in the master file format described in RFC883
+     except that all domain names are relative to the origin; in
+     this case, ``berkeley.edu'' (see below for a more detailed
+     description).  The second line specifies that all authorita-
+     tive data under ``cc.berkeley.edu'' is to be transferred
+     from the name server at 10.2.0.78.  If the transfer fails it
+     will try 128.32.0.10 and continue trying the address, up to
+     10, listed on this line.  The secondary copy is also author-
+     itative for the specified domain.  The fourth line specifies
+     data in ``named.ca'' is to be placed in the cache (i.e.,
+     well known data such as locations of root domain servers).
+     The file ``named.ca'' is in the same format as ``named.db''.
+
+
+
+
+Printed 12/27/86        15 November 1985                        1
+
+
+
+
+
+
+NAMED(8)            UNIX Programmer's Manual             NAMED(8)
+
+
+
+     The master file consists of entries of the form:
+
+          $INCLUDE <filename>
+          $ORIGIN <domain>
+          <domain> <opt_ttl> <opt_class> <type> <resource_record_data>
+
+     where _d_o_m_a_i_n is "." for root, "@" for the current origin, or
+     a standard domain name. If _d_o_m_a_i_n is a standard domain name
+     that does not end with ``.'', the current origin is appended
+     to the domain. Domain names ending with ``.'' are unmodi-
+     fied.  The _o_p_t__t_t_l field is an optional integer number for
+     the time-to-live field.  It defaults to zero.  The _o_p_t__c_l_a_s_s
+     field is the object address type; currently only one type is
+     supported, IN, for objects connected to the DARPA Internet.
+     The _t_y_p_e field is one of the following tokens; the data
+     expected in the _r_e_s_o_u_r_c_e__r_e_c_o_r_d__d_a_t_a field is in
+     parentheses.
+
+     A        a host address (dotted quad)
+
+     NS       an authoritative name server (domain)
+
+     MX       a mail exchanger (domain)
+
+     CNAME    the canonical name for an alias (domain)
+
+     SOA      marks the start of a zone of authority (5 numbers
+              (see RFC883))
+
+     MB       a mailbox domain name (domain)
+
+     MG       a mail group member (domain)
+
+     MR       a mail rename domain name (domain)
+
+     NULL     a null resource record (no format or data)
+
+     WKS      a well know service description (not implemented
+              yet)
+
+     PTR      a domain name pointer (domain)
+
+     HINFO    host information (cpu_type OS_type)
+
+     MINFO    mailbox or mail list information (request_domain
+              error_domain)
+
+NOTES
+     The following signals have the specified effect when sent to
+     the server process using the _k_i_l_l(1) command.
+
+     SIGHUP    Causes server to read named.boot and reload
+
+
+
+Printed 12/27/86        15 November 1985                        2
+
+
+
+
+
+
+NAMED(8)            UNIX Programmer's Manual             NAMED(8)
+
+
+
+               database.
+
+     SIGINT    Dumps current data base and cache to
+               /usr/tmp/named_dump.db
+
+     SIGUSR1   Turns on debugging; each SIGUSR1 increments debug
+               level.
+
+     SIGUSR2   Turns off debugging completely.
+
+FILES
+     /etc/named.boot          name server configuration boot file
+     /etc/named.pid           the process id
+     /usr/tmp/named.run       debug output
+     /usr/tmp/named_dump.db   dump of the name servers database
+
+SEE ALSO
+     kill(1), gethostbyname(3N), signal(3c), resolver(3),
+     resolver(5), RFC882, RFC883, RFC973, RFC974, _N_a_m_e _S_e_r_v_e_r
+     _O_p_e_r_a_t_i_o_n_s _G_u_i_d_e _f_o_r _B_I_N_D
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86        15 November 1985                        3
+
+
+

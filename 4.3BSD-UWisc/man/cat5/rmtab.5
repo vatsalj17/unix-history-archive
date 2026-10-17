@@ -1,0 +1,66 @@
+
+
+
+RMTAB(5)            UNIX Programmer's Manual             RMTAB(5)
+
+
+
+NAME
+     rmtab - remotely mounted file system table
+
+DESCRIPTION
+     _R_m_t_a_b resides in directory /_e_t_c and contains a record of all
+     clients that have done remote mounts of file systems from
+     this machine.  Whenever a remote _m_o_u_n_t is done, an entry is
+     made in the _r_m_t_a_b file of the machine serving up that file
+     system.  _U_m_o_u_n_t removes entries, if of a remotely mounted
+     file system.  _U_m_o_u_n_t -_a broadcasts to all servers, and
+     informs them that they should remove all entries from _r_m_t_a_b
+     created by the sender of the broadcast message.  By placing
+     a _u_m_o_u_n_t -_a command in /_e_t_c/_r_c._b_o_o_t, _r_m_t_a_b tables can be
+     purged of entries made by a crashed host, which upon reboot-
+     ing did not remount the same file systems it had before.
+     The table is a series of lines of the form
+
+           hostname:directory
+
+     This table is used only to preserve information between
+     crashes, and is read only by _m_o_u_n_t_d(8) when it starts up.
+     _M_o_u_n_t_d keeps an in-core table, which it uses to handle
+     requests from programs like _s_h_o_w_m_o_u_n_t(1) and _s_h_u_t_d_o_w_n(8).
+
+FILES
+     /etc/rmtab
+
+SEE ALSO
+     showmount(1), mountd(8), mount(8), umount(8), shutdown(8)
+
+BUGS
+     Although the _r_m_t_a_b table is close to the truth, it is not
+     always 100% accurate.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         1 February 1985                        1
+
+
+

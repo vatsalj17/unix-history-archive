@@ -1,0 +1,132 @@
+
+
+
+GROUP(5)            UNIX Programmer's Manual             GROUP(5)
+
+
+
+NAME
+     group - group file
+
+SYNOPSIS
+     /etc/group
+
+DESCRIPTION
+     _G_r_o_u_p contains for each group the following information:
+
+     o+ group name
+
+     o+ encrypted password
+
+     o+ numerical group ID
+
+     o+ a comma separated list of all users allowed in the group
+
+     This is an ASCII file.  The fields are separated by colons;
+     each group is separated from the next by a new-line.  If the
+     password field is null, no password is demanded.
+
+     This file resides in the /_e_t_c directory.  Because of the
+     encrypted passwords, it can and does have general read per-
+     mission and can be used, for example, to map numerical group
+     ID's to names.
+
+     A group file can have a line beginning with a plus (+),
+     which means to incorporate entries from the yellow pages.
+     There are two styles of + entries: All by itself, + means to
+     insert the entire contents of the yellow pages group file at
+     that point; +_n_a_m_e means to insert the entry (if any) for
+     _n_a_m_e from the yellow pages at that point.  If a + entry has
+     a non-null password or group member field, the contents of
+     that field will overide what is contained in the yellow
+     pages.  The numerical group ID field cannot be overridden.
+
+EXAMPLE
+     +myproject:::bill, steve
+     +:
+
+     If these entries appear at the end of a group file, then the
+     group _m_y_p_r_o_j_e_c_t will have members _b_i_l_land_s_t_e_v_e, and the
+     password and group ID of the yellow pages entry for the
+     group _m_y_p_r_o_j_e_c_t.  All the groups listed in the yellow pages
+     will be pulled in and placed after the entry for _m_y_p_r_o_j_e_c_t.
+
+FILES
+     /etc/group /etc/yp/group
+
+SEE ALSO
+     setgroups(2), initgroups(3), crypt(3), passwd(1), passwd(5)
+
+
+
+
+Printed 12/27/86         1 February 1985                        1
+
+
+
+
+
+
+GROUP(5)            UNIX Programmer's Manual             GROUP(5)
+
+
+
+BUGS
+     The _p_a_s_s_w_d(1) command won't change group passwords.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         1 February 1985                        2
+
+
+

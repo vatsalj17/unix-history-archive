@@ -1,0 +1,132 @@
+
+
+
+CPIO(1)             UNIX Programmer's Manual              CPIO(1)
+
+
+
+NAME
+     cpio - copy file archives in and out
+
+SYNOPSIS
+     cpio -o [ acBv ]
+
+     cpio -i [ BcdmrtuvfsSb6 ] [ patterns ]
+
+     cpio -p [ adlmruv ] directory
+
+DESCRIPTION
+     Cpio -o (copy out) reads the standard input to obtain a list
+     of path names and copies those files onto the standard out-
+     put together with path name and status information.
+
+     Cpio -i (copy in) extracts files from the standard input
+     which is assumed to be the product of a previous cpio -o.
+     Only files with names that match _p_a_t_t_e_r_n_s are selected.
+     _P_a_t_t_e_r_n_s are given in the name-generating notation of _s_h(1).
+     In _p_a_t_t_e_r_n_s, meta-characters ?, *, and [...] match the slash
+     / character.  Multiple _p_a_t_t_e_r_n_s may be specified and if no
+     _p_a_t_t_e_r_n_s are specified, the default for _p_a_t_t_e_r_n_s is * (i.e.,
+     select all files).  The extracted files are conditionally
+     created and copied into the current directory tree based
+     upon the options described below.
+
+     Cpio -p (pass) reads the standard input to obtain a list of
+     path names of files that are conditionally created and
+     copied into the destination _d_i_r_e_c_t_o_r_y tree based upon the
+     options described below.
+
+     The meanings of the available options are:
+
+     a    Reset access times of input files after they have been
+          copied.
+     B    Input/output is to be blocked 5,120 bytes to the record
+          (does not apply to the _p_a_s_s option; meaningful only
+          with data directed to or from /dev/rmt?).
+     d    _D_i_r_e_c_t_o_r_i_e_s are to be created as needed.
+     c    Write _h_e_a_d_e_r information in ASCII character form for
+          portability.
+     r    Interactively _r_e_n_a_m_e files.  If the user types a null
+          line, the file is skipped.
+     t    Print a _t_a_b_l_e _o_f _c_o_n_t_e_n_t_s of the input.  No files are
+          created.
+     u    Copy _u_n_c_o_n_d_i_t_i_o_n_a_l_l_y (normally, an older file will not
+          replace a newer file with the same name).
+     v    _V_e_r_b_o_s_e: causes a list of file names to be printed.
+          When used with the t option, the table of contents
+          looks like the output of an ls -l command (see _l_s(1)).
+     l    Whenever possible, link files rather than copying them.
+          Usable only with the -p option.
+
+
+
+Printed 12/27/86                                                1
+
+
+
+
+
+
+CPIO(1)             UNIX Programmer's Manual              CPIO(1)
+
+
+
+     m    Retain previous file modification time.  This option is
+          ineffective on directories that are being copied.
+     f    Copy in all files except those in _p_a_t_t_e_r_n_s.
+     s    Swap bytes.  Use only with the -i option.
+     S    Swap halfwords.  Use only with the -i option.
+     b    Swap both bytes and halfwords.  Use only with the -i
+          option.
+     6    Process an old (i.e., UNIX System _S_i_x_t_h Edition format)
+          file.  Only useful with -i (copy in).
+
+EXAMPLES
+     The first example below copies the contents of a directory
+     into an archive; the second duplicates a directory hierar-
+     chy:
+
+          ls | cpio -o >/dev/mt0
+
+          cd olddir
+          find . -depth -print | cpio -pdl newdir
+
+     The trivial case ``find . -depth -print | cpio -oB
+     >/dev/rmt0'' can be handled more efficiently by:
+
+          find . -cpio /dev/rmt0
+
+SEE ALSO
+     ar(1), find(1), cpio(4).
+
+BUGS
+     Path names are restricted to 128 characters.  If there are
+     too many unique linked files, the program runs out of memory
+     to keep track of them and, thereafter, linking information
+     is lost.  Only the super-user can copy special files.  The
+     -B option does not work with certain magnetic tape drives
+     (see _u_n_3_2(7) in the _U_N_I_X _S_y_s_t_e_m _A_d_m_i_n_i_s_t_r_a_t_o_r'_s _M_a_n_u_a_l).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86                                                2
+
+
+

@@ -1,0 +1,193 @@
+
+
+
+FSTAB(5)            UNIX Programmer's Manual             FSTAB(5)
+
+
+
+NAME
+     fstab - static information about filesystems
+
+SYNOPSIS
+     #include <mntent.h>
+
+DESCRIPTION
+     The file /_e_t_c/_f_s_t_a_b describes the filesystems and swapping
+     partitions used by the local machine.  The system adminis-
+     trator can modify it with a text editor.  It is read by com-
+     mands that mount, unmount, dump, restore, and check the con-
+     sistency of filesystems; also by the system when providing
+     swap space.  The file consists of a number of lines of the
+     form:
+9          _f_s_n_a_m_e _d_i_r _t_y_p_e _o_p_t_s _f_r_e_q _p_a_s_s_n_o
+9     for example:
+9          /dev/xy0a / 4.2 rw,noquota 1 2
+9
+     The entries from this file are accessed using the routines
+     in _g_e_t_m_n_t_e_n_t(3), which returns a structure of the following
+     form:
+
+          struct mntent {
+                 char  *mnt_fsname;  /* filesystem name */
+                 char  *mnt_dir;     /* filesystem path prefix */
+                 char  *mnt_type;    /* 4.2, nfs, swap, or ignore */
+                 char  *mnt_opts;    /* rw, ro, noquota, quota, hard, soft */
+                 int   mnt_freq;     /* dump frequency, in days */
+                 int   mnt_passno;   /* pass number on parallel fsck */
+          };
+
+     Fields are separated by white space; a `#' as the first
+     non-white character indicates a comment.
+
+     The _m_n_t__d_i_r fields is the full path name of the directory to
+     be mounted on.
+
+     The _m_n_t__t_y_p_e field determines how the _m_n_t__f_s_n_a_m_e and
+     _m_n_t__o_p_t_s fields will be interpreted.  Here is a list of the
+     filesystem types currently supported, and the way each of
+     them interprets these fields:
+
+     4.2       _m_n_t__f_s_n_a_m_e  Must be a block special device.
+
+     nfs       _m_n_t__f_s_n_a_m_e  the path on the server of the direc-
+               tory to be served.
+
+     swap      _m_n_t__f_s_n_a_m_e  must be a block special device swap
+               partition.
+
+
+
+
+Printed 12/27/86        23 September 1985                       1
+
+
+
+
+
+
+FSTAB(5)            UNIX Programmer's Manual             FSTAB(5)
+
+
+
+     If the _m_n_t__t_y_p_e is specified as ignore then the entry is
+     ignored.  This is useful to show disk partitions not
+     currently used.
+
+     The _m_n_t__o_p_t_s field contains a list of comma-separated option
+     words.  Some _m_n_t__o_p_t_s are valid for all filesystem types,
+     while others apply to a specific type only:
+9
+          _m_n_t__o_p_t_s valid on _a_l_l file systems (the default is
+          rw,suid):
+
+          rw     read/write.
+
+          ro     read-only.
+
+          suid   set-uid execution allowed.
+
+          nosuid set-uid execution not allowed.
+9
+          _m_n_t__o_p_t_s specific to 4.2 file systems (the default is
+          noquota).
+
+          quota  usage limits enforced.
+
+          noquotausage limits not enforced.
+9
+          _m_n_t__o_p_t_s specific to nfs (NFS) file systems (the
+          defaults are:
+9               fg,retry=1,timeo=7,retrans=4,port=NFS_PORT,hard
+9          with defaults for _r_s_i_z_e and _w_s_i_z_e set by the kernel):
+
+          bg        if the first attempt fails, retry in the
+                    background.
+
+          fg        retry in foreground.
+
+          retry=_n   set number of failure retries to _n.
+
+          rsize=_n   set read buffer size to _n bytes.
+
+          wsize=_n   set write buffer size to _n _b_y_t_e_s.
+
+          timeo=_n   set NFS timeout to _n tenths of a second.
+
+          retrans=_n set number of NFS retransmissions to _n.
+
+          port=_n    set server IP port number to _n.
+
+          soft      return error if server doesn't respond.
+9
+
+
+Printed 12/27/86        23 September 1985                       2
+
+
+
+
+
+
+FSTAB(5)            UNIX Programmer's Manual             FSTAB(5)
+
+
+
+          hard      retry request until server responds.
+
+          The bg option causes _m_o_u_n_t to run in the background if
+          the server's _m_o_u_n_t_d(8) does not respond. _m_o_u_n_t attempts
+          each request retry=_n times before giving up.  Once the
+          filesystem is mounted, each nfs request made in the
+          kernel waits timeo=_n tenths of a second for a response.
+          If no response arrives, the time-out is multiplied by 2
+          and the request is retransmitted.  When retrans=_n
+          retransmissions have been sent with no reply a soft
+          mounted filesystem returns an error on the request and
+          a hard mounted filesystem retries the request.  The
+          number of bytes in a read or write request can be set
+          with the rsize and wsize options.
+
+     The field _m_n_t__f_r_e_q indicates how often each partition should
+     be dumped by the _d_u_m_p(8) command (and triggers that
+     command's w option, which determines what filesystems should
+     be dumped).  Most systems set the _m_n_t__f_r_e_q field to 1, indi-
+     cating that filesystems are dumped each day.
+
+     The final field, _m_n_t__p_a_s_s_n_o, is used by the consistency
+     checking program _f_s_c_k(8) to allow overlapped checking of
+     filesystems during a reboot.  All filesystems with
+     _m_n_t__p_a_s_s_n_o of 1 are checked first simultaneously, then all
+     filesystems with _m_n_t__p_a_s_s_n_o of 2, and so on.  It is usual to
+     make the _m_n_t__p_a_s_s_n_o of the root filesystem have the value 1,
+     and then check one filesystem on each available disk drive
+     in each subsequent pass, until all filesystem partitions are
+     checked.
+
+     The /_e_t_c/_f_s_t_a_b file is read only by programs and never writ-
+     ten; the system administrator must maintain it manually.
+     The order of records in /_e_t_c/_f_s_t_a_b is important because
+     _f_s_c_k, _m_o_u_n_t, and _u_m_o_u_n_t process the file sequentially;
+     filesystems must appear _a_f_t_e_r filesystems they are mounted
+     within.
+
+FILES
+     /etc/fstab
+
+SEE ALSO
+     getmntent(3), fsck(8), mount(8), quotacheck(8), quotaon(8)
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86        23 September 1985                       3
+
+
+

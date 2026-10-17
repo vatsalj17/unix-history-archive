@@ -1,0 +1,132 @@
+
+
+
+QUOTACTL(2)         UNIX Programmer's Manual          QUOTACTL(2)
+
+
+
+NAME
+     quotactl - manipulate disk quotas
+
+SYNOPSIS
+     #include <ufs/quota.h>
+
+     quotactl(cmd, special, uid, addr)
+     int cmd;
+     char *special;
+     int uid;
+     caddr_t addr;
+
+DESCRIPTION
+     The _q_u_o_t_a_c_t_l call manipulates disk quotas.  The _c_m_d parame-
+     ter indicates a command to be applied to the user ID _u_i_d.
+     _S_p_e_c_i_a_l is a pointer to a null-terminated string containing
+     the path name of the block special device for the file sys-
+     tem being manipulated.  The block special device must be
+     mounted.  _A_d_d_r is the address of an optional, command
+     specific, data structure which is copied in or out of the
+     system.  The interpretation of _a_d_d_r is given with each com-
+     mand below.
+
+     Q_QUOTAON
+          Turn on quotas for a file system.  _A_d_d_r is a pointer to
+          a null terminated string containing the path name of
+          file containing the quotas for the file system.  The
+          quota file must exist; it is normally created with the
+          _q_u_o_t_a_c_h_e_c_k(8) program.  This call is restricted to the
+          super-user.
+
+     Q_QUOTAOFF
+          Turn off quotas for a file system.  This call is res-
+          tricted to the super-user.
+
+     Q_GETQUOTA
+          Get disk quota limits and current usage for user _u_i_d.
+          _A_d_d_r is a pointer to a struct dqblk structure (defined
+          in <_u_f_s/_q_u_o_t_a._h>).  Only the super-user may get the
+          quotas of a user other than himself.
+
+     Q_SETQUOTA
+          Set disk quota limits and current usage for user _u_i_d.
+          _A_d_d_r is a pointer to a struct dqblk structure (defined
+          in <_u_f_s/_q_u_o_t_a._h>).  This call is restricted to the
+          super-user.
+
+     Q_SETQLIM
+          Set disk quota limits for user _u_i_d.  _A_d_d_r is a pointer
+          to a struct dqblk structure (defined in <_u_f_s/_q_u_o_t_a._h>).
+          This call is restricted to the super-user.
+
+
+
+
+Printed 12/27/86         20 August 1985                         1
+
+
+
+
+
+
+QUOTACTL(2)         UNIX Programmer's Manual          QUOTACTL(2)
+
+
+
+     Q_SYNC
+          Update the on-disk copy of quota usages.  This call is
+          restricted to the super-user.
+
+RETURN VALUE
+     Upon successful completion, a value of 0 is returned.  Oth-
+     erwise, a value of -1 is returned and _e_r_r_n_o is set to indi-
+     cate the error.
+
+ERRORS
+     A _q_u_o_t_a_c_t_l call will fail when one of the following occurs:
+
+     [EINVAL]       _C_m_d is invalid.
+
+     [EPERM]        The call is privileged and the caller was not
+                    the super-user.
+
+     [EINVAL]       The _s_p_e_c_i_a_l parameter is not a mounted file
+                    system or is a mounted file system without
+                    quotas enabled.
+
+     [ENOTBLK]      The _s_p_e_c_i_a_l parameter is not a block device.
+
+     [EFAULT]       An invalid _a_d_d_r is supplied; the associated
+                    structure could not be copied in or out of
+                    the kernel.
+
+     [EINVAL]       The _a_d_d_r parameter is being interpreted as
+                    the path of a quota file which exists but is
+                    either not a regular file or is not on the
+                    file system pointed to by the _s_p_e_c_i_a_l parame-
+                    ter.
+
+     [EUSERS]       The quota table is full.
+
+SEE ALSO
+     quotaon(8), quotacheck(8)
+
+BUGS
+     There should be some way to integrate this call with the
+     resource limit interface provided by _s_e_t_r_l_i_m_i_t(2) and
+     _g_e_t_r_l_i_m_i_t(2).  Incompatible with Melbourne quotas.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         20 August 1985                         2
+
+
+

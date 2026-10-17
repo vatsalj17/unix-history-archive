@@ -1,0 +1,261 @@
+
+
+
+MOUNT(8)            UNIX Programmer's Manual             MOUNT(8)
+
+
+
+NAME
+     mount, umount - mount and dismount filesystems
+
+SYNOPSIS
+     /etc/mount [ -p ]
+     /etc/mount -a[fv] [ -t _t_y_p_e ]
+     /etc/mount [ -frv ] [ -t _t_y_p_e ] [ -o _o_p_t_i_o_n_s ] _f_s_n_a_m_e _d_i_r
+     /etc/mount [ -vf ] _f_s_n_a_m_e | _d_i_r
+
+     /etc/umount [ -h _h_o_s_t ]
+     /etc/umount -a[v]
+     /etc/umount [ -v ]
+
+DESCRIPTION
+     _m_o_u_n_t announces to the system that a filesystem _f_s_n_a_m_e is to
+     be attached to the file tree at the directory _d_i_r.  The
+     directory _d_i_r must already exist.  It becomes the name of
+     the newly mounted root.  The contents of _d_i_r are hidden
+     until the filesystem is unmounted.  If _f_s_n_a_m_e is of the form
+     host:path the filesystem type is assumed to be _n_f_s(4).
+
+     _U_m_o_u_n_t announces to the system that the filesystem _f_s_n_a_m_e
+     previously mounted on directory _d_i_r should be removed.
+     Either the filesystem name or the mounted-on directory may
+     be used.
+
+     _m_o_u_n_t and _u_m_o_u_n_t maintain a table of mounted filesystems in
+     /_e_t_c/_m_t_a_b, described in _m_t_a_b(5).  If invoked without an
+     argument, _m_o_u_n_t displays the table.  If invoked with only
+     one of _f_s_n_a_m_e or _d_i_r mount searches the file /_e_t_c/_f_s_t_a_b (see
+     _f_s_t_a_b(5)) for an entry whose _d_i_r or _f_s_n_a_m_e field matches the
+     given argument.  For example, if this line is in /_e_t_c/_f_s_t_a_b:
+
+          /dev/xy0g /usr 4.2 rw 1 1
+
+     then the commands mount /usr and mount /dev/xy0g are short-
+     hand for mount /dev/xy0g /usr
+
+MOUNT OPTIONS
+     -p   Print the list of mounted filesystems in a format suit-
+          able for use in /_e_t_c/_f_s_t_a_b.
+
+     -a   Attempt to mount all the filesystems described in
+          /_e_t_c/_f_s_t_a_b. (In this case, _f_s_n_a_m_e and _d_i_r are taken
+          from /_e_t_c/_f_s_t_a_b.) If a type is specified all of the
+          filesystems in /_e_t_c/_f_s_t_a_b with that type is mounted.
+          Filesystems are not necessarily mounted in the order
+          listed in /_e_t_c/_f_s_t_a_b .
+
+     -f   Fake a new /_e_t_c/_m_t_a_b entry, but do not actually mount
+          any filesystems.
+
+
+
+
+Printed 12/27/86        16 September 1985                       1
+
+
+
+
+
+
+MOUNT(8)            UNIX Programmer's Manual             MOUNT(8)
+
+
+
+     -v   Verbose - _m_o_u_n_t displays a message indicating the
+          filesystem being mounted.
+
+     -t   The next argument is the filesystem type.  The accepted
+          types are: 4.2, and nfs; see _f_s_t_a_b(5) for a description
+          of these filesystem types.
+
+     -r   Mount the specified filesystem read-only.  This is a
+          shorthand for:
+
+               mount -o ro _f_s_n_a_m_e _d_i_r
+
+          Physically write-protected and magnetic tape filesys-
+          tems must be mounted read-only, or errors occur when
+          access times are updated, whether or not any explicit
+          write is attempted.
+
+     -o   Specify _o_p_t_i_o_n_s , a list of comma seperated words from
+          the list below.  Some options are valid for all
+          filesystem types, while others apply to a specific type
+          only.
+9
+          _o_p_t_i_o_n_s valid on _a_l_l file systems (the default is
+          rw,suid):
+
+          rw     read/write.
+
+          ro     read-only.
+
+          suid   set-uid execution allowed.
+
+          nosuid set-uid execution not allowed.
+
+          hide   ignore this entry during a mount -a command to
+                 allow you to define _f_s_t_a_b entries for commonly
+                 used filesystems you don't want to automatically
+                 mount.
+9
+          _o_p_t_i_o_n_s specific to 4.2 file systems (the default is
+          noquota).
+
+          quota  usage limits enforced.
+
+          noquotausage limits not enforced.
+9
+          _o_p_t_i_o_n_s specific to nfs (NFS) file systems (the
+          defaults are:
+9               fg,retry=1,timeo=7,retrans=4,port=NFS_PORT,hard
+9          with defaults for _r_s_i_z_e and _w_s_i_z_e set by the kernel):
+9
+
+
+Printed 12/27/86        16 September 1985                       2
+
+
+
+
+
+
+MOUNT(8)            UNIX Programmer's Manual             MOUNT(8)
+
+
+
+          bg     if the first mount attempt fails, retry in the
+                 background.
+
+          fg     retry in foreground.
+
+          retry=_nset number of mount failure retries to _n.
+
+          rsize=_nset read buffer size to _n bytes.
+
+          wsize=_nset write buffer size to _n _b_y_t_e_s.
+
+          timeo=_nset NFS timeout to _n tenths of a second.
+
+          retrans=_n
+                 set number of NFS retransmissions to _n.
+
+          port=_n set server IP port number to _n.
+
+          soft   return error if server doesn't respond.
+
+          hard   retry request until server responds.
+
+          The bg option causes _m_o_u_n_t to run in the background if
+          the server's _m_o_u_n_t_d(8) does not respond. _m_o_u_n_t attempts
+          each request retry=_n times before giving up.  Once the
+          filesystem is mounted, each NFS request made in the
+          kernel waits timeo=_n tenths of a second for a response.
+          If no response arrives, the time-out is multiplied by 2
+          and the request is retransmitted.  When retrans=_n
+          retransmissions have been sent with no reply a soft
+          mounted filesystem returns an error on the request and
+          a hard mounted filesystem retries the request.
+          Filesystems that are mounted rw (read-write) should use
+          the hard option.  The number of bytes in a read or
+          write request can be set with the rsize and wsize
+          options.
+
+UMOUNT OPTIONS
+     -h _h_o_s_t
+          Unmount all filesystems listed in /_e_t_c/_m_t_a_b that are
+          remote-mounted from _h_o_s_t.
+
+     -a   Attempt to unmount all the filesystems currently
+          mounted (listed in /_e_t_c/_m_t_a_b).  In this case, _f_s_n_a_m_e is
+          taken from /_e_t_c/_m_t_a_b.
+
+     -v   Verbose - _u_m_o_u_n_t displays a message indicating the
+          filesystem being unmounted.
+
+EXAMPLES
+     mount /dev/xy0g /usr                   mount a local disk
+     mount -ft 4.2 /dev/nd0 /               fake an entry for nd root
+
+
+
+Printed 12/27/86        16 September 1985                       3
+
+
+
+
+
+
+MOUNT(8)            UNIX Programmer's Manual             MOUNT(8)
+
+
+
+     mount -at 4.2                          mount all 4.2 filesystems
+     mount -t nfs serv:/usr/src /usr/src    mount remote filesystem
+     mount serv:/usr/src /usr/src           same as above
+     mount -o hard serv:/usr/src /usr/src   same as above but hard mount
+     mount -p > /etc/fstab                  save current mount state
+
+FILES
+     /etc/mtab mount table
+     /etc/fstab     filesystem table
+
+SEE ALSO
+     mount(2), nfsmount(2), unmount(2), fstab(5), mountd(8c),
+     nfsd(8c)
+
+BUGS
+     Mounting filesystems full of garbage crashes the system.
+
+     No more than one ND client should mount an ND disk partition
+     "read-write" or the file system may become corrupted.
+
+     If the directory on which a filesystem is to be mounted is a
+     symbolic link, the filesystem is mounted on _t_h_e _d_i_r_e_c_t_o_r_y _t_o
+     _w_h_i_c_h _t_h_e _s_y_m_b_o_l_i_c _l_i_n_k _r_e_f_e_r_s, rather than being mounted on
+     top of the symbolic link itself.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86        16 September 1985                       4
+
+
+

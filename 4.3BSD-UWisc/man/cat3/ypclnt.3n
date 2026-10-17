@@ -1,0 +1,324 @@
+
+
+
+YPCLNT(3N)          UNIX Programmer's Manual           YPCLNT(3N)
+
+
+
+NAME
+     ypclnt yp_get_default_domain yp_bind yp_unbind yp_match
+     yp_first yp_next yp_all yp_order yp_master yperr_string
+     ypprot_err - yellow pages client interface
+
+SYNOPSIS
+     #include <rpcsvc/ypclnt.h>
+9     yp_bind(indomain);
+     char *indomain;
+9     void yp_unbind(indomain)
+     char *indomain;
+9     yp_get_default_domain(outdomain);
+     char **outdomain;
+9     yp_match(indomain, inmap, inkey, inkeylen, outval, outvallen)
+     char *indomain;
+     char *inmap;
+     char *inkey;
+     int inkeylen;
+     char **outval;
+     int *outvallen;
+9     yp_first(indomain, inmap, outkey, outkeylen, outval, outvallen)
+     char *indomain;
+     char *inmap;
+     char **outkey;
+     int *outkeylen;
+     char **outval;
+     int *outvallen;
+9     yp_next(indomain, inmap, inkey, inkeylen, outkey, outkeylen, outval, outvallen);
+     char *indomain;
+     char *inmap;
+     char *inkey;
+     int inkeylen;
+     char **outkey;
+     int *outkeylen;
+     char **outval;
+     int *outvallen;
+9     yp_all(indomain, inmap, incallback);
+     char *indomain;
+     char *inmap;
+     struct ypall_callback incallback;
+9     yp_order(indomain, inmap, outorder);
+     char *indomain;
+     char *inmap;
+     int *outorder;
+9     yp_master(indomain, inmap, outname);
+     char *indomain;
+     char *inmap;
+     char **outname;
+
+
+
+Printed 12/27/86        14 September 1985                       1
+
+
+9
+
+
+YPCLNT(3N)          UNIX Programmer's Manual           YPCLNT(3N)
+
+
+
+     char *yperr_string(incode)
+     int incode;
+9     ypprot_err(incode)
+     unsigned int incode;
+
+DESCRIPTION
+     This package of functions provides an interface to the yel-
+     low pages (YP) network lookup service.  The package can be
+     loaded from the standard library, /_l_i_b/_l_i_b_c._a.  Refer to
+     ypfiles(5) and ypserv(8) for an overview of the yellow
+     pages, including the definitions of _m_a_p and _d_o_m_a_i_n , and a
+     description of the various servers, databases, and commands
+     that comprise the YP.
+
+     All input parameters names begin with in.  Output parameters
+     begin with out.  Output parameters of type _c_h_a_r ** should be
+     addresses of uninitialized character pointers.  Memory is
+     allocated by the YP client package using _m_a_l_l_o_c(3), and may
+     be freed if the user code has no continuing need for it. For
+     each _o_u_t_k_e_y and _o_u_t_v_a_l, two extra bytes of memory are allo-
+     cated at the end that contain NEWLINE and NULL, respec-
+     tively, but these two bytes are not reflected in _o_u_t_k_e_y_l_e_n
+     or _o_u_t_v_a_l_l_e_n . _i_n_d_o_m_a_i_n and _i_n_m_a_p strings must be non-null
+     and null-terminated.  String parameters which are accom-
+     panied by a count parameter may not be null, but may point
+     to null strings, with the count parameter indicating this.
+     Counted strings need not be null-terminated.
+
+     All functions in this package of type int return 0 if they
+     succeed, and a failure code (YPERR__x_x_x_x) otherwise.  Failure
+     codes are described under DIAGNOSTICS below.
+
+     The YP lookup calls require a map name and a domain name, at
+     minimum. It is assumed that the client process knows the
+     name of the map of interest.  Client processes should fetch
+     the node's default domain by calling yp_get_default_domain()
+     , and use the returned _o_u_t_d_o_m_a_i_n as the _i_n_d_o_m_a_i_n parameter
+     to successive YP calls.
+
+     To use the YP services, the client process must be ``bound''
+     to a YP server that serves the appropriate domain using
+     _y_p__b_i_n_d.  Binding need not be done explicitly by user code;
+     this is done automatically whenever a YP lookup function is
+     called.  _y_p__b_i_n_d can be called directly for processes that
+     make use of a backup strategy (e.g., a local file) in cases
+     when YP services are not available.
+
+     Each binding allocates (uses up) one client process socket
+     descriptor; each bound domain costs one socket descriptor.
+     However, multiple requests to the same domain use that same
+     descriptor.  _y_p__u_n_b_i_n_d() is available at the client inter-
+     face for processes that explicitly manage their socket
+
+
+
+Printed 12/27/86        14 September 1985                       2
+
+
+9
+
+
+YPCLNT(3N)          UNIX Programmer's Manual           YPCLNT(3N)
+
+
+
+     descriptors while accessing multiple domains.  The call to
+     _y_p__u_n_b_i_n_d() make the domain _u_n_b_o_u_n_d, and free all per-
+     process and per-node resources used to bind it.
+
+     If an RPC failure results upon use of a binding, that domain
+     will be unbound automatically.  At that point, the ypclnt
+     layer will retry forever or until the operation succeeds,
+     provided that _y_p_b_i_n_d is running, and either
+
+     a)   the client process can't bind a server for the proper
+          domain, or
+
+     b)   RPC requests to the server fail.
+
+     If an error is not RPC-related, or if _y_p_b_i_n_d is not running,
+     or if a bound _y_p_s_e_r_v process returns any answer (success or
+     failure), the ypclnt layer will return control to the user
+     code, either with an error code, or a success code and any
+     results.
+
+     _y_p__m_a_t_c_h returns the value associated with a passed key.
+     This key must be exact; no pattern matching is available.
+
+     _y_p__f_i_r_s_t returns the first key-value pair from the named map
+     in the named domain.
+
+     _y_p__n_e_x_t() returns the next key-value pair in a named map.
+     The _i_n_k_e_y parameter should be the _o_u_t_k_e_y returned from an
+     initial call to _y_p__f_i_r_s_t() (to get the second key-value
+     pair) or the one returned from the nth call to _y_p__n_e_x_t() (to
+     get the nth + second key-value pair).
+
+     The concept of first (and, for that matter, of next) is par-
+     ticular to the structure of the YP map being processing;
+     there is no relation in retrieval order to either the lexi-
+     cal order within any original (non-YP) data base, or to any
+     obvious numerical sorting order on the keys, values, or
+     key-value pairs.  The only ordering guarantee made is that
+     if the _y_p__f_i_r_s_t() function is called on a particular map,
+     and then the _y_p__n_e_x_t() function is repeatedly called on the
+     same map at the same server until the call fails with a rea-
+     son of YPERR_NOMORE, every entry in the data base will be
+     seen exactly once. Further, if the same sequence of opera-
+     tions is performed on the same map at the same server, the
+     entries will be seen in the same order.
+
+     Under conditions of heavy server load or server failure, it
+     is possible for the domain to become unbound, then bound
+     once again (perhaps to a different server) while a client is
+     running. This can cause a break in one of the enumeration
+     rules; specific entries may be seen twice by the client, or
+     not at all.  This approach protects the client from error
+
+
+
+Printed 12/27/86        14 September 1985                       3
+
+
+
+
+
+
+YPCLNT(3N)          UNIX Programmer's Manual           YPCLNT(3N)
+
+
+
+     messages that would otherwise be returned in the midst of
+     the enumeration.  The next paragraph describes a better
+     solution to enumerating all entries in a map.
+
+     _y_p__a_l_l provides a way to transfer an entire map from server
+     to client in a single request using TCP (rather than UDP as
+     with other functions in this package).  The entire transac-
+     tion take place as a single RPC request and response.  You
+     can use _y_p__a_l_l just like any other YP procedure, identify
+     the map in the normal manner, and supply the name of a func-
+     tion which will be called to process each key-value pair
+     within the map.  You return from the call to _y_p__a_l_l only
+     when the transaction is completed (successfully or unsuc-
+     cessfully), or your ``_f_o_r_e_a_c_h'' function decides that it
+     doesn't want to see any more key-value pairs.
+
+     The third parameter to _y_p__a_l_l is
+          struct ypall_callback *incallback {
+               int (*foreach)();
+               char *data;
+          };
+
+     The function _f_o_r_e_a_c_h is called
+
+          foreach(instatus, inkey, inkeylen, inval, invallen, indata);
+          int instatus;
+          char *inkey;
+          int inkeylen;
+          char *inval;
+          int invalllen;
+          char *indata;
+
+     The _i_n_s_t_a_t_u_s parameter will hold one of the return status
+     values defined in <rpcsvc/yp_prot.h> - _e_i_t_h_e_r _Y_P__T_R_U_E or an
+     error code.  (See _y_p_p_r_o_t__e_r_r , below, for a function which
+     converts a YP protocol error code to a ypclnt layer error
+     code.)
+
+     The key and value parameters are somewhat different than
+     defined in the synopsis section above.  First, the memory
+     pointed to by the _i_n_k_e_y and _i_n_v_a_l parameters is private to
+     the _y_p__a_l_l function, and is overwritten with the arrival of
+     each new key-value pair.  It is the responsibility of the
+     _f_o_r_e_a_c_h function to do something useful with the contents of
+     that memory, but it does not own the memory itself.  Key and
+     value objects presented to the _f_o_r_e_a_c_h function look exactly
+     as they do in the server's map - if they were not newline-
+     terminated or null-terminated in the map, they won't be here
+     either.
+
+     The _i_n_d_a_t_a parameter is the contents of the _i_n_c_a_l_l_b_a_c_k->_d_a_t_a
+     element passed to _y_p__a_l_l . The _d_a_t_a element of the callback
+
+
+
+Printed 12/27/86        14 September 1985                       4
+
+
+
+
+
+
+YPCLNT(3N)          UNIX Programmer's Manual           YPCLNT(3N)
+
+
+
+     structure may be used to share state information between the
+     _f_o_r_e_a_c_h function and the mainline code.  Its use is
+     optional, and no part of the YP client package inspects its
+     contents - cast it to something useful, or ignore it as you
+     see fit.
+
+     The _f_o_r_e_a_c_h function is a Boolean.  It should return zero to
+     indicate that it wants to be called again for further
+     received key-value pairs, or non-zero to stop the flow of
+     key-value pairs.  If _f_o_r_e_a_c_h returns a non-zero value, it is
+     not called again; the functional value of _y_p__a_l_l is then 0.
+
+     _y_p__o_r_d_e_r returns the order number for a map.
+
+     _y_p__m_a_s_t_e_r returns the machine name of the master YP server
+     for a map.
+
+     _y_p_e_r_r__s_t_r_i_n_g returns a pointer to an error message string
+     that is null-terminated but contains no period or newline.
+
+     _y_p_p_r_o_t__e_r_r takes a YP protocol error code as input, and
+     returns a ypclnt layer error code, which may be used in turn
+     as an input to _y_p_e_r_r__s_t_r_i_n_g .
+
+FILES
+     /usr/include/rpcsvc/ypclnt.h
+     /usr/include/rpcsvc/yp_prot.h
+
+SEE ALSO
+     ypfiles(5), ypserv(8),
+
+DIAGNOSTICS
+     All integer functions return 0 if the requested operation is
+     successful, or one of the following errors if the operation
+     fails.
+
+
+          #define YPERR_BADARGS  1  /* args to function are bad */
+          #define YPERR_RPC      2  /* RPC failure - domain has been unbound */
+          #define YPERR_DOMAIN   3  /* can't bind to server on this domain */
+          #define YPERR_MAP      4  /* no such map in server's domain */
+          #define YPERR_KEY      5  /* no such key in map */
+          #define YPERR_YPERR    6  /* internal yp server or client error */
+          #define YPERR_RESRC    7  /* resource allocation failure */
+          #define YPERR_NOMORE   8  /* no more records in map database */
+          #define YPERR_PMAP     9  /* can't communicate with portmapper */
+          #define YPERR_YPBIND   10 /* can't communicate with ypbind */
+          #define YPERR_YPSERV   11 /* can't communicate with ypserv */
+          #define YPERR_NODOM    12 /* local domain name not set */
+
+
+
+
+
+
+Printed 12/27/86        14 September 1985                       5
+
+
+

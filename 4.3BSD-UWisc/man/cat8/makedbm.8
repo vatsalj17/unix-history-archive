@@ -1,0 +1,132 @@
+
+
+
+MAKEDBM(8)          UNIX Programmer's Manual           MAKEDBM(8)
+
+
+
+NAME
+     makedbm - make a yellow pages dbm file
+
+SYNOPSIS
+     makedbm [ -i _y_p__i_n_p_u_t__f_i_l_e ] [ -o _y_p__o_u_t_p_u_t__n_a_m_e ] [ -d
+     _y_p__d_o_m_a_i_n__n_a_m_e ] [ -m _y_p__m_a_s_t_e_r__n_a_m_e ] _i_n_f_i_l_e _o_u_t_f_i_l_e
+     makedbm [ -u _d_b_m_f_i_l_e_n_a_m_e ]
+
+DESCRIPTION
+     _m_a_k_e_d_b_m takes _i_n_f_i_l_e and converts it to a pair of files in
+     _d_b_m(3X) format, namely _o_u_t_f_i_l_e.pag and _o_u_t_f_i_l_e.dir.  Each
+     line of the input file is converted to a single _d_b_m record.
+     All characters up to the first tab or space form the key,
+     and the rest of the line is the data.  If a line ends with
+     \, then the data for that record is continued on to the next
+     line.  It is left for the clients of the yellow pages to
+     interpret #; _m_a_k_e_d_b_m does not itself treat it as a comment
+     character.  _i_n_f_i_l_e can be -, in which case standard input is
+     read.
+
+     _m_a_k_e_d_b_m is meant to be used in generating _d_b_m files for the
+     yellow pages, and it generates a special entry with the key
+     _y_p__l_a_s_t__m_o_d_i_f_i_e_d, which is the date of _i_n_f_i_l_e (or the
+     current time, if _i_n_f_i_l_e is -).
+
+OPTIONS
+     -i   Create a special entry with the key _y_p__i_n_p_u_t__f_i_l_e.
+
+     -o   Create a special entry with the key _y_p__o_u_t_p_u_t__n_a_m_e.
+
+     -d   Create a special entry with the key _y_p__d_o_m_a_i_n__n_a_m_e.
+
+     -m   Create a special entry with the key _y_p__m_a_s_t_e_r__n_a_m_e.  If
+          no master host name is specified, _y_p__m_a_s_t_e_r__n_a_m_e will
+          be set to the local host name.
+
+     -u   Undo a _d_b_m file.  That is, print out a _d_b_m file one
+          entry per line, with a single space separating keys
+          from values.
+
+EXAMPLE
+     It is easy to write shell scripts to convert standard files
+     such as /_e_t_c/_p_a_s_s_w_d to the key value form used by _m_a_k_e_d_b_m.
+     For example,
+
+           #!/bin/awk -f
+           BEGIN { FS = ":"; OFS = "\t"; }
+           { print $1, $0 }
+
+     takes the /_e_t_c/_p_a_s_s_w_d file and converts it to a form that
+     can be read by _m_a_k_e_d_b_m to make the yellow pages file
+     _p_a_s_s_w_d._b_y_n_a_m_e.  That is, the key is a username, and the
+
+
+
+Printed 12/27/86        17 September 1985                       1
+
+
+
+
+
+
+MAKEDBM(8)          UNIX Programmer's Manual           MAKEDBM(8)
+
+
+
+     value is the remaining line in the /_e_t_c/_p_a_s_s_w_d file.
+
+SEE ALSO
+     dbm(3X), yppasswd(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86        17 September 1985                       2
+
+
+

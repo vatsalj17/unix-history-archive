@@ -1,0 +1,68 @@
+cd /usr/spool/mqueue
+rm syslog.7
+mv syslog.6  syslog.7
+mv syslog.5  syslog.6
+mv syslog.4  syslog.5
+mv syslog.3  syslog.4
+mv syslog.2  syslog.3
+mv syslog.1  syslog.2
+mv syslog.0  syslog.1
+mv syslog    syslog.0
+cp /dev/null syslog
+chmod 666    syslog
+if [ -r /usr/spool/nameserver/logs/filter ]; then
+	cd /usr/spool/nameserver/logs
+	rm filter.7
+	mv filter.6  filter.7
+	mv filter.5  filter.6
+	mv filter.4  filter.5
+	mv filter.3  filter.4
+	mv filter.2  filter.3
+	mv filter.1  filter.2
+	mv filter.0  filter.1
+	mv filter    filter.0
+	cp /dev/null filter
+	chmod 666    filter
+fi
+if [ -r /usr/spool/uucp/LOGFILE ]; then
+	cd /usr/spool/uucp
+	rm LOGFILE.7
+	mv LOGFILE.6  LOGFILE.7
+	mv LOGFILE.5  LOGFILE.6
+	mv LOGFILE.4  LOGFILE.5
+	mv LOGFILE.3  LOGFILE.4
+	mv LOGFILE.2  LOGFILE.3
+	mv LOGFILE.1  LOGFILE.2
+	mv LOGFILE.0  LOGFILE.1
+	mv LOGFILE    LOGFILE.0
+	cp /dev/null LOGFILE
+	chmod 666    LOGFILE
+	/etc/chown uucp LOGFILE
+fi
+if [ -r /usr/spool/uucp/SYSLOG ]; then
+	cd /usr/spool/uucp
+	rm SYSLOG.7
+	mv SYSLOG.6  SYSLOG.7
+	mv SYSLOG.5  SYSLOG.6
+	mv SYSLOG.4  SYSLOG.5
+	mv SYSLOG.3  SYSLOG.4
+	mv SYSLOG.2  SYSLOG.3
+	mv SYSLOG.1  SYSLOG.2
+	mv SYSLOG.0  SYSLOG.1
+	mv SYSLOG    SYSLOG.0
+	cp /dev/null SYSLOG
+	chmod 666    SYSLOG
+	/etc/chown uucp SYSLOG
+fi
+cd /usr/adm
+rm messages.6
+mv messages.5  messages.6
+mv messages.4  messages.5
+mv messages.3  messages.4
+mv messages.2  messages.3
+mv messages.1  messages.2
+mv messages.0  messages.1
+mv messages    messages.0
+cp /dev/null messages
+chmod 666    messages
+kill -1 `cat /etc/syslog.pid`

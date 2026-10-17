@@ -1,0 +1,198 @@
+
+
+
+PSCATMAP(8)         UNIX Programmer's Manual          PSCATMAP(8)
+
+
+
+NAME
+     pscatmap - build ptroff width tables POSTSCRIPT fonts
+
+SYNOPSIS
+     /usr/misc/lib/ps/pscatmap _m_a_p_f_i_l_e
+
+DESCRIPTION
+     _p_s_c_a_t_m_a_p builds correspondence tables and width tables so
+     that documents produced with original [_o]_t_r_o_f_f(1) can be
+     translated into POSTSCRIPT programs by _p_s_c_a_t.  _p_s_c_a_t_m_a_p
+     parses a human-readable mapping table and generates five
+     output files - a _f_a_m_i_l_y.ct file, containing the character
+     correspondence table for _p_s_c_a_t, and four _f_t?? files, to be
+     used as _t_r_o_f_f width tables.  On 4.2bsd systems, these files
+     are C programs (ft_x_x.c) to be compiled into widths tables.
+     On System V systems, these files are the binary width tables
+     themselves.
+
+     The user must create a _f_a_m_i_l_y.head file containing ``.fp''
+     commands to preload appropriate fonts for [_o]_t_r_o_f_f.
+
+     The structure of the ._m_a_p files is relatively easy to under-
+     stand.  If you want to create your own, the best thing to do
+     is use an existing one as a template.  Lines that begin with
+     ``%'' are comments.  Blank (empty) lines are ignored.  Lines
+     beginning with  ``@'' are command lines. The following com-
+     mand lines are understood:
+
+     @FAMILYNAME _f_a_m_i_l_y
+                  where _f_a_m_i_l_y is a single token.  This specifies
+                  the base name for the generated .ct file.
+
+     @FACENAMES _r_f _i_f _b_f _s_f
+                  where _r_f, _i_f, _b_f, and _s_f, are the two-letter
+                  _t_r_o_f_f face codes for the Roman (font 1), Italic
+                  (font 2), Bold (font 3) and Symbol (font 4)
+                  fonts, respectively. _p_s_c_a_t_m_a_p will generate
+                  files with the names: ft_r_f[.c], ft_i_f[.c],
+                  ft_b_f[.c], ft_s_f[.c].
+
+     @BEGINFONTS  starts the section which identifies which
+                  POSTSCRIPT fonts will be a part of this mapping
+                  and defines short names for these fonts (to be
+                  used in a later section of the map file).
+                  @BEGINFONTS is followed by a sequence of lines
+                  of the form:
+                  shortname=_F_o_n_t-_N_a_m_e
+
+     @ENDFONTS    terminates this section.
+
+     @BEGINMAP    begins the real correspondence description.
+                  What follows are a sequence of lines, each line
+
+
+
+Printed 1/10/87            12 Nov 1985                          1
+
+
+
+
+
+
+PSCATMAP(8)         UNIX Programmer's Manual          PSCATMAP(8)
+
+
+
+                  describing a character action mapping.  Each
+                  line represents one character.  A line con-
+                  tains: the troff character code, the troff face
+                  code (R, I, B, or S), the C/A/T character code,
+                  the character width, the character action, x
+                  and y offsets for position adjustments, the
+                  POSTSCRIPT font and POSTSCRIPT character code
+                  to map to, and a short text description of the
+                  font.
+
+                  The best way to understand all this is to look
+                  at the map files already in the library and use
+                  them as examples.  They have copious comments
+                  to help explain what they do.
+
+     @ENDMAP      delimits the end of this section.
+
+ENVIRONMENT
+     PSLIBDIR path name of a directory to use instead of
+     /usr/misc/lib/ps for AFM files.
+
+FILES
+     /usr/misc/lib/ps/*.afm
+                         font metrics files.
+
+     _f_a_m_i_l_y.map          input mapping file.
+
+     _f_a_m_i_l_y.ct           generated correspondence table.
+
+     ft_x_x[.c]            generated width files.
+
+SEE ALSO
+     pscat(1), ptroff(1).
+     4.2bsd: troff(1).
+     System V: otroff(1), _D_o_c_u_m_e_n_t_e_r'_s _W_o_r_k_b_e_n_c_h.
+
+AUTHOR
+     Adobe Systems Incorporated
+
+DIAGNOSTICS
+     Lots, should be self explanatory.
+
+BUGS
+     Mounting anything but a font named `S' in position 4 will
+     cause _t_r_o_f_f to do unexpected things. _t_r_o_f_f really expects
+     the symbol font to me named `S'.  Thus every font family
+     defined should have identical symbol faces.  For this rea-
+     son, the text and symbol descriptions of the map files have
+     been segmented.  You can specify some other face name in the
+     @FACENAMES line for the fourth font, but don't ``.fp'' it in
+     troff.
+
+
+
+
+Printed 1/10/87            12 Nov 1985                          2
+
+
+
+
+
+
+PSCATMAP(8)         UNIX Programmer's Manual          PSCATMAP(8)
+
+
+
+NOTES
+     POSTSCRIPT is a trademark of Adobe Systems Incorporated.
+     Documenter's Workbench is a trademark of AT&T Technologies.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 1/10/87            12 Nov 1985                          3
+
+
+

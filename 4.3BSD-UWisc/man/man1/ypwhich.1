@@ -1,0 +1,90 @@
+.\" @(#)ypwhich.1 1.1 85/12/28 SMI; 
+.TH YPWHICH 1 "9 July 1985"
+.SH NAME
+ypwhich \- which host is the YP server or map master?
+.SH SYNOPSIS
+.B ypwhich
+[
+.B \-d
+[
+.I domain 
+] 
+[
+.B \-V1
+|
+.B \-V2
+] 
+[ 
+.I hostname 
+]
+.br
+.B ypwhich
+[
+.B \-t
+.I mapname
+]
+[
+.B \-d
+.I domain 
+] 
+.B \-m
+.I mname
+.br
+.B "ypwhich \-x"
+.SH DESCRIPTION
+.IX  "ypwhich command"  ""  "\fLypwhich\fP \(em who is yellow pages server"
+.I ypwhich
+tells which YP server supplies yellow pages services to a YP client,
+or which is the master for a map.
+If invoked without arguments, it gives the YP server
+for the local machine.  If
+.I hostname
+is specified, that machine is queried
+to find out which YP master it is using.
+.LP
+Refer to ypfiles(5) and ypserv(8) for an overview of the yellow
+pages.
+.SH OPTIONS
+.IP "\fB\-d\fR" .8i
+Use
+.I domain
+instead of the default domain.
+.TP .8i
+.B \-V1
+Which server is serving v.1 YP protocol-speaking client processes?
+.TP
+.B \-V2
+Which server is serving v.2 YP protocol client processes?
+.IP
+If neither version is specified, 
+.I ypwhich
+attempts attempts to locate the server that supplies the
+(current) v.2 services.  If there is no v.2 server currently
+bound, 
+.I ypwhich
+then attempts to locate the server supplying the v.1 services.
+Since YP servers and YP clients are both backward compatible,
+the user need seldom be concerned about which version is currently in 
+use.
+.IP "\fB\-t \fImapname\fR"
+Inhibit nickname translation;
+useful if there is a mapname identical to a nickname.
+This is not true of any Sun-supplied map.
+.TP
+.B \-m
+Find the master YP server for a map.  No
+.I hostname
+can be specified with
+.BR \-m .
+.I mname
+can be a mapname, or a nickname for a map.  
+.TP
+.B \-x
+Display the map nickname table.
+This lists the nicknames (\fImnames\fR\|)
+the command knows of, and indicates the
+.I mapname
+associated with each
+nickname.
+.SH "SEE ALSO"
+ypfiles(5), rpcinfo(8), ypset(8), ypserv(8)

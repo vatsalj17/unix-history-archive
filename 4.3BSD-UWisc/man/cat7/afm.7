@@ -1,0 +1,198 @@
+
+
+
+AFM(7)              UNIX Programmer's Manual               AFM(7)
+
+
+
+NAME
+     AFM - Adobe POSTSCRIPT font metrics file format
+
+DESCRIPTION
+     AFM files are a standard interchange format for communicat-
+     ing POSTSCRIPT font metric information to people and pro-
+     grams.  The format is ASCII encoded (for both human and
+     machine readability), machine independent, extensible, sim-
+     ple to parse, and simple to generate.  AFM files are avail-
+     able for all of Adobe Systems' POSTSCRIPT fonts.
+
+     While somewhat verbose, the format is intended to be easily
+     parsed, with the ability for applications to quickly skip
+     over items that are not of interest.  It should be possible
+     to create simple line-oriented parsing programs, or tools
+     based on _a_w_k(1) or _s_e_d(1).
+
+     Each AFM file contains the information for only one font
+     face.  The file begins with global information about the
+     font, followed by sections with character metrics.  The file
+     format is line-oriented, each line beginning with a property
+     (key) name, followed by the values for that property.  The
+     general idea is to give key-value tuples (much like in a
+     POSTSCRIPT font dictionary).
+
+     The format is:
+          Key [value value ...]
+     Key names are case-sensitive.  All keys beginning with a
+     capital letter are reserved by Adobe Systems.  The standard
+     keys are detailed below, but other keys should be allowed
+     and safely ignored by programs not recognizing them.  All
+     standard keys begin with a capital letter.  User-defined
+     non-standard entries should begin with a lower-case letter.
+
+     The file begins with the line:
+          StartFontMetrics _v_e_r_s_i_o_n
+     The version described here is 1.0.  The last line of the
+     file is:
+          EndFontMetrics
+
+     The following global font keys are defined.  Many of them
+     are defined as in the top level or FontInfo subdictionary of
+     a POSTSCRIPT font dictionary; their meanings are described
+     in Appendix A of the POSTSCRIPT Language Manual.  All
+     numeric values are in the (1000 unit per em) character coor-
+     dinate system.
+
+     FontName _s_t_r_i_n_g
+                    The name of the font as presented to the
+                    POSTSCRIPT findfont operator.
+
+     FullName _s_t_r_i_n_g
+
+
+
+Printed 1/10/87            12 Nov 1985                          1
+
+
+
+
+
+
+AFM(7)              UNIX Programmer's Manual               AFM(7)
+
+
+
+                    The ``print name'' of the font.
+
+     FamilyName _s_t_r_i_n_g
+                    The font family name.
+
+     Weight _s_t_r_i_n_g  The weight of the font.
+
+     ItalicAngle _r_e_a_l
+                    The angle (in degrees counter-clockwise from
+                    the vertical) of the dominant staffs of the
+                    font.
+
+     IsFixedPitch _b_o_o_l_e_a_n
+                    Indicates monospaced (typewriter) fonts.
+
+     FontBBox _l_l_x _l_l_y _u_r_x _u_r_y
+                    Four integers giving the lower left corner
+                    and the upper right corner of the font bound-
+                    ing box.  _N_o_t_e: the bounding box given here
+                    is that of the flattened paths, not of the
+                    Bezier curve descriptions.
+
+     UnderlinePosition _n_u_m_b_e_r
+                    The position (from the baseline) to place an
+                    underline.
+
+     UnderlineThickness _n_u_m_b_e_r
+                    Thickness of an underline stroke.
+
+     Version _s_t_r_i_n_g Font version identifier.
+
+     Notice _s_t_r_i_n_g  Font name trademark or copyright notice.
+
+     Comment _s_t_r_i_n_g Comment strings may be ignored.
+
+     EncodingScheme _s_t_r_i_n_g
+                    a string indicating the default encoding vec-
+                    tor for this font.  The most common one is
+                    AdobeStandardEncoding.  Special fonts may
+                    simply state ``FontSpecific''.  In the
+                    future, other schemes may be employed.
+
+     CapHeight _n_u_m_b_e_r
+                    Top of capital H.
+
+     XHeight _n_u_m_b_e_r Top of lower case x.
+
+     Ascender _n_u_m_b_e_r
+                    Top of lower case d.
+
+     Descender _n_u_m_b_e_r
+                    Bottom of lower case p.
+
+
+
+Printed 1/10/87            12 Nov 1985                          2
+
+
+
+
+
+
+AFM(7)              UNIX Programmer's Manual               AFM(7)
+
+
+
+     The individual character metrics are surrounded with the
+     lines StartCharMetrics and EndCharMetrics and consist of a
+     list of keys and values separated by semicolons.  The char-
+     acters are sorted (numeric ascending) by character code.
+     Unencoded characters follow all of the encoded ones and are
+     distinguished by having character code -1.  Each character
+     gets one line of description. Standard keys are:
+
+     C _n_u_m_b_e_r       decimal value of default POSTSCRIPT character
+                    code (-1 if unencoded).
+
+     WX _w_i_d_t_h-_x     Character width in _x (_y is 0).
+
+     W _w_i_d_t_h-_x _w_i_d_t_h-_y
+                    Character width vector.
+
+     N _n_a_m_e         POSTSCRIPT character name.
+
+     B _l_l_x _l_l_y _u_r_x _u_r_y
+                    The character bounding box.
+
+     L _s_u_c_c_e_s_s_o_r _l_i_g_a_t_u_r_e
+                    A ligature sequence;  The current character
+                    may join with the character named _s_u_c_c_e_s_s_o_r
+                    to form the character named _l_i_g_a_t_u_r_e.  Note
+                    that characters may have more than one such
+                    entry.
+
+     Most western language fonts have WX entries rather than W
+     ones.  Note that keys are one letter for brevity.  Here too,
+     the set is extensible, with unknown entries ignored.  (This
+     leaves room for addition of new information, for example.) A
+     future revision of this format will have a specification for
+     kerning information.
+
+FILES
+     /usr/misc/lib/ps/*.afm
+                    AFM files in the TRANSCRIPT distribution.
+
+SEE ALSO
+     awk(1), sed(1).
+
+AUTHOR
+     Adobe Systems Incorporated
+
+NOTES
+     POSTSCRIPT and TRANSCRIPT are trademarks of Adobe Systems
+     Incorporated.
+
+
+
+
+
+
+
+Printed 1/10/87            12 Nov 1985                          3
+
+
+

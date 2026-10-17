@@ -1,0 +1,198 @@
+
+
+
+PC(1)               UNIX Programmer's Manual                PC(1)
+
+
+
+NAME
+     pc - Pascal compiler
+
+SYNOPSIS
+     pc [ option ] [ -i name ...  ] name ...
+
+DESCRIPTION
+     _P_c is a Pascal compiler.  If given an argument file ending
+     with .p, it will compile the file and load it into an exe-
+     cutable file called, by default, _a._o_u_t.
+
+     A program may be separated into more than one .p file.  _P_c
+     will compile a number of argument .p files into object files
+     (with the extension .o in place of .p).  Object files may
+     then be loaded into an executable _a._o_u_t file.  Exactly one
+     object file must supply a program statement to successfully
+     create an executable a.out file.  The rest of the files must
+     consist only of declarations which logically nest within the
+     program.  References to objects shared between separately
+     compiled files are allowed if the objects are declared in
+     included header files, whose names must end with .h.  Header
+     files may only be included at the outermost level, and thus
+     declare only globally available objects.  To allow functions
+     and procedures to be declared, an external directive has
+     been added, whose use is similar to the forward directive
+     but restricted to appear only in .h files.  Function and
+     procedure bodies may not appear in .h files.  A binding
+     phase of the compiler checks that declarations are used con-
+     sistently, to enforce the type checking rules of Pascal.
+
+     Object files created by other language processors may be
+     loaded together with object files created by _p_c.  The func-
+     tions and procedures they define must have been declared in
+     .h files included by all the .p files which call those rou-
+     tines.  Calling conventions are as in C, with var parameters
+     passed by address.
+
+     See the Berkeley Pascal User's Manual for details.
+
+     The following options have the same meaning as in _c_c(1) and
+     _f_7_7(1).  See _l_d(1) for load-time options.
+
+     -c    Suppress loading and produce `.o' file(s) from source
+           file(s).
+
+     -g    Have the compiler produce additional symbol table
+           information for _d_b_x(1).
+
+     -w    Suppress warning messages.
+
+     -p    Prepare object files for profiling, see _p_r_o_f(1).
+
+
+
+
+Printed 12/27/86         April 29, 1985                         1
+
+
+
+
+
+
+PC(1)               UNIX Programmer's Manual                PC(1)
+
+
+
+     -O    Invoke an object-code improver.
+
+     -S    Compile the named program, and leave the assembler-
+           language output on the corresponding file suffixed
+           `.s'.  (No `.o' is created.).
+
+     -o output
+           Name the final output file _o_u_t_p_u_t instead of _a._o_u_t.
+
+     The following options are peculiar to _p_c.
+
+     -C    Compile code to perform runtime checks, verify assert
+           calls, and initialize all variables to zero as in _p_i.
+
+     -b    Block buffer the file _o_u_t_p_u_t.
+
+     -i    Produce a listing for the specified procedures, func-
+           tions and include files.
+
+     -l    Make a program listing during translation.
+
+     -s    Accept standard Pascal only; non-standard constructs
+           cause warning diagnostics.
+
+     -t directory
+           Use the given _d_i_r_e_c_t_o_r_y for compiler temporary files.
+
+     -z    Allow execution profiling with _p_x_p by generating
+           statement counters, and arranging for the creation of
+           the profile data file _p_m_o_n._o_u_t when the resulting
+           object is executed.
+
+     Other arguments are taken to be loader option arguments,
+     perhaps libraries of _p_c compatible routines.  Certain flags
+     can also be controlled in comments within the program as
+     described in the _B_e_r_k_e_l_e_y _P_a_s_c_a_l _U_s_e_r'_s _M_a_n_u_a_l.
+
+FILES
+     file.p                   pascal source files
+     /usr/lib/pc0             compiler
+     /lib/f1                  code generator
+     /usr/lib/pc2             runtime integrator (inline
+     expander)
+     /lib/c2                  peephole optimizer
+     /usr/lib/pc3             separate compilation consistency
+     checker
+     /usr/lib/pc2.*strings    text of the error messages
+     /usr/lib/how_pc          basic usage explanation
+     /usr/lib/libpc.a         intrinsic functions and I/O library
+     /usr/lib/libm.a          math library
+     /lib/libc.a              standard library, see _i_n_t_r_o(3)
+
+
+
+
+Printed 12/27/86         April 29, 1985                         2
+
+
+
+
+
+
+PC(1)               UNIX Programmer's Manual                PC(1)
+
+
+
+SEE ALSO
+     Berkeley Pascal User's Manual
+     pi(1), pxp(1), pxref(1), sdb(1)
+
+DIAGNOSTICS
+     For a basic explanation do
+
+          pc
+
+     See _p_i(1).  for an explanation of the error message format.
+     Internal errors cause messages containing the word SNARK.
+
+AUTHORS
+     Charles B. Haley, William N. Joy, and Ken Thompson
+     Retargetted to the second pass of the portable _C compiler by
+     Peter Kessler
+     Runtime library and inline optimizer by M. Kirk McKusick
+     Separate compilation consistency checking by Louise Madrid
+
+BUGS
+     The keyword packed is recognized but has no effect.
+
+     The binder is not as strict as described here, with regard
+     to the rules about external declarations only in `.h' files
+     and including `.h' files only at the outermost level.  It
+     will be made to perform these checks in its next incarna-
+     tion, so users are warned not to be sloppy.
+
+     The -z flag doesn't work for separately compiled files.
+
+     Because the -s option is usurped by the compiler, it is not
+     possible to pass the strip option to the loader.  Thus pro-
+     grams which are to be stripped, must be run through _s_t_r_i_p(1)
+     after they are compiled.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         April 29, 1985                         3
+
+
+

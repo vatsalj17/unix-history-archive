@@ -1,0 +1,132 @@
+
+
+
+YPSET(8)            UNIX Programmer's Manual             YPSET(8)
+
+
+
+NAME
+     ypset - point ypbind at a particular server
+
+SYNOPSIS
+     ypset [ -V1|-V2 ] [ -h _h_o_s_t ] [ -d _d_o_m_a_i_n ] _s_e_r_v_e_r
+
+DESCRIPTION
+     _y_p_s_e_t tells _y_p_b_i_n_d to get YP services for the specified
+     _d_o_m_a_i_n from the _y_p_s_e_r_v process running on _s_e_r_v_e_r.  If _s_e_r_v_e_r
+     is down, or isn't running _y_p_s_e_r_v, this is not discovered
+     until a YP client process tries to get a binding for the
+     domain.  At this point, the binding set by _y_p_s_e_t will be
+     tested by _y_p_b_i_n_d.  If the binding is invalid, _y_p_b_i_n_d will
+     attempt to rebind for the same domain.
+
+     _y_p_s_e_t is useful for binding a client node which is not on a
+     broadcast net, or is on a broadcast net which isn't running
+     a YP server host. It also is useful for debugging YP client
+     applications, for instance where a YP map only exists at a
+     single YP server host.
+
+     In cases where several hosts on the local net are supplying
+     YP services, it is possible for _y_p_b_i_n_d to rebind to another
+     host even while you attempt to find out if the _y_p_s_e_t opera-
+     tion succeeded.  That is, you can type "ypset host1", and
+     then "ypwhich", which replies: "host2", which can be confus-
+     ing.  This is a function of the YP subsystem's attempt to
+     load-balance among the available YP servers, and occurs when
+     _h_o_s_t_1 does not respond to _y_p_b_i_n_d because it is not running
+     _y_p_s_e_r_v (or is overloaded), and _h_o_s_t_2, running _y_p_s_e_r_v, gets
+     the binding.
+
+     _s_e_r_v_e_r indicates the YP server to bind to, and can be speci-
+     fied as a name or an IP address.  If specified as a name,
+     _y_p_s_e_t will attempt to use YP services to resolve the name to
+     an IP address. This will work only if the node has a current
+     valid binding for the domain in question. In most cases,
+     _s_e_r_v_e_r should be specified as an IP address.
+
+     Refer to ypfiles(5) and ypserv(8) for an overview of the
+     yellow pages.
+
+OPTIONS
+     -V1     Bind _s_e_r_v_e_r for the (old) v.1 YP protocol.
+
+     -V2     Bind _s_e_r_v_e_r for the (current) v.2 YP protocol.
+
+             If no version is supplied, _y_p_s_e_t, first attempts to
+             set the domain for the (current) v.2 protocol.  If
+             this attempt fails, _y_p_s_e_t, then attempts to set the
+             domain for the (old) v.1 protocol.
+
+
+
+
+Printed 12/27/86        13 September 1985                       1
+
+
+
+
+
+
+YPSET(8)            UNIX Programmer's Manual             YPSET(8)
+
+
+
+     -h _h_o_s_t Set ypbind's binding on _h_o_s_t, instead of locally.
+             _h_o_s_t can be specified as a name or as an IP address.
+
+     -d _d_o_m_a_i_n
+             Use _d_o_m_a_i_n , instead of the default domain.
+
+SEE ALSO
+     ypwhich(1), ypserv(8), ypfiles(5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86        13 September 1985                       2
+
+
+

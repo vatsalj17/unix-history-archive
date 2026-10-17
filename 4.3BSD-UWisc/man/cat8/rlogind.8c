@@ -1,0 +1,132 @@
+
+
+
+RLOGIND(8C)         UNIX Programmer's Manual          RLOGIND(8C)
+
+
+
+NAME
+     rlogind - remote login server
+
+SYNOPSIS
+     /etc/rlogind [ -d ]
+
+DESCRIPTION
+     _R_l_o_g_i_n_d is the server for the _r_l_o_g_i_n(1C) program.  The
+     server provides a remote login facility with authentication
+     based on privileged port numbers from trusted hosts.
+
+     _R_l_o_g_i_n_d listens for service requests at the port indicated
+     in the ``login'' service specification; see _s_e_r_v_i_c_e_s(5).
+     When a service request is received the following protocol is
+     initiated:
+
+     1)   The server checks the client's source port.  If the
+          port is not in the range 0-1023, the server aborts the
+          connection.
+
+     2)   The server checks the client's source address and
+          requests the corresponding host name (see
+          _g_e_t_h_o_s_t_b_y_a_d_d_r(3N), _h_o_s_t_s(5) and _n_a_m_e_d(8)).  If the
+          hostname cannot be determined, the dot-notation
+          representation of the host address is used.
+
+     Once the source port and address have been checked, _r_l_o_g_i_n_d
+     allocates a pseudo terminal (see _p_t_y(4)), and manipulates
+     file descriptors so that the slave half of the pseudo termi-
+     nal becomes the stdin , stdout , and stderr for a login pro-
+     cess.  The login process is an instance of the _l_o_g_i_n(1) pro-
+     gram, invoked with the -r option.  The login process then
+     proceeds with the authentication process as described in
+     _r_s_h_d(8C), but if automatic authentication fails, it
+     reprompts the user to login as one finds on a standard ter-
+     minal line.
+
+     The parent of the login process manipulates the master side
+     of the pseduo terminal, operating as an intermediary between
+     the login process and the client instance of the _r_l_o_g_i_n pro-
+     gram.  In normal operation, the packet protocol described in
+     _p_t_y(4) is invoked to provide ^S/^Q type facilities and pro-
+     pagate interrupt signals to the remote programs.  The login
+     process propagates the client terminal's baud rate and ter-
+     minal type, as found in the environment variable, ``TERM'';
+     see _e_n_v_i_r_o_n(7).  The screen or window size of the terminal
+     is requested from the client, and window size changes from
+     the client are propagated to the pseudo terminal.
+
+DIAGNOSTICS
+     All diagnostic messages are returned on the connection asso-
+     ciated with the stderr, after which any network connections
+
+
+
+Printed 12/27/86          May 24, 1986                          1
+
+
+
+
+
+
+RLOGIND(8C)         UNIX Programmer's Manual          RLOGIND(8C)
+
+
+
+     are closed.  An error is indicated by a leading byte with a
+     value of 1.
+
+     ``Try again.''
+     A _f_o_r_k by the server failed.
+
+     ``/bin/sh: ...''
+     The user's login shell could not be started.
+
+BUGS
+     The authentication procedure used here assumes the integrity
+     of each client machine and the connecting medium.  This is
+     insecure, but is useful in an ``open'' environment.
+
+     A facility to allow all data exchanges to be encrypted
+     should be present.
+
+     A more extensible protocol should be used.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 24, 1986                          2
+
+
+

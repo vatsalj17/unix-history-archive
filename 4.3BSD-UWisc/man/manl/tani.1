@@ -1,0 +1,70 @@
+.TH TANI LOCAL "7 June 1986"
+.UC 4
+.SH NAME
+tani \- interpret a compiled Tanenbaum microcode program.
+.SH SYNOPSIS
+.B tani
+datafile [ -f tanfile ] [ -d ]
+.SH DESCRIPTION
+.I Tani
+is the interpreter for the Tanenbaum microcode language.  
+It takes two forms of input: program and data.
+.PP
+The program input,
+.I tanfile,
+must be output from the Tanenbaum compiler, 
+.IR tanc(1).
+The information in this file is in binary format and
+is currently not portable across CPU types.
+If the -f option is not specified,
+.I tan.out
+is used as the program input.
+.PP
+The data is given in
+.I datafile
+and is loaded into the
+.I host
+machine memory before beginning interpretation.
+Each line of the data file contains information to be placed in a host
+machine memory location and may be in one of the following formats:
+.TP 2
+.B \(bu
+A number.  Numbers are presumed to be
+.B signed
+decimal unless preceeded by a '0' in which case they are read as 
+.B unsigned
+octal.
+.TP
+.B \(bu
+A string enclosed in angle brackets (<>).
+The string is copied into host memory with two characters per location.
+Newlines are represented as \\n.
+For the
+.IR prints
+instruction to work, strings must be terminated by a null (\\0).
+.TP
+.B \(bu
+A directive of the form
+.br
+		.=. + number
+.br
+indicating how much (in host memory words) the current
+memory location should be incremented.
+Again, the number is taken as decimal unless preceded by a '0'.
+.TP
+.B \(bu
+Comments start with a '/' and continue until the end of the line.  They
+may start anywhere on a line.
+.PP
+The -d flag may be specified to observe the internal state
+of the interpreter as it runs.
+.PP
+.SH AUTHOR
+Brian Pinkerton
+.SH FILES
+tan.out		default program input file
+.SH "SEE ALSO"
+tanc(l)
+.SH BUGS
+Debugging output is not well structured but still
+may make it too easy to debug these programs.

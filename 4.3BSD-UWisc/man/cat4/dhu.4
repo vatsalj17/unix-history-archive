@@ -1,0 +1,132 @@
+
+
+
+DHU(4)              UNIX Programmer's Manual               DHU(4)
+
+
+
+NAME
+     dhu - DHU-11 communications multiplexer
+
+SYNOPSIS
+     device dhu0 at uba0 csr 0160440 vector dhurint dhuxint
+
+DESCRIPTION
+     A DHU-11 provides 16 communication lines.
+
+     Each line attached to the DHU-11 communications multiplexer
+     behaves as described in _t_t_y(4).  Input and output for each
+     line may independently be set to run at any of 13 speeds
+     (50, 200 and 38400 baud are not available); see _t_t_y(4) for
+     the encoding.
+
+     Bit _i of flags may be specified for a DHU-11 to say that a
+     line is not properly connected, and that the line should be
+     treated as hard-wired with carrier always present.  Thus
+     specifying ``flags 0x0004'' in the specification of dhu0
+     would cause line ttyS2 to be treated in this way.
+
+     The DHU-11 driver normally uses input silos and delays
+     receiver interrupts by 20 milliseconds rather than taking an
+     interrupt on each input character.
+
+FILES
+     /dev/tty[S-Z][0-9a-f]
+
+SEE ALSO
+     tty(4)
+
+DIAGNOSTICS
+     dhu(%d,%d): NXM fault.  No response from UNIBUS on a DMA
+     transfer within a timeout period.  This is often followed by
+     a UNIBUS adapter error.  This occurs most frequently when
+     the UNIBUS is heavily loaded and when devices which hog the
+     bus (such as RK07s) are present.  It is not serious.
+
+     dhu%d: silo overflow.  The character input silo overflowed
+     before it could be serviced.  This can happen if a hard
+     error occurs when the CPU is running with elevated priority,
+     as the system may then print a message on the console with
+     interrupts disabled.
+
+NOTES
+     The driver currently does not make full use of the hardware
+     capabilities of the DHU-11, for dealing with XON/XOFF flow-
+     control or hard-wired lines for example.
+
+     Although the devices are not the same, a DHU-11 can convince
+     the DH-11 autoconfiguration code that it is a DH-11.
+
+
+
+
+Printed 12/27/86         April 27, 1986                         1
+
+
+
+
+
+
+DHU(4)              UNIX Programmer's Manual               DHU(4)
+
+
+
+     The 4 40-way cables are a pain.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         April 27, 1986                         2
+
+
+

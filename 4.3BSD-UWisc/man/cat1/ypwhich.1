@@ -1,0 +1,66 @@
+
+
+
+YPWHICH(1)          UNIX Programmer's Manual           YPWHICH(1)
+
+
+
+NAME
+     ypwhich - which host is the YP server or map master?
+
+SYNOPSIS
+     ypwhich [ -d [ _d_o_m_a_i_n ] [ -V1 | -V2 ] [ _h_o_s_t_n_a_m_e ]
+     ypwhich [ -t _m_a_p_n_a_m_e ] [ -d _d_o_m_a_i_n ] -m _m_n_a_m_e
+     ypwhich -x
+
+DESCRIPTION
+     _y_p_w_h_i_c_h tells which YP server supplies yellow pages services
+     to a YP client, or which is the master for a map.  If
+     invoked without arguments, it gives the YP server for the
+     local machine.  If _h_o_s_t_n_a_m_e is specified, that machine is
+     queried to find out which YP master it is using.
+
+     Refer to ypfiles(5) and ypserv(8) for an overview of the
+     yellow pages.
+
+OPTIONS
+     -d      Use _d_o_m_a_i_n instead of the default domain.
+
+     -V1     Which server is serving v.1 YP protocol-speaking
+             client processes?
+
+     -V2     Which server is serving v.2 YP protocol client
+             processes?
+
+             If neither version is specified, _y_p_w_h_i_c_h attempts
+             attempts to locate the server that supplies the
+             (current) v.2 services.  If there is no v.2 server
+             currently bound, _y_p_w_h_i_c_h then attempts to locate the
+             server supplying the v.1 services.  Since YP servers
+             and YP clients are both backward compatible, the
+             user need seldom be concerned about which version is
+             currently in use.
+
+     -t _m_a_p_n_a_m_e
+             Inhibit nickname translation; useful if there is a
+             mapname identical to a nickname.  This is not true
+             of any Sun-supplied map.
+
+     -m      Find the master YP server for a map.  No _h_o_s_t_n_a_m_e
+             can be specified with -m.  _m_n_a_m_e can be a mapname,
+             or a nickname for a map.
+
+     -x      Display the map nickname table.  This lists the
+             nicknames (_m_n_a_m_e_s) the command knows of, and indi-
+             cates the _m_a_p_n_a_m_e associated with each nickname.
+
+SEE ALSO
+     ypfiles(5), rpcinfo(8), ypset(8), ypserv(8)
+
+
+
+
+Printed 12/27/86           9 July 1985                          1
+
+
+

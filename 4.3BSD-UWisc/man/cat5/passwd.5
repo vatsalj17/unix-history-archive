@@ -1,0 +1,132 @@
+
+
+
+PASSWD(5)           UNIX Programmer's Manual            PASSWD(5)
+
+
+
+NAME
+     passwd - password file
+
+SYNOPSIS
+     /etc/passwd
+
+DESCRIPTION
+     The _p_a_s_s_w_d file contains for each user the following infor-
+     mation:
+
+     name      User's login name - contains no upper case charac-
+               ters and must not be greater than eight characters
+               long.
+
+     password  encrypted password
+
+     numerical user ID
+               This is the user's ID in the system and it must be
+               unique.
+
+     numerical group ID
+               This is the number of the group that the user
+               belongs to.
+
+     user's real name
+               In some versions of UNIX, this field also contains
+               the user's office, extension, home phone, and so
+               on.  For historical reasons this field is called
+               the GCOS field.
+
+     initial working directory
+               The directory that the user is positioned in when
+               they log in - this is known as the `home' direc-
+               tory.
+
+     shell     program to use as Shell when the user logs in.
+
+     The user's real name field may contain `&', meaning insert
+     the login name.
+
+     The password file is an ASCII file.  Each field within each
+     user's entry is separated from the next by a colon.  Each
+     user is separated from the next by a new-line.  If the pass-
+     word field is null, no password is demanded; if the Shell
+     field is null, /_b_i_n/_s_h is used.
+
+     The _p_a_s_s_w_d file can also have line beginning with a plus
+     (+), which means to incorporate entries from the yellow
+     pages.  There are three styles of + entries: all by itself,
+     + means to insert the entire contents of the yellow pages
+     password file at that point; +_n_a_m_e means to insert the entry
+     (if any) for _n_a_m_e from the yellow pages at that point;
+
+
+
+Printed 12/27/86         1 February 1985                        1
+
+
+
+
+
+
+PASSWD(5)           UNIX Programmer's Manual            PASSWD(5)
+
+
+
+     +@_n_a_m_e means to insert the entries for all members of the
+     network group _n_a_m_e at that point.  If a + entry has a non-
+     null password, directory, gecos, or shell field, they will
+     overide what is contained in the yellow pages.  The numeri-
+     cal user ID and group ID fields cannot be overridden.
+
+EXAMPLE
+     Here is a sample /_e_t_c/_p_a_s_s_w_d file:
+
+
+          root:q.mJzTnu8icF.:0:10:God:/:/bin/csh
+          tut:6k/7KCFRPNVXg:508:10:Bill Tuthill:/usr2/tut:/bin/csh
+          +john:
+          +@documentation:no-login:
+          +:::Guest
+
+     In this example, there are specific entries for users _r_o_o_t
+     _t_u_t, in case the yellow pages are out of order.  The user
+     will have his password entry in the yellow pages incor-
+     porated without change; anyone in the netgroup _d_o_c_u_m_e_n_t_a_t_i_o_n
+     will have their password field disabled, and anyone else
+     will be able to log in with their usual password, shell, and
+     home directory, but with a gecos field of _G_u_e_s_t.
+
+     The password file resides in the /_e_t_c directory.  Because of
+     the encrypted passwords, it has general read permission and
+     can be used, for example, to map numerical user ID's to
+     names.
+
+     Appropriate precautions must be taken to lock the
+     /_e_t_c/_p_a_s_s_w_d file against simultaneous changes if it is to be
+     edited with a text editor; _v_i_p_w(8) does the necessary lock-
+     ing.
+
+FILES
+     /etc/passwd
+
+SEE ALSO
+     getpwent(3), login(1), crypt(3), passwd(1), group(5),
+     vipw(8), adduser(8)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         1 February 1985                        2
+
+
+

@@ -1,0 +1,38 @@
+.\" @(#)yppasswd.1 1.1 85/12/28 SMI;
+.TH YPPASSWD 1 "21 August 1985"
+.SH NAME
+yppasswd \- change login password in yellow pages
+.SH SYNOPSIS
+.B yppasswd
+\ [ name ]
+.SH DESCRIPTION
+.IX  "yppasswd command"  ""  "\fLyppasswd\fP \(em change login password in yellow pages"
+.IX  "change login password in yellow pages"  ""  "change login password in yellow pages \(em \fLyppasswd\fP"
+.IX  "yellow pages"  "change login password in"  ""  "change login password in \(em \fLyppasswd\fP"
+.IX  "password"  "change in yellow pages"  ""  "change in yellow pages \(em \fLyppasswd\fP"
+.IX  "login password"  "change in yellow pages"  ""  "change in yellow pages \(em \fLyppasswd\fP"
+.I Yppasswd
+changes (or installs) a password associated with the user
+.IR name
+(your own name by default)
+in the yellow pages.  The yellow pages password may be different
+from the one on your own machine.
+.LP
+.I Yppasswd
+prompts for the old yellow pages password and then for the new one.
+The caller must supply both.
+The new password must be typed twice, to forestall mistakes.
+.LP
+New passwords must be at least four characters long if they use
+a sufficiently rich alphabet and at least six characters long
+if monocase.  These rules are relaxed if you are insistent enough.
+.LP
+Only the owner of the name or the super-user may change a password;
+in either case you must prove you know the old password.
+.SH "SEE ALSO"
+passwd(1), ypfiles(5), yppasswdd(8C)
+.SH BUGS
+The update protocol passes all the information to the server in
+one rpc call, without ever looking at it.  Thus if you
+type in your old password incorrectly, you will not be notified until
+after you have entered your new password.

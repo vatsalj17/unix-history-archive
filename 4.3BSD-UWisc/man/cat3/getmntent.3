@@ -1,0 +1,129 @@
+
+
+
+GETMNTENT(3)        UNIX Programmer's Manual         GETMNTENT(3)
+
+
+
+NAME
+     setmntent, getmntent, addmntent, endmntent, hasmntopt - get
+     file system descriptor file entry
+
+SYNOPSIS
+     #include <stdio.h>
+     #include <mntent.h>
+9     FILE *setmntent(filep, type)
+     char *filep;
+     char *type;
+9     struct mntent *getmntent(filep)
+     FILE *filep;
+9     int addmntent(filep, mnt)
+     FILE *filep;
+     struct mntent *mnt;
+9     char *hasmntopt(mnt, opt)
+     struct mntent *mnt;
+     char *opt;
+9     int endmntent(filep)
+     FILE *filep;
+
+DESCRIPTION
+     These routines replace the _g_e_t_f_s_e_n_t routines for accessing
+     the file system description file /_e_t_c/_f_s_t_a_b.  They are also
+     used to access the mounted file system description file
+     /_e_t_c/_m_t_a_b.
+
+     _S_e_t_m_n_t_e_n_t opens a file system description file and returns a
+     file pointer which can then be used with _g_e_t_m_n_t_e_n_t,
+     _a_d_d_m_n_t_e_n_t, or _e_n_d_m_n_t_e_n_t.  The _t_y_p_e argument is the same as
+     in _f_o_p_e_n(3).  _G_e_t_m_n_t_e_n_t reads the next line from _f_i_l_e_p and
+     returns a pointer to an object with the following structure
+     containing the broken-out fields of a line in the filesystem
+     description file, <_m_n_t_e_n_t._h>.  The fields have meanings
+     described in _f_s_t_a_b(5).
+
+          struct mntent {
+                 char    *mnt_fsname;    /* file system name */
+                 char    *mnt_dir;       /* file system path prefix */
+                 char    *mnt_type;      /* 4.2, nfs, swap, or xx */
+                 char    *mnt_opts;      /* ro, quota, etc. */
+                 int   mnt_freq;     /* dump frequency, in days */
+                 int   mnt_passno;   /* pass number on parallel fsck */
+          };
+
+     _A_d_d_m_n_t_e_n_t adds the _m_n_t_e_n_t structure _m_n_t to the end of the
+     open file _f_i_l_e_p.  Note that _f_i_l_e_p has to be opened for writ-
+     ing if this is to work.  _H_a_s_m_n_t_o_p_t scans the _m_n_t__o_p_t_s field
+     of the _m_n_t_e_n_t structure _m_n_t for a substring that matches
+     _o_p_t.  It returns the address of the substring if a match is
+
+
+
+Printed 12/27/86          12 March 1985                         1
+
+
+9
+
+
+GETMNTENT(3)        UNIX Programmer's Manual         GETMNTENT(3)
+
+
+
+     found, 0 otherwise.  _E_n_d_m_n_t_e_n_t closes the file.
+
+FILES
+     /etc/fstab
+     /etc/mtab
+
+SEE ALSO
+     fstab(5), getfsent(3)
+
+
+
+DIAGNOSTICS
+     Null pointer (0) returned on EOF or error.
+
+BUGS
+     The returned _m_n_t_e_n_t structure points to static information
+     that is overwritten in each call.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          12 March 1985                         2
+
+
+

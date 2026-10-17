@@ -1,0 +1,132 @@
+
+
+
+MNTENT(5)           UNIX Programmer's Manual            MNTENT(5)
+
+
+
+NAME
+     mntent - static information about filesystems
+
+SYNOPSIS
+     #include <mntent.h>
+
+DESCRIPTION
+     The file /_e_t_c/_f_s_t_a_b describes the file systems and swapping
+     partitions used by the local machine.  It is created by the
+     system administrator using a text editor and processed by
+     commands which mount, unmount, check consistency of, dump
+     and restore file systems, and by the system in providing
+     swap space.
+
+     It consists of a number of lines of the form:
+
+          fsname dir type opts freq passno
+
+     an example of which would be:
+
+          /dev/xy0a / 4.2 rw,noquota 1 2
+
+     The entries from this file are accessed using the routines
+     in _g_e_t_m_n_t_e_n_t(3), which returns a structure of the following
+     form:
+
+
+          struct mntent {
+                 char  *mnt_fsname;  /* file system name */
+                 char  *mnt_dir;     /* file system path prefix */
+                 char  *mnt_type;    /* 4.2, nfs, swap, or ignore */
+                 char  *mnt_opts;    /* ro, quota, etc. */
+                 int   mnt_freq;     /* dump frequency, in days */
+                 int   mnt_passno;   /* pass number on parallel fsck */
+          };
+
+     The fields are separated by white space, and a `#' as the
+     first non-white character indicates a comment.
+
+     The _m_n_t__t_y_p_e field determines how the _m_n_t__f_s_n_a_m_e, and
+     _m_n_t__o_p_t_s fields will be interpreted.  Below is a list of the
+     file system types currently supported and the way each of
+     them interprets these fields.
+
+     4.2
+
+     mnt_fsname  Must be a block special device.
+
+     mnt_opts    Valid opts are ro, rw, quota, noquota.
+
+     NFS
+
+
+
+
+Printed 12/27/86         21 August 1985                         1
+
+
+
+
+
+
+MNTENT(5)           UNIX Programmer's Manual            MNTENT(5)
+
+
+
+     mnt_fsname  The path on the server of the directory to be
+                 served.
+
+     mnt_opts    Valid opts are ro, rw, quota, noquota, hard,
+                 soft.
+
+     SWAP
+
+     mnt_fsname  Must be a block special device swap partition.
+
+     mnt_opts    Ignored.
+
+     If the _m_n_t__t_y_p_e is specified as ``ignore'' the entry is
+     ignored.  This is useful to show disk partitions which are
+     currently not used.
+
+     The field _m_n_t__f_r_e_q indicates how often each partition should
+     be dumped by the _d_u_m_p(8) command (and triggers that commands
+     w option which tells which file systems should be dumped).
+     Most systems set the _m_n_t__f_r_e_q field to 1 indicating that the
+     file systems are dumped each day.
+
+     The final field _m_n_t__p_a_s_s_n_o is used by the disk consistency
+     check program _f_s_c_k(8) to allow overlapped checking of file
+     systems during a reboot.  All file systems with _m_n_t__p_a_s_s_n_o
+     of 1 are first checked simultaneosly, then all file systems
+     with _m_n_t__p_a_s_s_n_o of 2, and so on.  It is usual to make the
+     _m_n_t__p_a_s_s_n_o of the root file system have the value 1 and then
+     check one file system on each available disk drive in each
+     subsequent pass to the exhaustion of file system partitions.
+
+     /_e_t_c/_f_s_t_a_b is only _r_e_a_d by programs, and not written; it is
+     the duty of the system administrator to properly create and
+     maintain this file.  The order of records in /_e_t_c/_f_s_t_a_b is
+     important because _f_s_c_k, _m_o_u_n_t, and _u_m_o_u_n_t process the file
+     sequentially; file systems must appear _a_f_t_e_r file systems
+     they are mounted within.
+
+FILES
+     /etc/fstab
+
+SEE ALSO
+     fsck(8), getmntent(3), mount(8), quotacheck(8), quotaon(8),
+     umount(8)
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         21 August 1985                         2
+
+
+

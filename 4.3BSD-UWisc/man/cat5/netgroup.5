@@ -1,0 +1,132 @@
+
+
+
+NETGROUP(5)         UNIX Programmer's Manual          NETGROUP(5)
+
+
+
+NAME
+     netgroup - list of network groups
+
+DESCRIPTION
+     _N_e_t_g_r_o_u_p defines network wide groups, used for permission
+     checking when doing remote mounts, remote logins, and remote
+     shells.  For remote mounts, the information in _n_e_t_g_r_o_u_p is
+     used to classify machines; for remote logins and remote
+     shells, it is used to classify users.  Each line of the _n_e_t_-
+     _g_r_o_u_p file defines a group and has the format
+
+           groupname member1 member2 ....
+
+     where member_i is either another group name, or a triple:
+
+           (hostname, username, domainname)
+
+     Any of three fields can be empty, in which case it signifies
+     a wild card.  Thus
+
+           universal (,,)
+
+     defines a group to which everyone belongs.  Field names that
+     begin with something other than a letter, digit or under-
+     score (such as ``-'') work in precisely the opposite
+     fashion. For example, consider the following entries:
+
+           justmachines  (analytica,-,sun)
+           justpeople    (-,babbage,sun)
+
+     The machine _a_n_a_l_y_t_i_c_a belongs to the group _j_u_s_t_m_a_c_h_i_n_e_s in
+     the domain _s_u_n, but no users belong to it.  Similarly, the
+     user _b_a_b_b_a_g_e belongs to the group _j_u_s_t_p_e_o_p_l_e in the domain
+     _s_u_n, but no machines belong to it.
+
+     Network groups are contained in the yellow pages, and are
+     accessed through these files:
+
+           /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.dir
+           /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.pag
+           /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.byuser.dir
+           /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.byuser.pag
+           /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.byhost.dir
+           /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.byhost.pag
+
+     These files can be created from /_e_t_c/_n_e_t_g_r_o_u_p using _m_a_k_-
+     _e_d_b_m(8).
+
+FILES
+     /etc/netgroup
+     /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.dir
+     /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.pag
+
+
+
+Printed 12/27/86         1 February 1985                        1
+
+
+
+
+
+
+NETGROUP(5)         UNIX Programmer's Manual          NETGROUP(5)
+
+
+
+     /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.byuser.dir
+     /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.byuser.pag
+     /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.byhost.dir
+     /etc/yp/_d_o_m_a_i_n_n_a_m_e/netgroup.byhost.pag
+
+SEE ALSO
+     getnetgrent(3), exportfs(8), makedbm(8), ypserv(8)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         1 February 1985                        2
+
+
+

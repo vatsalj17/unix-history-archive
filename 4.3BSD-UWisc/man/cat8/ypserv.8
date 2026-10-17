@@ -1,0 +1,132 @@
+
+
+
+YPSERV(8)           UNIX Programmer's Manual            YPSERV(8)
+
+
+
+NAME
+     ypserv - yellow pages server and binder processes
+
+SYNOPSIS
+     /usr/etc/ypserv
+     /etc/ypbind
+
+DESCRIPTION
+     The yellow pages (YP) provides a simple network lookup ser-
+     vice consisting of databases and processes.  The databases
+     are _d_b_m(3) files in a directory tree rooted at /_e_t_c/_y_p.
+     These files are described in ypfiles(5).  The processes are
+     /_u_s_r/_e_t_c/_y_p_s_e_r_v, the YP database lookup server, and
+     /_e_t_c/_y_p_b_i_n_d, the YP binder.  The programmatic interface to
+     YP is described in ypclnt(3N).  Administrative tools are
+     described in yppush(8), ypxfr(8), yppoll(8), ypwhich(8), and
+     ypset(8).  Tools to see the contents of YP maps are
+     described in ypcat(8), and ypmatch(1).  Database generation
+     and maintenance tools are described in ypinit(8), ypmake(8),
+     and makedbm(8).
+
+     Both _y_p_s_e_r_v and _y_p_b_i_n_d are daemon processes typically
+     activated at system startup time from /_e_t_c/_r_c._l_o_c_a_l.  _y_p_s_e_r_v
+     runs only on YP server machines with a complete YP database.
+     _y_p_b_i_n_d runs on all machines using YP services, both YP
+     servers and clients.
+
+     The _y_p_s_e_r_v daemon's primary function is to look up informa-
+     tion in its local database of YP maps.  The operations per-
+     formed by _y_p_s_e_r_v are defined for the implementor by the _Y_P
+     _p_r_o_t_o_c_o_l _s_p_e_c_i_f_i_c_a_t_i_o_n, and for the programmer by the header
+     file <rpcsvc/yp_prot.h>. Communication to and from _y_p_s_e_r_v is
+     by means of RPC calls.  Lookup functions are described in
+     ypclnt(3N), and are supplied as C-callable funtions in
+     /_l_i_b/_l_i_b_c.  There are four lookup functions, all of which
+     are performed on a specified map within some YP domain:
+     _M_a_t_c_h, _G_e_t__f_i_r_s_t, _G_e_t__n_e_x_t, and _G_e_t__a_l_l.  The _M_a_t_c_h opera-
+     tion takes a key, and returns the associated value.  The
+     _G_e_t__f_i_r_s_t operation returns the first key-value pair from
+     the map, and _G_e_t__n_e_x_t can be used to enumerate the
+     remainder. _G_e_t__a_l_l ships the entire map to the requester as
+     the response to a single RPC request.
+
+     Two other functions supply information about the map, rather
+     than map entries: _G_e_t__o_r_d_e_r__n_u_m_b_e_r, and _G_e_t__m_a_s_t_e_r__n_a_m_e.  In
+     fact, both order number and master name exist in the map as
+     key-value pairs, but the server will not return either
+     through the normal lookup functions.  (If you examine the
+     map with _m_a_k_e_d_b_m(8), however, they will be visible.)  Other
+     functions are used within the YP subsystem itself, and are
+     not of general interest to YP clients.  They include
+     _D_o__y_o_u__s_e_r_v_e__t_h_i_s__d_o_m_a_i_n?, _T_r_a_n_s_f_e_r__m_a_p, and
+
+
+
+Printed 12/27/86         6 December 1985                        1
+
+
+
+
+
+
+YPSERV(8)           UNIX Programmer's Manual            YPSERV(8)
+
+
+
+     _R_e_i_n_i_t_i_a_l_i_z_e__i_n_t_e_r_n_a_l__s_t_a_t_e.
+
+     The function of _y_p_b_i_n_d is to remember information that lets
+     client processes on a single node communicate with some
+     _y_p_s_e_r_v process.  _y_p_b_i_n_d must run on every machine which has
+     YP client processes; _y_p_s_e_r_v may or may not be running on the
+     same node, but must be running somewhere on the network.
+
+     The information _y_p_b_i_n_d remembers is called a _b_i_n_d_i_n_g - the
+     association of a domain name with the internet address of
+     the YP server, and the port on that host at which the _y_p_s_e_r_v
+     process is listening for service requests.  The process of
+     binding is driven by client requests.  As a request for an
+     unbound domain comes in, the _y_p_b_i_n_d process broadcasts on
+     the net trying to find a _y_p_s_e_r_v process that serves maps
+     within that domain.  Since the binding is established by
+     broadcasting, there must be at least one _y_p_s_e_r_v process on
+     every net.  Once a domain is bound by a particular _y_p_b_i_n_d,
+     that same binding is given to every client process on the
+     node.  The _y_p_b_i_n_d process on the local node or a remote node
+     may be queried for the binding of a particular domain by
+     using the _y_p_w_h_i_c_h(1) command.
+
+     Bindings are verified before they are given out to a client
+     process.  If _y_p_b_i_n_d is unable to speak to the _y_p_s_e_r_v process
+     it's bound to, it marks the domain as unbound, tells the
+     client process that the domain is unbound, and tries to bind
+     the domain once again.  Requests received for an unbound
+     domain will fail immediately.  In general, a bound domain is
+     marked as unbound when the node running _y_p_s_e_r_v crashes or
+     gets overloaded.  In such a case, _y_p_b_i_n_d will to bind any YP
+     server (typically one that is less-heavily loaded) available
+     on the net.
+
+     _y_p_b_i_n_d also accepts requests to set its binding for a par-
+     ticular domain.  The request is usually generated by the YP
+     subsystem itself.  _y_p_s_e_t(8) is a command to access the
+     _S_e_t__d_o_m_a_i_n facility.  It is for unsnarling messes, not for
+     casual use.
+
+FILES
+     If the file /_u_s_r/_e_t_c/_y_p/_y_p_s_e_r_v._l_o_g exists when _y_p_s_e_r_v starts
+     up, log information will be written to this file when error
+     conditions arise.
+
+SEE ALSO
+     ypclnt(3N), ypfiles(5), ypcat(8), ypmatch(8), yppush(8),
+     ypwhich(8), ypxfr(8), ypset(8), YP protocol specification
+
+
+
+
+
+
+
+Printed 12/27/86         6 December 1985                        2
+
+
+

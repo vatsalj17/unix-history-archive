@@ -1,0 +1,132 @@
+
+
+
+YPPUSH(8)           UNIX Programmer's Manual            YPPUSH(8)
+
+
+
+NAME
+     yppush - force propagation of a changed YP map
+
+SYNOPSIS
+     yppush [ -d _d_o_m_a_i_n ] [ -v ] _m_a_p_n_a_m_e
+
+DESCRIPTION
+     _y_p_p_u_s_h copies a new version of a Yellow Pages (YP) map from
+     the master YP server to the slave YP servers.  It is nor-
+     mally run only on the master YP server by the _M_a_k_e_f_i_l_e in
+     /_u_s_r/_e_t_c/_y_p/ after the master databases are changed.  It
+     first constructs a list of YP server hosts by reading the YP
+     map _y_p_s_e_r_v_e_r_s within the _d_o_m_a_i_n.  Keys within the map
+     _y_p_s_e_r_v_e_r_s are the ASCII names of the machines on which the
+     YP servers run.
+
+     A ``transfer map'' request is sent to the YP server at each
+     host, along with the information needed by the transfer
+     agent (the program which actually moves the map) to call
+     back the _y_p_p_u_s_h . When the attempt has completed (success-
+     fully or not), and the transfer agent has sent _y_p_p_u_s_h a
+     status message, the results may be printed to stdout.  Mes-
+     sages are also printed when a transfer is not possible; for
+     instance when the request message is undeliverable, or when
+     the timeout period on responses has expired.
+
+     Refer to ypfiles(5) and ypserv(8) for an overview of the
+     yellow pages.
+
+OPTIONS
+     -d   Specify a _d_o_m_a_i_n.
+
+     -v   Verbose. This causes messages to be printed when each
+          server is called, and for each response.  If this flag
+          is omitted, only error messages are printed.
+
+FILES
+     /etc/yp/_d_o_m_a_i_n_n_a_m_e/ypservers.{dir, pag}
+
+SEE ALSO
+     ypserv(8), ypxfr(8), ypfiles(5), YP protocol specification
+
+BUGS
+     In the current implementation (version 2 YP protocol), the
+     transfer agent is _y_p_x_f_r, which is started by the _y_p_s_e_r_v pro-
+     gram.  If _y_p_p_u_s_h detects that it is speaking to a version 1
+     YP protocol server, it uses the older protocol, sending a
+     version 1 YPPROC_GET request and issues a message to that
+     effect. Unfortunately, there is no way of knowing if or when
+     the map transfer is performed for version 1 servers.  _y_p_p_u_s_h
+     prints a message saying that an "old-style" message has been
+     sent.  The system administrator should later check to see
+
+
+
+Printed 12/27/86           1 Aug 1985                           1
+
+
+
+
+
+
+YPPUSH(8)           UNIX Programmer's Manual            YPPUSH(8)
+
+
+
+     that the transfer has actually taken place.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86           1 Aug 1985                           2
+
+
+

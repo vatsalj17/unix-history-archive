@@ -1,0 +1,132 @@
+
+
+
+VLP(1)              UNIX Programmer's Manual               VLP(1)
+
+
+
+NAME
+     vlp - Format Lisp programs to be printed with nroff, vtroff,
+     or troff
+
+SYNOPSIS
+     vlp [ -p _p_o_i_n_t_s_i_z_e ] [ -d ] [ -f ] [ -l ] [ -v ] [ -T _t_i_t_l_e_1
+     ] file1 [ -T _t_i_t_l_e_2 ] file2 ...
+
+DESCRIPTION
+     _V_l_p formats the named files so that they can be run through
+     nroff, vtroff, or troff to produce listings that line-up and
+     are attractive.  The first non-blank character of each line
+     is lined-up vertically, as in the source file.  Comments
+     (text beginning with a semicolon) are printed in italics.
+     Each function's name is printed in bold face next to the
+     function.  This format makes Lisp code look attractive when
+     it is printed with a variable width font.
+
+     Normally, _v_l_p works as a filter and sends its output to the
+     standard output.  However, the -v switch pipes the output
+     directly to vtroff.  If no files are specified, then _v_l_p
+     reads from the standard input.
+
+     The following options are available:
+
+     -p   The -p switch changes the size of the text from its
+          default value of 8 points to one of 6, 8, 10, or 12
+          points.  Once set, the point size is used for all sub-
+          sequent files.  This point size does not apply to
+          embedded text (see -_f below).
+
+     -d   The -d switch puts _v_l_p into debugging mode.
+
+     -f   _V_l_p has a filtered mode in which all lines are passed
+          unmodified, except those lines between the directives
+          .Ls and .Le.  This mode can be used to format Lisp code
+          that is embedded in a document.  The directive .Ls
+          takes an optional argument that gives the point size
+          for the embedded code.  If not size is specified, the
+          size of the surrounding text is used.
+
+     -l   The -l switch prevents _v_l_p from placing labels next to
+          functions.  This switch is useful for embedded Lisp
+          code, where the labels would be distracting.
+
+     -v   This switch cause _v_l_p to send its output to vtroff
+          rather than the standard output.
+
+     -T   A title to be printed on each page may be specified by
+          using the -T switch.  The -T switch applies only to the
+          next file name given.  Titles are not printed for
+          embedded text (see -f, above).  This switch may not be
+
+
+
+Printed 12/27/86         April 29, 1985                         1
+
+
+
+
+
+
+VLP(1)              UNIX Programmer's Manual               VLP(1)
+
+
+
+          used if _v_l_p is reading from the standard input.
+
+FILES
+     /usr/lib/vlpmacs         troff/nroff macros
+
+AUTHOR
+     Originally written by John K. Foderaro, with additional
+     changes by Kevin Layer and James Larus.
+
+SEE ALSO
+     vgrind(1), lisp(1)
+
+BUGS
+     _v_l_p transforms \ into \\ so that it will be printed out.
+     Hence, troff commands cannot be embedded in Lisp code.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         April 29, 1985                         2
+
+
+

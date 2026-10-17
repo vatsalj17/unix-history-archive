@@ -1,0 +1,198 @@
+
+
+
+AUTOCONF(4)         UNIX Programmer's Manual          AUTOCONF(4)
+
+
+
+NAME
+     autoconf - diagnostics from the autoconfiguration code
+
+DESCRIPTION
+     When UNIX bootstraps it probes the innards of the machine on
+     which it is running and locates controllers, drives, and
+     other devices, printing out what it finds on the console.
+     This procedure is driven by a system configuration table
+     which is processed by _c_o_n_f_i_g(8) and compiled into each ker-
+     nel.
+
+     On the VAX, devices in NEXUS slots are normally noted, thus
+     memory controllers, UNIBUS and MASSBUS adaptors.  Devices
+     which are not supported which are found in NEXUS slots are
+     noted also.  The Q-bus on the MICROVAX is configured in the
+     same way as the UNIBUS.
+
+     MASSBUS devices are located by a very deterministic pro-
+     cedure since MASSBUS space is completely probe-able.  If
+     devices exist which are not configured they will be silently
+     ignored; if devices exist of unsupported type they will be
+     noted.
+
+     UNIBUS devices are located by probing to see if their
+     control-status registers respond.  If not, they are silently
+     ignored.  If the control status register responds but the
+     device cannot be made to interrupt, a diagnostic warning
+     will be printed on the console and the device will not be
+     available to the system.
+
+     Normally, the system uses the disk from which it was loaded
+     as the root filesystem.  If that is not possible, a generic
+     system will pick its root device as the ``best'' available
+     device (MASSBUS disks are better than SMD UNIBUS disks are
+     better than RK07's; the device must be drive 0 to be con-
+     sidered).  If such a system is booted with the RB_ASKNAME
+     option (see _r_e_b_o_o_t(2)), then the name of the root device is
+     read from the console terminal at boot time, and any avail-
+     able device may be used.
+
+SEE ALSO
+     intro(4), boot(8), config(8)
+
+DIAGNOSTICS
+     cpu type %d not configured.  You tried to boot UNIX on a cpu
+     type which it doesn't (or at least this compiled version of
+     UNIX doesn't) understand.
+
+     mba%d at tr%d.  A MASSBUS adapter was found in tr%d (the
+     NEXUS slot number).  UNIX will call it mba%d.
+
+
+
+
+
+Printed 12/27/86          May 15, 1986                          1
+
+
+
+
+
+
+AUTOCONF(4)         UNIX Programmer's Manual          AUTOCONF(4)
+
+
+
+     %d mba's not configured.  More MASSBUS adapters were found
+     on the machine than were declared in the machine configura-
+     tion; the excess MASSBUS adapters will not be accessible.
+
+     uba%d at tr%d.  A UNIBUS adapter was found in tr%d (the
+     NEXUS slot number).  UNIX will call it uba%d.
+
+     dr32 unsupported (at tr %d).  A DR32 interface was found in
+     a NEXUS, for which UNIX does not have a driver.
+
+     ci unsupported (at tr %d).  A CI interface was found in a
+     NEXUS, for which UNIX does not have a driver.
+
+     mcr%d at tr%d.  A memory controller was found in tr%d (the
+     NEXUS slot number).  UNIX will call it mcr%d.
+
+     5 mcr's unsupported.  UNIX supports only 4 memory controll-
+     ers per cpu.
+
+     mpm unsupported (at tr%d).  Multi-port memory is unsupported
+     in the sense that UNIX does not know how to poll it for ECC
+     errors.
+
+     %s%d at mba%d drive %d.  A tape formatter or a disk was
+     found on the MASSBUS; for disks %s%d will look like ``hp0'',
+     for tape formatters like ``ht1''.  The drive number comes
+     from the unit plug on the drive or in the TM formatter (not
+     on the tape drive; see below).
+
+     %s%d at %s%d slave %d.  (For MASSBUS devices).  Which would
+     look like ``tu0 at ht0 slave 0'', where tu0 is the name for
+     the tape device and ht0 is the name for the formatter.  A
+     tape slave was found on the tape formatter at the indicated
+     drive number (on the front of the tape drive).  UNIX will
+     call the device, e.g., tu0.
+
+     %s%d at uba%d csr %o vec %o ipl %x.  The device %s%d, e.g.
+     dz0 was found on uba%d at control-status register address %o
+     and with device vector %o.  The device interrupted at prior-
+     ity level %x.
+
+     %s%d at uba%d csr %o zero vector.  The device did not
+     present a valid interrupt vector, rather presented 0 (a pas-
+     sive release condition) to the adapter.
+
+     %s%d at uba%d csr %o didn't interrupt.  The device did not
+     interrupt, likely because it is broken, hung, or not the
+     kind of device it is advertised to be.
+
+     %s%d at %s%d slave %d.  (For UNIBUS devices).  Which would
+     look like ``up0 at sc0 slave 0'', where up0 is the name of a
+     disk drive and sc0 is the name of the controller.  Analogous
+
+
+
+Printed 12/27/86          May 15, 1986                          2
+
+
+
+
+
+
+AUTOCONF(4)         UNIX Programmer's Manual          AUTOCONF(4)
+
+
+
+     to MASSBUS case.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 15, 1986                          3
+
+
+

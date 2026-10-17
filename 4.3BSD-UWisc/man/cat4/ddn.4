@@ -1,0 +1,66 @@
+
+
+
+DDN(4)              UNIX Programmer's Manual               DDN(4)
+
+
+
+NAME
+     ddn - DDN Standard Mode X.25 IMP interface
+
+SYNOPSIS
+     device ddn0 at uba0 csr 166740 vector ddnintr
+
+DESCRIPTION
+     The _d_d_n device provides a DDN Standard Mode X.25 interface
+     to an IMP using the ACC ACP625 X.25 board.  It is normally
+     used for connecting to the Defense Data Network (DDN).  The
+     controller itself is not accessible to users, but instead
+     provides a network interface for the Internet Protocol
+     described in _i_p(4P).
+
+SEE ALSO
+     intro(4N), ip(4P)
+
+DIAGNOSTICS
+     ddn%d: not alive.  The initialization routine was entered
+     even though the device did not autoconfigure.  This indi-
+     cates a system problem.
+
+     ddn%d: failed getting UBA resources for lcn %d.  Insuffi-
+     cient UNIBUS resources existed to initialize the device.
+     This is likely to be a shortage of UNIBUS mapping registers.
+
+     ddn%d: couldn't get X25 init buffer.  This indicates that an
+     _m_b_u_f could not be allocated for sending the initialization
+     message to the ACP625.
+
+     DDN: illegal X25 address length!
+     DDN: illegal X25 address format!
+     These errors indicate a problem with the called X.25 address
+     received from the IMP on an incoming call.
+
+     X25 RESET on lcn = %d.  This indicates that an unexpected
+     X.25 RESET was received on the indicated LCN.
+
+     X25 INTERRUPT on lcn = %d, code = %d.  This indicates that
+     an unexpected X.25 INTERRUPT Packet was received on the
+     indicated LCN.
+
+     ddn%d: failed to get supr msg bfr!.  This indicates that an
+     _m_b_u_f could not be allocated for sending a supervisor message
+     to the ACP625.
+
+     Any other error message from ddn%d: indicates a serious
+     error detected by either the driver or the ACP625 firmware.
+
+
+
+
+
+
+
+Printed 12/27/86          May 16, 1986                          1
+
+
+

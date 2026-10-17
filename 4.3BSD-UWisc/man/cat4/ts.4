@@ -1,0 +1,66 @@
+
+
+
+TS(4)               UNIX Programmer's Manual                TS(4)
+
+
+
+NAME
+     ts - TS-11 magtape interface
+
+SYNOPSIS
+     controller zs0 at uba? csr 0172520 vector tsintr
+     tape ts0 at zs0 drive 0
+
+DESCRIPTION
+     The ts-11 combination provides a standard tape drive inter-
+     face as described in _m_t_i_o(4).  The ts-11 operates only at
+     1600 bpi, and only one transport is possible per controller.
+
+SEE ALSO
+     mt(1), tar(1), tp(1), mtio(4), ht(4), tm(4), mt(4), ut(4)
+
+DIAGNOSTICS
+     ts%d: no write ring.  An attempt was made to write on the
+     tape drive when no write ring was present; this message is
+     written on the terminal of the user who tried to access the
+     tape.
+
+     ts%d: not online.  An attempt was made to access the tape
+     while it was offline; this message is written on the termi-
+     nal of the user who tried to access the tape.
+
+     ts%d: hard error bn%d xs0=%b.  A hard error occurred on the
+     tape at block _b_n; status register 0 is printed in octal and
+     symbolically decoded as bits.
+
+BUGS
+     If any non-data error is encountered on non-raw tape, it
+     refuses to do anything more until closed.
+
+     The device lives at the same address as a tm-11 _t_m(4); as it
+     is very difficult to get this device to interrupt, a generic
+     system assumes that a ts is present whenever no tm-11 exists
+     but the csr responds and a ts-11 is configured.  This does
+     no harm as long as a non-existent ts-11 is not accessed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 15, 1985                          1
+
+
+

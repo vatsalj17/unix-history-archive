@@ -1,0 +1,17 @@
+4$5# )! f1:   keyboard to line 1
+4$6# )" f2:   keyboard to line 2
+4$7# )# f3:   keyboard to line 3
+4$8# z  f4:   select window 0
+4$(# y  f4s:  select attribute list 0
+4$9# z! f5:   select window 1
+4$)# y! f5s:  select attribute list 1
+4$:# z" f6:   select window 2
+4$*# y" f6s:  select attribute list 2
+4$;# z# f7:   select window 3
+4$+# y# f7s:  select attribute list 3
+4#@# d f12:  scroll status line forward
+4#C# D f12s: scroll status line backward
+4"A#! f13:  display 80 columns
+4"D#" f13s: display 132 columns
+4"B#x f14:  set cursor pad to execute
+4"E#X f14s: set cursor pad to transmit

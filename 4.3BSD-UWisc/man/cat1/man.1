@@ -1,0 +1,132 @@
+
+
+
+MAN(1)              UNIX Programmer's Manual               MAN(1)
+
+
+
+NAME
+     man - find manual information by keywords; print out the
+     manual
+
+SYNOPSIS
+     man [ - ] [ -M _p_a_t_h ] [ section ] title ...
+     man -k keyword ...
+     man -f file ...
+
+DESCRIPTION
+     _M_a_n is a program which gives information from the program-
+     mers manual.  It can be asked for one line descriptions of
+     commands specified by name, or for all commands whose
+     description contains any of a set of keywords.  It can also
+     provide on-line access to the sections of the printed
+     manual.
+
+     When given the option -k and a set of keywords, _m_a_n prints
+     out a one line synopsis of each manual sections whose list-
+     ing in the table of contents contains one of those keywords.
+
+     When given the option -f and a list of file names, _m_a_n
+     attempts to locate manual sections related to those files,
+     printing out the table of contents lines for those sections.
+
+     When neither -k nor -f is specified, _m_a_n formats a specified
+     set of manual pages.  If a section specifier is given _m_a_n
+     looks in the that section of the manual for the given
+     _t_i_t_l_e_s. _S_e_c_t_i_o_n is either an Arabic section number (3 for
+     instance), or one of the words ``new,'' ``local,'' ``old,''
+     or ``public.'' A section number may be followed by a single
+     letter classifier (for instance, 1g, indicating a graphics
+     program in section 1).  If _s_e_c_t_i_o_n is omitted, _m_a_n searches
+     all sections of the manual, giving preference to commands
+     over subroutines in system libraries, and printing the first
+     section it finds, if any.
+
+     If the standard output is a teletype, or if the flag - is
+     given, _m_a_n pipes its output through _m_o_r_e(1) with the option
+     -s to crush out useless blank lines and to stop after each
+     page on the screen.  Hit a space to continue, a control-D to
+     scroll 11 more lines when the output stops.
+
+     Normally _m_a_n checks in a standard location for manual infor-
+     mation (/usr/man).  This can be changed by supplying a
+     search path (a la the shell) with the -M flag.  The search
+     path is a colon (`:') separated list of directories in which
+     manual subdirectories may be found; e.g.
+     ``/usr/local:/usr/man''. If the environment variable
+     `MANPATH' is set, its value is used for the default path.
+     If a search path is supplied with the -k or -f options, it
+     must be specified first.
+
+
+
+Printed 12/27/86           May 9, 1986                          1
+
+
+
+
+
+
+MAN(1)              UNIX Programmer's Manual               MAN(1)
+
+
+
+     _M_a_n will look for the manual page in either of two forms,
+     the nroff source or preformatted pages.  If either version
+     is available, the manual page will be displayed.  If the
+     preformatted version is available, and it has a more recent
+     modify time than the nroff source,  it will be promptly
+     displayed.  Otherwise, the manual page will be formatted
+     with nroff and displayed.  If the user has permission, the
+     formatted manual page will be deposited in the proper place,
+     so that later invocations of man will not need to format the
+     page again.
+
+FILES
+     /usr/man          standard manual area
+     /usr/man/man?/*   directories containing source for manuals
+     /usr/man/cat?/*   directories containing preformatted pages
+     /usr/man/whatis   keyword database
+
+SEE ALSO
+     apropos(1), more(1), whereis(1), catman(8)
+
+BUGS
+     The manual is supposed to be reproducible either on the pho-
+     totypesetter or on a typewriter.  However, on a typewriter
+     some information is necessarily lost.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86           May 9, 1986                          2
+
+
+

@@ -1,0 +1,1056 @@
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+NAME
+     XMenu - X Deck of cards Menu System
+
+SYNOPSIS
+     #include <X/XMenu.h>
+
+     XMenu *XMenuCreate(parent, xdef_env)
+     Window parent;
+     char *xdef_env;
+
+     int XMenuAddPane(menu, label, active)
+     XMenu *menu;
+     char *label;
+     int active;
+
+     int XMenuAddSelection(menu, pane, data, label, active)
+     XMenu *menu;
+     int pane;
+     char *data;
+     char *label;
+     int active;
+
+     int XMenuInsertPane(menu, pane, label, active)
+     XMenu *menu;
+     int pane;
+     char *label;
+     int active;
+
+     int XMenuInsertSelection(menu, pane,selection, data, label, active)
+     XMenu *menu;
+     int pane, selection;
+     caddr_d data;
+     char *label;
+     int active;
+
+     int XMenuFindPane(menu, label)
+     XMenu *menu;
+     char *label;
+
+     int XMenuFindSelection(menu, pane, label)
+     XMenu *menu;
+     int pane;
+     char *label;
+
+     int XMenuChangePane(menu, pane, label)
+     XMenu *menu;
+     int pane;
+     char *label;
+
+     int XMenuChangeSelection(menu, pane,selection, data,d_sw, label,l_sw)
+     XMenu *menu;
+     int pane, selection;
+
+
+
+Printed 1/10/87          29 January 1986                        1
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+     char *data;
+     int d_sw;
+     char *label;
+     int l_sw;
+
+     int XMenuSetPane(menu, pane, active)
+     XMenu *menu;
+     int pane;
+     int active;
+
+     int XMenuSetSelection(menu, pane, selection, active)
+     XMenu *menu;
+     int pane, selection;
+     int active;
+
+     int XMenuDeletePane(menu, pane)
+     XMenu *menu;
+     int pane;
+
+     int XMenuDeleteSelection(menu, pane, selection)
+     XMenu *menu;
+     int pane, selection;
+
+     int XMenuRecompute(menu)
+     XMenu *menu;
+
+     int XMenuLocate(menu, pane,selection, x,y, ulx,uly, width,height)
+     XMenu *menu;
+     int pane, selection;
+     int x, y;
+     int *ulx, *uly;
+     int *width, *height;
+
+     XMenuSetAEQ(menu, aeq)
+     XMenu *menu;
+     int aeq;
+
+     XMenuSetEvHandler(menu, handler)
+     XMenu *menu;
+     int (*handler)();
+
+     XMenuSetFreeze(menu, freeze)
+     XMenu *menu;
+     int freeze;
+
+     int XMenuActivate(menu, pane,selection, x,y, event_mask, data)
+     XMenu *menu;
+     int *pane, *selection;
+     int x, y;
+     int event_mask;
+     char **data;
+
+
+
+
+Printed 1/10/87          29 January 1986                        2
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+     XMenuDestroy(menu)
+     XMenu *menu;
+
+     char *XMenuError()
+
+DESCRIPTION
+     _X_M_e_n_u is an _X Window System Utility Package that implements
+     a `deck of cards' menu system.  _X_M_e_n_u is intended for use in
+     conjunction with _X_l_i_b, the _C _L_a_n_g_u_a_g_e _X _W_i_n_d_o_w _S_y_s_t_e_m _I_n_t_e_r_-
+     _f_a_c_e _L_i_b_r_a_r_y.
+
+     In a `deck of cards' menu system a menu is composed of
+     several cards or panes.  The panes are stacked as if they
+     were a deck of playing cards that were fanned out.  Each of
+     these panes has one or more selections.  A user interacts
+     with a `deck of cards' menu by sliding the mouse cursor
+     across the panes of the menu.  As the mouse cursor enters
+     each pane it will rise to the top of the deck and become
+     `current'. If the current pane is an active pane it will be
+     `activated', or made available for selection.  To indicate
+     this its background will then change from the patterned
+     inactive background to a solid color and the selections on
+     that pane will be activated.  If the current pane is not an
+     active pane (a setable state) then it will not be activated.
+     To indicate this its background will continue to be the pat-
+     terned inactive background and no selections on the pane
+     will be activated.  The pane previously containing the mouse
+     will lower (preserving its stacking order).  If it was
+     activated it will then become deactivated, its background
+     changing back to the inactive pattern.  Because of this
+     action it is not possible to have more than one current pane
+     at any one time.  When the mouse cursor enters an active
+     selection in a pane that has been activated then that selec-
+     tion will become activated and be high lighted.  If the
+     selection is not active or the pane has not been activated
+     then the selection will not be activated and will not be
+     high lighted.  Selection high lighting is accomplished in
+     one of two ways depending upon the state of the user's _X_d_e_-
+     _f_a_u_l_t_s variables.  If `box' mode high lighting is in effect,
+     the menu selection will be activated by placing a high light
+     box around the selection as the mouse cursor enters the
+     selection's active region and removing it (deactivating the
+     selection) as the cursor leaves.  If `invert' mode high
+     lighting is in effect, the menu selection will be activated
+     by inverting the background and foreground colors within the
+     selection's active region as the mouse cursor enters it and
+     reinverting them as the cursor leaves.
+
+     The application specifies a mouse event that will signify
+     that the user has made a selection. Any time that the selec-
+     tion mouse event is received by _X_M_e_n_u one of several results
+     will occur, depending upon the state of the menu system at
+
+
+
+Printed 1/10/87          29 January 1986                        3
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+     the time of the event.  If the selection event occurs while
+     the mouse cursor is in an activated selection the data that
+     has been stored with that selection will be returned to the
+     application program.  The data stored is in the form of a
+     generic pointer to memory (char *).  This allows the appli-
+     cation programmer to completely define the interpretation of
+     the selection data by recasting the data pointer as is
+     desired.
+
+     An application constructs a menu by first creating the _X_M_e_n_u
+     object.  Once the _X_M_e_n_u object has been created then panes
+     and selections are added in order as is needed.  Typically
+     panes contain related selections that are `described' by the
+     pane's label.  For example, you might create a pane labeled
+     `Mail' that has selections labeled `Read', `Send', `For-
+     ward', `Refile' and `Delete'.  There is no real need for the
+     panes in a menu to be related to each other but typically
+     they are related by default by the fact that they are all
+     being utilized the application that created the menu.
+
+     The _X_M_e_n_u system is maintained (menus, panes and selections)
+     via routines in the _X_M_e_n_u library.  The library contains the
+     following routines:
+
+     XMenuCreate
+             In order for a process to create a menu, it is
+             necessary for that process to have opened a connec-
+             tion to an _X display server and have a window in
+             hand that will be designated as the parent window of
+             the menu being created (remember that _X is designed
+             such that child windows of a parent window are
+             clipped to the borders of the parent).  Typically
+             the _X root window ( _R_o_o_t_W_i_n_d_o_w ) is used for this
+             purpose.  When the connection is open and a parent
+             window chosen, the application calls _X_M_e_n_u_C_r_e_a_t_e
+             passing it the parent window and a null-terminated
+             string.  The string designates the default environ-
+             ment name that will be used by XMenu to read the
+             users _X_d_e_f_a_u_l_t_s variables.  Typically the applica-
+             tion name is used for this purpose (a good software
+             engineering practice is to use element zero of the
+             applications argument vector, argv[0],  as the
+             default environment since this is the name by which
+             the application was called from the shell).  All
+             _u_s_e_r setable parameters are set via the _X_d_e_f_a_u_l_t_s
+             mechanism.  If any parameters do not have _X_d_e_f_a_u_l_t_s
+             values then they default to preset _X_M_e_n_u internal
+             values.  The _X_d_e_f_a_u_l_t_s parameters are listed below
+             along with their preset internal values.  If the
+             create operation is successful _X_M_e_n_u_C_r_e_a_t_e will
+             return an _X_M_e_n_u object.  If it fails NULL will be
+             returned.
+
+
+
+Printed 1/10/87          29 January 1986                        4
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+     XMenuAddPane
+             Once a menu has been created the application may
+             then begin adding panes and subsequently selections.
+             Panes are added by calling _X_M_e_n_u_A_d_d_P_a_n_e.
+             _X_M_e_n_u_A_d_d_P_a_n_e adds additional panes to a menu in call
+             order.  That is, panes will appear in the menu with
+             the first pane added being at the front of the pane
+             stack and the last pane added being at the back of
+             the pane stack.  _X_M_e_n_u_A_d_d_P_a_n_e takes the following
+             arguments: The menu to which the pane is being
+             added; A null-terminated string that will be the
+             label for the new pane; and an flag that designates
+             whether or not the pane is to be considered active
+             for selection.  It is sometimes useful to add inac-
+             tive panes to indicate a currently unavailable but
+             planned set of selections.  If the add operation is
+             successful the index number of the pane just added
+             will be returned.  If it fails _X_M__F_A_I_L_U_R_E will be
+             returned.  Further panes may be added at a later
+             time but remember that when this routine is used to
+             add panes they are always added to the back of the
+             pane stack!
+
+     XMenuAddSelection
+             Once a pane has been added to a menu is it possible
+             to begin adding selections to that pane.  Selections
+             are added to panes in much the same way as panes are
+             added to menus.  Selections are added by calling
+             _X_M_e_n_u_A_d_d_S_e_l_e_c_t_i_o_n. _X_M_e_n_u_A_d_d_S_e_l_e_c_t_i_o_n adds additional
+             selections to a pane in call order.  That is, selec-
+             tions will appear in the pane with the first selec-
+             tion added being at the top of the pane and the last
+             selection added being at the bottom of the pane.
+             _X_M_e_n_u_A_d_d_S_e_l_e_c_t_i_o_n takes the following arguments: The
+             menu containing the pane to which the selection is
+             being added; The index number of the pane to which
+             the selection is being added; A null-terminated
+             string that will be the label for the new selection;
+             A (char *) data value that will be returned by
+             _X_M_e_n_u_A_c_t_i_v_a_t_e whenever the new selection is selected
+             by the menu's user; and a flag that designates
+             whether or not the selection will be considered
+             active.  It is sometimes useful to add inactive
+             selections which may become active as the applica-
+             tion state changes.  If the add operation is suc-
+             cessful then the index number of the selection just
+             added will be returned.  If it fails _X_M__F_A_I_L_U_R_E will
+             be returned.  Further selections may be added at a
+             later time but remember when this routine is used to
+             add selections they are always added to the bottom
+             of a pane!
+
+
+
+
+Printed 1/10/87          29 January 1986                        5
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+     XMenuInsertPane
+             This routine allows the application to insert menu
+             panes into a menu in random order.  If the index
+             number of the pane being inserted matches the index
+             number of a pane that already exists, then the
+             existing pane is displaced backward (its index
+             number and the index numbers of all following planes
+             increased by one) in the menu and the new pane
+             inserted in its place.  Panes may be inserted into
+             any menu provided that the index number of the pane
+             being inserted is no more than one greater than the
+             index number of the last pane in the menu.  For
+             example, if a menu contains 4 panes with index
+             numbers 0 through 3 then it is possible to insert a
+             new pane with an index number from 0 through 4
+             inclusive.  It is possible to use _X_M_e_n_u_I_n_s_e_r_t_P_a_n_e in
+             place of _X_M_e_n_u_A_d_d_P_a_n_e but in situations where panes
+             are simply being added to a menu one after another
+             then the use of the simpler and more efficient
+             _X_M_e_n_u_A_d_d_P_a_n_e routine is encouraged.  _X_M_e_n_u_I_n_s_e_r_t_P_a_n_e
+             takes the following arguments: The menu into which
+             the pane is being inserted; the index number of the
+             new pane; a null-terminated string that will be the
+             label for the new pane; and an int that designates
+             whether or not the pane will to be considered active
+             for selection.  It is sometimes useful to add inac-
+             tive panes to indicate a currently unavailable but
+             planned set of selections.  If the insert operation
+             is successful the index number of the pane just
+             inserted will be returned.  If it fails _X_M__F_A_I_L_U_R_E
+             will be returned.
+
+     XMenuInsertSelection
+             This routine allows the application to insert selec-
+             tions into a menu pane in random order.  If the
+             index number of the selection being inserted matches
+             the index number of a selection that already exists
+             in the specified pane, then the existing selection
+             is displaced downward (its index number and the
+             index numbers of all following selections increased
+             by one) in the pane and the new selection inserted
+             in its place.  Selections may be inserted into any
+             pane provided that the index number of the selection
+             being inserted is no more than one greater than the
+             index number of the last selection in the pane.  For
+             example, if a pane contains 4 selections numbered 0
+             through 3 then it is possible to insert a new selec-
+             tion with an index number from 0 through 4
+             inclusive.  It is possible to use _X_M_e_n_u_I_n_s_e_r_t_S_e_l_e_c_-
+             _t_i_o_n in place of _X_M_e_n_u_A_d_d_S_e_l_e_c_t_i_o_n but in situations
+             where selections are simply being added to a pane
+             one after another then the use of the simpler and
+
+
+
+Printed 1/10/87          29 January 1986                        6
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+             more efficient _X_M_e_n_u_A_d_d_S_e_l_e_c_t_i_o_n routine is
+             encouraged.  _X_M_e_n_u_I_n_s_e_r_t_S_e_l_e_c_t_i_o_n takes the follow-
+             ing arguments: the menu containing the pane into
+             which the selection is being inserted; the index
+             number of the pane to which the selection is being
+             inserted; the desired index number of the new selec-
+             tion; a null-terminated string that will be the
+             label for the new selection; A (char *) data value
+             that will be returned by _X_M_e_n_u_A_c_t_i_v_a_t_e whenever the
+             new selection is selected by a user; and an int that
+             designates whether or not the selection will be con-
+             sidered active for selection.  It is sometimes use-
+             ful to insert inactive selections which may become
+             active as the application state changes.  If the
+             insert operation is successful the index number of
+             the selection just inserted will be returned.  If it
+             fails _X_M__F_A_I_L_U_R_E will be returned.
+
+     XMenuFindPane
+             This routine allows the application to find the
+             index number of a pane whose label matches a given
+             NULL terminated string.  _X_M_e_n_u_F_i_n_d_P_a_n_e takes the
+             following arguments: the menu containing the pane
+             whose index number is being searched for; and a null
+             terminated string to be searched for.  If the find
+             operation is successful then the index number of the
+             first pane whose label matches the given string will
+             be returned.  If it fails _X_M__F_A_I_L_U_R_E will be
+             returned.
+
+     XMenuFindSelection
+             This routine allows the application to find the
+             index number of a selection whose label matches a
+             given NULL terminated string.  _X_M_e_n_u_F_i_n_d_S_e_l_e_c_t_i_o_n
+             takes the following arguments:  the menu containing
+             the pane which contains the selection being searched
+             for; the index number of the pane which contains the
+             selection being searched for; and a null terminated
+             string to be searched for.  If the find operation is
+             successful then the index number of the first selec-
+             tion whose label matched the given string will be
+             returned.  If is fails _X_M__F_A_I_L_U_R_E will be returned.
+
+     XMenuChangePane
+             This routine allows the application to change a
+             pane's label on the fly.  This is useful for situa-
+             tions where a state change in the application must
+             be reflected in the menu.  _X_M_e_n_u_C_h_a_n_g_e_P_a_n_e takes the
+             following arguments: the menu containing the pane
+             whose label is being changed; the index number of
+             that pane in the specified menu; and a null-
+             terminated string that will be the used as the new
+
+
+
+Printed 1/10/87          29 January 1986                        7
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+             pane label.  If the change operation is successful
+             the index number of the pane just changed will be
+             returned.  If it fails _X_M__F_A_I_L_U_R_E will be returned.
+             _X_M_e_n_u_C_h_a_n_g_e_P_a_n_e may be called any time after the
+             pane being changed has been added / inserted into
+             the specified menu.
+
+     XMenuChangeSelection
+             This routine allows the application to change a
+             selection's data and label on the fly.  This is use-
+             ful for situations where a state change in the
+             application must be reflected in the menu.  _X_M_e_n_u_-
+             _C_h_a_n_g_e_S_e_l_e_c_t_i_o_n takes the following arguments: the
+             menu containing the pane that contains the selection
+             to be changed; the index number of that pane in the
+             menu; the index number of the selection to be
+             changed; a (char *) new data value for the selec-
+             tion; an int that indicates whether or not to actu-
+             ally store the new data value (in case only the
+             label is being changed); Aanull-terminated string
+             that will be the used as the new selection label;
+             and an int that indicates whether or not to actually
+             store the new label (incase only the data value is
+             being changed).  If the change operation is success-
+             ful the index number of the selection just changed
+             will be returned.  If it fails _X_M__F_A_I_L_U_R_E will be
+             returned.  _X_M_e_n_u_C_h_a_n_g_e_S_e_l_e_c_t_i_o_n may be called any-
+             time after the pane selection being changed has been
+             added to the specified pane and menu.
+
+     XMenuSetPane
+             _X_M_e_n_u_S_e_t_P_a_n_e allows the application to make an
+             active pane inactive or an inactive pane active.
+             This provides the application with the ability to
+             restrict the usage of certain panes to times when
+             they may or may not have a valid purpose.  In addi-
+             tion this allows the application to activate and
+             utilize dummy panes that were added at menu creation
+             time as place holders for future selections.
+             _X_M_e_n_u_S_e_t_P_a_n_e takes the following arguments: the menu
+             containing the pane to be activated or deactivated;
+             the index number of that pane in the specified menu;
+             and an int that designates whether or not the pane
+             is to be considered active for selection.  If the
+             set operation is successful the index number of the
+             pane just set will be returned.  If it fails
+             _X_M__F_A_I_L_U_R_E will be returned.  _X_M_e_n_u_S_e_t_P_a_n_e may be
+             called anytime after the pane being set has been
+             added / inserted into the specified menu.
+
+     XMenuSetSelection
+             _X_M_e_n_u_S_e_t_S_e_l_e_c_t_i_o_n allows the application to make an
+
+
+
+Printed 1/10/87          29 January 1986                        8
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+             active selection inactive or an inactive selection
+             active.  This provides the application with the
+             ability to restrict the usage of certain selections
+             to times when they may or may not have a valid pur-
+             pose.  In addition this allows the application to
+             activate and utilize selections that were added at
+             menu creation time with a future purpose in mind.
+             _X_M_e_n_u_S_e_t_S_e_l_e_c_t_i_o_n takes the following arguments: the
+             menu containing the pane that contains the selection
+             to be activated or deactivated;  the index number of
+             that pane in the menu;  the index number of the
+             selection to be activated / deactivated; and an int
+             that designates whether or not to make the specified
+             selection active.  If the set operation is success-
+             ful the index number of the selection just set will
+             be returned.  If it fails _X_M__F_A_I_L_U_R_E will be
+             returned.  _X_M_e_n_u_S_e_t_S_e_l_e_c_t_i_o_n may be called anytime
+             after the pane selection being set has been added to
+             the specified pane and menu.
+
+     XMenuDeletePane
+             This routine allows the application to delete panes
+             when they will no longer be needed.  _X_M_e_n_u_D_e_l_e_t_e_P_a_n_e
+             takes the following arguments: the menu containing
+             the pane to be deleted; and the index number of that
+             pane in the specified menu.
+
+     XMenuDeleteSelection
+             This routine allows the application to delete selec-
+             tions when they will no longer be needed.  _X_M_e_n_u_-
+             _D_e_l_e_t_e_S_e_l_e_c_t_i_o_n takes the following arguments: the
+             menu containing the pane which contains the selec-
+             tion to be deleted; the index number of the pane
+             containing the selection to be deleted; and the
+             index number of the selection to be deleted in that
+             pane.
+
+     XMenuRecompute
+             After the initial menu configuration has been con-
+             structed (in fact, anytime that the menu configura-
+             tion, a pane label or selection label is altered),
+             the menu dependencies need to be recomputed.  _X_M_e_n_u
+             will do this automatically if needed when _X_M_e_n_u_L_o_-
+             _c_a_t_e or _X_M_e_n_u_A_c_t_i_v_a_t_e is called.  In the interest of
+             efficiency it is suggested that the application call
+             _X_M_e_n_u_R_e_c_o_m_p_u_t_e prior to any calls to _X_M_e_n_u_L_o_c_a_t_e or
+             _X_M_e_n_u_A_c_t_i_v_a_t_e. This need only be done if
+             _X_M_e_n_u_A_d_d_P_a_n_e, _X_M_e_n_u_A_d_d_S_e_l_e_c_t_i_o_n, _X_M_e_n_u_I_n_s_e_r_t_P_a_n_e,
+             _X_M_e_n_u_I_n_s_e_r_t_S_e_l_e_c_t_i_o_n, _X_M_e_n_u_C_h_a_n_g_e_P_a_n_e, _X_M_e_n_u_-
+             _C_h_a_n_g_e_S_e_l_e_c_t_i_o_n, _X_M_e_n_u_D_e_l_e_t_e_P_a_n_e, or _X_M_e_n_u_-
+             _D_e_l_e_t_e_S_e_l_e_c_t_i_o_n have been called since the last call
+             to _X_M_e_n_u_R_e_c_o_m_p_u_t_e or _X_M_e_n_u_A_c_t_i_v_a_t_e. If
+
+
+
+Printed 1/10/87          29 January 1986                        9
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+             _X_M_e_n_u_R_e_c_o_m_p_u_t_e is called before the first pane has
+             been added to the menu a error will result indicat-
+             ing that the menu has not been initialized.  The
+             most efficient state is achieved if a sequence of
+             panes and selections are added or modified in order
+             and then a single call is immediately made to
+             _X_M_e_n_u_R_e_c_o_m_p_u_t_e. In this way all operations will
+             batched and all dependencies will be up to date by
+             the time the next _X_M_e_n_u_A_c_t_i_v_a_t_e call occurs.  If the
+             recompute operation is successful _X_M__S_U_C_C_E_S_S will be
+             be returned.  If it fails _X_M__F_A_I_L_U_R_E will be
+             returned.
+
+     XMenuLocate
+             This routine provides an application will all the
+             necessary data to properly locate and position a
+             menu with respect to the parent window.  _X_M_e_n_u_L_o_c_a_t_e
+             takes the following arguments: the menu that is
+             being located; the index number of the desired
+             current pane; the index number of the desired
+             current selection; the X and Y coordinates of where
+             the application would like the center of the current
+             selection (in the current pane) to be; and four
+             return value pointers to int that will be filled in
+             by the routine.  The four return value pointers are
+             set to the following values (respectively):  the
+             upper left X and Y coordinates of the entire menu
+             (relative to the parent window); and the overall
+             width and height of the entire menu.    If the
+             specified current selection is not a valid selection
+             index within the specified current pane (i.e., a
+             negative value or a value greater than the index of
+             the last selection in that pane) the return values
+             will be computed with the specified X and Y location
+             in the center of the flag of the specified current
+             pane.  If the locate operation is successful
+             _X_M__S_U_C_C_E_S_S will be be returned.  If it fails
+             _X_M__F_A_I_L_U_R_E will be returned.
+
+     XMenuSetAEQ
+          This routine allows the application to enable _A_s_y_n_c_h_r_o_-
+          _n_o_u_s _E_v_e_n_t _Q_u_e_u_e_i_n_g mode.  _X_M_e_n_u_S_e_t_A_E_Q takes two argu-
+          ments: The menu to be set and an int that indicates
+          whether or not to place the menu in _A_s_y_n_c_h_r_o_n_o_u_s _E_v_e_n_t
+          _Q_u_e_u_e_i_n_g (_A_E_Q) mode.  When in this mode foreign events
+          are queue for the duration of menu activation.  For a
+          complete discussion of asynchronous event handling and
+          the other _A_s_y_n_c_h_r_o_n_o_u_s _E_v_e_n_t modes please see the
+          description of _X_M_e_n_u_A_c_t_i_v_a_t_e below.
+
+     XMenuSetEvHandler
+             _X_M_e_n_u_S_e_t_E_v_H_a_n_d_l_e_r allows the application to enable
+
+
+
+Printed 1/10/87          29 January 1986                       10
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+             _A_s_y_n_c_h_r_o_n_o_u_s _E_v_e_n_t _H_a_n_d_o_f_f (_A_E_H) mode.
+             _X_M_e_n_u_S_e_t_E_v_H_a_n_d_l_e_r takes two arguments: The menu to
+             be set and a pointer to a routine which returns int.
+             When in this mode foreign events are handed off to
+             the specified routine as they are received (provied
+             _A_E_Q mode is not enabled).  Specifing a NULL event
+             handling routine will effectively disable _A_s_y_n_c_h_r_o_-
+             _n_o_u_s _E_v_e_n_t _H_a_n_d_o_f_f mode.  For a complete discussion
+             of asynchronous event handling and the various _A_s_y_n_-
+             _c_h_r_o_n_o_u_s _E_v_e_n_t modes please see the description of
+             _X_M_e_n_u_A_c_t_i_v_a_t_e below.  The format of the handler
+             should be as follows:
+             int handler(event)
+             XEvent *event;
+
+     XMenuSetFreeze
+             This routine allows the application to forcibly
+             override the _X_d_e_f_a_u_l_t_s setting of the `freeze'
+             parameter.  If freeze mode is turned on the bits
+             under where the menu will appear are saved by _X_M_e_n_u
+             then the _X server is frozen and remains frozed while
+             the menu is activated.  Immediately after the menu
+             is deactivated the bits under the menu are restored
+             to their original state and the server is unfrozen.
+             This routine is necessary for certain applications
+             that must guarantee that the screen contents are not
+             damaged by _X_M_e_n_u. _X_M_e_n_u_S_e_t_F_r_e_e_z_e takes two argu-
+             ments: The menu to be set and an int that indicates
+             whether or not to place the menu in freeze mode.
+
+     XMenuActivate
+             _X_M_e_n_u_A_c_t_i_v_a_t_e maps a given menu to the display and
+             activates the menu for user selection.  Since _X
+             processes events in an asynchronous manner it is
+             suggested that the application synchronize the X
+             connection and and process all events in the _X_l_i_b
+             internal event queue before _X_M_e_n_u_A_c_t_i_v_a_t_e is called.
+             It is likely that _X_M_e_n_u_A_c_t_i_v_a_t_e will encounter
+             events not associated with _X_M_e_n_u (foreign events)
+             while it is executing.  These events are handled by
+             _X_M_e_n_u in one of three ways:
+
+               1)   _A_s_y_n_c_h_r_o_n_o_u_s _E_v_e_n_t _D_i_s_c_a_r_d (_A_E_D) mode.
+                    This is the default mode and requires no action on the
+                    part of the application.  To reenable this mode the
+                    asynchronous event handler should be set to NULL and
+                    _A_E_Q mode should be disabled.
+               2)   _A_s_y_n_c_h_r_o_n_o_u_s _E_v_e_n_t _Q_u_e_u_e_i_n_g (_A_E_Q) mode.
+                    This mode is set by _X_M_e_n_u_S_e_t_A_E_Q).  In this mode
+                    all foreign events will be queued up until
+                    _X_M_e_n_u_A_c_t_i_v_a_t_e terminates, at which time they will
+                    be returned to the _X event queue.  As long as
+
+
+
+Printed 1/10/87          29 January 1986                       11
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+                    _A_E_Q mode is enabled any specified asynchronous event
+                    handler  (i.e., _A_E_H mode) is temporarily disabled.
+                    Disableing _A_E_Q mode will return _X_M_e_n_u to its
+                    previous method of asynchronous event handling.
+               3)   _A_s_y_n_c_h_r_o_n_o_u_s _E_v_e_n_t _H_a_n_d_o_f_f (_A_E_H) mode.
+                    In this mode the application has identified an
+                    asynchronous event handler (via _X_M_e_n_u_S_e_t_E_V_H_a_n_d_l_e_r)
+                    which will accept foreign events.  Enableling _A_E_Q
+                    mode temporarily disables any specified asynchronous
+                    event handler.  Setting the asynchronous event handler
+                    to NULL will enable _A_E_D mode (provided _A_E_Q mode
+                    is not enabled).
+
+     _X_M_e_n_u_A_c_t_i_v_a_t_e takes the following arguments: the menu that
+     is to be posted; the desired current pane and selection; the
+     X and Y menu position; the mouse button event mask; and a
+     pointer to a pointer to char (char **).  The menu is posi-
+     tioned within the menu's parent window such that the speci-
+     fied X and Y location (relative to the parent window) is in
+     the center of the specified current selection in the current
+     pane.  If the specified current selection is not a valid
+     selection index within the specified current pane (i.e., a
+     negative value or a value greater than the index of the last
+     selection in that pane) the menu will be mapped with the
+     specified X and Y location in the center of the flag of the
+     specified current pane.  The mouse button event mask pro-
+     vided by the application should be suitable for an _X_G_r_a_b_-
+     _M_o_u_s_e operation.  It provides the application with a way to
+     indicate which mouse events will be used to identify a
+     selection request.  Every time _X_M_e_n_u_A_c_t_i_v_a_t_e returns, the
+     pane and selection indices are left at their last known
+     values (i.e., the last current pane and selection indices).
+     The following are the defined return states for this rou-
+     tine:
+
+               1)   If the selection that is current at the time a
+                    selection request is made is active then the data
+                    pointer will be set to the data associated with that
+                    particular selection and _X_M__S_U_C_C_E_S_S is returned.
+               2)   If the selection that is current at the time a
+                    selection request is made is not active then the data
+                    pointer will be left untouched and _X_M__I_A__S_E_L_E_C_T will
+                    be returned.
+               3)   If there is no selection current at the time a
+                    selection request is made then the data pointer will
+                    be left untouched and _X_M__N_O__S_E_L_E_C_T will be returned.
+               4)   If at any time an error occurs the data pointer is
+                    left untouched and _X_M__F_A_I_L_U_R_E is returned.
+
+     XMenuDestroy
+             When the application is no longer intending to use a
+             menu _X_M_e_n_u_D_e_s_t_r_o_y should be called.  _X_M_e_n_u_D_e_s_t_r_o_y
+
+
+
+Printed 1/10/87          29 January 1986                       12
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+             frees all resources (both _X resources and system
+             resources) that are being held by the menu.  _X_M_e_n_u_-
+             _D_e_s_t_r_o_y takes only one argument, the menu to be des-
+             troyed.  WARNING! Using a menu after it has been
+             destroyed is to invite disaster!
+
+     XMenuError
+             When called _X_M_e_n_u_E_r_r_o_r will return a null-terminated
+             string that describes the current error state of the
+             _X_M_e_n_u library.  The string returned is static in the
+             _X_M_e_n_u library and should not be modified or freed.
+             The error state is set every time an _X_M_e_n_u routine
+             returns a status condition.  _X_M_e_n_u_E_r_r_o_r takes no
+             arguments.
+
+X DEFAULTS
+     MenuFreeze
+             Determines whether or not to grab the _X server while
+             a menu is posted.  One of: _o_n, _o_f_f. The default
+             value is _o_f_f.
+
+     MenuReverseVideo
+             Determines whether clock should be in normal mode
+             (white on black) or reverse video mode (black on
+             white).  On color displays this value is ignored.
+             One of: _o_n, _o_f_f. The default value is _o_f_f.
+
+     MenuStyle
+             Determines the menu display style.  One of:
+             _l_e_f_t__h_a_n_d, _r_i_g_h_t__h_a_n_d, _c_e_n_t_e_r. The default value is
+             _r_i_g_h_t__h_a_n_d.
+
+     MenuMode
+             Determines the menu selection high light mode.  One
+             of: _b_o_x, _i_n_v_e_r_t. If _b_o_x mode is chosen then the
+             _S_e_l_e_c_t_i_o_n_B_o_r_d_e_r_W_i_d_t_h and _S_e_l_e_c_t_i_o_n_B_o_r_d_e_r_C_o_l_o_r param-
+             eters effect the box line width and color respec-
+             tively.  If _i_n_v_e_r_t mode is chose then the _S_e_l_e_c_t_i_o_n_-
+             _F_o_r_e_g_r_o_u_n_d and _M_e_n_u_B_a_c_k_g_r_o_u_n_d colors are used for
+             the inversion.  The default value is _i_n_v_e_r_t.
+
+     MenuMouse
+             Determines the color of the mouse cursor while it is
+             within the menu.  On black and white displays this
+             value is ignored.  Any valid _X color may be used.
+             The default value is _B_l_a_c_k.
+
+     MenuBackground
+             Determines the menu background color.  On black and
+             white displays this value is ignored.  Any valid _X
+             color may be used.  The default value is _W_h_i_t_e.
+
+
+
+
+Printed 1/10/87          29 January 1986                       13
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+     MenuInactivePattern
+             Determines which of the five possible bitmap pat-
+             terns will be used to tile inactive panes.  One of:
+             _d_i_m_p_l_e_1, _d_i_m_p_l_e_3, _g_r_a_y_1, _g_r_a_y_3, _c_r_o_s_s__w_e_a_v_e. The
+             default value is _g_r_a_y_3.
+
+     PaneStyle
+             Determines the display style of all menu panes.  One
+             of: _f_l_u_s_h__l_e_f_t, _f_l_u_s_h__r_i_g_h_t, _c_e_n_t_e_r. The default
+             value is _c_e_n_t_e_r.
+
+     PaneFont
+             Determines the font used for the label (heading
+             text) of each pane.  Any valid _X font may be used.
+             The default value is _8_x_1_3.
+
+     PaneForeground
+             Determines the pane foreground color.  This is the
+             color used for the label (heading text) in each
+             pane.  On black and white displays this value is
+             ignored.  Any valid _X color may be used.  The
+             default value is _B_l_a_c_k.
+
+     PaneBorder
+             Determines the color of all menu pane borders.  On
+             black and white displays this value is ignored.  Any
+             valid _X color may be used.  The default value is
+             _B_l_a_c_k.
+
+     PaneBorderWidth
+             Determines the width (in pixels) of all menu pane
+             borders.  Any integer greater than or equal to 0 may
+             be used.  The default value is 2.
+
+     PaneSpread
+             Determines the horizontal spread of menu panes.  Any
+             double greater than or equal to 0.0 may be used.  A
+             value of 1.0 specifies a one to one ratio between
+             horizontal spread and vertical spread.  A value less
+             than 1.0 will compress the menu panes inward and a
+             value greater than 1.0 will expand them outward.
+             The default value is 1.0.
+
+     SelectionStyle
+             Determines the display style of all menu selections.
+             One of: _f_l_u_s_h__l_e_f_t, _f_l_u_s_h__r_i_g_h_t, _c_e_n_t_e_r. The default
+             value is _f_l_u_s_h__l_e_f_t.
+
+     SelectionFont
+             Determines the font used for the text in each selec-
+             tion.  Any valid _X font may be used.  The default
+             value is _6_x_1_0.
+
+
+
+Printed 1/10/87          29 January 1986                       14
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+     SelectionForeground
+             Determines the selection foreground color.  This is
+             the color used for the text in each selection.  On
+             black and white displays this value is ignored.  Any
+             valid _X color may be used.  On black and white
+             displays this value is ignored.  The default value
+             is _b_l_a_c_k.
+
+     SelectionBorder
+             Determines the color of all menu selection borders.
+             On black and white displays this value is ignored.
+             Any valid _X color may be used.  The default value is
+             _b_l_a_c_k.
+
+     SelectionBorderWidth
+             Determines the width (in pixels) of all menu selec-
+             tion borders.  Any integer greater than or equal to
+             0 may be used.  The default value is 1.
+
+     SelectionSpread
+             Determines the inter-selection spread.  Any double
+             greater than or equal to 0.0 may be used.  A value
+             of 1.0 specifies that 1.0 times the height of the
+             current selection font will be used for padding The
+             default value is 0.25.
+
+DIAGNOSTICS
+     Since _X_M_e_n_u uses the _X_l_i_b library, the _X_I_O_E_r_r_o_r and _X_E_r_r_o_r
+     _X_l_i_b routines may be set by the application to change how
+     asynchronous error reporting occurs.
+
+     Synchronous error reporting is primarily accomplished by
+     examining the return values of routines and using the
+     _X_M_e_n_u_E_r_r_o_r routine.  Although its use is discouraged, syn-
+     chronous error reporting may also be accomplished by having
+     the application directly examine the value of the __X_M_E_r_r_o_r_-
+     _C_o_d_e global variable.  __X_M_E_r_r_o_r_C_o_d_e is set every time an
+     _X_M_e_n_u routine returns a status condition.  The following
+     sequence of symbols is provided in _X_M_e_n_u._h and may be used
+     to index the null-terminated description strings in the glo-
+     bal error string array __X_M_E_r_r_o_r_L_i_s_t.
+
+     _X_M_E__C_O_D_E__C_O_U_N_T      Total number of entries in __X_M_E_r_r_o_r_L_i_s_t (17).
+
+     _X_M_E__N_O__E_R_R_O_R        -> ``No error''
+     _X_M_E__N_O_T__I_N_I_T        -> ``Menu not initialized''
+     _X_M_E__A_R_G__B_O_U_N_D_S      -> ``Argument out of bounds''
+     _X_M_E__P__N_O_T__F_O_U_N_D     -> ``Pane not found''
+     _X_M_E__S__N_O_T__F_O_U_N_D     -> ``Selection not found''
+     _X_M_E__S_T_Y_L_E__P_A_R_A_M     -> ``Invalid menu style parameter''
+     _X_M_E__G_R_A_B__M_O_U_S_E      -> ``Unable to grab mouse''
+     _X_M_E__I_N_T_E_R_P__L_O_C      -> ``Unable to interpret locator''
+
+
+
+Printed 1/10/87          29 January 1986                       15
+
+
+
+
+
+
+XMENU(3X)           UNIX Programmer's Manual            XMENU(3X)
+
+
+
+     _X_M_E__C_A_L_L_O_C          -> ``Unable to calloc memory''
+     _X_M_E__C_R_E_A_T_E__A_S_S_O_C    -> ``Unable to create XAssocTable''
+     _X_M_E__S_T_O_R_E__B_I_T_M_A_P    -> ``Unable to store bitmap''
+     _X_M_E__M_A_K_E__T_I_L_E_S      -> ``Unable to make tile pixmaps''
+     _X_M_E__M_A_K_E__P_I_X_M_A_P     -> ``Unable to make pixmap''
+     _X_M_E__C_R_E_A_T_E__C_U_R_S_O_R   -> ``Unable to create cursor''
+     _X_M_E__O_P_E_N__F_O_N_T       -> ``Unable to open font''
+     _X_M_E__C_R_E_A_T_E__W_I_N_D_O_W   -> ``Unable to create windows''
+     _X_M_E__C_R_E_A_T_E__T_R_A_N_S_P   -> ``Unable to create transparencies''
+
+FILES
+     /usr/include/X/XMenu.h, /usr/lib/libXMenu.a,
+     /usr/include/X/Xlib.h, /usr/lib/libX.a
+
+SEE ALSO
+     Xlib(3x), X(1), X(8c)
+
+AUTHOR
+     Copyright 1985, 1986, Massachusetts Institute of Technology.
+
+     See _X(_1) for a complete copyright notice.
+
+     Tony Della Fera (MIT Project Athena, DEC)
+
+BUGS
+     There is a problem that necessitates an additional round
+     trip time when panes are activated and deactivated.  In
+     order for this to be fixed efficiently, a change needs to be
+     made to the _X protocol.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 1/10/87          29 January 1986                       16
+
+
+

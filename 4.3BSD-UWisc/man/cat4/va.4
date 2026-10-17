@@ -1,0 +1,132 @@
+
+
+
+VA(4)               UNIX Programmer's Manual                VA(4)
+
+
+
+NAME
+     va - Benson-Varian interface
+
+SYNOPSIS
+     controller va0 at uba0 csr 0164000 vector vaintr
+     disk vz0 at va0 drive 0
+
+DESCRIPTION
+     (NOTE: the configuration description, while counter-
+     intuitive, is actually as shown above.)
+
+     The Benson-Varian printer/plotter in normally used with the
+     line printer system.  This description is designed for those
+     who wish to drive the Benson-Varian directly.
+
+     In print mode, the Benson-Varian uses a modified ASCII char-
+     acter set.  Most control characters print various non-ASCII
+     graphics such as daggers, sigmas, copyright symbols, etc.
+     Only LF and FF are used as format effectors.  LF acts as a
+     newline, advancing to the beginning of the next line, and FF
+     advances to the top of the next page.
+
+     In plot mode, the Benson-Varian prints one raster line at a
+     time.  An entire raster line of bits (2112 bits = 264 bytes)
+     is sent, and then the Benson-Varian advances to the next
+     raster line.
+
+     Note: The Benson-Varian must be sent an even number of
+     bytes.  If an odd number is sent, the last byte will be
+     lost.  Nulls can be used in print mode to pad to an even
+     number of bytes.
+
+     To use the Benson-Varian yourself, you must realize that you
+     cannot open the device, /_d_e_v/_v_a_0 if there is a daemon
+     active.  You can see if there is an active daemon by doing a
+     _l_p_q(1) and seeing if there are any files being printed.
+     Printing should be turned off using _l_p_c(8).
+
+     To set the Benson-Varian into plot mode include the file
+     <_s_y_s/_v_c_m_d._h> and use the following _i_o_c_t_l(2) call
+
+          ioctl(fileno(va), VSETSTATE, plotmd);
+
+     where _p_l_o_t_m_d is defined to be
+
+          int plotmd[] = { VPLOT, 0, 0 };
+
+     and _v_a is the result of a call to _f_o_p_e_n on stdio.  When you
+     finish using the Benson-Varian in plot mode you should
+     advance to a new page by sending it a FF after putting it
+     back into print mode, i.e. by
+
+
+
+
+Printed 12/27/86          May 14, 1986                          1
+
+
+
+
+
+
+VA(4)               UNIX Programmer's Manual                VA(4)
+
+
+
+          int prtmd[] = { VPRINT, 0, 0 };
+          ...
+          fflush(va);
+          ioctl(fileno(va), VSETSTATE, prtmd);
+          write(fileno(va), "\f\0", 2);
+
+FILES
+     /dev/va0
+
+SEE ALSO
+     vfont(5), lpr(1), lpd(8), vp(4)
+
+DIAGNOSTICS
+     The following error numbers are significant at the time the
+     device is opened.
+
+     [ENXIO]   The device is already in use.
+
+     [EIO]     The device is offline.
+
+     The following message may be printed on the console.
+
+     va%d: npr timeout.  The device was not able to get data from
+     the UNIBUS within the timeout period, most likely because
+     some other device was hogging the bus.  (But see BUGS
+     below).
+
+BUGS
+     The 1's (one's) and l's (lower-case el's) in the Benson-
+     Varian's standard character set look very similar; caution
+     is advised.
+
+     The interface hardware is rumored to have problems which can
+     play havoc with the UNIBUS.  We have intermittent minor
+     problems on the UNIBUS where our _v_a lives, but haven't ever
+     been able to pin them down completely.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 14, 1986                          2
+
+
+

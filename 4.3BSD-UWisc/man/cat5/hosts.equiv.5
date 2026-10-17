@@ -1,0 +1,132 @@
+
+
+
+HOSTS.EQUIV(5)      UNIX Programmer's Manual       HOSTS.EQUIV(5)
+
+
+
+NAME
+     hosts.equiv - list of trusted hosts
+
+DESCRIPTION
+     _H_o_s_t_s._e_q_u_i_v resides in directory /_e_t_c and contains a list of
+     trusted hosts.  When an _r_l_o_g_i_n(1) or _r_s_h(1) request from
+     such a host is made, and the initiator of the request is in
+     /_e_t_c/_p_a_s_s_w_d, then no further validity checking is done.
+     That is, _r_l_o_g_i_n does not prompt for a password, and _r_s_h com-
+     pletes successfully.  So a remote user is ``equivalenced''
+     to a local user with the same user ID when the remote user
+     is in _h_o_s_t_s._e_q_u_i_v.
+
+     The format of _h_o_s_t_s._e_q_u_i_v is a list of names, as in this
+     example:
+
+           host1
+           host2
+           +@group1
+           -@group2
+
+     A line consisting of a simple host name means that anyone
+     logging in from that host is trusted.  A line consisting of
+     +@_g_r_o_u_p means that all hosts in that network group are
+     trusted.  A line consisting of -@_g_r_o_u_p means that hosts in
+     that group are not trusted.  Programs scan _h_o_s_t_s._e_q_u_i_v
+     linearly, and stop at the first hit (either positive for
+     hostname and +@ entries, or negative for -@ entries).  A
+     line consisting of a single + means that everyone is
+     trusted.
+
+     The ._r_h_o_s_t_s file has the same format as _h_o_s_t_s._e_q_u_i_v.  When
+     user _X_X_X executes _r_l_o_g_i_n or _r_s_h, the ._r_h_o_s_t_s file from _X_X_X's
+     home directory is conceptually concatenated onto the end of
+     _h_o_s_t_s._e_q_u_i_v for permission checking.  However, -@ entries
+     are not sticky.  If a user is excluded by a minus entry from
+     _h_o_s_t_s._e_q_u_i_v but included in ._r_h_o_s_t_s, then that user is con-
+     sidered trusted.  In the special case when the user is root,
+     then only the /._r_h_o_s_t_s file is checked.
+
+     It is also possible to have two entries (separated by a sin-
+     gle space) on a line of these files.  In this case, if the
+     remote host is equivalenced by the first entry, then the
+     user named by the second entry is allowed to log in as any-
+     one, that is, specify any name to the -l flag (provided that
+     name is in the /_e_t_c/_p_a_s_s_w_d file, of course).  Thus
+
+           sundown john
+
+     allows _j_o_h_n to log in from sundown as anyone.  The usual
+     usage would be to put this entry in the ._r_h_o_s_t_s file in the
+     home directory for _b_i_l_l . Then _j_o_h_n may log in as _b_i_l_l when
+
+
+
+Printed 12/27/86         1 February 1985                        1
+
+
+
+
+
+
+HOSTS.EQUIV(5)      UNIX Programmer's Manual       HOSTS.EQUIV(5)
+
+
+
+     coming from sundown.  The second entry may be a netgroup,
+     thus
+
+           +@group1 +@group2
+
+     allows any user in _g_r_o_u_p_2 coming from a host in _g_r_o_u_p_1 to
+     log in as anyone.
+
+FILES
+     /etc/hosts.equiv
+     /etc/yp/_d_o_m_a_i_n/netgroup
+     /etc/yp/_d_o_m_a_i_n/netgroup.byuser
+     /etc/yp/_d_o_m_a_i_n/netgroup.byhost
+
+SEE ALSO
+     rlogin(1), rsh(1), netgroup(5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         1 February 1985                        2
+
+
+

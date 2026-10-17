@@ -1,0 +1,132 @@
+
+
+
+YPXFR(8)            UNIX Programmer's Manual             YPXFR(8)
+
+
+
+NAME
+     ypxfr - transfer a YP map from some YP server to here
+
+SYNOPSIS
+     ypxfr [ -f ] [ -h _h_o_s_t ] [ -d _d_o_m_a_i_n ] [ -c ] [ -C _t_i_d _p_r_o_g
+     _i_p_a_d_d _p_o_r_t ] _m_a_p_n_a_m_e
+
+DESCRIPTION
+     _y_p_x_f_r moves a YP map to the local host by making use of nor-
+     mal YP services.  It creates a temporary map in the direc-
+     tory /_e_t_c/_y_p/_d_o_m_a_i_n (which must already exist), fills it by
+     enumerating the map's entries, fetches the map parameters
+     (master and order number) and loads them.  It then deletes
+     any old versions of the map and moves the temporary map to
+     the real mapname.
+
+     If _y_p_x_f_r is run interactively, it writes its output to the
+     terminal.  However, if it's invoked without a controlling
+     terminal, and if the log file /_e_t_c/_y_p/_y_p_x_f_r._l_o_g exists, it
+     will append all its output to that file.  Since _y_p_x_f_r is
+     most often run from /_u_s_r/_l_i_b/_c_r_o_n_t_a_b , or by _y_p_s_e_r_v , you
+     can use the log file to retain a record of what was
+     attempted, and what the results were.
+
+     For consistency between servers, _y_p_x_f_r should be run period-
+     ically for every map in the YP data base. Different maps
+     change at different rates:  the _s_e_r_v_i_c_e_s._b_y_n_a_m_e map may not
+     change for months at a time, for instance, and may therefore
+     be checked only once a day in the wee hours.  You may know
+     that _m_a_i_l._a_l_i_a_s_e_s or _h_o_s_t_s._b_y_n_a_m_e changes several times per
+     day.  In such a case, you may want to check hourly for
+     updates.   A _c_r_o_n_t_a_b(5) entry can be used to perform
+     periodic updates automatically. Rather than having a
+     separate _c_r_o_n_t_a_b entry for each map, you can group comands
+     to update several maps in a shell script.  Examples (mnemon-
+     ically named) are in /_e_t_c/_y_p: _y_p_x_f_r__1_p_e_r_d_a_y._s_h,
+     _y_p_x_f_r__2_p_e_r_d_a_y._s_h, and _y_p_x_f_r__1_p_e_r_h_o_u_r._s_h.  They can serve as
+     reasonable first cuts.
+
+     Refer to ypfiles(5) and ypserv(8) for an overview of the
+     yellow pages.
+
+OPTIONS
+     -f        Force the transfer to occur even if the version at
+               the master is not more recent than the local ver-
+               sion.
+
+     -c        Don't send a "Clear current map" request to the
+               local _y_p_s_e_r_v process.  Use this flag if _y_p_s_e_r_v is
+               not running locally at the time you are running
+               _y_p_x_f_r.  Otherwise, _y_p_x_f_r will complain that it
+               can't talk to the local _y_p_s_e_r_v, and the transfer
+
+
+
+Printed 12/27/86           1 Aug 1985                           1
+
+
+
+
+
+
+YPXFR(8)            UNIX Programmer's Manual             YPXFR(8)
+
+
+
+               will fail.
+
+     -h _h_o_s_t   Get the map from _h_o_s_t , regardless of what the map
+               says the master is.  If _h_o_s_t is not specified,
+               _y_p_x_f_r will ask the YP service for the name of the
+               master, and try to get the map from there.  _h_o_s_t
+               may be a name or an internet address in the form
+               _a._b._c._d .
+
+     -d _d_o_m_a_i_n Specify a domain other than the default domain.
+
+     -C _t_i_d _p_r_o_g _i_p_a_d_d _p_o_r_t
+               This option is only for use by _y_p_s_e_r_v.  When
+               _y_p_s_e_r_v invokes _y_p_x_f_r, it specifies that _y_p_x_f_r
+               should call back a _y_p_p_u_s_h process at the host with
+               IP address _i_p_a_d_d_r , registered as program number
+               _p_r_o_g , listening on port _p_o_r_t , and waiting for a
+               response to transaction _t_i_d .
+
+FILES
+     /etc/yp/ypxfr.log, /etc/yp/ypxfr_1perday.sh,
+     /etc/yp/ypxfr_2perday.sh, /etc/yp/ypxfr_1perhour.sh,
+     /usr/lib/crontab
+
+SEE ALSO
+     ypfiles(5), ypserv(8), yppush(8), YP protocol spec
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86           1 Aug 1985                           2
+
+
+

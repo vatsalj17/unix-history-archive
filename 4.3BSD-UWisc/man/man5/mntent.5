@@ -1,0 +1,114 @@
+.\" @(#)mntent.5 1.1 85/12/28 SMI;
+.TH MNTENT 5 "21 August 1985"
+.SH NAME
+mntent \- static information about filesystems
+.SH SYNOPSIS
+.B #include <mntent.h>
+.SH DESCRIPTION
+.IX  "mntent file"  ""  "\fLmntent\fP \(em file system static information"
+.IX  "file system"  "mntent file"  ""  "\fLmntent\fP \(em static information"
+.IX  "static file system information mntent"  ""  "static file system information \(em \fLmntent\fP"
+The file
+.I /etc/fstab
+describes the file systems and swapping partitions used by the local machine.
+It is created by the system administrator using a text editor
+and processed by commands which mount, unmount, check consistency of,
+dump and restore file systems, and by the system in providing
+swap space.
+.LP
+It consists of a number of lines of the form:
+.IP
+fsname dir type opts freq passno
+.LP
+an example of which would be:
+.IP
+/dev/xy0a / 4.2 rw,noquota 1 2
+.LP
+.LP
+The entries from this file are accessed using the routines in
+.IR getmntent (3),
+which returns a structure of the following form:
+.IP
+.ta \w'#define'u +\w'char\0\0'u +\w'*mnt_fsname;\0\0'u
+.nf
+struct mntent {
+	char	*mnt_fsname;	/* file system name */
+	char	*mnt_dir;	/* file system path prefix */
+	char	*mnt_type;	/* 4.2, nfs, swap, or ignore */
+	char	*mnt_opts;	/* ro, quota, etc. */
+	int	mnt_freq;	/* dump frequency, in days */
+	int	mnt_passno;	/* pass number on parallel fsck */
+};
+.fi
+.LP
+The fields are separated by white space,
+and a `#' as the first non-white character indicates a comment.
+.LP
+The \fImnt_type\fP field determines how the 
+.I mnt_fsname,
+and 
+.I mnt_opts
+fields will be interpreted.
+Below is a list of the file system types currently supported and
+the way each of them interprets these fields.
+.LP
+.B 4.2
+.IP mnt_fsname 12
+Must be a block special device.
+.IP mnt_opts 12
+Valid opts are ro, rw, quota, noquota.
+.LP
+.B NFS
+.IP mnt_fsname 12
+The path on the server of the directory to be served.
+.IP mnt_opts 12
+Valid opts are ro, rw, quota, noquota, hard, soft.
+.LP
+.B SWAP
+.IP mnt_fsname 12
+Must be a block special device swap partition.
+.IP mnt_opts 12
+Ignored.
+.LP
+If the
+.I mnt_type
+is specified as ``ignore'' the entry is ignored.
+This is useful to show disk partitions which are currently not used.
+.LP
+The field \fImnt_freq\fP indicates how often each partition should
+be dumped by the
+.IR dump (8)
+command (and triggers that commands \fBw\fP option which tells
+which file systems should be dumped).
+Most systems set the \fImnt_freq\fP field to 1 indicating that the
+file systems are dumped each day.
+.LP
+The final field \fImnt_passno\fP is used by the disk consistency
+check program
+.IR fsck (8)
+to allow overlapped checking of file systems during a reboot.  All
+file systems with \fImnt_passno\fP of 1 are first checked simultaneosly,
+then all file systems with \fImnt_passno\fP of 2, and so on.
+It is usual to make the \fImnt_passno\fP of the root file system have
+the value 1 and then check one file system on each available disk
+drive in each subsequent pass to the exhaustion of file system partitions.
+.LP
+.I /etc/fstab
+is only
+.I read
+by programs, and not written;
+it is the duty of the system administrator to properly create 
+and maintain this file.
+The order of records in
+.I /etc/fstab
+is important because
+.I fsck,
+.I mount,
+and
+.I umount
+process the file sequentially; file systems must appear
+\fIafter\fP file systems they are mounted within.
+.SH FILES
+/etc/fstab
+.SH SEE ALSO
+fsck(8), getmntent(3), mount(8), quotacheck(8), quotaon(8), umount(8)

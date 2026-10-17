@@ -1,0 +1,129 @@
+.\" @(#)quotactl.2 1.1 85/12/28 SMI; from UCB 15 April 1985
+.TH QUOTACTL 2 "20 August 1985"
+.SH NAME
+quotactl \- manipulate disk quotas
+.SH SYNOPSIS
+.nf
+.B #include <ufs/quota.h>
+.LP
+.B quotactl(cmd, special, uid, addr)
+.B int cmd;
+.B char *special;
+.B int uid;
+.B caddr_t addr;
+.fi
+.SH DESCRIPTION
+.LP
+.IX  "file system"  "quotactl disk quotas"  ""  "\fLquotactl\fP \(em disk quotas"
+.IX  "quotactl disk quotas"  ""  "\fLquotactl\fP \(em disk quotas"
+.IX  "disk quotas quotactl"  ""  "disk quotas \(em \fLquotactl\fP"
+The
+.I quotactl
+call manipulates disk quotas.  The
+.I cmd
+parameter indicates a command to be applied to the user ID
+.IR uid .
+.I Special
+is a pointer to a null-terminated string containing the path
+name of the block special device for the file system being manipulated.
+The block special device must be mounted.
+.I Addr
+is the address of an optional, command specific, data structure
+which is copied in or out of the system.  The interpretation of
+.I addr
+is given with each command below.
+.TP
+Q_QUOTAON
+Turn on quotas for a file system.
+.I Addr
+is a pointer to a null terminated string containing the path name
+of file containing the quotas for the file system.
+The quota file must exist; it is normally created with the
+.IR quotacheck (8)
+program.  This call is restricted to the super-user.
+.TP
+Q_QUOTAOFF
+Turn off quotas for a file system.
+This call is restricted to the super-user.
+.TP
+Q_GETQUOTA
+Get disk quota limits and current usage for user
+.IR uid .
+.I Addr
+is a pointer to a struct dqblk structure (defined in 
+.RI < ufs/quota.h >).
+Only the super-user may get the quotas of a user other than himself.
+.TP
+Q_SETQUOTA
+Set disk quota limits and current usage for user
+.IR uid .
+.I Addr
+is a pointer to a struct dqblk structure (defined in 
+.RI < ufs/quota.h >).
+This call is restricted to the super-user.
+.TP
+Q_SETQLIM
+Set disk quota limits for user
+.IR uid .
+.I Addr
+is a pointer to a struct dqblk structure (defined in 
+.RI < ufs/quota.h >).
+This call is restricted to the super-user.
+.TP
+Q_SYNC
+Update the on-disk copy of quota usages.
+This call is restricted to the super-user.
+.SH "RETURN VALUE"
+Upon successful completion, a value of 0 is returned.
+Otherwise, a value of \-1 is returned and
+.I errno
+is set to indicate the error.
+.SH ERRORS
+A
+.I quotactl
+call will fail when one of the following occurs:
+.TP 15
+[EINVAL]
+.I Cmd
+is invalid.
+.TP 15
+[EPERM]
+The call is privileged and the caller was not the super-user.
+.TP 15
+[EINVAL]
+The 
+.I special
+parameter is not a mounted file system
+or is a mounted file system without quotas enabled.
+.TP 15
+[ENOTBLK]
+The
+.I special
+parameter is not a block device.
+.TP 15
+[EFAULT]
+An invalid
+.I addr
+is supplied; the associated structure could not be copied in or out
+of the kernel.
+.TP 15
+[EINVAL]
+The
+.I addr
+parameter is being interpreted as the path of a quota file
+which exists but is either not a regular file or is not on the
+file system pointed to by the
+.I special
+parameter.
+.TP 15
+[EUSERS]
+The quota table is full.
+.SH "SEE ALSO"
+quotaon(8), quotacheck(8)
+.SH BUGS
+There should be some way to integrate this call with the resource
+limit interface provided by
+.IR setrlimit (2)
+and
+.IR getrlimit (2).
+Incompatible with Melbourne quotas.

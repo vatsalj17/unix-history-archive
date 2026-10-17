@@ -1,0 +1,132 @@
+
+
+
+YPFILES(5)          UNIX Programmer's Manual           YPFILES(5)
+
+
+
+NAME
+     ypfiles - the yellowpages database and directory structure
+
+DESCRIPTION
+     The yellow pages (YP) network lookup service uses a database
+     of _d_b_m files in the directory hierarchy at /_e_t_c/_y_p . A _d_b_m
+     database consists of two files, created by calls to the
+     _d_b_m(3X) library package.  One has the filename extension
+     ._p_a_g and the other has the filename extension ._d_i_r.  For
+     instance, the database named _h_o_s_t_s._b_y_n_a_m_e, is implemented by
+     the pair of files _h_o_s_t_s._b_y_n_a_m_e._p_a_g and _h_o_s_t_s._b_y_n_a_m_e._d_i_r.  A
+     _d_b_m database served by the YP is called a YP _m_a_p.  A YP
+     _d_o_m_a_i_n is a named set of YP maps. Each YP domain is imple-
+     mented as a subdirectory of /_e_t_c/_y_p containing the map.  Any
+     number of YP domains can exist.  Each may contain any number
+     of maps.
+
+     No maps are required by the YP lookup service itself,
+     although they may be required for the normal operation of
+     other parts of the system.  There is no list of maps which
+     YP serves - if the map exists in a given domain, and a
+     client asks about it, the YP will serve it.  For a map to be
+     accessible consistently, it must exist on all YP servers
+     that serve the domain.  To provide data consistency between
+     the replicated maps, an  entry to run _y_p_x_f_r periodically
+     should be made in /_u_s_r/_l_i_b/_c_r_o_n_t_a_b on each server.  More
+     information on this topic is in ypxfr(8).
+
+     YP maps should contain two distinguished key-value pairs.
+     The first is the key YP_LAST_MODIFIED, having as a value a
+     ten-character ASCII order number.  The order number should
+     be the UNIX time in seconds when the map was built.  The
+     second key is YP_MASTER_NAME, with the name of the YP master
+     server as a value. _m_a_k_e_d_b_m generates both key-value pairs
+     automatically.  A map that does not contain both key-value
+     pairs can be served by the YP, but the _y_p_s_e_r_v process will
+     not be able to return values for "Get order number" or "Get
+     master name" requests. In addition, values of these two keys
+     are used by _y_p_x_f_r when it transfers a map from a master YP
+     server to a slave. If _y_p_x_f_r cannot figure out where to get
+     the map, or if it is unable to determine whether the local
+     copy is more recent than the copy at the master, you must
+     set extra command line switches when you run it.
+
+     YP maps must be generated and modified only at the master
+     server.  They are copied to the slaves using _y_p_x_f_r(8) to
+     avoid potential byte-ordering problems among YP servers run-
+     ning on machines with different architectures, and to minim-
+     ize the amount of disk space required for the dbm files.
+     The YP database can be initially set up for both masters and
+     slaves by using _y_p_i_n_i_t(8).
+
+
+
+
+Printed 12/27/86           1 Aug 1985                           1
+
+
+
+
+
+
+YPFILES(5)          UNIX Programmer's Manual           YPFILES(5)
+
+
+
+     After the server databases are set up, it is probable that
+     the contents of some maps will change.  In general, some
+     ASCII source version of the database exists on the master,
+     and it is changed with a standard text editor.  The update
+     is incorporated into the YP map and is propagated from the
+     master to the slaves by running /_e_t_c/_y_p/_M_a_k_e_f_i_l_e . All Sun-
+     supplied maps have entries in /_e_t_c/_y_p/_M_a_k_e_f_i_l_e ; if you add
+     a YP map, edit the this file to support the new map.  The
+     makefile uses _m_a_k_e_d_b_m to generate the YP map on the master,
+     and _y_p_p_u_s_h to propagate the changed map to the slaves.
+     _y_p_p_u_s_h is a client of the map _y_p_s_e_r_v_e_r_s , which lists all
+     the YP servers. For more information on this topic, see
+     yppush(8).
+
+SEE ALSO
+     makedbm(8), ypinit(8), ypmake(8), ypxfr(8), yppush(8),
+     yppoll(8), ypserv(8), rpcinfo(8),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86           1 Aug 1985                           2
+
+
+

@@ -1,0 +1,65 @@
+
+
+
+GETDOMAINNAME(2)    UNIX Programmer's Manual     GETDOMAINNAME(2)
+
+
+
+NAME
+     getdomainname, setdomainname - get/set name of current
+     domain
+
+SYNOPSIS
+     getdomainname(name, namelen)
+     char *name;
+     int namelen;
+9     setdomainname(name, namelen)
+     char *name;
+     int namelen;
+
+DESCRIPTION
+     _G_e_t_d_o_m_a_i_n_n_a_m_e returns the name of the domain for the current
+     processor, as previously set by _s_e_t_d_o_m_a_i_n_n_a_m_e.  The parame-
+     ter _n_a_m_e_l_e_n specifies the size of the _n_a_m_e array.  The
+     returned name is null-terminated unless insufficient space
+     is provided.
+
+     _S_e_t_d_o_m_a_i_n_n_a_m_e sets the domain of the host machine to be
+     _n_a_m_e, which has length _n_a_m_e_l_e_n.  This call is restricted to
+     the super-user and is normally used only when the system is
+     bootstrapped.
+
+     The purpose of domains is to enable two distinct networks
+     that may have host names in common to merge.  Each network
+     would be distinguished by having a different domain name.
+     At the current time, only the yellow pages service makes use
+     of domains.
+
+RETURN VALUE
+     If the call succeeds a value of 0 is returned.  If the call
+     fails, then a value of -1 is returned and an error code is
+     placed in the global location _e_r_r_n_o.
+
+ERRORS
+     The following errors may be returned by these calls:
+
+     [EFAULT]       The _n_a_m_e parameter gave an invalid address.
+
+     [EPERM]        The caller was not the super-user.  This
+                    error only applies to setdomainname.
+
+BUGS
+     Domain names are limited to 255 characters.
+
+
+
+
+
+
+9
+
+
+Printed 12/27/86         19 August 1985                         1
+
+
+

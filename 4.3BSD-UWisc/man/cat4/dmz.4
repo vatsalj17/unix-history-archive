@@ -1,0 +1,132 @@
+
+
+
+DMZ(4)              UNIX Programmer's Manual               DMZ(4)
+
+
+
+NAME
+     dmz - DMZ-32 terminal multiplexor
+
+SYNOPSIS
+     device dmz0 at uba? csr 0160540
+          vector dmzrinta dmzxinta dmzrintb dmzxintb dmzrintc
+     dmzxintc
+
+DESCRIPTION
+     The _d_m_z device provides 24 lines of asynchronous serial line
+     support.  Modem control on all ports is available as an
+     option for the H3014 distribution panel.
+
+     Each line attached to a DMZ-32 serial line port behaves as
+     described in _t_t_y(4).  Input and output for each line may
+     independently be set to run at any of 16 speeds; see _t_t_y(4)
+     for the encoding.
+
+     Bit _i of flags may be specified for a _d_m_z to to say that a
+     line is not properly connected, and that the line should be
+     treated as hard-wired with carrier always present.  Thus
+     specifying ``flags 0x000004'' in the specification of _d_m_z0
+     would cause line _t_t_y_a_2 to be treated in this way.
+
+     The _d_m_z driver normally enables the input silos with a short
+     timeout (30 milliseconds); this allows multiple characters
+     to be received per interrupt during periods of high-speed
+     input.
+
+FILES
+     /dev/tty[abcefg][0-9a-n]
+
+SEE ALSO
+     tty(4)
+
+DIAGNOSTICS
+     dmz%d: NXM line %d.  No response from the UNIBUS on a DMA
+     transfer within a timeout period.  This is often followed by
+     a UNIBUS adapter error.  This occurs most frequently when
+     the UNIBUS is heavily loaded and when devices which hog the
+     bus (such as RK07s) are present.  It is not serious.
+
+     dmz%d: silo overflow.  The character input silo overflowed
+     before it could be serviced.  This can happen if a hard
+     error occurs when the CPU is running with elevated priority,
+     as the system will then print a message on the console with
+     interrupts disabled.  It is not serious.
+
+BUGS
+     It should be possible to set the silo timeout with a confi-
+     guration file option, as the value is a trade-off between
+     efficiency and response time for flow control and character
+
+
+
+Printed 12/27/86          April 7, 1986                         1
+
+
+
+
+
+
+DMZ(4)              UNIX Programmer's Manual               DMZ(4)
+
+
+
+     echo.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          April 7, 1986                         2
+
+
+

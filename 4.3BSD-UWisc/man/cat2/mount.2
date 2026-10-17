@@ -1,0 +1,198 @@
+
+
+
+MOUNT(2)            UNIX Programmer's Manual             MOUNT(2)
+
+
+
+NAME
+     mount - mount file system
+
+SYNOPSIS
+     #include <sys/mount.h>
+     mount(type, dir, flags, data)
+     int type;
+     char *dir;
+     int flags;
+     caddr_t data;
+
+DESCRIPTION
+     _m_o_u_n_t attaches a file system to a directory.  After a suc-
+     cessful return, references to directory _d_i_r will refer to
+     the root directory on the newly mounted file system.  _D_i_r is
+     a pointer to a null-terminated string containing a path
+     name.  _D_i_r must exist already, and must be a directory.  Its
+     old contents are inaccessible while the file system is
+     mounted.
+
+     The _f_l_a_g_s argument determines whether the file system can be
+     written on, and if set-uid execution is allowed.  Physically
+     write-protected and magnetic tape file systems must be
+     mounted read-only or errors will occur when access times are
+     updated, whether or not any explicit write is attempted.
+
+     _T_y_p_e indicates the type of the filesystem.  It must be one
+     of the types defined in _m_o_u_n_t._h.  _D_a_t_a is a pointer to a
+     structure which contains the type specific arguments to
+     mount.  Below is a list of the filesystem types supported
+     and the type specific arguments to each:
+
+     MOUNT_UFS
+         struct ufs_args {
+                 char    *fspec;      /* Block special file to mount */
+         };
+
+     MOUNT_NFS
+         #include           <nfs/nfs.h>
+         #include           <netinet/in.h>
+         struct nfs_args {
+                 struct sockaddr_in  *addr;  /* file server address */
+                 fhandle_t  *fh;      /* File handle to be mounted */
+                 int        flags;    /* flags */
+                 int        wsize;    /* write size in bytes */
+                 int        rsize;    /* read size in bytes */
+                 int        timeo;    /* initial timeout in .1 secs */
+                 int        retrans;  /* times to retry send */
+         };
+
+RETURN VALUE
+     _M_o_u_n_t returns 0 if the action occurred, and -1 if _s_p_e_c_i_a_l is
+
+
+
+Printed 12/27/86         19 August 1985                         1
+
+
+
+
+
+
+MOUNT(2)            UNIX Programmer's Manual             MOUNT(2)
+
+
+
+     inaccessible or not an appropriate file, if _n_a_m_e does not
+     exist, if _s_p_e_c_i_a_l is already mounted, if _n_a_m_e is in use, or
+     if there are already too many file systems mounted.
+
+ERRORS
+     _M_o_u_n_t will fail when one of the following occurs:
+
+     [EPERM]        The caller is not the super-user.
+
+     [ENOENT]       _S_p_e_c_i_a_l does not exist.
+
+     [ENOTBLK]      _S_p_e_c_i_a_l is not a block device.
+
+     [ENXIO]        The major device number of _s_p_e_c_i_a_l is out of
+                    range (this indicates no device driver exists
+                    for the associated hardware).
+
+     [EPERM]        The pathname contains a character with the
+                    high-order bit set.
+
+     [ENOTDIR]      A component of the path prefix in _n_a_m_e is not
+                    a directory.
+
+     [EBUSY]        _D_i_r is not a directory, or another process
+                    currently holds a reference to it.
+
+     [EBUSY]        No space remains in the mount table.
+
+     [EBUSY]        The super block for the file system had a bad
+                    magic number or an out of range block size.
+
+     [EBUSY]        Not enough memory was available to read the
+                    cylinder group information for the file sys-
+                    tem.
+
+     [EIO]          An I/O error occurred while reading the super
+                    block or cylinder group information.
+
+     [ENOTDIR]      A component of the path prefix in _s_p_e_c_i_a_l or
+                    _n_a_m_e is not a directory.
+
+     [EPERM]        The pathname of _s_p_e_c_i_a_l or _n_a_m_e contains a
+                    character with the high-order bit set.
+
+     [ENAMETOOLONG] The pathname of _s_p_e_c_i_a_l or _n_a_m_e was too long.
+
+     [ENOENT]       _S_p_e_c_i_a_l or _n_a_m_e does not exist.
+
+     [EACCES]       Search permission is denied for a component
+                    of the path prefix of _s_p_e_c_i_a_l or _n_a_m_e.
+
+     [EFAULT]       _S_p_e_c_i_a_l or _n_a_m_e points outside the process's
+
+
+
+Printed 12/27/86         19 August 1985                         2
+
+
+
+
+
+
+MOUNT(2)            UNIX Programmer's Manual             MOUNT(2)
+
+
+
+                    allocated address space.
+
+     [ELOOP]        Too many symbolic links were encountered in
+                    translating the pathname of _s_p_e_c_i_a_l or _n_a_m_e.
+
+     [EIO]          An I/O error occurred while reading from or
+                    writing to the file system.
+
+SEE ALSO
+     unmount(2), mount(8)
+
+BUGS
+     The error codes are in a state of disarray; too many errors
+     appear to the caller as one value.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         19 August 1985                         3
+
+
+

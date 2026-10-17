@@ -1,0 +1,264 @@
+
+
+
+XBIFF(1)            UNIX Programmer's Manual             XBIFF(1)
+
+
+
+NAME
+     XBIFF - X window system mail notification program
+
+SYNOPSIS
+     XBIFF [ option ] ...
+
+DESCRIPTION
+     _X_B_I_F_F periodically checks the user's mail file (i.e.
+     /usr/spool/mail/<user>) and indicates mail state (none, new
+     or old).  _X_B_I_F_F creates a window in which a pixmap is
+     displayed indicating current mail state.  The three pixmaps
+     used are: an empty mail box (no mail), a mail box with
+     letters and the flag up (new mail) and a mail box with
+     letters but with the flag down (old mail).  When new mail is
+     received, _X_B_I_F_F flashes the window.  If the user then
+     presses the left button in the window, a summary of the new
+     message(s) is displayed in another window.  A click of any
+     button in this window causes the window to go away.  Until
+     this is done, no further checks of the mailbox are per-
+     formed.
+
+     The middle button pops up a window giving a short summary of
+     every message in the mailbox.  This summary consists of the
+     ``From '' and ``Subject:'' lines of each message.  A click
+     of the mouse inside the window causes it to go away.  The
+     right button provides a menu from which the user may quit
+     the program or enter a program to read his/her mail.  As
+     with the left button, no further checks are made on the
+     mailbox until this function has ended.  The user must exit
+     the program to cause this to happen.
+
+     In either of the summary windows (either of new mail or of
+     all mail), as many lines as possible will be displayed,
+     given the size of the screen and the limits imposed by the
+     user on the command line and in the ~/.Xdefaults file.
+     Sometimes, however, not all the lines will fit in the sum-
+     mary window.  To view these lines, move the mouse out of the
+     window either to the top or to the bottom and, if you don't
+     move the mouse too far away, the window will scroll so as to
+     display hidden summary lines from the given direction.  E.g.
+     if you move the mouse out of the window to the bottom, lines
+     which are below the currently displayed ones will become
+     visible.  This scrolling can be stopped either by reentering
+     the window or by moving the mouse beyond a certain distance,
+     as specified on the command line or in the ~/.Xdefaults
+     file.  See below.
+
+     _X_B_I_F_F understands the following options:
+
+     -fn _f_o_n_t
+             Specify the font to use in displaying the hostname.
+             Defaults to _t_i_m_r_o_m_1_0.
+
+
+
+Printed 1/10/87         8 September 1986                        1
+
+
+
+
+
+
+XBIFF(1)            UNIX Programmer's Manual             XBIFF(1)
+
+
+
+     -fs _f_o_n_t
+             Specify the font to use in displaying summary lines.
+             Defaults to the -fn font.
+
+     -bd _c_o_l_o_r
+             Specify the border color.  On monochrome displays,
+             should be ``white'' or ``black''; white is the
+             default.
+
+     -bg _c_o_l_o_r
+             Specify the background color.  On monochrome
+             displays, should be ``white'' or ``black''; black is
+             the default.
+
+     -bw[idth] _p_i_x_e_l_s
+             Specify the width in pixels of the border around the
+             _X_B_I_F_F window. The default value is 0 pixels.
+
+     -fg _c_o_l_o_r
+             Specify the foreground color.  On monochrome
+             displays, should be ``white'' or ``black''; white is
+             the default.
+
+     -r[everse]
+             Cause _X_B_I_F_F to reverse foreground and background
+             colors.
+
+     -u[pdate] _s_e_c_o_n_d_s
+             Specify the frequency in seconds with which _X_B_I_F_F
+             checks the mail file and updates its display (except
+             if the _X_B_I_F_F window is obscured and then exposed,
+             immediate check and redisplay occurs).  The default
+             update frequency is 30 seconds.
+
+     -d[elay] _t_e_n_t_h_s _o_f _s_e_c_o_n_d_s
+             Specify the fequency in tenths of seconds which
+             _X_B_I_F_F will flash the window.  The default delay is 5
+             tenths of a second.
+
+     -st[hresh] _p_i_x_e_l_s
+             Set the number of pixels within which the mouse must
+             be of the window to cause the summary window to
+             scroll.  Once it begins scrolling, moving the mouse
+             outside this threshold will cause scrolling to
+             cease.
+
+     -sd[elay] _s_e_c_o_n_d_s
+             Specify, as a real number, the number of seconds to
+             delay between scrolls.  If the mouse remains outside
+             the window and within the scrolling threshold longer
+             than this, the window will scroll again.  The window
+             will continue scrolling one scroll-size (see below)
+
+
+
+Printed 1/10/87         8 September 1986                        2
+
+
+
+
+
+
+XBIFF(1)            UNIX Programmer's Manual             XBIFF(1)
+
+
+
+             every this many seconds until the mouse moves out-
+             side the threshold.
+
+     -ss[ize] _l_i_n_e_s
+             Set the number of lines to scroll each time to
+             _l_i_n_e_s.  This is summary lines, not screen scanlines.
+
+     =_g_e_o_m_e_t_r_y
+             The window is created with the specified size and
+             location determined by the supplied geometry specif-
+             ication.  See _X(_1) for a full explanation.
+
+     S=_g_e_o_m_e_t_r_y
+             Each summary window is created with the specified
+             size and location.  The width and height are inter-
+             preted a little differently than usual.  The width
+             is taken to be the _m_i_n_i_m_u_m number of characters wide
+             each window should be.  If you specify a width of 10
+             and there's a line of width 50, the window will be
+             created to hold the width 50 line.  The height is in
+             summary lines rather than screen scanlines.
+
+     [_h_o_s_t]:[_d_i_s_p_l_a_y]
+             Normally, _X_B_I_F_F gets the host and display number to
+             use from the environment variable ``DISPLAY''.
+             Either or both can be specified with this option.
+             _h_o_s_t specifies which machine to create the _X_B_I_F_F
+             window on, and _d_i_s_p_l_a_y specifies the display number.
+             For example, ``ginko:0'' creates an _X_B_I_F_F on display
+             0 on machine ginko. Either value can be defaulted by
+             omission but ``:'' is necessary to specify one or
+             both.
+
+X DEFAULTS
+     Font    Specify the font to use in displaying the hostname.
+
+     SummaryFont
+             Specify the font to use when displaying summary win-
+             dows.
+
+     Foreground
+             Set the foreground color.
+
+     Background
+             Set the background color.
+
+     Border  Set the border color.
+
+     BorderWidth
+             Set the border width of the window.
+
+
+
+
+
+Printed 1/10/87         8 September 1986                        3
+
+
+
+
+
+
+XBIFF(1)            UNIX Programmer's Manual             XBIFF(1)
+
+
+
+     ReverseVideo
+             If ``on'', reverse the definition of foreground and
+             background color.
+
+     Update  Set the interval (in seconds) to check the mail file
+             and update display.
+
+     Delay   Set the flash delay interval.
+
+     OtherCommand
+             Set the command which is executed when the _O_t_h_e_r
+             item in the right-button menu is selected.  This
+             command is passed directly to an instance of /bin/sh
+             so if you want it to create a window, use xterm.
+
+     SummaryGeometry
+             Same as for S=, above, only don't precede it with a
+             `S'.
+
+     ScrollThreshold
+             Equivalent to -st[hresh].
+
+     ScrollSize
+             Equivalent to -ss[ize].
+
+     ScrollDelay
+             Equivalent to -sd[elay].
+
+ENVIRONMENT
+     DISPLAY - to get the default host and display number.
+
+SEE ALSO
+     X(1), X(8C), select(2)
+
+DIAGNOSTICS
+     Unable to open display or create window.  Unable to query
+     root window for dimensions. Various X errors.
+
+BUGS
+     _X_B_I_F_F attempts to flash the window when new mail arrives;
+     this is quite slow when going across long nets and small
+     (e.g. less than 15) delays often result in only a single
+     flash.
+
+AUTHOR
+     David C. Martin (UC Berkeley).
+     Summary windows added by Adam R. de Boor (UC Berkeley)
+     Copyright (c) 1986, Regents of the University of California
+
+
+
+
+
+
+
+Printed 1/10/87         8 September 1986                        4
+
+
+

@@ -1,0 +1,66 @@
+
+
+
+MT(4)               UNIX Programmer's Manual                MT(4)
+
+
+
+NAME
+     mt - TM78/TU-78 MASSBUS magtape interface
+
+SYNOPSIS
+     master mt0 at mba? drive ?
+     tape mu0 at mt0 slave 0
+
+DESCRIPTION
+     The tm78/tu-78 combination provides a standard tape drive
+     interface as described in _m_t_i_o(4).  Only 1600 and 6250 bpi
+     are supported; the TU-78 runs at 125 ips and autoloads
+     tapes.
+
+SEE ALSO
+     mt(1), tar(1), tp(1), mtio(4), tm(4), ts(4), ut(4)
+
+DIAGNOSTICS
+     mu%d: no write ring.  An attempt was made to write on the
+     tape drive when no write ring was present; this message is
+     written on the terminal of the user who tried to access the
+     tape.
+
+     mu%d: not online.  An attempt was made to access the tape
+     while it was offline; this message is written on the termi-
+     nal of the user who tried to access the tape.
+
+     mu%d: can't change density in mid-tape.  An attempt was made
+     to write on a tape at a different density than is already
+     recorded on the tape.  This message is written on the termi-
+     nal of the user who tried to switch the density.
+
+     mu%d: hard error bn%d mbsr=%b er=%x ds=%b.   A tape error
+     occurred at block _b_n; the mt error register and drive status
+     register are printed in octal with the bits symbolically
+     decoded.  Any error is fatal on non-raw tape; when possible
+     the driver will have retried the operation which failed
+     several times before reporting the error.
+
+     mu%d: blank tape.  An attempt was made to read a blank tape
+     (a tape without even end-of-file marks).
+
+     mu%d: offline.  During an i/o operation the device was set
+     offline.  If a non-raw tape was used in the access it is
+     closed.
+
+BUGS
+     If any non-data error is encountered on non-raw tape, it
+     refuses to do anything more until closed.
+
+     Because 800 bpi tapes are not supported, the numbering of
+     minor devices is inconsistent with triple-density tape
+     units.  Unit 0 is drive 0, 1600 bpi.
+
+
+
+Printed 12/27/86          June 1, 1986                          1
+
+
+

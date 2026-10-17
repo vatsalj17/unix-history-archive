@@ -1,0 +1,64 @@
+
+
+
+GETNETGRENT(3N)     UNIX Programmer's Manual      GETNETGRENT(3N)
+
+
+
+NAME
+     getnetgrent, setnetgrent, endnetgrent, innetgr - get network
+     group entry
+
+SYNOPSIS
+     innetgr(netgroup, machine, user, domain)
+     char *netgroup, *machine, *user, *domain;
+9     setnetgrent(netgroup)
+     char *netgroup
+9     endnetgrent()
+9     getnetgrent(machinep, userp, domainp)
+     char **machinep, **userp, **domainp;
+
+DESCRIPTION
+     _I_n_n_g_e_t_g_r returns 1 or 0, depending on whether _n_e_t_g_r_o_u_p con-
+     tains the machine, user, domain triple as a member.  Any of
+     the three strings machine, user, or domain can be NULL, in
+     which case it signifies a wild card.
+
+     _G_e_t_n_e_t_g_r_e_n_t returns the next member of a network group.
+     After the call, machinep will contain a pointer to a string
+     containing the name of the machine part of the network group
+     member, and similarly for userp and domainp.  If any of
+     machinep, userp or domainp is returned as a NULL pointer, it
+     signifies a wild card. Getnetgrent will malloc space for the
+     name.  This space is released when a endnetgrent call is
+     made.  Getnetgrent returns 1 if it succeeding in obtaining
+     another member of the network group, 0 if it has reached the
+     end of the group.
+
+     _S_e_t_n_e_t_g_r_e_n_t establishes the network group from which getnet-
+     grent will obtain members, and also restarts calls to get-
+     netgrent from the beginning of the list.  If the previous
+     setnetgrent call was to a different network group, a endnet-
+     grent call is implied.  _E_n_d_n_e_t_g_r_e_n_t frees the space allo-
+     cated during the getnetgrent calls.
+
+FILES
+     /etc/netgroup
+     /etc/yp/_d_o_m_a_i_n/netgroup
+     /etc/yp/_d_o_m_a_i_n/netgroup.byuser
+     /etc/yp/_d_o_m_a_i_n/netgroup.byhost
+
+
+
+
+
+
+
+
+9
+
+
+Printed 12/27/86         1 February 1985                        1
+
+
+

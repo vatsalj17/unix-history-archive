@@ -1,0 +1,129 @@
+
+
+
+MOUNT(3R)           UNIX Programmer's Manual            MOUNT(3R)
+
+
+
+NAME
+     mount - keep track of remotely mounted filesystems
+
+SYNOPSIS
+     #include <rpcsvc/mount.h>
+
+RPC INFO
+     program number:
+          MOUNTPROG
+9     xdr routines:
+          xdr_exportbody(xdrs, ex)
+               XDR *xdrs;
+               struct exports *ex;
+          xdr_exports(xdrs, ex);
+               XDR *xdrs;
+               struct exports **ex;
+          xdr_fhandle(xdrs, fh);
+               XDR *xdrs;
+               fhandle_t *fp;
+          xdr_fhstatus(xdrs, fhs);
+               XDR *xdrs;
+               struct fhstatus *fhs;
+          xdr_groups(xdrs, gr);
+               XDR *xdrs;
+               struct groups *gr;
+          xdr_mountbody(xdrs, ml)
+               XDR *xdrs;
+               struct mountlist *ml;
+          xdr_mountlist(xdrs, ml);
+               XDR *xdrs;
+               struct mountlist **ml;
+          xdr_path(xdrs, path);
+               XDR *xdrs;
+               char **path;
+9     procs:
+          MOUNTPROC_MNT
+               argument of xdr_path, returns fhstatus.
+               Requires unix authentication.
+          MOUNTPROC_DUMP
+               no args, returns struct mountlist
+          MOUNTPROC_UMNT
+               argument of xdr_path, no results.
+               requires unix authentication.
+          MOUNTPROC_UMNTALL
+               no arguments, no results.
+               requires unix authentication.
+               umounts all remote mounts of sender.
+          MOUNTPROC_EXPORT
+          MOUNTPROC_EXPORTALL
+               no args, returns struct exports
+9     versions:
+
+
+
+Printed 12/27/86         10 August 1985                         1
+
+
+9
+
+
+MOUNT(3R)           UNIX Programmer's Manual            MOUNT(3R)
+
+
+
+          MOUNTVERS_ORIG
+9     structures:
+          struct mountlist {       /* what is mounted */
+               char *ml_name;
+               char *ml_path;
+               struct mountlist *ml_nxt;
+          };
+          struct fhstatus {
+               int fhs_status;
+               fhandle_t fhs_fh;
+          };
+          /*
+           * List of exported directories
+           * An export entry with ex_groups
+           * NULL indicates an entry which is exported to the world.
+           */
+          struct exports {
+               dev_t            ex_dev; /* dev of directory */
+               char       *ex_name;     /* name of directory */
+               struct groups   *ex_groups;   /* groups allowed to mount this entry */
+               struct exports  *ex_next;
+          };
+          struct groups {
+               char      *g_name;
+               struct groups  *g_next;
+          };
+
+SEE ALSO
+     mount(8), showmount(8), mountd(8C), _N_F_S _P_r_o_t_o_c_o_l _S_p_e_c, sec-
+     tion 3.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+9
+
+
+Printed 12/27/86         10 August 1985                         2
+
+
+

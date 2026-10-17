@@ -1,0 +1,198 @@
+
+
+
+RX(4)               UNIX Programmer's Manual                RX(4)
+
+
+
+NAME
+     rx - DEC RX02 floppy disk interface
+
+SYNOPSIS
+     controller fx0 at uba0 csr 0177170  vector rxintr
+     disk rx0 at fx0 drive 0
+     disk rx1 at fx0 drive 1
+
+DESCRIPTION
+     The _r_x device provides access to a DEC RX02 floppy disk unit
+     with M8256 interface module (RX211 configuration). The RX02
+     uses 8-inch, single-sided, soft-sectored floppy disks (with
+     pre-formatted industry-standard headers) in either single or
+     double density.
+
+     Floppy disks handled by the RX02 contain 77 tracks, each
+     with 26 sectors (for a total of 2,002 sectors).  The sector
+     size is 128 bytes for single density, 256 bytes for double
+     density.  Single density disks are compatible with the RX01
+     floppy disk unit and with IBM 3740 Series Diskette 1 sys-
+     tems.
+
+     In addition to normal (`block' and `raw') i/o, the driver
+     supports formatting of disks for either density and the
+     ability to invoke a 2 for 1 interleaved sector mapping com-
+     patible with the DEC operating system RT-11.
+
+     The minor device number is interpreted as follows:
+
+     Bit      Description
+     0        Sector interleaving  (1 disables interleaving)
+     1        Logical sector 1 is on track 1 (0 no, 1 yes)
+     2        Not used, reserved
+     Other    Drive number
+
+     The two drives in a single RX02 unit are treated as two
+     disks attached to a single controller.  Thus, if there are
+     two RX02's on a system, the drives on the first RX02 are
+     ``rx0'' and ``rx1'', while the drives on the second are
+     ``rx2'' and ``rx3''.
+
+     When the device is opened, the density of the disk currently
+     in the drive is automatically determined. If there is no
+     floppy in the device, open will fail.
+
+     The interleaving parameters are represented in raw device
+     names by the letters `a' through `d'.  Thus, unit 0, drive 0
+     is called by one of the following names:
+
+     Mapping       Device name   Starting track
+     interleaved   /dev/rrx0a    0
+     direct        /dev/rrx0b    0
+
+
+
+Printed 12/27/86          May 15, 1985                          1
+
+
+
+
+
+
+RX(4)               UNIX Programmer's Manual                RX(4)
+
+
+
+     interleaved   /dev/rrx0c    1
+     direct        /dev/rrx0d    1
+
+     The mapping used on the `c' device is compatible with the
+     DEC operating system RT-11.  The `b' device accesses the
+     sectors of the disk in strictly sequential order. The `a'
+     device is the most efficient for disk-to-disk copying.  This
+     mapping is always used by the block device.
+
+     I/O requests must start on a sector boundary, involve an
+     integral number of complete sectors, and not go off the end
+     of the disk.
+
+NOTES
+     Even though the storage capacity on a floppy disk is quite
+     small, it is possible to make filesystems on double density
+     disks. For example, the command
+          % mkfs /dev/rx0 1001 13 1 4096 512 32 0 4
+     makes a file system on the double density disk in rx0 with
+     436 kbytes available for file storage.  Using _t_a_r(1) gives a
+     more efficient utilization of the available space for file
+     storage.  Single density diskettes do not provide sufficient
+     storage capacity to hold file systems.
+
+     A number of _i_o_c_t_l(2) calls apply to the rx devices, and have
+     the form
+          #include <vaxuba/rxreg.h>
+          ioctl(fildes, code, arg)
+          int *arg;
+     The applicable codes are:
+
+     RXIOC_FORMAT      Format the diskette. The density to use is
+                       specified by the _a_r_g argument, zero gives
+                       single density while non-zero gives double
+                       density.
+
+     RXIOC_GETDENS     Return the density of the diskette (zero
+                       or non-zero as above).
+
+     RXIOC_WDDMK       On the next write, include a _d_e_l_e_t_e_d _d_a_t_a
+                       _a_d_d_r_e_s_s _m_a_r_k in the header of the first
+                       sector.
+
+     RXIOC_RDDMK       Return non-zero if the last sector read
+                       contained a _d_e_l_e_t_e_d _d_a_t_a _a_d_d_r_e_s_s _m_a_r_k in
+                       its header, otherwise return 0.
+
+ERRORS
+     The following errors may be returned by the driver:
+
+     [ENODEV]    Drive not ready; usually because no disk is in
+                 the drive or the drive door is open.
+
+
+
+Printed 12/27/86          May 15, 1985                          2
+
+
+
+
+
+
+RX(4)               UNIX Programmer's Manual                RX(4)
+
+
+
+     [ENXIO]     Nonexistent drive (on open); offset is too large
+                 or not on a sector boundary or byte count is not
+                 a multiple of the sector size (on read or
+                 write); or bad (undefined) ioctl code.
+
+     [EIO]       A physical error other than ``not ready'', prob-
+                 ably bad media or unknown format.
+
+     [EBUSY]     Drive has been opened for exclusive access.
+
+     [EBADF]     No write access (on format), or wrong density;
+                 the latter can only happen if the disk is
+                 changed without _c_l_o_s_i_n_g the device (i.e., cal-
+                 ling _c_l_o_s_e(2) ).
+
+FILES
+     /dev/rx?
+     /dev/rrx?[a-d]
+
+SEE ALSO
+     rxformat(8V), newfs(8), mkfs(8), tar(1), arff(8V)
+
+DIAGNOSTICS
+     rx%d: hard error, trk %d psec %d cs=%b, db=%b, err=%x, %x,
+     %x, %x.  An unrecoverable error was encountered.  The track
+     and physical sector numbers, the device registers and the
+     extended error status are displayed.
+
+     rx%d: state %d (reset).  The driver entered a bogus state.
+     This should not happen.
+
+BUGS
+     A floppy may not be formatted if the header info on sector
+     1, track 0 has been damaged.  Hence, it is not possible to
+     format completely degaussed disks or disks with other for-
+     mats than the two known by the hardware.
+
+     If the drive subsystem is powered down when the machine is
+     booted, the controller won't interrupt.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 15, 1985                          3
+
+
+

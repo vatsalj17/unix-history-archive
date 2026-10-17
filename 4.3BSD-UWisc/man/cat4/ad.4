@@ -1,0 +1,66 @@
+
+
+
+AD(4)               UNIX Programmer's Manual                AD(4)
+
+
+
+NAME
+     ad - Data Translation A/D converter
+
+SYNOPSIS
+     device ad0 at uba0 csr 0170400 vector adintr
+
+DESCRIPTION
+     _A_d provides the interface to the Data Translation A/D con-
+     verter.  This is not a real-time driver, but merely allows
+     the user process to sample the board's channels one at a
+     time.  Each minor device selects a different A/D board.
+
+     The driver communicates to a user process by means of
+     ioctls.  The AD_CHAN ioctl selects which channel of the
+     board to read.  For example,
+          chan = 5; ioctl(fd, AD_CHAN, &chan);
+     selects channel 5.  The AD_READ ioctl actually reads the
+     data and returns it to the user process.  An example is
+          ioctl(fd, AD_READ, &data);
+
+FILES
+     /dev/ad
+
+DIAGNOSTICS
+     None.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86          May 15, 1985                          1
+
+
+

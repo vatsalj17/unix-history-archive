@@ -1,0 +1,59 @@
+.\" @(#)ypwhich.8 1.1 85/12/28 SMI;
+.TH YPWHICH 8 "26 August 1985"
+.SH NAME
+ypwhich \- what machine is the YP server?
+.SH SYNOPSIS
+.B ypwhich
+[
+.B \-d
+domainname ] [ hostname ]
+.PP
+.B ypwhich
+[
+.B \-d
+domainname ] [
+.B \-t
+]
+.B \-m
+[ mname ]
+.SH DESCRIPTION
+.IX  "ypwhich command"  ""  "\fLypwhich\fP \(em who is yellow pages server"
+.I Ypwhich
+tells which YP server supplies yellow pages to a YP client,
+and which YP server is the master for a map.
+If invoked without arguments, it gives the YP server
+for the local machine.  If
+.I hostname
+is specified, that machine is queried
+to find out which YP master it is using.
+.PP
+If the
+.B \-m
+switch is used without \fImname\fP, a list of every map
+in the domain and the master of each will be printed.  If
+.I mname
+is specified, only the master YP server for that map is printed.
+.I Mname
+may be a mapname, or a nickname for a mapname.  
+Mapnames and nicknames are described in
+.IR ypcat (1).
+.SH OPTIONS
+.TP
+.B \-d
+.I Domainname
+specifies the name of a YP domain.
+The default is the default domain for the local machine.
+.TP
+.B \-m
+Find the master YP server for a map,
+or for all maps in a domain.  No
+.I hostname
+may be specified with
+.BR \-m .
+.TP
+.B \-t
+Inhibit nickname translation;
+useful if there is a mapname identical to a nickname.
+This is not true of any Sun-supplied map.
+.SH "SEE ALSO"
+ypfiles(5), rpcinfo(8), yppush(8), ypserv(8)

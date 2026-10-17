@@ -1,0 +1,66 @@
+
+
+
+EX(4)               UNIX Programmer's Manual                EX(4)
+
+
+
+NAME
+     ex - Excelan 10 Mb/s Ethernet interface
+
+SYNOPSIS
+     device ex0 at uba0 csr 164000 vector excdint
+
+DESCRIPTION
+     The _e_x interface provides access to a 10 Mb/s Ethernet net-
+     work through an Excelan controller used as a link-layer
+     interface.
+
+     Each of the host's network addresses is specified at boot
+     time with an SIOCSIFADDR ioctl.  The _e_x interface employs
+     the address resolution protocol described in _a_r_p(4P) to
+     dynamically map between Internet and Ethernet addresses on
+     the local network.
+
+     The interface normally tries to use a ``trailer'' encapsula-
+     tion to minimize copying data on input and output.  The use
+     of trailers is negotiated with ARP.  This negotiation may be
+     disabled, on a per-interface basis, by setting the
+     IFF_NOTRAILERS flag with an SIOCSIFFLAGS ioctl.
+
+DIAGNOSTICS
+     ex%d: HW %c.%c, NX %c.%c, hardware address %s.  This pro-
+     vides firmware revisions levels, and is expected during
+     autoconfiguration.
+
+     ex%d: can't initialize.  There was a failure in allocating
+     unibus resources for the device.
+
+     ex%d: configuration failed; cc = %x.  The hardware indicated
+     an error when trying to initalize itself.  The error code
+     returned is described at length in the device Reference
+     Manual.
+
+     ex%d: receive error %b.  The hardware indicated an error in
+     reading a packet from the cable.  Specific Error bits are
+     provided
+
+     ex%d: transmit error %b.  The hardware indicated an error in
+     transmitting a packet to the cable or an illegally sized
+     packet.  Specific Error bits are provided
+
+     ex%d: can't handle af%d.  The interface was handed a message
+     with addresses formatted in an unsuitable address family;
+     the packet was dropped.
+
+SEE ALSO
+     intro(4N), inet(4F), arp(4P)
+
+
+
+
+
+Printed 12/27/86          May 16, 1986                          1
+
+
+

@@ -1,0 +1,132 @@
+
+
+
+SETQUOTA(2)         UNIX Programmer's Manual          SETQUOTA(2)
+
+
+
+NAME
+     setquota - enable/disable quotas on a file system
+
+SYNOPSIS
+     setquota(special, file)
+     char *special, *file;
+
+DESCRIPTION
+     Disc quotas are enabled or disabled with the _s_e_t_q_u_o_t_a call.
+     _S_p_e_c_i_a_l indicates a block special device on which a mounted
+     file system exists.  If _f_i_l_e is nonzero, it specifies a file
+     in that file system from which to take the quotas.  If _f_i_l_e
+     is 0, then quotas are disabled on the file system.  The
+     quota file must exist; it is normally created with the _q_u_o_-
+     _t_a_c_h_e_c_k(8) program.
+
+     Only the super-user may turn quotas on or off.
+
+SEE ALSO
+     quota(2), quotacheck(8), quotaon(8)
+
+RETURN VALUE
+     A 0 return value indicates a successful call.  A value of -1
+     is returned when an error occurs and _e_r_r_n_o is set to indi-
+     cate the reason for failure.
+
+ERRORS
+     _S_e_t_q_u_o_t_a will fail when one of the following occurs:
+
+     [EPERM]        The caller is not the super-user.
+
+     [ENOENT]       _S_p_e_c_i_a_l does not exist.
+
+     [ENOTBLK]      _S_p_e_c_i_a_l is not a block device.
+
+     [ENXIO]        The major device number of _s_p_e_c_i_a_l is out of
+                    range (this indicates no device driver exists
+                    for the associated hardware).
+
+     [EPERM]        The pathname contains a character with the
+                    high-order bit set.
+
+     [ENOTDIR]      A component of the path prefix in _f_i_l_e is not
+                    a directory.
+
+     [EACCES]       _F_i_l_e resides on a file system different from
+                    _s_p_e_c_i_a_l.
+
+     [EACCES]       _F_i_l_e is not a plain file.
+
+     [ENAMETOOLONG] The pathname was too long.
+
+
+
+
+Printed 12/27/86         19 August 1985                         1
+
+
+
+
+
+
+SETQUOTA(2)         UNIX Programmer's Manual          SETQUOTA(2)
+
+
+
+     [EFAULT]       _S_p_e_c_i_a_l or _f_i_l_e points outside the process's
+                    allocated address space.
+
+     [EIO]          An I/O error occurred while reading from or
+                    writing to the file system.
+
+BUGS
+     The error codes are in a state of disarray; too many errors
+     appear to the caller as one value.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 12/27/86         19 August 1985                         2
+
+
+

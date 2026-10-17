@@ -1,0 +1,256 @@
+.TH XBIFF 1 "8 September 1986" "X Version 10.3"
+.SH NAME
+XBIFF - X window system mail notification program
+.SH SYNOPSIS
+.B XBIFF
+[ option ] ...
+.SH DESCRIPTION
+.I XBIFF 
+periodically checks the user's mail file (i.e. /usr/spool/mail/<user>) and
+indicates mail state (none, new or old).
+.I XBIFF
+creates a window in which a pixmap is displayed indicating current mail 
+state.  The three pixmaps used are: an empty mail box (no mail), a mail box
+with letters and the flag up (new mail) and a mail box with letters but
+with the flag down (old mail).  When new mail is received,
+.I XBIFF
+flashes the window.
+If the user then presses the left button in the window,
+a summary of the new message(s) is displayed in another window.
+A click of any button in this window causes the window to go away.
+Until this is done,
+no further checks of the mailbox are performed.
+.PP
+The middle button pops up a window giving a short summary of every message in
+the mailbox.
+This summary consists of the ``From '' and ``Subject:'' lines of each message.
+A click of the mouse inside the window causes it to go away.
+The right button provides a menu from which the user may quit the
+program or enter a program to read his/her mail.
+As with the left button,
+no further checks are made on the mailbox until this function has ended.
+The user must exit the program to cause this to happen.
+.PP
+In either of the summary windows
+(either of new mail or of all mail),
+as many lines as possible will be displayed,
+given the size of the screen and the limits imposed by the user on the
+command line and in the ~/.Xdefaults file.
+Sometimes,
+however,
+not all the lines will fit in the summary window.
+To view these lines,
+move the mouse out of the window either to the top or to the bottom and,
+if you don't move the mouse too far away,
+the window will scroll so as to display hidden summary lines from the given
+direction.
+E.g. if you move the mouse out of the window to the bottom,
+lines which are below the currently displayed ones will become visible.
+This scrolling can be stopped either by reentering the window or by moving
+the mouse beyond a certain distance,
+as specified on the command line or in the ~/.Xdefaults file.
+See below.
+.PP
+.I XBIFF
+understands the following options:
+.PP
+.TP 8
+.B \-fn \fIfont\fP
+Specify the font to use in displaying the hostname.
+Defaults to \fItimrom10\fP.
+.PP
+.TP 8
+.B \-fs \fIfont\fP
+Specify the font to use in displaying summary lines.
+Defaults to the
+.B \-fn
+font.
+.PP
+.TP 8
+.B \-bd \fIcolor\fP
+Specify the border color.  On monochrome displays, should be ``white'' or
+``black''; white is the default.
+.PP
+.TP 8
+.B \-bg \fIcolor\fP
+Specify the background color.  On monochrome displays, should be ``white'' or
+``black''; black is the default.
+.PP
+.TP 8
+.B \-bw[idth] \fIpixels\fP
+Specify the width in pixels of the border around the
+.I XBIFF
+window. The default value is 0 pixels.
+.PP
+.TP 8
+.B \-fg \fIcolor\fP
+Specify the foreground color.  On monochrome displays, should be ``white'' or
+``black''; white is the default.
+.PP
+.TP 8
+.B \-r[everse]
+Cause
+.I XBIFF
+to reverse foreground and background colors.
+.PP
+.TP 8
+.B \-u[pdate] \fIseconds\fP
+Specify the frequency in seconds with which
+.I XBIFF
+checks the mail file and updates its display (except if the
+.I XBIFF
+window is obscured and then exposed, immediate check and redisplay occurs).
+The default update frequency is 30 seconds.
+.PP
+.TP 8
+.B \-d[elay] \fItenths of seconds\fP
+Specify the fequency in tenths of seconds which
+.I XBIFF
+will flash the window.  The default delay is 5 tenths of a second.
+.PP
+.TP 8
+.B \-st[hresh] \fIpixels\fP
+Set the number of pixels within which the mouse must be of the window to
+cause the summary window to scroll.
+Once it begins scrolling,
+moving the mouse outside this threshold will cause scrolling to cease.
+.PP
+.TP 8
+.B \-sd[elay] \fIseconds\fP
+Specify,
+as a real number,
+the number of seconds to delay between scrolls.
+If the mouse remains outside the window and within the scrolling threshold
+longer than this,
+the window will scroll again.
+The window will continue scrolling one scroll-size (see below) every
+this many seconds until the mouse moves outside the threshold.
+.PP
+.TP 8
+.B \-ss[ize] \fIlines\fP
+Set the number of lines to scroll each time to
+.IR lines .
+This is summary lines,
+not screen scanlines.
+.PP
+.TP 8
+.B =\fIgeometry\fP
+The window is created with the specified
+size and location
+determined
+by the supplied geometry specification.
+See \fIX(1)\fP for a full explanation.
+.PP
+.TP 8
+.B S=\fIgeometry\fP
+Each summary window is created with the specified size and location.
+The width and height are interpreted a little differently than usual.
+The width is taken to be the \fIminimum\fP number of characters wide each
+window should be.
+If you specify a width of 10 and there's a line of width 50,
+the window will be created to hold the width 50 line.
+The height is in summary lines rather than screen scanlines.
+.PP
+.TP 8
+.B \[\fIhost\fP]:\[\fIdisplay\fP]
+Normally,
+.I XBIFF
+gets the host and display number to use from the environment
+variable ``DISPLAY''.  Either or both can be specified with this option.
+.I host
+specifies which machine to create the
+.I XBIFF
+window on, and
+.I display
+specifies the display number.
+For example,
+``ginko:0'' creates an
+.I XBIFF
+on display 0 on machine ginko. Either value can be defaulted
+by omission but ``:'' is necessary to specify one or both.
+.SH X DEFAULTS
+.PP
+.TP 8
+.B Font
+Specify the font to use in displaying the hostname.
+.PP
+.TP 8
+.B SummaryFont
+Specify the font to use when displaying summary windows.
+.PP
+.TP 8
+.B Foreground
+Set the foreground color.
+.PP
+.TP 8
+.B Background
+Set the background color.
+.PP
+.TP 8
+.B Border
+Set the border color.
+.PP
+.TP 8
+.B BorderWidth
+Set the border width of the window.
+.PP
+.TP 8
+.B ReverseVideo
+If ``on'', reverse the definition of foreground and background color.
+.PP
+.TP 8
+.B Update
+Set the interval (in seconds) to check the mail file and update display.
+.PP
+.TP 8
+.B Delay
+Set the flash delay interval.
+.PP
+.TP 8
+.B OtherCommand
+Set the command which is executed when the
+.I Other
+item in the right-button menu is selected.
+This command is passed directly to an instance of /bin/sh so if you
+want it to create a window,
+use xterm.
+.PP
+.TP 8
+.B SummaryGeometry
+Same as for S=,
+above,
+only don't precede it with a `S'.
+.PP
+.TP 8
+.B ScrollThreshold
+Equivalent to
+.BR \-st[hresh] .
+.PP
+.TP 8
+.B ScrollSize
+Equivalent to
+.BR \-ss[ize] .
+.PP
+.TP 8
+.B ScrollDelay
+Equivalent to
+.BR \-sd[elay] .
+.SH ENVIRONMENT
+DISPLAY - to get the default host and display number.
+.SH SEE ALSO
+X(1), X(8C), select(2)
+.SH DIAGNOSTICS
+Unable to open display or create window.
+Unable to query root window for dimensions. Various X errors.
+.SH BUGS
+.I XBIFF
+attempts to flash the window when new mail arrives; this is quite slow
+when going across long nets and small (e.g. less than 15) delays
+often result in only a single flash.
+.SH AUTHOR
+David C. Martin (UC Berkeley).
+.br
+Summary windows added by Adam R. de Boor (UC Berkeley)
+.br
+Copyright (c) 1986, Regents of the University of California
+
