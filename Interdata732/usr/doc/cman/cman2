@@ -1,0 +1,636 @@
+.SH
+7.  Expressions
+.LP
+The precedence of expression operators is the same
+as the order of the major
+subsections of this section (highest precedence first).
+Thus the expressions referred to as the operands of \fG+\fR
+(\(sc7.4)
+are those expressions defined in \(sc\(sc7.1-7.3.
+Within each subsection, the operators have the same
+precedence.
+Left- or right-associativity is specified
+in each subsection for the operators
+discussed therein.
+The precedence and associativity of all the expression
+operators is summarized in the
+collected grammar.
+.PP
+Otherwise the order of evaluation of expressions
+is undefined.  In particular the compiler
+considers itself free to
+compute subexpressions in the order it believes
+most efficient,
+even if the subexpressions
+involve side effects.
+Expressions involving a commutative and associative
+operator may be rearranged arbitrarily, even in the presence
+of parentheses;
+to force a particular order of evaluation
+an explicit temporary must be used.
+.SH
+7.1  Primary expressions
+.LP
+Primary expressions
+involving \fG.\fR\|, \fG\(mi>\fR, subscripting, and function calls
+group left to right.
+.SY
+	primary-expression:
+		\fIidentifier\fR
+		\fIconstant\fR
+		\fIstring\fR
+		\fG(\fI expression \fG)\fR
+		\fIprimary-expression\fG [\fI expression \fG]\fR
+		\fIprimary-expression \fG( \fIexpression-list\*(op \fG)
+		\fIprimary-lvalue \fG.\fI identifier\fR
+		\fIprimary-expression \fG\(mi>\fI identifier\fR
+.ES
+.SY
+	expression-list:
+		expression
+		expression-list \fG,\fI expression
+.ES
+An identifier is a primary expression, provided it has been
+suitably declared as discussed below.
+Its type is specified by its declaration.
+However, if the type of the identifier is `array of .\|.\|.',
+then the value of the identifier-expression
+is a pointer
+to the first object in the array, and the
+type of the expression is
+`pointer to .\|.\|.'.
+Moreover, an array identifier is not an lvalue
+expression.
+Likewise, an identifier which is declared
+`function returning .\|.\|.',
+when used except in the function-name position
+of a call, is converted to `pointer to function returning .\|.\|.'.
+.PP
+A decimal, octal, character, or floating
+constant is a primary expression.
+Its type may be
+.Bd int,
+.Bd long,
+or
+.Bd double
+depending on its form.
+.PP
+A string is a primary expression.
+Its type is originally `array of \fGchar\fR'; but following
+the same rule given above for identifiers,
+this is modified to `pointer to \fGchar\fR' and the
+result is a pointer to the first character
+in the string.
+(There is an exception in certain initializers;
+see \(sc8.6.)
+.PP
+A parenthesized expression is a primary expression
+whose type and value are identical
+to those of the unadorned expression.
+The presence of parentheses does
+not affect whether the expression is an
+lvalue.
+.PP
+A primary expression followed by an expression in square
+brackets is a primary expression.
+The intuitive meaning is that of a subscript.
+Usually, the primary expression has type `pointer to .\|.\|.',
+the subscript expression is \fGint\fR,
+and the type of the result is `\|.\|.\|.\|'.
+The expression `E1[E2]' is
+identical (by definition) to `\**\|(\|\|(\|E1\|)\|+\|(\|E2\|)\|\|)\|'.
+All the clues
+needed to understand
+this notation are contained in this section together
+with the discussions
+in \(sc\(sc 7.1, 7.2, and 7.4 on identifiers,
+\fG\**\fR, and \fG+\fR respectively;
+\(sc14.3 below summarizes the implications.
+.PP
+A function call is a primary expression followed by parentheses
+containing a possibly
+empty, comma-separated list of expressions
+which constitute the actual arguments to the
+function.
+The primary expression must be of type `function returning .\|.\|.',
+and the result of the function call is of type `\|.\|.\|.\|'.
+As indicated
+below, a hitherto unseen identifier followed
+immediately by a left parenthesis
+is contextually declared
+to represent a function returning
+an integer;
+thus in the most common case, integer-valued functions
+need not be declared.
+.PP
+Any actual arguments of type \fGfloat\fR are
+converted to \fGdouble\fR before the call;
+any of type \fGchar\fR or \fGshort\fR are converted to \fGint\fR.
+.PP
+In preparing for the call to a function,
+a copy is made of each actual parameter;
+thus, all argument-passing in C is strictly by value.
+A function may
+change the values of its formal parameters, but
+these changes cannot affect the values
+of the actual parameters.
+On the other hand, it is possible
+to pass a pointer on the understanding
+that the function may change the value
+of the object to which the pointer points.
+The order of evaluation of arguments is undefined by the language;
+take note that the various compilers differ.
+.PP
+Recursive calls to any
+function are permitted.
+.PP
+A primary expression followed by a dot followed by an identifier
+is an expression.
+The first expression must be an lvalue naming a structure or union, and the identifier
+must name a member of the structure or union.
+The result is an lvalue referring
+to the named member of the structure or union.
+.PP
+A primary expression followed by an arrow (built from
+a `\(mi' and a `>')
+followed by an identifier
+is an expression.
+The first expression must be a pointer to a structure or a union
+and the identifier must name a member of that structure or union.
+The result is an lvalue referring to the named member
+of the structure or union
+to which the pointer expression points.
+.PP
+Thus the expression `E1\(mi>MOS' is the same as
+`(\**E1)\fB.\fRMOS'.
+Structures and unions are discussed in
+\(sc8.5.
+The rules given here for the use of
+structures and unions
+are not enforced strictly,
+in order to allow an escape from the typing mechanism.
+See \(sc14.1.
+.SH
+7.2  Unary operators
+.LP
+Expressions with unary operators
+group right-to-left.
+.SY
+	unary-expression:
+		\fG\**\fI expression\fR
+		\fG&\fI lvalue\fR
+		\fG\(mi\fI expression\fR
+		\fG!\fI expression\fR
+		\fG\*~\fI expression\fR
+		++ \fIlvalue\fR
+		\fR\(mi\(mi\fI lvalue\fR
+		\fIlvalue ++
+		\fIlvalue \(mi\(mi
+		\fG( \fItype-name \fG) \fIexpression\fG
+		\fGsizeof \fIexpression
+		\fGsizeof ( \fItype-name \fG)
+.ES
+The unary \fG\**\fR operator
+means
+.It indirection:
+the expression must be a pointer, and the result
+is an lvalue referring to the object to
+which the expression points.
+If the type of the expression is `pointer to .\|.\|.',
+the type of the result is `\|.\|.\|.\|'.
+.PP
+The result of the unary \fG&\fR operator is a pointer
+to the object referred to by the
+lvalue.
+If the type of the lvalue is `\|.\|.\|.\|',
+the type of the result is `pointer to .\|.\|.'.
+.PP
+The result
+of the unary
+.Bd \-
+operator
+is the negative of its operand.
+The usual arithmetic conversions are performed.
+The negative of an unsigned quantity is computed by
+subtracting its value from
+.MC
+$2 sup wordsize$.
+.mc
+.PP
+The result of the logical negation operator \fG!\fR
+is 1 if the value of its operand is 0, 0 if the value of its
+operand is non-zero.
+The type of the result is \fGint\fR.
+It is applicable to any arithmetic type
+or to pointers.
+.PP
+The \*~ operator yields the one's complement of its operand.
+The usual arithmetic conversions are performed.
+The type of the operand must be integral.
+.PP
+The object referred to by the lvalue operand of prefix `++'
+is incremented.
+The value is the new value of the operand,
+but is not an lvalue.
+The expression `++a' is equivalent to
+`(a@+=@1)'.
+See the discussions of addition (\(sc7.4) and assignment
+operators (\(sc7.14) for information on conversions.
+.PP
+The lvalue operand of prefix `\(mi\(mi' is decremented
+analogously to the ++ operator.
+.PP
+When postfix `++' is applied to an lvalue
+the result is the value of the object referred to by the lvalue.
+After the result is noted, the object
+is incremented in the same
+manner as for the prefix ++ operator.
+The type of the result is the same as the type of the lvalue expression.
+.PP
+When postfix `\(mi\(mi' is applied to an lvalue
+the result is the value of the object referred to by the lvalue.
+After the result is noted, the object
+is decremented in the manner as for the prefix \(mi\(mi operator.
+The type of the result is the same as the type of the lvalue
+expression.
+.PP
+An expression preceded by the parenthesized name of a data type
+causes conversion of the value of the expression to the named type.
+The construction of type names is described in \(sc8.7.
+.PP
+The \fGsizeof\fR operator yields the size,
+in bytes, of its operand.
+(A
+.It byte
+is undefined by the language
+except in terms of the value of
+.Bd sizeof.
+However in all existing implementations
+a byte is the space required to hold a
+.Bd char. "" )
+When applied to an array, the result is the total
+number of bytes in the array.
+The size is determined from
+the declarations of
+the objects in the expression.
+This expression is semantically an integer constant and may
+be used anywhere a constant is required.
+Its major use is in communication with routines
+like storage allocators and I/O systems.
+.PP
+The \fGsizeof\fR operator
+may also be applied to a parenthesized type name.
+In that case it yields the size, in bytes, of an object
+of the indicated type.
+.PP
+The construction `sizeof(type)' is taken to be a unit,
+so the expression `sizeof(type)\(mi2' is the same as
+`(sizeof(type))\(mi2'.
+.SH
+7.3  Multiplicative operators
+.LP
+The multiplicative operators
+\**,
+\fG/\fR, and \fG%\fR
+group left-to-right.
+The usual arithmetic conversions are performed.
+.SY
+	multiplicative-expression:
+		\fIexpression\fG \** \fIexpression\fR
+		\fIexpression \fG/\fI expression\fR
+		\fIexpression \fG%\fI expression\fR
+.ES
+The binary \fG\**\fR operator indicates multiplication.
+The \** operator is associative
+and expressions with several multiplications at the same
+level may be rearranged.
+.PP
+The binary \fG/\fR operator indicates division.
+When positive integers are divided truncation is toward 0,
+but the form of truncation is machine-dependent
+if either operand is negative.
+In all cases it is true that $(a/b) \** b~+~ a%b ~ == ~ a$.
+.MC
+On the \*(pd and \*I,
+the remainder has the same sign as the dividend.
+.mc
+.PP
+The binary \fG%\fR operator yields the remainder
+from the division of the first expression by the second.
+.MC
+The usual arithmetic conversions are performed.
+.mc
+The operands must not be
+floating.
+.SH
+7.4  Additive operators
+.LP
+The additive operators \fG+\fR and \fG\(mi\fR group left-to-right.
+The usual arithmetic conversions are performed.
+There are some additional type possibilities for each operator.
+.SY
+	additive-expression:
+		\fIexpression \fG+\fI expression\fR
+		\fIexpression \fG\(mi \fIexpression\fR
+.ES
+The result of the `+' operator is the sum of the operands.
+A pointer to an object in an array and
+a value of any integral type
+may be added.
+The latter is in all cases converted to
+an address offset
+by multiplying it
+by the length of the object to which the
+pointer points.
+The result is a pointer
+of the same type as the original pointer,
+and which points to another object in the same array,
+appropriately offset from the original object.
+Thus if P is a pointer
+to an object in an array, the expression `P+1' is a pointer
+to the next object in the array.
+.PP
+No further type combinations are allowed.
+.PP
+The + operator is associative
+and expressions with several additions at the same level may
+be rearranged.
+.PP
+The result of the `\(mi' operator is the difference of the operands.
+The usual arithmetic conversions are performed.
+Additionally,
+a value of any integral type
+may be subtracted from a pointer,
+and then the same conversions as for addition apply.
+.PP
+If two pointers to objects of the same type are subtracted,
+the result is converted
+(by division by the length of the object)
+to an \fGint\fR representing the number of
+objects separating
+the pointed-to objects.
+This conversion will in general give unexpected
+results unless the pointers point
+to objects in the same array, since pointers, even
+to objects of the same type, do not necessarily differ
+by a multiple of the object-length.
+.SH
+7.5  Shift operators
+.LP
+The shift operators \fG<<\fR and \fG>>\fR group left-to-right.
+Both perform the usual arithmetic conversions on their operands,
+each of which must be integral.
+Then the right operand is converted to
+.Bd int;
+the type of the result is that of the left operand.
+The result is undefined if the right operand is negative
+or larger than the number of
+bits in the object.
+.SY
+	shift-expression:
+		\fIexpression \fG<< \fIexpression\fR
+		\fIexpression \fG>> \fIexpression\fR
+.ES
+The value of `E1<<E2' is E1 (interpreted as a bit
+pattern) left-shifted E2 bits;
+vacated bits are 0-filled.
+The value of `E1>>E2' is E1
+right-shifted E2 bit positions.
+The shift is guaranteed to be logical
+(0-fill)
+if E1 is
+.Bd unsigned;
+otherwise it may be
+(and is, on the \*(pd)
+arithmetic (fill by a copy of the sign bit).
+.SH
+7.6  Relational operators
+.LP
+The relational operators group left-to-right, but
+this fact is not very useful; `a<b<c' does
+not mean what it seems to.
+.SY
+	relational-expression:
+		\fIexpression \fG<\fI expression\fR
+		\fIexpression \fG>\fI expression\fR
+		\fIexpression \fG<=\fI expression\fR
+		\fIexpression \fG>=\fI expression\fR
+.ES
+The operators < (less than), > (greater than), <= (less than
+or equal to) and >= (greater than or equal to)
+all yield 0 if the specified relation is false
+and 1 if it is true.
+The type of the result is
+.Bd int.
+The usual arithmetic conversions are performed.
+Two pointers may be compared,
+and the result depends on the relative locations in the address space
+of the pointed-to objects.
+Pointer comparison is portable only when the pointers point to objects
+in the same array.
+.SH
+7.7  Equality operators
+.LP
+.SY
+	equality-expression:
+		\fIexpression \fG==\fI expression\fR
+		\fIexpression \fG!=\fI expression\fR
+.ES
+The \fG==\fR (equal to) and the \fG!=\fR (not equal to) operators
+are exactly analogous to the relational
+operators except for their lower
+precedence.
+(Thus `a<b\ ==\ c<d' is 1 whenever
+a<b and c<d
+have the same truth-value).
+.PP
+A pointer may be compared to an integer,
+but the result is machine dependent unless the
+integer is the constant 0.
+A pointer to which 0 has been assigned is guaranteed
+not to point to any object,
+and will appear to be equal to 0;
+in conventional usage, such a pointer is considered to be null.
+.SH
+7.8  Bitwise \fIand \fGoperator
+.LP
+.SY
+	and-expression:
+		\fIexpression \fG&\fI expression\fR
+.ES
+The \fG&\fR operator is associative
+and expressions involving \fG&\fR may be rearranged.
+The usual arithmetic conversions are performed;
+the result is the bit-wise
+`and' function of the operands.
+The operator applies only to integral
+operands.
+.SH
+7.9  Bitwise \fIexclusive \fIor \fGoperator
+.LP
+.SY
+	exclusive-or-expression:
+		\fIexpression \fG\*^ \fIexpression\fR
+.ES
+.LP
+The \fG\*^\fR operator is associative
+and expressions involving \*^ may be rearranged.
+The usual arithmetic conversions are performed;
+the result is
+is the bit-wise `exclusive or' function of
+the operands.
+The operator applies only to integral
+operands.
+.SH
+7.10  Bitwise \fIinclusive \fIor \fGoperator
+.LP
+.SY
+	inclusive-or-expression:
+		\fIexpression \|\(or \fIexpression\fR
+.ES
+The \(or operator is associative
+and expressions with \(or may be rearranged.
+The usual arithmetic conversions are performed;
+the result is the bit-wise `inclusive or' function of its operands.
+The operator applies only to integral
+operands.
+.SH
+7.11  Logical \fIand \fGoperator
+.LP
+.SY
+	logical-and-expression:
+		expression \fG&&\fI expression
+.ES
+The \fG&&\fR operator groups left-to-right.
+It returns 1 if both its operands
+are non-zero, 0 otherwise.
+Unlike \fG&\fR, \fG&&\fR guarantees left-to-right
+evaluation; moreover the second operand is not evaluated
+if the first operand is 0.
+.PP
+The operands need not have the same type, but each
+must have one of the fundamental
+types or be a pointer.
+The result is always
+.Bd int.
+.SH
+7.12  Logical \fIor \fGoperator
+.LP
+.SY
+	logical-or-expression:
+		\fIexpression \|\(or\(or \fIexpression
+.ES
+The \(or\(or operator groups left-to-right.
+It returns 1 if either of its operands
+is non-zero, and 0 otherwise.
+Unlike \|\(or\|,
+\|\(or\(or guarantees left-to-right evaluation; moreover,
+the second operand is not evaluated
+if the value of the first operand is non-zero.
+.PP
+The operands need not have the same type, but each
+must
+have one of the fundamental types
+or be a pointer.
+The result is always
+.Bd int.
+.SH
+7.13  Conditional operator
+.LP
+.SY
+	conditional-expression:
+		\fIexpression \fG? \fIexpression \fG:\fI expression\fR
+.ES
+Conditional expressions group right-to-left.
+The first expression is evaluated
+and if it is non-zero, the result is the value of the
+second expression, otherwise that of third expression.
+If possible, the usual arithmetic conversions are performed
+to bring the second and third expressions to a common type;
+otherwise, if both are pointers of the same type,
+the result has the common type;
+otherwise, one must be a pointer and the other the constant 0,
+and the result has the type of the pointer.
+Only one of the second and third
+expressions is evaluated.
+.SH
+7.14  Assignment operators
+.LP
+There are a number of assignment operators,
+all of which group right-to-left.
+All require an lvalue as their left operand,
+and the type of an assignment expression is that
+of its left operand.
+The value is the value stored in the
+left operand after the assignment has taken place.
+The two parts of a compound assignment operator are separate
+tokens.
+.SY
+	assignment-expression:
+		\fIlvalue \fG= \fIexpression\fR
+		\fIlvalue \fG+ = \fIexpression\fR
+		\fIlvalue \fG\(mi = \fIexpression\fR
+		\fIlvalue \fG\** = \fIexpression\fR
+		\fIlvalue \fG/ = \fIexpression\fR
+		\fIlvalue \fG% = \fIexpression\fR
+		\fIlvalue \fG>> = \fIexpression\fR
+		\fIlvalue \fG<< = \fIexpression\fR
+		\fIlvalue \fG& = \fIexpression\fR
+		\fIlvalue \fG\*^ = \fIexpression\fR
+		\fIlvalue \fG\(or = \fIexpression\fR
+.ES
+Notice that the representation of the compound assignment operators
+has changed; formerly the `=' came first and the other operator
+came second (without any space).
+The compiler continues to accept the previous notation.
+.PP
+In the simple assignment with `=',
+the value of the expression replaces that of the object
+referred
+to by the lvalue.
+If both operands have arithmetic type,
+the right operand is converted to the type of the left
+preparatory to the assignment.
+.PP
+The behavior of an expression
+of the form `E1\ op =\ E2' may be inferred by
+taking it as equivalent to `E1\ =\ E1\ op\ E2';
+however, E1 is evaluated only once.
+In
+.Bd +=
+and
+.Bd \(mi=,
+the left operand may be a pointer, in which case the (integral) right
+operand is converted as explained
+in \(sc7.4;
+all right operands and all non-pointer left operands must
+have arithmetic type.
+.PP
+The compiler currently allows a pointer to be assigned to an integer,
+an integer to a pointer, and a pointer to a pointer of another type.
+The assignment is a pure copy operation, with no conversion.
+This usage is nonportable, and may produce pointers which
+cause addressing exceptions when used.
+However, it is guaranteed that assignment of the constant 0
+to a pointer will produce a null pointer
+distinguishable from a pointer to any object.
+.SH
+7.15  Comma operator
+.LP
+.SY
+	comma-expression:
+		\fIexpression \fG,\fI expression\fR
+.ES
+A pair of expressions separated by a comma is evaluated
+left-to-right and the value of the left expression is
+discarded.
+The type and value of the result are the
+type and value of the right operand.
+This operator groups left-to-right.
+In contexts where comma is given a special meaning,
+for example in a list of actual arguments
+to functions (\(sc7.1) and lists of initializers (\(sc8.6),
+the comma operator as described in this section
+can only appear in parentheses; for example,
+`f(a, (t = 3, t+2), c)'
+has three arguments, the second of which has the value 5.

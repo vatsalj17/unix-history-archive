@@ -1,0 +1,49 @@
+Subdirectories:
+	formatters	source for nroff and troff
+	terminals	terminal driving tables for nroff
+	fonts		font width tables for troff
+	programs	useful ancillary programs
+	tests		test input for nroff and troff
+
+The run file in formatters creates nroff, troff, and the suffix table,
+which have to be copied to their final resting place, e.g /usr/bin
+for the first two, /usr/lib for the latter.
+
+The following indicates where builtin pathnames are located.
+n2.c:	if((ptid != 1) && paper && ((i=open("/usr/jfo/tr.acct",1)) >0)){
+	[paper accounting file; create it by "date >/usr/jfo/tr.acct "
+	or >wherever_you_want_it;
+	read it with programs/tacct.c]
+ni.c:char nextf[NS] "/usr/lib/tmac.xxxxx";
+	[macro packages; e.g. tmac.s for -ms]
+ni.c:char termtab[NS] "/usr/lib/term/37";
+ni.c:char suftab[] "/usr/lib/suftab";
+t6.c:char fontfile[] "/usr/lib/font/XX";
+
+In the programs directory,
+pti.s is a phototypesetter interpreter used to see in
+painfull detail what troff is telling the hardware to do:
+troff -t | pti is the usage.
+
+tk.c is a general purpose pipe interface to the TEK4014;
+it understands Model 37 Teletype half-line and reverse line motions
+(default nroff output) and also squeezes 66 lines into a 64 line
+baseline space.
+It waits for a newline from the keyboard between pages.
+Options are "-t" for not waiting between pages and "-pLs"
+for redefineing the page length to L inches if s=i or L lines
+if s is null.
+
+tcat.c (with tcat1.c) interprets troff output onto a TEK4014.
+It squeezes an 11inch page into the 4014's 10.7 inches by
+compression at the bottom.
+It also waits for a newline between pages.
+Typical use is
+troff -t files | tcat
+tcat options are "-t" as above "-sN" to skip the first N pages and
+"-pLs" to redefine the page length (if s=i inches, =c centimeters,
+=p points, =P picas, =null lines).
+
+Finally, the file
+usr-lib-tmac.s should be copied to /usr/lib/tmac.s, which makes it
+into the '-ms' macro package.

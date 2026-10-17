@@ -1,0 +1,127 @@
+.nh
+.pl 66
+.ll 64
+.lt \n(.lu
+.nr xi 0\" in-out value
+.nr n 0 1\" level of section
+.nr l 0 1\" level of indent
+.nr s\nn 0\" level zero inc indent for section
+.nr i\nl 0\" level zero indent
+.nr o\nl 0\" level zero outdent
+.nr w 0\" .sp indicator for levels
+.de BP\" $1 - .in +$1, $2 - .ti -$2
+.br
+.if \\nw .sp 1
+.nr w 1
+.if \\n(.n\" .sp 1
+.ne 6
+.nr zi \\n(i\\nl
+.nr l \\n+l
+.nr t\\nl \\$2
+.nr i\\nl \\n(zi+\\$1
+.nr o\\nl \\n(zi+\\$1-\\$2
+.ta \\n(t\\nl
+.in \\n(i\\nl
+.ti \\n(o\\nl
+..
+.de NP\" reset indent, tab, and temp indent
+.br
+.ne 6
+.if \\nw .sp 1
+.nr w 1
+.if \\n(.n\" .sp 1
+.ta \\n(t\\nl
+.in \\n(i\\nl
+.ti \\n(o\\nl
+..
+.de EP\" pop indent level
+.br
+.if \\nw .sp 1
+.nr w 0
+.if \\n(.n\" .sp 1
+.if \\nl .in \\n(i\\n-l
+.if !\\nl .ta 8 16 24 32 40 48 56 64 72 80 88 96
+..
+.de IN\" $1 - the increment if given
+.br
+.if \\nw .sp 1
+.nr w 1
+.if \\n(.n\" .sp 1
+.ne 6
+.nr xi 7m
+.if \\$1 .nr xi \\$1m
+.in \\n(.iu+\\n(xiu
+.ta 8 16 24 32 40 48 56 64 72 80 88 96
+.nf
+..
+.de OT\" restore to previous indent
+.br
+.if \\nw .sp 1
+.nr w 0
+.if \\n(.n\" .sp 1
+.in \\n(.iu-\\n(xiu
+.fi
+..
+.de PA\" paragraph
+.br
+.if \\nw .sp 1
+.nr w 1
+.if \\n(.n\" .sp 1
+.ne 6
+..
+.de NS\"new section. $1=inc indent $2=section no if given
+.br
+.if \\nw .sp 1
+.nr w 1
+.if \\n(.n\" .sp 1
+.ne 6
+.nr n \\n+n
+.nr s\\nn \\$1
+.in +\\n(s\\nn
+.nr zi \\n(i\\nl
+.nr i\\nl \\n(zi+\\n(s\\nn
+\\$2
+'cu 1
+..
+.de ES\" end section and pop back things
+.br
+.if \\nw .sp 1
+.nr w 0
+.if \\n(.n\" .sp 1
+.nr zi \\n(i\\nl
+.nr i\\nl \\n(zi-\\n(s\\nn
+.in -\\n(s\\nn
+.nr n \\n-n
+..
+.de UL\" lynnies choice
+.ul 1
+..
+.de FO\" foot title macro
+.de x1
+'sp 2
+'ie '\\$2'date' 'tl '\\$1'- % -'\\n(dy/\\n(mo/\\n(yr'
+'el 'tl '\\$1'- % -'\\$2'
+'bp
+\\..
+.wh -5 x1
+..
+.de HE\" header title macro
+.de x2
+'sp 2
+'tl '\\$1'\\$2'\\$3'
+'sp 2
+\\..
+.wh 0 x2
+..
+.de AR\" make page nos arabic - no leading zeros
+.nr % 1
+.af % 1
+..
+.de BR\" make page nos big roman eg I, IV, XLM
+.nr % 1
+.af % I
+..
+.de LR\" make page nos little roman eg i, iv, xlm
+.nr % 1
+.af % i
+..

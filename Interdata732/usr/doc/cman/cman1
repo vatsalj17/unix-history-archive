@@ -1,0 +1,605 @@
+.fp 3 G
+.TL
+C Reference Manual
+.AU
+Dennis M. Ritchie
+.AI
+.MH
+.sp
+May 1, 1977
+.PP
+.so manmacs
+.EQ
+delim $$
+.EN
+.FS
+.nh
+Revised June, 1978
+by R. Miller,
+University of Wollongong.
+.hy
+.FE
+.SH
+.ti 0
+1.  Introduction
+.LP
+C is a computer language which offers
+a rich selection of operators and data types
+and the ability to impose useful structure
+on both control flow and data.
+All the basic operations and data objects
+are close to those actually implemented
+by most real computers,
+so that a very efficient implementation is possible,
+but the design is not tied to any particular
+machine and with a little care it is possible
+to write easily portable programs.
+.PP
+This manual describes the current version of the C language as it
+exists on the \*(pd, the Honeywell 6000, the
+\s8IBM\s10 System/370,
+.MC
+and the \*I 16-bit and 32-bit series.
+.mc
+Where differences exist, it concentrates on the \*(pd
+.MC
+and \*I,
+.mc
+but tries to point out
+implementation-dependent
+details.
+With few exceptions,
+these dependencies follow
+directly from the underlying properties of the hardware;
+the various compilers are generally quite compatible.
+.bp
+.SH
+2.  Lexical conventions
+.LP
+Blanks, tabs, newlines,
+and comments as described below
+are ignored except as they serve to separate
+tokens.
+Some space is required to separate
+otherwise adjacent identifiers,
+keywords, and constants.
+.PP
+If the input stream has been parsed into tokens
+up to a given character, the next token is taken
+to include the longest string of characters
+which could possibly constitute a token.
+.SH
+2.1  Comments
+.LP
+The characters
+.Bd /\**
+introduce a comment, which terminates
+with the characters
+.Bd \**/ "" .
+Comments do not nest.
+.SH
+2.2  Identifiers (Names)
+.LP
+An identifier is a sequence of letters and digits;
+the first character must be alphabetic.
+The underscore `\(ru' counts as alphabetic.
+Upper and lower case letters
+are considered different.
+.MC
+No more than the first eight characters
+are significant
+(although more may be used).
+External identifiers, which are used by various assemblers
+and loaders, are more restricted:
+
+.TS
+center;
+l l .
+DEC \*(pd	7 characters, 2 cases
+Honeywell 6000	6 characters, 1 case
+IBM 360/370	7 characters, 1 case
+\*I \*(I2	8 characters, 2 cases
+\*I \*(I1	6 characters, 1 case
+.TE
+.mc
+.SH
+2.3  Keywords
+.LP
+The following identifiers are reserved for use
+as keywords, and may not be used otherwise:
+.DS L
+.TS
+center;
+LfG LfG LfG .
+int	extern	else
+char	register	for
+float	typedef	do
+double	static	while
+struct	goto	switch
+union	return	case
+long	sizeof	default
+short	break	entry
+unsigned	continue
+auto	if
+.TE
+.DE
+The
+.Bd entry
+keyword is not currently implemented by any compiler but
+is reserved for future use.
+Some implementations also reserve the words
+.Bd fortran
+.MC
+and
+.Bd asm.
+.mc
+.SH
+2.4  Constants
+.LP
+There are several kinds
+of constants,
+.MC
+as described below.
+Hardware differences between implementations
+are summarized in \(sc2.6.
+.mc
+.SH
+2.4.1  Integer constants
+.LP
+An integer constant consisting of a sequence of digits
+is taken
+to be octal if it begins with \fG0\fR (digit zero), decimal otherwise.
+The digits \fG8\fR and \fG9\fR have octal value 10 and 11 respectively.
+A sequence of digits preceded by
+.Bd 0x
+or
+.Bd 0X
+(digit zero) is taken to be a hexadecimal integer.
+The hexadecimal digits include
+.Bd a
+or
+.Bd A
+through
+.Bd f
+or
+.Bd F
+with values 10 through 15.
+A decimal constant whose value exceeds the largest
+.MC
+signed machine integer is taken to be
+.mc
+.Bd long "" ;
+an octal or hex constant which exceeds the largest unsigned machine integer
+.MC
+is likewise taken to be
+.mc
+.Bd long.
+.SH
+2.4.2  Explicit long constants
+.LP
+A decimal, octal, or hexadecimal integer constant immediately followed
+by
+.Bd l
+(letter ell)
+or
+.Bd L
+.MC
+is a long constant.
+As discussed below,
+on some machines
+.mc
+integer and long values may be considered identical.
+.SH
+2.4.3  Character constants
+.LP
+A character constant is a sequence of characters enclosed in single quotes
+.Bd \|\(aa ` '.
+Within a character constant a single quote must be preceded by
+a backslash `\e'.
+Certain non-graphic characters, and `\e' itself,
+may be escaped according to the following table:
+.DS L
+.TS
+center;
+L L .
+\s8BS\s10	\eb
+\s8NL (LF)\s10	\en
+\s8CR\s10	\er
+\s8HT\s10	\et
+\s8FF\s10	\ef
+\fIddd\fR	\e\fIddd\fR
+\e	\e\e
+.TE
+.DE
+The escape `\e\fIddd\|\fR'
+consists of the backslash followed by 1, 2, or 3 octal digits
+which are taken to specify the value of the
+desired character.
+A special case of this construction is `\e0' (not followed
+by a digit) which indicates the character
+.SM
+NUL.
+.NL
+If the character following a backslash is not one
+of those specified, the backslash vanishes.
+.PP
+The value of a single-character constant is the numerical value of the
+.MC
+character in the machine's character set (\s8ASCII\s10 for the \*I and \*(pd).
+.mc
+On the \*(pd at most two characters are permitted
+in a character constant and the second character of a pair
+is stored in the high-order byte of the integer value.
+.MC
+On the \*I up to two (\*(I1) or four (\*(I2) characters
+are permitted,
+and are stored right-justified in a word.
+.mc
+Character constants with more than one character are
+inherently machine-dependent and should
+be avoided.
+.SH
+2.4.4  Floating constants
+.LP
+A floating constant consists of
+an integer part, a decimal point, a fraction part,
+an
+.Bd e
+or
+.Bd E,
+and an optionally signed integer exponent.
+The integer and fraction parts both consist of a sequence
+of digits.
+Either the integer part or the fraction
+part (not both) may be missing;
+either the decimal point or
+the \fGe\fR and the exponent (not both) may be missing.
+Every floating constant is taken to be double-precision.
+.SH
+2.5  Strings
+.LP
+A string is a sequence of characters surrounded by
+double quotes
+`\|"\|'.
+A string has type
+`array of characters' and storage class `static' (see below)
+and is initialized with
+the given characters.
+The compiler places
+a null byte `\|\e0\|'
+at the end of each string so that programs
+which scan the string can
+find its end.
+In a string, the character
+`\|"\|'
+must be preceded by
+a
+`\e'\|;
+in addition, the same escapes as described for character
+constants may be used.
+Finally, a `\e' and
+an immediately following new-line are ignored.
+.PP
+All strings, even when written identically, are distinct.
+.ne 13
+.SH
+2.6  Hardware Characteristics
+.LP
+.TS
+c c c c c c
+c c c c c c
+l l l l l l .
+	DEC	Honeywell	IBM	\*I	\*I
+	\*(pd	6000	370	\*(I1	\*(I2
+
+	ASCII	ASCII	EBCDIC	ASCII	ASCII
+char	8 bits	9 bits	8 bits	8 bits	8 bits
+int	16	36	32	16	32
+short	16	36	16	16	16
+long	32	36	32	32	32
+float	32	36	32	32	32
+double	64	72	64	32	32
+range	$\(+-10 sup \(+-38$	$\(+-10 sup \(+-38$	$\(+-10 sup \(+-76$\
+	$\(+-10 sup \(+-76$	$\(+-10 sup \(+-76$
+.TE
+.SH
+3.  Syntax notation
+.LP
+In the syntax notation used in this manual,
+syntactic categories are indicated by
+.MC
+\fIunderlining\fR,
+and literal words and characters
+in \fGbold\fR type.
+.mc
+Alternatives are listed on separate lines.
+An optional terminal or non-terminal symbol is
+indicated by the subscript `opt,' so that
+.SY
+	{ expression\*(op }
+.ES
+would indicate an optional expression in braces.
+The complete syntax is given in \(sc16, in the notation
+of YACC.
+.SH
+4.  What's in a Name?
+.LP
+C bases the interpretation of an
+identifier upon two attributes of the identifier: its
+.It "storage class"
+and its
+.It type.
+The storage class determines the location and lifetime
+of the storage associated with an identifier;
+the type determines
+the meaning of the values
+found in the identifier's storage.
+.PP
+There are four declarable storage classes:
+automatic,
+static,
+external,
+and
+register.
+Automatic variables are local to each invocation of
+a block, and are discarded upon exit from the block;
+static variables are local to a block, but retain
+their values upon reentry to a block even after control
+has left the block;
+external variables exist and retain their values throughout
+the execution of the entire program, and
+may be used for communication between
+functions, even separately compiled functions.
+Register variables are (if possible) stored in the fast registers
+of the machine; like automatic
+variables they are local to each block and disappear on exit from the block.
+.PP
+C supports several
+fundamental
+types of objects:
+.PP
+Objects declared as characters
+.Bd (char)
+are large enough to store any member of the implementation's
+character set,
+and if a genuine character is stored in a character variable,
+its value is equivalent to the integer code for that character.
+Other quantities may be stored into character variables, but
+.MC
+the implementation is machine-dependent.
+.mc
+.PP
+Up to three sizes of integer, declared
+.Bd "short int,"
+.Bd int,
+and
+.Bd "long int"
+are available.
+Longer integers provide no less storage than shorter ones,
+but the implementation may make either short integers, or long integers,
+or both equivalent to plain integers.
+`Plain' integers have the natural size suggested
+by the host machine architecture;
+the other sizes are provided to meet special needs.
+On the \*(pd and \*I,
+.MC
+integers are represented
+in 2's complement notation.
+.mc
+.PP
+Unsigned
+integers, declared
+.Bd unsigned,
+obey the laws of arithmetic modulo
+$2 sup n$
+where $n$ is the number of bits in the representation.
+.MC
+On the \*I and \*(pd,
+long and short unsigned quantities are not supported.
+.mc
+.PP
+Single precision floating point (\fGfloat\fR)
+.MC
+and double-precision floating-point (\fGdouble\fR) quantities
+are available.
+The \*I implementations currently make
+.mc
+.Bd float
+and
+.Bd double
+synonymous.
+.PP
+Because objects of these types can usefully be interpreted
+as numbers, they will be referred to as
+.It arithmetic
+types.
+Types
+.Bd char
+and
+.Bd int
+of all sizes will collectively be called
+.It integral
+types.
+.Bd Float
+and
+.Bd double
+will collectively be called
+.It floating
+types.
+.PP
+Besides the fundamental arithmetic types there is a
+conceptually infinite class of derived types constructed
+from the fundamental types in the following ways:
+.IP
+.It arrays
+of objects of most types;
+.IP
+.It functions
+which return objects of a given type;
+.IP
+.It pointers
+to objects of a given type;
+.IP
+.It structures
+containing a sequence of objects of various types;
+.IP
+.It unions
+capable of containing any one of several objects of various types.
+.LP
+In general these methods
+of constructing objects can
+be applied recursively.
+.SH
+5.  Objects and lvalues
+.LP
+An
+.It object
+is a manipulatable region of storage;
+an
+.It lvalue
+is an expression referring to an object.
+An obvious example of an lvalue
+expression is an identifier.
+There are operators which yield lvalues:
+for example,
+if E is an expression of pointer type, then \**E is an lvalue
+expression referring to the object to which E points.
+The name `lvalue' comes from the assignment expression
+`$E1@=@E2$' in which the left operand E1 must be
+an lvalue expression.
+The discussion of each operator
+below indicates whether it expects lvalue operands and whether it
+yields an lvalue.
+.SH
+6.  Conversions
+.LP
+A number of operators may, depending on their operands,
+cause conversion of the value of an operand from one type to another.
+This section explains the result to be expected from such
+conversions.
+\(sc6.6 summarizes the conversions demanded by
+most ordinary operators; it will be supplemented
+as required by the discussion
+of each operator.
+.SH
+6.1  Characters and integers
+.LP
+A character or a short integer may be used wherever an
+integer may be used.
+In all cases
+the value is converted to an integer.
+Conversion of a short integer always involves
+sign extension; short integers are signed quantities.
+Whether or not sign-extension occurs for characters is machine
+dependent, but it is guaranteed that a member of the
+standard character set is non-negative.
+On the \*(pd,
+character variables range in value from \-128 to 127;
+a character constant specified using an octal escape
+also suffers sign extension and may appear negative, for example
+.MC
+\|\(aa\|\e377\(aa\| when converted to an integer
+becomes -1.
+.mc
+.PP
+When a longer integer is converted to a shorter
+or to a
+.Bd char,
+it is truncated on the left.
+.SH
+6.2  Float and double
+.LP
+All floating arithmetic in C is carried out in double-precision;
+whenever a \fGfloat\fR
+appears in an expression it is lengthened to \fGdouble\fR
+by zero-padding its fraction.
+When a \fGdouble\fR must be
+converted to \fGfloat\fR, for example by an assignment,
+the \fGdouble\fR is rounded before
+truncation to \fGfloat\fR length.
+.SH
+6.3  Floating and integral
+.LP
+Conversions of floating values to integral type
+.MC
+tend to be rather machine-dependent;
+in particular, the direction of truncation of negative numbers
+varies from machine to machine.
+.mc
+The result is undefined if the
+value will not fit in the space provided.
+.PP
+Conversions of integral values to floating type
+are well behaved.
+Some loss of precision occurs
+if the destination lacks sufficient bits.
+.SH
+6.4  Pointers and integers
+.LP
+An integer or long integer may be added to or subtracted from
+a pointer; in such a case
+the first is converted as
+specified in the discussion of the addition operator.
+.PP
+Two pointers to objects of the same type may be subtracted;
+in this case the result is converted to an integer
+as specified in the discussion of the subtraction
+operator.
+.SH
+6.5  Unsigned
+.LP
+Whenever an unsigned integer and a plain integer
+are combined, the plain integer is converted to unsigned
+and the result is unsigned.
+.MC
+The value
+is the least unsigned integer congruent to the signed
+integer (modulo $2 sup wordsize$).
+In a 2's complement representation
+.mc
+this conversion is conceptual and there is no actual change in the
+bit pattern.
+.PP
+When an unsigned integer is converted to long,
+the value of the result is the same numerically as that of the
+unsigned integer.
+Thus the conversion amounts to padding with zeros on the left.
+.SH
+6.6  Arithmetic conversions
+.LP
+A great many operators cause conversions
+and yield result types in a similar way.
+This pattern will be called the `usual arithmetic conversions.'
+.IP
+First, any operands of type
+.Bd char
+or
+.Bd short
+are converted to
+.Bd int,
+and any of type
+.Bd float
+are converted to
+.Bd double.
+.IP
+Then, if either operand is
+.Bd double,
+the other is converted to
+.Bd double
+and that is the type of the result.
+.IP
+Otherwise, if either operand is
+.Bd long,
+the other is converted to
+.Bd long
+and that is the type of the result.
+.IP
+Otherwise, if either operand is
+.Bd unsigned,
+the other is converted to
+.Bd unsigned
+and that is the type of the result.
+.IP
+Otherwise, both operands must be
+.Bd int,
+and that is the type of the result.

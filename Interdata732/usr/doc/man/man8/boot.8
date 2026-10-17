@@ -1,0 +1,191 @@
+.th BOOT VIII
+.de DS
+.sp
+.ne \\$1
+.dt
+.nf
+.in +4
+..
+.de DE
+.fi
+.in -4
+..
+.sh NAME
+boot - how to boot UNIX
+.de pp
+.s1
+.ti -2
+.ul 1
+\\$1
+.sp
+..
+.sh DESCRIPTION
+UNIX is normally loaded by reading an
+\fIa.out\fR-format
+file from the root filesystem into memory.
+This is done by the
+.it uboot
+bootstrap program, which can be loaded by the
+LSU (Loader Storage Unit)
+or from magtape.
+.pp "Bootstrap Procedure From Disc"
+.lp +6 4
+1.	Make sure low-core device definitions are set up as
+described below, and the console tty is online.
+.ti -4
+2.	Turn the LSU `enable' switch
+.it on.
+.ti -4
+3.	Press the INI switch. A `?' prompt should appear on the console.
+.ti -4
+4.	If UNIX is to be started in single-user mode, enter the value
+x'F618' into the display-panel switch register
+(DTA F618 RUN).
+.ti -4
+5.	Type on the console the name of a file in the root directory
+to be loaded
+(normally \fBunix\fR).
+.ti -4
+6.	When UNIX is initialized, the amount of user memory available is
+printed on the console.
+In single-user mode, the console is automatically logged in as the
+super-user and a `#' prompt appears;
+otherwise, a
+.it login
+process is started on each terminal listed in the
+.it /etc/ttys
+file.
+.ti -4
+7.	Turn the LSU `enable' switch
+.it off.
+.ti -4
+8.	If rebooting after a crash, use
+.it icheck
+to check file system integrity. Use
+.it date
+to set the date and time.
+.i0
+.pp "Low-Core Initialization for Disc Boot"
+.DS 12
+.ul 1
+Address	Value		Meaning
+78	10	console address
+79	38	PALS `Command 2' to initialize console
+7A	C7	boot disk address
+7B	32	LSU disk type code (32:fixed 33:removable)
+7C	B6	controller address
+7D	F0	selch address
+7E-7F	0000	OS/MT `file extension' for LSU
+80-81	0000
+82-83	100	PSW save area (any value >=100 is OK)
+84-85	100	register save area
+.DE
+.pp "Loading uboot From Magtape"
+.lp +6 4
+1.	Set up '50 sequence' low-core definitions as described below.
+.ti -4
+2.	Mount the tape containing the
+.it uboot
+image on drive\ 0.
+.ti -4
+3.	Execute at location x'30'
+(DTA 30 ADD RUN).
+The tape moves and a `?' prompt should appear on the console.
+.ti -4
+4.	Follow steps 4-8 as for disk.
+.i0
+.pp "Low-Core Initialization for Tape Boot"
+.DS 13
+.ul 1
+Address	Value		Meaning
+30-33	0000 0050	illegal instruction new PSW
+
+50-53	D500 0300	al   x'300'    load from tape
+54-57	4300 0080	b    x'80'     branch to loaded program
+
+78	85		magtape address
+79	A1		magtape read command
+7A-7D		as for disk boot
+7E	10		console address
+			(copied to x'78' by \fIuboot\fR)
+7f	38		PALS `command 2' to initialize console
+80-85		as for disk boot
+.DE
+.pp "How it Works"
+The
+.it uboot
+program has been copied onto the disk (after the swap area) by the
+.it mkboot
+command.
+.it mkboot
+also initialized block\ 0 of the disk to look like an OS/MT `volume descriptor',
+which the LSU uses to locate the
+.it uboot
+image.
+If either of these areas has been corrupted, the LSU operation will fail
+and no `?' prompt will appear;
+.it uboot
+must then be loaded from a backup disk or magtape.
+
+Once loaded,
+.it uboot
+relocates itself to address x'20000', reads a filename from the console,
+and searches for the file in the root directory.
+If a disk I/0 error occurs,
+.it uboot
+goes into a one-instruction loop;
+if the file is not found, it repeats the `?' prompt.
+Otherwise, the file is read into core at address\ 0 (skipping the
+.it a.out
+header), and executed beginning at x'60'.
+.pp "Alternate System Devices"
+In case of hardware or other problems, UNIX can be loaded from a
+removable backup disk or with a different console tty,
+by changing the low-core device definitions.
+Once the system is loaded, it may also need to be reconfigured
+before it begins execution, by changing values in a fixed configuration
+area in the UNIX kernel, described below.
+
+To change the configuration area:
+.lp +6 4
+1.	Follow the normal bootstrap procedure,
+but type the boot filename preceded by a hyphen
+(e.g. \fB-unix\fR).
+.ti -4
+2.	\fIuboot\fR will load the file and then halt (WAIT light goes on).
+.ti -4
+3.	Use the display panel to patch configuration values in core
+(DTA address ADD DTA hi-halfword WRT DTA lo-halfword WRT).
+.ti -4
+4.	Execute at x'60' (DTA 60 ADD RUN).
+.i0
+
+The new configuration values may later be patched
+in the
+.it a.out
+file itself using
+.it ddt.
+
+.pp "UNIX Kernel Configuration Area"
+.DS 11
+.ul 2
+Name	Address	Value		Meaning
+		(fullword)
+trmask	404	0	debugging trace mask
+memtop	408	40000	maximum possible memory
+consdev	40C	0	console device number (major/minor
+			logical device - NOT address)
+rootdev	410	1	root device number
+swapdev	414	1	swap device number
+swplo	814	1F40	location of swap area on disk
+nswap	41C	640	size in blocks of swap area
+.DE
+
+N.B.: The values \fIconsdev\fR, \fIrootdev\fR and \fIswapdev\fR
+are UNIX logical device numbers (not hardware addresses),
+each consisting of a major and minor device number
+in the low-order two bytes of the word.
+For information on device numbers and PALS commands, see
+dsk(IV), pals(IV).
+.sh "SEE ALSO"
+mkboot(VIII), icheck(VIII), dsk(IV), pals(IV)

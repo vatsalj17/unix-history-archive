@@ -1,0 +1,37 @@
+.th DCOPY I 8/12/77
+.sh NAME
+dcopy - recursively copy directory contents
+.sh SYNOPSIS
+dcopy [ -v ] input-directory output-directory
+.sh DESCRIPTION
+Copies the tree of directories and files below
+.it input-directory
+into
+.it output-directory
+(which must exist and be empty).
+
+.lp +6 6
+-v	(Verbose) - prints each filename as it is created
+.i0
+
+.it dcopy
+searches the input directory,
+copying each file into the output directory.
+If it encounters a special file, it makes
+an identical special file in the output directory.
+If it encounters a directory,
+it makes a corresponding one in the output directory,
+and calls itself recursively.
+
+If the caller is the super-user,
+the created files and directories are given the same
+owner and modification date as the originals.
+.sh DIAGNOSTICS
+All I/O or other errors are reported.
+.sh AUTHOR
+R Miller
+.br
+University of Wollongong
+.sh BUGS
+.it dcopy
+breaks links and forms duplicate copies of linked files.

@@ -1,0 +1,671 @@
+.SH
+10. External definitions
+.LP
+A C program consists of a sequence of external definitions.
+An external definition declares an identifier to
+have storage class
+.Bd extern
+(by default)
+or perhaps
+.Bd static,
+and
+a specified type.
+The type-specifier (\(sc8.2) may also be empty, in which
+case the type is taken to be \fGint\fR.
+The scope of external definitions persists to the end
+of the file in which they are declared just as the effect
+of declarations persists to the end of a block.
+The syntax of external definitions is the same
+as that of all declarations, except that
+only at this level may the code for functions be given.
+.SH
+10.1  External function definitions
+.LP
+Function definitions have the form
+.SY
+	function-definition:
+		decl-specifiers\*(op function-declarator function-body
+.ES
+The only sc-specifiers
+allowed
+among the decl-specifiers
+are
+.Bd extern
+or
+.Bd static;
+See \(sc11.2 for the distinction between them.
+A function declarator is similar to a declarator
+for a `function returning ...' except that
+it lists the formal parameters of
+the function being defined.
+.SY
+	function-declarator:
+		declarator \fG( \fIparameter-list\*(op \fG)
+.ES
+.SY
+	parameter-list:
+		identifier
+		identifier \fG,\fI parameter-list
+.ES
+The function-body
+has the form
+.SY
+	function-body:
+		declaration-list compound-statement
+.ES
+The identifiers in the parameter list, and only those identifiers,
+may be declared in the declaration list.
+Any identifiers whose type is not given are taken to be
+.Bd int.
+The only storage class which may be specified is
+.Bd register;
+if it is specified, the corresponding actual parameter
+will be copied, if possible, into a register
+at the outset of the function.
+.PP
+A simple example of a complete function definition is
+.PR
+	int max\|(\|a, b, c)
+	int a, b, c;
+	{
+		int m;
+		m = \|(\|a\|>\|b\|)? a\|:\|b\|;
+		return\|(\|m\|>\|c? m\|:\|c\|)\|;
+	}
+.EP
+Here `int' is the type-specifier;
+`max(a,@b,@c)' is the function-declarator;
+`int@a,@b,@c;' is the declaration-list for
+the formal
+parameters;
+`{@.\|.\|.@}' is the
+block giving the code for the statement.
+The parentheses in the
+.Bd return
+are not required.
+.PP
+C converts all
+\fGfloat\fR actual parameters
+to \fGdouble\fR, so formal parameters declared \fGfloat\fR
+have their declaration adjusted to read \fGdouble\fR.
+Also, since a reference to an array in any context
+(in particular as an actual parameter)
+is taken to mean
+a pointer to the first element of the array,
+declarations of formal parameters declared `array of ...'
+are adjusted to read `pointer to ...'.
+Finally, because neither structures
+nor functions can be passed
+to a function, it is useless to declare
+a formal parameter to be a structure or
+function (pointers to structures or
+functions are of course permitted).
+.PP
+A free \fGreturn\fR statement is supplied at the
+end of each function definition, so
+running off the end
+causes
+control, but no value, to be returned to
+the caller.
+.SH
+10.2  External data definitions
+.LP
+An external data definition has the form
+.SY
+	data-definition:
+		declaration
+.ES
+The storage class of such data may be
+.Bd extern
+(which is the default)
+or
+.Bd static,
+but not
+.Bd auto
+or
+.Bd register.
+.SH
+11.  Scope rules
+.LP
+A C program need not all
+be compiled at the same time: the source text of the
+program
+may be kept in several files, and precompiled
+routines may be loaded from
+libraries.
+Communication among the functions of a program
+may be carried out both through explicit calls
+and through manipulation of external data.
+.PP
+Therefore, there are two kinds of scope to consider:
+first, what may be called the \fIlexical scope\fR
+of an identifier, which is essentially the
+region of a program during which it may
+be used without drawing `undefined identifier'
+diagnostics;
+and second, the scope
+associated with external identifiers,
+which is characterized by the rule
+that references to the same external
+identifier are references to the same object.
+.SH
+11.1  Lexical scope
+.LP
+The lexical scope of identifiers declared in external definitions
+persists from the definition through
+the end of the file
+in which they appear.
+The lexical scope of identifiers which are formal parameters
+persists through the function with which they are
+associated.
+The lexical scope of identifiers declared at the head of blocks
+persists until the end of the block.
+The lexical scope of labels is the whole of the
+function in which they appear.
+.PP
+Because all references to the same external identifier
+refer to the same object (see \(sc11.2)
+the compiler checks all declarations of the same external
+identifier for compatibility;
+in effect their scope is increased to the whole file in which they appear.
+.PP
+In all cases, however,
+if an identifier is explicitly declared at the head of a block,
+including the block constituting a function,
+any declaration of that identifier outside the block
+is suspended until the end of the block.
+.PP
+Remember also (\(sc8.5) that identifiers associated with
+ordinary variables on the one hand
+and those associated with structure and union members
+and tags on the other form two disjoint classes
+which do not conflict.
+.Bd Typedef
+names are in the same class as ordinary identifiers.
+They may be redeclared in inner blocks, but an explicit
+type must be given in the inner declaration:
+.PR
+typedef float distance;
+\&. . .
+{	auto int distance;
+	. . .
+.EP
+The
+.Bd int
+must be present in the second declaration,
+or it would be taken to be
+a declaration with no declarators and type
+.Bd distance.*
+.FS
+*It is agreed that the ice is thin here.
+.FE
+.SH
+11.2  Scope of externals
+.LP
+.MC
+If a function refers to an identifier
+declared to be
+.mc
+\fGextern\fR,
+then somewhere among the files or libraries
+constituting the complete program
+there must be an external definition
+for the identifier.
+All functions in a given program which refer to the same
+external identifier refer to the same object,
+so care must be taken that the type and extent
+specified in the definition
+are compatible with those specified
+by each function which references the data.
+.PP
+The appearance of the
+.Bd extern
+keyword in an external definition
+indicates that storage for the identifiers
+being declared
+will be allocated in another file.
+Thus in a multi-file program,
+an external data definition without
+the
+.Bd extern
+specifier must appear in exactly one of the files.
+Any other files which wish to give an external definition
+for the identifier must
+include the
+.Bd extern
+in the definition.
+The identifier can be initialized only in the declaration
+where storage is allocated.
+.PP
+Identifiers declared
+.Bd static
+at the top level in external definitions
+are not visible in other files.
+.MC
+Functions may be declared
+.Bd static
+to make their definition local to a file.
+.mc
+.SH
+12.  Compiler control lines
+.LP
+The C compiler contains a preprocessor capable
+of macro substitution, conditional compilation,
+and inclusion of named files.
+Lines beginning with `#' communicate
+with this preprocessor.
+These lines have syntax independent of the rest of the language;
+they may appear anywhere and have effect which lasts (independent of
+scope) until the end of the source program file.
+.SH
+12.1  Token replacement
+.LP
+A compiler-control line of the form
+.SY
+	\fG# define \fIidentifier token-string
+.ES
+(note: no trailing semicolon)
+causes the preprocessor to replace subsequent instances
+of the identifier with the given string of tokens.
+A line of the form
+.SY
+	\fG# define \fIidentifier\fG( \fIidentifier\fG , ... ) \fItoken-string
+.ES
+where there is no space between the first identifier
+and the `(',
+is a macro definition with arguments.
+Subsequent instances of the first identifier followed
+by a `(', a sequence of tokens delimited by commas, and a `)'
+are replaced
+by the token string in the definition.
+Each occurrence of an identifier mentioned in the formal parameter list
+of the definition is replaced by the corresponding token string from the call.
+The actual arguments in the call are token strings separated by commas;
+however commas in quoted strings or protected by
+parentheses do not separate arguments.
+The number of formal and actual parameters must be the same.
+Text inside a string or a character constant is not subject
+to replacement.
+.PP
+In both forms the replacement string is rescanned for more
+defined identifiers.
+In both forms
+a long definition may be continued on another line
+by writing `\e' at the end of the line to be continued.
+.PP
+This facility is most valuable for definition of `manifest constants',
+as in
+.PR
+	# define TABSIZE 100
+	.\|.\|.
+	int table[TABSIZE];
+.EP
+A control line of the form
+.SY
+	\fG# undef \fIidentifier
+.ES
+causes the
+identifier's preprocessor definition to be forgotten.
+.SH
+12.2  File inclusion
+.LP
+A compiler control line of
+the form
+.SY
+	\fG# include "\fIfilename\|\fG"
+.ES
+causes the replacement of that
+line by the entire contents of the file
+\fIfilename\fR.
+.PP
+The named file is searched for first in the directory
+of the original source file,
+and then in a sequence of standard places.
+Alternatively, a control line of the form
+.SY
+	# include <\fIfilename>
+.ES
+searches only the standard places,
+and not the directory of the source file.
+.PP
+Includes may be nested.
+.SH
+12.3  Conditional compilation
+.LP
+A compiler control line of the form
+.SY
+	\fG# if \fIconstant-expression
+.ES
+checks whether the constant expression (see \(sc15) evaluates to non-zero.
+A control line of the form
+.SY
+	\fG# ifdef \fIidentifier
+.ES
+checks whether the identifier is currently defined
+in the preprocessor; that is, whether it has been the
+subject of a
+.Bd #define
+control line.
+A control line of the form
+.SY
+	\fG# ifndef \fIidentifier
+.ES
+checks whether the identifier is currently undefined
+in the preprocessor.
+.PP
+All three forms are followed by an arbitrary number of lines,
+possibly containing a control line
+.SY
+	\fG# else
+.ES
+and then by a control line
+.SY
+	\fG# endif
+.ES
+If the checked condition is true
+then any lines
+between
+.Bd #else
+and
+.Bd #endif
+are ignored.
+If the checked condition is false then any lines between
+the test and an
+.Bd #else
+or, lacking an
+.Bd #else,
+the
+.Bd #endif,
+are ignored.
+.PP
+These constructions may be nested.
+.SH
+12.4  Line control
+.LP
+For the benefit of other preprocessors which generate C programs,
+a line of the form
+.SY
+	\fG# line \fIconstant identifier
+.ES
+causes the compiler to believe, for purposes of error
+diagnostics,
+that the next line number is given by the constant and the current input
+file is named by the identifier.
+If the identifier is absent the remembered file name does not change.
+.SH
+13.  Implicit declarations
+.LP
+It is not always necessary to specify
+both the storage class and the type
+of identifiers in a declaration.
+Sometimes the storage class is supplied by
+the context: in external definitions,
+and in declarations of formal parameters
+and structure members.
+In a declaration inside a function,
+if a storage class but no type
+is given, the identifier is assumed
+to be \fGint\fR;
+if a type but no storage class is indicated,
+the identifier is assumed to
+be \fGauto\fR.
+An exception to the latter rule is made for
+functions, since \fGauto\fR functions are meaningless
+(C being incapable of compiling code into the stack).
+If the type of an identifier is `function returning ...',
+it is implicitly declared to be \fGextern\fR.
+.PP
+In an expression, an identifier
+followed by \fG(\fR and not currently declared
+is contextually
+declared to be `function returning \fGint\fR'.
+.SH
+14.  Types revisited
+.LP
+This section summarizes the operations
+which can be performed on objects of certain types.
+.SH
+14.1  Structures and unions
+.LP
+There are only two things that can be done with
+a structure or union:
+name one of its members (by means of the
+\fG\|.\|\fR operator); or take its address (by unary \fG&\fR).
+Other operations, such as assigning from or to
+it or passing it as a parameter, draw an
+error message.
+In the future, it is expected that
+these operations, but not necessarily
+others, will be allowed.
+.PP
+\(sc7.1 says that in a direct or indirect structure reference
+(with \fG.\fR or \(mi>) the name on the right must be a member
+of the structure named or pointed to by the expression on the left.
+To allow an escape from the typing rules,
+this restriction is not firmly enforced by the compiler.
+In fact, any lvalue is allowed before `\fB.\fR', and that lvalue
+is then assumed to have the form
+of the structure of which the name on the right is a member.
+Also, the expression before a `\(mi>'
+is required only to be a pointer or an integer.
+If a pointer, it is assumed to point to a structure
+of which the name on the right is a member.
+If an integer, it is taken to be the absolute address,
+in machine storage units,
+of the appropriate structure.
+.PP
+Such constructions are non-portable.
+.SH
+14.2  Functions
+.LP
+There are only two things that
+can be done with a function:
+call it, or take its address.
+If the name of a function appears in an
+expression not in the function-name position of a call,
+a pointer to the function is generated.
+Thus, to pass one function to another, one
+might say
+.PR
+	int f(\|\|);
+	...
+	g(\|f\|);
+.EP
+Then the definition of \fIg \fRmight read
+.PR
+	g\|(\|funcp\|)
+	int (\**funcp)\|(\|\|);
+	{
+		.\|.\|.
+		(\**funcp)\|(\|\|);
+		.\|.\|.
+	}
+.EP
+Notice that \fIf\fR was declared
+explicitly in the calling routine since its first appearance
+was not followed by \fG(\fR\|.
+.SH
+14.3  Arrays, pointers, and subscripting
+.LP
+Every time an identifier of array type appears
+in an expression, it is converted into a pointer
+to the first member of the array.
+Because of this conversion, arrays are not
+lvalues.
+By definition, the subscript operator
+\fG[\|]\fR is interpreted
+in such a way that
+`E1[E2]' is identical to
+`\**(\|(\|E1)\|+\|(E2\|)\|)'.
+Because of the conversion rules
+which apply to \fG+\fR, if E1 is an array and E2 an integer,
+then E1[E2] refers to the E2-th member of E1.
+Therefore,
+despite its asymmetric
+appearance, subscripting is a commutative operation.
+.PP
+A consistent rule is followed in the case of
+multi-dimensional arrays.
+If E is an \fIn\|\fR-dimensional
+array
+of rank
+$i times j times ... times k$,
+then E appearing in an expression is converted to
+a pointer to an (\fIn\fR\(mi1)-dimensional
+array with rank
+$j times ... times k$.
+If the \fG\**\fR operator, either explicitly
+or implicitly as a result of subscripting,
+is applied to this pointer,
+the result is the pointed-to (\fIn\fR\(mi1)-dimensional array,
+which itself is immediately converted into a pointer.
+.PP
+For example, consider
+.PR
+	int x[3][5];
+.EP
+Here \fIx\fR is a 3\(mu5 array of integers.
+When \fIx\fR appears in an expression, it is converted
+to a pointer to (the first of three) 5-membered arrays of integers.
+In the expression `x[\|i\|]',
+which is equivalent to `\**(x+i)',
+\fIx\fR is first converted to a pointer as described;
+then \fIi\fR is converted to the type of \fIx\fR,
+which involves multiplying \fIi\fR by the
+length the object to which the pointer points,
+namely 5 integer objects.
+The results are added and indirection applied to
+yield an array (of 5 integers) which in turn is converted to
+a pointer to the first of the integers.
+If there is another subscript the same argument applies
+again; this time the result is an integer.
+.PP
+It follows from all this that arrays in C are stored
+row-wise (last subscript varies fastest)
+and that the first subscript in the declaration helps determine
+the amount of storage consumed by an array
+but plays no other part in subscript calculations.
+.SH
+14.4 Explicit pointer conversions
+.LP
+.MC
+Certain conversions involving pointers are permitted
+but have implementation-dependent aspects.
+They are all specified by means of an explicit
+type-conversion operator, \(sc\(sc7.2 and 8.7.
+.PP
+A pointer may be converted to any of the integral
+types large enough to hold it.
+Whether an \fGint\fR or \fGlong\fR is required
+is machine dependent.
+The mapping function is also machine dependent,
+but is intended to be unsurprising to those who
+know the addressing structure of the machine.
+Details for some particular machines are
+given below.
+.PP
+An object of integral type may be explicitly converted to a pointer.
+The mapping always carries an integer converted from a
+pointer back to the same pointer, but is
+otherwise machine dependent.
+.PP
+A pointer to one type may be converted to a pointer of another type.
+The resulting pointer may cause addressing exceptions upon use
+if the subject pointer does not refer to an object suitably
+aligned in storage.
+It is guaranteed that a pointer to an object of a given size
+may be converted to a pointer to an object of a smaller size
+and back again without change.
+.PP
+For example, a storage-allocation routine
+might accept a size (in bytes)
+of an object to allocate, and return a \fGchar\fR pointer;
+it might be used in this way:
+.PR
+	extern char *alloc();
+	double *dp;
+
+	dp = (double *) alloc(sizeof(double));
+	*dp = 22.0 / 7.0;
+.EP
+\fGalloc\fR must ensure (in a machine-dependent way)
+that its return value is suitable for conversion
+to a pointer to \fGdouble\fR; then the \fIuse\fR
+of the function is portable.
+.PP
+The pointer representation on the \*(pd
+corresponds to a 16-bit integer and is measured in bytes.
+\fGchars\fR have no alignment requirements;
+everything else must have an even address.
+.PP
+On the Honeywell 6000, a pointer corresponds to a
+36-bit integer;
+the word part is in the left 18 bits,
+and the two bits that select the character in a word
+are just to their right.
+Thus \fGchar\fR pointers are measured in units of
+$2 sup 16$ bytes; everything else is measured in
+units of $2 sup 18$ machine words.
+\fGdouble\fR quantities and aggregates containing them
+must lie on an even word address (0 mod $2 sup 19$).
+.PP
+The IBM 370 and the \*I \*(I2 are similar.
+On both, addresses are measured in bytes
+and occupy a 32-bit integer;
+elementary objects must be aligned on a boundary equal to their
+length, so pointers to \fGshort\fR must be 0 mod 2,
+to \fGint\fR and \fGfloat\fR 0 mod 4,
+and to \fGdouble\fR 0 mod 8.
+Aggregates are aligned on the strictest boundary
+required by any of their constituents.
+.PP
+Addressing on the \*I \*(I1 is like the \*(I2,
+except that a pointer corresponds to a 16-bit integer,
+and \fGlong\fR objects need only be aligned
+on a 2-byte boundary.
+.mc
+.SH
+15.  Constant expressions
+.LP
+In several places C requires expressions which evaluate to
+a constant:
+after
+.Bd case,
+as array bounds, and in initializers.
+In the first two cases, the expression can
+involve only integer constants, character constants,
+and
+.Bd sizeof
+expressions, possibly
+connected by the binary operators
+.SY
+.R
+	+  \(mi  \**  /  %  &  \(or  \*^  <<  >>  ==  !=  <  >  <=  >=
+.ES
+or by the unary operators
+.SY
+	\(mi   \*~
+.ES
+or by the ternary operator
+.SY
+.R
+	? :
+.ES
+Parentheses can be used for grouping,
+but not for function calls.
+.PP
+A bit more latitude is permitted for initializers;
+besides constant expressions as discussed above,
+one can also apply the unary \fG&\fR
+operator to external or static objects,
+.MC
+and (under UNIX)
+.mc
+to external or static arrays subscripted
+with a constant expression.
+The unary \fG&\fR can also
+be applied implicitly
+by appearance of unsubscripted arrays and functions.
+The basic rule is that initializers must
+evaluate either to a constant or to the address
+of a previously declared external or static object plus or minus a constant.

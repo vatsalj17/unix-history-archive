@@ -1,0 +1,56 @@
+.th SIGNAL II 8/12/77
+.sh NAME
+signal, csignal - catch or ignore signals
+.sh DESCRIPTION
+The
+.it signal
+mechanism is as described in The Book, with the following addition:
+
+Since the Interdata has no
+.it rti
+instruction, a special
+.it signal
+0 call allows signal routines to return to the
+point of interruption without disturbing registers or the PSW.
+
+When a caught signal occurs, UNIX first checks whether the process has
+a stack (see below); if not, the stack pointer is initialized to the top of
+the stack segment - 512. UNIX then stacks the
+.it old
+SP value, program counter, and PSW status (in reverse order) and transfers
+to the process's signal routine.
+
+An assembler signal routine can return to the point of interruption by
+executing
+.it signal
+0. UNIX then restores the PSW status, program counter, and previous
+SP value from the stack. (The PSW status is verified to
+prevent processes getting into an "unauthorized" state.)
+
+If the high-order bit of the restored PSW is
+.it on,
+the process is to be resumed in "no stack" mode.
+This is normally used only in "foreign" programs running under the
+OS SVC interpreter, which do not observe the UNIX stack discipline.
+
+A C signal function normally cannot return - it must only clean up and exit,
+or call
+.it reset
+to re-initialize the stack. However, a special version of
+.it signal
+exists (as \fIcsignal\fR()) which includes a pseudo-\c
+.it rti.
+Using this version, the process's signal function is called with the
+interrupt-time register values as arguments; i.e.
+
+.ti +10
+func(r0, r1, r2, ... , re, rf, ps, pc);
+
+When the function returns,
+.it csgnal
+restores registers and PSW from the arguments (which may have been
+altered) and resumes execution at address
+.it pc.
+.sh "SEE ALSO"
+rti(II)
+

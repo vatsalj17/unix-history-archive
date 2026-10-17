@@ -1,0 +1,281 @@
+.bp
+.SH
+9.  Statements
+.LP
+Except as indicated, statements are executed in sequence.
+.SH
+9.1  Expression statement
+.LP
+Most statements are expression statements, which have
+the form
+.SY
+	expression \fG;
+.ES
+Usually expression statements are assignments or function
+calls.
+.SH
+9.2  Compound statement, or block
+.LP
+So that several statements can be used where one is expected,
+the compound statement (also, and equivalently, called `block') is provided:
+.SY
+	compound-statement:
+		{ declaration-list\*(op statement-list\*(op }
+.ES
+.SY
+	declaration-list:
+		declaration
+		declaration declaration-list
+.ES
+.SY
+	statement-list:
+		statement
+		statement statement-list
+.ES
+If any of the identifiers
+in the declaration-list were previously declared,
+the outer declaration is pushed down for the duration of the block,
+at which time it resumes its force.
+.PP
+Any initializations of
+.Bd auto
+or
+.Bd register
+variables are performed each time the block is entered at the top.
+It is currently possible
+(but a bad practice)
+to transfer into a block;
+in that case the initializations are not performed.
+Initializations of
+.Bd static
+variables are performed only once when the program
+begins execution.
+Inside a block,
+.Bd external
+declarations do not reserve storage
+so initialization is not permitted.
+.SH
+9.3  Conditional statement
+.LP
+The two forms of the conditional statement are
+.SY
+	\fGif ( \fIexpression \fG) \fIstatement
+	\fGif ( \fIexpression \fG) \fIstatement \fGelse \fIstatement
+.ES
+In both cases the expression is evaluated
+and if it is non-zero, the first substatement
+is executed.
+In the second case the second substatement is executed
+if the expression is 0.
+As usual the `else' ambiguity is resolved by connecting
+an \fGelse\fR with the last encountered elseless \fGif\fR.
+.SH
+9.4  While statement
+.LP
+The \fGwhile\fR statement has the form
+.SY
+	\fGwhile ( \fIexpression \fG) \fIstatement
+.ES
+The substatement is executed repeatedly
+so long as the value of the 
+expression remains non-zero.
+The test takes place before each execution of the
+statement.
+.SH
+9.5  Do statement
+.LP
+The \fGdo\fR statement has the form
+.SY
+	\fGdo \fIstatement \fGwhile ( \fIexpression \fG) ;
+.ES
+The substatement is executed repeatedly until
+the value of the expression becomes zero.
+The test takes place after each execution of the
+statement.
+.SH
+9.6  For statement
+.LP
+The \fGfor\fR statement has the form
+.SY
+.ft G
+	for ( \fIexpression-1\*(op \fG; \fIexpression-2\*(op \fG ; \c
+\fIexpression-3\*(op \fG) \fIstatement
+.ES
+This statement is equivalent to
+.SY
+	expression-1;
+	\fGwhile (\fI\|expression-2\fG\|) {
+		\fIstatement
+		expression-3\|\fG;
+	}
+.ES
+Thus the first expression specifies initialization
+for the loop; the second specifies
+a test, made before each iteration, such
+that the loop is exited when the expression becomes
+0;
+the third expression typically specifies an incrementation
+which is performed after each iteration.
+.PP
+Any or all of the expressions may be dropped.
+A missing
+expression-2
+makes the
+implied \fGwhile\fR clause equivalent to `while(\|1\|)';
+other missing expressions are simply
+dropped from the expansion above.
+.SH
+9.7  Switch statement
+.LP
+The \fGswitch\fR statement causes control to be transferred
+to one of several statements depending on
+the value of an expression.
+It has the form
+.SY
+	\fGswitch ( \fIexpression \fG) \fIstatement
+.ES
+The usual arithmetic conversion is performed on the
+expression, but the result must be
+.Bd int.
+The statement is typically compound.
+Any statement within the statement
+may be labelled with one or more case prefixes
+as follows:
+.SY
+	\fGcase \fIconstant-expression \fG:
+.ES
+where the constant
+expression
+must be
+.Bd int.
+No two of the case constants in the same switch
+may have the same value.
+Constant expressions are precisely defined in \(sc15.
+.PP
+There may also be at most one statement prefix of the
+form
+.SY
+	\fGdefault :
+.ES
+When the \fGswitch\fR statement is executed, its expression
+is evaluated and compared with each case constant
+If one of the case constants is
+equal to the value of the expression,
+control is passed to the statement
+following the matched case prefix.
+If no case constant matches the expression,
+and if there is a \fGdefault\fR prefix, control
+passes to the prefixed
+statement.
+If no case matches and if there is no
+.Bd default
+then
+none of the statements in the
+switch is executed.
+.PP
+.Bd Case
+and
+.Bd default
+prefixes in themselves do not alter the flow of control,
+which continues unimpeded across such prefixes.
+To exit from a switch, see
+.Bd break,
+\(sc9.8.
+.PP
+Usually the statement that is the subject of a switch is compound.
+Declarations may appear at the head of this
+statement,
+initializations of automatic or register variables
+are ineffective.
+.SH
+9.8  Break statement
+.LP
+The statement
+.SY
+	\fGbreak ;
+.ES
+causes termination of the smallest enclosing \fGwhile\fR, \fGdo\fR,
+\fGfor\fR, or \fGswitch\fR statement;
+control passes to the
+statement following the terminated statement.
+.SH
+9.9  Continue statement
+.LP
+The statement
+.SY
+	\fGcontinue ;
+.ES
+causes control to pass to the loop-continuation portion of the
+smallest enclosing \fGwhile\fR,
+\fGdo\fR, or \fGfor\fR
+statement; that is to the end of the loop.
+More precisely, in each of the statements
+.SY
+.ta .5i 2.5i 4.5i
+	\fGwhile (\|\|.\|.\|.\|\|) {	do {	for (\|\|.\|.\|.\|\|) {
+	  \|.\|.\|.\|	  \|.\|.\|.\|	  \|.\|.\|.\|
+	contin:\|;	contin:\|;	contin:\|;
+	}	} while (\|\|.\|.\|.\|\|)\|;	}
+.RT
+.ES
+a \fGcontinue\fR is equivalent to `goto contin'.
+(Following the `contin:' is a null statement, \(sc9.13.)
+.SH
+9.10  Return statement
+.LP
+A function returns to its caller by means of
+the \fGreturn\fR statement, which has one of the
+forms
+.SY
+.ft G
+	return ;
+	return \fIexpression \fG;
+.ES
+In the first case the returned value is undefined.
+In the second case, the value of the expression
+is returned to the caller
+of the function.
+If required, the expression is converted,
+as if by assignment, to the type of the
+function in which it appears.
+Flowing off the end of a function is
+equivalent to a return with no returned value.
+.SH
+9.11  Goto statement
+.LP
+Control may be transferred unconditionally by means of
+the statement
+.SY
+.ft G
+	goto \fIidentifier \fG;
+.ES
+The identifier must be a label
+(\(sc9.12)
+located in the current function.
+Previous versions of C had an incompletely implemented
+notion of label variable, which has been withdrawn.
+.SH
+9.12  Labelled statement
+.LP
+Any statement may be preceded by
+label prefixes of the form
+.SY
+	identifier \fG:
+.ES
+which serve to declare the identifier
+as a label.
+The only use of a label is as a target of a
+.Bd goto.
+The scope of a label is the current function,
+excluding any sub-blocks in which the same identifier has been redeclared.
+See \(sc11.
+.SH
+9.13  Null statement
+.LP
+The null statement has the form
+.SY
+	\fG;
+.ES
+A null statement is useful to carry a label just before the `}'
+of a compound statement or to supply a null
+body to a looping statement such as \fGwhile\fR.

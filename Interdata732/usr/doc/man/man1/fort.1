@@ -1,0 +1,75 @@
+.th FORT I
+.sh NAME
+fort - Interdata Fortran V compiler
+.sh SYNOPSIS
+fort [ -l ] [ -c ] [ -S ] [ -o output ] file ...
+.sh DESCRIPTION
+Invokes the Fortran V compiler.
+
+Arguments of the form
+.it name.f
+or
+.it name.for
+are assumed to be Fortran source programs;
+each is compiled and assembled
+and the object code is left in file
+.it name.o.
+The
+.it "\&.o"
+file is normally deleted if only one source file is compiled.
+
+Source may contain lower-case letters and tabs.
+
+Each source file may contain only one main program or subprogram.
+
+Flags:
+
+.lp +6 6
+-l	Make a listing on the standard output.
+
+.lp +6 6
+-c	Compile only - suppress the loading phase,
+and don't delete the
+.it "\&.o"
+file.
+
+.lp +6 6
+-S	(Uppercase S) Suppress the assembly phase,
+and leave the assembly-language version of each
+source file in
+.it name.s.
+
+.lp +6 6
+-o	Leave the executable program in file
+.it output
+instead of
+.it a.out.
+.i0
+
+Other arguments are assumed to be loader flags (see ld(I)),
+object libraries, or object programs produced by
+an earlier Fortran compilation.
+All the resulting object files
+are linked together with the Fortran runtime library
+to produce an executable program on file
+.it a.out.
+
+Files are linked in the order specified: the main program must be named
+first.
+
+At execution time, Fortran I/O units 5 and 6 are assigned
+to the standard input and output respectively.
+No other unit numbers are currently supported.
+
+.sh DIAGNOSTICS
+For explanations of Fortran compile-time and run-time error numbers,
+use the
+.it ferr
+command (q.v.).
+.sh FILES
+.ta 16
+.nf
+/lib/frt0.o	Fortran runtime initialization
+/lib/libf.a	Fortran runtime library
+/lib/libd.a	Fortran double-precision library
+.fi

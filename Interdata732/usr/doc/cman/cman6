@@ -1,0 +1,276 @@
+.if n .ds * *
+.bp
+.SH
+16.  Grammar revisited.
+.PP
+This section repeats the grammar of C
+in notation somewhat different than 
+given before.
+The description below is adapted directly from a YACC grammar
+actually used by several compilers;
+thus it may (aside from possible editing errors)
+be regarded as authentic.
+The notation is pure YACC with the exception that
+the `\(or' separating alternatives for a production
+is omitted, since alternatives are always on separate lines;
+the `;' separating productions is omitted since
+a blank line is left between productions.
+.PP
+The lines with `%term' name the terminal symbols,
+which are either commented upon or should be self-evident.
+The lines with `%left,' `%right,' and `%binary'
+indicate whether the listed terminals are left-associative,
+right-associative, or non-associative,
+and describe a precedence structure.
+The precedence (binding strength)
+increases as one reads down the page.
+When the construction `%prec \fIx\fR'
+appears
+the precedence of the rule is that of the terminal
+.It x;
+otherwise
+the precedence of the rule is that of its leftmost terminal.
+.TS
+l1l1l1l1.
+%term	NAME
+%term	STRING
+%term	ICON
+%term	FCON
+%term	PLUS
+%term	MINUS
+%term	MUL
+%term	AND
+%term	QUEST
+%term	COLON
+%term	ANDAND
+%term	OROR
+%term	ASOP	/\** old-style =+ etc. \**/
+%term	RELOP	/\** <= >= < > \**/
+%term	EQUOP	/\** == != \**/
+%term	DIVOP	/\** / % \**/
+%term	OR	/\** \(or \**/
+%term	EXOR	/\** \*^ \**/
+%term	SHIFTOP	/\** << >> \**/
+%term	INCOP	/\** ++ \-\- \**/
+%term	UNOP	/\** ! \*~ \**/
+%term	STROP	/\** \fG.\fR \-> \**/
+.TE
+
+.TS
+l1l1l1l1.
+%term	TYPE	/\** int, char, long, float, double, unsigned, short \**/
+%term	CLASS	/\** extern, register, auto, static, typedef \**/
+%term	STRUCT	/\** struct or union \**/
+%term	RETURN
+%term	GOTO
+%term	IF
+%term	ELSE
+%term	SWITCH
+%term	BREAK
+%term	CONTINUE
+%term	WHILE
+%term	DO
+%term	FOR
+%term	DEFAULT
+%term	CASE
+%term	SIZEOF
+
+%term	LP	/\** ( \**/
+%term	RP	/\** ) \**/
+%term	LC	/\** { \**/
+%term	RC	/\** } \**/
+%term	LB	/\** [ \**/
+%term	RB	/\** ] \**/
+%term	CM	/\** , \**/
+%term	SM	/\** ; \**/
+%term	ASSIGN	/\** = \**/
+.TE
+
+.TS
+l1l1l1l1.
+%left	CM
+%right	ASOP	ASSIGN
+%right	QUEST	COLON
+%left	OROR
+%left	ANDAND
+%left	OROP
+%left	AND
+%binary	EQUOP
+%binary	RELOP
+%left	SHIFTOP
+%left	PLUS	MINUS
+%left	MUL	DIVOP
+%right	UNOP
+%right	INCOP	SIZEOF
+%left	LB	LP	STROP
+.TE
+
+.TS
+l1l1l1l1.
+program:	ext_def_list
+
+ext_def_list:	ext_def_list external_def
+	/\** empty \**/
+
+external_def:	optattrib SM
+	optattrib init_dcl_list SM
+	optattrib fdeclarator function_body
+
+function_body:	dcl_list compoundstmt
+
+dcl_list:	dcl_list declaration
+	/\** empty \**/
+
+declaration:	specifiers declarator_list SM
+	specifiers SM
+
+optattrib:	specifiers
+	/\** empty \**/
+
+specifiers:	CLASS type
+	type CLASS
+	CLASS
+	type
+
+type:	TYPE
+	TYPE TYPE
+	struct_dcl
+
+struct_dcl:	STRUCT NAME LC type_dcl_list RC
+	STRUCT LC type_dcl_list RC
+	STRUCT NAME
+
+type_dcl_list:	type_declaration
+	type_dcl_list type_declaration
+
+type_declaration:	type declarator_list SM
+	struct_dcl SM
+	type SM
+
+declarator_list:	declarator
+	declarator_list CM declarator
+
+declarator:	fdeclarator
+	nfdeclarator
+	nfdeclarator COLON con_e %prec CM
+	COLON con_e %prec CM
+
+nfdeclarator:	MUL nfdeclarator
+	nfdeclarator LP RP
+	nfdeclarator LB RB
+	nfdeclarator LB con_e RB
+	NAME
+	LP nfdeclarator RP
+
+fdeclarator:	MUL fdeclarator
+	fdeclarator LP RP
+	fdeclarator LB RB
+	fdeclarator LB con_e RB
+	LP fdeclarator RP
+	NAME LP name_list RP
+	NAME LP RP
+
+name_list:	NAME
+	name_list CM NAME
+
+init_dcl_list:	init_declarator %prec CM
+	init_dcl_list CM init_declarator
+
+init_declarator:	nfdeclarator
+	nfdeclarator ASSIGN initializer
+	nfdeclarator initializer
+	fdeclarator
+
+init_list:	initializer %prec CM
+	init_list CM initializer
+
+initializer:	e %prec CM
+	LC init_list RC
+	LC init_list CM RC
+
+compoundstmt:	LC dcl_list stmt_list RC
+
+stmt_list:	stmt_list statement
+	/\** empty \**/
+
+statement:	e SM
+	compoundstmt
+	IF LP e RP statement
+	IF LP e RP statement ELSE statement
+	WHILE LP e RP statement
+	DO statement WHILE LP e RP SM
+	FOR LP opt_e SM opt_e SM opt_e RP statement
+	SWITCH LP e RP statement
+	BREAK SM
+	CONTINUE SM
+	RETURN SM
+	RETURN e SM
+	GOTO NAME SM
+	SM
+	label statement
+
+label:	NAME COLON
+	CASE con_e COLON
+	DEFAULT COLON
+
+con_e:	e %prec CM
+
+opt_e:	e
+	/\** empty \**/
+
+elist:	e %prec CM
+	elist CM e
+
+e:	e MUL e
+	e CM e
+	e DIVOP e
+	e PLUS e
+	e MINUS e
+	e SHIFTOP e
+	e RELOP e
+	e EQUOP e
+	e AND e
+	e OROP e
+	e ANDAND e
+	e OROR e
+	e MUL ASSIGN e
+	e DIVOP ASSIGN e
+	e PLUS ASSIGN e
+	e MINUS ASSIGN e
+	e SHIFTOP ASSIGN e
+	e AND ASSIGN e
+	e OROP ASSIGN e
+	e QUEST e COLON e
+	e ASOP e
+	e ASSIGN e
+	term
+
+term:	term INCOP
+	MUL term
+	AND term
+	MINUS term
+	UNOP term
+	INCOP term
+	SIZEOF term
+	LP type_name RP term %prec STROP
+	SIZEOF LP type_name RP %prec SIZEOF
+	term LB e RB
+	term LP RP
+	term LP elist RP
+	term STROP NAME
+	NAME
+	ICON
+	FCON
+	STRING
+	LP e RP
+
+type_name:	type abst_decl
+
+abst_decl:	/\** empty \**/
+	LP RP
+	LP abst_decl RP LP RP
+	MUL abst_decl
+	abst_decl LB RB
+	abst_decl LB con_e RB
+	LP abst_decl RP
+.TE

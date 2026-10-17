@@ -1,0 +1,25 @@
+: UNIX filesystem bootstrap program (10-MB disk)
+
+cp mkboot /etc
+rm mkboot
+strip uboot
+cp uboot /uboot
+rm uboot
+
+: disc version - loaded by LSU
+/etc/mkboot -9600 /uboot /dev/df0
+
+: tape version - loaded by '50 sequence'
+dd if=/uboot of=/tuboot bs=160 skip=1
+dd if=/tuboot of=/dev/rmt0 bs=1k
+
+: multimedia diagnostics loader - loaded by uboot
+strip mdl
+cp mdl /mdl
+rm mdl
+
+: 'tp' tape bootstrap: copied onto blk 0 of tape by 'tp'
+
+strip tpboot
+dd if=tpboot of=/tpboot bs=160 skip=1
+rm tpboot

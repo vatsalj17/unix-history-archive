@@ -1,0 +1,35 @@
+.th ARCHIVE V
+.sh NAME
+archive - ar (library) file format
+.sh DESCRIPTION
+The archive command
+.it ar
+is used to combine several files into one.
+Archives are used mainly as libraries to be searched by the link-editor
+.it ld.
+
+A file produced by
+.it ar
+has a magic number 0177545(8) in the first word, followed by the
+constituent files, each preceded by a file header.
+The header of each file has the following format:
+
+.dt
+.nf
+struct {
+	char	name[14];	/* file name, null padded */
+	char	uid;		/* user id of file's owner */
+	char	gid;		/* group id of file's owner */
+	long	date;		/* time of last modification */
+	long	size;		/* size of file */
+	int	mode;		/* access modes */
+};
+
+Each file begins on an even address; a null byte is inserted between
+files if necessary.
+Nevertheless the size given reflects the actual size of the
+file exclusive of padding.
+
+Notice there is no provision for empty areas in an archive file.
+.sh "SEE ALSO"
+ar(I), ld(I)

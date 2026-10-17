@@ -1,0 +1,15 @@
+echo == Moving LSU bootstrap 
+/etc/mkboot -9600 /uboot /dev/dr0
+
+echo == Expanding filesystem size
+ddt /dev/dr0
+01004/d
+8000!
+/d
+;f
+
+echo == Fixing up freelist
+/etc/icheck -s /dev/dr0
+
+sync
+echo "*** Please Reboot Immediately ***"

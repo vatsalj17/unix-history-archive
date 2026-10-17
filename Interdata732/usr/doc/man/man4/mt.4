@@ -1,0 +1,84 @@
+.th MT IV
+.sh NAME
+mt - magnetic tape drive
+.sh DESCRIPTION
+The file
+.it mt0
+refers to the 800-bpi magnetic tape drive.
+The tape is automatically rewound when closed;
+if the last operation was a write, two filemarks are written first.
+
+A standard tape consists of a series of 512-byte records terminated by
+a filemark.
+To the extent possible, the system makes it possible, if inefficient,
+to treat the tape like any other file.
+Seeks have their usual meaning, and it is possible to read or write a byte
+at a time.
+Writing in very small units is inadvisable, however,
+because it tends to create monstrous record gaps.
+
+The interface discussed above is useful when it is desired to access the
+tape in a way compatible with ordinary files.
+When foreign tapes are to be dealt with,
+and especially when long records are to be read or written,
+the "raw" interface is appropriate.
+The associated raw tape file is named
+.it rmt0.
+Each read or write call reads or writes the next sequential record on
+the tape.
+In the write case the record has the same length as the buffer given.
+During a read, the record size is passed back as the number of bytes
+read, provided it is no greater than the buffer size;
+if the record is long, an I/O error is indicated.
+In raw tape I/o, the buffer must begin on a halfword boundary and
+the count must be even.
+Seeks are ignored.
+End-of-file status is returned when a tape mark is read
+(or when the end of the tape is reached)
+but another read will fetch the first record of the next tape file.
+
+The files
+.it mmt0
+and
+.it rmmt0
+are identical to the corresponding
+.it mt
+files, but are not rewound automatically; they may be used to access
+a tape containing multiple files.
+Tape positioning operations are performed on an open
+.it rmmt
+file by a
+.it stty
+call. The first word of the parameter list is one of the following:
+.in +4
+.nf
+0 - forward space file
+1 - back space file
+3 - write filemark
+4 - forward space record
+5 - back space record
+7 - rewind
+.in -4
+.fi
+The second and third words must be\ 0.
+(These operations are also performed by the
+.it tc
+command.)
+.sh FILES
+/dev/mt0, /dev/mmt0
+.br
+/dev/rmt0, /dev/rmmt0
+.sh "SEE ALSO"
+tc(I), tm(I), tp(I)
+.sh BUGS
+A rewind or backspace operation from loadpoint will hang up the controller.
+This condition must be cleared manually by a reset-forward-reset-online
+sequence.
+
+An attempt to write to a tape without a write ring will also hang up the
+controller.
+This must be cleared manually by a reset-online sequence.
+
+A
+.it gtty
+call should be provided to return the status of the drive.

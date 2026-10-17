@@ -1,0 +1,722 @@
+.bp
+.SH
+8.  Declarations
+.LP
+Declarations are used within function definitions to specify the interpretation
+which C gives to each identifier; they do not necessarily
+reserve storage associated with the identifier.
+Declarations have the form
+.SY
+	declaration:
+		decl-specifiers declarator-list\*(op  \fG;
+.ES
+The declarators in the declarator-list
+contain the identifiers being declared.
+The decl-specifiers
+consist of a sequence of type and storage class specifiers.
+.SY
+	decl-specifiers:
+		type-specifier decl-specifiers\*(op
+		sc-specifier decl-specifiers\*(op
+.ES
+The list must be self-consistent in a way described below.
+.SH
+8.1  Storage class specifiers
+.LP
+The sc-specifiers are:
+.SY
+	sc-specifier:
+.ft G
+		auto
+		static
+		extern
+		register
+		typedef
+.ES
+The
+.Bd typedef
+specifier does not reserve storage
+and is called a `storage class specifier' only for syntactic convenience;
+it is discussed in \(sc8.8.
+.PP
+The meanings of the various storage classes were discussed in \(sc4.
+.PP
+The
+.Bd "auto, static,"
+and
+.Bd register
+declarations also serve as definitions
+in that they cause an appropriate amount of storage to be reserved.
+In the \fGextern\fR case
+there must be an external definition (\(sc10)
+for the given identifiers
+somewhere outside the function in which they are declared.
+.PP
+A
+.Bd register
+declaration is best thought of as an
+.Bd auto
+declaration, together with a hint to the compiler
+that the variables declared will be heavily used.
+.MC
+Only the first few
+(\*(pd: three; \*I: five)
+such declarations are effective.
+Moreover, only variables of certain types will be stored in registers;
+on the \*(pd and \*I they are
+.Bd int,
+.Bd char,
+or pointer.
+.mc
+One restriction applies to register variables:
+the address-of operator
+.Bd &
+cannot be applied to them.
+Smaller, faster programs can be expected if register declarations
+are used appropriately,
+but future developments
+may render them unnecessary.
+.PP
+At most one sc-specifier may be given in a declaration.
+If the sc-specifier is missing from a declaration, it
+is taken to be \fGauto\fR
+inside a function,
+.Bd extern
+outside.
+Exception:
+functions are always
+.Bd extern.
+.SH
+8.2  Type specifiers
+.LP
+The type-specifiers are
+.SY
+	type-specifier:
+		\fGchar\fR
+		\fGshort\fR
+		\fGint\fR
+		\fGlong\fR
+		\fGunsigned\fR
+		\fGfloat
+		\fGdouble
+		\fIstruct-or-union-specifier
+		typedef-name
+.ES
+The words
+.Bd "long, short,"
+and
+.Bd unsigned
+may be thought of as adjectives; the following combinations
+are acceptable (in any order).
+.SY
+.ft G
+		short int
+		long int
+		unsigned int
+		long float
+.ES
+The meaning of the last is the same as
+.Bd double.
+Otherwise, at most one type-specifier may be given
+in a declaration.
+If the type-specifier is missing from a declaration,
+it is taken to be
+.Bd int.
+.PP
+Specifiers for structures and unions are discussed in \(sc8.5;
+declarations with
+.Bd typedef
+names are discussed in \(sc8.8.
+.SH
+8.3  Declarators
+.LP
+The declarator-list appearing in a declaration
+is a comma-separated sequence of declarators,
+each of which may have an initializer.
+.SY
+	declarator-list:
+		init-declarator
+		init-declarator \fG,\fI declarator-list
+.ES
+.SY
+	init-declarator:
+		declarator initializer\*(op
+.ES
+Initializers are discussed in \(sc8.6.
+The specifiers in the declaration
+indicate the type and storage class of the objects to which the
+declarators refer.
+Declarators have the syntax:
+.SY
+	declarator:
+		identifier
+		\fG( \fIdeclarator \fG)
+		\fG\**\fI declarator
+		declarator \fG( )\fI
+		declarator \fG[ \fIconstant-expression\*(op \fG]
+.ES
+The grouping is
+the same as in expressions.
+.SH
+8.4  Meaning of declarators
+.LP
+Each declarator is taken to be
+an assertion that when a construction of
+the same form as the declarator appears in an expression,
+it yields an object of the indicated
+type and storage class.
+Each declarator contains exactly one identifier; it is this identifier that
+is declared.
+.PP
+If an unadorned identifier appears
+as a declarator, then it has the type
+indicated by the specifier heading the declaration.
+.PP
+A declarator in parentheses is identical to the unadorned declarator,
+but the binding of complex declarators may be altered by parentheses.
+See the examples below.
+.PP
+If a declarator has the form
+.PR
+	\** D
+.EP
+for D a declarator, then the
+contained identifier has the type `pointer to .\|.\|.', where
+`\|.\|.\|.\|' is the type which the identifier would have had
+if the declarator had been simply D.
+.PP
+If a declarator has the form
+.PR
+	D\|(\|\|)
+.EP
+then the contained identifier has the type
+`function returning ...', where `\|.\|.\|.\|' is the
+type which the identifier would have
+had if the declarator had been simply D.
+.PP
+A declarator may have the form
+.PR
+	D[constant-expression]
+.EP
+or
+.PR
+	D[\|\|]
+.EP
+Such declarators make the contained identifier have
+type `array.'
+If the unadorned declarator D would
+specify a non-array of type `.\|.\|.',
+then the declarator
+`D[\|i\|]'
+yields a 1-dimensional array with rank \fIi\fR of objects
+of type `.\|.\|.'.
+If the unadorned declarator D would
+specify an \fIn\|\fR-dimensional array
+with rank
+$i sub 1 times i sub 2 times ... times i sub n$,
+then the declarator
+$roman D [ i sub { n+1 } ]$
+yields an
+$(n+1)$-dimensional
+array with rank
+$i sub 1 times i sub 2 times ... times i sub n times i sub { n+1}$.
+.PP
+In the first case the constant
+expression
+is an expression
+whose value is determinable at compile time,
+and whose type is
+.Bd int.
+(Constant expressions are defined precisely in \(sc15.)\|\|
+The constant expression of an array declarator may be missing
+only for the first dimension.
+This notation is useful when the array is external
+and the actual declaration, which allocates storage,
+is given elsewhere.
+The constant-expression may also be omitted
+when the declarator is followed by initialization.
+In this case the size is calculated from the number
+of initial elements supplied.
+.PP
+An array may be constructed from one of the basic types, from a pointer,
+from a structure or union,
+or from another array (to generate a multi-dimensional array).
+.PP
+Not all the possibilities
+allowed by the syntax above are actually
+permitted.
+The restrictions are as follows:
+functions may not return
+arrays, structures or functions,
+although they may return pointers to such things;
+there are no arrays of functions, although
+there may be arrays of pointers to functions.
+Likewise a structure may not contain a function,
+but it may contain a pointer to a function.
+.PP
+As an example, the declaration
+.PR
+	int i, \**ip, f\|(\|\|), \**fip(\|\|), (\**pfi)\|(\|\|);
+.EP
+declares an integer \fIi\fR,
+a pointer \fIip\fR to an integer,
+a function \fIf\fR returning an integer,
+a function \fIfip\fR returning a pointer to an integer,
+and a pointer \fIpfi\fR to a function which
+returns an integer.
+It is especially useful to compare the last two.
+The binding of `\**fip(\|)' is `\**(fip(\|))',
+so that the declaration suggests,
+and the same construction in an expression
+requires, the calling of a function
+.It fip,
+and then using indirection through the (pointer) result
+to yield an integer.
+In the declarator `(\**pfi)\|(\|)',
+the extra parentheses are necessary, as they are also
+in an expression, to indicate that indirection through
+a pointer to a function yields a function, which is then called.
+.PP
+As another example,
+.PR
+	float fa[17], \**afp[17];
+.EP
+declares an array of \fGfloat\fR numbers and an array of
+pointers to \fGfloat\fR numbers.
+Finally,
+.PR
+	static int x3d[3][5][7];
+.EP
+declares a static three-dimensional array of integers,
+with rank 3\(mu5\(mu7.
+In complete detail, \fIx3d\fR is an array of three items:
+each item is an array of five arrays;
+each of the latter arrays is an array of seven
+integers.
+Any of the expressions `x3d', `x3d[\|i\|]', `x3d[\|i\|][\|j\|]', `x3d[\|i\|][\|j\|][\|k\|]'
+may reasonably appear in an expression.
+The first three have type `array',
+the last has type \fGint\fR.
+.SH
+8.5  Structure and union declarations
+.LP
+A structure
+is an object consisting of a sequence of named members.
+Each member may have any type.
+A union is an object which may, at a given time, contain any one
+of several members.
+Structure and union specifiers have the same form.
+.SY
+	structure-or-union-specifier:
+		struct-or-union { struct-decl-list }
+		struct-or-union identifier { struct-decl-list }
+		struct-or-union identifier
+.ES
+.SY
+	struct-or-union:
+		\fGstruct
+		\fGunion
+.ES
+The
+struct-decl-list
+is a sequence of declarations for the members of the structure or union:
+.SY
+	struct-decl-list:
+		struct-declaration
+		struct-declaration struct-decl-list
+.ES
+.SY
+	struct-declaration:
+		type-specifier struct-declarator-list  \fG;
+.ES
+.SY
+	struct-declarator-list:
+		struct-declarator
+		struct-declarator \fG,\fI struct-declarator-list
+.ES
+In the usual case, a struct-declarator is just a declarator
+for a member of a structure or union.
+A structure member may also consist of a specified number of bits.
+Such a member is also called a
+.It field;
+its length is set off from the field name by a colon.
+.SY
+	struct-declarator:
+		declarator
+		declarator  \fG: \fI constant-expression
+		\fG:  \fIconstant-expression
+.ES
+Within a structure, the objects declared
+have addresses which increase as their declarations
+are read left-to-right.
+Each non-field member of a structure
+begins on an addressing boundary appropriate
+.MC
+to its type;
+therefore, there may
+be unnamed holes in a structure.
+.mc
+Field members are packed into machine integers;
+they do not straddle words.
+A field which does not fit into the space remaining in a word
+is put into the next word.
+No field may be wider than a word.
+.MC
+Fields are assigned right-to-left
+on the \*(pd,
+left-to-right on other machines.
+.mc
+.PP
+A struct-declarator with no declarator, only a colon and a width,
+indicates an unnamed field useful for padding to conform
+to externally-imposed layouts.
+As a special case, an unnamed field with a width of 0
+specifies alignment of the next field at a word boundary.
+The `next field' presumably is a field, not an ordinary
+structure member, because in the latter case the alignment would
+have been automatic.
+.PP
+The language does not restrict the types of things that
+are declared as fields,
+but implementations are not required to support any but
+integer fields.
+Moreover,
+even
+.Bd int
+fields may be considered to be unsigned.
+.MC
+On the \*(pd and \*I,
+fields are not signed and have only integer values.
+.mc
+.PP
+A union may be thought of as a structure all of whose members
+begin at offset 0 and whose size is sufficient to contain
+any of its members.
+At most one of the members can be stored in a union
+at any time.
+.PP
+A structure or union specifier of the second form, that is, one of
+.SY
+		\fGstruct \fIidentifier { struct-decl-list }
+		\fGunion \fIidentifier { struct-decl-list }
+.ES
+declares the identifier to be the
+.It "structure tag"
+(or union tag)
+of the structure specified by the list.
+A subsequent declaration may then use
+the third form of specifier, one of
+.SY
+		\fGstruct \fIidentifier
+		\fGunion \fIidentifier
+.ES
+Structure tags allow definition of self-referential
+structures; they also
+permit the long part of the declaration to be
+given once and used several times.
+It is however absurd to declare a structure or union
+which contains an instance of
+itself, as distinct from a pointer to an instance of itself.
+.PP
+The names of members and tags may
+be the same as ordinary variables.
+However, names of tags and members
+must be mutually distinct.
+.PP
+Two structures may share a common initial sequence of members;
+that is, the same member may appear in two different structures
+if it has the same type in both and if all previous members are the same
+in both.
+(Actually, the compiler checks only that
+a name in two different structures has the same type and
+offset in both,
+but if preceding members differ the construction is nonportable.)
+.PP
+A simple example of a structure declaration is
+.PR
+	struct tnode {
+		char tword[20];
+		int count;
+		struct tnode \**left;
+		struct tnode \**right;
+	};
+.EP
+which contains an array of 20 characters, an integer, and two pointers
+to similar structures.
+Once this declaration has been given, the following
+declaration makes sense:
+.PR
+	struct tnode s, \**sp;
+.EP
+which declares
+\fIs\fR to be a structure of the given sort
+and \fIsp\fR to be a pointer to a structure
+of the given sort.
+With these declarations, the expression
+.PR
+	sp\(mi>count
+.EP
+refers to the
+.It count
+field of the structure to which
+.It sp
+points;
+.PR
+	s\fB.\fGleft
+.EP
+refers to the left subtree pointer
+of the structure
+.It s.
+Finally,
+.PR
+	s.right\(mi>tword[0]
+.EP
+refers to the first character of the
+.It tword
+member of the right subtree of
+.It s.
+.SH
+8.6  Initialization
+.LP
+A declarator may specify an initial value for the
+identifier being declared.
+The initializer is preceded by `=', and
+consists of an expression or a list of values nested in braces.
+.SY
+	initializer:
+		\fB=\fI expression
+		\fB= { \fIinitializer-list }
+		\fB= { \fIinitializer-list \fB, }
+.ES
+.SY
+	initializer-list:
+		expression
+		initializer-list \fG,\fI initializer-list
+		{ initializer-list }
+.ES
+The `=' is a new addition to the syntax, intended to alleviate
+potential ambiguities.
+The current compiler allows it to be omitted when the rest of the initializer is
+a very simple expression (just a name, string, or constant)
+or when the rest of the initializer is enclosed in braces.
+.PP
+All the expressions in an initializer
+for a static or external variable must be constant
+expressions, which are described in \(sc15,
+or expressions which reduce to the address of a previously
+declared variable, possibly offset by a constant expression.
+Automatic or register variables may be initialized by arbitrary
+expressions involving previously declared variables.
+.MC
+.PP
+Static and external variables which are not initialized
+are guaranteed to start off as
+.Bd 0 "" ";"
+automatic and register variables which are not initialized
+are guaranteed to start off as garbage.
+.mc
+.PP
+When an initializer applies to a
+.It scalar
+(a pointer or an object of arithmetic type),
+it consists of a single expression, perhaps in braces.
+The initial value of the object is taken from
+the expression; the same conversions as for assignment are performed.
+.PP
+When the declared variable is an
+.It aggregate
+(a structure or array)
+then the initializer consists of a brace-enclosed, comma-separated list of
+initializers for the members of the aggregate,
+written in increasing subscript or member order.
+If the aggregate contains subaggregates, this rule
+applies recursively to the members of the aggregate.
+If there are fewer initializers in the list than there are members of the aggregate,
+then the aggregate is padded with 0's.
+.MC
+It is not permitted to initialize unions or automatic aggregates.
+.mc
+.PP
+Braces may be elided as follows.
+If the initializer begins with a left brace, then 
+the succeding comma-separated list of initializers initialize
+the members of the aggregate;
+it is erroneous for there to be more initializers than members.
+If, however, the initializer does not begin with a left brace,
+then only enough elements from the list are taken to account
+for the members of the aggregate; any remaining members
+are left to initialize the next member of the aggregate of which
+the current aggregate is a part.
+.PP
+A final abbreviation allows a
+.Bd char
+array to be initialized by a string.
+In this case successive members of the string
+initialize the members of the array.
+.PP
+For example,
+.PR
+int x[ ] = { 1, 3, 5 };
+.EP
+declares and initializes
+.It x
+as a 1-dimensional array which has three members, since no size was specified
+and there are three initializers.
+.PR
+float	y[4][3] = {
+	{ 1, 3, 5 },
+	{ 2, 4, 6 },
+	{ 3, 5, 7 },
+};
+.EP
+is a completely-bracketed initialization:
+1, 3, and 5 initialize the first row of
+the array $y [ 0 ]$,
+namely $y [ 0 ] [ 0 ]$, $y [ 0 ] [ 1 ]$, and $y [ 0 ] [ 2 ]$.
+Likewise the next two lines initialize
+$y [ 1 ]$ and $y [ 2 ]$.
+The initializer ends early and therefore $y [ 3 ]$ is initialized with 0.
+Precisely the same effect could have been achieved by
+.PR
+float	y[4][3] = {
+	1, 3, 5, 2, 4, 6, 3, 5, 7,
+};
+.EP
+The initializer for
+$y$ begins with a left brace, but that for $y [ 0 ]$ does not,
+therefore 3 elements from the list are used.
+Likewise the next three are taken successively for $y [ 1 ]$
+and $y [ 2 ]$.
+Also,
+.PR
+float	y[4][3] = {
+	{ 1 }, { 2 }, { 3 }, { 4 }
+};
+.EP
+initializes the first column of
+.It y
+(regarded as a two-dimensional array)
+and leaves the rest 0.
+.PP
+Finally, 
+.PR
+char	msg[\|] = "Syntax error on line %s\en";
+.EP
+shows a character array whose members are initialized
+with a string.
+.SH
+8.7  Type names
+.LP
+In two contexts (to specify type conversions explicitly, and as an argument of
+.Bd sizeof)
+it is desired to supply the name of a data type.
+This is accomplished using a `type name,' which in essence
+is a declaration for an object of that type which omits the name of
+the object.
+.SY
+	type-name:
+		type-specifier abstract-declarator
+.ES
+.SY
+	abstract-declarator:
+		empty
+		\fG( \fIabstract-declarator \fG)
+		\fG\** \fIabstract-declarator\fI
+		abstract-declarator \fG( )\fI
+		abstract-declarator \fG[ \fIconstant-expression\*(op \fG]
+.ES
+To avoid ambiguity,
+in the construction
+.SY
+		\fG( \fIabstract-declarator \fG)
+.ES
+the
+abstract-declarator
+is required to be nonempty.
+Under this restriction,
+it is possible to identify uniquely the location in the abstract-declarator
+where the identifier would appear if the construction were a declarator
+in a declaration.
+The named type is then the same as the type of the
+hypothetical identifier.
+For example,
+.PR
+	int
+	int \**
+	int \**[3]
+	int (\**)[3]
+.EP
+name respectively the types `integer,' `pointer to integer,'
+`array of 3 pointers to integers,'
+and
+`pointer to an array of 3 integers.'
+As another example,
+.PR
+	int i;
+	. . .
+	sin( (double) i);
+.EP
+calls the
+.It sin
+routine (which accepts a
+.Bd double
+argument)
+with an argument appropriately converted.
+.SH
+8.8  Typedef
+.LP
+Declarations whose `storage class' is
+.Bd typedef
+do not define storage, but instead
+define identifiers which can be used later
+as if they were type keywords naming fundamental
+or derived types.
+Within the scope of a declaration involving
+.Bd typedef,
+each of the identifiers appearing as part of
+any declarators therein become syntactically
+equivalent to type keywords
+naming the type
+associated with the identifiers
+in the way described in \(sc8.4.
+.SY
+	typedef-name:
+		identifier
+.ES
+For example,
+after
+.PR
+	typedef int MILES, \**KLICKSP;
+	typedef struct { double re, im;} complex;
+.EP
+the constructions
+.PR
+	MILES distance;
+	extern KLICKSP metricp;
+	complex z, \**zp;
+.EP
+are all legal declarations; the type of
+.It distance
+is
+.Bd `int',
+that of
+.It metricp
+is `pointer to
+.Bd int,'
+and that of
+.It z
+is the specified structure.
+.It zp
+is a pointer to such a structure.
+.PP
+.It Typedef
+does not introduce brand new types, only synonyms for
+types which could be specified in another way.
+Thus
+.Id distance
+in the example above
+.It distance
+is considered to have exactly the same type as
+any other
+.Bd int
+variable.

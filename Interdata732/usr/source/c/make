@@ -1,0 +1,17 @@
+echo == compiling C compiler
+echo = command
+cc -o cc -s -n cc.c
+
+echo = preprocessor
+cc -o cpp -s -n cpp.c -lS
+
+echo = pass 0
+cc -o c0 -s -n c0?.c
+
+echo = code tables
+cc -o cvopt cvopt.c
+cvopt tables c1x.s
+as -u -o c1x.o c1x.s
+
+echo = pass 1
+cc -o c1 -s -n c1?.c c1x.o

@@ -1,0 +1,94 @@
+.th AS I
+.sh NAME
+as - UNIX Interdata assembler
+.sh SYNOPSIS
+as [ -u ] [ -m ] [ -sN ] [ -o object-file ] file [ ... ]
+.sh DESCRIPTION
+Assembles the Interdata CAL source code in the named file(s),
+leaving the object-code output on
+.it a.out.
+If multiple filenames are given, only the last may have an END statement;
+they are concatenated together and assembled as one program.
+
+.lp +8 4
+-u	Uppercase characters (other than those within quoted strings)
+are to be translated to lowercase.
+.ti -4
+-m	Multiple redefinitions by EQU statements are to be
+considered legal
+(mainly for the benefit of the stupid Interdata Fortran V compiler).
+.ti -4
+-o	Leave the object-code output on the file named by the next argument,
+instead of "a.out".
+.ti -4
+-sN	Specifies the extent of 'SQUEZ' optimization performed.
+.nf
+-s0  NOSQZ - use longest form of all instructions
+-s1  NORX3 - squeeze RX3 instructions to RX2 or RX1
+             (where possible)
+-s2  SQUEZ - shorten all possible instructions:
+             RX branches to SF branches
+             RX3 instructions to RX2 or RX1
+             RI1 instructions to SF or RI2
+.fi
+The default is -s2 (full SQUEZ optimization).
+.i0
+.dt
+
+The input format is compatible with 32-bit CAL assembly language,
+with the following main exceptions:
+.lp +6 2
+-	if `-u' is not specified, opcodes must be lowercase,
+and uppercase and lowercase symbols are distinct (FRED is different from
+fred)
+.ti -2
+-	fields may be separated by tabs and/or blanks
+.ti -2
+-	a BSS pseudo-op is available for defining storage in the uninitialized
+data segment, as well as the text (PURE) and initialized data (IMPUR) segments.
+There is no ABS segment.
+.ti -2
+-	external references and common-block members may be used in
+assembly expressions
+.ti -2
+-	data definitions of type D'', E'' and T'',
+and externals of type Z() are not implemented
+.ti -2
+-	pseudo-ops BATCH, CAL, COPY and TARGT,
+and symbols ABSTOP, PURETOP and IMPTOP are not implemented
+.ti -2
+-	no listings
+.i0
+.dt
+
+.ne 28
+.sh DIAGNOSTICS
+.ta 4
+.in +4
+.nf
+A:	previously-defined absolute symbol required
+B:	short branch out of range
+C:	illegal or missing opcode
+D:	illegal data within COMN, STRUC or BSS
+E:	unexpected input after the END statement
+G:	garbage character
+I:	illegally nested IF, COMN, or STRUC
+L:	missing label
+M:	multiply defined symbol
+N:	syntax error in number
+O:	org to illegal address
+P:	symbol value changed between assembly passes
+Q:	missing quote
+R:	relocatability error
+S:	missing symbol
+U:	undefined symbol
+V:	illegal value (e.g. register field > 15)
+X:	syntax error
+Z:	division by 0
+.i0
+.dt
+.fi
+.sh AUTHOR
+Richard Miller
+.br
+University of Wollongong

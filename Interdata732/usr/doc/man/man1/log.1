@@ -1,0 +1,43 @@
+.th LOG I 8/12/77
+.sh NAME
+log - hardcopy log of terminal session
+.sh SYNOPSIS
+log [ file ]
+.sh DESCRIPTION
+After
+.it log
+is executed, all subsequent terminal I/O is
+logged onto
+.it file.
+Both input and output are copied onto the file,
+interspersed in the same order as they appear
+on the terminal.
+
+If
+.it file
+is omitted,
+.it log
+forces the shell's standard output to the terminal
+(file descriptor 2)
+and logs I/O on the
+.it log
+command's standard output.
+Thus
+.it log
+can be used as a filter; e.g.
+.ti +10
+% log | opr
+
+To terminate logging, type
+.it ctrl-d.
+.sh AUTHOR
+R Miller
+.br
+University of Wollongong
+.sh BUGS
+Since
+.it log
+is implemented with pipes, any program which tries to
+read from fd 1 or write to fd 0
+(e.g. Interdata BASIC II)
+cannot be logged.

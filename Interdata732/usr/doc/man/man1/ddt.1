@@ -1,0 +1,404 @@
+.ll 80
+.de ph
+.s1
+.ti 0
+.ul
+..
+.th DDT I
+.sh NAME
+ddt - dynamic C debugger
+.sh SYNOPSIS
+ddt [a.out [core [-]]]
+.sh DESCRIPTION
+.ul
+ddt
+is a debugger for use primarily with C programs.
+It is useful for both post-mortem and interactive debugging.
+An important feature of
+ddt
+is that even in the interactive case no
+advance planning is necessary to use it;
+in particular it is not necessary to compile or load the program
+in any special way nor to include any special
+routines in the object file.
+
+The first argument is the
+object program (containing a symbol table);
+if not given, "a.out" is used.  If only one
+argument is given, it is assumed to be an object
+program.
+The
+second argument is a core-image file; if not given,
+"core" is used.
+The core file need not be present.
+The optional third argument specifies
+that the file being debugged is not a core
+image.  This feature is used most
+frequently in examining the memory file /dev/mem.
+In order to set breakpoints and execute, the namelist (a.out)
+file must be present and can not be a shared text program.
+
+Commands to ddt have the following form:
+
+.ce 1
+[<address expression>[,repetition]]<command>[<display mode>]
+
+If no address is given, the last displayed address
+is used (this value is accessible by typing the special symbol ".").
+An address expression may optionally
+be followed by a comma and a number, in which case
+the command applies to the appropriate number of
+successive addresses.
+.ph
+Address Expression
+
+An address expression is an arithmetic combination
+of operands and operators.
+Operands may be:
+
+.nf
+.ta 5 20
+e.g.	main	symbol name
+	-32	decimal number
+	0177	octal number
+	0x3e8	hexadecimal number
+	'a	ASCII character
+	"xy	two ASCII characters
+.fi
+
+The following operators are recognized:
+
+.ta 5 20
+.nf
+	+	addition
+	blank	addition
+	-	subtraction
+	*	multiplication
+	\\	division
+	%	mod (remainder)
+	|	OR
+	&	AND
+	@	indirection (postfix operator)
+	[]	array subscription (postfix operator)
+.fi
+
+Evaluation proceeds left-to-right.  The construction
+name[expression] assumes that name is a pointer to
+an integer and is equivalent to the contents
+of the named cell plus four times the expression.
+.ne 24
+.ph
+Commands
+
+The command strings are
+.in +11
+.ta 11
+.ti -11
+/	display the contents of the addressed
+memory locations according to the display
+mode (default i).
+.ti -11
+=	evaluate and display the address expression
+according to the display mode (default o).
+.ti -11
+!	store the address expression (1 word) into
+the last specified memory location,
+which must be on a fullword boundary.
+.ti -11
+!	if no address expression preceeds the "!", the remainder of the
+line after the "!" is sent to UNIX to be interpreted as a command.
+.ti -11
+$	print a stack trace of the terminated program.
+The calls are listed in reverse order;
+the actual arguments to each routine are
+given in octal.
+.ti -11
+?	display fault type.
+.ti -11
+<new line>	display the next memory location according
+to the current display mode.
+.ti -11
+^	display the previous memory location
+according to the current display mode.
+.ti -11
+>	Replace dot with the effective address of
+last instruction which was displayed
+(follow the path).
+.ti -11
+;f	exit from ddt.
+.ti -11
+;=	search equal.
+.ti -11
+;#  	search not equal.
+.ti -11
+;b	set an execution breakpoint.
+.ti -11
+;c	clear an execution breakpoint.  If no address is given, all breakpoints
+are cleared.
+.ti -11
+;d	display the location of all execution breakpoints.
+.ti -11
+;g	begin execution of the symbolic file at location
+0.  This command may be optionally followed by a
+list of character string arguments to the program.
+.ti -11
+;p	continue execution after a breakpoint.
+.ig
+.ti -11
+;s	execute one instruction and break.
+.ti -11
+n;s	execute n instructions and break.
+.ti -11
+;.	set a temporary breakpoint at the specified address
+and continue execution.  This temporary breakpoint
+is deleted when the next breakpoint is encountered.
+..
+.ti -11
+;r	display all registers in octal and as symbols.
+.ti -11
+;e	display the floating point registers.
+.in -11
+.ne 18
+.ph
+Display Mode
+
+The mode characters are:
+.ta 5 15
+.nf
+	o	octal
+	x	hexadecimal
+	d	decimal
+	l	unsigned decimal
+	f	floating point
+	e	double precision floating point
+	i	symbolic instruction
+	&	address
+	b	byte in octal
+	'	byte in ASCII
+	"	two bytes in ASCII
+	s	string in ASCII
+.fi
+
+There are two display modes: one for display contents
+(/) and one for evaluate (=).  When ddt is
+invoked, the default mode for display contents is i
+(instruction) and the default mode for evaluate
+is  octal (o).  Whenever an explicit display
+mode is given, the default mode is set to the given
+mode and used thereafter until another mode is given.
+.ph
+Special Symbols
+
+Ddt recognizes a number of special symbols.  The values
+of these special symbols may be displayed, modified,
+and used in expressions.
+
+.ta 12 40
+.nf
+Name	Meaning	Default value
+ .	last address displayed
+ :r0	user register 0
+ :r1	user register 1
+ :r2	user register 2
+ ...
+ :re	user register 14
+ :rf	user register 15
+ :sp	user stack pointer
+ :pc	user program counter
+ :ps	user processor status
+ :m	search mask	0xffffffff
+ :8	lower search limit	0
+ :9	upper search limit	0x8000
+ :l	lowest address to
+	display as a symbol	0x100
+ :q	last value typed to user
+ :a	0  only C symbols	1
+	1  C and assembler symbols
+ :r	maximum symbol offset	0x1000
+	to display symbolically
+ :f	current function for	last function called
+	accessing local variables
+ :sl	lowest address on stack	0xe0000
+.fi
+.ph
+Symbols
+
+.ig
+All C symbols begin with an _.  As long as the special symbol :a
+contains a value of zero (default), ddt prepends an _ to all
+symbols, thus eliminating the requirement for the user to type _.
+If :a is set to a nonzero value, indicating that the program contains
+symbols which did not pass through the C compiler (such as assembler symbols),
+the _ before each C symbol will be displayed
+by ddt and must be typed by the user when specifying a symbol
+name.
+
+..
+Variables local to a function (automatic, static, and arguments)
+are accessible by writing the function name followed by a colon ":"
+followed by the local variable name (ie. main:argc).  The notion of the
+current function exists and is addressable as the special symbol
+":f".  The value of :f is set to the last function to be invoked
+whenever a breakpoint is encountered.  Variables local to the current
+function are accessible by simply writing the variable name.  The
+current function can be changed by modifying :f (ie xyz!:f sets the
+current  function to xyz which must be active).
+
+.ti 0
+Examples (each command is terminated by a <new line>):
+.in +15
+.ta 15 24
+.ti -15
+t1/	display the contents of t1 in the default
+display mode
+.ti -15
+t1=	display the address of t1 in the default evaluate
+display mode
+.ti -15
+t1+40/d	display the contents of t1+40 (decimal) in decimal
+.ti -15
+p@/o	displays in octal the contents of the word pointed to by p
+.ti -15
+:sp=o	display the contents of the users sp (r7) in octal
+.ti -15
+0377!:r2	set the value of the users r2 to 0377 octal
+.ti -15
+string/s	display the contents of string as ASCII characters
+.ti -15
+i1/o	this is equivalent to fun1:i1/o if the current function (:f)
+is fun1 and i1 is a local variable in fun1
+
+.ti -15
+xyz+012 023147	ddt displays the cell value
+.ti -15
+xyz+012 023147	0272!	user changes xyz+012 to octal 272
+
+.ad
+.ti -15
+Searches:
+
+.ti -15
+0100!:8	set lower search limit to 100 octal
+.ti -15
+1000!:9	set upper search limit to 1000 decimal
+.ti -15
+0177400!:m	set search mask to third byte in word
+.ti -15
+023000;=	search between 100 octal and 1000 decimal
+and prints the address and contents of each	
+word if the value of that word when logically
+ANDed with octal 177400 is equal to octal
+23000.  A search not equal also searches
+between the limits in :8 and :9, ANDs each word
+with the mask in :m and displays each word for which
+the resulting value does not equal the given value.
+.in -15
+.ph
+Execution and Breakpoints
+
+The general format of the set breakpoint command is:
+
+.ce
+<address expression>;b[<conditional expression>]
+
+which causes a breakpoint to be installed at location <address expression>.
+When a conditional breakpoint
+is encountered during the course of execution, the conditional expression is
+evaluated.  If the value of the conditional expression is true (non-zero),
+the execution break occurs.  If the value is false the execution
+break does not occur, and execution continues in the normal fashion.
+A null conditional expression is always evaluated as true.
+
+The format of the conditional expression is:
+
+.nf
+<relational expression>[<boolean operator><relational expression>
+     <boolean operator><relational expression>...]
+.fi
+
+A conditional expression is thus composed of
+any number of relational operators separated by the boolean 
+operator && (for AND) or || (for OR).
+Evaluation is strictly left to right (no parentheses).
+
+A relational expression is an address expression or two address expressions
+separated by one of the relational operators: ==,!=,<,<=,>,>=.  If an 
+address expression contains a symbol name then the value of the address
+expression is taken to be the contents of the memory cell addressed by the
+expression.  If an address expression contains no symbol name then the
+expression is taken literally (ie. the value of i1+4 is the contents
+of the memory cell whose address is i1+4 while the value of 100+4 is 104).
+The expression 104@ has the value of the contents of memory cell 104.
+
+CAUTION: blanks are meaningful to ddt and are equivalent to the addition (+)
+operator.
+
+The command ;d displays each active breakpoint along with any conditional
+expression associated with each.
+
+Some valid conditional expressions are:
+.nf
+	xx
+	i1>=0100
+	fun1:arg1!=1&&ii<12
+	j1||j2
+	0177203@==0177777
+.fi
+
+Upon encountering a breakpoint, ddt displays the instruction which
+will be executed when execution continues and ddt then goes into
+the command mode.
+
+.in +15
+.ti -15
+fun1;b	sets a breakpoint at the entry point of function fun1
+.ti -15
+;g abc filea	starts execution of the symbolic(a.out) file
+at location 0 passing to it the arguments
+abc and filea.
+.ig
+.ti -15
+;s	execute the next instruction and break
+.ti -15
+5;s	execute the next 5 instructions and break
+.ti -15
+fun1;.	set a temporary breakpoint at fun1 and 
+continue execution
+..
+.ti -15
+xxx;c	clear the breakpoint at location xxx
+.ti -15
+;c	clear all breakpoints
+
+.in -15
+.sh DIAGNOSTICS
+Self-explanatory (?) diagnostics are given for illegal or unrecognized
+commands.
+
+.sh "SEE ALSO"
+cc(I), C Reference Manual
+.sh BUGS
+The $ (stack trace) command always prints at least 2 arguments
+for every function, even those with fewer than 2 actual arguments.
+
+Local function symbols (auto, static, and register) are not accessible
+in the current Interdata implementation --
+only external symbols.
+
+Ddt can not be used interactively with FORTRAN (or ratfor) programs,
+since the illegal supervisor calls normally handled
+by the `OS/MT SVC Emulator' are intercepted by ddt.
+
+When proceeding from a breakpoint ddt removes the breakpoint
+temporarily,
+and replaces it only when a different breakpoint
+is encountered.
+This means any loop being debugged interactively
+should contain at least two breakpoints.
+
+Occasionally ddt may leave breakpoints set in the a.out file
+after it exits,
+making it impossible to execute the program.
+It is advisable to make a copy of valuable programs
+before debugging them interactively.
+.dt

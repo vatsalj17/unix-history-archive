@@ -1,0 +1,47 @@
+.th "FILESYSTEM" V 8/12/77
+.sh NAME
+fs - format of file system volume
+.sh DESCRIPTION
+The format of a file system volume is slightly different from
+that described in The Book,
+because of the Interdata's 32-bit
+word length.
+
+Differences are:
+
+.lp +16 16
+super-block	\c
+The
+.it free[]
+and
+.it inode[]
+arrays each hold 50 fullword pointers, not 100.
+
+.lp +16 16
+freelist	\c
+Free list index blocks contain 50 free-block pointers, not 100.
+
+.lp +16 16
+inode	\c
+The
+.it iaddr[]
+array holds 8 fullword block numbers, so the inode is 64 bytes long.
+Thus inode
+.it i
+is located in block (i+15)/8,
+at offset 64*(i+15)(mod 8) bytes from the beginning
+of the block.
+
+.lp +16 16
+indirect block	\c
+Each indirect block holds 128 fullword block numbers, not 256.
+The large file argorithm is changed accordingly.
+
+.lp +16 16
+directory	\c
+A directory entry is 16 bytes long: a
+.it halfword
+i-number, and a 14-character filename.
+.i0
+.sh "SEE ALSO"
+The Book

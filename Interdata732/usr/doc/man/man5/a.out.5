@@ -1,0 +1,39 @@
+.th A.OUT V 8/12/77
+.sh NAME
+a.out - link editor format
+.sh DESCRIPTION
+The a.out file produced by
+.it as
+and accepted by
+.it ld
+has the format of a PDP-11 UNIX a.out file,
+with the following differences:
+
+.lp +16 16
+Magic number	The magic number is a 32-bit fullword.
+
+.lp +16 16
+Header	The header is 8 words (32 bytes) long.
+
+.lp +16 16
+Symbol table	 Each entry is 4 words
+(16 bytes) long, containing an 8-character name,
+one-word type and one-word value.
+
+.lp +16 16
+Relocation bits	\c
+There is one 16-bit halfword of relocation bits per
+halfword of text and data.
+Bit 0 of the relocation halfword indicates,
+if
+.it on,
+that the corresponding text or data halfword is the high-order 16 bits
+of a fullword relocatable address;
+and the next relocation halfword is
+.it zero
+for a 24-bit address or
+.it nonzero
+for a 32-bit address.
+.i0
+.sh "SEE ALSO"
+The Book

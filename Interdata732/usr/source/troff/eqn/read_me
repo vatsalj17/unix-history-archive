@@ -1,0 +1,24 @@
+The grammar for eqn is in e.g; don't change it
+until you're reasonably cocky.
+Semantic actions for most kinds of things are in e[1256].c;
+input processing is in e3.c, general control in e4.c
+(including the main routine), and
+lexical stuff in elex.c. elex.c includes y.tab.c (from yaccing
+e.g), so if you change the grammar you have to recompile
+elex.c.
+
+Make a new eqn with
+	yacc e.g
+	cc e*.c -ly -lS
+
+The file test1 is a miniature test, small enough that
+you can understand what it does by eyeballing the output.
+When that works, use the file aip/browman for
+bigger and more serious testing.
+Both eqn and neqn have an undocumented option "-" which
+turns on a fair amount of debugging information related
+mainly to the heights of various objects.
+
+Regrettably, neqn is somewhat different from eqn
+internally, because it has not yet been converted
+to use the new standard io.

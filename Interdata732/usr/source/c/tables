@@ -1,0 +1,1024 @@
+  entry  regtab
+  impur
+  align adc
+regtab equ *
+	dc	14,divide
+	dc	16,fsela
+	dc	30,asplus
+	dc	31,asplus
+	dc	32,incaft
+	dc	33,incaft
+	dc	35,amper
+	dc	37,negg
+	dc	38,compl
+	dc	40,plus
+	dc	41,plus
+	dc	42,times
+	dc	43,divide
+	dc	44,divide
+	dc	45,rshift
+	dc	46,rshift
+	dc	47,plus
+	dc	48,plus
+	dc	49,plus
+	dc	51,itof
+	dc	52,ftoi
+	dc	70,asplus
+	dc	71,asplus
+	dc	72,astimes
+	dc	73,asdiv
+	dc	74,asdiv
+	dc	75,asrsh
+	dc	76,asrsh
+	dc	77,asplus
+	dc	78,asplus
+	dc	79,asplus
+	dc	80,assign
+	dc	98,call
+	dc	99,call
+	dc	102,jump
+	dc	106,load
+	dc	0
+  pure
+* incaft,decaft
+incaft:
+%r,c
+F
+	IB2	A1,A2
+
+%a,c
+F
+	ldar	rf,R
+	IB2	rf,A2
+	stB1	rf,A1
+
+%e*,c
+F1*
+	lB1	R,#1(R1)
+	ldar	rf,R
+	IB2	rf,A2
+	stB1	rf,#1(R1)
+
+%n*,c
+F2*
+	lB1	rf,#1(R)
+P-
+	sta	rf,P
+	IB2	rf,A2
+	stB1	rf,#1(R)
+	lda	R,P+
+
+* minus unary
+negg:
+%aw,n
+%af,n
+	sBFr	R*,R*
+	IB1	R*,A1
+
+%ew*,n
+F1*
+	sBFr	R*,R*
+	IB1	R*,#1(R1)
+
+%nf*,n
+F2*
+	sBFr	R*,R*
+	sB1	R*,#1(R)
+
+%e,n
+F1
+	sBFr	R*,R*
+	IBFr	R*,R1*
+
+%n,n
+FS
+	sBFr	R,R
+	Ia	R,P+
+
+%nf,n
+FS
+	sBFr	R*,R*
+	IBF	R*,P+
+
+* complement
+compl:
+%aw,n
+	lcs	R,1
+	IB1	R,A1
+
+%ew*,n
+F1*
+	lcs	R,1
+	IB1	R,#1(R1)
+
+%n,n
+F
+	Iai	R,-1
+
+* plus,minus, and, or, exor
+plus:
+%[ADD1]
+%n,aw
+%nf,af
+F
+	IB2	R*,A2
+
+%[ADD2]
+%n,ew*
+%nf,ef*
+F
+S1*
+	IB2	R*,#2(R1)
+
+%[ADD4]
+%n,e
+%nf,ef
+F
+S1
+	IBFr	R*,R1*
+
+%[ADD5]
+%n,n
+%nf,nf
+SS
+F
+	IBF	R*,P+
+
+* times
+times:
+%n,c
+F
+	lB2	rf,A2
+	Iar	R-,rf
+
+%n,aw
+F
+	IB2	R-,A2
+
+%n,ew*
+F
+S1*
+	Ia	R-,#2(R1)
+
+%n,e
+F
+S1
+	Iar	R-,R1
+
+%n,n
+SS
+F
+	Ia	R-,P+
+
+%nf,af
+%    [ADD1]
+
+%nf,nf*
+%    [ADD2]
+
+%nf,ef
+%    [ADD4]
+
+%nf,nf
+%    [ADD5]
+
+* divide,mod
+divide:
+%n,c
+F
+	lB2	rf,A2
+T
+	Iar	R-,rf
+
+%n,aw
+F
+T
+	IB2	R-,A2
+
+%n,ew*
+F
+S1*
+T
+	Ia	R-,#2(R1)
+
+%n,e
+F
+S1
+T
+	Iar	R-,R1
+
+%n,n
+SS
+F
+T
+	Ia	R-,P+
+
+%nf,af
+%    [ADD1]
+
+%nf,nf*
+%    [ADD2]
+
+%nf,ef
+%    [ADD4]
+
+%nf,nf
+%    [ADD5]
+
+* rshift,lshift
+rshift:
+%n,c
+F
+	I	R,A2
+
+%n,r
+F
+	I	R,0(A2)
+
+%n,e
+F
+S1
+	I	R,0(R1)
+
+%n,n
+SS
+F
+	lda	rf,P+
+	I	R,0(rf)
+
+* asplus,asminus, assand, asor, asxor, incbef, decbef
+asplus:
+%r,aw
+F
+	IB2	R,A2
+	ldar	A1,R
+
+%r,ew*
+F
+S1*
+	IB2	R,#2(R1)
+	ldar	A1,R
+
+%r,e
+F
+S1
+	Iar	R,R1
+	ldar	A1,R
+
+%r,n
+SS
+F
+	Ia	R,P+
+	ldar	A1,R
+
+%[ADDA1]
+%a,aw
+%af,af
+F
+	IB2	R*,A2
+	stB1	R*,A1
+
+%[ADDA2]
+%a,ew*
+%af,ef*
+F
+S1*
+	IB2	R*,#2(R1)
+	stB1	R*,A1
+
+%[ADDA3]
+%a,e
+%af,ef
+F
+S1
+	IBFr	R*,R1*
+	stB1	R*,A1
+
+%[ADDA4]
+%a,n
+%af,nf
+SS
+F
+	IBF	R*,P+
+	stB1	R*,A1
+
+%[ADDE1]
+%e*,aw
+%ef*,af
+F1*
+	lB1	R*,#1(R1)
+	IB2	R*,A2
+	stB1	R*,#1(R1)
+
+%[ADDE3]
+%e*,e
+%ef*,ef
+F*
+S1
+	ldar	rf,R
+	lB1	R*,#1(rf)
+	IBFr	R*,R1*
+	stB1	R*,#1(rf)
+
+%[ADDE4]
+%e*,n
+%ef*,nf
+SS
+F1*
+	lB1	R*,#1(R1)
+	IBF	R*,P+
+	stB1	R*,#1(R1)
+
+%n*,n
+SS
+F*
+	ldar	rf,R
+	lB1	R,#1(rf)
+	Ia	R,P+
+	stB1	R,#1(rf)
+
+* astimes
+astimes:
+%r,c
+F
+	lB2	rf,A2
+	Iar	R-,rf
+	ldar	A1,R
+
+%r,aw
+F
+	IB2	R-,A2
+	ldar	A1,R
+
+%r,e
+F
+S1
+	Iar	R-,R1
+	ldar	A1,R
+
+%r,n
+SS
+F
+	Ia	R-,P+
+	ldar	A1,R
+
+%a,c
+F
+	lB2	rf,A2
+	Iar	R-,rf
+	stB1	R,A1
+
+%a,aw
+F
+	IB2	R-,A2
+	stB1	R,A1
+
+%a,e
+F
+S1
+	Iar	R-,R1
+	stB1	R,A1
+
+%a,n
+SS
+F
+	Ia	R-,P+
+	stB1	R,A1
+
+%e*,c
+F1*
+	lB1	R,#1(R1)
+	IB2	R-,A2
+	stB1	R,#1(R1)
+
+%e*,n
+SS
+F1*
+	lB1	R,#1(R1)
+	Ia	R-,P+
+	stB1	R,#1(R1)
+
+%n*,c
+SS
+F*
+	ldar	rf,R
+	lB1	R,#1(rf)
+	Ia	R-,P+
+	stB1	R,#1(rf)
+
+%n*,aw
+F*
+	ldar	R1,R
+	lB1	R,#1(R1)
+	IB2	R-,A2
+	stB1	R,#1(R1)
+
+%n*,n
+SS
+F*
+	ldar	rf,R
+	lB1	R,#1(rf)
+	Ia	R-,P+
+	stB1	R,#1(rf)
+
+%af,af
+%    [ADDA1]
+
+%af,ef*
+%    [ADDA2]
+
+%af,ef
+%    [ADDA3]
+
+%af,nf
+%    [ADDA4]
+
+%ef*,af
+%    [ADDE1]
+
+%ef*,ef
+%    [ADDE3]
+
+%ef*,nf
+%    [ADDE4]
+
+* asdiv,asmod
+asdiv:
+%r,c
+F
+T
+	lB2	rf,A2
+	Iar	R-,rf
+	ldar	A1,R:
+
+%r,aw
+F
+T
+	IB2	R-,A2
+	ldar	A1,R:
+
+%r,n
+SS
+F
+T
+	Ia	R-,P+
+	ldar	A1,R:
+
+%a,c
+F
+T
+	lB2	rf,A2
+	Iar	R-,rf
+	stB1	R:,A1
+
+%a,aw
+F
+T
+	IB2	R-,A2
+	stB1	R:,A1
+
+%a,n
+SS
+F
+T
+	Ia	R-,P+
+	stB1	R:,A1
+
+%n*,c
+SS
+F*
+	ldar	rf,R
+	lB1	R,#1(rf)
+T
+	Ia	R-,P+
+	stB1	R:,#1(rf)
+
+%n*,aw
+F*
+	ldar	rf,R
+	lB1	R,#1(rf)
+T
+	IB2	R-,A2
+	stB1	R:,#1(rf)
+
+%n*,n
+SS
+F*
+	ldar	rf,R
+	lB1	R,#1(rf)
+T
+	Ia	R-,P+
+	stB1	R:,#1(rf)
+
+%af,af
+%    [ADDA1]
+
+%af,ef*
+%    [ADDA2]
+
+%af,ef
+%    [ADDA3]
+
+%af,nf
+%    [ADDA4]
+
+%ef*,af
+%    [ADDE1]
+
+%ef*,ef
+%    [ADDE3]
+
+%ef*,nf
+%    [ADDE4]
+
+* aslsh,asrsh
+asrsh:
+%r,c
+F
+	I	R,A2
+	ldar	A1,R
+
+%r,r
+F
+	I	R,0(A2)
+	ldar	A1,R
+
+%r,e
+F
+S1
+	I	R,0(R1)
+	ldar	A1,R
+
+%r,n
+SS
+F
+	lda	rf,P+
+	I	R,0(rf)
+	ldar	A1,R
+
+%a,c
+F
+	I	R,A2
+	stB1	R,A1
+
+%a,r
+F
+	I	R,0(A2)
+	stB1	R,A1
+
+%a,e
+F
+S1
+	I	R,0(R1)
+	stB1	R,A1
+
+%a,n
+SS
+F
+	lda	rf,P+
+	I	R,0(rf)
+	stB1	R,A1
+
+%n*,c
+F*
+	ldar	rf,R
+	lB1	R,#1(rf)
+	I	R,A2
+	stB1	R,#1(rf)
+
+%n*,r
+F*
+	ldar	rf,R
+	lB1	R,#1(rf)
+	I	R,0(A2)
+	stB1	R,#1(rf)
+
+%n*,e
+F*
+S1
+	ldar	rf,R
+	lB1	R,#1(rf)
+	I	R,0(R1)
+	stB1	R,#1(rf)
+
+%n*,n
+SS
+F*
+	ldar	rf,R
+	lB1	R,#1(rf)
+	lda	R1,P+
+	I	R,0(R1)
+	stB1	R,#1(rf)
+
+* assign
+assign:
+%r,n
+S
+	ldar	A1,R
+
+%a,n
+%af,nf
+S
+	stB1	R*,A1
+
+%e*,n
+%ef*,nf
+S
+F1*
+	stB1	R*,#1(R1)
+
+%n*,n
+%nf*,nf
+SS
+F*
+	ldar	rf,R
+	lBF	R*,P+
+	stB1	R*,#1(rf)
+
+* integer -> float
+itof:
+%n,n
+F
+	flr	R*,R
+
+* float -> integer
+ftoi:
+%nf,n
+F
+	fxr	R,R*
+
+* call1,call2
+call:
+%a,n
+	I	rf,A1
+
+%n*,n
+F2*
+	I	rf,#1(R)
+
+%n,n
+F
+	Ir	rf,R
+
+* jump
+jump:
+%a,n
+	I	A1
+
+%n,n
+F2*
+	I	#1(R)
+
+* load
+load:
+%a,n
+%af,n
+	IB1	R*,A1
+
+%n*,n
+%nf*,n
+F2*
+	IB1	R*,#1(R)
+
+* load address
+amper:
+%a,n
+%af,n
+	I	R,A1
+
+* field assignment - rhs already shifted & masked
+fsela:
+%a,aw
+F
+	nai	R,Z
+	oB2	R,A2
+	stB1	R,A1
+
+%a,ew*
+F
+S1*
+	nai	R,Z
+	oB2	R,#2(R1)
+	stB1	R,A1
+
+%a,n
+S
+	lB1	rf,A1
+	nai	rf,Z
+	oar	R,rf
+	stB1	R,A1
+
+%e*,aw
+F1*
+	lB1	R,#1(R1)
+	nai	R,Z
+	oB2	R,A2
+	stB1	R,#1(R1)
+
+%e*,n
+S
+F1*
+	lB1	rf,#1(R1)
+	nai	rf,Z
+	oar	R,rf
+	stB1	R,#1(R1)
+
+  entry cctab
+  impur
+  align adc
+cctab equ *
+	dc	30,cmisc
+	dc	31,cmisc
+	dc	37,cmisc
+	dc	38,cmisc
+	dc	40,cmisc
+	dc	41,cmisc
+	dc	45,cmisc
+	dc	46,cmisc
+	dc	47,tand
+	dc	48,cmisc
+	dc	51,cmisc
+	dc	52,cmisc
+	dc	49,cmisc
+	dc	60,equal
+	dc	61,equal
+	dc	62,equal
+	dc	63,equal
+	dc	64,equal
+	dc	65,equal
+	dc	66,equal
+	dc	67,equal
+	dc	68,equal
+	dc	69,equal
+	dc	70,cmisc
+	dc	71,cmisc
+	dc	77,cmisc
+	dc	78,cmisc
+	dc	79,cmisc
+	dc	80,cassign
+	dc	106,cload
+	dc	260,equal
+	dc	261,equal
+	dc	262,equal
+	dc	263,equal
+	dc	264,equal
+	dc	265,equal
+	dc	266,equal
+	dc	267,equal
+	dc	268,equal
+	dc	269,equal
+	dc	0
+  pure
+* relationals
+equal:
+%c,c
+F
+	IB2	R,A2
+
+%r,z
+	ldar	A1,A1
+
+%r,aw
+	IB2	A1,A2
+
+%r,a
+	I'B2	A1,A2
+
+%r,nw*
+S2*
+	IB2	A1,#2(R)
+
+%r,n*
+S2*
+	I'B2	A1,#2(R)
+
+%r,n
+S
+	Iar	A1,R
+
+%aw,z
+F
+
+%nw*,z
+F2*
+	lda	R,#1(R)
+
+%n,z
+F
+	ldar	R,R
+
+%n,aw
+%nf,af
+%    [ADD1]
+
+%n,ew*
+%    [ADD2]
+
+%nf,nf*
+%    [ADD2]
+
+%n,ew
+%nf,ef
+%    [ADD4]
+
+%n,a
+F
+	I'B2	R,A2
+
+%n,e*
+F
+S1*
+	I'B2	R,#2(R1)
+
+%n,n
+%nf,nf
+%    [ADD5]
+
+* assignment
+cassign:
+%[ASS1]
+%r,aw
+	lB2	A1,A2
+
+%[ASS2]
+%r,nw*
+S2*
+	lB2	A1,#2(R)
+
+%r,n
+H
+
+* test value
+cload:
+%aw,n
+%af,n
+%nw*,n
+%nf*,n
+H
+
+* 'and' for condition code only
+tand:
+%r,c
+	I'B2	A1,A2
+
+%aw,c
+S
+	IB1	R,A1
+
+%n,n
+H
+
+
+* ops for which regtab sets the condition code correctly
+cmisc:
+%n,n
+%nf,nf
+H
+
+  entry efftab
+  impur
+  align adc
+efftab equ *
+	dc	30,easplus
+	dc	31,edec
+	dc	32,easplus
+	dc	33,edec
+	dc	70,easplus
+	dc	71,edec
+	dc	75,easrsh
+	dc	76,easrsh
+	dc	77,edec
+	dc	78,edec
+	dc	79,edec
+	dc	80,eassign
+	dc	0
+  pure
+* asplus, incaft, incbef
+easplus:
+%[EAS1]
+%r,aw
+	IB2	A1,A2
+
+%[EAS2]
+%r,nw*
+S2*
+	IB2	A1,#2(R)
+
+%[EAS3]
+%r,n
+S
+	Iar	A1,R
+
+%[EAS4]
+%aw,c
+S
+	IB1m	R,A1
+
+%aw,r
+	IB1m	A2,A1
+
+%aw,n
+%	[EAS4]
+
+%a,aw
+%	[ADDA1]
+
+%nw*,c
+F2*
+	lB2	rf,A2
+	IB1m	rf,#1(R)
+
+%nw*,r
+F2*
+	IB1m	A2,#1(R)
+
+%ew*,n
+S
+F1*
+	IB1m	R,#1(R1)
+
+%nw*,e
+F2*
+S1
+	IB1m	R1,#1(R)
+
+%[EAS5]
+%n*,aw
+F2*
+	lB1	rf,#1(R)
+	IB2	rf,A2
+	stB1	rf,#1(R)
+
+* decbef, decaft, asminus, asor, etc.
+edec:
+%r,aw
+%	[EAS1]
+
+%r,nw*
+%	[EAS2]
+
+%r,n
+%	[EAS3]
+
+%a,aw
+%	[ADDA1]
+
+%n*,c
+%	[EAS5]
+
+* aslsh, asrsh
+easrsh:
+%r,c
+	I	A1,A2
+
+%r,r
+	I	A1,0(A2)
+
+%r,n
+S2
+	I	A1,0(R)
+
+* assign
+eassign:
+%r,a
+%    [ASS1]
+
+%r,n*
+%    [ASS2]
+
+%r,n
+S
+	ldar	A1,R
+
+%a,c
+S
+	stB1	R,A1
+
+%n*,c
+F2*
+	lB2	rf,A2
+	stB1	rf,#1(R)
+
+%a,r
+	stB1	A2,A1
+
+%n*,r
+F2*
+	stB1	A2,#1(R)
+
+  entry sptab
+  impur
+  align adc
+sptab equ *
+	dc	106,sload
+	dc	0
+  pure
+* put register variable on stack
+sload:
+%c,n
+F
+	stBF	R,P
+
+%r,n
+	stBF	A1,P
+

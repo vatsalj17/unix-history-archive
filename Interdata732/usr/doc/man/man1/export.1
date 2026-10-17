@@ -1,0 +1,40 @@
+.th EXPORT I 8/12/77
+.sh NAME
+export - copy a file to an Interdata OS/MT disc
+.sh SYNOPSIS
+export device file [ recl ]
+.sh DESCRIPTION
+Copies the specified file onto the device, which must
+contain an Interdata OS file system.
+The OS filename is formed by
+translating the UNIX filename to uppercase,
+and taking any characters after the last period
+as an extension.
+(Name and extension are truncated to 8 and 3
+characters respectively.)
+
+The created file will be INDEXED, with a
+logical record length of 
+.it recl
+(default 256).
+Note that
+.it export
+does not format the file into fixed-length records:
+.it recl
+is used only to initialize the OS directory entry.
+.sh AUTHOR
+R Miller
+.br
+University of Wollongong
+.sh "SEE ALSO"
+dfi(I), import(I)
+.sh BUGS
+The OS disc must contain at least one directory block.
+.br
+No check is made for already existing files.
+This may result in multiple OS files
+with the same name.
+.br
+There is no way to delete an OS file .
+.br
+Doesn't know about "Dynamic OS/MT" directory format.

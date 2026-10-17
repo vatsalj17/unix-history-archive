@@ -1,0 +1,36 @@
+.th DSK IV
+.sh NAME
+dsk - 10-megabyte disk
+.sh DESCRIPTION
+.it df?
+and
+.it dr?
+refer to the fixed and removable platter respectively of a 10-megabyte
+cartridge disk drive.
+Each has 512-byte blocks numbered 0 to 9791.
+
+The files access the disk via the system's normal buffering mechanism
+and may be read and written without regard to physical disk records.
+There is also a "raw" interface which provides for direct transmission
+between the disk and the user's read or write buffer.
+A single read or write call results in exactly one I/O operation,
+and therefore raw I/O is considerably more efficient when many bytes
+are transmitted.
+The names of the raw disk files are formed by prefixing
+.it `r'
+to the name of the corresponding disk.
+
+In raw I/O the buffer must begin on a halfword boundary,
+and counts should be a multiple of 512 bytes (a logical disk block).
+Likewise seek calls should specify a multiple of 512 bytes.
+.sh FILES
+.ul 1
+.nf
+  Name    Device   Address
+/dev/dr0   0/0       c6     removable disk (right-hand cabinet)
+/dev/df0   0/1       c7     fixed disk             "
+/dev/dr1   0/2       d6     removable disk (left-hand cabinet)
+/dev/df1   0/3       d7     fixed disk             "
+
+/dev/rdf?, /dev/rdr?         raw disks
+.fi

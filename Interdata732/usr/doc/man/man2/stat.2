@@ -1,0 +1,86 @@
+.th STAT II
+.sh NAME
+stat \*- get file status
+.sh SYNOPSIS
+.nf
+stat equ 18
+  svc  stat
+  dc   name,buf
+.fi
+.s3
+stat(name, buf)
+char *name;
+struct inode *buf;
+.fi
+.sh DESCRIPTION
+.it Name
+points to a null-terminated string naming
+a file;
+.it buf
+is the address of a 17(10) word buffer
+into which information is placed concerning the file.
+It is unnecessary to have any
+permissions at all with respect to the file, but all directories
+leading to the file must be readable.
+After
+.it stat,
+.it buf
+has the following structure
+.s3
+.if t .ta .5i 1i 2.5i
+.if n .ta 3 9 24
+.nf
+struct inode {
+	int	idev;	/*  major/minor device of i-node */
+	int	inumber;	/* i-node number */
+	int	flags;	/*  see below */
+	char	nlinks;	/*  number of links to file */
+	char	uid;	/*  user ID of owner */
+	char	gid;	/*  group ID of owner */
+	char	size0;	/*  unused */
+	int	size1;	/*  file size */
+	int	addr[8];	/*  block numbers or device number */
+	int	actime[2];	/*  time of last access */
+	int	modtime[2];	/*  time of last modification */
+};
+.fi
+.s3
+The flags are as follows:
+.s3
+.lp +10 9
+100000	i-node is allocated
+.lp +10 9
+060000	2-bit file type:
+.lp +15 9
+000000	plain file
+.lp +15 9
+040000	directory
+.lp +15 9
+020000	character-type special file
+.lp +15 9
+060000	block-type special file.
+.lp +10 9
+010000	large file
+.lp +10 9
+004000	set user-ID on execution
+.lp +10 9
+002000	set group-ID on execution
+.lp +10 9
+001000	save text image after execution
+.lp +10 9
+000400	read (owner)
+.lp +10 9
+000200	write (owner)
+.lp +10 9
+000100	execute (owner)
+.lp +10 9
+000070	read, write, execute (group)
+.lp +10 9
+000007	read, write, execute (others)
+.i0
+.sh "SEE ALSO"
+ls (I), fstat (II), fs (V)
+.sh DIAGNOSTICS
+Error bit (c-bit)
+is set if the file cannot be found.
+From C, a \*-1 return indicates an error.

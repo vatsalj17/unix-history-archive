@@ -1,0 +1,88 @@
+.th AR I
+.sh NAME
+ar - archive and library maintainter
+.sh SYNOPSIS
+ar [-]key [ posname ] afile [ name ] ...
+.sh DESCRIPTION
+.it ar
+maintains groups of files combined into a single archive file.
+Its main use is to create and update library files as used by
+.it ld.
+It can be used, though, for any similar purpose.
+
+.it key
+is one character from the set `drtmx', optionally concatenated with
+`vuaib'.
+.it afile
+is the archive file. The
+.it names
+are constituent files in the archive file.
+The meanings of the key characters are:
+
+.lp +8 6
+d	delete the named files from the archive
+
+.ti -6
+r	replace the named files in the archive. If the optional character
+.it u
+is used with
+.it r,
+then only those files with modified dates later than the archive files
+are replaced.
+If the optional positioning character
+.it a
+(also
+.it i)
+is used, then the
+.it posname
+argument must be present and specifies a file in the archive after
+(before for
+.it i)
+which new files are inserted.
+If no names are given, all files present in the archive
+which are also presnt in the current directory
+are replaced.
+If the archive file does not exist,
+.it r
+creates it.
+If the named files are not already in the archive,
+they are appended.
+
+.ti -6
+t	print a table of contents of the archive file.
+If no names are given, all files in the archive are tabled.
+If names are given, only those files are tabled.
+
+.ti -6
+p	prints the named files in the archive to standard output
+
+.ti -6
+m	moves the named files to the end of the archive.
+If the options
+.it i
+or
+.it b
+are used, then the
+.it posname
+argument must be present and specifies where the files are
+to be moved.
+
+.ti -6
+x	extracts the named files.
+If no names are given, all files in the archive are extracted.
+In neither case does
+.it x
+alter the archive file.
+
+.ti -6
+v	verbose option:
+.it ar
+gives a file-by-file description of the making of a new archive file
+from the old archive and the constituent files.
+When used with
+.it t,
+it gives a long listing of all information about the files.
+.sh FILES
+/tmp/v#     temporary
+.sh "SEE ALSO"
+ld(I), archive(V), arcv(I)
