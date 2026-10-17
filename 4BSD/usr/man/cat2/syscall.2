@@ -1,0 +1,66 @@
+
+
+
+SYSCALL(2)          UNIX Programmer's Manual           SYSCALL(2)
+
+
+
+NAME
+     syscall - indirect system call
+
+SYNOPSIS
+     syscall(number, r0, r1, arg ...)  (PDP-11)
+     syscall(number, arg, ...)  (VAX-11)
+
+DESCRIPTION
+     _S_y_s_c_a_l_l performs the system call whose assembly language
+     interface has the specified _n_u_m_b_e_r, register arguments _r_0
+     and _r_1 (on the PDP-11, regardless of whether the entry point
+     really uses them) and further arguments _a_r_g.
+
+     The r0 value of the system call is returned.
+
+DIAGNOSTICS
+     When the C-bit is set, _s_y_s_c_a_l_l returns -1 and sets the
+     external variable _e_r_r_n_o (see _i_n_t_r_o(2)).
+
+BUGS
+     There is no way to simulate system calls such as _p_i_p_e(2),
+     which return values in register r1.
+
+ASSEMBLER (PDP-11)
+     (indir = 0.)
+     sys indir; call
+
+     The system call at the location _c_a_l_l is executed.  Execution
+     resumes after the _i_n_d_i_r call.
+
+     On the PDP-11, the main purpose of _i_n_d_i_r is to allow a pro-
+     gram to store arguments in system calls and execute them out
+     of line in the data segment.  This preserves the purity of
+     the text segment.
+
+     If _i_n_d_i_r is executed indirectly, it is a no-op.  If the
+     instruction at the indirect location is not a system call,
+     _i_n_d_i_r returns error code EINVAL; see _i_n_t_r_o(2).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

@@ -1,0 +1,132 @@
+
+
+
+CTAGS(1)            UNIX Programmer's Manual             CTAGS(1)
+
+
+
+NAME
+     ctags - create a tags file
+
+SYNOPSIS
+     ctags [ -w ] [ -x ] [ -u ] name ...
+
+DESCRIPTION
+     _C_t_a_g_s makes a tags file for _e_x(1) from the specified C, Pas-
+     cal and Fortran sources.  A tags file gives the locations of
+     specified objects (in this case functions) in a group of
+     files.  Each line of the tags file contains the function
+     name, the file in which it is defined, and a scanning pat-
+     tern used to find the function definition.  These are given
+     in separate fields on the line, separated by blanks or tabs.
+     Using the _t_a_g_s file, _e_x can quickly find these function
+     definitions.
+
+     If the -x flag is given, _c_t_a_g_s produces a list of function
+     names, the line number and file name on which each is
+     defined, as well as the text of that line and prints this on
+     the standard output.  This is a simple index which can be
+     printed out as an off-line readable function index.
+
+     Files whose name ends in .c or .h are assumed to be C source
+     files and are searched for C routine and macro definitions.
+     Others are first examined to see if they contain any Pascal
+     or Fortran routine definitions; if not, they are processed
+     again looking for C definitions.
+
+     Options other than -x are:
+
+     -w   suppressing warning diagnostics.
+
+     -u   causing the specified files to be _u_p_d_a_t_e_d in tags, that
+          is, all references to them are deleted, and the new
+          values are appended to the file.  (Beware: this option
+          is implemented in a way which is rather slow; it is
+          usually faster to simply rebuild the _t_a_g_s file.)
+
+     The tag _m_a_i_n is treated specially in C programs.  The tag
+     formed is created by prepending _M to the name of the file,
+     with a trailing .c removed, if any, and leading pathname
+     components also removed.  This makes use of _c_t_a_g_s practical
+     in directories with more than one program.
+
+FILES
+     tags      output tags file
+
+SEE ALSO
+     ex(1), vi(1)
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+CTAGS(1)            UNIX Programmer's Manual             CTAGS(1)
+
+
+
+AUTHOR
+     Ken Arnold; FORTRAN added by Jim Kleckner; Bill Joy added
+     Pascal and -x, replacing _c_x_r_e_f.
+
+BUGS
+     Recognition of functions, subroutines and procedures for
+     FORTRAN and Pascal is done is a very simpleminded way.  No
+     attempt is made to deal with block structure; if you have
+     two Pascal procedures in different blocks with the same name
+     you lose.
+
+     The method of deciding whether to look for C or Pascal and
+     FORTRAN functions is a hack.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                2
+
+
+

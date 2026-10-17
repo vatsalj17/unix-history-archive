@@ -1,0 +1,264 @@
+
+
+
+APL(1)              UNIX Programmer's Manual               APL(1)
+
+
+
+NAME
+     apl - an apl interpreter
+
+SYNOPSIS
+     apl
+
+DESCRIPTION
+     _A_p_l is an APL interpreter.  All of the operators are exactly
+     as in apl\360.  Overstrikes are often required, and they
+     work (use ctrl-h).
+
+     Function definition is not what you would expect.  Functions
+     are loaded from files.  The first line of the file is the
+     function header, as you would expect it but with no del.
+     The rest of the file is the lines of the function.  Lines
+     are numbered, but there are no square brackets with line
+     numbers.  If you say )READ FILE it will load the function in
+     that file.  If you say )EX FILE it will put you in the edi-
+     tor to change that file.  Upon exit, it will read the file
+     in as though by )READ.
+
+     All of the usual operators are available, including domino.
+     Also available are monadic encode and epsilon.
+
+     The following _a_p_l system commands are available.
+
+     )ASCII
+          changes terminal to accept and print ASCII characters
+          and operators; this is the default.  If you are stuck
+          in APL mode on an ASCII terminal, `"' is `)' and lower-
+          case letters map to uppercase.
+
+     )APL
+          changes terminal to accept and print APL characters.
+          Erase is set to Z and kill is set to A.
+
+     )DIGITS n
+          sets the number of digits displayed to n, from 1 to 19.
+
+     )FUZZ n
+          sets the fuzz to n.
+
+     )ORIGIN n
+          sets the origin to n, which should be 1 or 0.
+
+     )WIDTH n
+          sets _a_p_l's idea of your terminal's carriage width.
+
+     )ERASE n
+          gets rid of function or variable named n.
+
+     )SAVE n
+
+
+
+Printed 11/10/80             8/26/80                            1
+
+
+
+
+
+
+APL(1)              UNIX Programmer's Manual               APL(1)
+
+
+
+          saves all variables and functions (workspace) in file
+          named n.  Workspaces are sensitive to changes in _a_p_l.
+
+     )LOAD n
+          gets the workspace in file n (which must have been
+          )SAVE'd.)
+
+     )COPY n
+          like )LOAD but variables and functions are not erased.
+          Things in the loaded file take precedence over stuff
+          already in.
+
+     )CLEAR
+          clears the workspace.
+
+     )DROP n
+          deletes file n in your directory, which need not be
+          saved from _a_p_l.
+
+     )CONTINUE
+          exits and saves workspace in file _c_o_n_t_i_n_u_e which is
+          loaded next time you run _a_p_l.
+
+     )OFF
+          exits _a_p_l.
+
+     )READ n
+          reads in a function from file _n.  The first line is the
+          header, with no del's.  The full APL360 header is
+          accepted.  All other lines in the file are lines in the
+          function.  Lines are implicitly numbered, and transfers
+          are as usual.  There are no labels.
+
+     )EDIT n
+          runs the editor _e_d(1) on file _n, and then )READ's the
+          file when you leave the editor.
+
+     )EX n
+          runs the editor _e_x(1) on file _n, and then )READ's the
+          file when you leave the editor.
+
+     )VI n
+          runs the editor _v_i(1) on file _n, and then )READ's the
+          file when you leave the editor.
+
+     )LIB
+          lists out all of the files in the current directory.
+
+     )FNS
+          lists out all current functions.
+
+     )VARS
+
+
+
+Printed 11/10/80             8/26/80                            2
+
+
+
+
+
+
+APL(1)              UNIX Programmer's Manual               APL(1)
+
+
+
+          lists out all current variables.
+
+     )DEBUG
+          toggles a debugging switch, which can produce vast
+          amounts of hopelessly cryptic output.
+
+FILES
+     apl_ws - temporary workspace file
+     continue - continue workspace
+
+AUTHORS
+     Ken Thompson, Ross Harvey, Douglas Lanam
+
+BUGS
+     This program has not been extensively used or tested.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80             8/26/80                            3
+
+
+
+
+
+
+APL(1)              UNIX Programmer's Manual               APL(1)
+
+
+
+ASCII CHAR MNEMONICS
+       &  E    and                 #    x    times
+       -  -    minus               +    +    add
+       <  <    less than           >    >    greater than
+       =  =    equal to            ,    ,    comma
+       %  /    divide              *    *    exponential (power)
+       !  !    factorial and combinations    ??deal
+      .le <_    less than or equal  .ge  >_    greater than or equal
+      .ne =/    not equal           .om  Z    omega (not used)
+      .ep S    epsilon             .rh  K    shape (rho)
+      .nt _    not (also '~')      .tk  |^    take (also '^')
+      .dr      drop                .it  i    iota
+      .ci O    circular function   .al  A    alpha (not used)
+      .cl |    maximum (ceiling)   .fl  |    minimum (floor)
+      .dl W    del (not used)      .de  [    upside down del
+      .jt      small circle (null) .qd  []   quad
+      .ss      right U (not used)  .sc       left U (not used)
+      .si      Down U              .su  U    U (not used)
+      .[^ [    upside-down del     .bv  ||    decode (base)
+      .rp ||    encode (rep)        .br  |    residue (mod)
+      .sp <-   assignment (also '_')    .go  ->goto
+      .or V    or                  .nn  E~    nand
+      .nr v~    nor                 .lg  *O    log
+      .rv O|    reversal            .tr  O\    transpose
+      .rb      reverse bar         .cb  ,-    comma bar ( not used)
+      .sb /-    slash bar           .bb  \-    blackslash bar
+      .gu W|    grade up            .gd  [|    grade down
+      .qq []'   quote quad          .dm  []:   domino
+      .lm      lamp                .ib  ||||    I-beam
+      .ex      execute (not used)  .fr       format(not used)
+      .di      diamond (not used)  .ot       out (not used)
+      .ld W~    locked del (not used)    ._a  Aalias for 'A'
+      ._b B    alias for 'B'       ._c  C    alias for 'C'
+      ._d D    alias for 'D'       ._e  E    alias for 'E'
+      ._f F    alias for 'F'       ._g  G    alias for 'G'
+      ._h H    alias for 'H'       ._i  I    alias for 'I'
+      ._j J    alias for 'J'       ._k  K    alias for 'K'
+      ._l L    alias for 'L'       ._m  M    alias for 'M'
+      ._n N    alias for 'N'       ._o  O    alias for 'O'
+      ._p P    alias for 'P'       ._q  Q    alias for 'Q'
+      ._r R    alias for 'R'       ._s  S    alias for 'S'
+      ._t T    alias for 'T'       ._u  U    alias for 'U'
+      ._v V    alias for 'V'       ._w  W    alias for 'W'
+      ._x X    alias for 'X'       ._y  Y    alias for 'Y'
+      ._z Z    alias for 'Z'
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80             8/26/80                            4
+
+
+

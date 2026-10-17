@@ -1,0 +1,66 @@
+
+
+
+VADVISE(2V)         UNIX Programmer's Manual          VADVISE(2V)
+
+
+
+NAME
+     vadvise - give advice to paging system
+
+SYNOPSIS
+     vadvise(param)
+
+DESCRIPTION
+     _V_a_d_v_i_s_e is used to inform the system that process paging
+     behavior merits special consideration.  Parameters to _v_a_d_-
+     _v_i_s_e are defined in the file <vadvise.h> . Currently, two
+     calls to _v_a_d_v_i_s_e are implemented:
+
+     The call
+
+          vadvise(VA_ANOM);
+
+     advises that the paging behavior is not likely to be well
+     handled by the system's default algorithm, since reference
+     information collected over macroscopic intervals (e.g. 10-20
+     seconds) will not serve to indicate future page references.
+     The system in this case will choose to replace pages with
+     little emphasis placed on recent usage, and more emphasis on
+     referenceless circular behavior.  It is _e_s_s_e_n_t_i_a_l that
+     processes which have very random paging behavior (such as
+     LISP during garbage collection of very large address spaces)
+     call _v_a_d_v_i_s_e, as otherwise the system has great difficulty
+     dealing with their page-consumptive demands.
+
+     The call
+
+          vadvise(VA_NORM);
+
+     restores default paging replacement behavior after a call to
+
+          vadvise(VA_ANOM);
+
+BUGS
+     This call is peculiar to this version of UNIX.  The options
+     and specifications of this system call and even the call
+     itself are expected to change.  It is expected to be
+     extended with additional facilities in future versions of
+     the system.  In particular it is expected that this call
+     will be particular to a segment, and that other behaviors
+     such as sequential behavior will be specifiable.
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

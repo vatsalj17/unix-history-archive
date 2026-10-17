@@ -1,0 +1,132 @@
+
+
+
+INTRO(3)            UNIX Programmer's Manual             INTRO(3)
+
+
+
+NAME
+     intro - introduction to library functions
+
+SYNOPSIS
+     #include <stdio.h>
+
+     #include <math.h>
+
+DESCRIPTION
+     This section describes functions that may be found in vari-
+     ous libraries, other than those functions that directly
+     invoke UNIX system primitives, which are described in sec-
+     tion 2.  Functions are divided into various libraries dis-
+     tinguished by the section number at the top of the page:
+
+     (3)   These functions, together with those of section 2 and
+           those marked (3S), constitute library _l_i_b_c, which is
+           automatically loaded by the C compiler _c_c(1) and the
+           Fortran compiler _f_7_7(1).  The link editor _l_d(1)
+           searches this library under the `-lc' option.
+           Declarations for some of these functions may be
+           obtained from include files indicated on the appropri-
+           ate pages.
+
+     (3J)  These functions are part of the job control facili-
+           ties, contained in the library " .}S 3 1 "" "
+           "-ljobs"" "." " " "" "" "" "" The job control facili-
+           ties are outlined in _j_o_b_s(3).
+
+     (3M)  These functions constitute the math library, _l_i_b_m.
+           They are automatically loaded as needed by the Fortran
+           compiler _f_7_7(1).  The link editor searches this
+           library under the `-lm' option.  Declarations for
+           these functions may be obtained from the include file
+           <math.h>.
+
+     (3S)  These functions constitute the `standard I/O package',
+           see _s_t_d_i_o(3).  These functions are in the library _l_i_b_c
+           already mentioned.  Declarations for these functions
+           may be obtained from the include file <stdio.h>.
+
+     (3X)  Various specialized libraries have not been given dis-
+           tinctive captions.  Files in which such libraries are
+           found are named on appropriate pages.
+
+FILES
+     /lib/libc.a
+     /lib/libm.a, /usr/lib/libm.a (one or the other)
+     /usr/lib/libjobs.a
+
+SEE ALSO
+     stdio(3), nm(1), ld(1), cc(1), f77(1), intro(2)
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+INTRO(3)            UNIX Programmer's Manual             INTRO(3)
+
+
+
+DIAGNOSTICS
+     Functions in the math library (3M) may return conventional
+     values when the function is undefined for the given argu-
+     ments or when the value is not representable.  In these
+     cases the external variable _e_r_r_n_o (see _i_n_t_r_o(2)) is set to
+     the value EDOM or ERANGE.  The values of EDOM and ERANGE are
+     defined in the include file <_m_a_t_h._h>.
+
+ASSEMBLER (PDP-11)
+     In assembly language these functions may be accessed by
+     simulating the C calling sequence.  For example, _e_c_v_t(3)
+     might be called this way:
+
+
+          setd
+          mov  $sign,-(sp)
+          mov  $decpt,-(sp)
+          mov  ndigit,-(sp)
+          movf value,-(sp)
+          jsr  pc,_ecvt
+          add  $14.,sp
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                2
+
+
+

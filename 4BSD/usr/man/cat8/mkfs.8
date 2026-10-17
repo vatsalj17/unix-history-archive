@@ -1,0 +1,132 @@
+
+
+
+MKFS(8)             UNIX Programmer's Manual              MKFS(8)
+
+
+
+NAME
+     mkfs - construct a file system
+
+SYNOPSIS
+     /etc/mkfs special size
+     /etc/mkfs special proto
+
+DESCRIPTION
+     _M_k_f_s constructs a file system by writing on the special file
+     _s_p_e_c_i_a_l. In the first form of the command a numeric size is
+     given and _m_k_f_s builds a file system with a single empty
+     directory on it.  The number of i-nodes is calculated as a
+     function of the filesystem size.  (No boot program is ini-
+     tialized in this form of _m_k_f_s.)
+
+     N.B.: All filesystems should have a _l_o_s_t+_f_o_u_n_d directory for
+     _f_s_c_k(8); this should be created for each file system by run-
+     ning _m_k_l_o_s_t+_f_o_u_n_d(8) in the root directory of a newly
+     created file system, after the file system is first mounted.
+
+     In bootstrapping, the second form of _m_k_f_s is sometimes used.
+     In this form, the file system is constructed according to
+     the directions found in the prototype file _p_r_o_t_o. The proto-
+     type file contains tokens separated by spaces or new lines.
+     The first token is the name of a file to be copied onto
+     block zero as the bootstrap program, see _b_p_r_o_c(8).  The
+     second token is a number specifying the size of the created
+     file system.  Typically it will be the number of blocks on
+     the device, perhaps diminished by space for swapping.  The
+     next token is the number of i-nodes in the i-list.  The next
+     set of tokens comprise the specification for the root file.
+     File specifications consist of tokens giving the mode, the
+     user-id, the group id, and the initial contents of the file.
+     The syntax of the contents field depends on the mode.
+
+     The mode token for a file is a 6 character string.  The
+     first character specifies the type of the file.  (The char-
+     acters -bcd specify regular, block special, character spe-
+     cial and directory files respectively.) The second character
+     of the type is either u or - to specify set-user-id mode or
+     not.  The third is g or - for the set-group-id mode.  The
+     rest of the mode is a three digit octal number giving the
+     owner, group, and other read, write, execute permissions,
+     see _c_h_m_o_d(1).
+
+     Two decimal number tokens come after the mode; they specify
+     the user and group ID's of the owner of the file.
+
+     If the file is a regular file, the next token is a pathname
+     whence the contents and size are copied.
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+MKFS(8)             UNIX Programmer's Manual              MKFS(8)
+
+
+
+     If the file is a block or character special file, two
+     decimal number tokens follow which give the major and minor
+     device numbers.
+
+     If the file is a directory, _m_k_f_s makes the entries .  and ..
+     and then reads a list of names and (recursively) file
+     specifications for the entries in the directory.  The scan
+     is terminated with the token $.
+
+     A sample prototype specification follows:
+
+          /usr/mdec/uboot
+          4872 55
+          d--777 3 1
+          usr  d--777 3 1
+               sh   ---755 3 1 /bin/sh
+               ken  d--755 6 1
+                    $
+               b0   b--644 3 1 0 0
+               c0   c--644 3 1 0 0
+               $
+          $
+
+SEE ALSO
+     filsys(5), dir(5), bproc(8), fsck(8), mklost+found(8)
+
+BUGS
+     There should be some way to specify links.
+
+     There should be some way to specify bad blocks.
+
+     Should make _l_o_s_t+_f_o_u_n_d automatically.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                2
+
+
+

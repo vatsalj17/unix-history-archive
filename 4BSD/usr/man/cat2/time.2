@@ -1,0 +1,132 @@
+
+
+
+TIME(2)             UNIX Programmer's Manual              TIME(2)
+
+
+
+NAME
+     time, ftime - get date and time
+
+SYNOPSIS
+     long time(0)
+
+     long time(tloc)
+     long *tloc;
+
+     #include <sys/types.h>
+     #include <sys/timeb.h>
+     ftime(tp)
+     struct timeb *tp;
+
+DESCRIPTION
+     _T_i_m_e returns the time since 00:00:00 GMT, Jan. 1, 1970,
+     measured in seconds.
+
+     If _t_l_o_c is nonnull, the return value is also stored in the
+     place to which _t_l_o_c points.
+
+     The _f_t_i_m_e entry fills in a structure pointed to by its argu-
+     ment, as defined by <_s_y_s/_t_i_m_e_b._h>:
+
+     /*   timeb.h  4.111/9/80*/
+
+     /*
+      * Structure returned by ftime system call
+      */
+     struct timeb
+     {
+          time_t   time;
+          unsigned short millitm;
+          short    timezone;
+          short    dstflag;
+     };
+
+     The structure contains the time since the epoch in seconds,
+     up to 1000 milliseconds of more-precise interval, the local
+     time zone (measured in minutes of time westward from
+     Greenwich), and a flag that, if nonzero, indicates that Day-
+     light Saving time applies locally during the appropriate
+     part of the year.
+
+SEE ALSO
+     date(1), stime(2), ctime(3)
+
+ASSEMBLER (PDP-11)
+     (ftime = 35.)
+     sys ftime; bufptr
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+TIME(2)             UNIX Programmer's Manual              TIME(2)
+
+
+
+     (time = 13.; obsolete call)
+     sys time
+     (time since 1970 in r0-r1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                2
+
+
+

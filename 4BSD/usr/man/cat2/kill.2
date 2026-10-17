@@ -1,0 +1,66 @@
+
+
+
+KILL(2)             UNIX Programmer's Manual              KILL(2)
+
+
+
+NAME
+     kill - send signal to a process
+
+SYNOPSIS
+     kill(pid, sig)
+
+DESCRIPTION
+     _K_i_l_l sends the signal _s_i_g to the process specified by the
+     process number by _p_i_d. See _s_i_g_s_y_s(2) for a list of signals.
+
+     The sending and receiving processes must have the same
+     effective user ID, otherwise this call is restricted to the
+     super-user.  (A single exception is the signal SIGCONT which
+     may be sent as described in _k_i_l_l_p_g(2), although it is usu-
+     ally sent using _k_i_l_l_p_g rather than _k_i_l_l).
+
+     If the process number is 0, the signal is sent to all other
+     processes in the sender's process group; see _t_t_y(4) and also
+     _k_i_l_l_p_g(2).
+
+     If the process number is -1, and the user is the super-user,
+     the signal is broadcast universally except to processes 0, 1
+     and 2, the scheduler initialization, and pageout processes,
+     see _i_n_i_t(8).
+
+     Processes may send signals to themselves.
+
+SEE ALSO
+     sigsys(2), signal(2), kill(1), killpg(2).
+
+DIAGNOSTICS
+     Zero is returned if the process is killed; -1 is returned if
+     the process does not have the same effective user ID and the
+     user is not super-user, or if the process does not exist.
+
+ASSEMBLER (PDP-11)
+     (kill = 37.)
+     (process number in r0)
+     sys kill; sig
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

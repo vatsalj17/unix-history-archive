@@ -1,0 +1,66 @@
+
+
+
+TIMES(2)            UNIX Programmer's Manual             TIMES(2)
+
+
+
+NAME
+     times - get process times
+
+SYNOPSIS
+     #include <sys/types.h>
+     #include <sys/times.h>
+
+     times(buffer)
+     struct tms *buffer;
+
+DESCRIPTION
+     _T_i_m_e_s returns time-accounting information for the current
+     process and for the terminated child processes of the
+     current process.  All times are in 1/HZ seconds, where HZ is
+     either 50 or 60 depending on your locality.
+
+     This is the structure returned by _t_i_m_e_s:
+
+     /*   times.h   4.1  11/9/80   */
+
+     /*
+      * Structure returned by times()
+      */
+     struct tms {
+          time_t    tms_utime;          /* user time */
+          time_t    tms_stime;          /* system time */
+          time_t    tms_cutime;         /* user time, children */
+          time_t    tms_cstime;         /* system time, children */
+     };
+
+     The children times are the sum of the children's process
+     times and their children's times.
+
+SEE ALSO
+     time(1), time(2), vtimes(2)
+
+ASSEMBLER (PDP-11)
+     (times = 43.)
+     sys times; buffer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

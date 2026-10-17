@@ -1,0 +1,198 @@
+
+
+
+VMSTAT(1)           UNIX Programmer's Manual            VMSTAT(1)
+
+
+
+NAME
+     vmstat - report virtual memory statistics
+
+SYNOPSIS
+     vmstat [ -fs ] [ -i ] [ interval [ count ] ]
+
+DESCRIPTION
+     _V_m_s_t_a_t delves into the system and normally reports certain
+     statistics kept about process, virtual memory, disk, trap
+     and cpu activity.  If given a -f argument, it instead
+     reports on the number of _f_o_r_k_s and _v_f_o_r_k_s since system
+     startup and the number of pages of virtual memory involved
+     in each kind of fork.  If given a -s argument, it instead
+     prints the contents of the _s_u_m structure, giving the total
+     number of several kinds of paging related events which have
+     occurred since boot.
+
+     If none of these options are given, _v_m_s_t_a_t will report in a
+     (usually) iterative fashion on the virtual memory activity
+     in the system.  In this case, the optional _i_n_t_e_r_v_a_l argument
+     causes _v_m_s_t_a_t to report once each _i_n_t_e_r_v_a_l seconds; ``vmstat
+     5'' will print what the system is doing every five seconds;
+     this is a good choice of printing interval since this is how
+     often the statistics are sampled in the system.  If a _c_o_u_n_t
+     is given, the statistics are repeated _c_o_u_n_t times.  There
+     are two formats; fields for the older format which is forced
+     by the -i option are tersely described later.  The default
+     format fields are:
+
+     Procs: information about numbers of processes in various
+     states.
+
+     R    in run queue
+     B    blocked for resources (i/o, paging, etc.)
+     W    runnable or short sleeper (< 20 secs) but swapped
+
+     Memory: information about the usage of virtual and real
+     memory.  Virtual pages are considered active if they belong
+     to processes which are running or have run in the last 20
+     seconds.  A ``page'' here is 1024 bytes.
+
+     AVM  active virtual pages
+     FRE  size of the free list
+
+     Page: information about page faults and paging activity.
+     These are averaged each five seconds, and given in units per
+     second.
+
+     RE   page reclaims (simulating reference bits)
+     PI   page-in events
+     PO   page-out events
+     FR   pages freed per second
+
+
+
+Printed 11/10/80             4/22/80                            1
+
+
+
+
+
+
+VMSTAT(1)           UNIX Programmer's Manual            VMSTAT(1)
+
+
+
+     DE   anticipated short term memory shortfall
+     SR   scan rate: pageout daemon rpm
+
+     Swap: information about the activity of the swap daemon
+     (process 0).
+
+     I    process swap ins in last 5 seconds
+     O    process swap outs in last 5 seconds
+
+     Disk: operations per second (this field is system depen-
+     dent).  Typically paging will be split across several of the
+     available drives.
+
+     D0   disk 0; on csvax: /usr file system
+     D1   disk 1; on csvax: on csvax: /va, /tmp and some paging
+     D2   disk 2; on csvax: /, /vb, /3bsd, /3bsd/usr and some paging
+     D3   disk 3; on csvax: /arch, /4bsd, /4bsd/usr and some paging
+
+     Faults: trap/interrupt rate averages per second over last 5
+     seconds.
+
+     IN   (non clock) device interrupts per second
+     SY   system calls per second
+     PD   pseudo-dma interrupts on DZ
+     CS   cpu context switch rate (switches/sec)
+
+     Cpu: breakdown of percentage usage of CPU time
+
+     US   user time for normal and low priority processes
+     SY   system time
+     ID   cpu idle
+
+     For the older format, process states are broken down into RU
+     (runnable), DW (disk i/o wait), PW (page wait), SL (sleeping
+     in core), and SW (swapped out while recently active).  For
+     memory usage, the percentage of memory used by sharable
+     pages is printed as TX.  Fault information is not printed,
+     but the percentage of CPU time given to low priority jobs is
+     given as NI.
+
+FILES
+     /dev/kmem, /vmunix
+
+SEE ALSO
+     The sections starting with ``Interpreting system activity''
+     in _S_e_t_t_i_n_g _u_p _t_h_e _F_o_u_r_t_h _B_e_r_k_e_l_e_y _S_o_f_t_w_a_r_e _T_a_p_e by W. Joy,
+     O. Babaoglu, and K. Sklower
+
+AUTHORS
+     William Joy and Ozalp Babaoglu
+
+
+
+
+
+Printed 11/10/80             4/22/80                            2
+
+
+
+
+
+
+VMSTAT(1)           UNIX Programmer's Manual            VMSTAT(1)
+
+
+
+BUGS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80             4/22/80                            3
+
+
+
+
+
+

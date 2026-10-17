@@ -1,0 +1,131 @@
+
+
+
+VA(4)               UNIX Programmer's Manual                VA(4)
+
+
+
+NAME
+     va - Benson-Varian interface
+
+SYNOPSIS
+     #include <sys/vcmd.h>
+
+DESCRIPTION
+     The Benson-Varian printer/plotter in normally used with the
+     programs _v_p_r(1), _v_p_r_i_n_t(1) or _v_t_r_o_f_f(1).  This description
+     is designed for those who wish to drive the Benson-Varian
+     directly.
+
+     The Benson-Varian at Berkeley uses 11" by 8" fan-fold paper.
+     It will print 132 characters per line in print mode and 2112
+     dots per line in plot mode.
+
+     In print mode, the Benson-Varian uses a modified ASCII char-
+     acter set.  Most control characters print various non-ASCII
+     graphics such as daggers, sigmas, copyright symbols, etc.
+     Only LF and FF are used as format effectors.  LF acts as a
+     newline, advancing to the beginning of the next line, and FF
+     advances to the top of the next page.
+
+     In plot mode, the Benson-Varian prints one raster line at a
+     time.  An entire raster line of bits (2112 bits = 264 bytes)
+     is sent, and then the Benson-Varian advances to the next
+     raster line.
+
+     Note: The Benson-Varian must be sent an even number of
+     bytes.  If an odd number is sent, the last byte will be
+     lost.  Nulls can be used in print mode to pad to an even
+     number of bytes.
+
+     To use the Benson-Varian yourself, you must realize that you
+     cannot open the device, /_d_e_v/_v_a_0 if there is a daemon
+     active.  You can see if there is a daemon active by doing a
+     _p_s(1), or by looking in the directory /_u_s_r/_s_p_o_o_l/_v_a_d. If
+     there is a file _l_o_c_k there, then there is probably a daemon
+     /_u_s_r/_l_i_b/_v_a_d running.  If not, you should remove the _l_o_c_k.
+
+     In any case, when your program tries to open the device
+     /_d_e_v/_v_a_0 you may get one of two errors.  The first of these
+     ENXIO indicates that the Benson-Varian is already in use.
+     Your program can then _s_l_e_e_p(2) and try again in a while, or
+     give up.  The second is EIO and indicates that the Benson-
+     Varian is offline.
+
+     To set the Benson-Varian into plot mode you can use the fol-
+     lowing _i_o_c_t_l(2) call
+
+          ioctl(fileno(va), VSETSTATE, plotmd);
+
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+VA(4)               UNIX Programmer's Manual                VA(4)
+
+
+
+     where plotmd is defined to be
+
+          int plotmd[] = { VPLOT, 0, 0 };
+
+     and _v_a is the result of a call to _f_o_p_e_n on stdio.  When you
+     finish using the Benson-Varian in plot mode you should
+     advance to a new page by sending it a FF after putting it
+     back into print mode, i.e. by
+9     int prtmd[] = { VPRINT, 0, 0 };
+     ...
+     fflush(va);
+     ioctl(fileno(va), VSETSTATE, prtmd);
+     write(fileno(va), "\f\0", 2);
+
+     _N._B.: If you use the standard I/O library with the Benson-
+     Varian you must do
+
+          setbuf(vp, vpbuf);
+
+     where _v_p_b_u_f is declared
+
+          char vpbuf[BUFSIZ];
+
+     otherwise the standard I/O library, thinking that the
+     Benson-Varian is a terminal (since it is a character special
+     file) will not adequately buffer the data you are sending to
+     the Benson-Varian.  This will cause it to run extremely
+     slowly and tends to grind the system to a halt.
+
+FILES
+     /dev/va0
+     /usr/include/sys/vcmd.h
+
+SEE ALSO
+     vfont(5), vpr(1), vtroff(1), vp(4)
+
+BUGS
+     The 1's (one's) and l's (lower-case el's) in the Benson-
+     Varian's standard character set look very similar; caution
+     is advised.
+
+
+
+
+
+
+
+
+
+
+
+9
+
+
+Printed 11/10/80                                                2
+
+
+

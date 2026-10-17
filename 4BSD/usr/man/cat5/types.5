@@ -1,0 +1,66 @@
+
+
+
+TYPES(5)            UNIX Programmer's Manual             TYPES(5)
+
+
+
+NAME
+     types - primitive system data types
+
+SYNOPSIS
+     #include <sys/types.h>
+
+DESCRIPTION
+     The data types defined in the include file are used in UNIX
+     system code; some data of these types are accessible to user
+     code:
+
+     typedef  struct _physadr { int r[1]; } *physadr;
+     typedef  long              daddr_t;
+     typedef  char *            caddr_t;
+     typedef  unsigned short    ino_t;
+     typedef  int               swblk_t;
+     typedef  int               size_t;
+     typedef  long              time_t;
+     typedef  long              label_t[14];
+     typedef  short             dev_t;
+     typedef  long              off_t;
+
+     typedef  unsigned char     u_char;
+     typedef  unsigned short    u_short;
+     typedef  unsigned int      u_int;
+     typedef  unsigned long     u_long;
+
+     /* major part of a device */
+     #define  major(x)  ((int)(((unsigned)(x)>>8)&0377))
+
+     /* minor part of a device */
+     #define  minor(x)  ((int)((x)&0377))
+
+     /* make a device number */
+     #define  makedev(x,y)      ((dev_t)(((x)<<8) | (y)))
+
+     The form _d_a_d_d_r__t is used for disk addresses except in an i-
+     node on disk, see _f_i_l_s_y_s(5).  Times are encoded in seconds
+     since 00:00:00 GMT, January 1, 1970.  The major and minor
+     parts of a device code specify kind and unit number of a
+     device and are installation-dependent.  Offsets are measured
+     in bytes from the beginning of a file.  The _l_a_b_e_l__t vari-
+     ables are used to save the processor state while another
+     process is running.
+
+SEE ALSO
+     filsys(5), time(2), lseek(2), adb(1)
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

@@ -1,0 +1,66 @@
+
+
+
+WAIT3(2J)           UNIX Programmer's Manual            WAIT3(2J)
+
+
+
+NAME
+     wait3 - wait for process to terminate
+
+SYNOPSIS
+     #include <wait.h>
+     #include <sys/vtimes.h>
+
+     wait3(status, options, vtimep)
+     union wait status;
+     int options;
+     struct vtimes *vtimep;
+
+     cc ... -ljobs
+
+DESCRIPTION
+     The _s_t_a_t_u_s and _o_p_t_i_o_n words are described by definitions and
+     macros in the file <wait.h>; the union and its bitfield
+     definitions and associated macros given there provide con-
+     venient and mnemonic access to the word of status returned
+     by a _w_a_i_t_3 call.  See this file for more information.
+
+     There are two _o_p_t_i_o_n_s, which may be combined by _o_ring them
+     together.  The first is WNOHANG which causes the _w_a_i_t_3 to
+     not hang if there are no processes which wish to report
+     status, rather returning a pid of 0 in this case as the
+     result of the _w_a_i_t_3. The second option is WUNTRACED which
+     causes _w_a_i_t_3 to return information when children of the
+     current process which are stopped but not traced (with
+     _p_t_r_a_c_e(2)) because they received a SIGTTIN, SIGTTOU, SIGTSTP
+     or SIGSTOP signal.  See _s_i_g_s_y_s(2)) for a description of
+     these signals.
+
+     The _v_t_i_m_e_p pointer is an optional structure where a _v_t_i_m_e_s
+     structure is returned describing the resources used by the
+     terminated process and all its children.  This may be given
+     as "0" if the information is not desired.  Currently this
+     information is not available for stopped processes.
+
+SEE ALSO
+     wait(2), exit(2), fork(2), sigsys(2)
+
+DIAGNOSTICS
+     Returns -1 if there are no children not previously waited
+     for, or 0 if the WNOHANG option is given and there are no
+     stopped or exited children.
+
+BUGS
+     This call is peculiar to this version of UNIX.  The options
+     and specifications of this system call and even the call
+     itself are subject to change.  It may be replaced by other
+     facilities in future versions of the system.
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

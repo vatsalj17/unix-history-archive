@@ -1,0 +1,66 @@
+
+
+
+VWRITE(2V)          UNIX Programmer's Manual           VWRITE(2V)
+
+
+
+NAME
+     vwrite - write (virtually) to file
+
+SYNOPSIS
+     vwrite(filedes, buffer, nbytes)
+     char *buffer;
+
+DESCRIPTION
+     N.B.: This call is likely to be replaced by more general
+     virtual memory facilities in the near future.
+
+     The _v_w_r_i_t_e system call is used in conjunction with _v_r_e_a_d to
+     perform efficient updating of large files.  After a call to
+     _v_r_e_a_d and updating of the data in the buffer which was given
+     to _v_r_e_a_d, a _v_w_r_i_t_e of the same buffer to the same _f_i_l_e_d_e_s at
+     the same offset in the file will cause data which has been
+     modified since it was _v_r_e_a_d from (or _v_w_r_i_t_t_e_n to) the file
+     to be returned to the file.
+
+SEE ALSO
+     vread(2)
+
+DIAGNOSTICS
+     Returns -1 on error: bad descriptor, buffer address, count
+     or alignment as well as on physical I/O errors.
+
+BUGS
+     The result of _v_w_r_i_t_e is defined only when no other _v_r_e_a_d'_s
+     have occurred on _b_u_f_f_e_r since the one matching the _v_w_r_i_t_e.
+
+     This call is peculiar to this version of UNIX.  It will be
+     superseded by more general virtual memory facilities in
+     future versions of the system.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80           deprecated                           1
+
+
+

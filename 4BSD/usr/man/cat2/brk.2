@@ -1,0 +1,66 @@
+
+
+
+BRK(2)              UNIX Programmer's Manual               BRK(2)
+
+
+
+NAME
+     brk, sbrk, break - change core allocation
+
+SYNOPSIS
+     char *brk(addr)
+
+     char *sbrk(incr)
+
+DESCRIPTION
+     _B_r_k sets the system's idea of the lowest location not used
+     by the program (called the break) to _a_d_d_r (rounded up to the
+     next multiple of 64 bytes on the PDP11, 256 bytes on the
+     Interdata 8/32, and 1024 bytes on a VAX-11).  Locations not
+     less than _a_d_d_r and below the stack pointer are not in the
+     address space and will thus cause a memory violation if
+     accessed.
+
+     In the alternate function _s_b_r_k, _i_n_c_r more bytes are added to
+     the program's data space and a pointer to the start of the
+     new area is returned.
+
+     When a program begins execution via _e_x_e_c the break is set at
+     the highest location defined by the program and data storage
+     areas.  Ordinarily, therefore, only programs with growing
+     data areas need to use _b_r_e_a_k.
+
+     The _v_l_i_m_i_t(2) system call may be used to determine the max-
+     imum permissible size of the _d_a_t_a region; it will not be
+     possible to set the break beyond "etext + vlimit(LIM_DATA,
+     -1)." (See _e_n_d(3) for the definition of _e_t_e_x_t.)
+
+SEE ALSO
+     exec(2), vlimit(2), malloc(3), end(3)
+
+DIAGNOSTICS
+     Zero is returned if the _b_r_k could be set; -1 if the program
+     requests more memory than the system limit or if too many
+     segmentation registers would be required to implement the
+     break.  _S_b_r_k returns -1 if the break could not be set.
+
+BUGS
+     Setting the break in the range 0177701 to 0177777 (on the
+     PDP11) is the same as setting it to zero.
+
+ASSEMBLER (PDP-11)
+     (break = 17.)
+     sys break; addr
+
+     _B_r_e_a_k performs the function of _b_r_k.  The name of the routine
+     differs from that in C for historical reasons.
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

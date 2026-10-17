@@ -1,0 +1,66 @@
+
+
+
+RV(4)               UNIX Programmer's Manual                RV(4)
+
+
+
+NAME
+     rv - Racal/Vadic ACU interface
+
+DESCRIPTION
+     The racal/vadic ACU interface is provided by the files
+     /_d_e_v/_c_u_a[_0_1] which is a multiplexed file, and by the daemon
+     _d_n_d which monitors the file, simulating a standard DN
+     dialer.  To place an outgoing call one forks a sub-process
+     trying to open /_d_e_v/_c_u_l? and then opens the corresponding
+     file /_d_e_v/_c_u_a? file and writes a number on it.  The daemon
+     translates the call to proper format for the Racal/Vadic
+     interface, and monitors the progress of the call recording
+     accounting information for later use.
+
+     The codes for the phone numbers are the same as in the DN
+     interface:
+
+     0-9  dial 0-9
+     :    dial *
+     ;    dial #
+     -    delay for second dial tone
+     <    end-of-number
+
+     The entire telephone number must be presented in a single
+     _w_r_i_t_e system call.
+
+     It is require that an end-of-number code be given.
+
+FILES
+     /dev/cua0 virtual dialer for 300 baud dialout
+     /dev/cua1 virtual dialer for 1200 baud dialout
+     /dev/cul0 the terminal which is connected to the 300 baud
+     dialout
+     /dev/cul1 the terminal which is connected to the 1200 baud
+     dialout
+     /usr/adm/dnacct     Accounting records for sucessfully com-
+     pleted calls.
+
+SEE ALSO
+     cu(1), uucp(1)
+
+BUGS
+     Locking problems.
+
+     The multiplexor seems to have rare-case bugs which occasi-
+     nally crash the system taking trap type 9's, usually in the
+     _s_d_a_t_a system routine.
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

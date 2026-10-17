@@ -1,0 +1,66 @@
+
+
+
+KILLPG(2J)          UNIX Programmer's Manual           KILLPG(2J)
+
+
+
+NAME
+     killpg - send signal to a process or a process group
+
+SYNOPSIS
+     killpg(pgrp, sig)
+
+     cc ... -ljobs
+
+DESCRIPTION
+     _K_i_l_l_p_g sends the signal _s_i_g to the specified process group.
+     See _s_i_g_s_y_s(2) for a list of signals; see _j_o_b_s(3) for an
+     explanation of process groups.
+
+     The sending process and members of the process group must
+     have the same effective user ID, otherwise this call is res-
+     tricted to the super-user.  As a single special case the
+     continue signal SIGCONT may be sent to any process which is
+     a descendant of the current process.  This allows a command
+     interpreter such as _c_s_h(1) to restart set-user-id processes
+     stopped from the keyboard with a stop signal.
+
+     The calls
+
+          killpg(0, sig)
+
+     and
+
+          kill(0, sig)
+
+     have identical effects, sending the signal to all members of
+     the invoker's process group (including the process itself).
+     It is preferable to use the call involving _k_i_l_l in this
+     case, as it is portable to other UNIX systems.
+
+SEE ALSO
+     jobs(3), kill(2), sigsys(2), signal(2), csh(1), kill(1)
+
+DIAGNOSTICS
+     Zero is returned if the processes are sent the signals; -1
+     is returned if any process in the process group cannot be
+     sent the signal, or if there are no members in the process
+     group.
+
+BUGS
+     The job control facilities are not available in standard
+     version 7 UNIX.  These facilities are still under develop-
+     ment and may change in future releases of the system as
+     better inter-process communication facilities and support
+     for virtual terminals become available.  The options and
+     specifications of this system call and even the call itself
+     are thus subject to change.
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

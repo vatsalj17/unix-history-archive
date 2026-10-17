@@ -1,0 +1,66 @@
+
+
+
+SETPGRP(2J)         UNIX Programmer's Manual          SETPGRP(2J)
+
+
+
+NAME
+     setpgrp, getpgrp - set/get process group
+
+SYNOPSIS
+     int getpgrp(pid)
+
+     setpgrp(pid, pgrp)
+
+     cc ... -ljobs
+
+DESCRIPTION
+     The process group of the specified process is returned by
+     _g_e_t_p_g_r_p. _S_e_t_p_g_r_p sets the process group of the specified
+     process _p_i_d to the specified _p_g_r_p. If _p_i_d is zero, then the
+     call applies to the current process.
+
+     If the invoker is not the super-user, then the affected pro-
+     cess must have the same effective user-id as the invoker or
+     be a descendant of the invoking process.
+
+     This call is used by _c_s_h(1) to create process groups in
+     implementing job control.  The TIOCGPGRP and TIOCSPGRP calls
+     described in _t_t_y(4) are used to get/set the process group of
+     the control terminal.
+
+     See _j_o_b_s(_3) for a general discussion of job control.
+
+SEE ALSO
+     jobs(3), getuid(2), tty(4)
+
+BUGS
+     The job control facilities are not available in standard
+     version 7 UNIX.  These facilities are still under develop-
+     ment and may change in future releases of the system as
+     better inter-process communication facilities and support
+     for virtual terminals become available.  The options and
+     specifications of these system calls and even the calls
+     themselves are thus subject to change.
+
+     A system call _s_e_t_p_g_r_p has been implemented in other versions
+     of UNIX which are not widely used outside of Bell Labora-
+     tories; these implementations have, in general, slightly
+     different semantics.
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

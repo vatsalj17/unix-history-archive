@@ -1,0 +1,132 @@
+
+
+
+VREAD(2V)           UNIX Programmer's Manual            VREAD(2V)
+
+
+
+NAME
+     vread - read virtually
+
+SYNOPSIS
+     vread(fildes, buffer, nbytes)
+     char *buffer;
+
+DESCRIPTION
+     N.B.: This call is likely to be replaced by more general
+     virtual memory facilities in the near future.
+
+     A file descriptor is a word returned from a successful _o_p_e_n,
+     _c_r_e_a_t, _d_u_p or _p_i_p_e call.  _B_u_f_f_e_r is the location of _n_b_y_t_e_s
+     contiguous bytes into which the input will be placed.  It is
+     not guaranteed that all _n_b_y_t_e_s will be read (see _r_e_a_d(2)).
+     In particular, if the returned value is 0, then end-of-file
+     has been reached.
+
+     Unlike _r_e_a_d(2), _v_r_e_a_d does not necessarily or immediately
+     fetch the data requested from _f_i_l_d_e_s, but merely insures
+     that the data will be fetched from the file descriptor _s_o_m_e_-
+     _t_i_m_e _b_e_f_o_r_e the first reference to the data, at the system's
+     discretion.  Thus _v_r_e_a_d allows the system, among other pos-
+     sibilities, to choose to read data on demand, with whatever
+     granularity is allowed by the memory management hardware, or
+     to just read it in immediately as with _r_e_a_d. A companion
+     _v_w_r_i_t_e(2) call may be used with _v_r_e_a_d to provide an effi-
+     cient mechanism for updating large files.  The behavior of
+     _v_r_e_a_d if other processes are writing to _f_i_l_d_e_s is not
+     defined.
+
+     Both the address of _b_u_f_f_e_r and the current offset in _f_i_l_d_e_s
+     (as told by _t_e_l_l(2)) must be aligned to a multiple of VALSIZ
+     (defined in <valign.h> ). The library routine _v_a_l_l_o_c(3)
+     allocates properly aligned blocks from the free list.
+
+     Note for non-virtual systems: the _v_r_e_a_d system call can be
+     simulated (exactly, if less efficiently) by _r_e_a_d. If the
+     unit on which a _v_r_e_a_d is done is not capable of supporting
+     efficient demand initialization (e.g. a terminal or a pipe),
+     then the system may choose to treat a call to _v_r_e_a_d as if it
+     were a call to _r_e_a_d at its discretion.
+
+SEE ALSO
+     read(2), write(2), vwrite (2), valloc(3)
+
+DIAGNOSTICS
+     A 0 is returned at end-of-file.  If the read was otherwise
+     unsuccessful, a -1 is returned.  Physical I/O errors, non-
+     aligned or bad buffer addresses, preposterous _n_b_y_t_e_s, file
+     descriptor not that of an input file, and file offset not
+     properly aligned can all generate errors.
+
+
+
+Printed 11/10/80           deprecated                           1
+
+
+
+
+
+
+VREAD(2V)           UNIX Programmer's Manual            VREAD(2V)
+
+
+
+BUGS
+     You can't _c_l_o_s_e a file descriptor which you have _v_r_e_a_d from
+     while there are still pages in the file which haven't been
+     fetched by the system into your address space.  In no case
+     can a file descriptor which had such pages at the point of a
+     _v_f_o_r_k be closed during the _v_f_o_r_k.
+
+     The system refuses to truncate a file to which any process
+     has a pending _v_r_e_a_d.
+
+     There is no primitive inverting _v_r_e_a_d to release the binding
+     _v_r_e_a_d sets up so that the file may be closed.  This can be
+     only be done, clumsily, by reading another (plain) file onto
+     the buffer area, or pulling the break back with _b_r_e_a_k(2) to
+     completely release the pages.
+
+     This call is peculiar to this version of UNIX.  It will be
+     superseded by more general virtual memory facilities in
+     future versions of the system.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80           deprecated                           2
+
+
+

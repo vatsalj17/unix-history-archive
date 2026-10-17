@@ -1,0 +1,66 @@
+
+
+
+FOPEN(3S)           UNIX Programmer's Manual            FOPEN(3S)
+
+
+
+NAME
+     fopen, freopen, fdopen - open a stream
+
+SYNOPSIS
+     #include <stdio.h>
+
+     FILE *fopen(filename, type)
+     char *filename, *type;
+
+     FILE *freopen(filename, type, stream)
+     char *filename, *type;
+     FILE *stream;
+
+     FILE *fdopen(fildes, type)
+     char *type;
+
+DESCRIPTION
+     _F_o_p_e_n opens the file named by _f_i_l_e_n_a_m_e and associates a
+     stream with it.  _F_o_p_e_n returns a pointer to be used to iden-
+     tify the stream in subsequent operations.
+
+     _T_y_p_e is a character string having one of the following
+     values:
+
+     "r"  open for reading
+
+     "w"  create for writing
+
+     "a"  append: open for writing at end of file, or create for
+          writing
+
+     _F_r_e_o_p_e_n substitutes the named file in place of the open
+     _s_t_r_e_a_m.  It returns the original value of _s_t_r_e_a_m.  The ori-
+     ginal stream is closed.
+
+     _F_r_e_o_p_e_n is typically used to attach the preopened constant
+     names, stdin, stdout, stderr, to specified files.
+
+     _F_d_o_p_e_n associates a stream with a file descriptor obtained
+     from _o_p_e_n, _d_u_p, _c_r_e_a_t, or _p_i_p_e(2).  The _t_y_p_e of the stream
+     must agree with the mode of the open file.
+
+SEE ALSO
+     open(2), fclose(3)
+
+DIAGNOSTICS
+     _F_o_p_e_n and _f_r_e_o_p_e_n return the pointer NULL if _f_i_l_e_n_a_m_e cannot
+     be accessed.
+
+BUGS
+     _F_d_o_p_e_n is not portable to systems other than UNIX.
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

@@ -1,0 +1,66 @@
+
+
+
+CORE(5)             UNIX Programmer's Manual              CORE(5)
+
+
+
+NAME
+     core - format of memory image file
+
+DESCRIPTION
+     UNIX writes out a memory image of a terminated process when
+     any of various errors occur.  See _s_i_g_n_a_l(2) for the list of
+     reasons; the most common are memory violations, illegal
+     instructions, bus errors, and user-generated quit signals.
+     The memory image is called `core' and is written in the
+     process's working directory (provided it can be; normal
+     access controls apply).
+
+     The maximum size of a _c_o_r_e file is limited by _v_l_i_m_i_t(2).
+     Files which would be larger than the limit are not created.
+
+     The core file consists of the _u. area, which currently con-
+     sists of 6 pages, beginning with a _u_s_e_r structure as given
+     in /usr/include/sys/user.h.  The kernel stack grows from the
+     end of this 6 page region.  The remainder of the core file
+     consists first of the data pages and then the stack pages of
+     the process image.
+
+     In general the debugger _a_d_b(1) is sufficient to deal with
+     core images.
+
+SEE ALSO
+     adb(1), signal(2), vlimit(2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

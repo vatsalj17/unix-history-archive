@@ -1,0 +1,66 @@
+
+
+
+LPR(1)              UNIX Programmer's Manual               LPR(1)
+
+
+
+NAME
+     lpr, lprm, lpq, print - line printer spooler
+
+SYNOPSIS
+     lpr [ -m ] [ name ... ]
+     lprm [ id ...  ] [ filename ...  ] [ owner ...  ]
+     lpq
+     print file ...
+
+DESCRIPTION
+     _L_p_r causes the named files to be queued for printing.  If no
+     files are named, the standard input is read.  The option -m
+     causes notification via _m_a_i_l(1) to be sent when the job com-
+     pletes.
+
+     _L_p_r_m removes an entry from the line printer queue.  The id,
+     filename or owner should be that reported by _l_p_q. All
+     appropriate files will be removed.  The id of each file
+     removed from the queue will be printed.
+
+     _L_p_q prints the line printer queue.  Each entry in the queue
+     is printed showing the owner of the queue entry, an identif-
+     ication number, the size of the entry in characters, and the
+     file which is to be printed.  The _i_d is useful for removing
+     a specific entry from the printer queue using _l_p_r_m(1).
+
+     _P_r_i_n_t _p_r'_s a copy of each named file on the line printer.
+     It is a one line shell script:
+
+          pr $* | lpr
+
+FILES
+     /usr/spool/lpd/*    spool area
+     /usr/lib/lpd        printer daemon
+     /usr/lib/lpf        filter to handle banners and underlining
+
+SEE ALSO
+     pr(1)
+
+BUGS
+     Queued jobs print in directory (seemingly random) order.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

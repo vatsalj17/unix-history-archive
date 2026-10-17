@@ -1,0 +1,66 @@
+
+
+
+LP(4)               UNIX Programmer's Manual                LP(4)
+
+
+
+NAME
+     lp - line printer
+
+DESCRIPTION
+     _L_p provides the interface to any of the standard DEC line
+     printers.  When it is opened or closed, a suitable number of
+     page ejects is generated.  Bytes written are printed.
+
+     An internal parameter within the driver determines whether
+     or not the device is treated as having a 96- or 64-character
+     set.  In half-ASCII mode, lower case letters are turned into
+     upper case and certain characters are escaped according to
+     the following table:
+
+     {         -(
+     }         -)
+     `         -'
+     |         -!
+     ~         -^
+
+     The driver correctly interprets carriage returns, back-
+     spaces, tabs, and form feeds.  A sequence of newlines which
+     extends over the end of a page is turned into a form feed.
+     Lines longer than 80 characters are truncated (This is a
+     parameter in the driver).  Another parameter allows indent-
+     ing all printout if it is unpleasantly near the left margin.
+
+FILES
+     /dev/lp
+
+SEE ALSO
+     lpr(1)
+
+BUGS
+     Half-ASCII mode, the indent and the maximum line length
+     should be settable by an _i_o_c_t_l(2).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

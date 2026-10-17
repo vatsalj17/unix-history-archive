@@ -1,0 +1,198 @@
+
+
+
+F77(1)              UNIX Programmer's Manual               F77(1)
+
+
+
+NAME
+     f77 - Fortran 77 compiler
+
+SYNOPSIS
+     f77 [ option ] ... file ...
+
+DESCRIPTION
+     _F_7_7 is the UNIX Fortran 77 compiler.  It accepts several
+     types of arguments:
+
+     Arguments whose names end with `.f' are taken to be Fortran
+     77 source programs; they are compiled, and each object pro-
+     gram is left on the file in the current directory whose name
+     is that of the source with `.o' substituted for '.f'.
+
+     Arguments whose names end with `.r' or `.e' are taken to be
+     Ratfor or EFL source programs, respectively; these are first
+     transformed by the appropriate preprocessor, then compiled
+     by f77.
+
+     In the same way, arguments whose names end with `.c' or `.s'
+     are taken to be C or assembly source programs and are com-
+     piled or assembled, producing a `.o' file.
+
+     The following options have the same meaning as in _c_c(1).
+     See _l_d(1) for load-time options.
+
+     -c   Suppress loading and produce `.o' files for each source
+          file.
+
+     -g   Have the compiler produce additional symbol table
+          information for _s_d_b(1).  Also pass the -lg flag to
+          _l_d(1).
+
+     -w   Suppress all warning messages.  If the option is
+          `-w66', only Fortran 66 compatibility warnings are
+          suppressed.
+
+     -p   Prepare object files for profiling, see _p_r_o_f(1).
+
+     -O   Invoke an object-code optimizer.
+
+     -S   Compile the named programs, and leave the assembler-
+          language output on corresponding files suffixed `.s'.
+          (No `.o' is created.).  -o output Name the final output
+          file _o_u_t_p_u_t instead of `a.out'.
+
+     The following options are peculiar to _f_7_7.
+
+     -onetrip
+          Compile DO loops that are performed at least once if
+          reached.  (Fortran 77 DO loops are not performed at all
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+F77(1)              UNIX Programmer's Manual               F77(1)
+
+
+
+          if the upper limit is smaller than the lower limit.)
+
+     -u   Make the default type of a variable `undefined' rather
+          than using the default Fortran rules.
+
+     -C   Compile code to check that subscripts are within
+          declared array bounds.
+
+     -F   Apply EFL and Ratfor preprocessor to relevant files,
+          put the result in the file with the suffix changed to
+          `.f', but do not compile.
+
+     -m   Apply the M4 preprocessor to each `.r' or `.e' file
+          before transforming it with the Ratfor or EFL prepro-
+          cessor.
+
+     -E_x  Use the string _x as an EFL option in processing `.e'
+          files.
+
+     -R_x  Use the string _x as a Ratfor option in processing `.r'
+          files.
+
+     Other arguments are taken to be either loader option argu-
+     ments, or F77-compatible object programs, typically produced
+     by an earlier run, or perhaps libraries of F77-compatible
+     routines.  These programs, together with the results of any
+     compilations specified, are loaded (in the order given) to
+     produce an executable program with name `a.out'.
+
+FILES
+     file.[fresc]        input file
+     file.o              object file
+     a.out               loaded output
+     /usr/lib/f77pass1   compiler
+     /lib/f1             pass 2
+     /lib/c2             optional optimizer
+     /usr/lib/libF77.a   intrinsic function library
+     /usr/lib/libI77.a   Fortran I/O library
+     /lib/libc.a         C library, see section 3
+
+SEE ALSO
+     S. I. Feldman, P. J. Weinberger, _A _P_o_r_t_a_b_l_e _F_o_r_t_r_a_n _7_7 _C_o_m_-
+     _p_i_l_e_r
+     prof(1), cc(1), ld(1), efl(1), ratfor(1)
+
+DIAGNOSTICS
+     The diagnostics produced by _f_7_7 itself are intended to be
+     self-explanatory.  Occasional messages may be produced by
+     the loader.
+
+BUGS
+     The Fortran 66 subset of the language has been exercised
+
+
+
+Printed 11/10/80                                                2
+
+
+
+
+
+
+F77(1)              UNIX Programmer's Manual               F77(1)
+
+
+
+     extensively; the newer features have not.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                3
+
+
+

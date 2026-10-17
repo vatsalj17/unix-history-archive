@@ -1,0 +1,132 @@
+
+
+
+IOCTL(2)            UNIX Programmer's Manual             IOCTL(2)
+
+
+
+NAME
+     ioctl, stty, gtty - control device
+
+SYNOPSIS
+     #include <sgtty.h>
+
+     ioctl(fildes, request, argp)
+     struct sgttyb *argp;
+
+     stty(fildes, argp)
+     struct sgttyb *argp;
+
+     gtty(fildes, argp)
+     struct sgttyb *argp;
+
+DESCRIPTION
+     _I_o_c_t_l performs a variety of functions on character special
+     files (devices).  The writeups of various devices in section
+     4 discuss how _i_o_c_t_l applies to them.
+
+     For certain status setting and status inquiries about termi-
+     nal devices, the functions _s_t_t_y and _g_t_t_y are equivalent to
+          ioctl(fildes, TIOCSETP, argp)
+          ioctl(fildes, TIOCGETP, argp)
+
+     respectively; see _t_t_y(4).
+
+     The following two standard calls, however, apply to any open
+     file:
+
+          ioctl(fildes, FIOCLEX, NULL);
+          ioctl(fildes, FIONCLEX, NULL);
+
+     The first causes the file to be closed automatically during
+     a successful _e_x_e_c operation; the second reverses the effect
+     of the first.
+
+     The following call is peculiar to the Berkeley implementa-
+     tion, and also applies to any open file:
+
+          ioctl(fildes, FIONREAD, &count)
+
+     returning, in the longword _c_o_u_n_t the number of characters
+     available for reading from _f_i_l_d_e_s.
+
+SEE ALSO
+     stty(1), tty(4), exec(2)
+
+DIAGNOSTICS
+     Zero is returned if the call was successful; -1 if the file
+     descriptor does not refer to the kind of file for which it
+     was intended, or if _r_e_q_u_e_s_t attempts to modify the state of
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+IOCTL(2)            UNIX Programmer's Manual             IOCTL(2)
+
+
+
+     a terminal when _f_i_l_d_e_s is not writeable.
+
+     _I_o_c_t_l calls which attempt to modify the state of a process
+     control terminal while a process is not in the process group
+     of the control terminal will cause a SIGTTOU signal to be
+     sent to the process' process group.  Such _i_o_c_t_ls are
+     allowed, however, if SIGTTOU is being held, ignored, if the
+     process is an orphan which has been inherited by _i_n_i_t, or is
+     the child in an incomplete _v_f_o_r_k (see _j_o_b_s(3))
+
+BUGS
+     Strictly speaking, since _i_o_c_t_l may be extended in different
+     ways to devices with different properties, _a_r_g_p should have
+     an open-ended declaration like
+
+          union { struct sgttyb ...; ...  } *argp;
+
+     The important thing is that the size is fixed by `struct
+     sgttyb'.
+
+ASSEMBLER (PDP-11)
+     (ioctl = 54.)
+     sys ioctl; fildes; request; argp
+
+     (stty = 31.)
+     (file descriptor in r0)
+     stty; argp
+
+     (gtty = 32.)
+     (file descriptor in r0)
+     sys gtty; argp
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                2
+
+
+

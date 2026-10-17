@@ -1,0 +1,132 @@
+
+
+
+FSTAB(5)            UNIX Programmer's Manual             FSTAB(5)
+
+
+
+NAME
+     fstab - static information about the filesystems
+
+SYNOPSIS
+     #include <fstab.h>
+
+DESCRIPTION
+     The file /_e_t_c/_f_s_t_a_b contains descriptive information about
+     the various file systems.  /_e_t_c/_f_s_t_a_b is only _r_e_a_d by pro-
+     grams, and not written; it is the duty of the system
+     administrator to properly create and maintain this file.
+
+     These programs use /_e_t_c/_f_s_t_a_b: _d_u_m_p, _m_o_u_n_t, _u_m_o_u_n_t, _s_w_a_p_o_n,
+     _f_s_c_k and _d_f. The order of records in /_e_t_c/_f_s_t_a_b is impor-
+     tant, for both _f_s_c_k, _m_o_u_n_t, and _u_m_o_u_n_t sequentially iterate
+     through /_e_t_c/_f_s_t_a_b doing their thing.
+
+     The special file name is the block special file name, and
+     not the character special file name.  If a program needs the
+     character special file name, the program must create it by
+     appending a ``r'' after the last ``/'' in the special file
+     name.
+
+     #define FSTAB                  "/etc/fstab"
+     #define FSNMLG                 16
+
+     #define FSTABFMT    "%16s:%16s:%2s:%d:%d\n"
+     #define FSTABARG(p) (p)->fs_spec, (p)->fs_file, \
+                         (p)->fs_type, &(p)->fs_freq, &(p)->fs_passno
+     #define FSTABNARGS  5
+
+     #define FSTAB_RW    "rw"       /* read write device */
+     #define FSTAB_RO    "ro"       /* read only device */
+     #define FSTAB_SW    "sw"       /* swap device */
+     #define FSTAB_XX    "xx"       /* ignore totally */
+
+     struct fstab {
+             char  fs_spec[FSNMLG]; /* block special device name */
+             char  fs_file[FSNMLG]; /* file system path prefix */
+             char  fs_type[3];      /* rw,ro,sw or xx */
+             int   fs_freq;         /* dump frequency, in days */
+             int   fs_passno;       /* pass number on parallel dump */
+     };
+
+
+     The proper way to read records from /_e_t_c/_f_s_t_a_b is to use the
+     routines getfsent(), getfsspec() or getfsfile().
+
+FILES
+     /etc/fstab
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+FSTAB(5)            UNIX Programmer's Manual             FSTAB(5)
+
+
+
+SEE ALSO
+     getfsent(3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                2
+
+
+

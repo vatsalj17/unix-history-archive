@@ -1,0 +1,66 @@
+
+
+
+PIPE(2)             UNIX Programmer's Manual              PIPE(2)
+
+
+
+NAME
+     pipe - create an interprocess channel
+
+SYNOPSIS
+     pipe(fildes)
+     int fildes[2];
+
+DESCRIPTION
+     The _p_i_p_e system call creates an I/O mechanism called a pipe.
+     The file descriptors returned can be used in read and write
+     operations.  When the pipe is written using the descriptor
+     _f_i_l_d_e_s[1] up to 4096 bytes of data are buffered before the
+     writing process is suspended.  A read using the descriptor
+     _f_i_l_d_e_s[0] will pick up the data.
+
+     It is assumed that after the pipe has been set up, two (or
+     more) cooperating processes (created by subsequent _f_o_r_k
+     calls) will pass data through the pipe with _r_e_a_d and _w_r_i_t_e
+     calls.
+
+     The Shell has a syntax to set up a linear array of processes
+     connected by pipes.
+
+     Read calls on an empty pipe (no buffered data) with only one
+     end (all write file descriptors closed) returns an end-of-
+     file.
+
+SEE ALSO
+     sh(1), read(2), write(2), fork(2)
+
+DIAGNOSTICS
+     The function value zero is returned if the pipe was created;
+     -1 if too many files are already open.  A signal is gen-
+     erated if a write on a pipe with only one end is attempted.
+
+BUGS
+     Should more than 4096 bytes be necessary in any pipe among a
+     loop of processes, deadlock will occur.
+
+ASSEMBLER (PDP-11)
+     (pipe = 42.)
+     sys pipe
+     (read file descriptor in r0)
+     (write file descriptor in r1)
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

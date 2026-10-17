@@ -1,0 +1,66 @@
+
+
+
+RESET(1)            UNIX Programmer's Manual             RESET(1)
+
+
+
+NAME
+     reset - reset the teletype bits to a sensible state
+
+SYNOPSIS
+     reset
+
+DESCRIPTION
+     _R_e_s_e_t sets the terminal to cooked mode, turns off cbreak and
+     raw modes, turns on nl, and restores special characters that
+     are undefined to their default values.
+
+     This is most useful after a program dies leaving a terminal
+     in a funny state; you have to type ``<LF>reset<LF>'' to get
+     it to work then to the shell, as <CR> often doesn't work;
+     often none of this will echo.
+
+     It isn't a bad idea to follow _r_e_s_e_t with _t_s_e_t(1)
+
+SEE ALSO
+     stty(1), tset(1)
+
+BUGS
+     Doesn't set tabs properly; it can't intuit personal choices
+     for interrupt and line kill characters, so it leaves these
+     the old UNIX standards ^? (delete) for interrupt and @ for
+     line kill.
+
+     It could well be argued that the shell should be responsible
+     for insuring that the terminal remains in a sane state; this
+     would eliminate the need for this program.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

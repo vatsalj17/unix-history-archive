@@ -1,0 +1,132 @@
+
+
+
+WRITE(2)            UNIX Programmer's Manual             WRITE(2)
+
+
+
+NAME
+     write - write on a file
+
+SYNOPSIS
+     write(fildes, buffer, nbytes)
+     char *buffer;
+
+DESCRIPTION
+     A file descriptor is a word returned from a successful _o_p_e_n,
+     _c_r_e_a_t, _d_u_p, or _p_i_p_e(2) call.
+
+     _B_u_f_f_e_r is the address of _n_b_y_t_e_s contiguous bytes which are
+     written on the output file.  The number of characters actu-
+     ally written is returned.  It should be regarded as an error
+     if this is not the same as requested.
+
+     Writes which are multiples of 1024 characters long and begin
+     on a 1024-byte boundary in the file are more efficient than
+     any others.
+
+     _W_r_i_t_es to the control terminal by a process which is not in
+     the process group of the termainl and which is not ignoring
+     or holding SIGTTOU signals cause the writer's process group
+     to receive a SIGTTOU signal (See _j_o_b_s(3) and the description
+     of the LTOSTOP option in _t_t_y(4) for details).
+
+     On some systems _w_r_i_t_e clears the set-user-id bit on a file.
+     This prevents penetration of system security by a user who
+     "captures" a writeable set-user-id file owned by the super-
+     user.
+
+SEE ALSO
+     creat(2), open(2), pipe(2)
+
+DIAGNOSTICS
+     Returns -1 on error: bad descriptor, buffer address, or
+     count; physical I/O errors.
+
+ASSEMBLER (PDP-11)
+     (write = 4.)
+     (file descriptor in r0)
+     sys write; buffer; nbytes
+     (byte count in r0)
+
+BUGS
+     It would be nice to be able to call write and have the call
+     return with an error indication if there was no buffer space
+     for the written data, rather than blocking the process.
+
+     Processes which have been orphaned by their parents and have
+     been inherited by _i_n_i_t(8) never receive SIGTTOU signals.
+     Output by such a process is permitted even when they are not
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+WRITE(2)            UNIX Programmer's Manual             WRITE(2)
+
+
+
+     in the process group of the control terminal.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                2
+
+
+

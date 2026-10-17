@@ -1,0 +1,132 @@
+
+
+
+ADDUSER(8)          UNIX Programmer's Manual           ADDUSER(8)
+
+
+
+NAME
+     adduser - procedure for adding new users
+
+DESCRIPTION
+     A new user must choose a login name, which must not already
+     appear in /_e_t_c/_p_a_s_s_w_d. An account can be added by editing a
+     line into the passwd file; this must be done with the pass-
+     word file locked e.g. by using _v_i_p_w(8).
+
+     A new user is given a group and user id.  User id's should
+     be distinct across a system, since they are used to control
+     access to files.  Typically, users working on similar pro-
+     jects will be put in the same group.  Thus at UCB we have
+     groups for system staff, faculty, graduate students, and a
+     few special groups for large projects.  System staff is
+     group "10" for historical reasons, and the super-user is in
+     this group.
+
+     A skeletal account for a new user "ernie" would look like:
+
+          ernie::235:20:&
+          Kovacs,508E,7925,6428202:/mnt/grad/ernie:/bin/csh
+
+     The first field is the login name "ernie".  The next field
+     is the encrypted password which is not given and must be
+     initialized using _p_a_s_s_w_d(1).  The next two fields are the
+     user and group id's.  Traditionally, users in group 20 are
+     graduate students and have account names with numbers in the
+     200's.  The next field gives information about ernie's real
+     name, office and office phone and home phone.  This informa-
+     tion is used by the _f_i_n_g_e_r(1) program.  From this informa-
+     tion we can tell that ernie's real name is "Ernie Kovacs"
+     (the & here serves to repeat "ernie" with appropriate capi-
+     talization), that his office is 508 Evans Hall, his exten-
+     sion is x2-7925, and this his home phone number is 642-8202.
+     You can modify the _f_i_n_g_e_r(1) program if necessary to allow
+     different information to be encoded in this field.  The UCB
+     version of finger knows several things particular to Berke-
+     ley - that phone extensions start "2-", that offices ending
+     in "E" are in Evans Hall and that offices ending in "C" are
+     in Cory Hall.
+
+     The final two fields give a login directory and a login
+     shell name.  Traditionally, user files live on a file system
+     which has the machines single letter _n_e_t(1) address as the
+     first of two characters.  Thus on the Berkeley CS Department
+     VAX, whose Berknet address is ``csvax'' abbreviated ``v''
+     the user file systems are mounted on ``/va'', ``/vb'', etc.
+     On each such filesystem there are subdirectories there for
+     each group of users, i.e.: "/va/staff" and "/vb/prof".  This
+     is not strictly necessary but keeps the number of files in
+     the top level directories reasonably small.
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+ADDUSER(8)          UNIX Programmer's Manual           ADDUSER(8)
+
+
+
+     The login shell will default to "/bin/sh" if none is given.
+     Most users at Berkeley choose "/bin/csh" so this is usually
+     specified here.
+
+     It is useful to give new users some help in getting started,
+     supplying them with a few skeletal files such as ._p_r_o_f_i_l_e if
+     they use "/bin/sh", or ._c_s_h_r_c and ._l_o_g_i_n if they use
+     "/bin/csh".  The directory "/usr/skel" contains skeletal
+     definitions of such files.  New users should be given copies
+     of these files which, for instance, arrange to use _t_s_e_t(1)
+     automatically at each login.
+
+FILES
+     /etc/passwd         password file
+     /usr/skel           skeletal login directory
+
+SEE ALSO
+     passwd(1), finger(1), chsh(1), chfn(1), passwd(5), vipw(8)
+
+BUGS
+     User information should be stored in its own data base
+     separate from the password file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                2
+
+
+

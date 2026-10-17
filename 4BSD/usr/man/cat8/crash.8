@@ -1,0 +1,264 @@
+
+
+
+CRASH(8)            UNIX Programmer's Manual             CRASH(8)
+
+
+
+NAME
+     crash - what happens when the system crashes
+
+DESCRIPTION
+     This section explains what happens when the system crashes
+     and how you can get a crash dump for analysis of non-
+     transient problems.
+
+     When the system crashes voluntarily it prints a message of
+     the form
+
+          panic: why i gave up the ghost
+
+     on the console, and then invokes an automatic reboot pro-
+     cedure as described in _r_e_b_o_o_t(8).  If the auto-reboot switch
+     is off on the console, then the processor will simply halt
+     at this point.  Otherwise the registers and the top few
+     locations of the stack will be printed on the console, and
+     then the system will check the disks and (unless some unex-
+     pected inconsistency is encountered), resume multi-user
+     operations.
+
+     The system has a large number of internal consistency
+     checks; if one of these fails, then it will panic with a
+     very short message indicating which one failed.  In the
+     absence of a dump, little can be done about one of these.
+     If the problem recurs, you should arrange to get a dump for
+     further analysis by running with auto-reboot disabled during
+     normal working hours and then following the procedure
+     described below.
+
+     The most common cause of system failures is hardware
+     failure, which can reflect itself in different ways.  Here
+     are the messages which you are likely to encounter, with
+     some hints as to causes.  Left unstated in all cases is the
+     possibility that hardware or software error produced the
+     message in some unexpected way.
+
+     IO err in push
+     hard IO err in swap
+          The system encountered an error trying to write to the
+          paging device or an error in reading critical informa-
+          tion from a disk drive.  You should fix your disk if it
+          is broken or unreliable.
+
+     Timeout table overflow
+     ran out of bdp's
+     ran out of uba map
+          These really shouldn't be panics, but until we fix up
+          the data structures involved, running out of entries
+          causes a crash.  If the timeout table overflows, you
+          should make it bigger.  If you run out of bdp's or uba
+
+
+
+Printed 11/10/80             VAX-11                             1
+
+
+
+
+
+
+CRASH(8)            UNIX Programmer's Manual             CRASH(8)
+
+
+
+          map you probably have a buggy device driver in your
+          system, allocating and not releasing UNIBUS resources.
+
+     KSP not valid
+     SBI fault
+     Machine check
+     CHM? in kernel
+          These indicate either a serious bug in the system or,
+          more often, a glitch or failing hardware.  For the
+          machine check, the top part of the resulting stack
+          frame gives more information.  You can refer to a VAX
+          11/780 System Maintenance Guide for information on
+          machine checks.  If machine checks or SBI faults recur,
+          check out the hardware or call field service.  If the
+          other faults recur, there is likely a bug somewhere in
+          the system, although these can be caused by a flakey
+          processor.  Run processor microdiagnostics.
+
+     trap type %d, code=%d
+          A unexpected trap has occurred within the system; the
+          trap types are:
+
+          0         reserved addressing mode
+          1         privileged instruction
+          2         BPT
+          3         XFC
+          4         reserved operand
+          5         CHMK (system call)
+          6         arithmetic trap
+          7         reschedule trap (software level 3)
+          8         segmentation fault
+          9         protection fault
+          10        trace pending (TP bit)
+
+          The favorite trap type in system crashes is trap type
+          9, indicating a wild reference.  The code is the refer-
+          enced address.  If you look down the stack, just after
+          the trap type and the code are the pc and the ps of the
+          processor when it trapped, showing you where in the
+          system the problem occurred.  These problems tend to be
+          easy to track down if they are kernel bugs since the
+          processor stops cold, but random flakiness seems to
+          cause this sometimes, e.g. we have trapped with code
+          80000800 three times in six months as an instruction
+          fetch went across this page boundary in the kernel but
+          have been unable to find any reason for this to have
+          happened.
+
+     init died
+          The system initialization process has exited.  This is
+          bad news, as no new users will then be able to log in.
+          Rebooting is the only fix, so the system just does it
+
+
+
+Printed 11/10/80             VAX-11                             2
+
+
+
+
+
+
+CRASH(8)            UNIX Programmer's Manual             CRASH(8)
+
+
+
+          right away.
+
+     That completes the list of panic types you are likely to
+     see.  Now for the crash dump procedure:
+
+     At the moment a dump can be taken only on magnetic tape.
+     Before you do anything, be sure that a clean tape is mounted
+     with a ring-in on the tape drive if you plan to make a dump.
+
+     Write the date and time on the console log.  Use the console
+     commands to examine the registers, program status long word,
+     and the top several locations on the stack.  A suggested
+     command sequence, which is executed by the "@DUMP" console
+     command script, is:
+          E PSL<return>
+          E R0/NE:F<return>
+          E SP<return>
+          E/V @ /NE:40<return>
+     If hardware problems dictate a special set of commands be
+     executed when the system crashes, a sequence of commands can
+     be saved using the console command "LINK" to be reexecuted
+     with "PERFORM" (which can be abbreviated "P").  If a dump is
+     to be taken on magnetic tape (this is a good idea in most
+     any case where the cause of the crash is not immediately
+     obvious) then the following commands will (should) be exe-
+     cuted:
+          D PSL 0<return>
+          D PC 80000200<return>
+          C<return>
+     These commands are actually part of the standard "@DUMP"
+     script.  This should write a copy of all of memory on the
+     tape, followed by two EOF marks.  Caution: Any error is
+     taken to mean the end of memory has been reached.  This
+     means that you must be sure the ring is in, the tape is
+     ready, and the tape is clean and new.
+
+     If there are not 40(hex) locations active on the kernel
+     stack when the procedure is begun, then the console may
+     begin to print error diagnostics.  You can stop this by hit-
+     ting "^C" (control-C), and then give the last three commands
+     above.
+
+     If the dump fails, you can try again, but some of the regis-
+     ters will be lost.  See below for what to do with the tape.
+
+     To restart after a crash, follow the directions in
+     _r_e_b_o_o_t(8); if the virtual memory subsystem is suspected as
+     the cause of the crash, then a version of the system other
+     than "vmunix" should be booted which will leave the paging
+     areas temporarily intact for use by the post-mortem analysis
+     program _a_n_a_l_y_z_e. After checking your root file system con-
+     sistency with _f_s_c_k(8), you can read the core dump tape into
+
+
+
+Printed 11/10/80             VAX-11                             3
+
+
+
+
+
+
+CRASH(8)            UNIX Programmer's Manual             CRASH(8)
+
+
+
+     the file /vmcore with
+
+          dd if=/dev/rmt0 of=/vmcore bs=20b
+
+     It does not work to use just _c_p(1), as the tape is blocked.
+     With the system still in single-user mode, run the analysis
+     program _a_n_a_l_y_z_e, e.g.:
+
+          analyze -s /dev/drum /vmcore /vmunix
+
+     and save the output.  Then boot up "vmunix" and let it do
+     the automatic reboot, i.e. to boot multi-user from an
+     RM03/RM05/RP06 on the MASSBUS
+
+          >>> BOOT RPM
+
+     After rebooting, to analyze a dump you should execute _p_s
+     -_a_l_x_k to print the process table at the time of the crash.
+     Use _a_d_b(1) to examine /_v_m_c_o_r_e.  The location
+     _d_u_m_p_s_t_a_c_k-_8_0_0_0_0_0_0_0 is the bottom of a stack onto which were
+     pushed the stack pointer sp, PCBB (containing the physical
+     address of a _u__a_r_e_a), MAPEN, IPL, and registers r13-r0 (in
+     that order).  r13(fp) is the system frame pointer and the
+     stack is used in standard calls format.  Use _a_d_b(1) to get a
+     reverse calling order.  In most cases this procedure will
+     give an idea of what is wrong.  A more complete discussion
+     of system debugging is impossible here.  See, however,
+     _a_n_a_l_y_z_e(8) for some more hints.
+
+SEE ALSO
+     analyze(8), reboot(8)
+     _V_A_X _1_1/_7_8_0 _S_y_s_t_e_m _M_a_i_n_t_e_n_a_n_c_e _G_u_i_d_e for more information
+     about machine checks.
+
+BUGS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80             VAX-11                             4
+
+
+
+
+
+

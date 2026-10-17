@@ -1,0 +1,198 @@
+
+
+
+TSET(1)             UNIX Programmer's Manual              TSET(1)
+
+
+
+NAME
+     tset - set terminal modes
+
+SYNOPSIS
+     tset [ options ] [ -m [_i_d_e_n_t][_t_e_s_t _b_a_u_d_r_a_t_e]:_t_y_p_e ...  ] [
+     type ]
+
+DESCRIPTION
+     _T_s_e_t causes terminal dependent processing such as setting
+     erase and kill characters, setting or resetting delays, and
+     the like.  It first determines the _t_y_p_e of terminal
+     involved, names for which are specified by the /_e_t_c/_t_e_r_m_c_a_p
+     data base, and then does necessary initializations and mode
+     settings.  In the case where no argument types are speci-
+     fied, _t_s_e_t simply reads the terminal type out of the
+     environment variable TERM and re-initializes the terminal.
+     The rest of this manual concerns itself with type initiali-
+     zation, done typically once at login, and options used at
+     initialization time to determine the terminal type and set
+     up terminal modes.
+
+     When used in a startup script ._p_r_o_f_i_l_e (for _s_h(1) users) or
+     ._l_o_g_i_n (for _c_s_h(1) users) it is desirable to give informa-
+     tion about the types of terminal usually used on terminals
+     which are not hardwired.  These ports are initially identi-
+     fied as being _d_i_a_l_u_p or _p_l_u_g_b_o_a_r_d or _a_r_p_a_n_e_t etc.  To
+     specify what terminal type is usually used on these ports -m
+     is followed by the appropriate port type identifier, an
+     optional baud-rate specification, and the terminal type to
+     be used if the mapping conditions are satisfied.  If more
+     than one mapping is specified, the first applicable mapping
+     prevails.  A missing type identifier matches all identif-
+     iers.
+
+     Baud rates are specified as with _s_t_t_y(1), and are compared
+     with the speed of the diagnostic output (which is almost
+     always the control terminal).  The baud rate test may be any
+     combination of: >, =, <, @, and !; @ is a synonym for = and
+     ! inverts the sense of the test.  To avoid problems with
+     metacharacters, it is best to place the entire argument to
+     -m within ``''' characters; users of _c_s_h(1) must also put a
+     ``\'' before any ``!'' used here.
+
+     Thus
+
+          tset -m  'dialup>300:adm3a'  -m  dialup:dw2  -m
+          'plugboard:?adm3a'
+
+     causes the terminal type to be set to an _a_d_m_3_a if the port
+     in use is a dialup at a speed greater than 300 baud; to a
+     _d_w_2 if the port is (otherwise) a dialup (i.e. at 300 baud or
+     less).  If the _t_y_p_e above begins with a question mark, the
+
+
+
+Printed 11/10/80             8/26/80                            1
+
+
+
+
+
+
+TSET(1)             UNIX Programmer's Manual              TSET(1)
+
+
+
+     user is asked if s/he really wants that type.  A null
+     response means to use that type; otherwise, another type can
+     be entered which will be used instead.  Thus, in this case,
+     the user will be queried on a plugboard port as to whether
+     they are using an _a_d_m_3_a. For other ports the port type will
+     be taken from the /etc/ttytype file or a final, default _t_y_p_e
+     option may be given on the command line not preceded by a
+     -m.
+
+     It is often desirable to return the terminal type, as speci-
+     fied by the -m options, and information about the terminal
+     to a shell's environment.  This can be done using the -s
+     option; using the Bourne shell, _s_h(1):
+
+          eval `tset -s _o_p_t_i_o_n_s...`
+
+     or using the C shell, _c_s_h(1):
+
+          setenv noglob; eval `tset -s _o_p_t_i_o_n_s...`
+
+     These commands cause _t_s_e_t to generate as output a sequence
+     of shell commands which place the variables TERM and TERMCAP
+     in the environment; see _e_n_v_i_r_o_n(5).
+
+     Once the terminal type is known, _t_s_e_t engages in terminal
+     mode setting.  This normally involves sending an initializa-
+     tion sequence to the terminal and setting the single charac-
+     ter erase (and optionally the line-kill (full line erase))
+     characters.
+
+     On terminals that can backspace but not overstrike (such as
+     a CRT), and when the erase character is the default erase
+     character (`#' on standard systems), the erase character is
+     changed to a Control-H (backspace).
+
+     The options are:
+
+     -e   set the erase character to be the named character _c on
+          all terminals, the default being the backspace charac-
+          ter on the terminal, usually ^H.
+
+     -k   is similar to -e but for the line kill character rather
+          than the erase character; _c defaults to ^X (for purely
+          historical reasons); ^U is the preferred setting.  No
+          kill processing is done if -k is not specified.
+
+     -I   supresses outputting terminal initialization strings.
+
+     -Q   supresses printing the ``Erase set to'' and ``Kill set
+          to'' messages.
+
+     -S   Outputs the strings to be assigned to TERM and TERMCAP
+
+
+
+Printed 11/10/80             8/26/80                            2
+
+
+
+
+
+
+TSET(1)             UNIX Programmer's Manual              TSET(1)
+
+
+
+          in the environment rather than commands for a shell.
+
+FILES
+     /etc/ttytype        terminal id to type map database
+     /etc/termcap   terminal capability database
+
+SEE ALSO
+     csh(1), setenv(1), sh(1), stty(1), environ(5), ttytype(5),
+     termcap(5)
+
+AUTHOR
+     Eric Allman
+
+BUGS
+     Should be merged with _s_t_t_y(1).
+
+NOTES
+     For compatibility with earlier versions of _t_s_e_t a number of
+     flags are accepted whose use is discouraged:
+
+     -d type   equivalent to -m dialup:type
+
+     -p type   equivalent to -m plugboard:type
+
+     -a type   equivalent to -m arpanet:type
+
+     -E c      Sets the erase character to _c only if the terminal
+               can backspace.
+
+     -         prints the terminal type on the standard output
+
+     -r        prints the terminal type on the diagnostic output.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80             8/26/80                            3
+
+
+

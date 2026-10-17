@@ -1,0 +1,264 @@
+
+
+
+REBOOT(8)           UNIX Programmer's Manual            REBOOT(8)
+
+
+
+NAME
+     reboot - UNIX bootstrapping procedures
+
+SYNOPSIS
+     /etc/reboot [ -s ] [ -n ] [ -a ]
+
+DESCRIPTION
+     UNIX is started by placing it in memory at location zero and
+     transferring to zero.  Since the system is not reenterable,
+     it is necessary to read it in from disk or tape each time it
+     is to be bootstrapped.
+
+     Rebooting a running system. When a UNIX is running and a
+     reboot is desired, /etc/reboot can be used.  It normally
+     causes the disks to be synced, and then a multi-user reboot
+     (as described below) is initiated.  This causes a system to
+     be booted and an automatic disk check to be performed.  If
+     all this succeeds without incident, the system is then
+     brought up for many users.
+
+     The options to the _r_e_b_o_o_t command are:
+
+     -s   Come up single user after the reboot, rather than doing
+          a disk check and going multi-user.
+
+     -n   Don't sync out the disks before performing the reboot.
+          This is useful if the reboot is immediately following
+          rebuilding of the free list on the root file system.
+
+     -a   Reload the bootstrap program and have it wait and ask
+          for a filename to be booted from.
+
+     Power fail and crash recovery. Normally, the system will
+     reboot itself at power-up or after crashes.  Provided the
+     auto-restart is enabled on the machine front panel, an
+     automatic consistency check of the file systems will be per-
+     formed then and unless this fails the system will resume
+     multi-user operations.
+
+     Cold starts. Files on the console floppy make cold-starting
+     the system easy.  For each disk controller there are two
+     floppy files from the root file system of unit 0 of that
+     controller: one which gives a single user shell, while the
+     other invokes the multi-user automatic reboot.  Thus these
+     files are RPS and RPM for the single and multi-user boot
+     from MASSBUS RP06/RM03/RM05 disks, UPS and UPM for UNIBUS
+     controller and disks such as the EMULEX SC-21 and AMPEX 9300
+     pair, or RKS and RKM for RK07 disks.
+
+     Giving the command
+
+          >>>BOOT RPM
+
+
+
+Printed 11/10/80                                                1
+
+
+
+
+
+
+REBOOT(8)           UNIX Programmer's Manual            REBOOT(8)
+
+
+
+     Would boot the system from (e.g.) an RP06 and run the
+     automatic consistency check as described in _f_s_c_k(8).  (Note
+     that it may be necessary to type control-P to gain the
+     attention of the LSI-11 before getting the >>> prompt.) The
+     command
+
+          >>>BOOT ANY
+
+     invokes a version of the boot program in a way which allows
+     you to specify any system as the system to be booted.  It
+     reads from the console a device specification (see below)
+     followed immediately by a pathname.  _B_o_o_t finds the
+     corresponding file on the given device, loads that file into
+     memory location zero, and starts the program at the entry
+     address specified in the program header (after clearing off
+     the high bit of the specified entry address.) Normal line
+     editing characters can be used in specifying the pathname.
+
+     If you have an rp06, rm05 or rm03 disk and wish to boot off
+     of a file system which starts at cylinder 0 of unit 0, you
+     can type "hp(0,0)vmunix" to the boot prompt; "up(0,0)vmunix"
+     would specify a UNIBUS ampex 9300 drive, ``rk(0,0)vmunix''
+     would specify a RK-07 disk drive.
+
+     A device specification has the following form:
+
+          device(unit, minor)
+
+     where _d_e_v_i_c_e is the type of the device to be searched, _u_n_i_t
+     is the unit number of the device, and _m_i_n_o_r is the minor
+     device index.  The following list of supported devices may
+     vary from installation to installation:
+          hp   RP06, RM05 or RM03 on MASSBUS
+          up   AMPEX 9300 on UNIBUS
+          ht   TE16
+          rk   RK07
+          tm   TM11
+
+     For tapes, the minor device number gives a file offset.
+
+     Emergency bootstraps. If the console BOOT command does not
+     work, here is a position-independent program which will read
+     the boot block (block 0) from a RP06, RM05, or RM03 disk on
+     the MASSBUS; the boot block will then boot in the file /_b_o_o_t
+     off the file system at cylinder 0 of the RP.
+
+     RP06 disk (MBA 0, drive 0)
+        00009fde   moval  *$0x20010000,r1     # MBA 0
+          512001
+        d0         movl   $1,4(r1)            # initialize MBA
+          04a101
+        d0         movl   $0x13,0x400(r1)     # volume valid
+
+
+
+Printed 11/10/80                                                2
+
+
+
+
+
+
+REBOOT(8)           UNIX Programmer's Manual            REBOOT(8)
+
+
+
+        0400c113
+        10008f32   cvtwl  $0x1000,0x424(r1)   # 16-bit format
+          0424c1
+        d4         clrl   12(r1)              # map reg. 0, offset 0
+            0ca1
+        8fd0       movl   $0x80000000,0x800(r1)       # valid, page 0/0
+        80000000
+          0800c1
+        32         cvtwl  $-512,16(r1)        # byte count
+        a1fe008f
+              10
+        28c1d4     clrl   0x428(r1)           # cylinder
+              04
+        14c1d4     clrl   0x414(r1)           # sector, track
+              04
+        c139d0     movl   $0x39,0x400(r1)     # read 1 block
+            0400
+          00       halt
+
+     To boot from magnetic tape:  The _t_p(1) command places the
+     bootstrap program _m_b_o_o_t on block 0 of the tape.  When read
+     into memory at location 0 and executed, _m_b_o_o_t prompts with
+     an equal sign `=', reads a file name from the console, then
+     loads and executes that file from the _t_p tape.  Unfor-
+     tunately DEC does not provide a console command to read a
+     block from tape to memory.  Here is a position-independent
+     program which does:
+
+     TM03 magtape (MBA 1, drive 0) from load point:
+        20009fde   moval  *$0x20012000,r1     # MBA 1
+          512001
+        d0         movl   $1,4(r1)            # initialize
+          04a101
+        32         cvtwl  $0x14c0,0x424(r1)   # drive characteristics
+        c114c08f
+            0424
+        a1d4       clrl   12(r1)              # map reg. 0, offset 0
+              0c
+        008fd0     movl   $0x80000000,0x800(r1)       # valid, page 0/0
+        c1800000
+            0800
+        8f32       cvtwl  $-512,16(r1)        # byte count
+        10a1fe00
+        00c139d0   movl   $0x39,0x400(r1)     # read 1 block
+              04
+            00     halt
+     Then give the console command "START 0\r".
+
+     _m_b_o_o_t does not perform character erase and line kill edit-
+     ing.  Instead, it starts over with the prompt for file name
+     whenever the requested file cannot be found.
+
+
+
+
+Printed 11/10/80                                                3
+
+
+
+
+
+
+REBOOT(8)           UNIX Programmer's Manual            REBOOT(8)
+
+
+
+     Be sure that _m_b_o_o_t exists whenever a _t_p tape is made.
+     Remember to put an appropriate block 0 boot and a /_b_o_o_t in
+     file systems when running _m_k_f_s.
+
+FILES
+     /vmunix           UNIX code
+     /usr/mdec/uboot   rp disk bootstrap
+     /boot             backup system bootstrap
+     /usr/mdec/mboot    _t_p magtape bootstrap
+
+SEE ALSO
+     tp(1), crash(8), fsck(8), init(8), rc(8)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                4
+
+
+

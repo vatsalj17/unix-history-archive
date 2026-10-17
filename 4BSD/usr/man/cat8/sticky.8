@@ -1,0 +1,66 @@
+
+
+
+STICKY(8)           UNIX Programmer's Manual            STICKY(8)
+
+
+
+NAME
+     sticky - executable files with persistent text
+
+DESCRIPTION
+     While the `sticky bit', mode 01000 (see _c_h_m_o_d(2)), is set on
+     a sharable executable file, the text of that file will not
+     be removed from the system swap area.  Thus the file does
+     not have to be fetched from the file system upon each execu-
+     tion.  As long as a copy remains in the swap area, the ori-
+     ginal text cannot be overwritten in the file system, nor can
+     the file be deleted.  (Directory entries can be removed so
+     long as one link remains.)
+
+     Sharable files are made by the -n and -z options of _l_d(1).
+
+     To replace a sticky file that has been used do: (1) Clear
+     the sticky bit with _c_h_m_o_d(1).  (2) Execute the old program
+     to flush the swapped copy.  This can be done safely even if
+     others are using it.  (3) Overwrite the sticky file.  If the
+     file is being executed by any process, writing will be
+     prevented; it suffices to simply remove the file and then
+     rewrite it, being careful to reset the owner and mode with
+     _c_h_m_o_d and _c_h_o_w_n(2).  (4) Set the sticky bit again.
+
+     Only the super-user can set the sticky bit.
+
+BUGS
+     Are self-evident.
+
+     Is largely unnecessary on the VAX; matters only for large
+     programs that will page heavily to start, since text pages
+     are normally cached incore as long as possible after all
+     instances of a text image exit.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+

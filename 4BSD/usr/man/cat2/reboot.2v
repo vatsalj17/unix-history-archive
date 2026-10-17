@@ -1,0 +1,132 @@
+
+
+
+REBOOT(2V)          UNIX Programmer's Manual           REBOOT(2V)
+
+
+
+NAME
+     reboot - reboot system or halt processor
+
+SYNOPSIS
+     #include <sys/reboot.h>
+
+     reboot(howto)
+     int howto;
+
+DESCRIPTION
+     _R_e_b_o_o_t is used to cause a system reboot, and is invoked
+     automatically in the event of unrecoverable system failures.
+     _H_o_w_t_o is a mask of options passed to the bootstrap program;
+     some of the information in _h_o_w_t_o is interpreted by this pro-
+     gram, and the information is further passed to the initiali-
+     zation process _i_n_i_t(8) in the new system.  When none of
+     these options (e.g. RB_AUTOBOOT) is given, the system is
+     rebooted from file "vmunix" in the root file system of unit
+     0 of the drive with the same disk controller as the current
+     root file system.  An automatic consistency check of the
+     disks is then normally performed.
+
+     The bits of _h_o_w_t_o are:
+
+     RB_HALT
+          the processor is simply halted; no reboot takes place.
+          This should be used with caution.
+
+     RB_ASKNAME
+          Interpreted by the bootstrap program itself, causing it
+          to inquire as to what file should be booted.  Normally,
+          the system is booted from the file "xx(0,0)vmunix"
+          without asking, where _x_x is determined by a code in
+          register _r_1_0 (which is known as _d_e_v_t_y_p_e) at entry to
+          the bootstrap program.  The code corresponds to the
+          major device number of the root file system, i.e.
+          "major(rootdev)".  Currently, the following values of
+          _d_e_v_t_y_p_e are understood:
+
+               0    hp   rm03/rm05/rp06 massbus disk
+               1    --   unused
+               2    up   emulex sc21 unibus controller; ampex 9300 disks
+               3    rk   rk07 unibus disks
+
+          Thus if _r_1_0 contained a 2, the system
+
+               up(0,0)vmunix.
+
+          would be booted.
+
+     RB_SINGLE
+          Normally, the reboot procedure involves an automatic
+
+
+
+Printed 11/10/80             VAX/11                             1
+
+
+
+
+
+
+REBOOT(2V)          UNIX Programmer's Manual           REBOOT(2V)
+
+
+
+          disk consistency check and then multi-user operations.
+          This prevents the consistency check, rather simply
+          booting the system with a single-user shell on the con-
+          sole, from the file system specified by _r_1_0.
+
+SEE ALSO
+     crash(8), halt(8), init(8), reboot(8)
+
+BUGS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Printed 11/10/80             VAX/11                             2
+
+
+
+
+
+

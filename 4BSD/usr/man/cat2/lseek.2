@@ -1,0 +1,66 @@
+
+
+
+LSEEK(2)            UNIX Programmer's Manual             LSEEK(2)
+
+
+
+NAME
+     lseek, tell - move read/write pointer
+
+SYNOPSIS
+     long lseek(fildes, offset, whence)
+     long offset;
+
+     long tell(fildes)
+
+DESCRIPTION
+     The file descriptor refers to a file open for reading or
+     writing.  The read (resp. write) pointer for the file is set
+     as follows:
+
+          If _w_h_e_n_c_e is 0, the pointer is set to _o_f_f_s_e_t bytes.
+
+          If _w_h_e_n_c_e is 1, the pointer is set to its current loca-
+          tion plus _o_f_f_s_e_t.
+
+          If _w_h_e_n_c_e is 2, the pointer is set to the size of the
+          file plus _o_f_f_s_e_t.
+
+     The returned value is the resulting pointer location.
+
+     The obsolete function _t_e_l_l(_f_i_l_d_e_s) is identical to
+     _l_s_e_e_k(_f_i_l_d_e_s, _0_L, _1).
+
+     Seeking far beyond the end of a file, then writing, creates
+     a gap or `hole', which occupies no physical space and reads
+     as zeros.
+
+SEE ALSO
+     open(2), creat(2), fseek(3)
+
+DIAGNOSTICS
+     -1 is returned for an undefined file descriptor, seek on a
+     pipe, or seek to a position before the beginning of file.
+
+BUGS
+     _L_s_e_e_k is a no-op on character special files.
+
+ASSEMBLER (PDP-11)
+     (lseek = 19.)
+     (file descriptor in r0)
+     sys lseek; offset1; offset2; whence
+
+     _O_f_f_s_e_t_1 and _o_f_f_s_e_t_2 are the high and low words of _o_f_f_s_e_t; r0
+     and r1 contain the pointer upon return.
+
+
+
+
+
+
+
+Printed 11/10/80                                                1
+
+
+
