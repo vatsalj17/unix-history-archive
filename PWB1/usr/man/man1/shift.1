@@ -1,0 +1,46 @@
+.th SHIFT I 5/31/77
+.sh NAME
+shift \*- adjust Shell arguments
+.sh SYNOPSIS
+.bd shift
+[ digit ]
+.sh DESCRIPTION
+.it Shift
+is used in Shell command files to shift the
+argument list left by 1,
+so that old
+.bd $2
+can now be referred to by
+.bd $1
+and so forth.
+.it Shift
+is useful to iterate over several arguments
+to a command file.
+For example, the command file
+.s3
+.nf
+.if n .ta 8
+.if t .ta .5i
+while "$1"
+	pr \*-3 $1
+	shift
+end
+.fi
+.s3
+.i0
+prints each of its arguments in 3-column format.
+.s3
+.it Shift
+is executed within the Shell.
+.s3
+The optional argument causes
+.it shift
+to leave shell arguments numbered lower than
+.it $digit
+alone on shifts;
+.it shift
+alone and
+.it "shift 1"
+are identical in effect.
+.sh "SEE ALSO"
+sh(I)

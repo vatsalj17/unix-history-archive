@@ -1,0 +1,187 @@
+.th CU VIII 5/31/77
+.sh NAME
+cu \- call UNIX
+.sh SYNOPSIS
+.ss 18
+.bd cu
+telno [
+.bd \-t
+] [
+.bd \-s
+speed ] [
+.bd \-a
+acu ] [
+.bd \-l
+line ]
+.br
+.ss 12
+.sh DESCRIPTION
+.it Cu
+calls up another UNIX system,
+a terminal,
+or possibly a non-UNIX system.
+It manages an interactive conversation with possible
+transfers of text files.
+.it Telno
+is the telephone number
+with minus signs at appropriate places for delays.
+The
+.bd \-t
+flag is used to dial out to a terminal.
+.it Speed
+gives the transmission speed (110, 134, 150, 300, 1200);
+300 is the default value.
+.s3
+The
+.bd \-a
+and
+.bd \-l
+values may be used to
+specify pathnames
+for the ACU and communications line devices.
+They can be used to override the following
+two built-in choices:
+.s3
+.in +5n
+\-a \|/dev/cua0 \|\-l \|/dev/cul0
+.in -5n
+.s3
+After making the connection,
+.it cu
+runs as two processes:
+the
+.it send
+process reads the standard input and
+passes most of it to the remote system;
+the
+.it receive
+process reads from the remote system and passes
+most data to the standard output.
+Lines beginning with ``~'' have special meanings.
+.s1
+The
+.it send
+process interprets the following:
+.s3
+.lp +25 20
+~\|\fB.\fP	terminate the conversation.
+.s3
+.lp +25 20
+~\^EOT	terminate the conversation.
+.s3
+.lp +25 20
+~\^<\^file	send the contents of
+.it file
+to the remote system,
+as though typed at the terminal.
+.s3
+.lp +25 20
+~\^!	invoke an interactive Shell on the local system.
+.s3
+.lp +25 20
+~\^!\^cmd ...	run the command on the local system
+(via
+.bd "sh \-c\c"
+).
+.s3
+.lp +25 20
+~\^$\^cmd ...	run the command locally and send its output
+to the remote system.
+.s3
+.lp +25 20
+~\^%\^take \|from\| [\^to\^]	copy file ``from'' (on the remote system)
+to file ``to'' on the local system.
+If ``to'' is omitted,
+the ``from'' name is used both places.
+.s3
+.lp +25 20
+~\^%\^put \|from\| [\^to\^]	copy file ``from'' (on local system)
+to file ``to'' on remote system.
+If ``to'' is omitted, the ``from'' name is used both places.
+.s3
+.lp +25 20
+~\^~\fB\|.\|.\|.\fP	send
+the line ``~\fB\|.\|.\|.\fP''.
+.i0
+.s1
+The
+.it receive
+process handles output diversions of the following form:
+.s3
+.in +5n
+\&~\^>[\^>]\^[\^\fB:\fP\^]\^file
+.br
+zero or more lines to be written to the file
+.br
+\&~\^>
+.in -5n
+.s1
+In any case, output is diverted (or appended, if ``>>'' is used) to the file.
+If ``\fB:\fP'' is used,
+the diversion is
+.it silent,
+i.e., it is written only to the file.
+If ``\fB:\fP'' is omitted,
+output is written both to the file and to the standard output.
+The trailing ``~\^>'' terminates the diversion.
+.sh FILES
+/dev/cua0
+.br
+/dev/cul0
+.br
+/dev/null
+.sh "SEE ALSO"
+dh(IV), dn(IV), tty(IV), ln(I), ttys(V)
+.sh "EXIT CODES"
+zero for normal exit,
+nonzero (various values) otherwise.
+.sh BUGS
+The use of
+.bd ~\^%\^put
+requires
+.it stty
+and
+.it cat
+on the remote side.
+It also requires that the
+current erase and kill characters on the remote
+system be identical to the current ones on the local system.
+Backslashes are inserted at appropriate places.
+.s3
+The use of
+.bd ~\^%\^take
+requires the existence of
+.it echo
+and
+.it tee
+on the remote system.
+Also,
+.bd "stty tabs"
+mode is required on the remote system if
+tabs are to be copied without expansion.
+.s3
+In order to use the
+.bd \-a
+and
+.bd \-l
+default values, the
+.it /dev/cua0
+and
+.it /dev/cul0
+special files must be linked (see \fIln\^\fP(I))
+to their respective devices.
+For example, one might link
+.it /dev/cua0
+and
+.it /dev/cul0
+to
+.it /dev/dn0
+and
+.it /dev/ttyh,
+respectively.
+Note that, for this example,
+.it /dev/ttyh
+must
+be marked ``ignored'' in the
+.it /etc/ttys
+file.

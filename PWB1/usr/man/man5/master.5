@@ -1,0 +1,94 @@
+.th MASTER V 5/31/77
+.sh NAME
+master \- master device information table
+.sh DESCRIPTION
+This file is used by the
+.it config\^\c
+(VIII)
+program to obtain device configuration information that enables
+it to generate the
+.it low.s
+and
+.it conf.c
+files.
+.s3
+The file consists of two parts, separated by a line with
+a dollar sign ($) in column 1.
+Part one contains device information, while part two contains
+names
+of devices that have aliases.
+Any line with an asterisk (*) in column 1 is treated as a comment.
+.s3
+Part one contains lines consisting of at least 10 fields
+and at most 13 fields,
+with the fields delimited by tabs and/or blanks, as follows:
+.s3
+.lp 25 15
+Field 1:	device name (8 characters maximum).
+.s3
+.lp 25 15
+Field 2:	interrupt vector size (decimal, in bytes).
+.s3
+.lp 25 15
+Field 3:	device mask \- each ``on'' bit indicates that
+the handler exists, as follows:
+.s3
+.in +5n
+.nf
+.ta 1i
+000020	open  handler
+000010	close handler
+000004	read  handler
+000002	write handler
+000001	sgtty handler.
+.fi
+.in -5n
+.s3
+.lp 25 15
+Field 4:	device type indicator, as follows:
+.s3
+.in +5n
+.nf
+.ta 1i
+000020	immediate allocation
+000010	block device
+000004	character device
+000002	floating vector
+000001	fixed vector.
+.fi
+.in -5n
+.s3
+.lp 25 15
+Field 5:	handler prefix (4 characters maximum).
+.s3
+.lp 25 15
+Field 6:	device address size (decimal).
+.s3
+.lp 25 15
+Field 7:	major device number for block-type device.
+.s3
+.lp 25 15
+Field 8:	major device number for character-type device.
+.s3
+.lp 25 15
+Field 9:	maximum number of devices per controller (decimal).
+.s3
+.lp 25 15
+Field 10:	maximum bus request level (4 through 7).
+.s3
+.lp 25 15
+Fields 11-13:	optional configuration table structure declarations
+(8 characters maximum).
+.i0
+.s3
+Part two contains lines with two fields each, as follows:
+.s3
+.lp 25 15
+Field 1:	alias of device (8 characters maximum).
+.s3
+.lp 25 15
+Field 2:	reference name of device (8 characters maximum,
+must have occurred in part one).
+.i0
+.sh "SEE ALSO"
+config(VIII)

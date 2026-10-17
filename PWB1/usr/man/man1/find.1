@@ -1,0 +1,183 @@
+.th FIND I 5/31/77
+.sh NAME
+find \*- find files
+.sh SYNOPSIS
+.bd find
+pathname-list  expression
+.sh DESCRIPTION
+.it Find
+recursively descends
+the directory hierarchy for
+each pathname in the
+.it pathname-list
+(i.e., one or more pathnames)
+seeking files that match a boolean
+.it expression
+written in the primaries given below.
+In the descriptions, the argument
+.it n
+is used as a decimal integer
+where
+.it +n
+means more than
+.it n,
+.it \*-n
+means less than
+.it n
+and
+.it n
+means exactly
+.it n.
+.s3
+.lp +16 16
+\fB\*-name\fR filename	True if the
+.it filename
+argument matches the current file name.
+Normal
+Shell
+argument syntax may be used if escaped (watch out for
+`[', `?' and `*').
+.s3
+.lp +16 16
+\fB\*-perm\fR onum	\c
+True if the file permission flags
+exactly
+match the
+octal number
+.it onum
+(see
+.it chmod\^\c
+(I)).
+If
+.it onum
+is prefixed by a minus sign,
+more flag bits (017777, see
+.it  stat\^\c
+(II)) become significant and
+the flags are compared:
+.it "(flags&onum)==onum."
+.s3
+.lp +16 16
+\fB\*-type\fP c	True if the type of the file
+is
+.it c,
+where
+.it c
+is
+.bd "b, c, d"
+or
+.bd f
+for
+block special file, character special file,
+directory or plain file.
+.s3
+.lp +16 16
+\fB\*-links\fP n	\c
+True if the file has
+.it n
+links.
+.s3
+.lp +16 16
+\fB\*-user\fP uname	\c
+True if the file belongs to the user
+.it uname.
+.s3
+.lp +16 16
+\fB\*-group\fR gname	\c
+As it is for
+.bd \*-user
+so shall it be for
+.bd \*-group
+(someday).
+.s3
+.lp +16 16
+\fB\*-size\fP n	\c
+True if the file is
+.it n
+blocks long (512 bytes per block).
+.s3
+.lp +16 16
+\fB\*-atime\fP n	\c
+True if the file has been accessed in
+.it n
+days.
+.s3
+.lp +16 16
+\fB\*-mtime\fP n	\c
+True if the file has been modified in
+.it n
+days.
+.s3
+.lp +16 16
+\fB\*-exec\fR command	\c
+True if the executed command returns
+a zero value as exit status.
+The end of the command must be punctuated by an escaped
+semicolon.
+A command argument `{}' is replaced by the
+current pathname.
+.s3
+.lp +16 16
+\fB\*-ok\fR command	\c
+Like
+.bd \*-exec
+except that the generated command line is printed
+with a question mark first,
+and is executed only if the user responds
+.bd y.
+.s3
+.lp +16 16
+\fB\*-print\fR	\c
+Always true;
+causes the current pathname to be printed.
+.s3
+.i0
+The primaries may be combined with
+these operators
+(ordered by precedence):
+.s3
+.lp +16 16
+\fB!\fR	Prefix
+.it not.
+.s3
+.lp +16 16
+\fB\*-a\fR	Infix
+.it and,
+second operand evaluated only if first is true.
+.s3
+.lp +16 16
+\fB\*-o\fR	Infix
+.it or,
+second operand evaluated only if first is false.
+.s3
+.lp +16 16
+\fB( \fRexpression\fB )\fR	Parentheses for grouping.
+(Must be escaped.)
+.s3
+.i0
+To remove all files named
+`a.out' or `*.o' that have not been accessed for a week:
+.s3
+.lp +.5i 0
+find / "(" \*-name a.out \*-o \*-name "*.o" ")"
+\*-a \*-atime +7 \*-a \*-exec rm {} ";"
+.i0
+.sh FILES
+/etc/passwd
+.sh "SEE ALSO"
+sh(I), if(I), fs(V)
+.sh BUGS
+.it Test
+(see
+.it if\^\c
+(I))
+can be useful with
+.it find.
+However, since
+.it test
+is implemented within the Shell,
+you must use something like:
+.s3
+.in +5n
+\-exec sh \-c "test args" ";"
+.in -5n

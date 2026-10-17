@@ -1,0 +1,75 @@
+: start
+pwd | = a
+if $a != / then
+	echo "Cannot shutdown, current working directory not `/'"
+	exit 1
+endif
+who ^wc -l ^ = a
+if $a -gt 1	then
+		echo "Do you want to send your own message(y or n):	\c"
+		= b < /dev/tty
+		if x$b = xy	then
+			echo "Type your message followed by ctrl d....\n\n"
+			/etc/wall < /dev/tty
+		else /etc/wall < /etc/getoff
+		endif
+		sleep 60
+endif
+echo "\n\n Busy out (push down) the appropriate "
+echo "phone lines for this system"
+echo "\n Type either ( y or n ) to continue or not	:\c"
+= b < /dev/tty
+if x$b = xn goto final
+
+: proc
+
+echo "\n\nAll currently running processes will now be terminated"
+ps ax ^sed -e 1d >/tmp/shutdown
+ed - /tmp/shutdown
+g/shutdown/d
+/^     0  /d
+1,$s/^\(.\{6\}\)\(.\{10\}\)\(.\).*/\1\3/
+g/^.\{6\}-$/d
+1,$s/^\(.\{6\}\).*/\1/
+g/$$/d
+1,$s/\(.*\)/kill -9 \1/
+w
+q
+sh /tmp/shutdown >/dev/null
+ps a 
+echo "\n\nWill a file save be done at this time?"
+echo "Type either ( y or n )	:\c"
+= b < /dev/tty
+if x$b = xn goto final
+
+: fsave
+
+/etc/mount ^grep -v "/tmp" ^sed -e 1d >/tmp/umount
+ed - /tmp/umount
+1,$s/ .*//
+w /tmp/ufsnames
+q
+ed - /tmp/umount
+1,$s/ read.*//
+1,$s/^.*on //
+1,$s/^/umount /
+w
+q
+sh /tmp/umount
+echo "The following filesystems have been UNMOUNTED....."
+cat /tmp/ufsnames
+echo "\n\nEach file system will NOW have an icheck performed "
+cp /etc/checklist /tmp/icheck$$
+ed - /tmp/icheck$$
+1,$s/^/icheck -s4 /
+w
+q
+sh /tmp/icheck$$
+echo "\n\n\nPlease HALT the system and then REBOOT as SINGLE-USER ONLY\n\n\n\n"
+exit
+
+: final
+
+sync;sync;sync
+echo "\n\n\nHALT the system\n\n\n"
+sync;sync;sync

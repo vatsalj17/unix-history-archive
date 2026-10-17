@@ -1,0 +1,129 @@
+if $n -eq 0 then
+	echo "usage: mm [options] [files]"
+	echo "-e => want eqn"
+	echo "-t => want tbl"
+	echo "-c => want col"
+	echo "-12 => want 12 pitch"
+	echo "-rC3 => D R A F T"
+	echo "-rB1 => Table of Contents (with .TC macro)"
+	echo "-300 => on DASI 300 (default)"
+	echo "-hp => on HP"
+	echo "-450 => on DASI450"
+	echo "-300S => on DASI300S"
+	echo "-300s => on DASI300S"
+	echo "-tn300 => on Terminet 300"
+	echo "-tn => on Terminet 300"
+	echo "-ti => on TI"
+	echo "-37 => on TTY 37"
+	echo "other options for nroff or PWB/MM"
+	exit
+endif
+= p /bin:/usr/bin
+= t 300
+= q -h
+while $1
+	if -r $1 break
+	switch $1
+	: -e
+		= e neqn
+		breaksw
+	: -t
+		= f tbl
+		breaksw
+	: -12
+		= b 12
+		= a "$a -rT1"
+		breaksw
+	: -c
+		= h c
+		breaksw
+	: -450
+		= g ""
+		= t 450
+		breaksw
+	: -ti
+	: -tn300
+	: -tn
+		= t tn300
+		= h c
+		breaksw
+	: -300S
+	: -300s
+		= g  ""
+		= t 300S
+		breaksw
+	: -hp
+		= g "|hp"
+		= t 37
+		breaksw
+	: -37
+		= g ""
+		= t 37
+		breaksw
+	: -300
+		= g ""
+		= t 300
+		breaksw
+	: default
+		= a "$a $1"
+	endsw
+	shift
+end
+if -z "$1" exit
+if "$b" = 12 then
+	switch $t
+	: 450
+		= t 450-12
+		breaksw
+	: 300
+		= t 300-12
+		breaksw
+	: 300S
+		= t 300S-12
+		breaksw
+	endsw
+endif
+if "$h" = c then
+	switch $t
+	: 450
+	: 450-12
+		= g "|col|450"
+		breaksw
+	: tn300
+		= g "|col"
+		breaksw
+	: 300
+		= g "|col|gsi"
+		breaksw
+	: 300-12
+		= g "|col|gsi +12 -2"
+		breaksw
+	: 300S
+		= g "|col|300S"
+		breaksw
+	: 300S-12
+		= g "|col|300S +12 -2"
+		breaksw
+	: default
+		= g "|col$g"
+		breaksw
+	endsw
+	= t 37
+	= q ""
+endif
+= t "-T$t"
+= d "$*"
+if "$f" != "" then
+	= f "cat $* |tbl|"
+	= d -
+endif
+if "$e" != "" then
+	if "$f" != "" then
+		= e "neqn |"
+	else
+		= e "neqn $* |"
+		= d -
+	endif
+endif
+$f $e nroff -mm $t $q $a $d $c $g
+exit

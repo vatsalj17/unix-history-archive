@@ -1,0 +1,101 @@
+.if n .tr | 
+.tr {"
+.tr }.
+.SC FILE~PATCHING~PROCEDURE September~14~1977
+.P
+After a system crash, there are several types of damage
+that can disable a file.
+Some of these errors must be repaired immediately 
+before the 
+disease spreads throughout the entire filesystem.
+A complete analysis of these errors can be found in the explanation
+of 
+.B check
+in the COMMANDS section of this manual.
+.HU "ERRORS OF SEVERE IMPACT"
+Errors such as 
+.I 377s ,
+.I 177s ,
+and those with a format of:
+.BS
+.BI
+.I "nnn complaint; i = xxxx (class)" \*F
+.BE
+.FS
+A full explanation of this type of error can be found
+in the description of
+\fIcheck\fP\|(VIII).
+.FE
+.sp
+should be treated immediately.
+Errors in the
+.I root
+should be handled first,
+because the commands \fIyou\fP execute are in the 
+.I root }
+.P
+.I 377s 
+and
+.I 177s
+can be handled by the program
+.B patchup }
+.BS
+.BI
+# 
+.UL "patchup"
+.BE
+.P
+The 
+.I complaint
+types of
+errors are too complicated to have established
+handling procedures, so an immediate telephone call to SYSTEM SUPPORT is
+recommended.
+.HU "ERRORS OF MODERATE IMPACT"
+Errors of the following formats are often found
+after a crash, and indicate problems
+in the
+.I "super block" \|:
+.BS 
+.BI
+.I "n dups in free"
+.BI
+.I "bad freeblock"
+.BI 
+.I "n missing"
+.BE
+.P
+After all other errors are repaired, these must be 
+remedied by:
+.BS
+.BI
+# 
+.UL "icheck \*-sX\fI devname\fP"
+~~~~~~(physical device name)
+.BE
+.sp
+where X is 
+3 for RP03s and 4 for RP04s and RP05s.
+.P
+.B "Icheck \*-sX"
+must always be performed on an unmounted filesystem,
+except in the special case of the
+.I root
+device,
+which is always mounted.
+Errors in the 
+.I "super block"
+of
+.I "root"
+MUST be repaired first
+and be followed by an IMMEDIATE reboot.
+.HU "NON-DISASTROUS ERRORS"
+.I 201s
+and
+.I 100s 
+are fairly innocuous errors.
+They can be repaired by the
+.B patchup
+program as described for
+.I 377s
+above.

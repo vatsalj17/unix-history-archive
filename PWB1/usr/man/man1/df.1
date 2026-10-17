@@ -1,0 +1,68 @@
+.th DF I 5/31/77
+.sh NAME
+df \*- report disk free space
+.sh SYNOPSIS
+.bd df
+[\c
+.bd \-uqs
+] [\c
+.bd \-t\c
+number] [arg ...]
+.sh DESCRIPTION
+.it Df
+prints the number of free blocks on a file system.
+If no
+.it args
+are specified, the free counts of all the
+mounted file systems are printed.
+.sp
+The
+.bd \-u
+flag prints the total block size, number of blocks
+allocated for system information, number of free blocks, number of blocks
+used and the number of free inodes.
+.sp
+The
+.bd \-q
+flag determines and prints the number of free blocks
+on a file system by  extracting the free count directly
+from the file system's superblock.
+.sp
+The
+.bd \-s
+flag is a silent option which prohibits  printing
+of any results. Error messages and exit status are not effected.
+.sp
+The
+.bd \-t
+flag followed by a decimal 
+.it number
+(5 digit maximum)
+is compared with the number of free blocks.
+The result of the comparison returns the file system's major
+and minor device numbers and a single character either
+.bd Y
+or
+.bd N,
+to indicate if the number of free blocks is
+greater or less than the requested
+.it number,
+respectively (e.g., df \-t 1000 /u8
+returns "0 12 Y").
+An exit status of 0 is returned for
+.bd Y
+and 1 for
+.bd N.
+.sp
+The
+.it arg
+can be specified as either the root name of the
+.bd mounted
+file system, e.g., "/u8" or the
+name of the special file
+corresponding to the particular device (must refer to a disk),
+e.g., "/dev/rp14".
+.sh FILES
+/dev/rf?, /dev/rk?, /dev/rp?, /etc/mnttab
+.sh "SEE ALSO"
+icheck(VIII)

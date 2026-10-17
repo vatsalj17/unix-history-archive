@@ -1,0 +1,118 @@
+.th FSPEC V 5/31/77
+.sh NAME
+fspec \*- format specification in text files
+.sh DESCRIPTION
+It is sometimes convenient to
+maintain text files on UNIX
+with non-standard tabs,
+.it i.e.,
+tabs which are not set at the simple interval
+of eight columns.
+Such files must generally be converted
+to a standard format,
+frequently by replacing all tabs with
+the appropriate number of spaces,
+before they can be processed by UNIX commands.
+A format specification
+occurring in the first line of a text file
+specifies how tabs are to be expanded in the remainder of the file.
+.s3
+A format specification consists of a sequence of parameters
+separated by blanks and surrounded by the brackets
+`<:' and `:>'.
+Each parameter consists of a keyletter,
+possibly followed immediately by a value.
+The following parameters are recognized:
+.s3
+.lp +11 9
+\fBt\fItabs\fR	The
+.bd t
+parameter specifies
+the tab settings for the file.
+The value of
+.it tabs
+must be one of the following:
+.lp +16 3
+1.	a list of column numbers separated by commas,
+indicating tabs set at the specified columns;
+.lp +16 3
+2.	a `\-' followed immediately by an integer
+.it n,
+indicating tabs at intervals of
+.it n
+columns;
+.lp +16 3
+3.	a `\-' followed by the name of a `canned' tab specification.
+.lp +11 9
+	Standard tabs are specified by `t\-8' or, equivalently,
+`t1,9,17,25,etc'.
+The canned tabs which are recognized are defined by the
+.it tabs\^\c
+(I) command \-
+a,a2,c,c2,c3,f,p,s,u.
+.s3
+.lp +11 9
+\fBs\fIsize\fR	The
+.bd s
+parameter specifies a maximum line size.
+The value of
+.it size
+must be an integer.
+Size checking is performed after tabs have been expanded,
+but before the margin is prepended.
+.s3
+.lp +11 9
+\fBm\fImargin\fR	The
+.bd m
+parameter specifies a number of spaces to be
+prepended to each line.
+The value of
+.it margin
+must be an integer.
+.s3
+.lp +11 9
+\fBd\fR	The
+.bd d
+parameter takes no value.
+Its presence indicates that the line containing the format specification
+is to be deleted from the converted file.
+.s3
+.lp +11 9
+\fBe\fR	The
+.bd e
+parameter takes no value.
+Its presence indicates that the current format is to prevail
+only until another format specification
+is encountered in the file.
+.i0
+.s3
+Default values, which are assumed for parameters not supplied,
+are `\fBt\fR\-8' and `\fBm\fR0'.
+If the
+.bd s
+parameter is not specified, no size checking is performed.
+.s3
+If the first line of a file does not contain a format specification,
+the above defaults are assumed for the entire file.
+.s3
+The following is an example of a line containing a format specification:
+.s3
+.lp +6 0
+/* <:t5,10,15 s72:> */
+.i0
+.s3
+If a format specification can be disguised as a comment,
+it is not necessary to code the
+.bd d
+parameter.
+.s3
+Several
+.it "Programmer's Workbench"
+commands correctly interpret the format specification for a file.
+Among them is
+.it gath
+which
+may be used to convert files to a standard format
+acceptable to other UNIX commands.
+.sh "SEE ALSO"
+ed(I), gath(I), reform(I), send(I), tabs(I)

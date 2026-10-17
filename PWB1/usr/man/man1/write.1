@@ -1,0 +1,64 @@
+.th WRITE I 5/31/77
+.sh NAME
+write  \*-  write to another user
+.sh SYNOPSIS
+.bd write
+user [ ttyno ]
+.sh DESCRIPTION
+.it Write
+copies lines from your terminal to that of
+another user.
+When first called,
+it sends the message
+.s3
+     message from yourname \fB...\fP
+.s3
+The recipient of the message should write back at this point.
+Communication continues until an end of file is
+read from the terminal or an interrupt is sent.
+At that point
+.it write
+writes `EOT' on the other terminal and exits.
+.s3
+If you want to write to a user who is logged in more than once,
+the
+.it ttyno
+argument may be used to indicate the last character
+of the appropriate terminal name.
+.s3
+Permission to write may be denied or granted by use of the
+.it mesg\^\c
+(I)
+command.
+At the outset writing is allowed.
+Certain commands, in particular
+.it nroff
+and
+.it pr,
+disallow
+messages in order to prevent messy output.
+.s3
+If the character `!' is found at the beginning of a line,
+.it write
+calls the Shell
+to execute the rest of the
+line as a command.
+.s3
+The following protocol is suggested for using
+.it write:
+when you first write to another user, wait for that user to
+write back before starting to send.
+Each party should end each message with a distinctive
+signal
+(\c
+.bd (o)
+for `over' is conventional) that the other may reply.
+.bd (oo)
+(for `over and out') is suggested when conversation
+is about to be terminated.
+.sh FILES
+/etc/utmp	to find user
+.br
+/bin/sh  	to execute `!'
+.sh "SEE ALSO"
+mesg(I), who(I), mail(I)

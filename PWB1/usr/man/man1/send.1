@@ -1,0 +1,651 @@
+.if t .ds ` ``\"
+.if t .ds ' ''\"
+.if n .ds ` ""\"
+.if n .ds ' ""\"
+.tr #
+.th SEND I 5/31/77
+.sh NAME
+send \*- submit RJE job
+.sh SYNOPSIS
+.bd send
+argument ...
+.sh DESCRIPTION
+.it Send
+is a command-level interface to the RJE subsystems
+.it hasp\^\c
+(VIII)
+and
+.it uvac\^\c
+(VIII).
+It allows the user
+to collect input from various sources
+in order to create a run stream
+consisting of card images.
+.it Send
+creates a temporary file, with a special format,
+to contain the collected run stream,
+and then queues the file for transmission
+by invoking
+.it haspqer
+or
+.it uvacqer,
+as appropriate.
+Further processing of the job is controlled by
+the appropriate PWB/UNIX RJE subsystem and the host computer
+to which the job is submitted.
+.s3
+Possible sources of input to
+.it send
+are: ordinary files, standard input,
+the terminal,
+and the output of a command or shell file.
+Each source of input is treated as a virtual file,
+and no distinction is made based upon its origin.
+Typical input is an ASCII text file of the sort
+that is created by the editor
+.it ed\^\c
+(I).
+An optional format specification
+appearing in the first line of a file
+(see
+.it fspec\^\c
+(V)) determines the settings
+according to which tabs are expanded into spaces.
+In addition, lines that begin with \*`~\*'
+are normally interpreted as commands
+controlling the execution of
+.it send.
+They may be used to set or reset flags,
+to define keyword substitutions,
+and to open new sources of input
+in the midst of the current source.
+Other text lines are translated one-for-one
+into card images of the run stream.
+.s3
+The run stream that results from this collection
+is treated as one job by the RJE subsystems.
+.it Send
+provides a card count for the run stream,
+and the queuer that is invoked
+announces the position
+that the job has been assigned
+in the queue of jobs waiting to be transmitted.
+The initial card of a job
+submitted to an IBM system
+must have a \*`/\*' in the first column.
+The initial card of a job submitted to a UNIVAC system
+must
+begin with a \*`@RUN\*'
+or \*`\^\`run\*', etc.
+Any cards preceding these will be excised.
+If a host computer is not specified before the first card of the runstream is ready to be sent,
+.it send
+will select a reasonable default.
+In the case of an IBM job, all cards
+beginning \*`/*$\*' will be excised from the runstream,
+because they are HASP command cards.
+.s3
+The arguments that
+.it send
+accepts are described below.
+An argument is interpreted
+according to
+the first pattern that it matches.
+Preceding a character with \*`\\\*'
+causes it to lose any special meaning
+it might otherwise have
+when matching against an argument pattern.
+.s3
+.lp +23 21
+\&\fB.\fP	Close the current source.
+.s3
+.lp +23 21
+\-	Open standard input as a new source.
+.s3
+.lp +23 21
++	Open the terminal as a new source.
+.s3
+.lp +23 21
+:\fIspec\fR\^:	Establish a default format
+specification for included sources,
+e.g.,
+\%:m6t-12:.
+.s3
+.lp +23 21
+:\fImessage\fR	Print message on the terminal.
+.s3
+.lp +23 21
+\-:\fIprompt\fR	Open standard input
+and, if it is a terminal,
+print \fIprompt\fP.
+.s3
+.lp +23 21
++:\fIprompt\fR	Open the terminal
+and print \fIprompt\fP.
+.s3
+.lp +23 21
+\-\fIflags\fR	Set the specified flags,
+which are described below.
+.s3
+.lp +23 21
++\fIflags\fR	Reset the specified flags.
+.s3
+.lp +23 21
+=\fIflags\fR	Restore the specified flags to their state
+at the previous level.
+.s3
+.lp +23 21
+!\fIcommand\fR	Execute the specified PWB/UNIX \fIcommand\fP
+via the one-line Shell,
+with input redirected to \fI/dev/null\fP
+as a default.
+Open the standard output of the command
+as a new source.
+.s3
+.lp +23 21
+$\fIline\fR	Collect contiguous arguments
+of this form and write them
+as consecutive lines
+to a temporary file;
+then have the file executed by the Shell.
+Open the standard output of the Shell
+as a new source.
+.s3
+.lp +23 21
+~\fIcomment\fR	Ignore this argument.
+.s3
+.lp +23 21
+=:\fIkeyword\fR	Prompt for a definition
+of \fIkeyword\fP from the terminal.
+.s3
+.lp +23 21
+\fIkeyword\fR\^=^\fIxx\fR	Define \fIkeyword\fP
+as a two-digit hexadecimal character code.
+.s3
+.lp +23 21
+\fIkeyword\fR\^=\fIstring\fR	Define \fIkeyword\fP
+in terms of a replacement string.
+.s3
+.lp +23 21
+\fIhost\fR	Job is to be submitted to: \fBA\fR, \fBB\fR, \fB1110\fR.
+The pseudonyms \fBA\fR and \fBB\fR are built into RJE to
+represent any IBM host connection.
+Their actual destinations are immaterial to RJE.
+The pseudonym \fB1110\fR is built into RJE to represent
+any UNIVAC host.
+.s3
+.lp +23 21
+\fIfilename\fR	Open the specified file as a new source of input.
+.i0
+.s3
+Arguments of the form \*`!\fIchdir directory\fR\*'
+will be trapped so that the
+.it send
+process can execute the specified \fIchdir\fP itself.
+The original directory will be restored at the end
+of any source that contains  a \fIchdir\fP.
+.s3
+The flags recognized by
+.it send
+are described in terms of
+the special processing
+that occurs when they are set:
+.s3
+.lp +7 5
+\fB\-l\fR	List card images on standard output.
+EBCDIC characters are translated back to ASCII.
+.s3
+.lp +7 5
+\fB\-q\fR	Do not output card images.
+.s3
+.lp +7 5
+\fB\-f\fR	Do not fold lower case to upper.
+.s3
+.lp +7 5
+\fB\-t\fR	Trace progress on diagnostic output,
+by announcing the
+opening of input sources.
+.s3
+.lp +7 5
+\fB\-k\fR	Ignore the keywords
+that are active at the previous level
+and erase any keyword definitions
+that have been made at the current level.
+.s3
+.lp +7 5
+\fB\-r\fR	Process included sources in raw mode;
+pack arbitrary 8-bit bytes
+one per column (80 columns per card) until an end-of-file.
+.s3
+.lp +7 5
+\fB\-i\fR	Do not interpret control lines
+in included sources;
+treat them as text.
+.s3
+.lp +7 5
+\fB\-s\fR	Make keyword substitutions
+before detecting and interpreting
+control lines.
+.s3
+.lp +7 5
+\fB\-y\fR	Suppress error diagnostics
+and submit job anyway.
+.s3
+.lp +7 5
+\fB\-g\fR	Gather mode, qualifying
+.bd \-l
+flag;
+list text lines before
+converting them to card images.
+.s3
+.lp +7 5
+\fB\-h\fR	Write listing with standard tabs.
+.s3
+.lp +7 5
+\fB\-p\fR	Prompt with \*`*\*' when taking input from the terminal.
+.s3
+.lp +7 5
+\fB\-m\fR	When input returns to the terminal
+from a lower level, repeat the prompt, if any.
+.s3
+.lp +7 5
+\fB\-a\fR	Make
+.bd \-k
+flag propagate to included sources,
+thereby protecting them from keyword substitutions.
+.s3
+.lp +7 5
+\fB\-c\fR	List control lines on diagnostic output.
+.s3
+.lp +7 5
+\fB\-d\fR	Extend the current set of keyword
+definitions by adding those active at the end of
+included sources.
+.i0
+.s3
+Control lines are input lines
+that begin with \*`~\*'.
+In the default mode
+.bd +ir,
+they are interpreted as commands to
+.it send.
+Normally they are
+detected immediately and
+read literally.
+The
+.bd \-s
+flag forces
+keyword substitutions to be made
+before control lines
+are intercepted and interpreted.
+Arguments appearing in control lines are handled
+exactly like the command arguments to
+.it send,
+except that they are processed
+at a nested level of input.
+.s3
+The two possible formats for a control line are:
+\*`~argument\*' and \*`~##argument#\fB...\fP\*'.
+In the first case,
+where the \*`~\*' is not followed by a space,
+the remainder of the line
+is taken as a single argument to
+.it send.
+In the second case,
+the line is parsed
+to obtain a sequence of arguments
+delimited by spaces.
+In this case
+the quotes \*`\^\'\^\*' and \*`\^"\^\*'
+may be employed to pass embedded spaces.
+.s3
+The interpretation of the argument \*`\fB.\fP\*'
+is chosen so that an input line
+consisting of \*`~\fB.\fP\*'
+is treated as a logical end-of-file.
+The following example illustrates
+some of the above conventions:
+.s3
+.lp +10 0
+send## \-
+.br
+~##argument ...
+.br
+~\fB.\fP
+.i0
+.s3
+This sequence of three lines
+is equivalent to
+the command synopsis
+at the beginning of this description.
+In fact, the \*`\-\*' is not even required.
+By convention, the
+.it send
+command reads standard input
+if no other input source is specified.
+.it Send
+may therefore be employed
+as a filter with side-effects.
+.s3
+The execution of the
+.it send
+command is controlled at each instant
+by a current environment,
+which includes
+the format specification for the input source,
+a default format specification for included sources,
+the settings of the mode flags,
+and the active set of keyword definitions.
+This environment can be altered dynamically.
+When a control line opens a new source of input,
+the current environment is pushed onto a stack,
+to be restored when input resumes
+from the old source.
+The initial format specification
+for the new source
+is taken from the first line of the file.
+If none is provided, the established default is used
+or, in its absence, standard tabs.
+The initial mode settings
+and active keywords
+are copied from the old environment.
+Changes made while processing
+the new source
+will not affect the environment
+of the old source, with one exception:
+if
+.bd \-d
+mode is set in the old environment,
+the old keyword context
+will be augmented by those definitions
+that are active at the end of the new source.
+When
+.it send
+first begins execution,
+all mode flags are reset,
+and no keywords are defined.
+.s3
+The initial, reset state for all mode flags
+is the \*`+\*' state.
+In general, special processing
+associated with a mode \fIx\fP
+is invoked by flag \-\fIx\fP
+and is revoked by flag +\fIx\fP.
+Most mode settings have an immediate effect
+on the processing of the current source.
+Exceptions to this are the
+.bd \-r
+and
+.bd \-i
+flags,
+which apply only to included source,
+causing it to be processed
+in an uninterpreted manner.
+.s3
+A keyword is an arbitrary ASCII string for which
+a replacement has been defined.
+The replacement may be another string, or
+(for IBM RJE only)
+the hexadecimal code for a single 8-bit byte.
+At any instant, a given set of keyword definitions is active.
+Input text lines are scanned,
+in one pass from left to right,
+and longest matches are attempted
+between substrings of the line
+and the active set of keywords.
+Characters that do not match
+are output, subject to folding and
+the standard translation.
+Keywords
+are replaced
+by the specified hexadecimal code
+or replacement string,
+which is then output
+character by character.
+The expansion of tabs
+and length checking,
+according to the format specification
+of an input source,
+are delayed until
+substitutions have been made in a line.
+.s3
+All of the keywords definitions made
+in the current source
+may be deleted by
+setting the
+.bd \-k
+flag.
+It then becomes possible
+to reuse them,
+although this is not recommended.
+Setting the
+.bd \-k
+flag also causes keyword definitions active
+at the previous source level to be ignored.
+Setting the
+.bd +k
+flag causes keywords at the previous level to be ignored
+but does not delete the definitions
+made at the current level.
+The
+.bd =k
+argument reactivates the definitions of the previous level.
+.s3
+A keyword may not be redefined,
+except redundantly,
+if it is active at some level of source input
+and its replacement is not null.
+Prompts for keywords
+that have already been defined at some higher level
+will simply cause the definitions
+to be copied down to the current level;
+new definitions
+will not be solicited.
+Only in the case where a keyword is defined by a null replacement, \fIA=\fP,
+is a redefinition allowed, \fIA=a\fP.
+Prompts for the keyword, \fI=:A\fP,
+will be satisfied by either definition.
+.s3
+Keyword substitution is
+an elementary macro facility
+that is easily explained
+and that appears useful enough
+to warrant its inclusion in the
+.it send
+command.
+More complex replacements are
+the function of a general macro processor(\c
+.it m4\^\c
+(I), perhaps.
+To reduce the overhead of string comparison,
+it is recommended that
+keywords be chosen
+so that their initial characters
+are unusual.
+For example, let them all be upper case.
+.s3
+.it Send
+performs two types of error checking on input text lines.
+Firstly, only ASCII graphics
+and tabs
+are permitted in input text.
+Secondly, the length of a text line,
+after substitutions have been made,
+may not exceed 80 bytes for IBM, or 132 bytes for UNIVAC.
+The length of each line may be additionally constrained
+by a size parameter
+in the format specification
+for an input source.
+Diagnostic output provides
+the location of each erroneous line,
+by line number and input source,
+a description of the error,
+and the card image that results.
+Other routine errors that are announced are
+the inability to open or write files,
+and abnormal exits from the Shell.
+Normally, the occurrence of any error
+causes
+.it send,
+before invoking the queuer,
+to prompt for positive affirmation
+that the suspect run stream
+should be submitted.
+.s3
+.tr ||
+The
+.it hasp
+subsystem, which supports IBM RJE,
+operates in EBCDIC code.
+The
+.it send
+command is therefore required to
+translate ASCII characters into
+their
+EBCDIC equivalents.
+The standard conversion is based on
+the character set described in
+\*`Appendix H\*' of
+.it "IBM System/370 Principles of Operation"
+(IBM SRL GA22-7000).
+Each ASCII character in the octal range 040-176
+possesses an EBCDIC graphic equivalent
+into which it is mapped,
+with four exceptions:#
+.if t broken vertical bar into \*`\(or\*',
+.if t \*`^\*' into \*`\(no\*',
+.if t \*`[\*' into \*`\(ct\*',
+.if t \*`]\*' into broken vertical bar.
+.if n broken vertical bar into EBCDIC \*`|\*',
+.if n \*`^\*' into EBCDIC not,
+.if n \*`[\*' into EBCDIC cents,
+.if n \*`]\*' into EBCDIC broken vertical bar.
+In listings requested from
+.it send
+and in printed output returned by
+.it hasp,
+the reverse translation
+is made
+from EBCDIC to ASCII,
+with the qualification that
+EBCDIC codes
+that do not have ASCII equivalents
+are translated into \*`^\*'.
+The
+.it uvac
+subsystem, on the other hand,
+operates in ASCII code,
+and any translations between
+ASCII and field-data
+are made,
+in accordance with the UNIVAC standard,
+by the host computer.
+.s3
+Additional control over the translation process
+is afforded by
+the
+.bd \-f
+flag
+and hexadecimal character codes.
+As a default,
+.it send
+folds
+lower-case letters into upper case.
+For UNIVAC RJE it does more:
+the entire ASCII range 140-176
+is folded into 100-136,
+so that \*`\^\`\^\*', for example,
+becomes \*`@\*'.
+In either case, setting the
+.bd \-f
+flag
+inhibits any folding.
+Non-standard character codes are obtained as
+a special case of keyword substitution.
+.s3
+When invoked under the name
+.it gath,
+the
+.it send
+command establishes initial flag settings
+.bd \-lgq
+and suppresses announcement of a zero card count.
+While in
+.bd \-gq
+mode,
+long lines that are detected
+elicit a diagnostic
+but are not truncated.
+Also, in this mode,
+it is potentially useful
+to convey non-graphics
+to standard output.
+To prevent
+.it gath
+from deleting non-printing characters,
+each may be declared as a single character keyword
+whose replacement is itself.
+To retain backspaces, for example,
+supply the argument \*`BS=BS\*',
+where BS denotes the ASCII character
+whose octal code is 010.
+.s3
+The UNIVAC 1110 capability is only supported at the BTL Piscataway location.
+.sh FILES
+.lp +20 20
+/bin/sh	Shell
+.lp +20 20
+/tmp/sh*	Shell temporary
+.lp +20 20
+/usr/rje/sys	PWB/UNIX system name, e.g., \*`A\*'
+.lp +20 20
+/usr/rje/lines	RJE configuration table
+.s3
+.i0
+And, where
+.it xxxx
+is either
+.it hasp
+or
+.it uvac:
+.s3
+.lp +20 20
+/usr/xxxx/pool/stm*	temporary
+.lp +20 20
+/usr/xxxx/xmit???	queued output
+.lp +20 20
+/usr/xxxx/xxxxqer	queueing program
+.lp +20 20
+/usr/xxxx/xxxxlock	null file for lockout
+.lp +20 20
+/usr/xxxx/xxxxstat	queue status record
+.i0
+.sh "SEE ALSO"
+help(I), m4(I), sh(I), ascii(V), ebcdic(V), fspec(V), hasp(VIII)
+.br
+.it "Guide to IBM Remote Job Entry for PWB/UNIX Users"
+by A. L. Sabsevitz.
+.sh DIAGNOSTICS
+\*`non-graphic deleted\*',
+\*`undefined tab deleted\*',
+\*`long line detected\*',
+\*`long line truncated\*',
+\*`illegal card excised\*'
+\- followed by the resulting card image.
+.br
+\*`Errors detected\*' 
+\- type \*`y\*' to submit anyway.
+.s3
+Use
+.it help\^\c
+(I) for explanations of error messages.
+.sh BUGS
+Standard input is read in blocks, and unused bytes are
+returned via
+.it seek\^\c
+(II).
+If standard input is a pipe, multiple arguments
+of the form \*`\-\*' and \*`\-:\fIprompt\fR\^\*'
+should not be used,
+nor should the logical end-of-file \*`~\fB.\fP\*'.
+.tr ##

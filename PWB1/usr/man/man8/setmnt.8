@@ -1,0 +1,58 @@
+.th SETMNT VIII 5/31/77
+.sh NAME
+setmnt \- establish mnttab table
+.sh SYNOPSIS
+.bd /etc/setmnt
+.sh DESCRIPTION
+.it Setmnt
+creates the
+.bd /etc/mnttab
+table (see
+.it mnttab\^\c
+(V)), which is needed for both the
+.it mount\^\c
+(VIII) and
+.it umount\^\c
+(VIII) commands.
+.it Setmnt
+reads standard input,
+and creates a
+.it mnttab
+entry for each line.
+Input lines have the format:
+.s3
+.in +5n
+filesys node
+.in -5n
+.s3
+where
+.it filesys
+is the name of the file system's
+.it "special file"
+(e.g., ``rp??''),
+and
+.it node
+is the root name of that file system.
+Thus
+.it filesys
+and
+.it node
+become the first two strings
+in the
+.it mnttab\^\c
+(V) entry.
+.sh FILES
+/etc/mnttab
+.sh "SEE ALSO"
+mnttab(V)
+.sh "BUGS"
+Evil things will happen if
+.it filesys
+or
+.it node
+are longer than 10 characters.
+.s3
+.it Setmnt
+silently enforces an upper limit on the maximum number of
+.it mnttab
+entries.

@@ -1,0 +1,231 @@
+.th IF I 5/31/77
+.sh NAME
+if \*-  conditional command
+.sh SYNOPSIS
+.bd if
+expr command [ arg ... ]
+.s3
+.bd if
+expr
+.bd then
+.br
+	command(s)
+.br
+	...
+.br
+[
+.bd else
+[ command ]
+.br
+	... ]
+.br
+.bd endif
+.s3
+.bd test
+expr
+.sh DESCRIPTION
+.it If
+evaluates the expression
+.it expr.
+In the first form above, if
+.it expr
+is true, the given
+.it command
+is executed with the given arguments.
+The command may be another
+.it if.
+.s3
+In the second form, if
+.it expr
+is true, the commands
+between the
+.it then
+and the next unmatched
+.it else
+or
+.it endif
+are  executed.
+If
+.it expr
+is false, the commands after
+.it then
+are skipped, and the commands after the optional
+.it else
+are executed.
+Zero or one commands may be written on the same line as the
+.it else.
+In particular,
+.it if
+may be used this way.
+The pseudo commands
+.it else
+and
+.it endif
+(whichever occurs first)
+must not be hidden behind semicolons or other commands.
+This form may be nested: every
+.it then
+needs a matching
+.it endif.
+.s3
+.it Test
+is an entry to
+.it if
+that evaluates the expression and returns exit code 0 if it is true,
+and code 1 if it is false or in error.
+.s3
+The following primitives are used to construct
+the
+.it expr:
+.s3
+.lp +13 13
+\fB\*-r\fR\ file	true if the file exists and is readable.
+.s3
+.lp +13 13
+\fB\*-w\ \fRfile	true if the file exists and is writable.
+.s3
+.lp +13 13
+\fB\*-s\fR\ file	true if the file exists and has a size greater than zero.
+.s3
+.lp +13 13
+\fB\*-f\fR\ file	true if the file exists and is an ordinary file.
+.s3
+.lp +13 13
+\fB\*-d\fR\ file	true if the file exists and is a directory.
+.s3
+.lp +13 13
+\fB\*-z\fR\ s1	true if the length of string
+.it s1
+is zero.
+.s3
+.lp +13 13
+\fB\*-n\fR\ s1	true if the length of string
+.it s1
+is nonzero.
+.s3
+.lp +13 13
+s1\ \fB=\ \fRs2	true
+if the strings
+.it s1
+and
+.it s2
+are equal.
+.s3
+.lp +13 13
+s1\ \fB!=\ \fRs2	true
+if the strings
+.it s1
+and
+.it s2
+are not equal.
+.s3
+.if n .ne7
+.lp +13 13
+n1 \fB\*-eq\fR n2
+.lp +13 13
+n1 \fB\*-ne\fR n2
+.lp +13 13
+n1 \fB\*-gt\fR n2
+.lp +13 13
+n1 \fB\*-ge\fR n2
+.lp +13 13
+n1 \fB\*-lt\fR n2
+.lp +13 13
+n1 \fB\*-le\fR n2	true
+if the stated algebraic
+relationship exists.
+The arguments
+.it n1
+and
+.it n2
+must be integers.
+.s3
+.lp +13 13
+\fB{ \fRcommand \fB}\fR	The bracketed command is
+executed to obtain the
+exit status.
+Status zero is considered
+.it true.
+The command must
+.bd not
+be another
+.it if.
+.s3
+.i0
+These primaries may be combined with the
+following operators:
+.s3
+.lp +13 13
+\fB!\fR	unary negation operator
+.s3
+.lp +13 13
+\fB\*-a\fR	binary
+.it and
+operator
+.s3
+.lp +13 13
+\fB\*-o\fR	binary
+.it or
+operator
+.s3
+.lp +13 13
+\fB(\ \fRexpr\fB\ )\fR	parentheses for grouping.
+.s3
+.i0
+.bd \*-a
+has higher precedence than
+.bd \*-o.
+Notice that all the operators and flags are separate
+arguments to
+.it if
+and hence must be surrounded by spaces.
+Notice also that parentheses are meaningful
+to the Shell and must be escaped.
+.s3
+.sh "EXIT CODES"
+0 \*- true expression, no error.
+.br
+1 \*- false condition or error.
+.sh "SEE ALSO"
+exit(I), goto(I), sh(I), switch(I), while(I), exit(II)
+.br
+.sh DIAGNOSTICS
+if:missing endif
+.br
+if:syntax error:
+value
+.br
+if:non-numeric arg:
+value
+.br
+if:no command:
+name
+.br
+else:missing endif
+.s3
+.it Test
+may issue any of the
+.it if
+messages above, except the first.
+.sh BUGS
+In general,
+.it if,
+.it else,
+.it endif,
+and
+.it test
+must not be hidden behind semicolons on a command line.
+Many of the effects are obtained by
+searching the input file and adjusting the read pointer appropriately.
+Thus, including any of these commands in a part of the file intended to be read
+by a command other than the shell may cause strange results
+if they are encountered while searching.
+.br
+These commands ignore redirection or piping of their standard
+input or output.
+Commands executed by
+.it if
+or
+.it test
+may be affected by redirections,
+but this practice is undesirable and should be avoided.

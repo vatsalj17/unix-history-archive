@@ -1,0 +1,136 @@
+.th VP I 5/31/77
+.sh NAME
+vp \*- Versatec print
+.sh SYNOPSIS
+.bd vp
+[\c
+.bd \*-b\c
+bin] [\c
+.bd \*-o\c
+offset] [\c
+.bd \*-t\c
+tspec] [\c
+.bd \*-n\c
+] [\c
+.bd \*-r\c
+name] cmd [args]
+.sh DESCRIPTION
+.it Vp
+builds a
+.it sh\c
+(I) command file in directory
+.bd /usr/vpd,
+and invokes
+.bd "/etc/vpd"
+(the Versatec daemon).
+The command file has the form:
+.s3
+.in +5n
+.nf
+: \fIlogname\fP
+vpbrk \fIbin\fP \fIlogname\fP
+chdir \fIcurdir\fP
+= p <\fIlogdir\fP/\fB.\fPpath
+\fIcmd\fP \fIargs\fP ^ reform \fItspec\fP \-0 +p\fIoffset\fP
+cat /usr/vpd/.X
+[ echo \fIshfile\fP finished ^ mail \fIlogname\fP >/dev/null ]
+[ echo \fIshfile\fP finished ^ write \fIlogname\fP >/dev/null ]
+rm \-f \fIshfile\fP
+.s3
+.in -5n
+.fi
+Here \fIlogname\fP is your login name,
+.it curdir
+is your current directory when you executed
+.it vp,
+.it logdir
+is your login directory,
+\fIshfile\fP is the name that
+.it vp
+selects for the generated command file,
+\fIbin\fP is your data station bin (see below),
+\fIoffset\fP is the offset for
+.it reform\c
+(I) (see below),
+and
+.it cmd
+and
+.it args
+are the command and optional arguments
+specified on the command line.
+.s3
+The Versatec daemon,
+.it /etc/vpd,
+invokes
+.it sh\c
+(I)
+on the command files that
+.it vp
+queues up in
+.it /usr/vpd.
+The daemon redirects the standard output
+of each command file to the Versatec printer.
+.s3
+The keyletter arguments are as follows:
+.s3
+.lp 15 5
+.bd "\*-b	\c"
+Your
+data station bin.
+.lp 15 5
+.bd "\*-o	\c"
+The
+offset for
+.it reform.
+The default is 12.
+.lp 15 5
+.bd "\*-t	\c"
+The
+first tabspec for
+.it reform.
+The default is `\-\-'.
+.lp 15 5
+.bd "\*-n	\c"
+A
+flag that includes the optional ``mail'' and ``write''
+lines in the command file.
+.lp 15 5
+.bd "\*-r	\c"
+The file named
+.it name
+is to be removed after printing is completed.
+.i0
+.s3
+Example:
+.s3
+.in +5n
+vp \-bx123 pr \-l84 myfile
+.in -5n
+.sh "OPERATIONS NOTE:"
+Execute
+.bd /etc/vpd
+after replacing paper in the Versatec printer.
+.sh FILES
+.lp +30 30
+/usr/vpd/*	queued command files
+.lp +30 30
+/usr/vpd/.X	terminator
+.lp +30 30
+/usr/bin/vpbrk	break page generator
+.lp +30 30
+/dev/vp0	Versatec printer
+.lp +30 30
+/etc/vpd	daemon program
+.i0
+.sh BUGS
+There should be a
+.it vp\c
+(IV) and a
+.it vpd\c
+(VIII).
+.br
+Only printers with DMA interfaces are handled; plotting
+is tolerated, but not supported.
+.br
+You cannot pipe into
+.it vp.

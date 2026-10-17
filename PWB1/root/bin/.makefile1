@@ -1,0 +1,416 @@
+
+SRC = /sys/source
+SYSINC = /sys/sys/hd
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = as
+
+LD = ld
+LDFLAGS = -s
+
+DD = TMP
+STICKY = OLD
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+SYSDEP=		# for $(SYSINC) system include files.
+
+MAKE = make
+SH = sh -v
+
+
+# ------------
+#  Create bin
+# ------------
+MAIN:		ld as		# make these first!
+
+MAIN:		adb ar banner \
+		cat cdb chgrp chmod chown cmp \
+		comm cp cpio cpx crypt csplit \
+		date db dcat dd df diff diff3 dsw du \
+		echo ed expr fc fd2 file find \
+		grep kill lex ln logdir login ls
+	-rm -f $(DD)*
+	-@echo "\n***** Following Files Still Present:";  ls -l $(DD)*;  echo "\n"
+	-@echo "\n***** Following Sticky Files Still Present, Remove After Next Reboot:"; \
+			ls -l $(STICKY)*;  echo "\n"
+
+adb:		$(SRC)/s1/adb/*.[ch] $(SRC)/s1/adb/Makefile \
+		$(CCDEP) $(CTIME) $(SYSDEP)
+	chdir $(SRC)/s1/adb; $(MAKE) "CC=$(CC)" "SYSINC=$(SYSINC)" adb
+	rm $(SRC)/s1/adb/*.o
+	mv $(SRC)/s1/adb/adb a.out
+	strip a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv adb $(DD)adb
+	mv a.out adb
+	ls -l adb
+	-rm -f $(DD)*
+
+ar:		$(SRC)/s1/ar.c $(CCDEP) $(CTIME) $(LPWDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s1/ar.c -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv ar $(DD)ar
+	mv a.out ar
+	ls -l ar
+	-rm -f $(DD)*
+
+as:		$(SRC)/s1/as1?.s $(ASFORCE)
+	-rm -f a.out
+	$(AS) $(SRC)/s1/as1?.s;  $(LD) $(LDFLAGS) -n a.out
+	chmod 1755 a.out
+	-chown bin a.out
+	-mv as $(STICKY)as
+	mv a.out as
+	ls -l $(STICKY)as as
+
+banner:		$(SRC)/s1/banner.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/banner.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv banner $(DD)banner
+	mv a.out banner
+	ls -l banner
+	-rm -f $(DD)*
+
+cat:		$(SRC)/s1/cat.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/cat.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv cat $(DD)cat
+	mv a.out cat
+	ls -l cat
+	-rm -f $(DD)*
+
+cdb:		$(SRC)/s1/cdb?.c $(CCDEP) $(SYSDEP)
+	$(CC) $(CCFLAGS) -I$(SYSINC) $(SRC)/s1/cdb?.c
+	rm cdb?.o
+	chmod 755 a.out
+	-chown bin a.out
+	-mv cdb $(DD)cdb
+	mv a.out cdb
+	ls -l cdb
+	-rm -f $(DD)*
+
+chgrp:		$(SRC)/s1/chgrp.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s1/chgrp.s;  $(LD) $(LDFLAGS) a.out -la
+	chmod 755 a.out
+	-chown bin a.out
+	-mv chgrp $(DD)chgrp
+	mv a.out chgrp
+	ls -l chgrp
+	-rm -f $(DD)*
+
+chmod:		$(SRC)/s1/chmod.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/chmod.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv chmod $(DD)chmod
+	mv a.out chmod
+	ls -l chmod
+	-rm -f $(DD)*
+
+chown:		$(SRC)/s1/chown.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s1/chown.s;  $(LD) $(LDFLAGS) a.out -la
+	chmod 755 a.out
+	-chown bin a.out
+	-mv chown $(DD)chown
+	mv a.out chown
+	ls -l chown
+	-rm -f $(DD)*
+
+cmp:		$(SRC)/s1/cmp.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/cmp.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv cmp $(DD)cmp
+	mv a.out cmp
+	ls -l cmp
+	-rm -f $(DD)*
+
+comm:		$(SRC)/s1/comm.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/comm.c -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv comm $(DD)comm
+	mv a.out comm
+	ls -l comm
+	-rm -f $(DD)*
+
+cp:		$(SRC)/s1/cp.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/cp.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv cp $(DD)cp
+	mv a.out cp
+	ls -l cp
+	-rm -f $(DD)*
+
+cpio:		$(SRC)/s1/cpio.c $(CCDEP) $(CTIME) $(LPWDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) -i $(SRC)/s1/cpio.c -lS -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv cpio $(DD)cpio
+	mv a.out cpio
+	ls -l cpio
+	-rm -f $(DD)*
+
+cpx:		$(SRC)/s1/cpx.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/cpx.c -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv cpx $(DD)cpx
+	mv a.out cpx
+	ls -l cpx
+	-rm -f $(DD)*
+
+crypt:		$(SRC)/s1/crypt.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/crypt.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv crypt $(DD)crypt
+	mv a.out crypt
+	ls -l crypt
+	-rm -f $(DD)*
+
+date:		$(SRC)/s1/date.c $(CCDEP) $(CTIME)
+	$(CC) $(CCFLAGS) $(SRC)/s1/date.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv date $(DD)date
+	mv a.out date
+	ls -l date
+	-rm -f $(DD)*
+
+db:		$(SRC)/s1/db?.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s1/db?.s;  $(LD) $(LDFLAGS) a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv db $(DD)db
+	mv a.out db
+	ls -l db
+	-rm -f $(DD)*
+
+dcat:		$(SRC)/s1/dcat.c $(CCDEP) $(LPWDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/dcat.c -lS -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv dcat $(DD)dcat
+	mv a.out dcat
+	ls -l dcat
+	-rm -f $(DD)*
+
+dd:		$(SRC)/s1/dd.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/dd.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv dd $(DD)dd
+	mv a.out dd
+	ls -l dd
+	-rm -f $(DD)*
+
+df:		$(SRC)/s1/df.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/df.c
+	chmod 4755 a.out
+	-chown root a.out
+	-mv df $(DD)df
+	mv a.out df
+	ls -l df
+	-rm -f $(DD)*
+
+diff:		$(SRC)/s1/diff.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) -i $(SRC)/s1/diff.c -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv diff $(DD)diff
+	mv a.out diff
+	ls -l diff
+	-rm -f $(DD)*
+
+diff3:
+	echo "\n*** SHELL diff3 is missing. ***\n"
+
+dsw:		$(SRC)/s1/dsw.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s1/dsw.s;  $(LD) $(LDFLAGS) a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv dsw $(DD)dsw
+	mv a.out dsw
+	ls -l dsw
+	-rm -f $(DD)*
+
+du:		$(SRC)/s1/du.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s1/du.c -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv du $(DD)du
+	mv a.out du
+	ls -l du
+	-rm -f $(DD)*
+
+echo:		$(SRC)/s1/echo.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/echo.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv echo $(DD)echo
+	mv a.out echo
+	ls -l echo
+	-rm -f $(DD)*
+
+ed:		$(SRC)/s1/ed.c $(CCDEP) $(LPWDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s1/ed.c -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv ed $(DD)ed
+	mv a.out ed
+	-mv e $(DD)e
+	ln ed e
+	ls -l ed e
+	-rm -f $(DD)*
+
+expr:		$(SRC)/s1/expr.y $(CCDEP) $(YACCDEP)
+	$(YACC) $(SRC)/s1/expr.y
+	$(CC) $(CCFLAGS) -n y.tab.c -ly
+	rm y.tab.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv expr $(DD)expr
+	mv a.out expr
+	ls -l expr
+	-rm -f $(DD)*
+
+fc:		$(SRC)/s1/fc.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/fc.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv fc $(DD)fc
+	mv a.out fc
+	ls -l fc
+	-rm -f $(DD)*
+
+fd2:		$(SRC)/s1/fd2.c $(CCDEP) $(LPWDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/fd2.c -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv fd2 $(DD)fd2
+	mv a.out fd2
+	ls -l fd2
+	-rm -f $(DD)*
+
+file:		$(SRC)/s1/file.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/file.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv file $(DD)file
+	mv a.out file
+	ls -l file
+	-rm -f $(DD)*
+
+find:		$(SRC)/s1/find.c $(CCDEP) $(LPWDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s1/find.c -lPW -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv find $(DD)find
+	mv a.out find
+	ls -l find
+	-rm -f $(DD)*
+
+grep:		$(SRC)/s1/grep.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/grep.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv grep $(DD)grep
+	mv a.out grep
+	ls -l grep
+	-rm -f $(DD)*
+
+kill:		$(SRC)/s1/kill.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/kill.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv kill $(DD)kill
+	mv a.out kill
+	ls -l kill
+	-rm -f $(DD)*
+
+lex:		$(SRC)/lex/lexgen.a $(CCDEP) $(YACCDEP) $(LSDEP)
+	-mkdir /tmp/makelex
+	-rm -f -r /tmp/makelex
+	chdir /tmp/makelex; ar x $(SRC)/lex/lexgen.a
+	chdir /tmp/makelex; $(YACC) parser.y
+	chdir /tmp/makelex; \
+		$(CC) $(CCFLAGS) -i main.c y.tab.c sub1.c sub2.c header.c -ly -lS
+	mv /tmp/makelex/a.out a.out
+	rm -f -r /tmp/makelex
+	rmdir /tmp/makelex
+	-chmod 755 a.out
+	-chown bin a.out
+	-mv lex $(DD)lex
+	mv a.out lex
+	ls -l lex
+	-rm -f $(DD)*
+
+ld:		$(SRC)/s1/ld.c $(CCDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s1/ld.c
+	chmod 1755 a.out
+	-chown bin a.out
+	-mv ld $(STICKY)ld
+	mv a.out ld
+	ls -l ld $(STICKY)ld
+
+ln:		$(SRC)/s1/ln.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/ln.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv ln $(DD)ln
+	mv a.out ln
+	ls -l ln
+	-rm -f $(DD)*
+
+logdir:		$(SRC)/s1/loginfo.c $(CCDEP) $(LPWDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/loginfo.c -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv logdir $(DD)logdir
+	-mv logtty $(DD)logtty
+	-mv logname $(DD)logname
+	mv a.out logdir
+	ln logdir logname
+	ln logdir logtty
+	ls -l logdir logtty logname
+	-rm -f $(DD)*
+
+login:		$(SRC)/s1/login.c $(CCDEP) $(LPWDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/login.c -lPW
+	chmod 4755 a.out
+	-chown root a.out
+	-mv login $(DD)login
+	mv a.out login
+	ls -l login
+	-rm -f $(DD)*
+
+ls:		$(SRC)/s1/ls.c $(CCDEP) $(CTIME)
+	$(CC) $(CCFLAGS) $(SRC)/s1/ls.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv ls $(DD)ls
+	mv a.out ls
+	ls -l ls
+	-rm -f $(DD)*
+
+
+RC:	# dummy name to force re-compiling things.

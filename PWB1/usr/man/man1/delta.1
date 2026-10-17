@@ -1,0 +1,326 @@
+.tr ~
+.tr $%
+.if n .ds D " -- 
+.if t .ds D \(em
+.tr @|
+.if n .tr #-
+.if t .tr #\(em
+.de SP
+.if n .ul
+[\fB#\\$1\fR\\c
+.if n .ul 0
+\\$2\\$3
+..
+.de SF
+.if n .ul
+[\fB#\\$1\fR]
+.if n .ul 0
+..
+.de DT
+.hc ^
+^...
+.hc
+..
+.de AR
+.s1
+.lp +10 5
+\fB#\\$1\\fR	\\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8 \\$9
+..
+.de FI
+.s1
+.lp +30 30
+\\$1	\\$2
+.i0
+..
+.ds F)  \fB\s-2FILES\s+2\fR
+.de I
+.if n .ul
+\fI\\$1\fR\c
+.if n .ul 0
+\\$2\\$3\\$4\\$5\\$6\\$7\\$8\\$9
+..
+.if n .ds )Q '
+.if n .ds )G `
+.if t .ds )Q \\(aa
+.if t .ds )G \\(ga
+.if t .ds )S \\|
+.th DELTA I 8/31/77
+.sh NAME
+delta \*- make an SCCS delta
+.sh SYNOPSIS
+.bd delta
+.SF s
+.SF n
+.SP r sid ]
+.SP g list]
+.SP y history]
+.SP m mrs ]
+.SF p
+name
+.DT
+.sh DESCRIPTION
+.ad
+.it Delta
+adds a delta to each named SCCS file.
+If a directory is named,
+.it delta
+behaves as though each file in the directory were
+specified as a named file,
+except that non-SCCS files
+(last component of the pathname does not begin with ``s\fB.\fP''),
+and unreadable files
+are silently ignored.
+If a name of ``#'' is given, the standard input is read;
+each line of the standard input is taken to be the name of an SCCS file
+to be processed.
+Again, non-SCCS files, and unreadable files are silently ignored.
+(If a name of ``#'' is given the
+.bd y
+keyletter must be present; see below.)
+.s1
+A
+.it get
+of many SCCS files,
+followed by a
+.it delta
+of those files should be avoided when the
+.it get
+generates a large amount of data.
+Instead,
+multiple
+.it "get\*Ddelta"
+sequences should be used.
+.s1
+Comments about the purpose
+of the delta(s)
+are
+supplied (once, and only once) either from the standard input,
+or by using the
+.bd y
+argument.
+If one supplies the comments through the standard input,
+and the standard input is a terminal
+(as determined by a successful
+.it gtty\c
+(II)
+call),
+the program will prompt (on
+the standard output) with
+``comments? ''.
+Otherwise,
+no prompt is printed.
+A newline preceded by a ``\\''
+may be used to make
+the entering of the comments more convenient.
+The first newline not preceded by a ``\\'' terminates the comments response.
+The
+.bd y
+argument is used to supply comments on the command line;
+if it is given the ``comments?'' question is not printed,
+and the standard input is not read.
+.s1
+If there is a
+.it v
+flag in the file
+(see
+.it admin\c
+(I))
+the prompting is somewhat different.
+As the comments are solicited only once,
+if the first file processed
+has a
+.it v
+flag
+then all files processed must have a
+.it v
+flag
+(any files that don't will cause a diagnostic message and won't be processed;
+processing will continue with the next file).
+The inverse is also true.
+.s1
+When a file has a
+.it v
+flag, before prompting for ``comments? ''
+.it delta
+will prompt for ```MRs? ''
+(again, the prompt is only printed if the standard input is a terminal).
+MR numbers are read from the standard input
+separated by blanks and/or tabs.
+The same continuation rules apply as above.
+When an unadorned newline is read,
+.it delta
+will prompt for ``comments? ''
+as described above.
+If the
+.it v
+flag has a value,
+it is taken to be the name of a program (or shell procedure) which will validate
+the correctness of the MR numbers.
+This program is executed with the first argument having the value of
+the $M$ identification keyword, a second argument of the value
+of the $Y$ identification keyword, and third and subsequent arguments
+being the MR numbers.
+If a non-zero exit status is returned from this program
+.it delta
+will terminate
+(it is assumed that the MR numbers were not all valid).
+The
+.bd m
+argument is used to supply MR numbers on the command line;
+if it is given the ``MRs? '' question is not printed,
+and the standard input is not read.
+.s1
+The following description is written as though only one
+SCCS file were named;
+the process of making a delta is equivalent for each file.
+(Note that the effects of any keyletter arguments apply independently to
+each SCCS file, and that the same comments are used for all files.)
+.s1
+The
+.bd g
+argument specifies a list
+(see
+.it get\c
+(I)
+for the definition of <list>)
+of deltas which are to be marked
+.it ignored
+when the file is accessed at the change level
+created by this delta.
+(See
+the description of the
+.it l-file
+format in
+.it get\c
+(I)).
+A delta should only be ignored when the
+problem that caused the creation of the delta being ignored
+is no longer a problem at the change level
+created by this delta.
+.s1
+The
+.bd p
+argument causes
+.it delta
+to print the differences that constitute the delta on the standard output.
+.s1
+.it Delta
+makes a delta by
+``getting''
+the named file
+(see
+.it get\c
+(I))
+at the SID
+specified by the
+.bd r
+keyletter
+(this SID
+.it must
+be listed in the
+.it p-file
+),
+or at the same SID
+that was used when the
+.it get
+command was executed with the
+.bd e
+argument
+by the user executing
+.it delta
+(if the user executing
+.it delta
+is listed more than once in the
+.it p-file,
+the
+.bd r
+argument
+.it must
+be supplied).
+The ``gotten'' file is then compared with the
+.it g-file
+;
+the differences between the two files constitute the delta.
+.s1
+When the comparison is finished,
+.it delta
+prints the SID of the new delta,
+followed by the number of lines inserted, deleted, and unchanged.
+The
+.bd s
+argument suppresses this printing.
+Normally,
+the
+.it g-file
+is removed after the delta is made.
+The
+.bd n
+argument suppresses the removal.
+.s1
+.it Delta
+will ignore hangups
+if it is already ignoring interrupts.
+.sh FILES
+.na
+.lp +14 14
+g-file	See
+.it get
+for an explanation of the
+.it g-file.
+.lp +14 14
+p-file	Information from
+.it get.
+.lp +14 14
+q-file	Replacement for the
+.it p-file.
+The naming convention is the same as that for the
+.it p-file
+(see
+.it get\c
+).
+.lp +14 14
+x-file	Replacement for
+the SCCS file.
+The naming convention is the same as that for the
+.it p-file
+(see
+.it get\c
+).
+.lp +14 14
+z-file	Lockout~file;
+see
+.it get\c
+(I).
+.lp +14 14
+d-file	``Gotten'' file; temporary.
+The naming convention is the same as that for the
+.it p-file
+(see
+.it get\c
+).
+.lp +14 14
+/usr/bin/bdiff	Program to compute differences
+between the ``gotten'' file and the
+.it g-file.
+.ad
+.lp +0 0
+.sh "SEE ALSO"
+.na
+get(I),
+admin(I),
+prt(I),
+help(I),
+sccsfile(V),
+bdiff(I)
+.br
+.ad
+.it "SCCS/PWB User's Manual"
+by L. E. Bonanni and A. L. Glasser.
+.sh DIAGNOSTICS
+Use
+.it help\c
+(I)
+for explanations.
+.tr ~~
+.tr $$
+.tr @@

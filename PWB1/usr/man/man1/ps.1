@@ -1,0 +1,119 @@
+.th PS I 5/31/77
+.sh NAME
+ps \*- process status
+.sh SYNOPSIS
+.bd ps
+[
+.bd aklxt
+]
+[ namelist ]
+.sh DESCRIPTION
+.it Ps
+prints certain indicia about active
+processes.
+The
+.bd a
+flag asks for information about all processes with terminals (ordinarily
+only one's own processes are displayed);
+.bd x
+asks even about processes with no terminal;
+.bd l
+asks for a long listing.
+The short listing contains the process ID, tty letter,
+the cumulative execution time of the process and an
+approximation to the command line.
+If the
+.bd k
+flag is specified,
+the file
+.it /sys/sys/core
+is used in place of
+.it /dev/mem.
+This is used for
+postmortem system debugging.
+If a second argument is given,
+it is taken to be the file containing the system's namelist.
+If the
+.bd t
+flag is used, the following character is taken to be
+the specific tty for which information is to be printed.
+.s3
+The long listing is columnar and contains
+.s3
+.lp +15 10
+F	Flags associated with the process.
+01: in core;
+02: system process;
+04: locked in core (e.g. for physical I/O);
+10: being swapped;
+20: being traced by another process.
+.s3
+.lp +15 10
+S	The state of the process.
+0: nonexistent;
+S: sleeping;
+W: waiting;
+R: running;
+I: intermediate;
+Z: terminated;
+T: stopped.
+.s3
+.lp +15 10
+UID	The user ID of the process owner.
+.s3
+.lp +15 10
+PID	The process ID of the process; as in certain cults it is possible to kill a process
+if you know its true name.
+.s3
+.lp +15 10
+PPID	The process ID of the parent process.
+.s3
+.lp +15 10
+CPU	Processor utilization for scheduling.
+.s3
+.lp +15 10
+PRI	The priority of the
+process; high numbers mean low priority.
+.s3
+.lp +15 10
+NICE	Used in priority computation.
+.s3
+.lp +15 10
+ADDR	The core address of the process if resident,
+otherwise the disk address.
+.s3
+.lp +15 10
+SZ	The size in blocks of the core image of the process.
+.s3
+.lp +15 10
+WCHAN	The event for which the process is waiting or sleeping;
+if blank, the process is running.
+.s3
+.lp +15 10
+TTY	The controlling tty for the process.
+.s3
+.lp +15 10
+TIME	The cumulative execution time for the process.
+.s3
+.lp +15 10
+COMMAND	The command and its arguments.
+.s3
+.i0
+.dt
+.it Ps
+makes an educated guess as to the file name
+and arguments given when the process was created
+by examining core memory or the swap area.
+The method is inherently somewhat unreliable and in any event
+a process is entitled to destroy this information,
+so the names cannot be counted on too much.
+.sh FILES
+/unix		system namelist
+.br
+/dev/mem	core memory
+.br
+/sys/sys/core	alternate core file
+.br
+/dev		searched to find swap device and tty names
+.sh "SEE ALSO"
+kill(I)

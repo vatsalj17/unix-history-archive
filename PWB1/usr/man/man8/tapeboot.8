@@ -1,0 +1,134 @@
+.th "TAPE BOOT" VIII 5/31/77
+.sh NAME
+tapeboot \*- magnetic tape bootstrap programs
+.sh DESCRIPTION
+There are two magnetic tape bootstrap programs to handle the problem of booting
+a PDP-11/45 or PDP-11/70 from a TU10 or TU16 tape transport.
+In both programs, the tape density used is 800 bpi.
+.s3
+The first bootstrap program,
+.ul
+mboot,
+is designed to be used
+in conjunction with the
+.ul
+tp
+command.
+The
+.ul
+tp
+command first copies a bootstrap
+program /usr/mdec/mboot, if magnetic tape, or /usr/mdec/tboot, if DECtape,
+to the first record (block 0, 256 words)
+of the tape.
+Note, the bootstrap mboot or tboot, as appropriate, must exist whenever a tape is made using
+.ul
+tp.
+When using DECtape, booting is relatively simple since the standard
+.if t \s-2DEC\s+2\(rg
+.if n DEC (Rg.)
+ROM bootstrap loader reads block 0.
+However, when using magnetic tape, a special ROM or some manual procedure must be used to read in block 0.
+The standard \s-2DEC\s+2 loaders for magnetic tape read the second record (block 1) of the tape,
+since the first record (block 0) contains header information on \s-2DEC\s+2 operating systems.
+.s3
+To boot from magnetic tape using mboot, first create a tape using
+.ul
+tp.
+For example, to make a boot tape containing the UNIX operating system, execute
+.br
+.ta 5n
+	tp mr unix
+.br
+Next, read the first record of the tape into memory starting at address 0 and then jump to
+address 0,
+using a special ROM or some manual procedure (toggle in the program).
+The bootstrap program, mboot, relocates itself to high core as specified when
+assembled (typically 24K words, maximum of 28K).
+It then determines whether to use the TU10 code
+or the TU16 code.
+The TU10 is used if the TM11 command register (772\ 552) exists
+and the function (bits\ <3:1>) is non-zero,
+otherwise the TU16 is used.
+Next, the program rewinds the tape and prompts the user by typing `='
+on the console.
+The user must then enter the name of the desired program exactly as contained
+in the table of contents on the tp tape.
+The `#' character will erase the last character typed,
+the `@' character will kill the entire line, and `A' through `Z' is translated to `a'
+through `z'.
+Also, carriage return (CR) is mapped into line feed (LF) on input, and LF
+is output as CR-LF.
+The upper-case to lower-case conversion is used
+to handle upper-case-only terminals such as
+the
+.if t \s-2TELETYPE\s+2\(rg
+.if n TELETYPE(Rg.)
+Model 33
+or the \s-2DEC\s+2 LA30.
+Therefore, a file name with upper case characters can not be
+booted using this procedure.
+.s3
+After the name has been completely entered by typing CR or LF,
+the program reads the table of contents into memory starting
+at address 0.
+This table of contents is 24 blocks long for DECtape and 62 blocks for magnetic tape.
+If the name matches an entry in the table,  memory below the bootstrap program is cleared,
+the tape is positioned to the address found in the table entry, and read into memory starting at address 0.
+Note, the amount of data read is only the low order 16 bits of the 24 bit size field in the table of contents
+entry.
+Next, the bootstrap program rewinds the tape.
+If address 0 contains 000\ 407, a UNIX a.out program is assumed and the first 8 words are stripped off by
+relocating the loaded program toward address 0.
+Finally, a jump to address 0 is done by executing "jsr pc,*$0".
+.s3
+If the name entered does not match or if the loaded program returns, the bootstrap starts over and prompts `='.
+Also, if there is an error while reading the tape, the program
+will backspace one record and attempt to read the record again.
+This may lead to a looping condition if there is a hard tape error.
+.s3
+The other bootstrap program,
+.ul
+tapeboot,
+does not involve the
+.ul
+tp
+command.
+The complete program fits in one 256 word block, but is duplicated so that one copy resides in block
+0 and another in block 1.
+Thus, both the standard \s-2DEC\s+2 ROM bootstrap loaders and the special ROM loaders will work.
+.ne 2
+For example,
+to create a boot tape, execute
+.s3
+.ta 5n
+	cat /usr/mdec/tapeboot program-to-boot > /dev/mt0
+.s3
+After the program is loaded and started, it relocates itself to high core and determines whether to use
+the TU10 code or the TU16 code as described above.
+It then types on the console "PWB\ tape\ boot\ loader", rewinds
+the tape, reads two blocks to skip past itself on the tape, clears memory,
+and reads the rest of the tape,
+to the tape mark, into memory starting at address  0.
+The loaded program is adjusted if address 0 contains 000\ 407 as above.
+Finally, a jump to address 0 is done by executing "jsr pc, *$0".
+.s3
+If there is an error while reading the tape, the bootstrap program will type "tape\ error"
+and attempt to read the record again.
+.sh FILES
+/usr/mdec/mboot - 
+.ul
+tp 
+magtape bootstrap
+.br
+/usr/mdec/tboot - 
+.ul
+tp
+DECtape bootstrap
+.br
+/usr/mdec/tapeboot - 
+TU10/TU16 magtape bootstrap
+.br
+/sys/source/util - source directory
+.sh "SEE ALSO"
+tp(I), unixboot(VIII)

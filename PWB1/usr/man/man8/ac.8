@@ -1,0 +1,93 @@
+.th AC VIII 5/31/77
+.sh NAME
+ac \- login accounting
+.sh SYNOPSIS
+.bd /etc/ac
+.bd \-\c
+sys
+[
+.bd \-w
+wtmp ] [
+.bd \-p
+[
+people
+] ]
+.sh DESCRIPTION
+.it Ac
+produces a printout giving the
+connect time
+for each user who has logged in
+during the life of the current
+.it wtmp
+file.
+A total is also produced.
+.it sys
+specifies the name of the system
+(e.g., A) on which
+.it ac
+is run.
+This information is used for the output heading.
+.bd \-w
+is used to specify an alternate \fIwtmp\fR file.
+.bd \-p
+without
+.it people
+prints all individual totals; without this option,
+only system totals are printed.
+Any
+.it people
+specified after the
+.bd \-p
+option
+will limit the
+printout to only the specified login names.
+If no \fIwtmp\fR file is given,
+.it /usr/actg/data/wtmp
+is used.
+.s3
+.it Ac
+also updates the file
+.it /usr/actg/data/log
+with the
+last date on which each user-id was logged into the system,
+and
+.it /usr/actg/data/uacct
+with any fees from the previous day,
+by reading those fees from
+.it /usr/actg/data/fee.
+.s3
+The accounting file
+.it /usr/adm/wtmp
+is maintained by
+.it init
+and
+.it login.
+Neither of these programs creates the file,
+so if it does not exist,
+no connect-time accounting is done.
+To start accounting, that file should be created with length 0.
+On the other hand, if the file is left undisturbed it will
+grow without bound,
+so the desired information
+should be collected periodically, and the file truncated.
+.s3
+Normally,
+.it /usr/adm/wtmp
+should be copied into the file specified by the
+.bd \-w
+option (or, in the absence of that option, into
+.it /usr/actg/data/wtmp\^\c
+) before
+.it ac
+is invoked; this is also the time at which
+.it /usr/adm/wtmp
+should be normally truncated.
+.sh FILES
+.nf
+/usr/adm/wtmp
+/usr/actg/data/fee
+/usr/actg/data/uacct
+/usr/actg/data/log
+.fi
+.sh "SEE ALSO"
+init(VIII), login(I), wtmp(V)

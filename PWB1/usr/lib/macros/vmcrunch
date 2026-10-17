@@ -1,0 +1,17 @@
+: this Shell procedure crunches vmca into vmc.
+: vmca is the full, commented text of view graph macros.
+: vmc is the compact executable version.
+chmod 644 vmc
+ed - vmca
+3,$g/^'	/d
+3,$g/^' /d
+g/^\.tm/d
+g/\\".*/s///
+g/ 	.*/s///
+g/^['.][abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz] ./s/ //
+g/@/s///g
+w vmc
+q
+: the last global edit command above maps all "@" signs into BELs!
+chmod 444 vmc
+ls -l vmc*

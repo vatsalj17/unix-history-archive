@@ -1,0 +1,69 @@
+.if n .tr!|
+.if n .ds v !
+.th 450 I 5/31/77
+.sh NAME
+450 \*- handle special functions of DASI450 terminal
+.sh SYNOPSIS
+.bd 450
+.sh DESCRIPTION
+.it 450
+supports special functions of, and optimizes the use of the DASI450
+terminal,
+or any terminal that is functionally identical,
+such as the DIABLO 1620 or XEROX 1700.
+It converts half-line forward, half-line reverse, and full-line reverse
+motions to the correct vertical motions.
+It also
+attempts to draw Greek letters and other special symbols
+in the same manner as
+.it "gsi(I)."
+.it 450
+can be used
+to print equations neatly, in the sequence:
+.s3
+     neqn file ... \*v nroff \*v 450
+.s1
+NOTE:
+.it 450
+can be used with the
+.it nroff
+.bd \-s
+flag or .rd requests
+when it is necessary to insert paper manually or change fonts
+in the middle of a document.
+Instead of hitting the RETURN key in these cases,
+you must use the LINE FEED key to
+get any response.
+.s1
+However, in most cases,
+.it 450
+can be eliminated in favor of the following:
+.s1
+.bd "nroff \*-T450"
+.it files...
+or
+.bd "nroff \*-T450\*-12"
+.it files...
+.s1
+In a few cases, the additional movement optimization of
+.it 450
+may produce better-aligned output.
+.s1
+The SPACING switch may be in either 10-pitch or 12-pitch position
+(but that setting can be overridden dynamically).
+In either case, vertical spacing is 6 lines/inch,
+unless dynamically changed to 8 lines per inch by an appropriate escape sequence.
+.sh "SEE ALSO"
+graph(I), gsi(I), mesg(I), neqn(I), stty(I), tabs(I),
+greek(V),
+DASI450(VII),
+terminals(VII)
+.sh BUGS
+Some Greek characters can't be correctly printed in column 1
+because the print head cannot be moved to the left from there.
+If your output contains much Greek and/or reverse line feeds,
+use friction feed instead of a forms tractor.
+Although good enough for drafts,
+the latter has a tendency to slip when reversing direction,
+distorting Greek characters, and misaligning the first line after a long set
+of reverse line feeds.

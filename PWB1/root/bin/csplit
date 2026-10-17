@@ -1,0 +1,38 @@
+: context split: 
+: split [-s] [-f prefix] file  [re1 re2 re3 ... ren]
+if x"$1" = x-s then
+		echo "-" | = d
+		shift
+endif
+if x"$1" = x-f then 
+		= b $2
+		shift
+		shift
+else
+		= b xx
+endif
+if x"$2" = x then 
+		cp $1 $b00
+		exit
+endif
+= a 0
+echo "1,/$2/-1w "$b00 >/tmp/$b$$
+: lp
+expr 0$a + 1 ^ = a
+expr substr 0$a length $a  2 ^= a
+if x"$3" = x goto dne
+if x"$3" = x"$2" then
+		echo ".+1w " /tmp/c$$ >>/tmp/$b$$
+		echo ".+1,/$3/-1w " /tmp/c1$$ >>/tmp/$b$$
+		echo "!cat /tmp/c$$ /tmp/c1$$ > " $b$a >> /tmp/$b$$
+		shift 2
+		goto lp
+endif
+echo ".+1,/$3/-1w " $b$a  >>/tmp/$b$$
+shift 2
+goto lp
+: dne
+echo ".+1,\$w "$b$a  >>/tmp/$b$$
+bfs $d $1 </tmp/$b$$
+rm /tmp/$b$$
+exit

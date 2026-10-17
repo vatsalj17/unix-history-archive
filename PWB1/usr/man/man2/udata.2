@@ -1,0 +1,25 @@
+.th UDATA II 5/31/77
+.sh NAME
+udata \*- get per-user data
+.sh SYNOPSIS
+.nf
+(pwbsys = 57.; udata = 1)
+(pointer to buffer in r0)
+(function in r1)
+.bd "sys	pwbsys; udata"
+.fi
+.sh DESCRIPTION
+.it Udata
+is used to access a 32 byte section of the per-user process data region.
+If the
+.it function
+is zero, the section is read into the buffer given by the pointer.
+If the function is non-zero, the section is written from
+the buffer if super-user.
+The structure of the section is left to the user.
+.sh "SEE ALSO"
+loginfo(I), loginfo(II)
+.sh DIAGNOSTICS
+The error bit(c-bit) is set if
+the buffer can not be read or written, or if not super-user for write.
+From C, a \*-1 return indicates an error.

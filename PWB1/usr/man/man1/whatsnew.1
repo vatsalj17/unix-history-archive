@@ -1,0 +1,54 @@
+.th WHATSNEW I 5/31/77
+.sh NAME
+whatsnew \*- compare file modification dates
+.sh SYNOPSIS
+.bd whatsnew
+[ \*-yymmdd ]
+[ listfile ]
+.sh DESCRIPTION
+.it Whatsnew
+will compare the modification dates of files
+listed in 
+.it listfile
+against the date supplied
+and report those files that 
+have changed since that date.
+By default,
+the modification time of the file \fB.\fP\fInewdate\fP
+in the user's login directory will be used as the
+comparison date.
+Similarly, the file \fB.\fP\fInewlist\fP
+in the
+user's login directory will be used 
+if
+.it listfile
+is omitted.
+.s1
+If a date is not supplied
+and \fB.\fP\fInewlist\fP
+exists,
+it will be re-created.
+This will essentially update
+the default comparison date used by subsequent 
+.it whatsnew
+commands.
+.s1
+Entries in the
+list file should be 
+relative to the login directory,
+one per line.
+If an entry is a directory,
+files in that directory will be
+compared.
+Only one level of directory searching
+is performed.
+.sh FILES
+/logindir/\fB.\fPnewlist
+.br
+/logindir/\fB.\fPnewdate
+.sh DIAGNOSTICS
+``bad date'' if the supplied date is earlier than 1970.
+.br
+``cannot read list'' if the list file is not readable.
+.br
+``cannot access file status'' if it can't.

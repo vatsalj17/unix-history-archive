@@ -1,0 +1,783 @@
+'\"       To get a copy of this INTRODUCTION on your terminal, type:
+'\"              nroff introduction
+'\"
+'\"       To get a typeset copy, type:
+'\"              troff introduction
+'\"
+.if n .po 5n
+.de he
+.ev 2
+.if t .ps 10
+.ft R
+.if t .po 0
+.if t .lt 7.5i
+.if t .tl '\(mi''\(mi'
+.if t .lt
+.if t .po
+'sp .5i
+.CH
+.ft
+.if t 'ps
+'sp .5i
+.ev
+..
+.de fo
+.ev 1
+'sp .5i
+'ft R
+.if t 'ps 10
+.CF
+.if t 'ps
+'ft
+.ev
+'bp
+..
+.de P
+.if n .sp
+.if t .sp .5v
+.ne 1.1v
+..
+.wh 0 he
+.wh -1i fo
+.hy 0
+.hw print-out photo-type-setter
+.tr ~
+.if t \{.po .75i
+.ll 6i
+.lt 6i
+.ev1
+.ll 6i
+.lt 6i
+.ev
+.ev2
+.ll 6i
+.lt 6i
+.ev
+\}
+.ps 10
+.vs 12p
+.if n .na
+.if n .rm ad
+.if t .ds ` ``\"
+.if t .ds ' ''\"
+.if t .ds d \(em\"
+.if n .ds ` ""\"
+.if n .ds ' ""\"
+.if n .ds d " -- \"
+.br
+.if t .ss 18
+.if t .sp |2.5i
+.if t .ps 36
+.if t .ce
+.if t \(bs
+.if t .ps
+.sp |4.2i
+.ps 20
+.ft B
+.ce 3
+P\s-4WB/UNIX\s0
+.sp 2v
+User's Manual
+.sp 2v
+.ft
+.ps 14
+.if t .ft I
+Edition 1.0
+.sp 3v
+.ps 12
+.vs 14p
+.if t .ft
+.in +\n(.lu-\w'E. M. Piskorik'u/2u\"
+T. A. Dolotta
+.br
+R. C. Haight
+.br
+E. M. Piskorik
+.in -\n(.lu-\w'E. M. Piskorik'u/2u\"
+.vs 12p
+.sp 1v
+.if t .ft I
+.ce 2
+Editors
+.sp 2v
+May 1977
+.br
+.ps 10
+.if t .ft
+.sp 5v
+.if t .ll -1.35i
+.if t .in +1.35i
+The enclosed \s-2PWB/UNIX\s0 documentation is supplied
+in accordance with the Software Agreement
+you have with the Western Electric Company.
+.if t .in -1.35i
+.if t .ll
+.sp \n(.tu-1v
+.ce
+Bell Telephone Laboratories, Incorporated
+.br
+.ss 12
+.sp |3i
+.ce
+UNIX is a Trademark/Service Mark of the Bell System.
+.sp |7.5i
+.if t .ll -1.35i
+.if t .in +1.35i
+.if t .ft I
+This manual was
+.if t set on a Graphic Systems, Inc.\p
+.if t phototypesetter driven by the \s-2TROFF\s0
+.if n produced by the NROFF
+formatting program operating
+under the \s-2PWB/UNIX\s0 system.
+The text of the manual was
+prepared using the
+\s-2ED\s0
+text editor.
+.bp
+.if t .ft
+.if t .in -1.35i
+.if t .ll
+.hy 14
+.pn 3\"ACKNOWLEDGEMENTS
+.de CF
+.af % i\"roman page numbers
+.tl ''- % -''
+..
+.sp |3i
+.ce
+.if t .ft B
+ACKNOWLEDGEMENTS
+.if t .ft
+.sp 1v
+.if t .ll +.1i
+.if t .lt +.1i
+.if t .po -.05i
+The form and organization
+of this manual,
+as well as a major fraction
+of its contents, have been
+copied from the
+.ul
+U\s-2NIX\s0 Programmer's Manual\*dSixth Edition,
+by K.~Thompson and D.~M.~Ritchie (Bell Telephone Laboratories, May 1975).
+The number of our colleagues who have contributed to \s-2UNIX\s0
+and \s-2PWB/UNIX\s0 software and documentation is, by now, too
+large to list here, but the usefulness and acceptance of \s-2UNIX\s0
+and of \s-2PWB/UNIX\s0 is a true measure of their collective success.
+.sp 1v
+.if t .tl '\fIPiscataway,~New~Jersey\fP''T.A.D.~~~~~~\|'
+.if n .tl 'Piscataway,~New~Jersey''T.A.D.~~~~~~\|'
+.if t .tl '\fIMay~1977\fP''R.C.H.~~~~~~\|'
+.if n .tl 'May~1977''R.C.H.~~~~~~\|'
+.tl '''E.M.P.~~~~~~\|'
+.if t .ll
+.if t .lt
+.if t .po
+.pn 5\"INTRODUCTION
+.bp
+.ce
+.if t .ft B
+INTRODUCTION
+.if t .ft
+.sp 1v
+This manual describes the
+features of \s-2PWB\/UNIX\s0.
+It provides neither a general
+overview of \s-2UNIX\s0
+(for that, see \*`The U\s-2NIX\s0 Time-Sharing System,\*'
+\fIComm. \s-2ACM\s0\fP \fB17\fP(7):365-75, July 1974,
+by D.~M.~Ritchie and K.~Thompson),
+nor details of the implementation of the system.
+.P
+This manual is divided into
+eight sections:
+.P
+.nf
+	I.	Commands and Application Programs
+	II.	System Calls
+	III.	Subroutines
+	IV.	Special Files
+	V.	File Formats and Conventions
+	VI.	Games
+	VII.	Miscellaneous
+	VIII.	System Maintenance
+.P
+.fi
+Section I (\fICommands and Application Programs\fP\^)
+describes programs intended to be invoked directly by
+the user
+or by command language procedures,
+in contradistinction to subroutines, which are
+intended to be called by the user's programs.
+Commands generally reside in the directory
+.ul
+/bin
+(for
+\fIbin\fP\^ary programs).
+Some programs also reside in
+.ul
+/usr/bin,
+to save space in
+.ul
+/bin.
+These directories are searched automatically by the command interpreter
+called the
+Shell.
+.P
+Section II (\fISystem Calls\fP\^)
+describes the entries into the \s-2UNIX\s0 supervisor, including
+the assembler and the \fB\s-1C\s0\fP language
+interfaces.
+In the assembler,
+these system calls are invoked by the
+.ul
+sys
+operation code, which is a synonym for the
+.ul
+trap
+instruction.
+.P
+Section III (\fISubroutines\fP\^) describes the available
+subroutines.
+Their binary versions reside in various system libraries
+in directory
+.ul
+/lib.
+The subroutines available for \fB\s-1C\s0\fP and for Fortran are also included there;
+they reside in
+.ul
+/lib/libc.a
+and
+.ul
+/lib/libf.a,
+respectively.
+.P
+Section IV
+(\fISpecial Files\fP\^) discusses the characteristics of
+each system \*`file\*' that actually refers to an input/output device.
+The names in that
+section refer to the Digital Equipment Corporation's device names for the
+hardware,
+instead of the names of
+the special files themselves.
+.P
+Section V
+(\fIFile Formats and Conventions\fP\^)
+documents the structure of particular
+kinds of files; for example, the form of the output of the assembler and the loader
+is given.
+Excluded are files used by only one command,
+for example, the assembler's intermediate files.
+.P
+Section VIII (\fISystem Maintenance\fP\^) discusses commands that are not intended
+for use by the ordinary user,
+in some cases because they disclose information
+in which he or she is presumably not interested,
+and in others because they perform
+privileged functions.
+.P
+Each section consists of a number of independent
+entries of a page or so each.
+The name of the entry is in the upper corners of its pages.
+Entries within each section are
+alphabetized.
+The page numbers of each entry start at 1.
+.P
+All entries are based on a common format,
+not all of whose parts always appear:
+.P
+.in +.5i
+The
+\s-2NAME\s0
+part repeats the name of the entry and
+states (very briefly) its purpose.
+.P
+The
+\s-2SYNOPSIS\s0
+part summarizes the use of the
+program being described.
+A few conventions are used, particularly in
+Section I
+(\fICommands\fP\^):
+.in +.5i
+.P
+.if t \fBBoldface\fP
+.if n \fIBoldface\fP
+strings are considered literals, and
+are to be typed just as they appear (they are usually
+.if t underlined
+.if n \fIunderlined\fP
+in the typed
+version of the manual entries \fIunless\fP
+they are juxtaposed with an \fIitalic\fP string).
+.P
+\fIItalic\fP strings usually represent
+substitutable arguments (they are
+.if t underlined
+.if n \fIunderlined\fP
+in the
+typed version of the manual entries).
+.P
+Square brackets \*`[\|]\*' around an argument
+indicate that the argument is optional.
+When an argument is given as
+\*`name\*' or \*`file\*',
+it always
+refers to a
+.ul
+file
+name.
+.P
+Ellipses \*`\fB.\|.\|.\fP\*' are used to show that the previous argument-prototype
+may be repeated.
+.P
+A final convention is used by the commands themselves.
+An argument beginning with a minus sign \*`\(mi\*'
+or a plus sign \*`+\*'
+is often taken to be some sort of flag argument
+even if it appears in a position where a file name
+could appear.
+Therefore, it is unwise to have files
+.if n whose names begin with \*`\(mi\*'
+.if t whose names begin with \*`\(mi\*'\p
+or \*`+\*'.
+.P
+.in -.5i
+The
+\s-2DESCRIPTION\s0
+part discusses in detail the subject at hand.
+.P
+The
+\s-2FILES\s0
+part gives the file names that are
+built into the program.
+.P
+The
+\s-2SEE ALSO\s0
+part gives pointers to related information.
+.P
+The
+\s-2DIAGNOSTICS\s0
+part discusses
+the diagnostic indications that may be produced.
+Messages that are intended to be self-explanatory
+are not listed.
+.P
+The
+\s-2BUGS\s0
+part gives
+known bugs and sometimes deficiencies.
+Occasionally, the suggested fix is
+also described.
+.in -.5i
+.P
+A table of contents
+(organized by section and alphabetized within each section)
+and a permuted index derived from that table
+precede Section I.
+Within each
+.ul
+index
+entry, the title
+of the
+.ul
+manual
+entry to which
+it refers is followed by the appropriate section number in parentheses.
+This fact is important because there is considerable
+name duplication among the sections,
+arising principally from commands that
+exist only to exercise a particular system call.
+.P
+All manual entries are available \%on-line via the \fIman\fP\^(I)
+command (q.v.).
+.if t .pn 7\"HOW TO GET STARTED
+.if n .pn 9\"HOW TO GET STARTED
+.bp
+.ce
+.if t .ft B
+HOW~\|TO~\|GET~\|STARTED
+.if t .ft
+.sp 1v
+This section provides the basic information
+you need to get started on \s-2UNIX\s0
+(we will use \*`\s-2UNIX\s0\*' in this section to mean both
+\*`\s-2UNIX\s0\*' and \*`\s-2PWB/UNIX\s0\*',
+unless the distinction matters):
+how to log in and log out,
+how to communicate through your terminal,
+and how to run a program.
+See \fIU\s-2NIX\s0 for Beginners\fP
+by B. W. Kernighan for a more complete introduction
+to the system.
+.P
+.ul
+Logging in.~\|
+You must call \s-2UNIX\s0 from an appropriate terminal.
+U\s-2NIX\s0 supports full-duplex \s-2ASCII\s0 terminals.
+You must also have a valid user name,
+which may be obtained, together with the telephone number, from the system administrator.
+The same telephone number
+serves terminals operating at speeds of 110, 150, and 300 baud.
+After a data connection is established,
+the log in procedure depends on the kind of terminal
+you are using.
+.P
+.in +.5i
+.ul
+300-baud terminals:~\|
+These terminals generally have a speed
+switch that should be set to \*`300\*' (or \*`30\*', for
+30 characters per second)
+and a half-/full-duplex switch that should be set to
+full-duplex.
+When a connection is established, the system
+types \*`login:\*'; you type your
+user name, followed by the \*`return\*' key.
+If you have a password (and you should!), the system asks for it,
+but does not print (\*`echo\*') it on the terminal.
+After you have logged in,
+the \*`return\*', \*`new-line\*', and \*`line-feed\*' keys
+will give exactly the same result.
+.P
+.ul
+.if t \s-2TELETYPE\s0\(rg
+.if n TELETYPE(Rg.)
+Model 37:~\|
+When you have established a data connection,
+the system types out a few garbage characters
+(the \*`login:\*' message at the wrong speed).
+Depress the \*`break\*' (or \*`interrupt\*')
+key; this is a speed-independent signal
+to \s-2UNIX\s0 that a 150-baud terminal
+is in use.
+The system then will type \*`login:\*', this time at 150 baud
+(another \*`break\*' at this point will get you down to 110 baud);
+you respond with your user name.
+From the \s-2TELETYPE\s0 Model 37, and any other terminal that has the \*`new-line\*'
+function (combined \*`carriage-return\*' and \*`line-feed\*' pair),
+terminate each line you type with the
+\*`new-line\*' key
+(\fInot\fP the \*`return\*' key).
+.P
+.in -.5i
+It is important
+that you type your name in lower case if possible; if you type
+upper-case letters, \s-2UNIX\s0
+will assume that your terminal cannot generate lower-case
+letters and will translate all subsequent upper-case
+input to lower case.
+When you have logged in successfully,
+the Shell program
+will type a \*`%\*' to you.
+(The Shell is described below under
+\fIHow to run a program.\fP)
+.P
+For more information, consult
+\fIlogin\fP\^(I) and
+\fIgetty\fP\^(VIII), which discuss the login sequence in more
+detail, and \fItty\fP\^(IV), which discusses terminal input/output.
+See \fIterminals\fP\^(VII) for information about various terminals.
+.P
+.ul
+Logging out.~\|
+There are three ways to log out:
+.P
+.in +.5i
+You can simply hang up the phone.
+.P
+You can log out by typing an end-of-file indication
+(\s-2ASCII\s0 \s-2EOT\s0 character, usually typed as \*`control d\*') to the Shell.
+The Shell will terminate and the \*`login:\*' message
+will appear again.
+.P
+You can also log in directly as another user
+by giving a \fIlogin\fP command.
+.P
+.in -.5i
+.ul
+How to communicate through your terminal.~\|
+When you type to \s-2UNIX\s0, a gnome deep in the system
+is gathering your characters and saving them.
+These
+characters will not be given to a program
+until you type a \*`return\*' (or \*`new-line\*'), as described above
+in
+.ul
+Logging in.
+.P
+U\s-2NIX\s0 terminal input/output is full-duplex.
+It has full read-ahead, which means that you can
+type at any time,
+even while a program is
+typing at you.
+Of course, if you type during output, the output will
+have the input characters interspersed.
+However, whatever you type will be saved and
+interpreted in correct sequence.
+There is a limit to the amount of read-ahead,
+.if n but it
+.if t but it\p
+.if t .bp
+is generous and not likely to be exceeded unless
+the system is in trouble.
+When the read-ahead limit is exceeded, the system
+throws away
+.ul
+all
+the saved characters.
+.P
+On a terminal input line, the character \*`@\*'
+kills all the characters typed before it, so typing mistakes
+can be repaired on a single line.
+The character \*`#\*' erases the last character typed.
+Successive uses of \*`#\*' erase characters back to, but
+not beyond, the beginning of the line.
+\*`@\*' and \*`#\*' can be transmitted to a program
+by preceding them with \*`\\\*'.
+(Thus, to erase \*`\\\*', you need two \*`#\*'s).
+.P
+The \s-2ASCII\s0 \*`delete\*' (a.k.a. \*`rubout\*') character is not passed to programs
+but instead generates
+an
+.ul
+interrupt signal,
+just like the \*`break\*', \*`interrupt\*', or \*`attention\*' signal.
+This signal
+generally causes whatever program
+you are running to terminate.
+It is typically used to stop a long printout that
+you don't want.
+However, programs can arrange either to ignore
+this signal altogether,
+or to be notified when it happens (instead
+of being terminated).
+The editor \fIed\fP\^(I), for example, catches interrupts and
+stops what it is doing,
+instead of terminating, so that an interrupt can
+be used to halt an editor printout without
+losing the file being edited.
+.P
+The \fIquit\fP signal is generated
+by typing the \s-2ASCII\s0 \s-2FS\s0 character.
+It not only causes a running program to terminate
+but also generates a file with the core image
+of the terminated process.
+.ul
+Quit
+is useful
+for debugging.
+.if n .bp
+.if n .ns
+.P
+Besides adapting to the speed of the terminal,
+\s-2UNIX\s0 tries to be intelligent about whether
+you have a terminal with the \*`new-line\*' function,
+or whether it must be simulated with a \*`carriage-return\*' and \*`line-feed\*' pair.
+In the latter case, all
+.ul
+input
+\*`carriage-return\*' characters
+are changed to \*`line-feed\*' characters (the standard
+line delimiter),
+and a \*`carriage-return\*' and \*`line-feed\*' pair
+is echoed to the terminal.
+If you get into the wrong mode, the \fIstty\fP\^(I) command
+will rescue you.
+.P
+Tab characters are used freely in \s-2UNIX\s0 source programs.
+If your terminal does not have the tab function,
+you can arrange to have tab characters changed into spaces
+during output, and echoed as spaces
+during input.
+Again, the \fIstty\fP\^(I) command
+will set or reset this mode.
+The system assumes
+that tabs are set every eight columns.
+The \fItabs\fP\^(I) command will set
+tab stops on your terminal, if that is possible.
+.P
+.ul
+How to run a program; the Shell.~\|
+When you have successfully logged into \s-2UNIX\s0, a program
+called the Shell is listening to your terminal.
+The Shell reads typed-in lines, splits them up
+into a command name and arguments, and executes the command.
+A command is simply an executable program.
+Normally, the Shell looks first in your current directory
+(see
+.ul
+The current directory
+below)
+for a program with the given name,
+and if none is there, then in system directories.
+There is nothing special about system-provided
+commands except that they are kept in directories
+where the Shell can find them.
+The command name is always the first word on an input line to the Shell;
+it and its arguments are separated from one another by
+space or tab characters.
+.P
+When a program terminates, the Shell will ordinarily regain control and type
+a \*`%\*' at you to indicate that it is ready for another command.
+The Shell has many other capabilities, which are described in detail in
+\fIsh\fP\^(I).
+.P
+.ul
+The current directory.~\|
+U\s-2NIX\s0 has a file system arranged in a hierarchy of directories.
+When the system administrator gave you a user name,
+he or she also created a directory for you (ordinarily
+with the same name as your user name).
+When you log in, any file
+name you type is by default
+assumed to be in this directory.
+Since you are the owner of this directory, you have
+full permissions to read, write, alter, or destroy
+its contents.
+.ne 3
+Permissions to have your will with other directories
+and files will have been granted or denied to you
+by their respective owners.
+As a matter of observed fact, many \s-2UNIX\s0 users
+do not
+protect their files from destruction,
+let alone perusal, by other users.
+.P
+To change the
+current directory (but not the set of permissions you
+were endowed with at login) use \fIchdir\fP\^(I).
+.if n .bp
+.if n .ns
+.P
+.ul
+Path names.~\|
+To refer to files not in the current directory, you must
+use a path name.
+Full path names begin with \*`/\*', which is the name of the root directory of the
+whole file system.
+After the slash comes the name of each directory containing the next
+sub-directory (followed by a \*`/\*'), until finally the
+file name is reached.
+E.g.:
+.ul
+/usr/lem/filex
+refers to the file
+.ul
+filex
+in the directory
+.ul
+lem; lem
+is itself a subdirectory of
+.ul
+usr; usr
+springs directly from the root directory.
+.P
+If your current directory has subdirectories,
+the path names of files therein begin with
+the name of the corresponding subdirectory (without a prefixed \*`/\*').
+.P
+Without important exception,
+a path name may be used anywhere a file name is
+required.
+.P
+Important commands that modify the contents of files
+are \fIcp\fP\^(I), \fImv\fP\^(I), and \fIrm\fP\^(I),
+which respectively copy, move (i.e., rename), and remove files.
+To find out the status of files or directories, use \fIls\fP\^(I).
+See \fImkdir\fP\^(I) for making directories and \fIrmdir\fP\^(I) for destroying them.
+.P
+For a fuller discussion of the file system, see
+\*`The U\s-2NIX\s0 Time-Sharing System\*'
+(\fIComm. \s-2ACM\s0\fP \fB17\fP(7):365-75, July 1974)
+by D.~M.~Ritchie and K.~Thompson.
+It may also be useful to glance through
+Section II of this manual, which discusses
+system calls, even if you don't intend
+to deal with the system at that level.
+.P
+.ul
+Writing a program.~\|
+To enter the text of a source program into a \s-2UNIX\s0 file, use \fIed\fP\^(I).
+The three principal languages available under \s-2UNIX\s0 are
+\fB\s-1C\s0\fP (see
+\fIcc\fP\^(I)), Fortran (see
+\fIfc\fP\^(I)), and
+assembly language (see \fIas\fP\^(I)).
+After the program text has been entered through
+the editor
+and written in a file (whose name has the appropriate suffix),
+you can give the name of that file
+to the appropriate language processor as an argument.
+Normally, the output of the language processor
+will be left in a file in the current directory named \*`a.out\*'.
+(If the output is precious, use \fImv\fP\^(I) to move it to a less
+exposed name soon.)~
+If you wrote in assembly language, you will probably
+need to load the program with library subroutines; see
+\fIld\fP\^(I).
+The other two language processors call
+the loader automatically.
+.P
+When you have finally gone through this entire process
+without provoking any diagnostics, the resulting program
+can be run by giving its name to the Shell
+in response to the \*`%\*' prompt.
+.P
+Next, you will need \fIcdb\fP\^(I) or \fIdb\fP\^(I) to
+examine the remains of your program.
+The former is useful for \fB\s-1C\s0\fP programs, the latter
+for assembly-language.
+No debugger is much help for Fortran.
+.P
+Your programs can receive arguments from the command line
+just as system programs do.
+See \fIexec\fP\^(II).
+.if n .bp
+.if n .ns
+.P
+.ul
+Text processing.~\|
+Almost all text is entered through the editor \fIed\fP\^(I).
+The commands most often used to write text on a terminal are:
+\fIcat\fP\^(I), \fIpr\fP\^(I), and \fInroff\fP\^(I).
+The \fIcat\fP\^(I) command simply dumps \s-2ASCII\s0 text
+on the terminal, with no processing at all.
+The \fIpr\fP\^(I) command paginates the text, supplies headings,
+and has a facility for multi-column output.
+\fINroff\fP\^(I)
+is an elaborate text formatting program,
+and requires careful forethought
+in entering both the text and the formatting commands
+into the input file; it
+produces output on a typewriter-like terminal.
+\fIRoff\fP\^(I)
+is a less elaborate text formatting
+program, and requires somewhat less forethought;
+it is obsolescent.
+\fITroff\fP\^(I)
+is similar to \fInroff\fP\^(I), but
+drives a Graphic Systems, Inc. phototypesetter.
+.if t It was used to typeset this manual.
+.P
+.ul
+Surprises.~\|
+Certain commands provide
+.ul
+inter-user
+communication.
+Even if you do not plan to use them, it would be
+well to learn something about them, because someone else may
+aim them at you.
+To communicate with another user currently logged in,
+\fIwrite\fP\^(I)
+is used;
+\fImail\fP\^(I)
+will leave a message whose presence will be announced
+to another user when he or she next logs in.
+The corresponding entries in this manual also suggest how to respond to
+these two commands if you are their target.
+.P
+When you log in, a message-of-the-day may greet you
+before the first \*`%\*'.

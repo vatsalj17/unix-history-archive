@@ -1,0 +1,140 @@
+.tr ~
+.tr $%
+.if n .ds D " -- \"
+.if t .ds D _
+.tr @|
+.if n .tr #-
+.if t .tr #\-
+.de SP
+.if n .ul
+[\fB#\\$1\fP\\c
+.if n .ul 0
+\\$2\\$3
+..
+.de B
+.if n .ul
+.ft B
+\\$1\\c
+.if n .ul 0
+.ft P
+\\$2
+..
+.de SF
+.if n .ul
+[\fB#\\$1\fP]
+.if n .ul 0
+..
+.de DT
+.hc ^
+^\fB.\|.\|.\fP
+.hc
+..
+.de AR
+.s1
+.lp +10 5
+\fB#\\$1\\fP	\\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8 \\$9
+..
+.de FI
+.s1
+.lp +30 30
+\\$1	\\$2
+.i0
+..
+.ds F) \fB\s-2FILES\s+2\fP
+.de I
+.if n .ul
+\fI\\$1\fP\c
+.if \\n(.$-1 \^\c
+.if n .ul 0
+\\$2\\$3\\$4\\$5\\$6\\$7\\$8\\$9
+..
+.de FG
+.s1
+.lp +20 7
+.if t \fB\\$1\fP\\$2\t\\$3
+.if n \\$1_\\$2\t\\$3
+..
+.if n .ds )Q '
+.if n .ds )G `
+.if t .ds )Q \\(aa
+.if t .ds )G \\(ga
+.if t .ds )S \\|
+.th GONG I 4/1/77
+.sh NAME
+gong \- evaluate process performance
+.sh SYNOPSIS
+.na
+.bd gong
+.SF f
+.SF a
+process-id
+.DT
+.ad
+.sh DESCRIPTION
+.I Gong
+is used to evaluate the performance of a process that is in
+execution.
+.s1
+The
+.I process-id
+is the process number of the process whose performance is to be
+evaluated.
+.s1
+The evaluation is performed by a set of three ``panelist'' routines,
+each of which analyzes one aspect (time, space, and tonality)
+of the performance of the process.
+If any of these routines is not amused by the performance,
+the process being analyzed is sent the
+.I gong (II)
+signal.
+In addition, the process-id of the evaluated process is written
+on the standard gong, for possible future corrective action.
+(It is suggested that the standard gong
+be an audible alarm for proper effect.)~
+It is expected that after being
+.I gong (II)ed,
+the process will promptly commit suicide.
+.s1
+The
+.bd f
+keyletter argument
+indicates that
+.I gong
+is to invoke
+.I flog (I)
+with the
+.I unmerciful
+argument
+if the process does not respond to
+.I gong (II)ing.
+In the absence of this argument, the process is continuously
+.I gong (II)ed,
+which may lead to the process becoming a
+deaf zombie.
+.s1
+The
+.bd a
+keyletter argument indicates that if all three of the panelist
+routines
+.I gong (II)
+a process, the process should be unmercifully
+.I flog (I)ged
+whether or not the
+.bd f
+keyletter is supplied.
+.sh FILES
+/dev/ding.dong is the standard gong.
+.sh "SEE ALSO"
+On the Applicability of Gonging to the Performance and Merit Review Process,
+.I "Journal of Irreproducible Results,"
+vol. 263, issue 19, pp. 253-307.
+.sh BUGS
+If the named process does not exist,
+it is possible that
+.I gong
+will attempt an evaluation of itself, which may lead to a condition
+known as compounded double ringing (see
+.I echo (I)).
+Therefore, it is recommended that
+.I gong
+be used with extreme care.

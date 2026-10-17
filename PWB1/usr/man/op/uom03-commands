@@ -1,0 +1,386 @@
+.if n .tr | 
+.tr {"
+.tr }.
+.SC OPERATOR~COMMANDS September~14~1977
+.HU "MOUNT AND UMOUNT COMMANDS"
+The
+.B mount
+and
+.B umount
+commands are used to logically
+.B mount
+or
+.B unmount
+filesystems.
+The
+.B mount
+command without any arguments is used to list which filesystems are 
+.I mounted
+and on which 
+.I device
+they are located.
+This aspect of the command will not give accurate data when performed
+on a SINGLE-USER system.
+.P
+The format for these commands is:
+.BS
+.BI
+# 
+.UL "mount"
+.BE
+.in +5
+.P
+.nf
+Output will be formatted:
+``\c
+.I fsname ~\c
+on~\c
+.I devname ~\c
+.I permissions ~\c
+on~\c
+.I "day~date~time~year" ''
+.fi
+.P
+An example would be:
+.BS
+.BI
+``/a3~on~/dev/rp5~read/write~on~thu~may~15~17:43:51~1976''
+.BE
+.in -5
+or
+.BS
+.BI
+# 
+.UL "mount \fIdevname fsname option\fP\|\*F"
+.BE
+.FS
+NOTE: Before 
+.B mount ing
+a filesystem, be sure that a filesystem with the same name (i.e.,
+.I fsname \|)
+is not already mounted .
+.FE
+or
+.BS
+.BI
+# 
+.UL "umount \fIdevname\fP"
+.BE
+.VL 25 10
+.LI "\fIdevname\fP ="
+the logical device name (e.g.,``/dev/rp12'')
+.LI "\fIfsname\fP ="
+the filesystem name that you wish this
+device to be called (e.g.,``/f3'' or ``/bck'')
+.LI "\fIpermissions\fP ="
+.I "read only"
+or
+.I "read/write"
+permissions are granted.
+.LI "\fIoption\fP ="
+the optional ``\*-r'' for
+.I "read only"
+(this field is left blank for write capabilities)
+.LE
+.P
+Before 
+.B umount ing
+any filesystems, it is a good practice to perform a
+.B mount ,
+without arguments,
+to know which devices you will have to re-mount,
+and what they must be named.
+.P
+If the
+.B umount
+command complains that the device is 
+.I busy ,
+it means that someone is using the filesystem (maybe you).
+Change directory (\|\c
+.B "chdir" \|(I))
+to ``/'' and try again.
+.bp
+.RM
+.HU "DEVNAME (PHYSICAL VERSUS BLOCK)"
+Block device names are used in
+commands which must have data passed
+through the system buffers
+(e.g.,
+.B mount ,
+.B umount \|).
+They are formatted:
+.BS
+.BI
+``/dev/rp12'' or ``/dev/mt0''
+.BE
+.sp 3
+.P
+Physical device names should always be used for 
+.I "file maintenance"
+commands (e.g.,
+.B vc10 ,
+.B vc88 ,
+.B vc50 
+and
+.B check \|).
+Use of Physical device names makes the transfer of data
+``device-to-device'', thereby shortening execution time considerably.
+These are formatted:
+.BS
+.BI
+``/dev/rrp12'' or ``/dev/rmt0''
+.BE
+.sp
+(note the extra ``r'' in ``rrp12'')
+.P
+Physical device names should be used only in referencing logically
+.B umount ed
+filesystems, since changes made to the physical device may not be
+reflected in the systems in-core image of the device.
+The exception to this rule is the ``root'' device, which is never 
+.B umount ed.
+.bp
+.RM
+.HU "CHECK AND ICHECK"
+The
+.B check
+command is used to check filesystems for possible
+file damage.
+For example,
+.B check
+should always be used after a system crash.
+.P
+The
+.B check
+and
+.B icheck
+commands are formatted:
+.BS
+.BI
+#
+.UL "check \fIoption devname devname ...\fP"
+.BE
+.sp
+and
+.BS
+.BI
+# 
+.UL "icheck \fIoption devname\fP"
+.BE
+.P
+Leaving the
+the
+.I devname
+field blank for
+.B check
+will default to a
+.B check
+of all filesystems listed in the file ``/etc/checklist''.
+.VL 25 10
+.LI "\fIoption\fP ="
+option field.\*F
+.LE
+.FS
+An explanation of all possible options can be found
+in the description of 
+\fIcheck\fP\|(VIII)
+and
+\fIicheck\fP\|(VIII)
+.FE
+.P
+The 
+.I "\*-s"
+(for salvage)
+is used with
+.B icheck
+to create a new 
+.I "free list"
+for the filesystem specified;
+.B "icheck \*-sX"
+(where ``X'' is 3 for RP03s, and 4 for RP04s and RP05s)
+should always be performed on an
+.B umount ed
+filesystem (except for the root which is always mounted);
+.B "icheck \*-sX"
+of the root must be followed by an IMMEDIATE reboot.
+.sp
+.VL 25 10
+.LI "\fIdevname\fP ="
+physical device name 
+.LE
+.P
+For an example,
+the
+.I root
+filesystem for a system might be located on
+/dev/rrp0.
+If you wanted to
+check only that particular filesystem
+you would type:
+.BS
+.BI
+# 
+.UL "check /dev/rrp0"
+.BE
+.sp
+On the other hand:
+.BS
+.BI
+#
+.UL check
+.BE
+.sp
+would check all of them.
+.br
+.ne 15
+An example of what the normal output of check should look like is:
+.BS
+.BI
+# 
+.UL "check /dev/rrp0"
+.sp
+    /dev/rrp0:
+.nf
+.if n .ta 14
+.if t .ta 1i
+    spcl	\0155
+    files	\0253
+    large	\0\085
+    direc	\0\018
+    indir	\0\085
+    used	2849
+    last	6681
+    free	3698
+.fi
+.BE
+.P
+.P
+.sp 2
+.ne 20
+The two examples below illustrate errors of moderate impact 
+and also non-disastrous errors called
+.I 100s
+and
+.I 201s .
+They are not particularly dangerous, and the system can run with them present, but they should be repaired 
+before opening the system to users.
+.sp
+.ne 15
+.BS
+.BI
+# 
+.UL "check /dev/rrp0"
+.sp
+    /dev/rrp0:
+.nf
+       372 100
+    spcl	\0155
+    files	\0253
+    large	\0\085
+    direc	\0\018
+    indir	\0\085
+    used	2849
+    last	6681
+    free	3698
+.BE
+.fi
+.sp
+.ne 16
+.BS
+.BI
+# 
+.UL "check /dev/rrp0"
+.sp
+    /dev/rrp0:
+.nf
+       372 100
+       465 201
+       379 201
+    spcl	\0155
+    files	\0253
+    large	\0\085
+    direc	\0\018
+    indir	\0\085
+    used	2849
+    last	6681
+    free	3698
+.BE
+.fi
+.sp
+.ne 17
+The following errors should be repaired before users log on via
+.B icheck ;
+they indicate errors in the
+.I "free list" }
+These types of errors leave the system virtually useless.
+.BS
+.BI
+# 
+.UL "check /dev/rrp0"
+.sp
+    /dev/rrp0:
+.nf
+    Bad freeblock
+    15 dups in free
+    2005 missing
+    spcl	\0155
+    files	\0253
+    large	\0\085
+    direc	\0\018
+    indir	\0\085
+    used	2849
+    last	6681
+    free	3698
+.BE
+.fi
+.sp
+.ne 19
+These errors illustrate
+.I "Errors of Severe Impact"
+(\|\c
+.I 377s
+and
+.I 177s )
+and if 
+encountered, they should be repaired
+immediately via
+.B patchup }
+It is disastrous to run with such errors outstanding, since these types of errors will spread
+throughout the filesystem.
+.sp
+.BS
+.BI
+# 
+.UL "check /dev/rrp0"
+.sp
+    /dev/rrp0:
+.nf
+       675 377
+       496 177
+    spcl	\0155
+    files	\0253
+    large	\0\085
+    direc	\0\018
+    indir	\0\085
+    used	2849
+    last	6681
+    free	3698
+.sp
+.BE
+.fi
+.RM
+.P
+There are many other types of
+.I serious
+errors that can appear in your
+.B check
+output.
+The repair of these errors is too complicated to be described in this document.\*F
+.FS
+For more details on repairing file system errors, see 
+.I "Repairing Damaged PWB/UNIX File Systems"
+by P. D. Wandzilak.
+.FE
+.P
+Phone numbers to call when problems arise can be found
+in the CONTACTS section of this book.

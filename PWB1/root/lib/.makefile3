@@ -1,0 +1,74 @@
+LIB = /lib
+
+SRC = /sys/source
+FSRC = /sys/fort
+
+MAKE = make
+AR = ar
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = -as
+
+LD = -ld
+LDFLAGS = -s
+
+DD = TMP
+STICKY = OLD
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+
+# ------------
+#  Create lib.
+# ------------
+
+MAIN:		libPW.a libS.a libl.a libp.a liby.a
+	-rm -f $(DD)*
+	-@echo "\n***** Following Files Still Present:";  ls -l $(DD)*;  echo "\n"
+
+
+libPW.a:	$(SRC)/s5/*.[cs] \
+		$(SRC)/s5/makefile $(CCDEP) $(ASDEP)
+	chdir $(SRC)/s5; $(MAKE) "LIB=$(LIB)" "CC=$(CC)" "AS=$(AS)" "DD=$(DD)" \
+			install clean
+
+libS.a libp.a:	$(SRC)/s4/stdio/*.[csh] \
+		$(SRC)/s4/stdio/makefile $(CCDEP) $(ASDEP)
+	chdir $(SRC)/s4/stdio; $(MAKE) "LIB=$(LIB)" "CC=$(CC)" "AS=$(AS)" \
+			"DD=$(DD)" install clean
+
+libl.a:	$(SRC)/lex/lexcl.a $(CCDEP)
+	-mkdir /tmp/makelibl
+	-rm -f -r /tmp/makelibl
+	chdir /tmp/makelibl; $(AR) x $(SRC)/lex/lexcl.a
+	chdir /tmp/makelibl; $(CC) -c $(CCFLAGS) *.c
+	chdir /tmp/makelibl; $(AR) r tmp.a *.o
+	-mv libl.a $(DD)libl.a
+	mv /tmp/makelibl/tmp.a libl.a
+	-chmod 644 libl.a
+	-chown bin libl.a
+	rm -f -r /tmp/makelibl
+	rmdir /tmp/makelibl
+	ls -l libl.a
+
+liby.a:		$(SRC)/s2/yacc.d/lib*.c \
+		$(SRC)/s2/yacc.d/makefile $(CCDEP)
+	chdir $(SRC)/s2/yacc.d; $(MAKE) "CC=$(CC)" liby.a
+	chdir $(SRC)/s2/yacc.d; rm lib*.o
+	-mv liby.a $(DD)liby.a
+	mv $(SRC)/s2/yacc.d/liby.a liby.a
+	-chmod 644 liby.a
+	-chown bin liby.a
+	-rm -f $(DD)liby.a
+	ls -l liby.a
+
+
+RC:	# dummy name to force re-compiling things.

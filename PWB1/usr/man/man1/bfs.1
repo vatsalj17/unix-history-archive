@@ -1,0 +1,337 @@
+.tr ~.
+.th BFS I 5/31/77
+.if t .ds q \(aa
+.if n .ds q '
+.sh NAME
+bfs \*- big file scanner
+.sh SYNOPSIS
+.bd bfs
+[
+.bd \*-
+] name
+.sh DESCRIPTION
+.it Bfs
+is (almost) like
+.it ed\^\c
+(I)
+except that it is read-only
+and processes much bigger files.
+Files can be up 1024K bytes (the maximum possible size) and
+32K lines, with up to 255 characters per line.
+.it Bfs
+is usually more efficient than
+.it ed
+for scanning a file,
+since the file is not copied to a buffer.
+.s3
+Normally,
+the size of the file being scanned is printed,
+as is the size of any file written with the
+.it w
+command.
+The optional
+.bd \*-
+suppresses printing of sizes.
+Input is prompted with `*' if
+`P' and a carriage return is typed as in
+.it ed.
+Prompting can be turned off again by
+inputting another `P' and carriage
+return.
+Note that messages are given in response
+to errors if prompting is turned on.
+.s3
+All address expressions described under
+.it ed
+are supported.
+In addition, regular expressions may be surrounded with two
+symbols besides `/' and `?': `>' indicates
+downward search without wrap-around,
+and `<' indicates upward search without wrap-around.
+Since
+.it bfs
+uses a different regular expression-matching routine
+from 
+.it ed,
+the regular expressions accepted are slightly wider in scope (see
+.it regex\^\c
+(III)).
+There is a slight difference in mark names: only the letters
+`a' through `z' may be used,
+and all 26 marks are remembered.
+.s3
+The
+.it e,
+.it g,
+.it v,
+.it k,
+.it n,
+.it p,
+.it q,
+.it w,
+.it =,
+.it !
+and null
+commands operate
+as described under
+.it ed.
+Commands such as `\*-\*-\*-', `+++\*-',
+`+++=', `\*-12', and `+4p' are accepted.
+Note that `1,10p' and `1,10' will both print 
+the first ten lines.
+The
+.it f
+command only prints the name of the file being scanned;
+there is no 
+.it remembered
+file name.
+The
+.it w
+command is independent of output diversion,
+truncation or crunching
+(see the
+.it xo,
+.it xt
+and
+.it xc
+commands, below).
+The following additional commands are available:
+.s3
+.lp +10 5
+xf file
+.br
+Further commands are taken from the named file.
+When an end-of-file is reached,
+an interrupt signal is received or an error occurs,
+reading resumes with the
+file containing the
+.it xf.
+.it Xf
+commands may be nested to a depth of 10.
+.s3
+.lp +10 5
+xo [file]
+.br
+Further output from the
+.it p
+and null
+commands is diverted to the named file,
+which, if necessary, is created mode 666.
+Plain `xo' diverts output back to the standard output.
+Note that each diversion causes truncation
+or creation of the file.
+.s3
+.lp +10 5
+: label
+.br
+This positions a label in a command file.
+The label is terminated by newline, and
+blanks between the `:' and the start of the label are ignored.
+This command may also be used to insert comments
+into a command file,
+since labels need not be referenced.
+.s3
+.lp +10 5
+( \fB. \fR, \fB. \fR)\|xb/regular expression/label
+.br
+A jump (either upward or downward) is made to the named label if
+the command succeeds.
+It fails under any of the following conditions:
+.s3
+.lp +16 3
+.ne 5
+1. Either address is not between 1 and $.
+.lp +16 3
+2. The second address is less than the first.
+.lp +16 3
+3. The regular expression doesn't match at least one line
+in the specified range, including the first and last lines.
+.lp +10 0
+.s3
+On success, `.' is set to the line matched and a jump
+is made to the label.
+This command is the only one that doesn't issue an error
+message on bad addresses, so it may be used to
+test whether addresses are bad before other commands are executed.
+Note that the command
+.s3
+.lp +16 0
+xb/^/ label
+.lp +10 0
+.s3
+is an unconditional jump.
+.s3
+The
+.it xb
+command is allowed only if
+it is read from someplace other than a terminal.
+If it is read from a pipe only a downward jump is possible.
+.lp +10 0
+.s3
+.lp +10 5
+xt number
+.br
+Output from the
+.it p
+and null commands is
+truncated to at most
+.it number
+characters.
+The initial number is 255.
+.s3
+.lp +10 5
+xv[digit: 0\*-9][optional spaces][value]
+.br
+The variable name is the specified
+.it digit
+following the `xv'. `xv5100' or `xv5 100' both
+assign the
+.it value 
+`100' to the
+.it variable
+`5'. `xv61,100p' assigns the
+.it value
+`1,100p' to 
+.it variable
+`6'. To reference the variable put a `%'
+in front of the variable name.
+For example, using the above assignments
+for the variables `5' and`6':
+.s3
+.lp +16 0
+1,%5p
+.lp +16 0
+1,%5
+.lp +16 0
+%6
+.lp +10 0
+.s3
+will all print the first 100 lines.
+.s3
+.lp +16 0
+g/%5/p
+.lp +10 0
+.s3
+would globally search for the characters `100'
+and print each line containing a match.
+To escape the special meaning of `%', a `\\' must
+precede it.
+.s3
+.lp +16 0
+g/".*\\%[cds]/p
+.lp +10 0
+.s3
+could be used to match and list lines 
+containing
+.it printf
+of characters,decimal integers, or strings.
+.s3
+Another feature of the
+.it xv
+command is that the first line
+of output from a UNIX command can
+be stored into a variable. The only
+requirement is that the first character
+of
+.it value
+be an `!'. For example:
+.s3
+.lp +16 0
+\fB~\fRw junk
+.lp +16 0
+xv5!cat junk
+.lp +16 0
+!rm junk
+.lp +16 0
+!echo "%5"
+.lp +16 0
+xv6!expr %6 + 1
+.lp +10 0
+.s3
+would put the current line into variable `5',
+print it, and increment the variable `6' by one.
+To escape the special meaning of `!' as the
+first character of
+.it value,
+precede it with a `\\'.
+.s3
+.lp +16 0
+xv7\\!date
+.lp +10 0
+.s3
+stores the
+value `!date' into
+variable `7'.
+.s3
+.lp +10 5
+xbz label
+.lp +10 5
+xbn label
+.br
+These two commands will test the last saved
+.it return
+.it code
+from the execution of a unix command
+(!UNIX command) and branch on a zero
+or nonzero value, respectively, to the
+specified label. The two examples below both 
+search for the next five lines containing
+the string `size'.
+.s3
+.lp +16 0
+xv55
+.lp +16 0
+: l
+.lp +16 0
+/size/
+.lp +16 0
+xv5!expr %5 - 1
+.lp +16 0
+!if 0%5 != 0 exit 2
+.lp +16 0
+xbn l
+.s3
+.lp +16 0
+xv45
+.lp +16 0
+: l
+.lp +16 0
+/size/
+.lp +16 0
+xv4!expr %4 - 1
+.lp +16 0
+!if 0%4 = 0 exit 2
+.lp +16 0
+xbz l
+.s3
+.s3
+.lp +10 5
+xc [switch]
+.br
+If
+.it switch
+is 1, output from the
+.it p
+and null commands is crunched;
+if
+.it switch
+is 0 it isn't.
+Plain
+`xc'
+reverses the switch.
+Initially the switch is set for no crunching.
+Crunched output has strings of tabs and blanks reduced
+to one blank and blank lines suppressed.
+.s3
+.i0
+.ne 5
+.fi
+.i0
+.sh "SEE ALSO"
+ed(I), regex(III)
+.br
+.ne 20
+.sh DIAGNOSTICS
+`?' for errors in commands, if prompting is turned off.
+Self-explanatory error messages when prompting is on.
+.tr ~~

@@ -1,0 +1,47 @@
+.tr |
+.th "UNIX BOOT" VIII 5/31/77
+.sh NAME
+unixboot \*- UNIX startup and boot procedures
+.sh DESCRIPTION
+.it "How to start UNIX.||"
+UNIX is started by placing it in core
+at location zero and transferring to zero.
+Since the system is not reenterable,
+it is necessary to read it in from disk or tape.
+See
+.it diskboot(VIII)
+or
+.it tapeboot(VIII).
+.s3
+.it "The switches.||"
+The console switches play an important role in the
+use and especially the booting of UNIX.
+During operation,
+the console switches are
+examined 60 times per second,
+and the contents of the address specified by the switches
+are displayed in the display register.
+If the switch address is even,
+the address is interpreted in kernel (system)
+space;
+if odd,
+the rounded-down address is interpreted in
+the current user space.
+.s3
+If any diagnostics are produced by the system,
+they are printed on the console only if
+the switches are non-zero.
+Thus it is wise to have a non-zero value in the
+switches at all times.
+.s3
+During the startup of the
+system,
+.it init(VIII)
+reads the switches and
+will come up single-user
+if the switches are set to 173030.
+.sh FILES
+/unix \*- UNIX code
+.sh "SEE ALSO"
+tp(I), init(VIII), 70boot(VIII), diskboot(VIII), romboot(VIII), tapeboot(VIII)
+.tr ||

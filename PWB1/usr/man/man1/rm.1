@@ -1,0 +1,54 @@
+.th RM I 5/31/77
+.sh NAME
+rm  \*- remove (unlink) files
+.sh SYNOPSIS
+.bd rm
+[
+.bd \*-f
+] [
+.bd \*-r
+] name ...
+.sh DESCRIPTION
+.it Rm
+removes the entries for one or more files from a directory.
+If an entry was the last link to the file, the file
+is destroyed.
+Removal of a file requires write permission in its directory,
+but neither read nor write permission on the file itself.
+.s3
+If the user does not have write permission
+on a file,
+.it rm
+prints the file name and its mode, then
+reads a line from the standard input.
+If the line begins with \fBy\fR, the file is removed,
+otherwise it is not.
+The question is not asked if
+option
+.bd \-f
+was given or if the standard input is not a terminal.
+.s3
+If a designated file is a directory,
+an error comment is printed unless the optional
+argument
+.bd \*-r
+has been used.
+In that case,
+.it rm
+recursively deletes the
+entire contents of the specified directory.
+To remove directories \fIper se\fR see
+.it rmdir\^\c
+(I).
+.sh FILES
+/etc/glob to implement the
+.bd \*-r
+flag
+.sh "SEE ALSO"
+rmdir(I)
+.sh BUGS
+When
+.it rm
+removes the contents of a directory under the
+.bd \*-r
+flag, full pathnames are not printed in diagnostics.

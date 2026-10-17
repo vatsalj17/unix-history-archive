@@ -1,0 +1,35 @@
+: crunch procedure for -mm.  Creates $1.m $1.mtoc $1.mcs from $1.src.
+	rm -f $1.mcs $1.mtoc $1.m
+	cp $1.src TMP$1.src
+	chmod 666 TMP$1.src
+	pump | ed - TMP$1.src
+3,\$g/^''*	/d
+1,\$s/\\".*//
+1,\$s/@//g
+/ds.*RE/g//s//@/
+w
+e
+g/if/s/if  */if/g
+g/^[.'][abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]  */s/  *//
+g/^.if.*[.'][abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz] /ka\
+s/^\(.*[.'][abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]\)  */\1/
+w
+/S>TOC/+1;/E>TOC/-w $1.mtoc
+/S>TOC/;/E>TOC/d
+/S>CS/+1;/E>CS/-w $1.mcs
+/S>CS/;/E>CS/d
+w $1.m
+q
+!
+
+rm -f TMP$1.src
+chmod 664 $1.m $1.mcs $1.mtoc
+chgrp pw $1.m $1.mcs $1.mtoc
+chown bin $1.m $1.mcs $1.mtoc
+exit 0
+	deletes all comments lines
+	deletes \" sections
+	converts @ to bell for convenient delimiter
+	crunches out blanks in appropriate places
+		watch out for .if blah .ds S ".xx   12345      !!!!!
+	DOES NOT take out .tm commands

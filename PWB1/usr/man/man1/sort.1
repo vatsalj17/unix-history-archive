@@ -1,0 +1,136 @@
+.th SORT I 5/31/77
+.sh NAME
+sort \*- sort or merge files
+.sh SYNOPSIS
+.bd sort
+[
+.bd \*-mubdfinr
+] [
+.bd \*-t\c
+x ]
+[ \fB+\fRpos [ \fB\*-\fRpos ]
+] ...
+[
+.bd \*-o
+name ] [ name ] ...
+.sh DESCRIPTION
+.it Sort
+sorts
+lines of all the named files together
+and writes the result on
+the standard output.
+The name `\*-' means
+the standard input.
+The standard input is also used if no input file names are given.
+Thus
+.it sort
+may be used as a filter.
+.s3
+The default sort key is an entire line.
+Default ordering is
+lexicographic by bytes in machine
+collating sequence.
+The ordering is affected by the following flags
+one or more of which may appear.
+.s3
+.lp +4 4
+\fBb\fR	Leading blanks (spaces and tabs) are not included in keys.
+.lp+4 4
+\fBd\fR	`Dictionary' order: only letters, digits and blanks
+are significant in comparisons.
+.lp +4 4
+\fBf\fR	Fold lower case
+letters onto upper case.
+.lp +4 4
+\fBi\fR	Ignore all nonprinting nonblank characters in nonnumeric comparisons.
+.lp +4 4
+\fBn\fR	An initial numeric string,
+consisting of optional minus sign,
+digits and optionally included decimal point,
+is sorted by arithmetic value.
+.lp+4 4
+\fBr\fR	Reverse the sense of comparisons.
+.lp +4 4
+\fBt\fIx\fR	Tab character between fields is
+.it x.
+.s3
+.i0
+Selected parts of the line, specified by
+\fB+\fIpos\fR
+and
+\fB\*-\fIpos\fR,
+may be used as sort keys.
+.it Pos
+has the form
+.it m.n
+optionally followed by one or more of the flags
+.bd bdfinr,
+where
+.it m
+specifies a number of fields to skip,
+.it n
+a number of characters to skip further into the next field,
+and the flags specify a special ordering rule for the key.
+A missing
+.bd \&.\c
+.it n
+is taken to be 0.
+\fB+\fIpos\fR denotes the beginning of the key;
+\fB\*-\fIpos\fR denotes the first position after the key
+(end of line by default).
+Later keys are compared only when all earlier keys
+compare equal.
+.s3
+When no tab character has been specified,
+a field consists of
+nonblanks and any preceding blanks.
+Under the
+.bd \*-b
+flag, leading blanks are excluded from a field.
+When a tab character has been specified,
+fields are strings separated by tab characters.
+.s3
+.i0
+Lines that otherwise compare equal are ordered
+with all bytes significant.
+.s3
+These flag arguments are also understood:
+.s3
+.lp +4 4
+\fBm\fR	Merge only, the input files are already sorted.
+.s3
+.lp +4 4
+\fBo\fR	The next argument is the name of an output file
+to use instead of the standard output.
+This file may be the same as one of the inputs,
+except under the merge flag \fB\*-m\fR.
+.s3
+.lp +4 4
+\fBu\fR	Suppress all but one in each
+set of contiguous equal lines.
+Ignored bytes
+and bytes outside keys
+do not participate in
+this comparison.
+.i0
+.s3
+Examples.
+Print a list of all the distinct
+.it roff\^\c
+(I) commands in a given document:
+.s3
+.ti +8
+grep "^\\." document
+.tr ||
+.if t \(bv
+.if n |
+sort \*-u +0 \*-0.3
+.s3
+Print the password file
+.it passwd\^\c
+(V) sorted by user id:
+.s3
+.ti +8
+sort \*-t: +2n /etc/passwd
+.sh FILES
+/tmp/stm???

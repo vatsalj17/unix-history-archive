@@ -1,0 +1,296 @@
+.if t .ds ` ``\"
+.if n .ds ` ""\"
+.if t .ds ' ''\"
+.if n .ds ' ""\"
+.th TBL I 5/31/77
+.sh NAME
+tbl \*- format tables for nroff or troff
+.sh SYNOPSIS
+.bd tbl
+[ files ] ...
+.sh DESCRIPTION
+.it Tbl
+is an
+.it nroff\^\c
+(I)
+or
+.it troff\^\c
+(I)
+preprocessor for formatting tables.
+The input files are copied to the standard output,
+except for lines between \f3.\fPTS and \f3.\fPTE
+command lines, which are assumed to describe tables,
+and which are reformatted.
+There are several global options; if any are desired,
+they are specified on the first line after \f3.\fPTS as a series
+of keywords separated by blanks or commas and followed by
+a semicolon.  The possible words are:
+.br
+.in +4n
+.nf
+center - center the table
+.br
+expand - format the table to fill the current line length
+.br
+.br
+box - enclose the table in a box
+.br
+allbox - draw all possible lines so that every item is in a box
+.fi
+.in -4n
+.br
+After this line (or after \f3.\fPTS if no global options are
+given) are the lines describing the table format.  Each
+line describes a line of the actual table.  One letter is
+used for each column.  As many lines are as needed to
+describe the table are given; the last line should end
+with the character \*`\f3.\fP\*' to signal the end of the
+format information.
+The last line of the description will apply to all following
+lines of the table.  The legal characters to describe a column
+are:
+.s3
+.lp +4 4
+c	center within the column
+.lp +4 4
+.if n .sp 1
+.if t .sp .3
+r	right-adjust
+.lp +4 4
+.if n .sp 1
+.if t .sp .3
+l	left-adjust
+.lp +4 4
+.if n .sp 1
+.if t .sp .3
+n	numerical adjustment: the units digits of numbers are aligned.
+.lp +4 4
+.if n .sp 1
+.if t .sp .3
+s	span the previous entry over this column.
+.lp +4 4
+.if n .sp 1
+.if t .sp .3
+_	replace this entry with a horizontal line
+.lp +4 4
+.if n .sp 1
+.if t .sp .3
+=	replace this entry with a double horizontal line
+.i0
+.s3
+A column letter
+may be followed
+by an integer
+giving the number of spaces between this column and the next; 3 is default.
+A column letter may be preceded by a \*`|\*' character to indicate
+that a vertical line is to be drawn to the left of this column.
+Letting \\t represent a tab (which must be typed as a genuine tab),
+the input:
+.s3
+.nf
+	\f3.\fPTS
+	c s s
+	c c s
+	c c c
+	l n n\fB.\fP
+	Household Population
+	Town\\tHouseholds
+	\\tNumber\\tSize
+	Bedminster\\t789\\t3.26
+	Bernards Twp.\\t3087\\t3.74
+	Bernardsville\\t2018\\t3.30
+	Bound Brook\\t3425\\t3.04
+	Branchburg\\t1644\\t3.49
+	Bridgewater\\t7897\\t3.81
+	Far Hills\\t240\\t3.19
+	\f3.\fPTE
+.fi
+.s3
+yields:
+.s3
+.if n .in +8n
+.if t .in +.5i
+.ne 10
+.TS
+.nr 35 \n(.u
+.nf
+.nr 79 0n
+.nr 80 \n(79
+.nr 40 \n(79
+.nr 38 \n(79+\w!Town!
+.if \n(80<\n(38 .nr 80 \n(38
+.nr 38 \n(79+\w!!
+.if \n(80<\n(38 .nr 80 \n(38
+.nr 38 \n(79+\w!Bedminster!
+.if \n(80<\n(38 .nr 80 \n(38
+.nr 38 \n(79+\w!Bernards Twp.!
+.if \n(80<\n(38 .nr 80 \n(38
+.nr 38 \n(79+\w!Bernardsville!
+.if \n(80<\n(38 .nr 80 \n(38
+.nr 38 \n(79+\w!Bound Brook!
+.if \n(80<\n(38 .nr 80 \n(38
+.nr 38 \n(79+\w!Branchburg!
+.if \n(80<\n(38 .nr 80 \n(38
+.nr 38 \n(79+\w!Bridgewater!
+.if \n(80<\n(38 .nr 80 \n(38
+.nr 38 \n(79+\w!Far Hills!
+.if \n(80<\n(38 .nr 80 \n(38
+.nr 81 \n(80
+.nr 41 \n(80
+.nr 38 \n(80+\w!Number!
+.if \n(81<\n(38 .nr 81 \n(38
+.nr 31 0
+.nr 32 0
+.nr 38 \w!789!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!3087!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!2018!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!3425!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!1644!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!7897!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!240!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 61 \n(80+\n(31
+.nr 38 \n(61+\n(32
+.if \n(38>\n(81 .nr 81 \n(38
+.if \n(38<\n(81 .nr 61 +(\n(81-\n(38)/2
+.nr 82 \n(81
+.nr 42 \n(81
+.nr 38 \n(81+\w!Size!
+.if \n(82<\n(38 .nr 82 \n(38
+.nr 31 0
+.nr 32 0
+.nr 38 \w!3!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!.26!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!3!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!.74!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!3!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!.30!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!3!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!.04!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!3!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!.49!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!3!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!.81!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 38 \w!3!
+.if \n(31<\n(38 .nr 31 \n(38
+.nr 38 \w!.19!
+.if \n(32<\n(38 .nr 32 \n(38
+.nr 62 \n(81+\n(31
+.nr 38 \n(62+\n(32
+.if \n(38>\n(82 .nr 82 \n(38
+.if \n(38<\n(82 .nr 62 +(\n(82-\n(38)/2
+.nr 38 \n(79+\w!Household Population!-\n(82
+.if \n(38>0 .nr 38 \n(38/2
+.if \n(38<0 .nr 38 0
+.nr 61 +1*\n(38
+.nr 81 +1*\n(38
+.nr 41 +1*\n(38
+.nr 62 +2*\n(38
+.nr 82 +2*\n(38
+.nr 42 +2*\n(38
+.nr 38 \n(80+\w!Households!-\n(82
+.if \n(38>0 .nr 38 \n(38/1
+.if \n(38<0 .nr 38 0
+.nr 62 +1*\n(38
+.nr 82 +1*\n(38
+.nr 42 +1*\n(38
+.nr 38 1n
+.nr 41 +3*\n(38
+.nr 81 +3*\n(38
+.nr 61 +3*\n(38
+.if n .if \n(61%24>0 .nr 61 +12u
+.nr 42 +6*\n(38
+.nr 82 +6*\n(38
+.nr 62 +6*\n(38
+.if n .if \n(62%24>0 .nr 62 +12u
+.nr TW \n(82
+.fc ! :
+.ta \n(82u 
+\&!:Household Population:!
+.ta \n(80u \n(82u 
+\&\h'|\n(40u'!:Town:!\h'|\n(41u'!:Households:!
+.ta \n(80u \n(81u \n(82u 
+\&\h'|\n(40u'!::!\h'|\n(41u'!:Number:!\h'|\n(42u'!:Size:!
+.ta \n(80u \n(61u \n(62u \n(82u 
+\&\h'|\n(40u'!Bedminster:!\h'|\n(41u'!:789!\h'|\n(42u'!:3!!.26:!
+.ta \n(80u \n(61u \n(62u \n(82u 
+\&\h'|\n(40u'!Bernards Twp.:!\h'|\n(41u'!:3087!\h'|\n(42u'!:3!!.74:!
+.ta \n(80u \n(61u \n(62u \n(82u 
+\&\h'|\n(40u'!Bernardsville:!\h'|\n(41u'!:2018!\h'|\n(42u'!:3!!.30:!
+.ta \n(80u \n(61u \n(62u \n(82u 
+\&\h'|\n(40u'!Bound Brook:!\h'|\n(41u'!:3425!\h'|\n(42u'!:3!!.04:!
+.ta \n(80u \n(61u \n(62u \n(82u 
+\&\h'|\n(40u'!Branchburg:!\h'|\n(41u'!:1644!\h'|\n(42u'!:3!!.49:!
+.ta \n(80u \n(61u \n(62u \n(82u 
+\&\h'|\n(40u'!Bridgewater:!\h'|\n(41u'!:7897!\h'|\n(42u'!:3!!.81:!
+.ta \n(80u \n(61u \n(62u \n(82u 
+\&\h'|\n(40u'!Far Hills:!\h'|\n(41u'!:240!\h'|\n(42u'!:3!!.19:!
+.fc
+.mk ##
+.nr ## -1v
+.if \n(35>0 .fi
+.TE
+.fi
+.if n .in -8n
+.if t .in -.5i
+.s3
+If a table element contains only \*`_\*' or \*`=\*', a
+single or double line (respectively) is drawn
+across the \f2column\fP at that point.  If a table line contains
+only \*`_\*' or \*`=\*', a single or double line (respectively) is drawn all the way across the
+.it table.
+.s3
+If a column describer contains the
+character \*`|\*', a vertical line is drawn to the left of
+that column beginning at the point in the column corresponding
+to the position of the vertical bar in the describer, and extending
+to the bottom of the table.
+.s3
+If no arguments are given,
+.it tbl
+reads the standard input,
+so it may be used as a filter.
+When it is used with
+.it eqn
+or
+.it neqn,
+the
+.it tbl
+command should be first, to minimize the volume
+of data passed through
+pipes.
+.sh "SEE ALSO"
+.it "TBL \\- A Program to Format Tables"
+by M. E. Lesk.

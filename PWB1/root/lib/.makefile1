@@ -1,0 +1,60 @@
+LIB = /lib
+
+SRC = /sys/source
+FSRC = /sys/fort
+
+MAKE = make
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = -as
+
+LD = -ld
+LDFLAGS = -s
+
+DD = TMP
+STICKY = OLD
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+
+# ------------
+#  Create lib.
+# ------------
+
+MAIN:		as2 \
+		liba.a crt0.o fcrt0.o mcrt0.o
+	-rm -f $(DD)*
+	-@echo "\n***** Following Files Still Present:";  ls -l $(DD)*;  echo "\n"
+	@echo "\n***** Following Sticky Files Still Present, Remove After Next Reboot:";\
+			 ls -l $(STICKY)*;  echo "\n"
+
+
+as2:		$(SRC)/s1/as2?.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s1/as2?.s
+	$(LD) $(LDFLAGS) -n a.out
+	-chmod 1755 a.out
+	-chown bin a.out
+	-mv as2 $(STICKY)as2
+	mv a.out as2
+	ls -l $(STICKY)as2 as2
+
+liba.a:		$(SRC)/s3/*.[cs] \
+		$(SRC)/s3/makefile $(ASDEP)
+	chdir $(SRC)/s3; $(MAKE) "LIB=$(LIB)" "CC=$(CC)" "AS=$(AS)" "DD=$(DD)" \
+			install clean
+
+crt0.o fcrt0.o mcrt0.o: $(SRC)/s4/*crt0.s \
+			$(SRC)/s4/makefile $(ASDEP)
+	chdir $(SRC)/s4; $(MAKE) "LIB=$(LIB)" "CC=$(CC)" "AS=$(AS)" "DD=$(DD)" \
+			in_crt0
+
+RC:	# dummy name to force re-compiling things.

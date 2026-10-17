@@ -1,0 +1,375 @@
+.tr ~
+.tr $%
+.if n .ds D " -- 
+.if t .ds D _
+.tr @|
+.de SP
+.if n .ul
+\%[\fB\(em\\$1\fR\\c
+.if n .ul 0
+\\$2\\$3
+..
+.de SF
+.if n .ul
+\%[\fB\(em\\$1\fR]
+.if n .ul 0
+..
+.de DT
+.hc ^
+^...
+.hc
+..
+.de AR
+.s1
+.lp +10 5
+\fB\(em\\$1\\fR	\\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8 \\$9
+..
+.de FI
+.s1
+.lp +30 30
+\\$1	\\$2
+.i0
+..
+.ds F)  \fB\s-2FILES\s+2\fR
+.de I
+.if n .ul
+\fI\\$1\fR\c
+.if n .ul 0
+\\$2\\$3\\$4\\$5\\$6\\$7\\$8\\$9
+..
+.de FG
+.s1
+.lp +20 7
+.if t \fB\\$1\fR\\$2\t\\$3
+.if n \\$1_\\$2\t\\$3
+..
+.if n .ds )Q '
+.if n .ds )G `
+.if t .ds )Q \\(aa
+.if t .ds )G \\(ga
+.if t .ds )S \\|
+.th ADMIN I 8/30/77
+.sh NAME
+admin \*- administer SCCS files
+.sh SYNOPSIS
+.na
+.bd admin
+.SF n
+.SP i \%[name]
+.SP r rel ]]
+.SP t \%[name] ]
+.if n .br
+.SP f add-flag\%[flag-val] ]
+.DT
+.SP d delete-flag ]
+.DT
+.br
+.SP a add-login ]
+.DT
+.SP e erase-login ]
+.DT
+.SF h
+.SF z
+name
+.DT
+.ad
+.sh DESCRIPTION
+.it Admin
+is used to create new SCCS files
+and change parameters of existing ones.
+Arguments to
+.it admin\c
+,
+which may appear in any order,
+consist of keyletter arguments,
+which begin with ``\*-'',
+and named files.
+If a named file doesn't exist,
+it is created,
+and its parameters are initialized according to
+the specified keyletter arguments.
+Parameters not initialized by a keyletter argument
+are assigned a default value.
+If a named file does exist,
+parameters corresponding to specified keyletter arguments
+are changed,
+and other parameters are left as is.
+.s1
+If a directory is named,
+.it admin
+behaves as though each file in the directory were
+specified as a named file,
+except that non-SCCS files
+(last component of the pathname does not begin with ``s\fB.\fP''),
+and unreadable files,
+are silently ignored.
+If a name of ``\(em'' is given, the standard input is read;
+each line of the standard input is taken to be the name of an SCCS file
+to be processed.
+Again, non-SCCS files and unreadable files are silently ignored.
+.s1
+The keyletter arguments are as follows.
+Each is explained as though only one named file is to be processed,
+but the effects of any keyletter argument
+other than
+.bd i
+and
+.bd r
+apply independently to
+each named file.
+.AR n This
+argument indicates that new files are to be created.
+This argument must be specified when creating
+new SCCS files.
+The
+.bd i
+argument implies an
+.bd n
+argument.
+.AR i The
+name of a file from which the text of an initial delta is to be taken.
+If this argument is supplied,
+but the file name is omitted,
+the text is obtained by reading the standard input
+until an end-of-file is encountered.
+If this argument is omitted,
+and the
+.it admin
+command creates one or more SCCS files,
+then their initial deltas must be inserted in the
+normal manner,
+using
+.it get
+and
+.it delta\c
+(I).
+Only one SCCS file may be created
+by an
+.it admin
+command on which the
+.bd i
+argument is supplied.
+.AR r The
+release into which the initial delta will be inserted.
+This argument may only be supplied if the
+.bd i
+argument is also supplied.
+If this argument is omitted,
+the initial delta will be inserted into release 1.
+The level of the initial delta will always be 1.
+.AR t The
+name of a file from which descriptive text for the SCCS file
+is to be taken.
+If this argument is supplied and
+.it admin
+is creating a new SCCS file, the descriptive-text file-name must also
+be supplied.
+In the case of existing SCCS files, if this argument is supplied
+but the file name is omitted, the descriptive text (if any)
+currently in the SCCS file will be removed.
+If the file name is supplied, the text in the file named will replace
+the descriptive text (if any) currently in the SCCS file.
+.AR f This
+argument specifies a flag, and, possibly, a value for the flag, to
+be added to the SCCS file.
+Several
+.bd f
+arguments may be supplied on a single
+.it admin
+command.
+The allowable flags and their values are as follows:
+.FG b ~ The
+presence of this flag indicates that the use of the
+.bd b
+argument on a
+.it get
+command will cause a branch to be taken in the delta tree.
+.FG c ceil The
+``ceiling:'' the highest release (less than or equal to 9999)
+which may be specified by the
+.bd r
+argument on a
+.it get
+with an
+.bd e
+argument.
+If this flag is not specified, the ceiling is 9999.
+.FG d SID The
+default SID to be used on a
+.it get
+when the
+.bd r
+argument is not supplied.
+.FG f floor The
+``floor:'' the lowest release (greater than 0) which may be specified by the
+.bd r
+argument on a
+.it get
+with an
+.bd e
+argument.
+If this flag is not specified, the floor is 1.
+.FG i ~ The
+presence of this flag causes the "No id keywords (ge6)" message issued by
+.it get
+or
+.it delta
+to be treated as a fatal error.
+In the absence of this flag, the message is only a warning.
+.FG m mod This
+flag specifies the module name of the SCCS file.
+Its value will be used by
+.it get
+as the replacement for the $M$ keyword.
+.FG t type This
+flag specifies the type of the module.
+Its value will be used by
+.it get
+as a replacement for the $Y$ keyword.
+.FG v \%[pgm] The
+presence of this flag indicates that
+.it delta
+is to prompt for MR numbers in addition to comments.
+If the optional value of this flag is present, it specifies
+the name of an MR number validity checking program.
+.AR d This
+argument specifies a flag to be completely removed from an
+SCCS file.
+This argument may only be specified when processing existing
+SCCS files.
+Several
+.bd d
+arguments may be supplied on a single
+.it admin
+command.
+See the
+.bd f
+argument for the allowable flags.
+.AR a A
+login name
+to be added to the list of logins which
+may add deltas.
+Several
+.bd a
+arguments may be supplied
+on a single
+.it admin
+command.
+As many logins as desired may be on the list simultaneously.
+If the list of logins is empty,
+then anyone may add deltas.
+.AR e A
+login name to be erased from the list of logins.
+Several
+.bd e
+arguments may be supplied on a single
+.it admin
+command.
+.AR h This
+argument provides a convenient mechanism for checking for corrupted
+files.
+With this argument,
+.it admin
+will check that the sum of all the characters in the
+SCCS file (the check-sum)
+agrees with the sum which is stored in the first line of the file.
+If the sums are not in agreement a "corrupted file" message will be
+produced.
+This argument inhibits writing on the file, so that it
+will nullify the effect of any other arguments supplied, and
+is, therefore, only meaningful when processing existing files.
+.AR z This
+argument will cause
+.it admin
+to ignore any discrepancy in the check-sum of the SCCS file
+(see
+.bd h
+argument),
+and to replace it with the new one.
+(The same effect may be had by first editing the SCCS file with
+.it ed\c
+(I)
+in order to replace the five-character check-sum in the
+first line of the file with five zeroes.
+A subsequent invocation of
+an SCCS command which modifies the file (e.g.,
+.it admin\c
+,
+.it delta\c
+),
+will cause check-sum validation to be by-passed, and a new
+check-sum to be computed.)
+The purpose of this is to correct the check-sum in those
+files which may have been edited by the user.
+Note that use of this argument on a truly corrupted file
+will prevent future detection of the corruption.
+.i0
+.sh FILES
+The last component of
+all SCCS file names must be of the form ``\fBs.\fP\fImodulename\fP''.
+New SCCS files are given mode 444.
+Write permission
+in the pertinent directory is,
+of course,
+required to create a file.
+All writing done by
+.it admin
+is to a temporary x-file (see
+.it get\c
+(I)),
+created with mode 444 if the
+.it admin
+command is creating a new SCCS file, or with the same mode
+as the SCCS file if it exists.
+After successful execution of
+.it admin\c
+,
+the SCCS file will be deleted, if it exists, and the x-file
+will be renamed with the name of the SCCS file.
+This ensures that changes will be made to the SCCS file only
+if no errors occurred.
+.s1
+It is recommended that directories containing SCCS files be mode
+755
+and that SCCS files themselves be mode 444.
+The mode of the directories will allow
+only the owner to modify
+SCCS files contained in the directories.
+The mode of the SCCS files will prevent any modification
+at all except by SCCS commands.
+.s1
+If it should be necessary to patch an SCCS file for any reason,
+the mode may be changed to 644 by the owner, and then the owner may
+edit the file at will with
+.it ed\c
+(I).
+.s1
+.it Admin
+also makes use of the
+.it z-file,
+which is used to prevent simultaneous updates to the SCCS file by different users.
+See
+.it get\c
+(I)
+for further information.
+.sh "SEE ALSO"
+.na
+get(I),
+delta(I),
+prt(I),
+what(I),
+help(I),
+ed(I),
+sccsfile(V)
+.br
+.it "SCCS/PWB User's Manual"
+by L. E. Bonanni and A. L. Glasser.
+.ad
+.sh DIAGNOSTICS
+Use
+.it help\c
+(I)
+for explanations.
+.tr ~~
+.tr $$
+.tr @@

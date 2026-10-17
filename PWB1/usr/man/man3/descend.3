@@ -1,0 +1,63 @@
+.th DESCEND III 5/31/77
+.sh NAME
+descend \*- search UNIX file system directories
+.sh SYNOPSIS
+.nf
+.ft B
+int descend(name, goal, function, arg)
+char *name, goal;
+int (*function)();
+??? arg;
+.ft R
+.fi
+.sh DESCRIPTION
+The
+.ul
+descend
+function requires a file or directory name as first argument.
+If
+.it name
+is a directory name,
+.ul
+descend
+recurses
+until regular files are found.
+Depending on the
+.ul
+goal
+argument, the user-passed function
+.ul
+function
+is called as follows:
+
+ 	(*function)(arg, name)
+
+In addition to these arguments,
+.ul
+stat(II)
+information is available for the current file.
+The external file status buffer is named ``_Dstatb''.
+.s1
+The
+.it goal
+argument
+is defined as:
+ 	\*af\*a	call user function when
+.it name
+is a
+.bd file.
+ 	\*ad\*a	call user function when
+.it name
+is a
+.bd directory.
+ 	\*ab\*a	call user function for both.
+.s3
+This function is kept in the
+.bd \-lPW
+library.
+.sh DIAGNOSTICS
+.ul
+Descend
+returns zero on failure.
+It also writes error messages on file descriptor 2
+(such as \%"\-\-unreadable" for private files).

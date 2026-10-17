@@ -1,0 +1,282 @@
+
+SRC = /sys/source
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = as
+
+LD = ld
+LDFLAGS = -s
+
+DD = TMP
+STICKY = OLD
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+
+MAKE = make
+SH = sh -v
+
+
+# ------------
+#  Create /usr/bin.
+# ------------
+
+MAIN:		bas bc bfs cal cref crpost dc egrep expr \
+		fgrep graph m4 ptx quiz rc regcmp rgrep \
+		sno typo units upost vp vpbrk xargs
+	-rm -f $(DD)*
+	-@echo "\n***** Following Files Still Present:";  ls -l $(DD)*;  echo "\n"
+	-@echo "\n***** Following Sticky Files Still Present, Remove After Next Reboot:"; \
+			ls -l $(STICKY)*;  echo "\n"
+
+
+bas:		$(SRC)/s1/bas.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s1/bas.s;  $(LD) $(LDFLAGS) a.out -la
+	chmod 755 a.out
+	-chown bin a.out
+	-mv bas $(DD)bas
+	mv a.out bas
+	ls -l bas
+	-rm -f $(DD)*
+
+bc:		$(SRC)/s1/bc.y $(CCDEP) $(YACCDEP)
+	$(YACC) $(SRC)/s1/bc.y
+	$(CC) $(CCFLAGS) y.tab.c
+	rm y.tab.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv bc $(DD)bc
+	mv a.out bc
+	ls -l bc
+	-rm -f $(DD)*
+
+bfs:		$(SRC)/s1/bfs.c $(CCDEP) $(LSDEP) $(LPWDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/bfs.c -lPW -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv bfs $(DD)bfs
+	mv a.out bfs
+	ls -l bfs
+	-rm -f $(DD)*
+
+cal:		$(SRC)/s1/cal.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/cal.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv cal $(DD)cal
+	mv a.out cal
+	ls -l cal
+	-rm -f $(DD)*
+
+cref:		$(SRC)/s1/cref.sa $(CCDEP) $(LPWDEP)
+	mkdir /tmp/makecref
+	chdir /tmp/makecref; ar x $(SRC)/s1/cref.sa; \
+			$(CC) $(CCFLAGS) dr.c acts.c put.c -lPW
+	mv /tmp/makecref/a.out a.out
+	rm -f -r /tmp/makecref
+	rmdir /tmp/makecref
+	chmod 755 a.out
+	-chown bin a.out
+	-mv cref $(DD)cref
+	mv a.out cref
+	ls -l cref
+	-rm -f $(DD)*
+
+crpost:		$(SRC)/s1/cref.sa $(CCDEP)
+	ar x $(SRC)/s1/cref.sa crpost.c
+	$(CC) $(CCFLAGS) -n crpost.c
+	rm crpost.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv crpost $(DD)crpost
+	mv a.out crpost
+	ls -l crpost
+	-rm -f $(DD)*
+
+dc:		$(SRC)/s1/dc?.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s1/dc?.s;  $(LD) $(LDFLAGS) a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv dc $(DD)dc
+	mv a.out dc
+	ls -l dc
+	-rm -f $(DD)*
+
+egrep:		$(SRC)/s1/egrep.y $(CCDEP) $(YACCDEP)
+	$(YACC) $(SRC)/s1/egrep.y
+	$(CC) $(CCFLAGS) -n y.tab.c -ly
+	rm y.tab.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv egrep $(DD)egrep
+	mv a.out egrep
+	ls -l egrep
+	-rm -f $(DD)*
+
+expr:		$(SRC)/s1/expr.y $(CCDEP) $(YACCDEP)
+	$(YACC) $(SRC)/s1/expr.y
+	$(CC) $(CCFLAGS) -n y.tab.c -ly
+	rm y.tab.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv expr $(DD)expr
+	mv a.out expr
+	ls -l expr
+	-rm -f $(DD)*
+
+fgrep:		$(SRC)/s1/fgrep.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/fgrep.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv fgrep $(DD)fgrep
+	mv a.out fgrep
+	ls -l fgrep
+	-rm -f $(DD)*
+
+graph:		$(SRC)/s1/graph.c $(SRC)/plot/plot.c.a $(CCDEP)
+	mkdir /tmp/makegraph
+	cp $(SRC)/s1/graph.c /tmp/makegraph
+	chdir /tmp/makegraph; ar x $(SRC)/plot/plot.c.a;  $(CC) $(CCFLAGS) -n *.c
+	mv /tmp/makegraph/a.out a.out
+	rm -f -r /tmp/makegraph
+	rmdir /tmp/makegraph
+	chmod 755 a.out
+	-chown bin a.out
+	-mv graph $(DD)graph
+	mv a.out graph
+	ls -l graph
+	-rm -f $(DD)*
+
+m4:		$(SRC)/s2/m4.y $(CCDEP) $(LSDEP) $(YACCDEP)
+	$(YACC) $(SRC)/s2/m4.y
+	$(CC) $(CCFLAGS) y.tab.c -ly -lS
+	rm y.tab.c
+	-chmod 755 a.out
+	-chown bin a.out
+	-mv m4 $(DD)m4
+	mv a.out m4
+	ls -l m4
+	-rm -f $(DD)*
+
+ptx:		$(SRC)/s2/ptx.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/ptx.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv ptx $(DD)ptx
+	mv a.out ptx
+	ls -l ptx
+	-rm -f $(DD)*
+
+quiz:		$(SRC)/s2/quiz.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/quiz.c -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv quiz $(DD)quiz
+	mv a.out quiz
+	ls -l quiz
+	-rm -f $(DD)*
+
+rc:		$(SRC)/s2/rc.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/rc.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv rc $(DD)rc
+	mv a.out rc
+	ls -l rc
+	-rm -f $(DD)*
+
+regcmp:		$(SRC)/s2/regcmp.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/regcmp.c -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv regcmp $(DD)regcmp
+	mv a.out regcmp
+	ls -l regcmp
+	-rm -f $(DD)*
+
+rgrep:		$(SRC)/s2/rgrep.c $(CCDEP) $(LPWDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/rgrep.c -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv rgrep $(DD)rgrep
+	mv a.out rgrep
+	ls -l rgrep
+	-rm -f $(DD)*
+
+sno:		$(SRC)/sno/*.[ch] $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/sno/sno?.c
+	rm sno?.o
+	chmod 755 a.out
+	-chown bin a.out
+	-mv sno $(DD)sno
+	mv a.out sno
+	ls -l sno
+	-rm -f $(DD)*
+
+typo:		$(SRC)/s2/typo.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/typo.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv typo $(DD)typo
+	mv a.out typo
+	ls -l typo
+	-rm -f $(DD)*
+
+units:		$(SRC)/s2/units.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/units.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv units $(DD)units
+	mv a.out units
+	ls -l units
+	-rm -f $(DD)*
+
+upost:		$(SRC)/s1/cref.sa $(CCDEP)
+	ar x $(SRC)/s1/cref.sa upost.c
+	$(CC) $(CCFLAGS) -n upost.c
+	rm upost.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv upost $(DD)upost
+	mv a.out upost
+	ls -l upost
+	-rm -f $(DD)*
+
+vp:		$(SRC)/s2/vp.c $(CTIME) $(CCDEP) $(LSDEP) $(LPWDEP) $(LpwDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/vp.c -lpw -lPW -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv vp $(DD)vp
+	mv a.out vp
+	ls -l vp
+	-rm -f $(DD)*
+
+vpbrk:		$(SRC)/s2/vpbrk.c $(CCDEP) $(CTIME) $(LPWDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/vpbrk.c -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv vpbrk $(DD)vpbrk
+	mv a.out vpbrk
+	ls -l vpbrk
+	-rm -f $(DD)*
+
+xargs:		$(SRC)/s2/xargs.c $(CCDEP) $(LPWDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/xargs.c -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv xargs $(DD)xargs
+	mv a.out xargs
+	ls -l xargs
+	-rm -f $(DD)*
+
+RC:	# dummy name to force re-compiling things.

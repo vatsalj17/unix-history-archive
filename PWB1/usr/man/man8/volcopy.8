@@ -1,0 +1,77 @@
+.th VOLCOPY VIII 5/31/77
+.sh NAME
+volcopy, labelit \*- copy filesystems with label checking
+.sh SYNOPSIS
+.s3
+.bd /etc/vc10
+fsname special1 volname1 special2 volname2
+.br
+.bd /etc/vc50
+fsname special1 volname1 special2 volname2
+.br
+.bd /etc/vc88
+fsname special1 volname1 special2 volname2
+.br
+.bd "/etc/labelit"
+special [ fsname volume [ \*-n ] ]
+.s3
+.sh DESCRIPTION
+.it Volcopy
+makes a literal copy of the filesystem
+using
+a blocksize matched to the device (10 blocks for tape
+.it "[vc10],"
+50 blocks for RP03
+.it "[vc50],"
+or 88 blocks for RP04,5,6
+.it "[vc88])."
+Using
+.it vc10,
+a 2400 foot/800 bpi tape will hold
+40K blocks; 65K blocks fit at 1600 bpi.
+.s3
+The
+.it fsname 
+argument represents the mounted name (e.g.: `root', `u1', etc.)
+of the filsystem being copied.
+.s3
+The
+.it "special"
+should be the physical disk or tape (e.g.: `/dev/rrp15', `/dev/rmt0', etc.).
+.s3
+The
+.it "volname"
+is the physical volume name (e.g.: `pk3', `t0122', etc.)
+and should match the external label sticker.
+Such label names are limited to five or fewer characters.
+.s3
+.it "Special1"
+and
+.it "volname1"
+are the device and volume from which the copy of the filesystem is
+being extracted.
+.it "Special2"
+and
+.it "volname2"
+are the target device and volume.
+.s3
+.it Fsname
+and
+.it volname
+are recorded in the last 12 characters
+of the superblock (char fsname[6], volname[6];).
+.s3
+.it Labelit
+can be used to provide initial labels for unmounted disk
+or tape filesystems.
+With the optional arguments omitted,
+.it labelit
+prints current label values.
+The
+.bd \*-n
+option provides for initial labelling of new tapes or disks
+(this destroys previous contents).
+.sh FILES
+/etc/log/filesavelog: a record of filesystems/volumes copied
+.sh "SEE ALSO"
+fs(V)

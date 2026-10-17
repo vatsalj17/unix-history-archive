@@ -1,0 +1,89 @@
+.th SHA V 5/31/77
+.sh NAME
+sha \*- Shell accounting file
+.sh DESCRIPTION
+The file
+.it /etc/sha
+is used by each Shell to record command execution data.
+This information is
+.it not
+used for charging,
+but is helpful for system tuning,
+command design,
+and monitoring of user activity.
+For each command executed,
+the Shell writes a 32-byte record of the following form:
+.s3
+.nf
+struct {
+	char	command\_name[8];
+	char	login\_name[6];
+	char	tty\_letter;
+	char	user\_id;
+	long	date;
+	long	real\_time;
+	long	cpu\_time;
+	long	system\_time;
+} sh\_record;
+.fi
+.s3
+The
+.it command\_name
+gives the last (or only) component of
+a pathname.
+When an asynchronously-executed command terminates,
+the Shell can obtain times,
+but not the actual command name.
+In this case, `**gok' is used.
+The name `()'
+indicates the completion of a parenthesized subshell.
+.s3
+The type (and therefore volume)
+of data recorded in
+.it /etc/sha
+can be controlled by setting file permission bits appropriately.
+If it cannot be opened for writing,
+no data is recorded.
+Otherwise, the Shell tests the 3 bits of the group permission field
+to determine the kinds of recording to be done.
+If a Shell is reading from a TTY,
+it tests the high-order bit (04).
+If it is 0,
+the Shell records only external commands,
+i.e., those not built into the Shell.
+If the bit is 1,
+internal commands (such as
+.it chdir,
+.it =,
+etc.)
+are also recorded.
+A Shell that is not reading from a TTY uses the two low-order bits.
+If bit 02 is on, external commands are recorded.
+Setting bit 01 on adds internal commands.
+.it Adm
+should own
+.it /etc/sha,
+and the group owner should be one not used elsewhere,
+such as 0.
+No data is ever recorded for the super-user.
+Sample file modes and their effects are:
+.s3
+.lp +4 4
+606	Record external commands issued at TTY.
+This is the preferred mode.
+.s3
+.lp +4 4
+666	Record everything but procedure-level internal commands,
+which can account for 30% of all command executions.
+.s3
+.lp +4 4
+676	Record everything.
+This mode is probably of interest only to those who
+maintain the Shell.
+Be warned that this mode may cause
+.it /etc/sha
+to grow by 1000 blocks per day in an active system.
+.sh "SEE ALSO"
+sh(I),
+lastcom(VIII),
+sa(VIII)

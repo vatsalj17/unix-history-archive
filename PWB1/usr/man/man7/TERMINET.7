@@ -1,0 +1,97 @@
+.th TERMINET VII 5/31/77
+.sh NAME
+TermiNet \*- GE TermiNet 300 (and 1200) terminals
+.sh DESCRIPTION
+The TermiNet 300 is a reasonable terminal for general-purpose use.
+Because it does provide hardware tab stops,
+it is useful for both programming and documentation.
+It prints up to 118 characters (10-pitch),
+utilizing a
+continuously-moving band of print elements.
+The terminal is reasonably compact.
+A useful feature is the fact that the first tab stop set on the
+terminal becomes the left margin.
+Some users prefer this terminal's column position lights and lack
+of large moving print element.
+Visibility of current typed line is adequate.
+.s1
+The TermiNet 1200 is a 1200-baud version of the 300.
+.sh "COMMANDS TO ISSUE AFTER LOGIN"
+.s1
+.bd tabs
+or
+.bd "tabs +ttn"
+.s1
+This assures setting of UNIX standard tab stops.
+By default, you also have delays set as by
+.bd "stty nl0 cr1,"
+which should generally work, but may fail for some types of output.
+On a TermiNet 300 at this setting,
+it takes about 49 seconds per page of C program,
+and 84 seconds per page of
+.it nroff
+output (UNIX manual page), the latter figure assuming output is tabbed.
+Usable settings and their relative time ratios are as follows:
+.s1
+.if n .ta 9 17
+.if t .ta 1.5i
+.nf
+nl0 cr2	1.00
+nl0 cr1	1.03
+nl0 cr3	1.08
+nl2 cr2	1.10
+nl2 cr3	1.17
+.fi
+.s1
+The TermiNet 1200 is about 2.5 times faster than
+the 300 at corresponding settings,
+but may not be able to print properly at the fastest settings.
+.sh "NORMAL SWITCH SETTINGS"
+Several switches are on
+back of the terminal:
+.s1
+(Back left) \*- NORM (not CAPS ONLY)
+.br
+(Back left, on some models) \*- FULL DUPLEX
+.br
+(Back right) \*- power ON
+.s1
+Light switches on front left:
+.s1
+ON LINE \*- push so that it becomes lit
+.br
+INTERRUPT \*- if lit, push it so it goes out
+.s1
+Switches on right front:
+.s1
+TRANSPARENCY \*- OFF
+.br
+INHIBIT \*- NORM
+.br
+RATE \*- 30
+.br
+LINE FEED \*- 1
+.br
+AUTO L.F. \*- OFF
+.sh "COMMON PROBLEMS"
+NO LINE FEED OCCURS WHEN RETURN HIT; NO SYSTEM RESPONSE TO RETURN \*-
+you are in a mode where there is no conversion of RETURN to CR-LF echoed to your terminal.
+There are two situations.
+First, either the terminal or coupler switch may be set to HALF-DUPLEX, and you may
+have asked to suppress echoing because you were getting double characters.
+Change the switches to FULL-DUPLEX, and issue a
+.bd "stty echo"
+command.
+The second case is that a
+.bd "stty nl"
+command has been done,
+or some equivalent action,
+such as using LINE FEED
+rather than RETURN during your login sequence.
+Issue the command
+.bd "stty \*-nl,"
+but terminate it with a LINE FEED, not a RETURN.
+This will restore the terminal to the normal state,
+allowing convenient use of RETURN again.
+.sh "SEE ALSO"
+stty(I), tabs(I), terminals(VII)

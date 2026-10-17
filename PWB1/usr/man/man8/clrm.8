@@ -1,0 +1,41 @@
+.th CLRM VIII 5/31/77
+.sh NAME
+clrm \*- clear mode of i-node
+.sh SYNOPSIS
+.bd /etc/clrm
+filesystem i-number ...
+.sh DESCRIPTION
+.it Clrm
+writes a zero in the two byte mode of the associated
+i-node numbered
+.it i-number.
+The
+.it filesystem
+argument must be a special file name referring
+to a device containing a file system.
+More than one
+.it i-number
+may be given.
+After
+.it clrm,
+any blocks in the affected file will show up as
+``missing'' in a
+.it check
+of the
+.it filesystem.
+.s3
+The primary purpose of this routine is to remove
+a file which does not appear in a directory.
+Internal checks are performed on each
+.it i-number
+to protect the
+.it filesystem
+against clearing either a directory or a special file.
+.s3
+Since
+.it clrm
+does not destroy the i-node's original disk block address when
+invoked, the i-node, if cleared by mistake, may then be
+salvaged more efficiently.
+.sh "SEE ALSO"
+check(VIII), clri(VIII)

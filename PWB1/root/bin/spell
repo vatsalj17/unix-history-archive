@@ -1,0 +1,31 @@
+= a /usr/lib/spell
+= b /tmp/sp$$
+= d -3
+= p /bin:/usr/bin
+onintr RM
+while $1
+	switch $1
+	: -1
+		= f 1
+		breaksw
+	: -v
+		= c -v
+		= d -2
+		breaksw
+	: default
+		break
+	endsw
+	shift
+end
+deroff -w $*>$b.0
+sort -u +0f +0 $b.0|$a0 - /usr/lib/w2006 >$b
+$a1<$b|sort -f|\
+$a2 /usr/dict/spellinglist /usr/dict/stoplist|\
+sort -f|$a3 $b /dev/null $c>$b.l
+if -z "$f" then
+	pr $d -h "Possible spelling errors" $b.l
+else
+	cat $b.l
+endif
+: RM
+rm -f $b*

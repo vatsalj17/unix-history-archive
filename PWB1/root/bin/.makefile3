@@ -1,0 +1,253 @@
+
+SRC = /sys/source
+SYSINC = /sys/sys/hd
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = as
+
+LD = ld
+LDFLAGS = -s
+
+MAKE = make
+SH = sh -v
+
+DD = TMP
+STICKY = OLD
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+SYSDEP=		# for $(SYSINC) system include files.
+
+# ------------
+#  Create bin
+# ------------
+
+MAIN:		\
+		sed sh size sleep sort \
+		spell split strip stty su sum sync \
+		tee time tp tr tty \
+		uname uniq wc who write yacc
+	-rm -f $(DD)*
+	-@echo "\n***** Following Files Still Present:";  ls -l $(DD)*;  echo "\n"
+	-@echo "\n***** Following Sticky Files Still Present, Remove After Next Reboot:"; \
+			ls -l $(STICKY)*;  echo "\n"
+
+sed:		$(SRC)/s2/sed?.c $(SRC)/s2/sed.h $(CCDEP)
+	chdir $(SRC)/s2;  $(CC) -s sed?.c
+	rm $(SRC)/s2/sed?.o
+	mv $(SRC)/s2/a.out a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv sed $(DD)sed
+	mv a.out sed
+	ls -l sed
+	-rm -f $(DD)*
+
+sh:		$(SRC)/s2/sh.c $(CCDEP) $(LPWDEP)
+	chdir $(SRC)/s2;  $(SH) sh.rc
+	mv $(SRC)/s2/a.out a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv sh $(DD)sh
+	mv a.out sh
+	-mv rsh $(DD)rsh
+	ln sh rsh
+	ls -l sh rsh
+	-rm -f $(DD)*
+
+size:		$(SRC)/s2/size.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/size.c -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv size $(DD)size
+	mv a.out size
+	ls -l size
+	-rm -f $(DD)*
+
+sleep:		$(SRC)/s2/sleep.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/sleep.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv sleep $(DD)sleep
+	mv a.out sleep
+	ls -l sleep
+	-rm -f $(DD)*
+
+sort:		$(SRC)/s2/sort.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/sort.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv sort $(DD)sort
+	mv a.out sort
+	ls -l sort
+	-rm -f $(DD)*
+
+split:		$(SRC)/s2/split.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/split.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv split $(DD)split
+	mv a.out split
+	ls -l split
+	-rm -f $(DD)*
+
+strip:		$(SRC)/s2/strip.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s2/strip.s;  $(LD) $(LDFLAGS) a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv strip $(DD)strip
+	mv a.out strip
+	ls -l strip
+	-rm -f $(DD)*
+
+stty:		$(SRC)/s2/stty.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/stty.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv stty $(DD)stty
+	mv a.out stty
+	ls -l stty
+	-rm -f $(DD)*
+
+su:		$(SRC)/s2/su.c $(CCDEP) $(LPWDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/su.c -lPW
+	chmod 4755 a.out
+	-chown root a.out
+	-mv su $(DD)su
+	mv a.out su
+	ls -l su
+	-rm -f $(DD)*
+
+sum:		$(SRC)/s2/sum.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/sum.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv sum $(DD)sum
+	mv a.out sum
+	ls -l sum
+	-rm -f $(DD)*
+
+sync:		$(SRC)/s2/sync.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/sync.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv sync $(DD)sync
+	mv a.out sync
+	ls -l sync
+	-rm -f $(DD)*
+
+tee:		$(SRC)/s2/tee.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/tee.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv tee $(DD)tee
+	mv a.out tee
+	ls -l tee
+	-rm -f $(DD)*
+
+time:		$(SRC)/s2/time.c $(CCDEP) $(LPWDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/time.c -lPW -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv time $(DD)time
+	mv a.out time
+	ls -l time
+	-rm -f $(DD)*
+
+tp:		$(SRC)/s2/tp.s $(ASDEP) $(CTIME)
+	-rm -f a.out
+	$(AS) $(SRC)/s2/tp.s;  $(LD) $(LDFLAGS) a.out -lc -la
+	chmod 755 a.out
+	-chown bin a.out
+	-mv tp $(DD)tp
+	mv a.out tp
+	ls -l tp
+	-rm -f $(DD)*
+
+tr:		$(SRC)/s2/tr.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/tr.c -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv tr $(DD)tr
+	mv a.out tr
+	ls -l tr
+	-rm -f $(DD)*
+
+tty:		$(SRC)/s2/tty.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s2/tty.s;  $(LD) $(LDFLAGS) a.out -la
+	chmod 755 a.out
+	-chown bin a.out
+	-mv tty $(DD)tty
+	mv a.out tty
+	ls -l tty
+	-rm -f $(DD)*
+
+uname:		$(SRC)/s2/uname.c $(CCDEP) $(LPWDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/uname.c -lPW
+	chmod 755 a.out
+	-chown bin a.out
+	-mv uname $(DD)uname
+	mv a.out uname
+	ls -l uname
+	-rm -f $(DD)*
+
+uniq:		$(SRC)/s2/uniq.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/uniq.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv uniq $(DD)uniq
+	mv a.out uniq
+	ls -l uniq
+	-rm -f $(DD)*
+
+wc:		$(SRC)/s2/wc.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/wc.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv wc $(DD)wc
+	mv a.out wc
+	ls -l wc
+	-rm -f $(DD)*
+
+who:		$(SRC)/s2/who.c $(CCDEP) $(CTIME)
+	$(CC) $(CCFLAGS) $(SRC)/s2/who.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv who $(DD)who
+	mv a.out who
+	ls -l who
+	-rm -f $(DD)*
+
+write:		$(SRC)/s2/write.c $(CCDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s2/write.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv write $(DD)write
+	mv a.out write
+	ls -l write
+	-rm -f $(DD)*
+
+yacc:		$(SRC)/s2/yacc.d/makefile $(SRC)/s2/yacc.d/dextern \
+		$(SRC)/s2/yacc.d/files $(SRC)/s2/yacc.d/y?.c $(CCDEP) $(LSDEP)
+	chdir $(SRC)/s2/yacc.d; $(MAKE) CC=$(CC) yacc
+	rm $(SRC)/s2/yacc.d/y?.o
+	mv $(SRC)/s2/yacc.d/yacc a.out
+	strip a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv yacc $(DD)yacc
+	mv a.out yacc
+	ls -l yacc
+	-rm -f $(DD)*
+
+RC:	# dummy name to force re-compiling things.

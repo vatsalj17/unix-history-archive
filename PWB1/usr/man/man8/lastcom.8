@@ -1,0 +1,56 @@
+.th LASTCOM VIII 5/31/77
+.sh NAME
+lastcom \*- search shell accounting records
+.sh SYNOPSIS
+.bd /etc/lastcom
++
+.s3
+.bd /etc/lastcom
+[ + ] ttylist
+.s3
+.bd /etc/lastcom
+[ + ] \-logname
+.sh DESCRIPTION
+Starting with the most recent entry,
+.it lastcom
+searches back through the shell accounting records for
+usage matching its arguments.
+Only the most recent 1000 entries are scanned.
+.s3
+The ``+'' option alone causes all 1000 entries to be printed.
+.s3
+The
+.it ttylist
+causes
+.it lastcom
+to print the latest entry for each tty (letter or number) specified.
+With the ``+'' option, all entries for
+each tty are listed.
+.s3
+The
+.it \*-logname
+option
+causes the latest command
+executed by the user to be printed.
+Again, the ``+'' means
+.it all
+commands.
+The
+.it logname
+may be entered as an expression as specified in
+.it glob(VIII).
+.s3
+Examples:
+.nf
+.s3
+/etc/lastcom 012345678
+	lists the last command completed by each of the ttys 0\*-8.
+.s3
+/etc/lastcom + "\*-???"
+ 	lists all commands executed by users with 3 character
+	login names.
+.fi
+.sh FILES
+/etc/sha
+.sh "SEE ALSO"
+sh(I), sha(V), glob(VIII)

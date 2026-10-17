@@ -1,0 +1,95 @@
+.th HP I 5/31/77
+.sh NAME
+hp \*- handle special functions of HP 2640 terminal
+.sh SYNOPSIS
+.bd hp
+[\fB\*-e\fR]
+[\fB\*-m\fR]
+.sh DESCRIPTION
+.it Hp
+supports special functions of the Hewlett-Packard 2640
+family of terminals,
+with the primary purpose of producing accurate representations of most
+.it nroff\^\c
+(I)
+output.
+Typical uses are:
+.s3
+	nroff \*-h files ... \*v hp		or:
+.if n .br
+	nroff \*-h \*-s files ... \*v hp
+.s3
+In the latter case,
+.it nroff
+will stop at the beginning of each page including the first and wait for
+you to hit LINE FEED to initiate
+output.
+.s0
+Regardless of the hardware options
+on your terminal,
+.it hp
+does sensible things with underlining and reverse line feeds.
+If the terminal has the
+display enhancements feature,
+subscripts and superscripts can be indicated in distinct ways.
+If it has the mathematical-symbol option, you can see Greek and other special
+characters.
+.s3
+The flags are as follows:
+.s3
+.lp +5 4
+\fB\*-e\fR	it is assumed that your terminal has the display
+enhancements feature, and so maximal use is made of the added display modes.
+Overstruck characters are presented in the Underline mode.
+Superscripts are shown in Half-Bright mode,
+and subscripts in Half-Bright, Underlined mode.
+If this flag is omitted,
+.it hp
+assumes that your terminal lacks the display enhancements feature.
+In this case, all overstruck characters, subscripts, and superscripts
+are displayed in Inverse Video
+mode, i.e., dark on light, rather than the usual
+light on dark.
+.s3
+.lp +5 4
+\fB\*-m\fR	requests minimization of output by removal of newlines.
+Any contiguous sequence of 3 or more newlines is converted into
+a sequence of only 2 newlines;
+i.e., any number of successive blank lines produces only
+a single blank output line.
+This allows you to retain more actual text on the screen.
+.i0
+.s3
+With regard to Greek and other scientific characters,
+.it hp
+provides the same set as does
+.it gsi\^\c
+(I),
+except that "not" is approximated by a right arrow,
+and only the top half of
+the integral sign is shown.
+The display is adequate for examining output
+from
+.it neqn\^\c
+(I).
+.sh DIAGNOSTICS
+"line too long"	 if representation of a line exceeds 300 characters, which
+would occur, for instance,
+if you underlined every other character in an 80-character line
+containing many Greek characters.
+.sh "EXIT CODES"
+0 \*- normal
+.br
+1 \*- for any error
+.sh "SEE ALSO"
+gsi(I), HP2640(VII), neqn(I), nroff(I)
+.sh BUGS
+Note that the second or later characters in an overstriking sequence are
+always assumed to be underlines.
+For example, a bullet made from lower-case "o" overstruck with "+" appears
+as an "o" that is either underlined or shown in
+Inverse Video.
+Although some terminals do provide numerical superscript characters,
+no effort is made to display them.
+The programming is ugly, and most terminals
+do not possess this feature.

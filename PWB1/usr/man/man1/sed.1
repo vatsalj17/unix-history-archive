@@ -1,0 +1,369 @@
+.th SED I 5/31/77
+.sh NAME
+sed \*- stream editor
+.sh SYNOPSIS
+.bd "sed"
+[
+.bd \-g
+] [
+.bd \-n
+] [
+.bd \-f\^
+commandfile ] ... [ [
+.bd \-e\^
+] command ] ... [ file ] ...
+.sh DESCRIPTION
+.it Sed
+copies the input
+.it file\^\c
+s
+(default is standard input)
+to the standard output,
+perhaps performing one or more editor commands (see
+.it ed\^\c
+(I)) on each line.
+.s3
+The
+.bd \-g
+flag indicates that all
+.it s
+commands should be executed as though followed by a
+.it g.
+If only some substitutions are to be done globally,
+leave out the
+.bd \-g
+flag and put the
+\fIg\fR's at the end of the appropriate command lines.
+.s3
+The
+.bd \-n
+flag indicates that
+only lines that are explicitly printed by
+.it p
+commands are to be copied to the standard output.
+In order to avoid getting double copies of some lines in the standard output,
+the
+.it p
+command is ignored unless the
+.bd \-n
+flag is set.
+.s3
+The
+.bd \*-e
+flag indicates that the next argument is an editor command.
+.s3
+The
+.bd \*-f
+flag indicates that the next argument is a file name; the
+file contains editor commands, one to a line.
+Commands that are inherently multi-line, like
+.it a
+or
+.it c,
+should have the interior newlines
+escaped by `\e'.
+Append, insert, and change modes are terminated by an non-escaped newline.
+.s3
+The
+.bd \*-e
+and
+.bd \*-f
+flags may be intermixed in any order.
+.s3
+If no
+.bd \*-e
+or
+.bd \*-f
+flags are given,
+the first argument is taken by default
+to be an editor command.
+.s3
+Addresses are allowed.
+The meaning of \fItwo\fP addresses is:
+``Attempt this command on the first
+line that matches the first address,
+and on all subsequent lines up to and including
+the first subsequent line that matches the second address;
+then search for a match of the first address
+and iterate.''
+\fIOne\fP address means:
+``Attempt this command on all lines that
+match the address.''
+Either line-numbers or regular expressions are
+allowed as addresses.
+Line numbers increase monotonically throughout \fIall\fP
+the input files,
+so that,
+if \fIn\fP is the number of the last line of the first input file,
+then \fIn+1\fP is the number of the first line of the second file, etc.
+A `$' as an address matches the \fIlast\fP line of the \fIlast\fP
+input file.
+.s3
+The intention is to simulate the editor as exactly
+as possible, but the line-at-a-time operation
+makes certain differences unavoidable or desirable:
+.s3
+.lp +6 3
+1.	There is no notion of `\fB.\fP'
+and no relative addressing.
+.s3
+.lp +6 3
+2.	Commands
+with no addresses are defaulted to
+.it 1,$\^
+rather than to dot.
+.s3
+.lp +6 3
+3.	Addresses
+specified as regular expressions must be delimited by `/'; `?' is an error.
+.s3
+.lp +6 3
+4.	Expressions
+in addresses are not allowed (i.e., `+', `\-').
+.s3
+.lp +6 3
+5.	Commands
+may have only as many addresses as they can use.
+That is, no command may have more than two addresses;
+the
+.it a,
+.it i,
+and
+.it r
+commands may have only one address.
+.s3
+.lp +6 3
+6.	A
+\fIp\fP at the end of a command only works with the \fIs\fP
+command.
+For other commands, or if the
+.bd \-n
+flag is not in effect, a \fIp\fP at the end of a command line
+is ignored.
+.s3
+.lp +6 3
+7.	A
+.it w
+may appear at the end of a \fIs\fP command.
+It should be followed by a single space and a file name.
+If the \fIs\fP command succeeds, the
+modified
+line is appended to the file.
+All files are opened when the commands are being compiled,
+and closed when the program terminates.
+Only ten distinct file names may appear in
+.it w
+commands in a single execution of \fIsed\fP.
+Unlike
+.it p,
+.it w
+takes effect regardless of the
+.bd \-n
+flag.
+If both
+.it p
+and
+.it w
+are appended to the same substitute command,
+they must be in the order
+.it pw.
+.s3
+.lp +6 3
+8.	The
+only editor commands available are
+.it a,
+.it c,
+.it d,
+.it i,
+.it s,
+.it p,
+.it q,
+.it r,
+.it w,
+.it g,
+.it v,
+and =.
+A successful execution of a
+.it q
+command causes the current line to be written out if it should be,
+and execution terminated.
+When a line is deleted by a
+.it d
+or
+.it c
+command, no further commands are attempted on its corpse,
+but another line is immediately read from the input
+(but see item 10. below).
+.s3
+.lp +6 3
+9.	The \fIn\fP\^ext line command,
+\fIn\fP, replaces the current line by the next line from the input
+file.
+The list of editing commands is continued after the \fIn\fP command
+is executed.
+.s3
+.lp +6 4
+10.	If
+an
+.it a,
+.it i,
+or
+.it r
+command is successfully executed, the text is inserted
+into the standard output whether or not the line on which the
+match was made is later deleted or not.
+Thus the commands:
+.in +1i
+.nf
+/b/a\\
+XXX
+/b/,/c/d
+.in -1i
+applied to the file
+.in +1i
+a
+b
+c
+d
+.in -1i
+will produce
+.in +1i
+a
+XXX
+d
+.in -1i
+on the output.
+.fi
+.s3
+.lp +6 4
+11.	Text
+inserted in the output stream by the
+.it a,
+.it i,
+.it c,
+or
+.it r
+commands is not scanned for any pattern matches,
+nor are any editor commands applied to it.
+.s3
+.i0
+.it Sed
+supports three commands to control the flow of processing.
+These commands do no editing on the input line, but
+serve to control the order in which multiple editing commands are
+applied to an input line.
+.s3
+.lp +6 4
+12.	The label command,
+.it ": label,"
+marks a place in the list of editing commands which may be
+referred to by
+.it j
+and
+.it t
+commands (see 13. and 14. below);
+the \fIlabel\fP may be any sequence of eight or fewer characters;
+if two different colon commands have identical labels, a compile-time diagnostic will be
+generated and no execution attempted.
+.s3
+.lp +6 4
+13.	The \fIj\fP\^ump command,
+.it "j label,"
+causes the sequence of editing commands being applied to the current input line to be restarted
+immediately after the place where a colon command with the same \fIlabel\fP
+was encountered.
+If no colon command with the same label can be found after
+all editing commands have been compiled, a compile-time
+diagnostic is produced and no execution is attempted.
+A
+.it j
+command with no \fIlabel\fP is taken to be a jump to the end of the list of editing commands;
+whatever should be done with the current input line is done, and
+another input line is read; the list of editing commands is restarted
+from the beginning of that line.
+.s3
+.lp +6 4
+14.	The
+\fIt\fP\^est command,
+.it "t label,"
+tests whether
+.it any
+successful substitutions have been made on the current input line;
+if so, it jumps to \fIlabel;\fP if not, it does nothing.
+The flag that indicates that a successful substitution has occurred on the current input line
+is reset by either reading a new line or by executing the
+.it t
+command.
+.s3
+.i0
+.it Sed
+also supports command grouping and several operations that can
+build lines into a pattern space to be operated upon by other commands.
+.s3
+.lp +6 4
+15.	Commands may be grouped by curly braces.
+The opening brace must appear in the place where a command would ordinarily
+appear; the closing brace must appear on a line by itself (except for leading blanks or tabs).
+If the first line of a command file has
+.it #n
+as its first two characters, the no-copy flag is set, as though the
+.bd \-n
+option had been given on the command line.
+The remainder of this first line is ignored and may be used for
+a title or a comment.
+.ne 18
+.ne 14
+As an example:
+.s3
+.br
+.in +3n
+.nf
+#n  Print first non-blank line after a blank line, and first line, if non-blank.
+1{
+.in +.5i
+/\fB.\fP/p
+.in -.5i
+}
+/^$/{
+: loop
+.in +.5i
+n
+/\fB.\fP/{
+.in +.5i
+p
+j
+.in -.5i
+}
+j loop
+.in -.5i
+}
+.fi
+.in -3n
+.s3
+.i0
+.lp +6 4
+16.	The \fIN\fPext command,
+.it N,
+appends the next input line to the current line; the two
+lines are separated by a new-line character, that
+may be matched by `\\n'.
+.s3
+.lp +6 4
+17.	The \fID\fPelete command,
+.it D,
+deletes up to and including the first (leftmost) new-line in the current pattern space.
+If the pattern space becomes empty (the only new-line is at the end of the space),
+\fID\fP\^elete reads another line from the input.
+The list of editing commands is restarted from the beginning.
+.s3
+.lp +6 4
+18.	The \fIP\fP\^rint command,
+.it P,
+prints on standard output up to and including the first new-line in the pattern space.
+.i0
+.sh "SEE ALSO"
+ed(I)
+.sh BUGS
+Lines are silently truncated to a maximum length of 512 characters.
+The ``plus'', ``range'', and ``through'' regular expression operators (``\^+\^'', ``\^\\{\|\\}\^'', ``\^[\|\-\|]\^'')
+of \fIed\fP\^(I) are not implemented in \fIsed\fP.

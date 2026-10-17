@@ -1,0 +1,34 @@
+.th ALARM II 5/31/77
+.sh NAME
+alarm \*- schedule signal after specified time
+.sh SYNOPSIS
+(alarm = 27.)
+.br
+(seconds in r0)
+.br
+.ft B
+sys	alarm
+.s3
+alarm(seconds)
+.br
+int seconds;
+.ft R
+.sh DESCRIPTION
+.it Alarm
+causes signal number 14 to be sent to the invoking process
+in a number of seconds given by the argument.
+Unless caught, the signal terminates the process.
+.s3
+Alarm requests are not stacked;
+successive calls reset the alarm clock.
+If the argument is 0, any alarm request is cancelled.
+Because the clock has a 1-second resolution,
+the signal may occur up to one second early;
+because of scheduling delays,
+resumption of execution of when the signal is
+caught may be delayed an arbitrary amount.
+The longest specifiable delay time is 65535 seconds.
+The old value of the alarm clock is returned in r0.
+In C, that value is returned.
+.sh "SEE ALSO"
+pause(II), sleep(III)

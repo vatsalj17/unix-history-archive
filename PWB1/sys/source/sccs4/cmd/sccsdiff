@@ -1,0 +1,41 @@
+: sccsdiff 1.2
+onintr intr
+goto start
+: intr
+rm -f /tmp/get$$ >/dev/null
+exit 1
+
+
+DESCRIPTION:
+	Run bdiff on two versions of a set of SCCS files
+	$1 and $2 are two (old/new) SCCS get specifiers (-r... or -c...)
+	if $3 begins with a "-" it is taken to be an argument for pr (e.g. -l84)
+	$3 $4 ... are SCCS files which are gotten.
+
+
+: start
+if $n -lt 3 then
+	echo "Usage: sccsdiff -r<old> -r<new> [pr flags] sccsfile ..."
+	exit 1
+endif
+= a "$1"
+shift
+= b "$1"
+shift
+
+expr substr "$1" 1 1 ^ = c
+if "x$c" = x- then
+	= c "$1"
+	shift
+else
+	= c " "
+endif
+
+while $1
+	get -s -p -k $a $1 >/tmp/get$$
+	if $r -eq 0 then
+	   get -s -p -k $b $1 ^ bdiff /tmp/get$$ - ^ pr $c -h "$1: $a vs. $b"
+	endif
+	shift
+end
+rm /tmp/get$$

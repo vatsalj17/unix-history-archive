@@ -1,0 +1,40 @@
+.th UTIME II 5/31/77
+.sh NAME
+utime \*- update times in file
+.sh SYNOPSIS
+.nf
+(pwbsys = 57.; utime = 3)
+(pointer to times in r0)
+(pointer to name in r1)
+.bd "sys	pwbsys; utime"
+.s3
+.bd "utime(name, times)"
+.bd "char *name, *times;"
+.fi
+.sh DESCRIPTION
+.it Utime
+is used to set both the access and modification times
+of a file.
+Only the super-user may use this call.
+.it Name
+points to a null-terminated string naming a file, and
+.it times
+points to a structure containing two long integer time values:
+.s3
+.nf
+struct {
+	long int actime;	/* access time */
+	long int modtime;	/* modification time */
+};
+.fi
+.s3
+This function is kept in the
+.bd \-lPW
+library.
+.sh "SEE ALSO"
+stat(II)
+.sh DIAGNOSTICS
+The error bit(c-bit) is set if 
+.it name
+does not exist, if not super-user, or if a read-only file system.
+From C, a \*-1 return indicates an error.

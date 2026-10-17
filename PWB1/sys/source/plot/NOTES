@@ -1,0 +1,39 @@
+the libraries described in PLOT(VII) are:
+
+	plot.a made from source in plot.c.a
+	vt0.a made from source in vt0.c.a
+	t300.a made from source in t300.c.a
+	t300s.a made from source in t300s.c.a
+	tek.a made from source in tek.c.a
+	t450.a made from source in t450.c.a
+		(for DASI terminals)
+
+the source is simply extracted from the
+corresponding -.c.a archive, compiled
+and placed into the -.a archive. do not
+cross the source in the various archives,
+there is a lot of duplication in file and 
+entry names.
+
+to create the programs described in PLOT(VI)
+compile the program driver.c with the
+corresponding library. exmple:
+
+	cc -c -O driver.c
+	cc driver.o tek.a
+	mv a.out /usr/bin/tek
+
+	cc driver.o t450.a
+	mv a.out /usr/bin/t450
+
+finally, to produce GRAPH(VI) compile
+graph.c with the library plot.a.
+it is easy to produce device dependent
+versions of graph by loading other libraries.
+example:
+
+	cc -c -O graph.c
+	cc graph.o plot.a
+	mv a.out /usr/bin/graph
+
+good luck.

@@ -1,0 +1,42 @@
+.th KILL II 5/31/77
+.sh NAME
+kill  \*-  send signal to a process
+.sh SYNOPSIS
+(kill = 37.)
+.br
+(process number in r0)
+.br
+.ft B
+sys kill; sig
+.s3
+kill(pid, sig);
+.ft R
+.sh DESCRIPTION
+.it Kill
+sends the signal
+.it sig
+to the process specified by the
+process number in r0.
+See
+.it signal\^\c
+(II) for a list of signals.
+.s3
+The sending and receiving processes must
+have the same effective user ID.
+The super-user can kill any process.
+.s3
+If the process number is 0,
+the signal is sent to all processes which have the
+same process group number as the sender.
+If the process number is less than 0, the signal
+is sent to all processes for which the sender has permission.
+In both of the above cases, process 0 and process 1 are excluded.
+Note, process 0 is really the scheduler, and process numbers must
+be positive to avoid confusion with error indications in C.
+.sh "SEE ALSO"
+kill(I), signal(II)
+.sh DIAGNOSTICS
+The error bit (c-bit)
+is set if the process does not
+have permission, or if the process does not exist.
+From C, a \*-1 return indicates an error.

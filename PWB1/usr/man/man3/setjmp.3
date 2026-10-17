@@ -1,0 +1,61 @@
+.th SETJMP III 5/31/77
+.sh NAME
+setjmp, longjmp \*- execute non-local goto
+.sh SYNOPSIS
+.ft B
+.br
+int save[3];
+.s3
+setjmp(save)
+.s3
+longjmp(save)
+.ft R
+.sh DESCRIPTION
+These routines are useful for dealing with errors 
+and interrupts encountered in
+a low-level subroutine of a program.
+.s3
+.it Setjmp
+saves its stack environment
+in
+.it save
+for
+later use by
+.it longjmp.
+It returns 0 on the initial call.
+.s3
+.it Longjmp
+restores the environment saved in
+.it save
+by
+.it setjmp.
+It then returns in such a way that execution
+continues as if the call of 
+.it setjmp
+had just returned (with a nonzero value).
+All accessible automatic and register data have values as of the
+time 
+.it setjmp
+was called.
+.s3
+The routine that called
+.it setjmp
+must still be active when
+.it longjmp
+is called.
+.s3
+Although these functions are similar in purpose to
+.it setexit
+and
+.it reset,
+they permit several
+.it setjmp
+calls to be made,
+each with a different
+.it save.
+.it Longjmp
+may then return to any of them
+by selecting the appropriate one.
+.sh "SEE ALSO"
+signal(II),
+reset(III)

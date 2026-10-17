@@ -1,0 +1,49 @@
+.th USTAT II 5/31/77
+.sh NAME
+ustat \*- get file system statistics
+.sh SYNOPSIS
+.nf
+(pwbsys = 57.; ustat = 2)
+(pointer to buf in r0)
+(device number in r1)
+.bd "sys	pwbsys; ustat"
+.fi
+.s3
+.bd "ustat(device, buf)"
+.br
+.bd "char	*buf;"
+.sh DESCRIPTION
+.it Ustat
+is designed to return a section
+of the super block of the mounted file system specified by
+.it device.
+.it Device
+is
+.it addr[0]
+of the inode of the mounted block-type special file.
+The structure of
+.it buf
+is:
+.nf
+.ta 8n 16n 30n
+
+struct {
+	int	s_tfree;	/* total free */
+	int	s_tinode;	/* total inodes free */
+	char	s_fname[6];	/* filsys name */
+	char	s_fpack[6];	/* filsys pack name */
+}
+.fi
+.s3
+This function is kept in the
+.bd \-lPW
+library.
+.sh "SEE ALSO"
+fs(V)
+.sh DIAGNOSTICS
+The error bit(c-bit) is set if 
+.it device
+is not mounted or
+.it buf
+can not be written. From C,
+a \*-1 return indicates an error.

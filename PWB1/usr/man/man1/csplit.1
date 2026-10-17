@@ -1,0 +1,89 @@
+.if n .ds |\"
+.if t .ds | \|\"
+.th CSPLIT I 5/31/77
+.sh NAME
+csplit \*- context split
+.sh SYNOPSIS
+.bd csplit
+[
+.bd \-s
+]
+[
+.bd \-f
+prefix] file [RE01 RE02 \fB...\fP REn]
+.br
+.sh DESCRIPTION
+.it Csplit
+reads
+.it file
+and separates it into n+1
+sections, defined by the regular expressions RE01, \fB...\fP , REn,
+where n is less than 100.
+If the
+.bd \-f
+option is used, the sections are
+placed in
+.it prefix\^\c
+00
+\&\fB...\fP
+.it prefix\^\c
+n.
+The default is xx00 \fB...\fP xxn.
+These sections get the following pieces of
+.it file:
+.s3
+.lp +12 5
+00:	from the start of the file up to (but not including) the first line matched by RE01
+.lp +12 5
+01:	from the line matched by RE01 up to the first line that is matched by RE02
+.lp +12 5
+.if t .sp -.5v
+\0\fB.\fP
+.lp +12 5
+.if t .sp -.5v
+\0\fB.\fP
+.lp +12 5
+.if t .sp -.5v
+\0\fB.\fP
+.lp +11 5
+n+1:	 line matched by REn to the end of the file
+.lp +0 0
+.s3
+Enclose by double quotes (") all RE's that contain blanks or
+other characters meaningful to the Shell.
+.s3
+.it Csplit
+tells the size of the original file, as well as of each
+\&``split'' file as it
+creates it.
+It also prints any appropriate diagnostics.
+If the
+.bd \-s
+option is present,
+.it csplit
+suppresses the printing of all character counts.
+.sp
+EXAMPLE:
+.br
+.s3
+.in +.5i
+csplit \|\-f \|zz \|file \|"procedure \|division" \|par5. \|par16.
+.br
+.in -.5i
+.s3
+After editing the ``split'' files, they can be recombined as follows:
+.s3
+.in +.5i
+cat \|zz0[0-3] \|>file
+.in -.5i
+.s3
+It should be noted that
+.it csplit
+does not affect in any way the original file.
+The responsibility for removing
+it is the user's.
+.i0
+.tr `
+.sh SEE`ALSO
+ed(I), sh(I)
+.tr ``

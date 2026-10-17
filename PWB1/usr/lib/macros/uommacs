@@ -1,0 +1,98 @@
+.if n .nr O 3
+.so /usr/lib/tmac.m
+.nr Pt 0
+.nr Hc 1
+.nr Hu 2
+.HM I A
+.nr Ht 1
+.de TP
+'sp 2
+'tl ''PWB/UNIX OPERATIONS MANUAL''
+'sp2
+.if \w@\\*(`a@>0 \{\
+'	tl ''\\*(`a''
+'	sp2 \}
+..
+.PF "||- \\\\nP -||"
+.OF "||\\\\*(`b||"
+.EF "||\\\\*(`b||"
+.de RM
+.LC 0
+..
+.de SC
+.RM
+.)w\"flush floating keeps
+.ds `a 
+.SK\"new page
+.H 1 "\\$1"
+.ds `a \\$1
+.ds `b \\$2
+'''.nr P 1\"reset page counter
+..
+.ds HF 1 3 3 3 3 3 3
+.de HX
+.if \\$1=1 .ds }0
+.if \\$1=2 .ds }0
+..
+.de `d
+.nr `d \\$1
+.if !\\n(`d-1 .AL A
+.if !\\n(`d-2 .AL 1
+.if \\n(`d-2 .LB \\n(Li 0 2 2 a
+..
+.de `e
+.if \\n(.$ .nr `e \\$1
+.if !\\n(.$ .nr `e \\n(:g
+.if \\n(`e-\\n(:g-1 .tm ILLEGAL LEVEL SKIP
+.if \\n(`e-\\n(:g .`d \\n(`e\"begin new list
+.if \\n(:g-\\n(`e .LC \\n(`e\"prune back
+.LI
+..
+.de L1
+.`e 1
+..
+.de L2
+.`e 2
+..
+.de L3
+.`e 3
+..
+.de `c
+.de I
+\&`\\\\$1'\\\\$2
+\\..
+.rm `c
+..
+.if n .`c
+.if t .rm `c
+.de BS
+.ds `f \\$1
+.if !\\n(.$ .ds `f ~
+.ML \\*(`f \\n(Li
+..
+.de BE
+.LE
+..
+.de BI
+.LI
+..
+.tr ~ 
+.de `a
+.de UL
+\\\\$1\l'|0\(ul'
+\\..
+..
+.de `b
+.de UL
+.ul
+\\\\$1
+\\..
+..
+.if t .`a
+.if n .`b
+.rm `a
+.rm `b
+.if n .ds a ->
+.if t .ds a \(->
+.if n .ds cr "(CR)
+.if t .ds cr \s+7\v'.3m'\(co\v'-.3m'\s-7

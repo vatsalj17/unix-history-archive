@@ -1,0 +1,66 @@
+: 'Procedure to compile & install hasp in $1 file sys - /usr if $1 null.'
+: 'Does NOT make subdirectories rje rje/sque hasp hasp/job hasp/pool hasp/info.'
+: 'If you are not running HASP, ASP, or JES, change the SFILES define'
+: 'in hdisp.c to 1.  Jobs will then come back to /usr/hasp/job.'
+: 'Run me as root!'
+
+: '$2 : name of C compiler.  cc if null.'
+= c $2 cc
+
+pwd |= b
+= f $1 /usr
+echo "making library"
+sh lib.rc $c
+echo "compiling source"
+as hmain.s
+mv a.out hmain.o
+ld -n hmain.o -lPW -lc
+mv a.out haspmain
+rm hmain.o
+$c -s -O -n -o haspqer rjeqer.c lib1.a -lPW
+$c -s -O -n -o haspdisp hdisp.c lib1.a -lPW
+$c -s -O -n -o hasphalt rjehalt.c lib1.a -lPW
+$c -s -O -n -o haspinit rjeinit.c lib1.a -lPW
+echo "making shqer. shqer runs jobs with uid 180. change define if needed."
+$c -s -O -o shqer shqer.c lib1.a -lPW
+$c -s -O -o compact compact.c
+: program to print out usage stats if turned on
+$c -s -O -o usage usage.c
+$c -s -O -n -o haspcopy rjecopy.c -lPW
+$c -s -O -n -o hasprecv hrecv.c -lPW
+$c -s -O -n -o haspxmit hxmit.c -lPW
+$c -O -o snoop0 snoop0.c
+$c -O -o snoop1 snoop1.c
+= a $f/hasp
+cp testjob $a/testjob
+mv snoop0 $a/snoop0
+mv snoop1 $a/snoop1
+mv compact $a/compact
+mv usage $a/usage
+mv haspqer $a/haspqer
+mv haspdisp $a/haspdisp
+mv hasphalt $a/hasphalt
+mv haspinit $a/haspinit
+mv shqer $a/shqer
+mv haspcopy $a/haspcopy
+mv hasprecv $a/hasprecv
+mv haspxmit $a/haspxmit
+mv haspmain $a/haspmain
+: lsl used for listing left over files to be cleaned out by ops
+cp lsl $a/lsl
+: ptrans file  --  prints a punch file in ascii
+cp ptran $a/ptran
+cp ptrans $a/ptrans
+: scan used to scan log file. e.g. scan log 50 prints last 50 chars
+cp scan $a/scan
+chdir $a
+chmod 555 testjob snoop0 snoop1 compact usage haspqer haspdisp \
+		hasphalt haspinit shqer haspcopy hasprecv haspxmit \
+		haspmain lsl ptran ptrans scan
+chown rje testjob snoop0 snoop1 compact usage haspqer haspdisp \
+		hasphalt haspinit shqer haspcopy hasprecv haspxmit \
+		haspmain lsl ptran ptrans scan
+chmod 4555 haspqer
+chmod 500 shqer
+chown root shqer
+echo "DONE!"

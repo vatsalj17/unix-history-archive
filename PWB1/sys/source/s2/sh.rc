@@ -1,0 +1,12 @@
+cc -O -S $1sh.c
+ed - $1sh.s
+?data?
+s/data/text/
+w
+q
+as - $1sh.s
+mv a.out $1sh.o
+:	needs logtty, logdir, logname
+cc -s -n $1sh.o -lPW
+chmod 755 a.out
+rm $1sh.o  $1sh.s

@@ -1,0 +1,535 @@
+.ds TW \v'.25m'\s+2~\s-2\v'-.25m'
+.if n .ds TW ~
+.ds ST \v'.25m'*\v'-.25m'
+.if n .ds ST *
+.ds IM \v'.1m'=\v'-.1m'\s-2\h'-.1m'>\h'.1m'\s+2
+.if n .ds IM =>
+.ds LE \(<=
+.ds LT \s-2<\s+2
+.ds GT \s-2>\s+2
+.de SP
+.if t .sp .5
+.if n .sp
+..
+.de sb
+.if t .sp .10i
+.if n .sp
+.ne 2
+..
+.de ch
+.if n .if 0\\$1<1 .sp
+.if t .sp \\$1
+.ne 6
+.if n .ta 1 8
+.if t .ta 1u .5i
+.if n .in 8
+.if t .in .5i
+.ti 0
+..
+.de cs
+.SP
+.if n .ta 3 8
+.if t .ta .2i .5i
+.if n .in 8
+.if t .in .5i
+.ti 0
+..
+.de es
+.SP
+.if n .ta 3 6 8 11
+.if t .ta .2i .44iC .52i .8i
+.if n .in 11
+.if t .in .8i
+.ti 0
+..
+.de fs
+.SP
+.if t .ta .2i .5i .8i
+.if n .ta 3 9 12
+.if t .in .8i
+.if n .in 12
+.ti 0
+..
+.de cx
+.if t .in 0
+.if n .in 0
+..
+.th ADB I 5/31/77
+.sh NAME
+adb \*- debugger
+.sh SYNOPSIS
+.bd adb
+[\fB\-w\fR] [ objfil [ corfil ] ]
+.sh DESCRIPTION
+.in 0
+\fIAdb\fP is a general-purpose debugging program.
+It may be used to examine files and to provide
+a controlled environment for the execution
+of UNIX programs.
+.SP
+\fIObjfil\fP is normally an executable program file, preferably
+containing a symbol table;
+if not then the
+symbolic features of \fIadb\fP
+cannot be used although the file can still
+be examined.
+The default for \fIobjfil\fR is \fBa.out.\fR
+\fICorfil\fR is assumed to be a core image file produced after
+executing \fIobjfil;\fR the default for \fIcorfil\fR is \fBcore.\fR
+.SP
+Requests to \fIadb\fR
+are read from the standard input and
+responses are to the standard output.
+If the \fB\-w\fP
+flag is present then both \fIobjfil\fP
+and \fIcorfil\fP are
+created if necessary and
+opened for reading and writing
+so that files can be modified using \fIadb\fP.
+\fIAdb\fP ignores QUIT signals; INTERRUPT
+causes return to the next \fIadb\fP command.
+.SP
+In general, requests to \fIadb\fP
+are of the form
+.SP
+.if n .ti 16
+.if t .ti 1.6i
+[\|\fIaddress\fR\|]  [\|, \fIcount\fR\|]  [\|\fIcommand\fR\|] [\|;\|]
+.SP
+If \fIaddress\fR is present then
+\fIdot\fP
+is set to \fIaddress\fR.
+Initially \fIdot\fR is set to 0.
+For most commands, \fIcount\fP specifies how many times
+the command will be executed.
+The default \fIcount\fP is 1;
+\fIAddress\fP and \fIcount\fP are expressions.
+.SP
+The interpretation of an address depends
+on the context it is used in.
+If a sub-process is being debugged then
+addresses are interpreted
+in the usual way in the address space of the sub-process.
+For further details of address mapping see \s8\fBADDRESSES\fP\s0.
+.sh EXPRESSIONS
+.es
+	\fB.\fP			The value of \fIdot\fR.
+.es
+	+			The value of \fIdot\fP incremented by the current increment.
+.es
+	\fB^\fP			The value of \fIdot\fR decremented by the current increment.
+.es
+	\fB"\fP			The last \fIaddress\fP typed.
+.es
+	\fIinteger\fP			An octal number if \fIinteger\fR begins with a 0;
+a hexadecimal number if preceded by `#';
+otherwise a decimal number.
+.es
+	\fIinteger\fB.\|\fIfraction\fR
+.br
+A 32-bit floating point number.
+.es
+	\fB\'\fIcccc\fR\|\'			The ASCII value of up to 4 characters.
+`\\' may be used to escape `\*a'.
+.es
+	\*(LT\|\fIname\fP			The value of \fIname\fP, which is either a variable name or a register name.
+\fIAdb\fR maintains a number of variables
+(q.v.) that are referred to by the letters \fBa\fP to \fBz\fP
+or the digits 0 to 9
+(see \s8\fBVARIABLES\fP\s0 below).
+If \fIname\fP is a register name, then
+the value of the register is obtained from
+the system header in \fIcorfil\fP.
+The register names are
+\fBr0 ... r5 sp pc ps\fP.
+.es
+	\fIsymbol\fP			A \fIsymbol\fR is a sequence
+of upper or lower case letters, underscores or
+digits, not starting with a digit.
+`\\' may be used to escape other characters.
+The value of the \fIsymbol\fR is taken from the symbol table
+in \fIobjfil\fP.
+An initial `\*_' or `\*(TW' will be prepended to \fIsymbol\fP if needed.
+.es
+	\fIroutine\|\fB.\fI\|name\fR
+.br
+The address of the variable \fIname\fP in the specified
+C routine.
+Both \fIroutine\fP and \fIname\fP are \fIsymbols\fP.
+If \fIname\fP is omitted, the value is the address of the
+most recently activated C stack frame
+corresponding to \fIroutine\fP.
+.es
+	(\|\fIexp\fP\|)			The value of \fIexp\fP.
+.cx
+.sb
+\fBMonadic\ operators\fP
+.es
+	\*(ST	\fIexp\fP		The contents of the location addressed
+by \fIexp\fR in \fIcorfil\fP.
+.es
+	@	\fIexp\fP			The contents of the location addressed by \fIexp\fR in
+\fIobjfil\fP.
+.es
+	\-	\fIexp\fP		Integer negation.
+.es
+	\*(TW	\fIexp\fP		Bitwise complement.
+.cx
+.sb
+\fBDyadic\ operators\fP
+are left associative
+and are less binding than monadic operators.
+.es
+	\fIe1\fP	+	\fIe2\fR	Integer addition.
+.es
+	\fIe1\fP	\-	\fIe2\fR	Integer subtraction.
+.es
+	\fIe1\fP	\*(ST	\fIe2\fR	Integer multiplication.
+.es
+	\fIe1\fP	\fB%\fP	\fIe2\fR	Integer division.
+.es
+	\fIe1\fP	&	\fIe2\fR	Bitwise conjunction.
+.es
+	\fIe1\fP	\(bv	\fIe2\fR	Bitwise disjunction.
+.es
+	\fIe1\fP	#	\fIe2\fR	\fIe1\fR rounded up to the next multiple of \fIe2\fR.
+.cx
+.sh COMMANDS
+Most commands consist of a verb followed by a modifier or list
+of modifiers.
+The following verbs are available.
+(The commands `?' and `/' may be followed by `\*(ST';
+see \s8\fBADDRESSES\fP\s0 for further details.)
+.ch .5
+	?\ \fIf\fR	Locations starting at \fIaddress\fR in \fIobjfil\fP
+are printed according to the format \fIf\fR.
+\fIDot\fR is incremented by the sum of the increments for each format letter (q.v.).
+.ch .2
+	/\ \fIf\fR	Locations starting at \fIaddress\fR in \fIcorfil\fP
+are printed according to the format \fIf\fR and \fIdot\fR is incremented as for `?'.
+.ch .2
+	=\ \fIf\fR	The value of \fIaddress\fP itself is printed in the
+styles indicated by the format \fIf\fR.
+(For \fBi\fR format `?' is printed for the parts of the instruction that reference
+subsequent words.)
+.cx
+.sb
+\fBFormats\fP
+.br
+A \fIformat\fR consists of one or more characters that specify a style
+of printing.
+Each format character may be preceded by a decimal integer
+that is a repeat count for the format character.
+While stepping through a format, \fIdot\fP is incremented
+by the amount given for each format letter.
+If no format is given then the last format is used.
+The format letters available are as follows.
+.fs
+	\fBo\fR	2	Print 2 bytes in octal.
+All octal numbers output by \fIadb\fR are preceded by 0.
+.fs
+	\fBO\fR	4	Print 4 bytes in octal.
+.fs
+	\fBq\fR	2	Print in signed octal.
+.fs
+	\fBQ\fR	4	Print long signed octal.
+.fs
+	\fBd\fR	2	Print in decimal.
+.fs
+	\fBD\fR	4	Print long decimal.
+.fs
+	\fBx\fR	2	Print 2 bytes in hexadecimal.
+.fs
+	\fBX\fR	4	Print 4 bytes in hexadecimal.
+.fs
+	\fBu\fR	2	Print as an unsigned decimal number.
+.fs
+	\fBU\fR	4	Print long unsigned decimal.
+.fs
+	\fBf\fR	4	Print the 32-bit value
+as a floating point number.
+.fs
+	\fBF\fR	8	Print double floating point.
+.fs
+	\fBb\fR	1	Print the addressed byte in octal.
+.fs
+	\fBc\fR	1	Print the addressed character.
+.fs
+	\fBC\fR	1	Print the addressed character using
+the following escape convention.
+Character values 000 to 040 are printed as @ followed by the corresponding
+character in the range 0100 to 0140.
+The character @ is printed as @@.
+.fs
+	\fBs\fR	\fIn\fR	Print the addressed characters until a zero character
+is reached.
+.fs
+	\fBS\fR	\fIn\fR	Print a string using
+the @ escape convention;
+\fIn\fP is the length of the string including its zero terminator.
+.fs
+	\fBY\fR	4	Print 4 bytes in date format (see \fItime\fR\^(II)).
+.fs
+	\fBi\fR	\fIn\fR	Print as PDP-11 instructions;
+\fIn\fR is the number of bytes occupied by the instruction.
+This style of printing causes variables 1 and 2 to be set
+to the offset parts of the source and destination respectively.
+.fs
+	\fBa\fR	0	Print the value of \fIdot\fR in symbolic form.
+Symbols are checked to ensure that they have an appropriate
+type as indicated below.
+.SP
+.nf
+	/	local or global data symbol
+	?	local or global text symbol
+	=	local or global absolute symbol
+.fi
+.fs
+	\fBp\fR	2	Print the addressed value in symbolic form using
+the same rules for symbol lookup as \fBa\fR.
+.fs
+	\fBt\fR	0	When preceded by an integer, tabs to the next
+appropriate tab stop.
+For example, \fB8t\fP moves to the next 8 space tab stop.
+.fs
+	\fBr\fR	0	Print a space.
+.fs
+	\fBn\fR	0	Print a newline.
+.fs
+	\fB"..."\fR	0	Print the enclosed string.
+.fs
+	\fB^\fP		\fIdot\fR is decremented by the current increment.
+Nothing is printed.
+.fs
+	+		\fIdot\fP is incremented by 1.
+Nothing is printed.
+.fs
+	\-		\fIdot\fP is decremented by 1.
+Nothing is printed.
+.cx
+.sh "MORE COMMANDS"
+Here are a few more commands;
+`[?/]' means the command can start with either `?', for addresses in
+.it objfil,
+or `/', for addresses in
+.it corfil.
+.ch .5
+	[\fB?/\fP]\ \fBl\fP\ \fIvalue\ mask\fP
+\&
+.br
+Words starting at \fIdot\fR
+are masked with \fImask\fR and compared with \fIvalue\fR until
+a match is found.
+If \fBL\fP is used, then the match is for 4 bytes at a time instead of 2.
+If no match is found, then \fIdot\fR is unchanged; otherwise
+\fIdot\fR is set to the matched location.
+If \fImask\fR is omitted, then \-1 is used.
+.ch .5
+	[\fB?/\fP]\ \fBw\fP\ \fIvalue\fP\ \fB.\|.\|.\fP
+\&
+.br
+\fIvalue\fR is written into the addressed
+location.
+If \fBW\fP is used then 4 bytes are written, otherwise
+2 bytes are written.
+Odd addresses are not allowed when writing to the sub-process
+address space.
+.ch .5
+	[\fB?/\fP]\ \fBm\fP\ \fIb1\ e1\ f1\fP [\fB?/\fP]
+\&
+.br
+New values for (\fIb1\fP\|,\|\fIe1\fP\|,\|\fIf1\fP) are
+recorded.
+If less than three expressions are given then
+the remaining map parameters are left unchanged.
+If the `?' or `/' is followed by `\*(ST' then
+the second segment (\fIb2\fP\|,\|\fIe2\fP\|,\|\fIf2\fP)
+of the mapping is changed.
+If the list is terminated by `?' or `/' then the file
+(\fIobjfil\fP or \fIcorfil\fP respectively) is used
+for subsequent requests.
+(So that, for example, `/m?' will cause `/' to refer to \fIobjfil\fP.)
+.ch .5
+	\fB\*(GT\fP\|\fIname\fR	\fIdot\fP
+is assigned to the variable or register named.
+.ch .5
+	\fB!\fP	A shell is called to read the
+rest of the line following `!'.
+.ch .5
+	$\ \fImodifier\fR
+\&
+.cs
+	\fB<\fR \fIf\fR	Read commands from the file \fIf\fR and return.
+.cs
+	\fB>\fR \fIf\fR	Send output to the file \fIf\fR
+which is created if it does not exist.
+.cs
+	\fBr\fR	Print the general registers and
+the instruction addressed by \fBpc\fP;
+\fIdot\fR is set to \fBpc\fR.
+.cs
+	\fBf\fR	Print the floating registers in
+single or double length.
+If the floating point status of \fBps\fP is set to double (0200 bit)
+then double length is used anyway.
+.cs
+	\fBb\fR	Print all breakpoints
+and their associated counts and commands.
+.cs
+	\fBa\fR	ALGOL 68 stack backtrace.
+If \fIaddress\fR is given then it is taken to be the
+address of the current frame (instead of \fBr4\fR).
+If \fIcount\fP is given then only the first \fIcount\fP frames are printed.
+.cs
+	\fBc\fR	C stack backtrace.
+If \fIaddress\fR is given then it is taken as the
+address of the current frame (instead of \fBr5\fR).
+If \fBC\fR is used then the names and (16-bit) values of all automatic
+and static variables are printed for each active function.
+If \fIcount\fP is given then only the first \fIcount\fP frames are printed.
+.cs
+	\fBe\fP	The names and values of
+external variables are printed.
+.cs
+	\fBw\fP	Set the page width for output to \fIaddress\fP (default 80).
+.cs
+	\fBs\fR	Set the limit for symbol matches to \fIaddress\fP (default 255).
+.cs
+	\fBo\fP	All integers input are regarded as octal.
+.cs
+	\fBd\fP	Reset integer input as described in \s8\fBEXPRESSIONS\fP\s0.
+.cs
+	\fBq\fP	Exit from \fIadb\fP.
+.cs
+	\fBv\fR	Print all non-zero variables in octal.
+.cs
+	\fBm\fR	The values used for mapping
+addresses into file addresses are printed.
+.ch .5
+	:\ \fImodifier\fR
+\&
+.cs
+	\fBb\fR\ \fIc\fP	Set breakpoint at \fIaddress\fR.
+The breakpoint is executed \fIc\-1\fP times before
+causing a stop.
+Each time the breakpoint is encountered,
+the command \fIc\fP is executed.
+If this command sets \fIdot\fP to zero
+then the breakpoint causes a stop.
+.cs
+	\fBd\fR	Delete breakpoint at \fIaddress\fR.
+.cs
+	\fBr\fR\ \fIc\fP	Run \fIobjfil\fR as a sub-process.
+If \fIaddress\fR is given explicitly, then the
+program is entered at this point; otherwise,
+the program is entered at its standard entry point;
+\fIc\fR specifies how many breakpoints are to be
+ignored before stopping.
+Arguments to the sub-process may be supplied on the
+same line as the command.
+An argument starting with < or > causes the standard
+input or output to be established for the command.
+All signals are turned on on entry to the sub-process.
+.cs
+	\fBc\fR\ \fIs\fR	The sub-process is continued
+with signal \fIs\fP.
+If \fIaddress\fR is given then the sub-process
+is continued at this address.
+If no signal is specified then the signal
+that caused the sub-process to stop is sent.
+Breakpoint skipping is the same
+as for \fBr\fR.
+.cs
+	\fBs\fR\ \fIs\fR	As for \fBc\fR except that
+the sub-process is single stepped \fIcount\fR times.
+If there is no current sub-process then \fIobjfil\fP is run
+as a sub-process as for \fBr\fP.
+In this case no signal can be sent; the remainder of the line
+is treated as arguments to the sub-process.
+.cs
+	\fBk\fR	The current sub-process, if any, is terminated.
+.cx
+.ne 10
+.sh VARIABLES
+\fIAdb\fP provides a number of variables.
+Named variables are set initially by \fIadb\fR
+but are not used subsequently.
+Numbered variables are reserved for communication
+as follows.
+.cs
+.in 0
+	0	The last value printed.
+.br
+	1	The last offset part of an instruction source.
+.br
+	2	The previous value of variable 1.
+.cx
+.SP
+On entry the following are set
+from the system header in the \fIcorfil\fP.
+If \fIcorfil\fP does not appear to be a \fBcore\fP file then
+these values are set from \fIobjfil\fP.
+.cs
+.in 0
+	b	The base address of the data segment.
+.br
+	d	The data segment size.
+.br
+	e	The entry point.
+.br
+	m	The `magic' number (0405, 0407, 0410 or 0411).
+.br
+	s	The stack segment size.
+.br
+	t	The text segment size.
+.cx
+.sh ADDRESSES
+The address in a file associated with
+a written address is determined by a mapping
+associated with that file.
+Each mapping is represented by two triples
+(\fIb1\fP\|,\|\fIe1\fP\|,\|\fIf1\fP) and (\fIb2\fP\|,\|\fIe2\fP\|,\|\fIf2\fP) and the
+\fIfile address\fP corresponding
+to a written \fIaddress\fP is calculated as follows.
+.SP
+.if t .ti 1.5i
+.if n .ti 8
+\fIb1\fR\*(LE\fIaddress\fR<\fIe1\fR  \*(IM  \fIfile address\fR=\fIaddress\fR+\fIf1\fR\-\fIb1\fR, otherwise,
+.SP
+.if t .ti 1.5i
+.if n .ti 8
+\fIb2\fR\*(LE\fIaddress\fR<\fIe2\fR  \*(IM  \fIfile address\fR=\fIaddress\fR+\fIf2\fR\-\fIb2\fR,
+.SP
+otherwise, the requested \fIaddress\fR is not legal.
+In some cases (e.g. for programs with separated I and D
+space) the two segments for a file may overlap.
+If a `?' or `/' is followed by an `\*(ST' then only the second
+triple is used.
+.SP
+The initial setting of both mappings is suitable for
+normal \fBa.out\fP and \fBcore\fR files.
+If either file is not of the kind expected then, for that file,
+\fIb1\fR is set to 0, \fIe1\fR is set to
+the maximum file size
+and \fIf1\fR is set to 0; in this way the whole
+file can be examined with no address translation.
+.SP
+So that \fIadb\fR may be used on large files
+all appropriate values are kept as signed 32-bit integers.
+.sh EXIT\ STATUS
+If the last command was successful then the exit status is zero;
+otherwise it is non-zero.
+.sh FILES
+	/dev/mem
+.br
+	/dev/swap
+.br
+.sh SEE\ ALSO
+	cdb(I), db(I), ptrace(II), a.out(V), core(V)
+.sh BUGS
+.cs
+	a)	A breakpoint set at the entry point is not effective
+on initial entry to the program.
+.cs
+	b)	When single stepping, system calls do not count as an
+executed instruction.

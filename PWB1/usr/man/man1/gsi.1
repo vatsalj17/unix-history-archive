@@ -1,0 +1,244 @@
+.if n .tr!|
+.if n .ds v !
+.th GSI I 5/31/77
+.sh NAME
+gsi \- handle special functions of GSI300 terminal
+.sh SYNOPSIS
+.bd gsi
+[\fB+12\fR]
+[\fB\-\fIn\fR]
+[\fB\-d\fIt,l,c\fR]
+.sh DESCRIPTION
+.if n\{\
+.s3
+.ce
+***NOTE***
+The table at the end of this write-up will print correctly only
+on a GSI300 or DASI450 terminal (with the plot switch
+.it on),
+.it and
+only if the one of the following sequences is used to print it:
+.br
+	nroff -ma -T300 /usr/man/man1/gsi.1
+.br
+or
+.br
+	nroff -ma -T450 /usr/man/man1/gsi.1
+.br
+as appropriate.
+.br
+.tr x*
+.nr a \n(.lu-\n(}Iu
+\l'\naux'
+.br
+.tr xx\}
+.s3
+.it Gsi
+supports special functions, and optimizes the use, of the GSI300
+(DASI300 or DTC300) terminal.
+It converts half-line forward, half-line reverse, and full-line reverse
+motions to the correct vertical motions.
+It also
+attempts to draw Greek letters and other special symbols.
+It permits convenient use of 12-pitch text.
+It also reduces printing time (5 to 70%).
+.it Gsi
+can be used
+to print equations neatly, in the sequence:
+.s3
+     neqn file \fB...\fP \*v nroff \*v gsi
+.s3
+WARNING: if your terminal has a PLOT switch, make sure it is turned ON
+before
+.it gsi
+is used.
+.s2
+The behavior of
+.it gsi
+can be modified by the optional flag arguments to handle
+12-pitch text, fractional line spacings, messages, and delays.
+.s3
+.lp +9 8
+\fB+12\fR	permits use of 12-pitch, 6 lines/inch text.
+GSI terminals normally allow only two combinations: 10-pitch, 6 lines/inch,
+or 12-pitch, 8 lines/inch.
+To obtain the 12-pitch, 6 lines per inch combination, the user should turn the
+PITCH switch to 12, and use the
+.bd +12
+option.
+.s2
+.lp +9 8
+\fB\-\fIn\fR	controls the size of half-line spacing.
+A half-line is by default
+equal to 4 vertical plot increments.
+Because each increment equals 1/48 of an inch,
+a 10-pitch line-feed requires 8 increments,
+while a 12-pitch line-feed needs only 6.
+The first digit of
+.it n
+overrides the default value, thus allowing for individual taste
+in the appearance of subscripts and superscripts.
+For example,
+.it nroff(I)
+half-lines could be made to act as quarter-lines by using
+\fB\-2\fR.
+The user could also obtain appropriate half-lines for
+12-pitch, 8 lines/inch mode by using the option \fB\-3\fR alone,
+having set the PITCH switch to 12-pitch.
+.s2
+.lp +9 8
+\fB\-d\fIt,l,c\fR	controls delay factors.
+The default setting is \fB\-d\fP3,90,30.
+GSI terminals sometimes produce
+peculiar output when faced with
+very long lines,
+too many tab characters,
+or long strings of blankless, non-identical characters.
+One null (delay) character is inserted in a line for every set of
+.it t
+tabs,
+and for every contiguous string of
+.it c
+non-blank, non-tab characters.
+If a line is longer than
+.it l
+bytes, 1+(total length)/20 nulls are inserted at the end of that line.
+Items can be omitted from the end of the list,
+implying use of the default values.
+Also, a value of
+zero
+for
+.it t
+.it (c)
+requests 2 null bytes per tab (character).
+The former may be needed for C programs, the latter for files like \fI/etc/passwd\fP.
+Because terminal behavior varies according to the specific characters printed and
+the load on a system,
+the user may have to experiment with these values to get correct output.
+The
+.bd \-d
+option exists only as a last resort
+for those few cases that do not otherwise print properly.
+For example, the file \fI/etc/passwd\fP may be printed using \fB\-d\fP3,30,5.
+The value \fB\-d\fP0,1 is a good one to use for C programs that have many
+levels of indentation.
+.s3
+Note that the delay control interacts heavily with the carriage return and
+line feed delays being used at the time: see
+.it "GSI300(VII)."
+The
+.it stty(I)
+modes
+.bd "nl0 cr2"
+or
+.bd "nl0 cr3"
+are recommended for most uses.
+.i0
+.ne2
+.s3
+NOTE:
+.it gsi
+always synchronizes its buffering so that it can be used with the
+.it nroff
+.bd \-s
+flag or \fB.\fPrd requests, when it is necessary to insert paper manually or change fonts
+in the middle of a document.
+Instead of hitting the RETURN key in these cases, you must use the LINE FEED key to
+get any response.
+.i0
+.s3
+In many cases, the following sequences are equivalent:
+.s3
+.nf
+.nr a \w@nroff \-T300\-12 files \fB...\fP@+3n
+.if n .ta 8n +\nau
+.if t .ta .5i +\nau
+	nroff \-T300 files \fB...\fP	\ and\ \ \ nroff files \fB...\fP \*v gsi
+.br
+	nroff \-T300\-12 files \fB...\fP	\ and\ \ \ nroff files \fB...\fP \*v gsi +12
+.fi
+.s3
+The use of
+.it gsi
+can thus often be avoided unless
+special delays or options are required.
+.s3
+Here are the
+.it neqn(I)
+names and
+resulting output for the special characters supported:
+.s3
+.ta 13 36 48
+.if t .ta 1i 3i 4i
+.if n .ne40
+Name	Symbol	Name	Symbol
+.nf
+.if n .ta 15 25
+.if t .ta 1.15i 1.85i
+.de GG
+.if n \\$1\t\\$2
+.if t \\$1\t\\$2
+..
+.s3
+.if n .ls2
+.mk
+.GG alpha \(*a
+.GG beta \(*b
+.GG delta \(*d
+.GG DELTA \(*D
+.GG epsilon \(*e
+.GG eta \(*y
+.GG gamma  \\\\ \(*g
+.GG GAMMA \(*G
+.GG infinity \(if
+.GG integral \(is
+.GG lambda \(*l
+.GG LAMBDA \(*L
+.GG mu \(*m
+.GG nabla(del) \(gr
+.GG not  \(em \(no
+.GG nu \(*n
+.GG omega \(*w
+.rt
+.if n .po39
+.if t .po +3i
+.GG OMEGA \(*W
+.GG partial \(pd
+.GG phi \(*f
+.GG PHI \(*F
+.GG psi \(*q
+.GG PSI \(*Q
+.GG pi \(*p
+.GG PI \(*P
+.GG rho \(*r
+.GG sigma \(*s
+.GG SIGMA \(*S
+.GG tau \(*t
+.GG theta \(*h
+.GG THETA \(*H
+.GG xi \(*c
+.GG zeta \(*z
+.po
+.ls1
+.s3
+.fi
+.sh "SEE ALSO"
+450(I), graph(I), greek(V),
+GSI300(VII), mesg(I), neqn(I), plot(I), stty(I),
+tabs(I)
+.sh BUGS
+Some characters in the above table can't be correctly printed in column 1
+because the print head cannot be moved to the left from there.
+If your output contains much Greek and/or reverse line feeds,
+use friction feed instead of a forms tractor.
+Although good enough for drafts,
+the latter has a tendency to slip when reversing direction,
+distorting Greek characters, and misaligning the first line after a long set
+of reverse line feeds.
+.br
+.it Gsi
+is definitely
+.it not
+usable with the ``second generation'' models of the GSI300,
+such as the GSI300S or DASI450.
+.tr !!

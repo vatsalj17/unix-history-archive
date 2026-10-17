@@ -1,0 +1,129 @@
+# Extra troff stuff: fonts, etc.
+
+SRC = /sys/source
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = -as
+
+MAKE = make
+SH = sh -v
+
+LD = ld
+LDFLAGS = -s
+
+DD = TMP
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+
+# ------------
+#  Create /usr/lib
+# ------------
+
+MAIN:		FIRST font font/B font/C font/G font/GI font/J font/GM font/M \
+		font/I font/R font/S
+	-rm -f $(DD)*
+	-@echo "\n***** The Following Files are Still Present:";  ls -l $(DD)*
+
+FIRST:
+	@echo "\n***** This .makefile is only for the extra eqn/troff PWB package."
+	@echo "***** If you haven't bought that package, it will fail. *****\n"
+
+font/B:		$(SRC)/s7/croff/font/B.c $(CCDEP)
+	chdir font; $(CC) -c $(SRC)/s7/croff/font/B.c
+	strip font/B.o
+	-mv font/B $(DD)B
+	mv font/B.o font/B
+	-chmod 755 font/B
+	-chown bin font/B
+	ls -l font/B
+	-rm -f $(DD)B
+
+font/C:		$(SRC)/s7/croff/font/C.c $(CCDEP)
+	chdir font; $(CC) -c $(SRC)/s7/croff/font/C.c
+	strip font/C.o
+	-mv font/C $(DD)C
+	mv font/C.o font/C
+	-chmod 755 font/C
+	-chown bin font/C
+	ls -l font/C
+	-rm -f $(DD)C
+
+font/G:		$(SRC)/s7/croff/font/G.c $(CCDEP)
+	chdir font; $(CC) -c $(SRC)/s7/croff/font/G.c
+	strip font/G.o
+	-mv font/G $(DD)G
+	mv font/G.o font/G
+	-chmod 755 font/G
+	-chown bin font/G
+	ls -l font/G
+	-rm -f $(DD)G
+
+font/GI font/J:		$(SRC)/s7/croff/font/GI.c $(CCDEP)
+	chdir font; $(CC) -c $(SRC)/s7/croff/font/GI.c
+	strip font/GI.o
+	-mv font/GI $(DD)GI
+	-mv font/J $(DD)J
+	mv font/GI.o font/GI
+	ln font/GI font/J
+	-chmod 755 font/GI font/J
+	-chown bin font/GI font/J
+	ls -l font/GI font/J
+	-rm -f $(DD)GI $(DD)J
+
+font/GM font/M:		$(SRC)/s7/croff/font/GM.c $(CCDEP)
+	chdir font; $(CC) -c $(SRC)/s7/croff/font/GM.c
+	strip font/GM.o
+	-mv font/GM $(DD)GM
+	-mv font/M $(DD)M
+	mv font/GM.o font/GM
+	ln font/GM font/M
+	-chmod 755 font/GM font/M
+	-chown bin font/GM font/M
+	ls -l font/GM font/M
+	-rm -f $(DD)GM $(DD)M
+
+font/I:		$(SRC)/s7/croff/font/I.c $(CCDEP)
+	chdir font; $(CC) -c $(SRC)/s7/croff/font/I.c
+	strip font/I.o
+	-mv font/I $(DD)I
+	mv font/I.o font/I
+	-chmod 755 font/I
+	-chown bin font/I
+	ls -l font/I
+	-rm -f $(DD)I
+
+font/R:		$(SRC)/s7/croff/font/R.c $(CCDEP)
+	chdir font; $(CC) -c $(SRC)/s7/croff/font/R.c
+	strip font/R.o
+	-mv font/R $(DD)R
+	mv font/R.o font/R
+	-chmod 755 font/R
+	-chown bin font/R
+	ls -l font/R
+	-rm -f $(DD)R
+
+font/S:		$(SRC)/s7/croff/font/S.c $(CCDEP)
+	chdir font; $(CC) -c $(SRC)/s7/croff/font/S.c
+	strip font/S.o
+	-mv font/S $(DD)S
+	mv font/S.o font/S
+	-chmod 755 font/S
+	-chown bin font/S
+	ls -l font/S
+	-rm -f $(DD)S
+
+font:
+	mkdir font
+	chmod 755 font
+	-chown bin font
+
+RC:	# dummy name to force re-compiling things.

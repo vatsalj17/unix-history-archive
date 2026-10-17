@@ -1,0 +1,50 @@
+.th MOUNT VIII 5/31/77
+.sh NAME
+mount \*- mount file system
+.sh SYNOPSIS
+.bd /etc/mount
+[ special  file  [
+.bd \-r
+]]
+.sh DESCRIPTION
+.it Mount
+announces to the system that a removable file system is present on the device
+corresponding to the special file
+.it special
+(which must refer to a disk or possibly DECtape).
+The
+.it file
+must exist already; its syntax must contain a leading "/", e.g., "/u8",
+or the mount request is disallowed and an appropriate error message is
+reported; otherwise,
+.it file
+becomes the name of the root of the newly mounted file system. A
+caution message is reported when mounting a file system with
+name
+.it file,
+which is different than the current root name
+of the device corresponding to the special file
+.it special.
+.s3
+.it Mount
+maintains a table of mounted devices (\c
+.it mnttab\^\c
+(V));
+if invoked without an argument
+.it mount
+prints the entire table.
+.s3
+The optional last argument 
+[
+.bd \-r
+]
+indicates that the
+.it file
+is to be mounted read-only.
+Physically write-protected and magnetic tape file systems must be mounted
+in this way or errors will occur when access times are updated, regardless
+if an explicit write is attempted.
+.sh FILES
+/etc/mnttab
+.sh "SEE ALSO"
+fs(V), mnttab(V), umount(VIII)

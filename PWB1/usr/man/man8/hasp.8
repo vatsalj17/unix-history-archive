@@ -1,0 +1,687 @@
+.if t .ds ` ``\"
+.if t .ds ' ''\"
+.if n .ds ` ""\"
+.if n .ds ' ""\"
+.th HASP VIII 5/31/77
+.sh NAME
+hasp \*- PWB/UNIX IBM Remote Job Entry
+.sh SYNOPSIS
+.bd /usr/hasp/haspinit
+.s3
+.br
+.bd /usr/hasp/hasphalt
+.sh DESCRIPTION
+.it Hasp
+is the communal name for a collection of programs and a file
+organization that allow PWB/UNIX,
+equipped with an appropriate driver
+for the DQS11-B,
+to communicate with IBM's Job Entry Subsystems
+by mimicking an IBM 2770 remote station.
+.s3
+.it Hasp
+is initiated by the command
+.it haspinit
+and is terminated gracefully by the command
+.it hasphalt.
+While active,
+.it hasp
+runs in background and
+requires no human supervision.
+It quietly transmits to the IBM system jobs that have been queued by the command
+.it send\^\c
+(I)
+and messages that have been entered by the command
+.it rjestat\^\c
+(I).
+It receives from the IBM system print and punch data sets and
+message output.
+It enters the data sets into the proper PWB/UNIX directory
+and notifies the appropriate user of their arrival.
+It scans the message output to maintain a record on
+each of its jobs.
+It also makes these messages available
+for public inspection,
+so that
+.it rjestat\^\c
+(I),
+in particular,
+may extract responses.
+.s3
+Unless otherwise specified, all files and commands described below
+live in directory
+.it /usr/hasp
+(first exceptions:
+.it send
+and
+.it rjestat\^\c
+).
+.s3
+There are two sources of
+data that is to be transmitted by
+.it hasp
+from PWB/UNIX
+to an IBM System/370.
+In both cases, the data is organized as files in
+.it ebcdic\^\c
+(V)
+format.
+The first is a single file
+.it haspmesg
+that
+is reserved for message input.
+It is written by the enquiry command
+.it rjestat\^\c
+(I)
+and is assigned a priority for transmission.
+The second source, containing the bulk of the
+data, consists of jobs that have been
+entered into the
+.if n .it xmit*
+.if t .it xmit\v'.2v'*\v'-.2v'
+queue by the program
+.it haspqer.
+On completion of processing,
+.it send
+invokes
+.it haspqer.
+As each file is queued, a subordinate
+.if n .it info/logx*
+.if t .it info/logx\v'.2v'*\v'-.2v'
+file is created
+to save the name, numeric id, login directory, and tty letter
+of the user who is doing the queueing.
+Upon successful transmission of the data to the IBM system,
+.it haspdisp
+will move this information into the
+.it jobsout
+file and delete the
+.if n .it info/logx*
+.if t .it info/logx\v'.2v'*\v'-.2v'
+file.
+.s3
+Each time
+.it haspinit
+is invoked, the
+.if n .it xmit*
+.if t .it xmit\v'.2v'*\v'-.2v'
+queue is compacted,
+along with the associated
+.if n .it info/logx*
+.if t .it info/logx\v'.2v'*\v'-.2v'
+files,
+and its beginning and end are calculated.
+A three-digit sequence number specifying the first free slot
+at the end of the queue is written to file
+.it haspstat.
+This number is subsequently updated by
+.it haspqer
+each time that a new job is entered into the queue.
+A pointer to the beginning of the queue is maintained by
+.it haspmain.
+It is periodically compared to the current end of the queue
+to determine whether any jobs are waiting to be transmitted.
+A null lock-file
+.it hasplock
+is created with mode zero to prevent simultaneous updating of
+.it haspstat.
+.s3
+In anticipation of receiving output,
+.it hasp
+always maintains a vacant file
+.if n .it tmp*
+.if t .it tmp\v'.2v'*\v'-.2v'
+in its own directory.
+Output from the IBM system is initially written into this file and is
+classified as either a print data set, a punch data set,
+or message output.
+Print output is converted to an ASCII text file,
+with standard tabs.
+Form feeds are suppressed, but the last line of each page
+is distinguished by the presence of an extraneous
+trailing space.
+Punch output is converted to EBCDIC format.
+This classification and
+both conversions
+occur as
+the output is received;
+.if n .it tmp*
+.if t .it tmp\v'.2v'*\v'-.2v'
+files are
+moved or copied
+into the appropriate user's directory and assigned the name
+.if n .it prnt*
+.if t .it prnt\v'.2v'*\v'-.2v'
+or
+.if n .it pnch*,
+.if t .it pnch\v'.2v'*\v'-.2v',
+respectively,
+or
+placed into user directories under user-specified names,
+or used as input to
+programs to be automatically executed,
+as specified by the user.
+This process is driven by the \*`usr=...\*' specification.
+.it Hasp
+retains ownership of these files and permits read-only access
+to them.
+Files of message output are digested by
+.it hasp
+immediately and are not retained.
+.s3
+A record is maintained for each job that passes through
+.it hasp.
+Identifying information is extracted contextually
+from files transmitted to and received from the IBM system.
+From each file transmitted,
+.it hasp
+extracts the job name, the programmer's name, the user name, the destination directory
+name, and the
+message level.
+This information is temporarily stored, in the order of submission of jobs, in file
+.it jobsout.
+It is retrieved, by job name and programmer's name,
+when the IBM system acknowledges the job and assigns a number to it.
+.s3
+The
+IBM system automatically returns
+an acknowledgement message for each job it receives.
+Other status messages are returned in response to enquiries
+entered by users and in response to enquiries that
+.it hasp
+itself generates every ten minutes.
+All messages received by
+.it hasp
+are appended to the
+.it resp
+file.
+The
+.it resp
+file is automatically truncated when it reaches 32,000 bytes.
+Each sequence of enquiries written to the message file
+.it haspmesg
+should be preceded by an identification card image
+of the form \*`/*$UX<process id>\*'.
+The
+IBM system will echo back the first portion of this card image,
+as this is an illegal command.
+The appearance of process ids in the response stream
+permits responses to be passed on to the proper users.
+.it Hasp
+enters process id zero on all enquiries it generates on its own behalf.
+.s3
+While it is active,
+.it hasp
+occupies at least the two process slots that are appropriated by
+.it haspinit.
+These slots are used to run
+.it haspmain,
+that supervises data transfers,
+as well as
+.it haspdisp,
+that performs dispatching functions;
+these two processes are connected by a pipe.
+The function of
+.it haspmain
+is to cycle repetitively, looking for data to
+transfer either to or from the IBM system.
+When it finds some, it spawns a child process, either
+.it haspxmit
+or
+.it hasprecv,
+to effect the transfer.
+It waits for its child to complete its task and then
+passes an event notice to
+.it haspdisp.
+.it Haspmain
+exits normally as soon as it detects the file
+.it haspstop
+(created by
+.it hasphalt\^\c
+),
+and exits reluctantly whenever it encounters a run of errors.
+An attempt is made to manage the null file
+.it haspdead
+so that it exists precisely when
+.it haspmain
+is not executing.
+.it Haspinit
+has the capability of \fIdialing\fP any remote IBM system
+with the proper hardware and software configuration.
+A file
+.it haspsoff
+is created by
+.it hasphalt
+to signal that the phone should be hung up by
+.it haspmain.
+.s3
+Ordinarily,
+.it haspdisp
+waits for event completion notices from
+.it haspmain.
+.it Haspdisp
+follows up the events described by directing output files, updating
+records, and notifying users.
+It may spawn the program
+.it haspcopy
+to copy output across file systems.
+.it Haspdisp
+references the system files
+.it /etc/passwd
+and
+.it /etc/utmp
+to correlate user names, numeric ids, and terminals.
+Normal termination of
+.it haspmain
+causes
+.it haspdisp
+to exit also.
+In the case of error termination,
+.it haspdisp
+delays about one minute and then reboots
+RJE
+by executing
+.it haspinit
+again.
+.s3
+Event notices begin with a one-digit code.
+The code \*`0\*' alone signals normal termination.
+Other event notices consist of a code in the
+range \*`1\*' to \*`6,\*' followed by the name of a file in
+the
+.it /usr/hasp
+directory.
+Notices are issued
+as each file in the
+.if n .it xmit*
+.if t .it xmit\v'.2v'*\v'-.2v'
+queue is transmitted and as each
+.if n .it tmp*
+.if t .it tmp\v'.2v'*\v'-.2v'
+file is filled with output.
+These files are moved to new temporary names before the event notice is composed.
+Transmitted files (code 1) are renamed
+.if n .it zmit*
+.if t .it zmit\v'.2v'*\v'-.2v'
+and output files (codes 3-5) are renamed
+.if n .it "prt*, pch*,"
+.if t .it "prt\v'.2v'*\v'-.2v', pch\v'.2v'*\v'-.2v',"
+or
+.if n .it msg*,
+.if t .it msg\v'.2v'*\v'-.2v',
+depending on their type.
+When
+.it haspdisp
+gets around to following up on the events described,
+the files will either be deleted
+or moved to a permanent destination.
+.s3
+Event notices are written to the
+.it log
+file at the time they are received by
+.it haspdisp.
+A typical section of the log looks as follows:
+.s3
+.nf
+		1zmit283
+		5msg61
+		1zmit284
+		5msg62
+		3prt63
+.fi
+.s3
+Additional lines are written to the log by
+.it haspinit.
+Each reboot of \fIhaspinit\fP is marked by a time stamp.
+If the previous execution of
+.it haspmain
+ended in error, an exception notice
+precedes the time stamp.
+Exception notices are formatted by
+.it haspmain
+and consist of a sequence of capital letters.
+The most common is \*`AAAAA\*', that indicates
+five successive failures to acquire the line
+for a transmission to the host.
+A sequence of time stamps alternating with \*`AAAAA\*'
+indicates that the host is not responding to RJE.
+Each time the RJE facility is booted via the
+.it haspinit
+program,
+the
+.it log
+file is cleaned out.
+A copy of its last contents is placed in a file named
+.it slog.
+.s3
+Several RJE programs, including the
+.it send\^\c
+(I)
+command, use the 
+.it ustat\^\c
+(II)
+system call to determine the remaining capacity
+of the file systems they use,
+in an attempt to keep roughly
+1,000 blocks and 50 i-nodes free.
+.it Haspinit
+issues a warning when fewer than 2,000 blocks or 100 i-nodes are available.
+.it Send
+shuts down when only 1,500 blocks remain,
+and
+.it haspmain
+stops accepting output from the IBM system
+when the capacity falls to 1,200 blocks.
+In addition, output files are limited in size
+at all times to a maximum of 512K bytes.
+Of this, only 64K bytes are guaranteed.
+How much more output will be accepted
+depends on the current capacity of the
+.it hasp
+file system.
+Excess data is simply discarded,
+with no provision for retrieving it.
+.s3
+Most
+.it hasp
+files and directories are protected
+from unauthorized tampering.
+The exception is the
+.it pool
+directory, that is provided so that
+.it send\^\c
+(I)
+can create temporary files in the correct file system.
+.it Haspqer
+and
+.it rjestat\^\c
+(I),
+the user's interfaces to
+.it hasp,
+operate in \fIsetuid\fP mode to contribute the necessary permission modes.
+.it Rjestat\^\c
+(I),
+incidentally, extends to anyone who can login as
+.it rje
+complete freedom to enter console commands.
+When invoked with a \fB+\fP argument,
+it suppresses the \fBd\fP that begins a display command
+and allows one to cancel or re-route jobs.
+.s3
+Some minimal oversight of each
+.it hasp
+subsystem is required.
+The
+.it hasp
+mailbox should be inspected and cleaned out periodically.
+The
+.it job
+directory should also be checked.
+The only files placed there are output files whose
+destination file systems are out of space.
+Users should be given a short period of time (say, a day or two),
+and then these files should be removed.
+In the source code for the program,
+.it haspdisp
+is a \fIdefine\fP statement for the character string \s-1\fBSFILE\fP\s0.
+If it is set to 1,
+all returned jobs for which PWB/UNIX RJE can not
+find the \*`usr=\fB...\fP\*' specification are placed
+into the
+.it job
+directory.
+This feature is primarily intended for those PWB/UNIX systems that
+are connected to the IBM systems whose output format
+is not known to
+.it haspdisp.
+.s3
+Usage statistics are recorded in the directory
+.it /usr/hasp/usg,
+if it exists.
+Six files will be created and updated.
+Each will contain data on a per-user-id basis.
+File
+.it hasp.in.sum
+accumulates
+the number of blocks transmitted by
+.it hasp;
+file
+.it hasp.in.cnt
+records the number of transmissions; file
+.it hasp.in.max
+records the size, in blocks,
+of the largest job sent.
+Files
+.it "hasp.out.sum, hasp.out.cnt"
+and
+.it hasp.out.max
+contain the same statistics
+for output received by
+.it hasp.
+The program
+.it usage
+may be used to print these statistics;
+\*`usage file [user-id1 ...]\*'
+will print out the statistics gathered in \fIfile\fP.
+If the optional user-id list is present, only the statistics for these user-ids will be printed.
+.s3
+The configuration table
+.it /usr/rje/lines
+is accessed by all components of RJE.
+Its six columns may be labeled
+\*`host\*', \*`system\*', \*`directory\*', \*`prefix\*', \*`device\*',
+and \*`types\*'.
+Each line of the table (maximum of six)
+defines an RJE connection.
+\*`Host\*' is the name of a remote computer: \fBA, B,\fP
+or \fB1110\fP.
+\*`System\*' is a string of capital letters identifying PWB/UNIX systems.
+The first specifies where the RJE connection is normally terminated;
+the remainder specify where it may be backed-up to
+if the primary RJE system goes down.
+\*`Directory\*' is the directory name of the servicing RJE subsystem.
+\*`Prefix\*' is the string prepended (redundantly) to
+several crucial files and programs in the directory: \fIhasp, hasp2, uvac\fP.
+\*`Device\*' is the name of the controlling \%DQS-11B,
+with \*`\fI/dev/\fP\*' excised.
+\*`Types\*' contains information on the type of connection to make.
+It contains the logon id and
+phone number to use when RJE is to automatically \fIdial\fP a remote IBM system.
+An \fBn\fP in this field indicates that this
+entry is not for dial-up.
+When a dial-up entry is initiated,
+the phone number found here is automatically dialed,
+PWB/UNIX RJE logs on,
+and normal RJE processing
+occurs.
+When
+.it hasphalt
+is executed,
+RJE signs off and hangs up the phone automatically.
+If the first character in the \*`types\*' field is an \fBi\fP, all console status
+facilities are inhibited
+(e.g.,
+.it rjestat\^\c
+(I)
+will not behave like a status terminal, and
+the ten-minutes automatic status inquiry is inhibited).
+.s3
+The file
+.it /usr/rje/sys
+contains the single-letter name of the current PWB/UNIX system.
+An RJE connection will be considered available
+if this is its primary system or if this is one of its backup
+systems and the associated directory is mounted.
+.it Send\^\c
+(I)
+and
+.it rjestat\^\c
+(I)
+select an available connection by indexing on the \*`host\*' field
+of the configuration table.
+.it Hasp
+programs index on the \*`prefix\*' field.
+A subordinate directory,
+.it sque,
+exists in
+.it /usr/rje
+for use by
+.it haspdisp
+and
+.it shqer
+programs.
+This directory holds those output files that
+have been designated as standard input to some executable
+file.
+This designation is done via the \*`usr=...\*' specification.
+.it Haspdisp
+places the output files here and updates the file
+.it log
+to specify the order of execution, arguments to be passed, etc.
+.it Shqer
+executes the appropriate files.
+A program
+called
+.it compact
+compacts the
+.it log
+file.
+It should be executed before
+.it shqer
+and RJE have been started.
+.s3
+All HASP programs are reentrant; therefore,
+if more than one HASP is to be run on a given
+PWB/UNIX system,
+simply link,
+via
+.it ln\^\c
+(I),
+HASP2
+program names to HASP names in
+.it /usr.
+.ne 10
+.sh FILES
+configuration-dependent and general-purpose RJE files:
+.br
+.s3
+/dev/rjei		DQS11-B
+.br
+/dev/tty?		terminals
+.br
+/etc/utmp		list of active users
+.br
+/etc/passwd		user population
+.br
+/usr/rje/sys		PWB/UNIX system name, e.g., \*`A\*'
+.br
+/usr/rje/lines		PWB/UNIX RJE lines configuration table
+.br
+/usr/rje/sque/log	log information for \fIshqer\fP
+.s3
+user files
+.s3
+.br
+.if n */.mail			a user's mailbox
+.if t \v'.2v'*\v'-.2v'/.mail			a user's mailbox
+.br
+.if n */prnt*			a user's print data set
+.if t \v'.2v'*\v'-.2v'/prnt\v'.2v'*\v'-.2v'			a user's print data set
+.br
+.if n */pnch*			a user's punch data set
+.if t \v'.2v'*\v'-.2v'/pnch\v'.2v'*\v'-.2v'			a user's punch data set
+.s3
+hasp files (relative to the
+.it directory
+entry in the RJE configuration table):
+.s3
+.br
+.if n hasp*			mostly programs
+.if t hasp\v'.2v'*\v'-.2v'			mostly programs
+.br
+haspdead		inactive flag
+.br
+haspsoff		dial-up hang-up signal
+.br
+haspstop		halt signal
+.br
+haspmesg		message slot
+.br
+haspstat  		queue end record
+.br
+hasplock		lockout file
+.br
+.if n xmit*			jobs queued
+.if t xmit\v'.2v'*\v'-.2v'			jobs queued
+.br
+.if n info/logx*		haspqer loginfo
+.if t info/logx\v'.2v'*\v'-.2v'		haspqer loginfo
+.br
+.if n job/*			output from jobs whose file systems are out of space
+.if t job/\v'.2v'*\v'-.2v'			output from jobs whose file systems are out of space
+.br
+jobsout			fifo job store
+.br
+.if n tmp*			output files
+.if t tmp\v'.2v'*\v'-.2v'			output files
+.br
+log			event log
+.br
+resp			concatenated responses from the IBM system
+.br
+status			RJE message of the day
+.br
+.if n pool/stm*		\fIsend\fP\^(I) temporaries
+.if t pool/stm\v'.2v'*\v'-.2v'		\fIsend\fP\^(I) temporaries
+.br
+.if n usg/*			usage statistics
+.if t usg/\v'.2v'*\v'-.2v'			usage statistics
+.sh "SEE ALSO"
+send(I), rjestat(I), rje(IV), ebcdic(V), regen(VIII)
+.br
+.it "Guide to IBM Remote Job Entry for PWB/UNIX Users"
+by A. L. Sabsevitz.
+.br
+.it "System Components: IBM 2770 Data Communication System,"
+IBM SRL \%GA27-3013.
+.br
+.it "OS/VS2 HASP II Version 4 System Programmer's Guide"
+IBM SRL \%GC27-6992.
+.sh DIAGNOSTICS
+.it Haspinit
+provides brief error messages describing obstacles to
+bringing up
+.it hasp.
+They can best be understood in the context of the RJE source code.
+The most frequently occurring one is \*`cannot open /dev/rjei\*'.
+This may occur if the \%DQS-11B status register shows something other than
+READY (octal 200).
+It will also occur if another process already has the \%DQS-11B open,
+or if the exclusive use flag (_dqsx+3, _dqsx+73, etc.)
+has remained set after a close of the \%DQS-11B.
+.s3
+Once
+.it hasp
+has been started, users should assist in monitoring its performance,
+and should notify operations personnel
+of any perceived need for remedial action.
+.it Rjestat\^\c
+(I)
+will aid in diagnosing the current state of RJE.
+It can detect, with some reliability,
+when the far end of the communications line has gone dead,
+and will report in this case that the host computer
+is not responding to RJE.
+It will also attempt to reboot
+.it hasp
+if it detects a prolonged period of inactivity on the \%DQS-11B.
+.sh BUGS
+The name
+.it hasp
+is an anachronism.
+It is used only
+as a collective name and could represent
+.it hasp,
+.it jes2,
+.it asp,
+etc.

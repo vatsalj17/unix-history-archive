@@ -1,0 +1,248 @@
+.th DIFFMARK I 5/31/77
+.sh NAME
+diffmark \*- mark changes between versions of a file
+.sh SYNOPSIS
+.bd diffmark
+[\fBcode"\fIstring\fB"\fR] ...
+[\fIname\fR]
+.sh DESCRIPTION
+.it Diffmark
+is a filter used to modify the editor command version of
+.it diff(I)
+output
+so that it can be used to mark the changes between successive versions
+of a file.
+Its most common use is to automatically insert change mark commands into
+a file of text for
+.it nroff(I)
+or
+.it troff(I).
+The following is a typical command sequence:
+.s1
+diff \*-e oldfile newfile \*v diffmark markedfile \*v ed \*- oldfile
+.s1
+The generated file
+.it markedfile
+is the same as
+.it newfile,
+except that it has the needed
+change mark requests inserted.
+The user would normally print
+.it markedfile,
+and later remove it and
+.it oldfile
+when no longer needed.
+.s1
+.it Diffmark
+adds extra lines to the output of
+.it diff.
+It inserts one line at both the beginning and end of each sequence
+of appended or changed lines,
+and appends two lines following each deletion.
+The default values of these lines are chosen to make use of the
+``margin character''  request of
+the formatters.
+The user may override any such value by supplying an
+option string, which is concatenated with a newline to make up the line.
+Any null option string causes its corresponding line
+to be omitted completely.
+The option codes and their defaults are as follows:
+.s1
+.lp +7 6
+.bd \*-ab\c
+".mc \*v" \*- ``append'' beginning \*-
+insert at beginning of an addition
+.s1
+.lp +7 6
+.bd \*-ae\c
+".mc" \*- ``append'' end \*-
+insert at end of an addition
+.s1
+.lp +7 6
+.bd \*-cb\c
+".mc \*v" \*- ``change'' beginning \*-
+insert at beginning of a change
+.s1
+.lp +7 6
+.bd \*-ce\c
+".mc" \*- ``change'' end \*-
+insert at end of a change
+.s1
+.lp +7 6
+.bd \*-db\c
+".mc *" \*- ``delete'' 1st line \*-
+insert as first line of deletion
+.s1
+.lp +7 6
+.bd \*-de\c
+".mc" \*- ``delete'' 2nd line \*-
+insert as 2nd line of deletion
+.s1
+.i0
+Although not a necessity, the following option is convenient:
+.s1
+.lp +7 6
+\fIname\fR	causes
+.it diffmark
+to append "w \fIname\fR" to the end of its output.
+For safety's sake, this name should
+.it not
+be the same as that of the file being edited.
+.i0
+.s2
+.ne6
+Here is an example.
+Suppose you run the following sequence of commands:
+.s1
+diff \*-e oldfile newfile >diff1
+.br
+diffmark diff3 \*-cb".mc +" <diff1 >diff2
+.br
+ed \*- oldfile <diff2
+.br
+nroff diff3 >diff4
+.s1
+Of course, the only reason for doing this rather than using pipelines is to
+see what all the files look like:
+.s2
+.nf
+oldfile:
+\&.nf
+ccc
+eee
+ggg
+hhh
+zzz
+.s1
+newfile:
+\&.nf
+aaa
+eee
+fff
+ggg
+zzz
+.s1
+diff1 (output from diff):
+5d
+3a
+fff
+\&.
+2c
+aaa
+\&.
+.s1
+diff2 (output from diffmark):
+5c
+\&.mc *
+\&.mc
+\&.
+3a
+\&.mc \*v
+fff
+\&.mc
+\&.
+2c
+\&.mc +
+aaa
+\&.mc
+\&.
+w diff3
+.s1
+diff3 (edited version of oldfile):
+\&.nf
+\&.mc +
+aaa
+\&.mc
+eee
+\&.mc \*v
+fff
+\&.mc
+ggg
+\&.mc *
+\&.mc
+zzz
+.s1
+diff4 (formatted output, with line length set to 10):
+.if n .ta 12
+.if t .ta .8i
+aaa	+
+eee
+fff	\*v
+ggg
+zzz	*
+.fi
+.s2
+If you are so inclined, you can use
+.it diffmark
+to produce listings of C (or other)
+programs with changes marked.
+A typical shell procedure is:
+.in +3
+.nf
+:	cdiffmk: shell proc to show C program differences
+:	called: cdiffmk old new
+diff \*-e $1 $2 \*v (diffmark;echo \'1,$p\') \*v ed \*- $1 \*v nroff macs \*- \*v pr \*-h $2
+.in -3
+.s1
+The file macs looks like this:
+.br
+\&.pl1
+\&.ll 77
+\&.nf
+\&.eo
+\&.nc \*g
+.s1
+.fi
+The
+.bd ll
+request might specify a different line length, depending on the
+nature of the program being printed.
+The
+.bd eo
+and
+.bd nc
+requests are probably needed only for C programs.
+.sh DIAGNOSTICS
+"input not from diff"
+.br
+"line too long" (>512 characters)
+.br
+Up to 72 characters of the offending
+line are printed immediately following the diagnostic.
+.sh "EXIT CODES"
+0 \*- normal completion
+.br
+1 \*- input did not appear to be from
+.it  diff,
+or other error
+.sh "SEE ALSO"
+diff(I), nroff(I), troff(I)
+.sh BUGS
+Esthetic considerations may dictate manual adjustment of some output.
+File differences involving only formatting requests may produce undesirable
+output.
+I.e., replacing ".sp" by ".sp2" will
+produce a change mark on the preceding or following line of output.
+.s2
+For those who use
+.it diffmark
+to produce UNIX Manual pages, extra handling may be needed to get vertical
+bars to appear.
+This results from the choice of the bar as the character translated to
+a nonadjustable blank for use with tabs.
+.tr %!
+When you use
+.it diffmark,
+override the default choice of "\*v" by "%" instead,
+causing the latter to appear in your final output.
+If you prefer the vertical bar, you can get it on
+the final output by adding the following to the beginning of your file:
+.in +3
+.if n \&.if n .tr %\*v
+.if t \&.if n .tr %\|\*v
+.br
+\&.if n .ds v %
+.in -3
+.tr %%
+which may be mysterious, but works.
+.tr !!

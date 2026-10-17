@@ -1,0 +1,105 @@
+.th TI700 VII 5/31/77
+.sh NAME
+TI700 \*- TI 745, 735, and 725 terminals
+.sh DESCRIPTION
+The TI745 (and to a lesser extent, the TI735)
+are lighter and smaller than the older TI725,
+and their keyboards are more
+suitable for general-purpose UNIX usage.
+In particular, the DEL key and backslash are favorably placed,
+and they provide an underscore in place of the 725's back-arrow.
+.it Nroff(I)
+output is thus more readable on the 745 and 735.
+Output is printed on thermal paper,
+with a carriage width of 80 characters.
+The TI745 accepts a smaller roll of paper than the others,
+but is much more portable.
+.sh "COMMANDS TO ISSUE AFTER LOGIN"
+.s1
+.bd "stty \*-tabs"
+.bd "nl0 cr2"
+.s1
+This requests UNIX to simulate standard UNIX tab stops (every 8 columns).
+It also lessens carriage return and line feed delays to the minimum
+acceptable to the terminal.
+If the terminal cannot print something at this setting,
+various other settings may be tried.
+At the
+.bd "nl0 cr2"
+setting, it takes about 65 seconds per page of C program,
+and 93 seconds per page of
+.it nroff
+output (UNIX Manual page).
+Usable settings and their relative time ratios are as follows:
+.s1
+.if n .ta 9 17
+.if t .ta 1.5i
+.nf
+nl0 cr2	1.00
+nl0 cr1	1.03
+nl0 cr3	1.06
+nl2 cr2	1.08
+nl2 cr3	1.14
+.fi
+.s1
+The lack of hardware tabs causes these terminals to require about
+15-20% more time than 300-baud terminals providing tabs.
+.sh "NORMAL SWITCH SETTINGS (745)"
+.s1
+Most switches are right-left
+toggles in front of the keyboard.
+.s1
+UPPER CASE (left front) \*- right side depressed
+.br
+HALF DUP (right front) \*- right side depressed
+.br
+LOW SPEED (right front) \*- right side depressed
+.br
+ON LINE (right front) \*- left side depressed
+.br
+MARK-EVEN-ODD (right rear) \*- EVEN
+.br
+ON-OFF (right rear) \*- toggle back
+.sh "NORMAL SWITCH SETTINGS (735-725)"
+Most of the switches are on the upper left side of the terminal:
+.s1
+LINE FEED \*- SINGLE
+.br
+SPEED \*- 30
+.br
+DUPLEX \*- FULL
+.br
+PARITY \*- EVEN
+.br
+INTERFACE \*- INT
+.s1
+In addition, the PWR switch must of course be turned on,
+and the ON LINE switch depressed.
+You will be in local mode otherwise, and get no response whatsoever.
+.sh "SPECIAL CHARACTERS"
+To generate a Horizontal Tab character from the keyboard,
+hold CTRL down and hit "i".
+.s1
+You can interrupt an executing program with either the DEL or BREAK keys.
+.sh "COMMON PROBLEMS"
+NO LINE FEED OCCURS WHEN RETURN HIT; NO SYSTEM RESPONSE TO RETURN \*-
+you are in a mode where there is no conversion of RETURN to CR-LF echoed to your terminal.
+There are two situations.
+First, either the terminal or coupler switch may be set to HALF-DUPLEX, and you may
+have asked to suppress echoing because you were getting double characters.
+Change the switches to FULL-DUPLEX, and issue a
+.bd "stty echo"
+command.
+The second case is that a
+.bd "stty nl"
+command has been done,
+or some equivalent action,
+such as using LINE FEED
+rather than RETURN during your login sequence.
+Issue the command
+.bd "stty \*-nl,"
+but terminate it with a LINE FEED, not a RETURN.
+This will restore the terminal to the normal state,
+allowing convenient use of RETURN again.
+.sh "SEE ALSO"
+stty(I), terminals(VII)

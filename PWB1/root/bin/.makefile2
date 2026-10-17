@@ -1,0 +1,206 @@
+
+SRC = /sys/source
+SYSINC = /sys/sys/hd
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = as
+
+LD = ld
+LDFLAGS = -s
+
+DD = TMP
+STICKY = OLD
+
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+SYSDEP=		# for $(SYSINC) system include files.
+
+MAKE = make
+SH = sh -v
+
+
+# ------------
+#  Create bin
+# ------------
+
+MAIN:		\
+		mail make mesg mkdir mv newgrp nice nm nohup \
+		od passwd pr prof ps pwd \
+		rm rmdir
+	-rm -f $(DD)*
+	-@echo "\n***** Following Files Still Present:";  ls -l $(DD)*;  echo "\n"
+	-@echo "\n***** Following Sticky Files Still Present, Remove After Next Reboot:"; \
+			ls -l $(STICKY)*;  echo "\n"
+
+mail:		$(SRC)/s2/mail.c $(CCDEP) $(CTIME) $(LPWDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/mail.c -lPW -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv mail $(DD)mail
+	mv a.out mail
+	ls -l mail
+	-rm -f $(DD)*
+
+make:		$(SRC)/s2/make.d/defs $(SRC)/s2/make.d/*.[cy] $(SRC)/s2/make.d/Makefile \
+		$(CCDEP) $(CTIME) $(YACCDEP) $(LSDEP)
+	chdir $(SRC)/s2/make.d; $(MAKE) CC=$(CC) make cleanup
+	mv $(SRC)/s2/make.d/make a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv make $(DD)make
+	mv a.out make
+	ls -l make
+	-rm -f $(DD)*
+
+mesg:		$(SRC)/s2/mesg.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/mesg.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv mesg $(DD)mesg
+	mv a.out mesg
+	ls -l mesg
+	-rm -f $(DD)*
+
+mkdir:		$(SRC)/s2/mkdir.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/mkdir.c
+	chmod 4755 a.out
+	-chown root a.out
+	-mv mkdir $(DD)mkdir
+	mv a.out mkdir
+	ls -l mkdir
+	-rm -f $(DD)*
+
+mv:		$(SRC)/s2/mv.c $(CCDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s2/mv.c
+	chmod 4755 a.out
+	-chown root a.out
+	-mv mv $(DD)mv
+	cp a.out mv
+	rm a.out
+	ls -l mv
+	-rm -f $(DD)*
+
+newgrp:		$(SRC)/s2/newgrp.c $(CCDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s2/newgrp.c
+	chmod 4755 a.out
+	-chown root a.out
+	-mv newgrp $(DD)newgrp
+	mv a.out newgrp
+	ls -l newgrp
+	-rm -f $(DD)*
+
+nice:		$(SRC)/s2/nice.c $(CCDEP) $(LPWDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/nice.c -lPW -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv nice $(DD)nice
+	mv a.out nice
+	ls -l nice
+	-rm -f $(DD)*
+
+nm:		$(SRC)/s2/nm.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/nm.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv nm $(DD)nm
+	mv a.out nm
+	ls -l nm
+	-rm -f $(DD)*
+
+nohup:		$(SRC)/s2/nohup.c $(CCDEP) $(LPWDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/nohup.c -lPW -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv nohup $(DD)nohup
+	mv a.out nohup
+	ls -l nohup
+	-rm -f $(DD)*
+
+od:		$(SRC)/s2/od.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/od.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv od $(DD)od
+	mv a.out od
+	ls -l od
+	-rm -f $(DD)*
+
+passwd:		$(SRC)/s2/passwd.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/passwd.c
+	chmod 4755 a.out
+	-chown root a.out
+	-mv passwd $(DD)passwd
+	mv a.out passwd
+	ls -l passwd
+	-rm -f $(DD)*
+
+pr:		$(SRC)/s2/pr.c $(CCDEP) $(CTIME)
+	$(CC) $(CCFLAGS) $(SRC)/s2/pr.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv pr $(DD)pr
+	mv a.out pr
+	ls -l pr
+	-rm -f $(DD)*
+
+prof:		$(SRC)/s2/prof.c $(SRC)/plot/plot.c.a $(CCDEP)
+	mkdir /tmp/makeprof
+	cp $(SRC)/s2/prof.c /tmp/makeprof
+	chdir /tmp/makeprof; ar x $(SRC)/plot/plot.c.a;  $(CC) $(CCFLAGS) *.c
+	mv /tmp/makeprof/a.out a.out
+	rm -f -r /tmp/makeprof
+	rmdir /tmp/makeprof
+	chmod 755 a.out
+	-chown bin a.out
+	-mv prof $(DD)prof
+	mv a.out prof
+	ls -l prof
+	-rm -f $(DD)*
+
+ps:		$(SRC)/s2/ps.c $(CCDEP) $(SYSDEP)
+	$(CC) $(CCFLAGS) -I$(SYSINC) $(SRC)/s2/ps.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv ps $(DD)ps
+	mv a.out ps
+	ls -l ps
+	-rm -f $(DD)*
+
+pwd:		$(SRC)/s2/pwd.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/pwd.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv pwd $(DD)pwd
+	mv a.out pwd
+	ls -l pwd
+	-rm -f $(DD)*
+
+rm:		$(SRC)/s2/rm.c $(CCDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s2/rm.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv rm $(DD)rm
+	mv a.out rm
+	ls -l rm
+	-rm -f $(DD)*
+
+rmdir:		$(SRC)/s2/rmdir.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s2/rmdir.s;  $(LD) $(LDFLAGS) a.out
+	chmod 4755 a.out
+	-chown root a.out
+	-mv rmdir $(DD)rmdir
+	mv a.out rmdir
+	ls -l rmdir
+	-rm -f $(DD)*
+
+RC:	# dummy name to force re-compiling things.

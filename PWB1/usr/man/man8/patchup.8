@@ -1,0 +1,55 @@
+.th PATCHUP VIII 5/31/77
+.sh NAME
+patchup \*- patch up a damaged file system
+.sh SYNOPSIS
+.bd /etc/patchup
+.sh DESCRIPTION
+.it Patchup
+is an interactive program that can repair certain forms of
+file system inconsistencies.
+These include a subset of the errors reported by
+.it check\c
+\^(VIII)
+that commonly occur after a crash.
+.it Patchup
+will correct deltas of 100, 177, 201, and 377, as follows:
+.s3
+.lp 20 10
+100	the inode is de-allocated
+and any used blocks are added to the
+.it "free list."
+.s3
+.lp 20 10
+177	the link count for the file
+is incremented.
+.s3
+.lp 20 10
+201	a pathname for the orphan file
+is created in a directory called ``salvage'' in the affected file system.
+.s3
+.lp 20 10
+377	the directory entry for the
+inode is removed.
+.i0
+.s3
+.it Patchup
+prompts the user for all the information that it requires.
+.sh FILES
+.lp 15 10
+/dev/rp??	file system to be patched
+.lp 15 10
+salvage	directory for orphan files
+.lp 15 10
+201dir	temporary directory for saving orphan files
+.i0
+.sh "SEE ALSO"
+check(VIII), fsdb(VIII), clrm(VIII), icheck(VIII),
+ncheck(VIII)
+.br
+.it "Repairing Damaged PWB/UNIX File Systems"
+by P. D. Wandzilak.
+.sh DIAGNOSTICS
+When it gets confused,
+.it patchup
+will print a message notifying the operator to
+obtain additional assistance from qualified personnel.

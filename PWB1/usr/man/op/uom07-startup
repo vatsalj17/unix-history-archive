@@ -1,0 +1,94 @@
+.tr }.
+.tr {"
+.SC UNIX~INITIALIZATION~PROCEDURE September~14~1977
+.HU "TO OPEN THE SYSTEM TO MULTIPLE USERS"
+.L1
+If running 
+.I SINGLE-USER:
+.L2
+Do a 
+.B CHECK
+of the filesystems via
+.B check
+(if the filesystems are not clean, refer to FILE PATCHING
+PROCEDURE).
+.BS
+.BI
+# 
+.UL "check"
+.BE
+.L2
+Set date to the correct time.
+.L2
+Reboot by changing the position of the
+.I CSW
+to
+any position other than the original setting,
+and entering
+.I \d\uCTRL/d \|}\*F
+.FS
+Do not do a 
+.I CTRL/d
+after an
+.I icheck~-sX
+of the 
+.I ROOT
+device; instead the system MUST be halted and completely rebooted.
+.FE
+.L1
+When running
+.I MULTI-USER 
+log on as
+.I "SUPER USER" }
+.BS -
+.BI
+login: 
+.UL "root"
+.BI
+password: 
+.UL "!;%&?"
+~~~~~~(system will give you a
+.I # )
+.BE
+If you are running 
+.I "SINGLE-USER"
+you automatically
+get back the 
+.I # }
+.L1
+ONLY IF the filesystems are clean, to open the system for general use 
+(i.e.,
+to allow users to log on):
+.L2
+Start 
+.B /ETC/STARTUP }
+.BS
+.BI
+# 
+.UL "startup"
+.br
+This command alone will activate the
+processes for each of the systems.
+The file ``/etc/startup'' should contain any commands and cleanup
+to be done on each reboot.
+.BE
+.L2
+Do a 
+.B "ps a"
+to make sure
+.I HASP ,
+.I CRON ,
+.I HASP2 ,
+and
+.I UVAC
+(if applicable) are active.
+.BS
+.BI
+# 
+.UL "ps a"
+.BE
+.L2
+Unbusy the appropriate dial-up lines for each system.
+.L2
+Log-off (\c
+.I "CTRL/d" \|).

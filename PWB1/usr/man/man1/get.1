@@ -1,0 +1,714 @@
+.tr ~
+.tr $%
+.if t .ds . \\fB\\s+2.\\s-2\\fP
+.if n .ds . .
+.if n .ds D " -- 
+.if t .ds D \(em
+.tr @|
+.if n .tr #-
+.if t .tr #\(em
+.de SP
+.if n .ul
+[\fB#\\$1\fR\\c
+.if n .ul 0
+\\$2\\$3
+..
+.de SF
+.if n .ul
+[\fB#\\$1\fR]
+.if n .ul 0
+..
+.de DT
+.hc ^
+^...
+.hc
+..
+.de AR
+.s1
+.lp +10 5
+\fB#\\$1\\fR	\\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8 \\$9
+..
+.de FI
+.s1
+.lp +30 30
+\\$1	\\$2
+.i0
+..
+.ds F)  \fB\s-2FILES\s+2\fR
+.de I
+.if n .ul
+\fI\\$1\fR\c
+.if n .ul 0
+\\$2\\$3\\$4\\$5\\$6\\$7\\$8\\$9
+..
+.if n .ds )Q '
+.if n .ds )G `
+.if t .ds )Q \\(aa
+.if t .ds )G \\(ga
+.if t .ds )S \\|
+.th GET I 8/31/77
+.sh NAME
+get \*- get generation from SCCS file
+.sh SYNOPSIS
+.na
+.bd get
+.SP r rel[\*.lev[\*.br[\*.seq ]]]]
+.SP c cutoff ]
+.SP i incl-list ]
+.SP x excl-list ]
+.SP a serial ]
+.SF k
+.SF e
+.if n .ul
+[\fB#l\fR[\fBp\fR]]
+.if n .ul 0
+.SF p
+.SF m
+.SF n
+.SF s
+.SF b
+.SF g
+.SF t
+name
+.DT
+.ad
+.sh DESCRIPTION
+.it Get
+generates an ASCII text file from
+each named SCCS file according to the specifications given
+by its keyletter arguments,
+which begin with ``\*-''.
+The arguments
+may be specified in any order,
+but all keyletter arguments apply to all named SCCS files.
+If a directory is named,
+.it get
+behaves as though each file in the directory were
+specified as a named file,
+except that non-SCCS files
+(last component of the pathname does not begin with ``s\fB.\fP''),
+and unreadable files
+are silently ignored.
+If a name of ``#'' is given, the standard input is read;
+each line of the standard input is taken to be the name of an SCCS file
+to be processed.
+Again, non-SCCS files, and unreadable files are silently ignored.
+.s1
+The generated text is normally written into a file called the
+.it g-file.
+See \*(F), below,
+for an explanation of how the name of this file is determined.
+.s1
+The keyletter arguments are as follows.
+Each is explained as though only one named file is to be processed,
+but the effects of any keyletter argument apply independently to
+each named file.
+.AR r The
+SCCS identification string (SID) of the change level
+to be generated.
+If the entire argument is omitted,
+the meaning is the same
+as if the default SID were specified
+(see
+.it admin\c
+(I)).
+If there is no default SID in the SCCS file
+the
+highest release which has deltas
+is used.
+If only the release is specified,
+the level defaults to the highest level in that release.
+A release and level completely identifies a specific change level.
+If a branch is also specified and
+the sequence is omitted, the sequence defaults to the
+highest sequence in the branch.
+A release, level, branch, and sequence also completely identifies a specific
+change level.
+(All deltas are identified either by a 2 component SID\*Drelease
+and level,
+or by a 4 component SID\*Drelease, level, branch, and sequence.
+SID's with 4 components identify deltas which have heretofore
+been called ``non-propagating''.)
+.AR c Cutoff
+date-time,
+in the form
+\s-2YY[MM[DD[HH[MM[SS]]]]]\s+2.
+No delta which was created after the specified cutoff date-time
+will be applied.
+Units omitted from the date-time default
+to their maximum possible values;
+that is,
+``\fB#c\fR7502''
+is equivalent to
+``\fB#c\fR750228235959''.
+Any number of non-numeric characters may separate
+the various 2 digit pieces of the cutoff date-time.
+This feature allows one to specify a cutoff date in the form:
+``"\fB#c\fR77/2/2 9:22:25"''.
+Note that this implies that one may use the
+$E$ and $U$ identification keywords
+(see below)
+for nested
+.it gets
+within,
+say
+the input to a
+.it send\c
+(I)
+command:
+.ti +5
+.tr ~~
+~!get  "#c$E$  $U$"  s\*.file
+.br
+.tr ~
+.AR i This
+argument is used to specify a list of deltas to be included
+(forced to be applied).
+The list has the following syntax:
+.s1
+.in +5
+.if n .ta 12,18
+.if t .ta 5,7
+.if t .tr @\(or
+.nf
+<list>	::=	<range>
+	  @	<list> \fB,\fR <range>
+<range>	::=	<delta>
+	  @	<delta> \fB\*-\fR <delta>
+<delta>	::=	<rel>
+	  @	<rel> \*. <lev>
+	  @	<rel> \*. <lev> \*. <br>
+	  @	<rel> \*. <lev> \*. <br> \*. <seq>
+.in -5
+.tr @|
+.fi
+.s1
+If a level is omitted from a delta specification the
+highest level of the specified release is assumed.
+If a branch is specified, but the sequence is omitted the
+highest sequence of the specified branch is assumed.
+.AR x This argument is similar to
+.bd i
+except that it is followed
+by a list of deltas to be excluded
+(forced to not be applied).
+.AR a The
+serial number of the change level to be generated
+(see
+.it sccsfile\c
+(V)).
+This keyletter is used by the
+.it comb\c
+(I)
+command;
+it is not a generally useful keyletter,
+and most users will probably never use it.
+If both the
+.bd r
+and
+.bd a
+keyletters are specified,
+the
+.bd a
+keyletter is used.
+Care should be taken when using the
+.bd a
+keyletter in conjunction with the
+.bd e
+keyletter,
+as the SID of the delta to be created
+may not be what one expects.
+The
+.bd r
+keyletter can be used with the
+.bd a
+and
+.bd e
+keyletters to control the naming of the SID of the delta to
+be created.
+.AR k This
+argument suppresses replacement of identification keywords
+(see below) by specific values.
+The
+.bd k
+argument is implied by the
+.bd i\fR,\fB
+.bd x
+or
+.bd e
+arguments.
+.AR e This
+argument indicates that this
+.it get
+is for the purpose of making a delta with a later
+execution of
+.it delta.
+It causes creation, or updating of a
+.it p-file
+(see \*(F)).
+Another
+.it get
+with an
+.bd e
+argument,
+if at the same delta
+or for the same new SID,
+may not be executed until the delta is made.
+If the
+.it g-file
+generated by a
+.it get
+with an
+.bd e
+argument is ruined,
+a new one may be obtained by executing another
+.it get
+with a
+.bd k
+argument instead of an
+.if n .ul
+\fBe\fR.
+Note that although the
+.bd c
+argument may be used in combination with
+.bd e\c
+,
+.it delta
+will not use it when regenerating the
+.it g-file
+for the purpose of determining what changed.
+When the
+.bd e
+argument is supplied the protection restrictions
+determined by the ceiling, the floor,
+and the list of users authorized to
+make deltas are enforced.
+.AR l This
+argument causes a delta
+summary to be written into an
+.it l-file
+(see \*(F)).
+If
+.bd #lp
+is used
+then an
+.it l-file
+is not created;
+the delta summary is written on the standard output instead.
+The
+.it reform\c
+(I)
+command can be used to truncate lines of the
+.it l-file.
+.AR p This
+argument causes the generated text to
+be written to the standard output instead of to a
+.it g-file.
+All output which normally goes to the standard output
+goes to file descriptor 2 instead,
+unless the
+.bd s
+argument is supplied,
+in which case it disappears.
+.AR s This
+argument suppresses all output normally written on the
+standard output.
+However,
+fatal error messages (which always go to file descriptor
+2) remain unaffected.
+.AR m This
+argument causes each generated text
+line to be preceded by the
+SID
+of the delta which inserted that text line.
+The format is:
+SID,
+followed by a horizontal tab, followed by the text line.
+.AR n This
+argument causes each generated text line to be preceded with the
+$M$ identification keyword
+(see below).
+The format is:
+$M$ identification keyword,
+followed by a horizontal tab,
+followed by the text line.
+When both the
+.bd m
+and
+.bd n
+arguments are supplied
+the format is:
+$M$ identification
+keyword,
+followed by a horizontal tab,
+followed by the
+.bd m
+argument format.
+.AR b This
+argument is used with the
+.bd e
+argument to indicate that the new delta should have an SID in a new branch.
+This argument is allowed only if the
+.bd b
+flag exists in the file;
+see
+.it admin\c
+(I).
+.AR g The
+.bd g
+argument suppresses the actual getting of source.
+It is primarily used to generate an
+.it l-file,
+or to verify the existence of a particular SID.
+.AR t The
+.bd t
+argument is used
+to access the most recent
+(``top'')
+delta in a given release
+(i.e., when no
+.bd r
+argument is supplied, or an argument of the form
+.bd r\c
+rel
+is supplied).
+.i0
+.s1
+For each file processed,
+.it get
+responds (on the standard output) with the
+SID
+being accessed and
+with the number of lines generated.
+If there is more than one named file
+or if a directory or standard input is named,
+each file name is printed
+(preceded by a newline)
+before it is processed.
+If the
+.bd i
+argument is supplied included deltas are listed following the
+notation ``Included'';
+if the
+.bd x
+argument is supplied excluded deltas are listed following the
+notation ``Excluded''.
+.s1
+Identifying information
+is inserted into the generated text by replacing
+.it "identification keywords"
+by appropriate values, wherever they occur.
+The following keywords are available:
+.na
+.lp +8 0
+.s1
+.ul
+.lp +24 16
+Keyword	Value
+.s1
+.lp +24 16
+  \fB$M%\fR	Module name;
+either the value of the
+.bd m
+flag in the file
+(see
+.it admin\c
+(I)),
+or the
+.it g-file
+name\*Dsee \*(F).
+.lp +24 16
+  \fB$I$\fR	SCCS identification string (SID)\*D\fB$R$.$L$.$B$.$S$.
+.lp +24 16
+  \fB$R%\fR	Release.
+.lp +24 16
+  \fB$L%\fR	Level.
+.lp +24 16
+  \fB$B%\fR	Branch.
+.lp +24 16
+  \fB$S%\fR	Sequence.
+.lp +24 16
+  \fB$D%\fR	Current date (YY/MM/DD).
+.lp +24 16
+  \fB$H%\fR	Current date (MM/DD/YY).
+.lp +24 16
+  \fB$E%\fR	Date of newest applied delta (YY/MM/DD).
+.lp +24 16
+  \fB$G%\fR	Date of newest applied delta (MM/DD/YY).
+.lp +24 16
+  \fB$T%\fR	Current time (HH:MM:SS).
+.lp +24 16
+  \fB$U%\fR	Time of newest applied delta (HH:MM:SS).
+.lp +24 16
+  \fB$Y%\fR	The
+value of the
+.bd t
+flag in the file
+(see
+.it admin\c
+(I)).
+.lp +24 16
+  \fB$F%\fR	File name.
+.lp +24 16
+  \fB$C%\fR	Current line number.
+This keyword is intended for identifying messages
+output by the program such as ``this shouldn't have happened'' type errors.
+It is
+.it not
+intended to be used on every line to provide
+sequence numbers.
+.lp +24 16
+.tr @@##
+  \fB$Z%\fR	The 4 characters @(#)
+(used to
+construct strings recognizable by
+.it what\c
+(I)).
+.if n .tr @|
+.if t .tr @\(or
+.if n .tr #-
+.if t .tr #\(em
+.lp +24 16
+  \fB$W%\fR	A shorthand notation for constructing
+.it what\c
+(I)
+strings
+for UNIX program files.
+\fB$W$~\fR=\fB~$Z$$M$\fR<horizontal-tab>\fB$I$\fR
+.lp +24 16
+  \fB$A%\fR	Another shorthand notation for constructing
+.it what\c
+(I)
+strings
+for non-UNIX program files.
+\fB$A$~\fR=\fB~$Z$$Y$~$M$~$I$$Z$\fR
+.ad
+.i0
+.sh FILES
+Several auxiliary files may be created by
+.it get.
+These files are known generically as the
+.it g-file\c
+,
+.it l-file\c
+,
+.it p-file\c
+,
+and
+.it z-file.
+The letter before the hyphen is called the tag.
+An auxiliary file name is formed from the SCCS file name:
+the last component of
+all SCCS file names must be of the form ``\fBs.\fP\fImodulename\fP'',
+the auxiliary files are named by replacing the leading ``s''
+with the tag.
+The
+.it g-file
+is an exception to this scheme:
+the
+.it g-file
+is named by removing
+the ``s.''.
+For example,
+if the SCCS file name is ``s.xyz.c'',
+the auxiliary file names would be ``xyz.c'',
+``l.xyz.c'',
+``p.xyz.c'',
+and
+``z.xyz.c'',
+respectively.
+.s1
+The
+.it g-file\c
+,
+which contains the generated text,
+is created
+in the current directory
+(unless the
+.bd p
+argument is supplied,
+or zero lines of text were generated).
+It is owned by the real user.
+If the
+.bd k
+argument is supplied or implied its mode is 644;
+otherwise its mode is 444.
+Only the real user need have
+write permission in the current
+directory.
+.s1
+The
+.it l-file
+is also created
+(unless a
+.bd p
+follows the
+.bd #l\c
+)
+in the current directory,
+if the
+.bd l
+argument is supplied;
+its mode is 444 and it is owned by the real user.
+Only the real user need have
+write permission in the
+current directory.
+The
+.it l-file
+contains
+a table showing which deltas were applied.
+The following is printed for each delta in the SCCS file:
+.s1
+.nr a 0 1
+.af a a
+.na
+.in +10
+.ti -3
+\n+a)~Blank if the delta was applied;
+``*'' otherwise.
+.ti -3
+\n+a)~Blank if the delta was applied or wasn't applied and ignored;
+``*'' if the delta wasn't applied and wasn't ignored.
+.ti -3
+\n+a)~A code indicating a ``special'' reason
+why the delta was or was not applied:
+.in +3
+.br
+``I'': Included.
+.br
+``X'': Excluded.
+.br
+``C'': Cut off (by a
+.bd c
+argument).
+.in -3
+.ti -3
+\n+a)~Blank.
+.ti -3
+\n+a)~SCCS identification string (SID).
+.ti -3
+\n+a)~Tab character.
+.ti -3
+\n+a)~Date and time (in the form
+YY/MM/DD~HH:MM:SS)
+of creation.
+.ti -3
+\n+a)~Blank.
+.ti -3
+\n+a)~Creator.
+.s1
+.in -3
+.ad
+The comments and MR data follow on subsequent lines,
+indented one horizontal tab character.
+A blank line terminates each entry.
+.i0
+.s1
+The
+.it p-file
+is used to
+pass information resulting from a
+.it get
+with an
+.bd e
+argument along to
+.it delta.
+Its contents are used to prevent a subsequent
+execution of
+.it get
+with an
+.bd e
+argument until
+.it delta
+is executed
+(subject to the conditions described above under the
+.bd e
+keyletter description).
+The
+.it p-file
+is created in the directory containing the SCCS file
+(which might,
+of course,
+also be the current directory),
+and the effective user must have
+write permission
+in that directory.
+Its mode is 644 and it is owned by the effective user.
+The format of the
+.it p-file
+is:
+the gotten SID,
+followed by a blank,
+followed by the SID this delta will have when it is made,
+followed by a blank,
+followed by the login name of the real user,
+followed by a blank,
+followed by the date-time
+of the get
+(\c
+.it not
+the cutoff date-time),
+followed by a blank and the
+.bd #i
+keyletter argument if it was present,
+followed by a blank and the
+.bd #x
+keyletter argument if it was present,
+followed by a newline.
+There can be an arbitrary number of lines in the
+.it p-file
+at any time;
+no two lines can have the same gotten SID
+or the same new SID.
+.s1
+The
+.it z-file
+is created in the directory containing the SCCS file for the duration of updating
+the
+.it p-file.
+The same protection restrictions as those for the
+.it p-file
+apply for the
+.it z-file.
+The
+.it z-file
+is
+created mode 444.
+It serves as a
+.it lock-out
+mechanism against simultaneous updates.
+Its contents are
+(in binary; 2 bytes)
+the process ID of the
+command
+(i.e.,
+.it get\c
+)
+that created it.
+.sh "SEE ALSO"
+.na
+admin(I),
+delta(I),
+prt(I),
+what(I),
+help(I),
+sccsfile(V),
+.br
+.it "SCCS/PWB User's Manual"
+by L. E. Bonanni and A. L. Glasser.
+.sh DIAGNOSTICS
+Use
+.it help\c
+(I)
+for explanations.
+.sh BUGS
+If the effective user has
+write permission (either explicitly or implicitly) in the directory
+containing the SCCS files,
+but the real user doesn't,
+then only one file may be named when the
+.bd e
+argument is supplied.
+.tr ~~
+.tr $$
+.tr @@

@@ -1,0 +1,55 @@
+.th CPX I 5/31/77
+.sh NAME
+cpx \*- copy a file exactly
+.sh SYNOPSIS
+.bd cpx
+\*- [file1 | \*-] [file2 | \*-]
+.sh DESCRIPTION
+.it Cpx
+copies 
+.it "file 1"
+onto
+.it "file 2."
+The mode, owner and time of last modification of the source file
+are preserved.
+.s3
+Either
+.it file1
+or
+.it file2
+may be represented as a ``\-'',
+which uses the standard UNIX input/output pipe mechanism,
+instead of the corresponding file.
+A file read from a pipe or written to a pipe will be preceded with a header,
+containing the mode, owner, time of last modification, number of characters,
+and a summed total of the characters in the file.
+The case where a pipe is read and a file is written, both the
+number of characters and the summed total are
+compared to similar values after the copy.
+If there are no differences between the comparisons, the message
+``ok'' is printed.
+.s3
+.it Cpx
+prohibits copying a file onto itself.
+.s3
+.it Cpx
+does not allow
+.it file1
+to be a directory.
+If
+.it file2
+is a directory, then the target file is a file in that directory
+with the file name of 
+.it file1.
+.s3
+Examples to copy a file to the current directory:
+.s3
+.in +5
+cpx ../file1 \- | cpx \- \fB.\fP
+.br
+cpx ../file1 \fB.\fP
+.br
+cpx ../file1 file2
+.in -5
+.sh "SEE ALSO"
+cp(I)

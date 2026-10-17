@@ -1,0 +1,124 @@
+.th EGREP I 5/31/77
+.sh NAME
+egrep \*- search a file for lines containing a pattern
+.sh SYNOPSIS
+.bd egrep
+[
+.bd \*-b
+] [
+.bd \*-c
+] [
+.bd \*-f
+] [
+.bd \*-n
+] [
+.bd \*-v
+] pattern [ file ] ...
+.sh DESCRIPTION
+.it egrep
+searches the input files
+(standard input default)
+for all lines containing an instance of the
+regular expression
+.it pattern.
+Normally, each line matched
+is copied to the standard output.
+The
+.it pattern
+matches a line whenever the line
+contains a substring denoted by the
+.it pattern.
+.s3
+The flags modify the normal behavior as follows:
+.s3
+.lp +4 4
+.bd "\*-b	\c"
+causes each printed line to be preceded by the block
+number on which it was found
+.lp +4 4
+.bd "\*-c	\c"
+causes only a count of matching lines to be printed
+.lp +4 4
+.bd "\*-f	\c"
+causes the regular expression to come from a file named
+.it pattern
+.lp +4 4
+.bd "\*-n	\c"
+causes each printed line to be preceded by its relative line
+number in the file
+.lp +4 4
+.bd "\*-v	\c"
+causes all lines but those matching the
+.it pattern
+to be printed
+.s3
+.i0
+In all cases the file name is shown if there is more than one input file.
+.s3
+.i0
+A
+.it pattern
+is one of the following:
+.s3
+.lp +3 3
+1.	an ordinary character (denoting itself)
+.s3
+.lp +3 3
+2.	a circumflex `^' (denoting the beginning of a line)
+.s3
+.lp +3 3
+3.	a dollar sign `$' (denoting the end of a line)
+.s3
+.lp +3 3
+4.	a period `\fB.\fR' (denoting any character but a newline)
+.s3
+.lp +3 3
+5.	`[' followed by a string of characters followed by `]'
+(denoting any character in the string;
+if the first character in this string is `^',
+the pattern denotes any character except newline
+and the characters in the string)
+.s3
+.lp +3 3
+6.	`(' followed by a pattern followed by `)' (denoting
+the enclosed pattern)
+.s3
+.lp +3 3
+7.	a pattern followed by `*', or by `+', or by `?'
+(denoting zero or more, one or more, or zero or one instances,
+respectively, of the preceding pattern)
+.s3
+.lp +3 3
+8.	a pattern followed by a pattern (denoting concatenation
+of the two patterns)
+.s3
+.lp +3 3
+9.	a pattern followed by `|' followed by
+another pattern (denoting the alternation of the two patterns);
+a newline may be used in place of `|'.
+.s3
+.i0
+In parsing a pattern, the rules are applied in the order given.
+.s3
+A pattern metacharacter can be used as an ordinary character by preceding it
+by `\\'.
+The metacharacters are:
+`^', `$', `\fB.\fR', `[', `]', `*', `+', `?', `(', `)', `\\'.
+.s3
+Care should be taken when
+using the characters
+$ * [ ^ | ( ) and \\ in the regular
+expression as they are
+also meaningful to the Shell.
+When
+.it pattern
+is a regular expression other than a simple
+string,
+it is generally necessary to enclose the
+entire
+.it pattern
+argument in quotes.
+.sh "SEE ALSO"
+grep(I), fgrep(I), lex(I), rgrep(I), sed(I), ed(I), sh(I)
+.sh BUGS
+Lines longer than 512 characters are not printed completely.

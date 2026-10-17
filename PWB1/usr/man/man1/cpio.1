@@ -1,0 +1,121 @@
+.th CPIO I 5/11/77
+.tr ~
+.sh NAME
+cpio \*- copy file archives in and out
+.sh SYNOPSIS
+.bd cpio
+\fB\*-o\fR[\fBv\fR]
+.s3
+.bd cpio
+\fB\*-i\fR[\fBdrtuv\fR] [ pattern ]
+.s3
+.bd cpio
+\fB\*-p\fR[\fBdlruv\fR] [ pattern ] directory
+.i0
+.sh DESCRIPTION
+.s3
+.s3
+.it "Cpio \*-o"
+(copy out)
+reads the standard input for a list of pathnames
+and copies those files onto the
+standard output
+together with pathname and status information.
+.s3
+.it "Cpio \*-i"
+(copy in)
+extracts from the
+standard input, which is the product of a previous
+.it ``cpio\ \-o'',
+files whose names are selected by a
+.it pattern
+given in the name-generating syntax of
+.it sh\^\c
+(I).
+The
+.it pattern
+meta-characters `?', `*', `[...]' will match `/' characters.
+The
+.it pattern
+argument defaults to "*".
+.s3
+.it "Cpio \*-p"
+(pass) copies
+out and in
+in a single operation.
+Destination pathnames are interpreted relative to the named
+.it directory.
+.s3
+The options are:
+.s3
+.i0
+.lp 15 5
+.bd d	\c
+.it Directories
+are to be created as needed.
+.s3
+.lp 15 5
+.bd r	\c
+Interactively
+.it rename
+files.
+If the user types a null line, the
+file is skipped.
+.s3
+.lp 15 5
+.bd t	\c
+Print a
+.it "table of contents"
+of the input.
+No files are created.
+.s3
+.lp 15 5
+.bd u	\c
+Copy
+.it unconditionally
+(normally, an older file will not replace a newer file with the same name).
+.s3
+.lp 15 5
+.bd v	\c
+.it Verbose:
+causes a list of file
+names to be printed.
+When used with
+the
+.bd t
+option,
+the table of contents looks like an ``ls \*-l'' (see \fIls\fP\^(I)).
+.s3
+.lp 15 5
+.bd l	\c
+Whenever possible, link files rather than copying them.
+Usable only with
+the
+.bd \*-p
+option.
+.s3
+.lp 15 5
+.bd m	\c
+Retain previous file modified time (only for the super-user).
+.i0
+.s3
+.i0
+The first example below copies the contents of a directory
+into an archive;
+the second duplicates a directory hierarchy:
+.s3
+ 	ls \*v cpio \*-o >/dev/mt0
+.s3
+	chdir olddir
+.br
+	find \fB.\fP \*-print \*v cpio \*-pdl newdir
+.sh "SEE ALSO"
+ar(I), cpio(V)
+.sh BUGS
+Path names are restricted to 128 characters.
+.br
+If there are too many unique linked files,
+the program runs out of
+memory to keep track of them
+and subsequent linking information is lost.
+.tr ~~

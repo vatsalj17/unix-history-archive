@@ -1,0 +1,130 @@
+onintr INTR
+echo "File system patching of `100', `177', `201', and `377' errors:"
+cd /
+echo "Enter device number (e.g.: the `0' in /dev/rp0):    \c"
+= d </dev/tty
+echo "Enter device type (e.g.: 3=RP03, 4=RP04,RP05) :    \c"
+: devtype
+= h </dev/tty
+switch $h
+	: 3
+	: 4
+	    breaksw
+	: default
+	    echo "`$h' is invalid, try again or DEL:    \c"
+	    goto devtype
+endsw
+echo "Enter file system name (e.g.: `/' or `/a1'):    \c"
+= f </dev/tty
+if $f = root then
+	= f /
+endif
+if ! -d $f then
+	echo "Filesystem name `"$f"' is invalid."
+	exit 1
+endif
+expr substr $fx 1 1^= a
+if $a != / then
+	= f /$f
+endif
+if $f != / then
+	nohup umount /dev/rp$d
+	sleep 2
+endif
+while 1
+	echo "Indicate error type (100, 177, 201, 377):   \c"
+	= t </dev/tty
+	if -z "$t"  -o "$tx" = qx break
+	echo "Enter list of I-numbers (separated by blanks): "
+	= l </dev/tty
+	= l "$l"" "
+	switch $t
+	: 100
+	clrm /dev/rp$d $l
+	icheck -s$h /dev/rrp$d
+	if "$f" = "/" then
+		echo "halt System and reboot single user immediately"
+		exit
+	endif
+	breaksw
+	: 201
+		if $f != / then
+			mount /dev/rp$d $f
+			if $r -gt 0 then
+				echo "mount failed?"
+				exit 1
+			endif
+		endif
+		cd $f
+		nohup rmall -r -f -d 201dir
+		nohup mkdir 201dir salvage
+		while -n "$l"
+			expr substr "$l" 1 index "$l" " "^= i
+			expr substr "$l" \( index "$l" " " + 1 \) 99^= l
+			ls -id 201dir | = a
+			= a $a
+			cp /dev/null 201dir/$i
+			rm -f 201dir/$i
+			cd /
+			umount /dev/rp$d
+			pump + | fsdb /dev/rrp$d > /dev/null
+			$ai.a0b.d2=$i
+			q
+			!
+			nohup mount /dev/rp$d $f
+			cd $f/201dir
+			if ! -d $i then
+				ls -li .
+				echo "Want to salvage? (y | n):  \c"
+				= a </dev/tty
+				if $aX = yX then
+					mv $i ../salvage
+					echo "Moved to salvage directory"
+				else
+					unlink $i
+				endif
+			else
+				echo "$i is a directory, CONTACT SUPPORT"
+				cd /
+				nohup umount /dev/rp$d
+				pump + |fsdb /dev/rrp$d > /dev/null
+				$ai.a0b.d2=0
+				q
+				!
+				nohup mount /dev/rp$d $f
+			endif
+		cd $f
+		end
+		breaksw
+	: 177
+		while -n "$l"
+			expr substr "$l" 1 index "$l" " "^= i
+			expr substr "$l" \( index "$l" " " + 1 \) 99^= l
+			pump + | fsdb /dev/rp$d > /dev/null
+			$ii.ln=+1
+			q
+			!
+		end
+		breaksw
+	: 377
+		nohup mount /dev/rp$d $f
+		cd $f
+		echo ncheck -i $l /dev/rrp$d ^ sh -t \
+		^ sed -e "v/[0123456789].*	/d" \
+			-e "s/^.*	/unlink ./" ^ sh -
+		breaksw
+	: default
+		echo "This program is not equipped to handle this type of error"
+		echo "CONTACT SUPPORT FOR HELP"
+	endsw
+	cd /
+	nohup umount /dev/rp$d
+end
+icheck -s$h /dev/rrp$d
+= a end
+: INTR
+if "$ax" != endx echo "\nAborted\n"
+cd /
+if $fx != x -a $fx != /x then
+	nohup umount /dev/rp$d
+endif

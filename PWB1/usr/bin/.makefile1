@@ -1,0 +1,289 @@
+
+SRC = /sys/source
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = as
+
+LD = ld
+LDFLAGS = -s
+
+MAKE = make
+SH = sh -v
+
+DD = TMP
+STICKY = OLD
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+LpwDEP =	# for -lpw lib.
+
+
+# ------------
+#  Create /usr/bin.
+# ------------
+
+MAIN:		450 cb col diffmark gath gsi hp man mm \
+		ratfor reform rjestat send spline t300 t300s t300S t450 \
+		tabs tail whatsnew 
+
+MAIN:		cvtbl deroff neqn nroff roff tbl
+	-rm -f $(DD)*
+	-@echo "\n***** Following Files Still Present:";  ls -l $(DD)*;  echo "\n"
+	-@echo "\n***** Following Sticky Files Still Present, Remove After Next Reboot:"; \
+			ls -l $(STICKY)*;  echo "\n"
+
+450:		$(SRC)/s1/450.c $(CCDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s1/450.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv 450 $(DD)450
+	mv a.out 450
+	ls -l 450
+	-rm -f $(DD)*
+
+cb:		$(SRC)/s1/cb.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/cb.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv cb $(DD)cb
+	mv a.out cb
+	ls -l cb
+	-rm -f $(DD)*
+
+col:		$(SRC)/s1/col.c $(CCDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s1/col.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv col $(DD)col
+	mv a.out col
+	ls -l col
+	-rm -f $(DD)*
+
+diffmark:		$(SRC)/s1/diffmark.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/diffmark.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv diffmark $(DD)diffmark
+	mv a.out diffmark
+	ls -l diffmark
+	-rm -f $(DD)*
+
+gsi:		$(SRC)/s1/gsi.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/gsi.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv gsi $(DD)gsi
+	mv a.out gsi
+	ls -l gsi
+	-rm -f $(DD)*
+
+hp:		$(SRC)/s1/hp.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/hp.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv hp $(DD)hp
+	mv a.out hp
+	ls -l hp
+	-rm -f $(DD)*
+
+ratfor:		$(SRC)/s2/ratfor.a $(CCDEP) $(YACCDEP) $(LSDEP)
+	mkdir /tmp/makeratfor
+	chdir /tmp/makeratfor; ar x $(SRC)/s2/ratfor.a;  $(MAKE) CC=$(CC)
+	mv /tmp/makeratfor/a.out a.out
+	rm -f -r /tmp/makeratfor
+	rmdir /tmp/makeratfor
+	chmod 755 a.out
+	strip a.out
+	-chown bin a.out
+	-mv ratfor $(DD)ratfor
+	mv a.out ratfor
+	ls -l ratfor
+	-rm -f $(DD)*
+
+reform:		$(SRC)/s2/reform.c $(CCDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s2/reform.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv reform $(DD)reform
+	mv a.out reform
+	ls -l reform
+	-rm -f $(DD)*
+
+rjestat:		$(SRC)/rje/rjestat/rjestat?.c $(CCDEP) $(CTIME) $(LPWDEP)
+	chdir $(SRC)/rje/rjestat;  $(SH) rjestat.rc
+	mv $(SRC)/rje/rjestat/rjestat a.out
+	strip a.out
+	chmod 4755 a.out
+	-chown rje a.out
+	-mv rjestat $(DD)rjestat
+	mv a.out rjestat
+	ls -l rjestat
+	-rm -f $(DD)*
+
+gath send:		$(SRC)/rje/send/send?.c $(CCDEP) $(LPWDEP)
+	chdir $(SRC)/rje/send;  $(SH) send.rc
+	mv $(SRC)/rje/send/send a.out
+	strip a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv send $(DD)send
+	mv a.out send
+	-mv gath $(DD)gath
+	ln send gath
+	ls -l send gath
+	-rm -f $(DD)*
+
+spline:		$(SRC)/s2/spline.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/spline.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv spline $(DD)spline
+	mv a.out spline
+	ls -l spline
+	-rm -f $(DD)*
+
+t300:		$(SRC)/plot/t300.c.a $(SRC)/plot/driver.c $(CCDEP)
+	mkdir /tmp/maket300
+	cp $(SRC)/plot/t300.c.a /tmp/maket300
+	chdir /tmp/maket300; ar x $(SRC)/plot/t300.c.a; \
+			$(CC) $(CCFLAGS) -n $(SRC)/plot/driver.c *.c
+	mv /tmp/maket300/a.out a.out
+	rm -f -r /tmp/maket300
+	rmdir /tmp/maket300
+	chmod 755 a.out
+	-chown bin a.out
+	-mv t300 $(DD)t300
+	mv a.out t300
+	ls -l t300
+	-rm -f $(DD)*
+
+t300s t300S:	$(SRC)/plot/t300s.c.a $(SRC)/plot/driver.c $(CCDEP)
+	mkdir /tmp/maket300s
+	cp $(SRC)/plot/t300s.c.a /tmp/maket300s
+	chdir /tmp/maket300s; ar x $(SRC)/plot/t300s.c.a; \
+			$(CC) $(CCFLAGS) -n $(SRC)/plot/driver.c *.c
+	mv /tmp/maket300s/a.out a.out
+	rm -f -r /tmp/maket300s
+	rmdir /tmp/maket300s
+	chmod 755 a.out
+	-chown bin a.out
+	-mv t300s $(DD)t300s
+	-mv t300S $(DD)t300S
+	mv a.out t300s
+	ln t300s t300S
+	ls -l t300s t300S
+	-rm -f $(DD)*
+
+
+t450:		$(SRC)/plot/t450.c.a $(SRC)/plot/driver.c $(CCDEP)
+	mkdir /tmp/maket450
+	cp $(SRC)/plot/t450.c.a /tmp/maket450
+	chdir /tmp/maket450; ar x $(SRC)/plot/t450.c.a; \
+			$(CC) $(CCFLAGS) -n $(SRC)/plot/driver.c *.c
+	mv /tmp/maket450/a.out a.out
+	rm -f -r /tmp/maket450
+	rmdir /tmp/maket450
+	chmod 755 a.out
+	-chown bin a.out
+	-mv t450 $(DD)t450
+	mv a.out t450
+	ls -l t450
+	-rm -f $(DD)*
+
+tabs:		$(SRC)/s2/tabs.c $(CCDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s2/tabs.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv tabs $(DD)tabs
+	mv a.out tabs
+	ls -l tabs
+	-rm -f $(DD)*
+
+tail:		$(SRC)/s2/tail.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/tail.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv tail $(DD)tail
+	mv a.out tail
+	ls -l tail
+	-rm -f $(DD)*
+
+whatsnew:		$(SRC)/s2/whatsnew.c $(CCDEP) $(CTIME) $(LSDEP) $(LPWDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/whatsnew.c -lPW -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv whatsnew $(DD)whatsnew
+	mv a.out whatsnew
+	ls -l whatsnew
+	-rm -f $(DD)*
+
+
+cvtbl:		$(SRC)/s1/cvtbl.c $(CCDEP) $(LPDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/cvtbl.c -lp
+	chmod 755 a.out
+	-chown bin a.out
+	-mv cvtbl $(DD)cvtbl
+	mv a.out cvtbl
+	ls -l cvtbl
+	-rm -f $(DD)*
+
+deroff:		$(SRC)/s1/deroff.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) -n $(SRC)/s1/deroff.c -lS
+	chmod 755 a.out
+	-chown bin a.out
+	-mv deroff $(DD)deroff
+	mv a.out deroff
+	ls -l deroff
+	-rm -f $(DD)*
+
+neqn:		$(SRC)/s7/neqn/ne*.[cgh] $(CCDEP) $(YACCDEP)
+	chdir $(SRC)/s7/neqn;  $(SH) neqnrc
+	-chdir $(SRC)/s7/neqn;  rm -f *.o
+	mv $(SRC)/s7/neqn/a.out a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv neqn $(DD)neqn
+	mv a.out neqn
+	ls -l neqn
+	-rm -f $(DD)*
+
+nroff:		$(SRC)/s7/croff/n*.[ch] $(CCDEP)
+	chdir $(SRC)/s7/croff;  $(SH) bothrc;  $(SH) nrc;
+	-chdir $(SRC)/s7/croff;  rm -f *.o
+	mv $(SRC)/s7/croff/nroff a.out
+	chmod 1755 a.out
+	-chown bin a.out
+	-mv nroff $(STICKY)nroff
+	mv a.out nroff
+	ls -l nroff OLDnroff
+
+roff:		$(SRC)/s7/roff/roff?.s $(ASDEP)
+	-rm -f a.out
+	$(AS) $(SRC)/s7/roff/roff?.s;  $(LD) $(LDFLAGS) a.out -la
+	chmod 755 a.out
+	-chown bin a.out
+	-mv roff $(DD)roff
+	mv a.out roff
+	ls -l roff
+	-rm -f $(DD)*
+
+tbl:		$(SRC)/s7/tbl/t?.c $(CCDEP) $(LSDEP)
+	chdir $(SRC)/s7/tbl;  $(CC) $(CCFLAGS) -n t?.c -lS
+	chdir $(SRC)/s7/tbl;  rm t?.o
+	mv $(SRC)/s7/tbl/a.out a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv tbl $(DD)tbl
+	mv a.out tbl
+	ls -l tbl
+	-rm -f $(DD)*
+
+RC:	# dummy name to force re-compiling things.

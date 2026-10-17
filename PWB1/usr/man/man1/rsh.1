@@ -1,0 +1,91 @@
+.th RSH I 5/31/77
+.sh NAME
+rsh  \*-  restricted shell (command interpreter)
+.sh SYNOPSIS
+.bd rsh
+[
+.bd \*-x
+] [
+.bd \*-
+] [
+.bd \*-ct
+]
+[ name [ arg1 ... ] ]
+.sh DESCRIPTION
+.it Rsh
+is a restricted version of the standard command interpreter
+.it "sh(I)."
+It is used to set up login names or execution environments whose
+capabilities are more controlled than that of the standard shell.
+The actions of
+.it rsh
+are identical to those of
+.it sh,
+except for the following restrictions:
+.s3
+.lp +5 5
+1)	\c
+.it chdir
+is not allowed.
+.s3
+.lp +5 5
+2)	changes to the shell variable `$p' are not permitted.
+.s3
+.lp +5 5
+3)	it is illegal to use `/' in the name of a command.
+.s3
+.lp +5 5
+4)	\c
+.it next
+is not permitted.
+.s3
+.lp +5 5
+5)	`>' and `>>' are disallowed.
+.s3
+.i0
+These restrictions combine to lock a user into the login directory,
+limit the set of invokable commands to those found in
+directories included in the `.path' file,
+and eliminate the direct creation or
+modification of files.
+When a command to be executed is found to be a shell procedure,
+.it rsh
+invokes
+.it sh
+to execute it.
+Thus, it is possible to write shell procedures using the full power of
+the standard shell,
+while the end user is restricted to a limited menu of commands.
+.s3
+.it Rsh
+is actually just a link to
+.it sh.
+.sh FILES
+/etc/glob,
+which interprets `*', `?', and `['.
+.br
+/dev/null as a source of end-of-file.
+.br
+\&.path in login directory to initialize $p.
+.br
+\&.profile in login directory for general initialization.
+.br
+/etc/sha for accounting information.
+.sh "SEE ALSO"
+sh(I)
+.sh BUGS
+It would be better to have a flag for
+.it opt
+which changed
+.it sh
+into
+.it rsh
+dynamically.
+With a non-interruptable `.profile',
+it would be possible to act as
+.it sh,
+use
+.it chdir
+(for example), and then change into
+.it rsh
+at the end of initialization.

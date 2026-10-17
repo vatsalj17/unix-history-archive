@@ -1,0 +1,97 @@
+.th RJESTAT I 5/31/77
+.sh NAME
+rjestat \*- RJE status and enquiries
+.sh SYNOPSIS
+.bd rjestat
+[
+.bd \-
+] [
+.bd A
+] [
+.bd B
+] [
+.bd 1110
+]
+.sh DESCRIPTION
+When invoked without the `\-' argument,
+.it rjestat
+reports the current status of RJE links
+to the specified host computers.
+When invoked with the `\-' argument,
+.it rjestat
+sets up an interactive status terminal.
+If no hosts are cited explicitly,
+the specification defaults to all those
+for which a given PWB/UNIX is configured.
+The ``host'' pseudonyms
+.bd "A, B,"
+and
+.bd 1110
+are built into the RJE software.
+.bd A
+and
+.bd B
+may be used to represent any IBM host machine.
+Their actual destinations are immaterial to RJE.
+The pseudonym
+.bd 1110
+is built into RJE
+to represent any UNIVAC host.
+.s3
+To enter an enquiry via such a status terminal,
+you must first generate an interrupt.
+This can be done by hitting the DEL key
+or the BREAK/INTERRUPT key.
+.it Rjestat
+will respond by prompting for enquiries directed
+to each host in turn.
+The line on which a prompt appears may be completed
+to form a legitimate display command for that particular host.
+If the line is terminated with a `\\',
+the prompt will be repeated,
+otherwise it will advance to the next host.
+A carriage return alone indicates
+that no enquiry is to be directed to a particular host.
+You should expect to wait at least 30 seconds for a response.
+.s3
+An interrupt will temporarily halt
+the display of responses.
+It can therefore be used to inhibit roll-up
+on a CRT terminal.
+The display of responses will resume
+after all prompts have been satisfied
+(perhaps by null completions).
+.s3
+To exit from the status terminal, generate a quit signal
+or type DEL followed by EOT.
+.s3
+The UNIVAC 1110 capability is only supported at the BTL Piscataway location.
+.sh FILES
+/dev/rje*	  DQS-11's used by RJE
+.br
+/usr/rje/sys	  PWB/UNIX system name
+.br
+/usr/rje/lines	  configuration table
+.s3
+And, in the directory for each RJE subsystem:
+.s3
+log		  activity log
+.br
+resp		  concatenated responses
+.br
+status		  message of the day
+.br
+xmit*		  files queued
+.br
+*mesg		  enquiry slot
+.br
+*init		  boot program
+.sh "SEE ALSO"
+.it "Guide to IBM Remote Job Entry for PWB/UNIX Users"
+by A. L. Sabsevitz.
+.br
+.it "OS/VS2 HASP II Version 4 Operator's Guide,"
+IBM SRL #GC27-6993.
+.br
+.it "Operator's Library: OS/VS2 Reference (JES2),"
+IBM SRL #GC38-0210.

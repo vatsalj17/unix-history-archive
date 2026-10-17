@@ -1,0 +1,134 @@
+.tr {"
+.tr }.
+.SC UNIX~SHUTDOWN~PROCEDURE September~14~1977
+.HU "TO SHUTDOWN THE SYSTEM"
+.L1
+Make sure system is
+.I idle 
+(all users logged-off).
+This can be accomplished by executing the
+.B shutdown
+program.\*F
+.FS
+Commands actually entered by the operator appear underlined.
+.FE
+.BS
+.BI
+login: 
+.UL "root"
+.BI
+password: 
+.UL !;%&?
+.BI
+# 
+.UL "shutdown"
+.BE
+.sp
+If the shutdown program fails,
+the following steps can be used instead.
+.L2
+.I BROADCAST
+a message until all users, who can, are logged-off.
+.BS
+.BI
+# 
+.UL "wall FILENAME" 
+.br
+(to 
+.I broadcast
+the contents of a file)
+.BE
+OR
+.BS
+.BI
+# 
+.UL wall
+.br
+.UL "The body of you message should be typed here."
+.br
+.UL "``CTRL/d''"
+.BE
+.L2
+Busy out (push in buttons) the dial-up lines for the appropriate system(s).
+.L2
+Halt
+.I HASP
+or
+.I HASP2 ,
+if applicable.
+.BS
+.BI
+# 
+.UL "setuid hasp"
+.BI
+%
+.UL "/usr/hasp/hasphalt"
+.BI
+# 
+.UL "setuid hasp2"
+.BI
+%
+.UL /usr/hasp2/hasp2halt
+.br
+(Systems will respond with either
+.I "hasp halted"
+or
+.I "hasp2 halted"
+or both)
+.BE
+.L2
+On systems with UNIVAC RJE.
+.BS
+.BI
+# 
+.UL "setuid uvac"
+.BI
+%
+.UL /usr/uvac/uvachalt
+.br
+(system will respond with
+.I "uvac halted" \|)
+.L2
+Do a
+.B "ps a"
+to find out the
+process number of the
+.I CRON, 
+then,
+.B kill
+the
+.I CRON \|,
+if it is active,
+and
+any other active processes other than the
+.B "ps a"
+and your terminal process.
+.BS
+.BI
+# 
+.UL "ps a"
+.br
+(system will give you a list of active processes)
+.BI
+# 
+.UL "kill -9 \fIprocess#\fP"
+.br
+(where 
+.I process#
+is the decimal process number of each active process)
+.BE
+.L2
+Enter
+.BS
+.BI
+# 
+.UL "sync;sync;sync"
+.BE
+.L1
+Halt system (set
+.I HALT
+toggle down).
+.L1
+If turning off power, make sure the disk drives have
+been stopped before turning CONSOLE POWER KEY
+to the OFF position.

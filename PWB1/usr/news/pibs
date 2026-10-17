@@ -1,0 +1,1254 @@
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+TO:
+
+     All BISP Programmer's Workbench (PWB) Users
+
+SUBJECT:
+
+     Release 4.0 of SCCS/PWB
+
+DISPOSITION:
+
+     PWB User's Manual (User's Documentation, Book One)
+
+On Wednesday, February 18, 1977, release 4.0 of SCCS/PWB was
+installed on the BIS PWB systems.
+
+The existing release 3 commands will continue to be available
+until further notice.  The new (release 4.0) commands are avail-
+able as _a_d_m_i_n, _g_e_t, _p_r_t, and _d_e_l_t_a.
+
+User documentation for the release 4.0 commands is available
+under the _m_a_n(I) command, and will be issued at a future time
+to the PWB User's Documentation subscription list.
+
+Release 4 SCCS/PWB files have different format than release 3
+SCCS/PWB files.  Release 3 files may be identified by a "magic
+number" of 61000(8), while release 4 files have a magic number of
+64001(8).  Attempting to apply release 3 commands to release 4
+files, or release 4 commands to release 3 files will produce a
+diagnostic message.
+
+
+1.  _M_A_J_O_R__I_N_C_O_M_P_A_T_I_B_I_L_I_T_I_E_S
+
+1.1  _F_i_l_e__F_o_r_m_a_t__a_n_d__P_r_t
+
+The file format of SCCS files has been completely changed.
+Release 4 SCCS files are ASCII files (i.e., they are a sequence
+of newline terminated ASCII strings); see _s_c_c_s_f_i_l_e(V).
+
+ASCII files have many advantages over binary (release 3) files.
+Any PWB command which can be used on normal text files can now be
+used on SCCS files.  In particular, _g_r_e_p/_s_e_d type of commands are
+particularly attractive for use with SCCS files.  (The file for-
+mat of release 4 files was designed to allow the extraction of
+the various portions of a release 4 file with either the _g_r_e_p or
+_s_e_d commands.) ASCII files also imply that when the SCCS file
+itself must be changed (patched), it can now be done by using the
+text editor _e_d(I).  Finally, the _c_a_t(I) command can be used
+to "dump" an SCCS file.
+
+Due to the change in file format, the output format of the
+_p_r_t(I) command has changed drastically; see _p_r_t(I).
+
+
+
+
+                              - 1 -
+
+
+
+
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+1.2  _N_o_n_-_p_r_o_p_a_g_a_t_i_n_g__D_e_l_t_a_s
+
+The deltas of an SCCS file form a tree.  In release 3, these
+trees are restricted to trees where the only nodes which can have
+more than one successor are those nodes which already have one
+successor, and the level number of that successor is 1.  The
+number of additional successors is limited (typically to one).
+The nodes on the additional branches are "non-propagating" del-
+tas.  For example, given deltas 1.1, 1.2, 1.3, 3.1, and 3.2, a
+delta may be added to the tree at 1.3, forming a new branch.  The
+new delta will be identified as 1.4 and will be non-propagating.
+One, and only one, more delta may be added to the tree at 1.3,
+forming yet another new branch.  This new delta will be identi-
+fied as 2.1 and will also be non-propagating.  In release 3 it is
+not possible to ascertain the predecessors of a given delta (one
+would expect delta 2.1 to precede delta 3.1, however, in the
+example above this is not true).
+
+The restrictions on the number of branches that may exist in the
+tree of deltas of an SCCS file has caused some problems for users
+of SCCS.  The following example illustrates the most common prob-
+lem: Given deltas 1.1, 1.2, 1.3, 2.1, and 2.2.  The release 1
+source has a bug that should be fixed.  A programmer begins to
+fix the bug creating 1.4 and 1.5.  The bug is not completely
+fixed and a very serious bug is reported by a user of the pro-
+gram.  The fix to this more serious bug should be made directly
+after 1.3, but this is not possible.  The new fix is instead made
+after 1.5!  More often than not, this method of source update
+will create additional problems for the user of the program.  To
+prevent problems of this nature, release 4 of SCCS allows the
+tree of deltas to take on the shape of an arbitrary tree.  This
+additional freedom necessitates a change in the method of number-
+ing deltas.  All deltas along the "main line" (or "trunk") of the
+tree retain the "release.level" numbering.  Also, in release 4,
+delta 2.1 will always precede delta 3.1 (see below).
+
+The numbering of so-called "non-propagating" deltas has com-
+pletely changed.  (The term "non-propagating" has been discarded
+in release 4.) Deltas in release 4 are identified by an SCCS
+identification string (SID).  The SID consists of two components
+("release.level") for normal deltas, and four components
+("release.level.branch.sequence") for so-called "non-propagating"
+deltas.  A new keyletter is available on the _g_e_t command which
+provides for upward compatibility of the defaults for SIDs.  The
+-_t keyletter on _g_e_t will access the most recent ("top") delta in
+the specified release.  Thus, if one specifies "get -t -r60
+s.file", and the newest release 60 delta is 60.8.1.3, then
+60.8.1.3 will be accessed.
+
+In release 4 whenever a delta already has a successor with a two
+component (R.L) SID (e.g., delta 1.2 may have successors 1.3,
+1.4, ..., 2.1, 2.2, ...), the SID of the new successor always has
+four components.  The new successor is identified by the "branch"
+
+
+
+                              - 2 -
+
+
+
+
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+component of the SID (each additional successor to a given delta
+creates an additional branch in the tree of deltas).  The value
+for the branch component is simply one more than the highest
+existing branch component for the same prefix (R.L).  The value
+for the first branch is 1.  (E.g., a delta added to 1.2 when 1.3
+exists will get the SID 1.2.1.1.) The last component is the
+sequence number within a given branch.
+
+With this algorithm it is not possible to enumerate all predeces-
+sors of a given delta, if the SID of that delta has four com-
+ponents.  The branch component provides limited information.
+(The second successor of delta 4.6.8.2 is 4.6.X.1, where X is a
+number greater than 8.)
+
+The SCCS identification keywords %R% and %L% are retained (the
+values of the first and second components of the SID are the sub-
+stitutions, respectively), and SCCS identification keywords will
+be introduced for the branch and sequence components (%B% and
+%S%, respectively).  The %I% keyword (equivalent to
+%R%.%L%.%B%.%S%) should be used in place of the separate com-
+ponent identification keywords.
+
+The following tables and notes give the rules of the new algo-
+rithm (in the discussion that follows a "main line" delta is any
+delta with a two component SID):
+
+
+      The current (release 3) algorithm can be described as
+
+_S_I_D _s_p_e_c_i_f_i_e_d     _S_I_D _a_c_t_u_a_l_l_y _g_o_t_t_e_n   _n_e_w _S_I_D (_i_f _g_e_t -_e) _N_o_t_e_s
+R                 R.MAXL                R.MAXL+1            1
+R                 MAXR.MAXL             R.1                 2
+R.L               R.L                   not allowed         3
+
+        The new (release 4) algorithm can be described as
+
+_S_I_D _s_p_e_c_i_f_i_e_d     _S_I_D _a_c_t_u_a_l_l_y _g_o_t_t_e_n   _n_e_w _S_I_D (_i_f _g_e_t -_e) _N_o_t_e_s
+R                 R.MAXL                R.MAXL+1            4
+R                 MAXR.MAXL             R.1                 5
+R                 R.MAXL                R.MAXL.MAXB+1.1     6
+R.L               R.L                   R.L+1               7
+R.L               R.L                   R.L.MAXB+1.1        8
+R.L.B             R.L.B.MAXS            R.L.B.MAXS+1        9
+R.L.B.S           R.L.B.S               R.L.B.S+1           10
+R.L.B.S           R.L.B.S               R.L.MAXB+1.1        11
+
+_N_o_t_e_s
+
+ 1.  This is the most common action (the SID is usually left off
+     and the default release is used).  The delta R.1 must exist,
+     if it does not then this is case 2 (see next note).
+
+
+
+
+
+                              - 3 -
+
+
+
+
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+          Example:
+                            get -e -r1 s.x
+                            (1.1 must exist)
+                            1.MAXL actually gotten
+                            New SID = 1.MAXL+1
+
+ 2.  This corresponds to beginning a new release.  The delta R.1
+     does not exist.
+
+          Example:
+                            get -e -r2 s.x
+                            (2.1 does not exist)
+                            1.MAXL actually gotten
+                            New SID = 2.1
+
+ 3.  A specific delta is named; this delta must exist.  This form
+     is illegal for a get -e.
+
+          Example:
+                            get -r3.8 s.x
+                            (3.8 must exist)
+                            3.8 actually gotten
+
+ 4.  Analogous to note 1 above.  The delta R.1 must exist, if it
+     does not then this is case 5 (see next note).  The delta
+     R.MAXL has no "main line" successors; if it does then this
+     is case 6 (see below).  _T_h_i_s _l_a_s_t _c_o_n_d_i_t_i_o_n _i_s _n_o_t _u_p_w_a_r_d
+     _c_o_m_p_a_t_i_b_l_e _w_i_t_h _r_e_l_e_a_s_e _3 _S_C_C_S/_P_W_B.
+
+          Example:
+                            get -e -r1 s.x
+                            (1.1 must exist)
+                            1.MAXL actually gotten
+                            New SID = 1.MAXL+1
+
+ 5.  Analogous to note 2 above.  The delta R.1 does not exist.
+
+          Example:
+                            get -e -r2 s.x
+                            (2.1 does not exist)
+                            1.MAXL actually gotten
+                            New SID = 2.1
+
+ 6.  Analogous to the creation of a release 3 "non-propagating"
+     delta.  The delta R.MAXL has a "main line" successor.  _T_h_i_s
+     _s_i_t_u_a_t_i_o_n _i_s _n_o_t _u_p_w_a_r_d _c_o_m_p_a_t_i_b_l_e _w_i_t_h _r_e_l_e_a_s_e _3 _S_C_C_S/_P_W_B.
+
+          Example:
+                            get -e -r1 s.x
+                            (1.MAXL = 1.8; 2.1 exists;
+                            1.8.1.1 does not exist)
+                            1.8 actually gotten
+                            New SID = 1.8.1.1
+
+
+
+                              - 4 -
+
+
+
+
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+ 7.  A specific delta is named; this delta must exist.  In
+     release 4 this form _i_s legal for a get -e.  The delta R.L
+     has no successors; if it does (or the user supplies an addi-
+     tional keyletter [-_b]) then this is case 8 (see next note).
+
+          Example:
+                            get -e -r1.3 s.x
+                            (1.3 exists and has no successors)
+                            1.3 actually gotten
+                            New SID = 1.4
+
+ 8.  A specific delta is named.  Either the delta R.L has a suc-
+     cessor, or the user has supplied an additional keyletter [-
+     _b]).
+
+          Example:
+                            get -e -r1.3 -b s.x
+                            (1.3 exists and 1.3.1.1 does not exist)
+                            1.3 actually gotten
+                            New SID = 1.3.1.1
+          OR
+                            get -e -r1.3 s.x
+                            (1.3 exists and has a successor;
+                            1.3.1.1 does not exist)
+                            1.3 actually gotten
+                            New SID = 1.3.1.1
+
+ 9.  Analogous to notes 1 and 4 above.  The delta R.L.B.1 must
+     exist.
+
+          Example:
+                            get -e -r1.3.1 s.x
+                            (1.3.1.1 must exist)
+                            1.3.1.MAXS actually gotten
+                            New SID = 1.3.1.MAXS+1
+
+10.  Analogous to note 7 above.  A specific delta is named.  The
+     delta R.L.B.S has no successors; if it does (or the user
+     supplies an additional keyletter [-_b]) then this is case 11
+     (see next note).
+
+          Example:
+                            get -e -r2.3.8.4 s.x
+                            (2.3.8.4 exists)
+                            2.3.8.4 actually gotten
+                            New SID = 2.3.8.5
+
+11.  Analogous to note 8 above.  Either the delta R.L.B.S has a
+     successor, or the user has supplied an additional keyletter
+     [-_b]).
+
+
+
+
+
+
+                              - 5 -
+
+
+
+
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+          Example:
+                            get -e -r2.3.8.4 s.x
+                            (2.3.8.4 exists and has a successor;
+                            2.3.9.1 does not exist)
+                            2.3.8.4 actually gotten
+                            New SID = 2.3.9.1
+
+
+2.  _F_E_A_T_U_R_E_S__N_O__L_O_N_G_E_R__S_U_P_P_O_R_T_E_D
+
+Besides what was mentioned above, the following are no longer
+supported:
+
+2.1  _A_d_m_i_n
+
+ 1.  The _d keyletter; there is no longer a "description field" in
+     an SCCS file.  See however "NEW FEATURES" below.
+
+ 2.  The _p keyletter; there is no longer a "person field" in an
+     SCCS file.  See however "NEW FEATURES" below.
+
+ 3.  The _l and _u keyletters; locks are not supported.  The floor
+     and the ceiling have, in the past, been more than enough
+     additional protection.
+
+ 4.  The _y keyletter; There is no longer a "default release".
+     The highest release that has deltas is always the "default
+     release".
+
+2.2  _P_r_t
+
+As described above, because of the change in the SCCS file for-
+mat, the output format of _p_r_t(I) (q.v.) has changed drasti-
+cally.  The header and release table are non-existent in release
+4.  The delta table and the body have changed formats.  The _p and
+_x keyletters are no longer supported.
+
+2.3  _G_e_t
+
+The %X% ("non-propagating" flag), and %P% identification keywords
+are no longer supported.  The %S% identification keyword has a
+new meaning; see below.
+
+2.4  _D_e_l_t_a
+
+The _a keyletter is no longer supported ("non-propagating" deltas
+don't exist in release 4).  The _l and _h keyletters are no longer
+supported.
+
+
+
+
+
+
+
+
+                              - 6 -
+
+
+
+
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+3.  _F_E_A_T_U_R_E_S__T_H_A_T__H_A_V_E__C_H_A_N_G_E_D
+
+3.1  _A_d_m_i_n
+
+ 1.  The _t_y_p_e, _f_l_o_o_r, and _c_e_i_l_i_n_g fields are implemented as flags
+     (see "NEW FEATURES", below).
+
+ 2.  The "list of users who may add deltas" is now a list of
+     login names (strings).  The use of a numeric value on an _e
+     keyletter does not have the same meaning as in release 3 (in
+     release 4, a numeric string is simply a string).  Note that
+     the use of login names allows distinction between two or
+     more users who have the same user ID.
+
+ 3.  The _z keyletter recomputes the checksum (in release 3 _a_d_m_i_n
+     simply zeroed the checksum).
+
+3.2  _P_r_t
+
+The format of the delta table and the body have changed, and the
+meaning of the _s keyletter has changed; see _p_r_t(I).  The
+interpretation of the _y keyletter has changed slightly: the _y
+keyletter takes either an SID as an argument, or no argument at
+all.  With a specific SID, processing printing of the delta table
+will stop with the printing of the named SID's entry.  If no
+argument is specified, just the first delta table entry is
+printed.
+
+3.3  _G_e_t
+
+ 1.  The value of an _r keyletter argument is now an SID.  See
+     above or _g_e_t(I) for defaults.
+
+ 2.  Non-numeric characters may separate the various 2 digit
+     pieces of a cutoff date-time.  This feature is most useful
+     for nesting _g_e_t commands within _s_e_n_d(I) input; see
+     _g_e_t(I).
+
+ 3.  The syntax of a <list> (value of an _i or _x keyletter) has
+     changed to allow for "branch" and "sequence".
+
+ 4.  The format of the _l-_f_i_l_e has changed drastically; see
+     _g_e_t(I).
+
+ 5.  The format of the _m keyletter output is: SID, followed by a
+     horizontal tab, followed by the text line.  The
+     _r_e_f_o_r_m(I) command will be changed so that its _s
+     keyletter will take all characters up to the first tab,
+     throw away the tab, place the characters in columns 73
+     through 80, and if the text extends beyond column 80, place
+     an "*" in column 80.  In addition, +_t will be assumed.
+
+
+
+
+
+                              - 7 -
+
+
+
+
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+ 6.  The "Non-prop" messages no longer are output because there
+     are no longer "non-propagating" deltas.
+
+ 7.  The content of the _n keyletter output is changed slightly.
+     Instead of the _g-_f_i_l_e name, the value of the %M% identifica-
+     tion keyword is used (see next item).
+
+ 8.  The value of the %M% identification keyword is either the
+     value of the _m flag (see "NEW FEATURES", below), or, if
+     there is no _m flag in the file, the _g-_f_i_l_e name.
+
+ 9.  The %S% identification keyword is no longer the description;
+     it is now the "sequence" component of the SID being
+     accessed.
+
+10.  The replacement text for the %Z% identification keyword has
+     been changed to "@(#)" to allow it to be transmitted via
+     rje, and printed on IBM printers.  The _w_h_a_t(I) command
+     has already been changed to recognize both the old %Z%
+     replacement and the new %Z% replacement.
+
+11.  The format of the _p-_f_i_l_e has changed drastically; see
+     _g_e_t(I).
+
+3.4  _D_e_l_t_a
+
+The prompt for "history? " has been changed to a prompt for "com-
+ments? ".  Also, if there is a _v flag in the file, _d_e_l_t_a will
+prompt for Modification Request (MR) numbers in addition to
+prompting for comments.  If the _v flag has a value, then that
+value is taken to be the name of program which can verify the
+correctness of the MR numbers; see _d_e_l_t_a(I).
+
+
+4.  _N_E_W__F_E_A_T_U_R_E_S
+
+4.1  _I_m_p_r_o_v_e_d__E_r_r_o_r__H_a_n_d_l_i_n_g
+
+In release 4, whenever a command detects a fatal error when pro-
+cessing a file, processing on that file will be terminated, but
+the command will attempt to continue with any subsequent files.
+This feature is most useful when checking for corrupted SCCS
+files.
+
+4.2  _C_h_e_c_k_i_n_g__f_o_r__C_o_r_r_u_p_t_e_d__S_C_C_S__F_i_l_e_s
+
+The _h keyletter on the _a_d_m_i_n(I) command causes _a_d_m_i_n to
+check the stored checksum against a computed checksum.  _A_d_m_i_n is
+now the recommended program to be used for checking for corrupted
+files.
+
+
+
+
+
+
+                              - 8 -
+
+
+
+
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+4.3  _F_l_a_g_s
+
+There are seven flags in release 4 SCCS files.  All may be set,
+removed, or changed with _a_d_m_i_n(I).  See _a_d_m_i_n(I) for
+the meanings of the different flags.
+
+4.4  _U_s_e_r__T_e_x_t
+
+A portion of an SCCS file is reserved for arbitrary text supplied
+by the user.  This text is changed with the _a_d_m_i_n(I) com-
+mand.  This portion of the file is intended to take the place of
+the release 3 description and person fields.
+
+4.5  _P_r_t
+
+_P_r_t(I) has new keyletter arguments to print the new pieces
+of an SCCS file; see _p_r_t(I).
+
+4.6  _G_e_t
+
+4.6.1  _M_u_l_t_i_p_l_e _G_e_t -_e _C_o_m_m_a_n_d_s  It is possible for more than one
+get-edit-delta sequence to be active at the same time, provided
+that no two _g_e_t_s accessed the same SID, and that no two deltas,
+when made, will create the same SID.  A diagnostic message will
+be issued whenever one of these conditions is violated, and the
+_g_e_t for the file in question will be terminated.  A warning will
+be produced whenever another user has already done a (non-
+interfering) _g_e_t -_e.  The format of the _p-_f_i_l_e has changed drast-
+ically as a result of this new feature; see _g_e_t(I).  If the
+same user has done more than one _g_e_t -_e then that user must use
+the -_r keyletter on _d_e_l_t_a until there is no ambiguity about which
+delta is to be made; see _d_e_l_t_a(I).
+
+4.6.2  -_b _k_e_y_l_e_t_t_e_r  The -_b keyletter is used with the -_e
+keyletter.  It forces the SID of the new delta to be in a new
+branch.  It is only allowed if the _b flag is present in the file;
+see _a_d_m_i_n(I).
+
+4.6.3  -_g _k_e_y_l_e_t_t_e_r  The -_g keyletter suppresses the actual get-
+ting of source.  It may be used to retrieve an _l-_f_i_l_e, or to ver-
+ify the correctness of a given SID ("get -rSID -s -g s.file" will
+simply set the shell variable $r to 0 if the SID exists in the
+file, or 1 if the SID does not exist in the file).
+
+4.6.4  -_t _k_e_y_l_e_t_t_e_r  The -_t keyletter is used to request the most
+recent ("top") delta in a release.  It provides for compatibility
+of use between release 3 and release 4.  (If 60.8.1.3 is the
+newest delta with a release of 60, then a "get -t -r60 s.file"
+will access 60.8.1.3.)
+
+4.6.5  _I_n_c_l_u_d_e/_E_x_c_l_u_d_e  In release 4, the -_i and the -_x arguments
+are recorded in the _p-_f_i_l_e and are used when making the delta
+(i.e., when _d_e_l_t_a regenerates the _g-_f_i_l_e to determine what
+
+
+
+                              - 9 -
+
+
+
+
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+changed, it will include (exclude) those deltas specified by the
+-_i (-_x) arguments from the _p-_f_i_l_e).  Thus, when a delta is made
+on a branch (say, for an old release of the program), and it is
+desired to include the fix in the "main line", the -_i keyletter
+will include the fix without any noticeable increase in the size
+of the SCCS file.
+
+Whenever two deltas conflict in what they are trying to insert or
+delete (for example, an insert comes along in the middle of an
+older delete), _g_e_t will generate a warning message identifying
+the line where the conflict begins, and later, identifying the
+line where the conflict ends.  With these warning messages it is
+possible to use the include/exclude facilities without fear of
+unwanted changes being made to a _g-_f_i_l_e.
+
+4.7  _D_e_l_t_a
+
+_D_e_l_t_a will use the _d_i_f_f(I) program to determine what changed
+between two files of text.
+
+The "ignore" capability is intended to replace the release 3 pro-
+cess of acknowledging non-propagating deltas.  Any delta which is
+not applied and not ignored will be identified in the _l-_f_i_l_e.  A
+delta should be ignored once the problem which caused the crea-
+tion of the delta has been solved, or found to be non-existent.
+A delta which is included need not be ignored since an included
+delta _i_s applied.
+
+Whenever a delta is made, the number of lines inserted, deleted,
+and unchanged will be recorded in the delta table entry for the
+new delta.
+
+4.8  _L_o_c_k_o_u_t
+
+An additional file has been introduced which will serve as a
+semaphore to any other program attempting to update the SCCS
+file.  This file is known generically as the _z-_f_i_l_e.
+
+
+5.  _C_O_N_V_E_R_S_I_O_N__F_R_O_M__R_E_L_E_A_S_E__3__T_O__R_E_L_E_A_S_E__4
+
+Release 3 files are converted to release 4 files by executing the
+command:
+          _s_c_v name ...
+where "name" is any file name argument acceptable to the release
+3 _g_e_t command (including directory names, or a name of "-").  The
+_s_c_v command prints the name of each file processed.  After a file
+has been processed, the release 3 file is _r_e_p_l_a_c_e_d with the
+release 4 file.  The release 3 file is unlinked.  If one desires
+to retain a copy of the release 3 file, one must either make a
+link (see _l_n(I)) or a copy (see _c_p(I)) of the release 3 file.  DO
+NOT SAVE OLD SCCS FILES UNLESS YOU'RE ONLY EXPERIMENTING WITH
+RELEASE 4 - ONCE A RELEASE 4 DELTA IS MADE THE 2 FILES WILL BE
+
+
+
+                             - 10 -
+
+
+
+
+
+
+PY-77-05(PWB PIB)            2/22/77            PY-77-05(PWB PIB)
+
+
+OUT OF SYNC.
+
+Release 3 _p-_f_i_l_e_s are _n_o_t acceptable to release 4 commands.
+Therefore, either (release 3) _d_e_l_t_a should be executed before
+_s_c_v, or the _p-_f_i_l_e should be removed.  _S_c_v will not convert a
+release 3 SCCS file if there is a _p-_f_i_l_e outstanding.
+
+The "person" and "description" fields will be copied to the "user
+text" portion of the file.  The "type" will be preserved.  The
+number of lines inserted, deleted, and unchanged for each delta
+is not computed by _s_c_v, hence these data are recorded in the con-
+verted file as "?????".  The SIDs of "non-propagating" deltas
+have, of course, four components.
+
+Finally, only one login name per user ID will be placed on the
+"list of users who may add deltas".  If you use this feature of
+SCCS and share user IDs among different login names, you must add
+the other login names to the user list with the _a_d_m_i_n(I)
+command.
+
+Additional copies of this PIB may be obtained from any PWB com-
+puter by use of command "man pib 77 05".
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                             - 11 -
+
+
+
+
+
+
+PY-77-XX(PWB PIB)            5/24/77            PY-77-XX(PWB PIB)
+
+
+TO:
+
+     All BISP Programmer's Workbench (PWB) Users
+
+SUBJECT:
+
+     Installation of PWB/UNIX Edition 1.0
+
+DISPOSITION:
+
+     PWB User's Manual (User's Documentation, Book One)
+
+
+               "The air is humming,
+               And something great is coming.
+               Come on, deliver to me ..."
+
+                    - _W_e_s_t _S_i_d_e _S_t_o_r_y
+                      L. Bernstein & S. Sondheim
+
+
+
+PWB/UNIX Edition 1.0 is currently being tested on UNIX A.  It
+will be installed on the other BISP PDP-11's as follows:
+
+     UNIX D:    6/6/77
+     UNIX B,F:  6/13/77
+
+PWB/UNIX Edition 1.0 will be available to the rest of the world
+on 7/1/77.  It will _n_o_t be installed on Systems C and E; those
+users are moving to the new Systems G and H in July, and they
+will get PWB/UNIX Edition 1.0 at that time.
+
+There are a number of differences between PWB/UNIX Edition 1.0
+and the "old" version currently installed on PWB Systems B-F.
+These differences range from major to trivial.  The following
+describes the _k_n_o_w_n differences:
+
+_P_W_B/_M_M _M_a_c_r_o_s:
+     PWB/UNIX Edition 1.0 has a new version of the Memorandum
+     Macros.  The _n_r_o_f_f output of PWB/MM moves closer to the
+     _t_r_o_f_f output appearance.*  The new default _n_r_o_f_f appearance
+     incorporates the following:
+
+        o+ The first two heading levels are stand-alone, and both
+          have a blank line following the heading text.  Previ-
+          ously, only the first had a blank line following the
+          text.  Specifically, the default value for the Hs
+          register is 2, instead of 1.
+        o+ The text for all heading levels will be underlined.
+________
+  * In fact, the new _n_r_o_f_f version of PWB/MM is based on the
+    existing _t_r_o_f_f version.
+
+
+
+                              - 1 -
+
+
+
+
+
+
+PY-77-XX(PWB PIB)            5/24/77            PY-77-XX(PWB PIB)
+
+
+        o+ The indentation for dash lists and bullet lists is the
+          same as for the paragraph indentation.  Previously,
+          these lists were indented two spaces.
+        o+ .SA 0 (no right adjustment) is the default for _n_r_o_f_f.
+
+_n_r_o_f_f:
+     PWB/UNIX Edition 1.0 has a new ("C") version of _n_r_o_f_f.  It
+     is vastly different from the previous (assembler) version.
+     The _n_r_o_f_f ``language'' is now closer to _t_r_o_f_f than before.
+     In fact, both _n_r_o_f_f and _t_r_o_f_f are described in the same
+     document -- "Nroff/Troff User's Manual", by J. F. Ossanna,
+     October 11, 1976.
+
+     "New Text Formatting Software for the PWB Systems", Memoran-
+     dum for File, February 2, 1977, File 39380-6 by D. W. Smith,
+     gives a complete description of the differences between the
+     old and new versions and how to modify existing macro pack-
+     ages for the new _n_r_o_f_f.
+
+     After PWB/UNIX Edition 1.0 has been installed, the old ver-
+     sion of _n_r_o_f_f will reside in _o_n_r_o_f_f for a period of time.
+
+_t_b_l:
+     The PWB/UNIX Edition 1.0 version of the program to set
+     tables of data, _t_b_l, has been greatly improved.  Its
+     features are described in "Tbl -- A Program to Format
+     Tables" by M. E. Lesk, revised printing dated
+     August 10, 1976.  Its newest features include the ability to
+     draw boxes around the columns of data and the ability to
+     specify columns of filled text.
+
+     The way in which the column specifications are written has
+     changed from the previous version.  Any document using the
+     previous specifications _m_u_s_t be converted.  The program
+     _c_v_t_b_l will do this conversion.  For example:
+
+          cvtbl file...
+
+     will convert the column specifications in the given file(s).
+
+     The _t_b_l manual mentions certain features that are functions of
+     the -ms macro package,* and _n_o_t of _t_b_l itself:
+
+        o+ The .TC synonym for .T& must _n_o_t be used.  It conflicts
+          with the .TC macro of PWB/MM.
+
+        o+ The .T# and .TH macros are not yet implemented in
+          PWB/MM.  Thus, multi-page boxed tables cannot be done.
+
+     The new _t_b_l works only with the new _n_r_o_f_f and _t_r_o_f_f.  That
+     is, new _t_b_l is _n_o_t compatible with _o_n_r_o_f_f.  After PWB/UNIX
+________
+  * M. E. Lesk, "Typing Documents on UNIX".
+
+
+
+                              - 2 -
+
+
+
+
+
+
+PY-77-XX(PWB PIB)            5/24/77            PY-77-XX(PWB PIB)
+
+
+     Edition 1.0 has been installed, the old version of _t_b_l will
+     reside in _o_t_b_l for a brief period.
+
+_n_e_q_n:
+     The PWB/UNIX Edition 1.0 _n_e_q_n has been revised to use the
+     features of the new _n_r_o_f_f.  Some new math setting facilities
+     have also been added.  For documentation, see "Typesetting
+     Mathematics -- User's Guide" by B. W. Kernighan and L. L.
+     Cherry, June 2, 1976.  The program _n_e_q_n cannot
+     work with _o_n_r_o_f_f.  After PWB/UNIX Edition 1.0 has been
+     installed, the old version will reside in _o_n_e_q_n for a while.
+
+/_u_s_r/_p_u_b/_e_q_n_c_h_a_r:
+     The extended mathematics symbols for _n_e_q_n and _e_q_n are avail-
+     able in PWB/UNIX Edition 1.0.  "New Graphic Symbols for Eqn
+     and Neqn" by C. Scrocca tells how to access
+     them and use them.
+
+_m_a_i_l:
+     The _m_a_i_l command has changed in PWB/UNIX Edition 1.0.  It
+     now adds new mail entries to the _e_n_d of your ._m_a_i_l and _m_b_o_x
+     files.  Thus "cat mbox" gives oldest-mail-first, rather than
+     most-recent-mail-first.  To print the most recent mail
+     first, use:
+
+          mail -f mbox
+
+     The advantage of all this is that, if your ._m_a_i_l file is
+     mode "622" (see _c_h_m_o_d(I)), then other people can send you
+     mail, but cannot _r_e_a_d your mail.
+
+     In PWB/UNIX Edition 1.0, system-wide news is mailed to
+     /_u_s_r/_n_e_w_s/._m_a_i_l.  Thus, use:
+
+          mail -f /usr/news/.mail
+
+     instead of:
+
+          cat /usr/unix/.mail
+
+     (In other words, that mailbox lives in /_u_s_r/_n_e_w_s instead of
+     /_u_s_r/_u_n_i_x.)
+
+     Other features of the new _m_a_i_l command are:
+
+        o+ When sending mail to someone, you can terminate the
+          mail with a line that has just a ".", instead of with
+          "Control D" (i.e., _m_a_i_l now resembles the "a" command
+          of _e_d).
+        o+ _m_a_i_l with no arguments (or _m_a_i_l -_y_n) tries to use the
+          ._m_a_i_l and _m_b_o_x files in your current directory.  But if
+          ._m_a_i_l doesn't exist there, _m_a_i_l uses ._m_a_i_l and _m_b_o_x in
+          your login directory instead.  Thus you needn't _c_h_d_i_r
+
+
+
+                              - 3 -
+
+
+
+
+
+
+PY-77-XX(PWB PIB)            5/24/77            PY-77-XX(PWB PIB)
+
+
+          to your login directory to read or save your mail.
+        o+ You can only _m_a_i_l to people (i.e., login ID's), not
+          directories.
+
+_s_p_e_l_l:
+     The PWB/UNIX Edition 1.0 _s_p_e_l_l command is greatly improved.
+     The new _s_p_e_l_l knows many more words.  Also, if a misspelled
+     word has upper-case letters, the new _s_p_e_l_l reports the word
+     with those letters in upper-case.  For example, suppose that
+     the first word of a sentence is misspelled -- "Theerfore".
+     The old _s_p_e_l_l reported the misspelling as "theerfore".  The
+     new _s_p_e_l_l reports it as "Theerfore".  As a result, the
+     errors are much easier to find.
+
+     Also, _s_p_e_l_l gives multi-column output (_s_p_e_l_l pipes its out-
+     put through the _p_r command).  The old _s_p_e_l_l gave just a sim-
+     ple, one-column list.  To get one-column, non-_p_r output from
+     the new _s_p_e_l_l, use:
+
+          spell -1 files ...
+
+_c_a_t:
+     In PWB/UNIX Edition 1.0, if file "x" doesn't exist, the com-
+     mand:
+
+          cat x
+
+     gives an error message.  The old _c_a_t command silently
+     ignored non-existent files.
+
+_e_c_h_o:
+     The PWB/UNIX Edition 1.0 _e_c_h_o command prints "\" when given
+     "\\".  Thus:
+
+          echo '\\'
+
+     will print "\"; the old _e_c_h_o printed "\\".
+
+_c_p_i_o, _c_p_i-_c_p_o:
+     In PWB/UNIX Edition 1.0, the _c_p_i_o command replaces the old
+     _c_p_i and _c_p_o commands; see /_u_s_r/_n_e_w_s/_c_p_i_o.
+
+     The _c_p_i_o intermediate file format differs from that used by
+     _c_p_i-_c_p_o.  Thus old intermediate files _w_i_l_l _n_o_t _w_o_r_k with the
+     new _c_p_i_o.*  To ease conversion, _o_c_p_i_o will, for a while,
+     accept old-format _c_p_i-_c_p_o intermediate files.
+
+_C _c_o_m_p_i_l_e_r (_c_c):
+     The _n_c_c that is currently available will become _c_c in
+     PWB/UNIX Edition 1.0.  Also, a new conditional-compilation
+________
+  * Furthermore, the new _c_p_i_o will not work with intermediate
+    files created by earlier, preliminary versions of _c_p_i_o.
+
+
+
+                              - 4 -
+
+
+
+
+
+
+PY-77-XX(PWB PIB)            5/24/77            PY-77-XX(PWB PIB)
+
+
+     pre-processor statement,
+
+          #if expression
+
+     has been added.  The expression can only involve compile-
+     time constants (i.e., "#if NBLOCKS>3").  Otherwise, it is
+     used in the same fashion as #ifdef and #ifndef.
+
+_P_o_r_t_a_b_l_e _I/_O _L_i_b_r_a_r_y (-_l_p):
+     For PWB/UNIX Edition 1.0, the Portable I/O library has been
+     replaced by D. M. Ritchie's new "standard" I/O library
+     (-lS).  To ease conversion, PWB/UNIX Edition 1.0 has an
+     "imitation" -lp library, in which the more commonly-used -lp
+     functions have been written in terms of the equivalent -lS
+     functions.  The change should be transparent to most pro-
+     grams that use -lp, although programs that used the more
+     esoteric (or perverse) -lp features may not re-compile.
+
+     In any case, we _s_t_r_o_n_g_l_y recommend that all programs that
+     use -lp be revised to use the -lS library directly.
+
+_N_e_w _P_W_B _S_y_s_t_e_m _C_a_l_l_s:
+     Any program that calls the following functions from the -lPW
+     library:
+
+          logname()  logtty()  logdir()
+          pexec()    uname()   ustat()
+
+     _m_u_s_t be recompiled before PWB/UNIX Edition 1.0 is installed,
+     unless it has been recompiled since 4/15/77.  In other
+     words, new versions of the aforementioned functions were
+     installed on or before 4/15/77.  Anything that was compiled
+     after that date is fine, but any program that has the ear-
+     lier versions of those functions will not work in PWB/UNIX
+     Edition 1.0.  It will fail with an "Invalid System Call"
+     error.*
+
+             Furthermore, any program that calls _u_s_t_a_t(II) may have to be
+     changed; the new _u_s_t_a_t (that is, the one installed on
+     4/15/77) has a different argument sequence.  See the new
+     manual page ("man 2 ustat").
+
+_p_e_x_e_c:
+     The _p_e_x_e_c function has some new features.  In particular,
+     the calling function can explicitly specify the list of
+     directories to be searched (this overrides the user's
+     ".path" file).  In addition, the ".path" file's second line,
+     if any, may specify the name of the program to be treated as
+     the Shell.  See the new manual page ("man 3 pexec").
+
+________
+  * I.e., the "old" PWB system calls will not exist in PWB/UNIX
+    Edition 1.0; only the new calls will work.
+
+
+
+                              - 5 -
+
+
+
+
+
+
+PY-77-XX(PWB PIB)            5/24/77            PY-77-XX(PWB PIB)
+
+
+/_b_i_n, /_u_s_r/_b_i_n:
+     In PWB/UNIX Edition 1.0, a number of commands have migrated
+     from the /_b_i_n directory to the /_u_s_r/_b_i_n directory.  This
+     includes the text-processing family -- _n_r_o_f_f, _n_e_q_n, _t_b_l,
+     _e_q_n, and _t_r_o_f_f.  Also, a few commands have migrated from
+     /_u_s_r/_b_i_n to /_b_i_n.  This shouldn't affect you, unless:
+
+        o+ you have removed /_u_s_r/_b_i_n from your ._p_a_t_h file (see
+          _s_h(I)), or
+        o+ your Shell procedures use explicit path names for com-
+          mands in /_b_i_n or /_u_s_r/_b_i_n (i.e., any Shell that calls
+          "/bin/nroff" won't work; it must be changed to call
+          "/usr/bin/nroff", or, better yet, just "nroff").
+
+_c_r_y_p_t(I):
+     The PWB/UNIX Edition 1.0 _c_r_y_p_t(I) command, which simulates a
+     cryptographic machine, uses a different encryption algorithm
+     than the old _c_r_y_p_t.  The new _c_r_y_p_t _c_a_n_n_o_t decrypt old
+     encrypted files.  Thus any encrypted files should be
+     decrypted before PWB/UNIX Edition 1.0 is installed, and re-
+     encrypted after installation.
+
+_p_a_s_s_w_o_r_d_s, _c_r_y_p_t(III):
+     The PWB/UNIX Edition 1.0 _c_r_y_p_t(III) function uses a new and
+     more secure password encryption algorithm.  A side-effect is
+     that the encrypted string generated by the new _c_r_y_p_t is 11
+     characters long; the old _c_r_y_p_t generated an 8 character
+     string.
+
+     Since login passwords are encrypted via _c_r_y_p_t(III), this
+     (indirectly) affects everyone.  To ease the transition,
+     since 5/6/77 the login procedure has been silently convert-
+     ing encrypted passwords from the old to the new format.*
+             When PWB/UNIX Edition 1.0 is installed, only new encryption
+     passwords will be accepted.
+
+     _T_h_e _m_o_r_a_l: Anyone who hasn't logged in between 5/6/77 and
+     the PWB/UNIX Edition 1.0 installation date will _n_o_t be able
+     to login after it's installed!  These users will have to ask
+     the system administrator to set their password.
+
+The following changes have already been installed on PWB Systems
+B-F, within the last month or so.  They are included here for
+completeness:
+
+_S_C_C_S:
+     SCCS Release 4 will be the standard for PWB/UNIX Edition
+________
+  * To be precise, the current _l_o_g_i_n(I) tries both the new and
+    old encryption schemes.  If the _o_l_d scheme matches the
+    /etc/passwd file entry, _l_o_g_i_n automatically re-encrypts your
+    password using the _n_e_w encryption scheme.  In addition, the
+    current _p_a_s_s_w_d(I) command uses the new encryption scheme.
+
+
+
+                              - 6 -
+
+
+
+
+
+
+PY-77-XX(PWB PIB)            5/24/77            PY-77-XX(PWB PIB)
+
+
+     1.0.  The SCCS Release 3 commands will _n_o_t be available in
+     PWB/UNIX Edition 1.0 (_o_a_d_m_i_n, _o_g_e_t, _o_d_e_l_t_a, etc.)
+
+_r_m:
+     In PWB/UNIX Edition 1.0, if file "x" doesn't exist, the com-
+     mand:
+
+          rm -f x
+
+     does _n_o_t give an error message (i.e., the "-f" option
+     suppresses the "non-existent file" error message).  The old
+     _r_m command gave an error message even if "-f" was specified.
+     Also, when the new _r_m is called from a Shell procedure, it
+     always assumes the "-f" option.
+
+_e_d:
+     The PWB/UNIX Edition 1.0 _e_d command has a few new commands.
+     The _j command joins lines together.  ".-1,.j" tacks the
+     current line onto the end of the previous line, and "1,10j"
+     joins the first 10 lines together.  A simple "j" will join
+     the current line and the _n_e_x_t line.  That is, "j" defaults
+     to ".,.+1j".
+
+     The _G and _V commands have also been added.  They are
+     interactive variants of the _g and _v commands.  They were
+     described in a /_u_s_r/_u_n_i_x/._m_a_i_l entry on or about May 6, and
+     are fully described in _e_d(I) ("man 1 ed").
+
+_S_h_e_l_l (_s_h):
+     A number of minor improvements have been made to the Shell
+     and related programs.
+
+        o+ The Shell's -x option is replaced by -v (for verbose).
+        o+ Interrupt-handling has been cleaned up: ``onintr -''
+          causes both the current Shell procedure and the invoked
+          commands to be immune to interrupts.  Commands invoked
+          asynchronously from within Shell procedures are now
+          immune to interrupts and quits, as they should be.
+        o+ The Shell still reports the process numbers of asyn-
+          chronous processes created at the terminal level.  It
+          no longer prints these numbers for asynchronous
+          processes created inside a Shell procedure.
+        o+ The Shell variable $w gives the first component of $s,
+          i.e., it gives the PWB/UNIX file system name.
+        o+ The Shell variable $z gives the name of the program
+          invoked to process Shell procedures.  It is /_b_i_n/_s_h by
+          default, but is initialized from the second line of the
+          ._p_a_t_h file, if there is such a line.
+        o+ The _s_w_i_t_c_h command used to search for a label that was
+          identical to its argument.  Now each label is con-
+          sidered to be a pattern (of the same form as for Shell
+          argument list generation) that is matched against the
+          _s_w_i_t_c_h argument.  For example:
+
+
+
+                              - 7 -
+
+
+
+
+
+
+PY-77-XX(PWB PIB)            5/24/77            PY-77-XX(PWB PIB)
+
+
+               switch "$1"
+               : -*
+                    cmds...
+               : *.c
+                    etc...
+        o+ When the `=' command reads a line from a file, it now
+          returns a non-zero exit code if it encountered end-of-
+          file on that file.
+        o+ The _c_d command is a synonym for _c_h_d_i_r.
+        o+ ``opt -p "string"'' changes the Shell prompt string ("%
+          ") to the argument given.
+
+Additional copies of this PIB may be obtained from any PWB com-
+puter by use of command "man pib 77 XX".
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              - 8 -
+
+
+
+

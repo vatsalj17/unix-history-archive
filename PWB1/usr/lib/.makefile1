@@ -1,0 +1,281 @@
+
+SRC = /sys/source
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = -as
+
+MAKE = make
+
+LD = ld
+LDFLAGS = -s
+
+DD = TMP
+
+SH = sh -v
+MAKE = make
+
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+
+# ------------
+#  Create /usr/lib
+# ------------
+
+MAIN:		libpw.a libwrt.a diff31 spell0 spell1 spell2 spell3 \
+		aign atab cign ctab eign etab \
+		yaccopar lex/ncform \
+		suftab term/300 term/300-12 term/300s term/300s-12 term/300S term/300S-12 \
+		term/37 term/450 term/450-12 term/450-12-8 term/tn300
+
+MAIN:		macros/npwbmm.m macros/npwbmm.mtoc macros/npwbmm.mcs \
+		macros/tpwbmm.m macros/tpwbmm.mtoc macros/tpwbmm.mcs
+
+#		"Dummy" depencies on text files -- checks that they exist.
+MAIN:		lib.b sccs.hf sq2006 units w2006 \
+		tmac.a tmac.m tmac.mcs tmac.mtoc \
+		tmac.org tmac.uom tmac.v
+
+MAIN:
+	-rm -f $(DD)*
+	-@echo "\n***** The Following Files are Still Present:";  ls -l $(DD)*
+
+libpw.a libwrt.a:	$(SRC)/s4/util/*.[chs] $(SRC)/s4/util/makefile \
+			$(CCDEP) $(ASDEP)
+	chdir $(SRC)/s4/util; $(MAKE) libpw.a libwrt.a "CC=$(CC)"
+	-mv libpw.a $(DD)libpw.a
+	-mv libwrt.a $(DD)libwrt.a
+	mv $(SRC)/s4/util/libpw.a libpw.a
+	mv $(SRC)/s4/util/libwrt.a libwrt.a
+	-chdir $(SRC)/s4/util; $(MAKE) clean
+	chmod 644 libpw.a libwrt.a
+	-chown bin libpw.a libwrt.a
+	ls -l libpw.a libwrt.a
+	-rm -f $(DD)*
+
+diff31:		$(SRC)/s1/diff3.c $(CCDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s1/diff3.c
+	chmod 755 a.out
+	-chown bin a.out
+	-mv diff31 $(DD)diff31
+	mv a.out diff31
+	ls -l diff31
+	-rm -f $(DD)*
+
+spell0:		$(SRC)/s2/spell0.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/spell0.c -lS
+	-chmod 755 a.out
+	-chown bin a.out
+	-mv spell0 $(DD)spell0
+	mv a.out spell0
+	ls -l spell0
+	-rm -f $(DD)*
+
+spell1:		$(SRC)/s2/spell1.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/spell1.c -lS
+	-chmod 755 a.out
+	-chown bin a.out
+	-mv spell1 $(DD)spell1
+	mv a.out spell1
+	ls -l spell1
+	-rm -f $(DD)*
+
+spell2:		$(SRC)/s2/spell2.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/spell2.c -lS
+	-chmod 755 a.out
+	-chown bin a.out
+	-mv spell2 $(DD)spell2
+	mv a.out spell2
+	ls -l spell2
+	-rm -f $(DD)*
+
+spell3:		$(SRC)/s2/spell3.c $(CCDEP) $(LSDEP)
+	$(CC) $(CCFLAGS) $(SRC)/s2/spell3.c -lS
+	-chmod 755 a.out
+	-chown bin a.out
+	-mv spell3 $(DD)spell3
+	mv a.out spell3
+	ls -l spell3
+	-rm -f $(DD)*
+
+aign atab cign ctab eign etab:	$(SRC)/s1/cref.sa $(CCDEP)
+	-mkdir /tmp/makecrtab
+	chdir /tmp/makecrtab; ar x $(SRC)/s1/cref.sa
+	chdir /tmp/makecrtab; $(CC) mtab.c -o mtab
+	-mv aign $(DD)aign
+	-mv cign $(DD)cign
+	-mv eign $(DD)eign
+	-mv atab $(DD)atab
+	-mv ctab $(DD)ctab
+	-mv etab $(DD)etab
+	cp /tmp/makecrtab/asym aign
+	cp /tmp/makecrtab/csym cign
+	cp /tmp/makecrtab/esym eign
+	/tmp/makecrtab/mtab /tmp/makecrtab/atable atab
+	/tmp/makecrtab/mtab /tmp/makecrtab/ctable ctab
+	/tmp/makecrtab/mtab /tmp/makecrtab/etable etab
+	-chmod 644 aign atab cign ctab eign etab
+	-chown bin aign atab cign ctab eign etab
+	ls -l aign atab cign ctab eign etab
+	-rm -f $(DD)*
+	rm -r -f /tmp/makecrtab
+	rmdir /tmp/makecrtab
+
+yaccopar:	$(SRC)/s2/yacc.d/yaccopar
+	-mv yaccopar $(DD)yaccopar
+	cp $(SRC)/s2/yacc.d/yaccopar yaccopar
+	-chmod 644 yaccopar
+	-chown bin yaccopar
+	-rm -f $(DD)*
+	ls -l yaccopar
+
+lex/ncform:	$(SRC)/lex/lexcl.a
+	-mv lex/ncform $(DD)ncform
+	chdir lex; ar x $(SRC)/lex/lexcl.a ncform
+	-chmod 644 lex/ncform
+	-chown bin lex/ncform
+	-rm -f $(DD)ncform
+	ls -l lex/ncform
+
+suftab:		$(SRC)/s7/croff/suftab.s $(ASDEP)
+	$(AS) $(SRC)/s7/croff/suftab.s
+	strip a.out
+	-mv suftab $(DD)suftab
+	mv a.out suftab
+	-chmod 644 suftab
+	-chown bin suftab
+	ls -l suftab
+	-rm -f $(DD)suftab
+
+term/300:	$(SRC)/s7/croff/term/tab300.c $(CCDEP)
+	chdir term; $(CC) -c $(SRC)/s7/croff/term/tab300.c
+	strip term/tab300.o
+	-mv term/300 $(DD)300
+	mv term/tab300.o term/300
+	-chmod 755 term/300
+	-chown bin term/300
+	ls -l term/300
+	-rm -f $(DD)300
+
+term/300-12:	$(SRC)/s7/croff/term/tab300-12.c $(CCDEP)
+	chdir term; $(CC) -c $(SRC)/s7/croff/term/tab300-12.c
+	strip term/tab300-12.o
+	-mv term/300-12 $(DD)300-12
+	mv term/tab300-12.o term/300-12
+	-chmod 755 term/300-12
+	-chown bin term/300-12
+	ls -l term/300-12
+	-rm -f $(DD)300-12
+
+term/300s term/300S:	$(SRC)/s7/croff/term/tab300s.c $(CCDEP)
+	chdir term; $(CC) -c $(SRC)/s7/croff/term/tab300s.c
+	strip term/tab300s.o
+	-mv term/300s $(DD)300s
+	-mv term/300S $(DD)300S
+	mv term/tab300s.o term/300s
+	ln term/300s term/300S
+	-chmod 755 term/300s term/300S
+	-chown bin term/300s term/300S
+	ls -l term/300s term/300S
+	-rm -f $(DD)300s $(DD)300S
+
+term/300s-12 term/300S-12:	$(SRC)/s7/croff/term/tab300s-12.c $(CCDEP)
+	chdir term; $(CC) -c $(SRC)/s7/croff/term/tab300s-12.c
+	strip term/tab300s-12.o
+	-mv term/300s-12 $(DD)300s-12
+	-mv term/300S-12 $(DD)300S-12
+	mv term/tab300s-12.o term/300s-12
+	ln term/300s-12 term/300S-12
+	-chmod 755 term/300s-12 term/300S-12
+	-chown bin term/300s-12 term/300S-12
+	ls -l term/300s-12 term/300S-12
+	-rm -f $(DD)300s-12 $(DD)300S-12
+
+term/450:	$(SRC)/s7/croff/term/tab450.c $(CCDEP)
+	chdir term; $(CC) -c $(SRC)/s7/croff/term/tab450.c
+	strip term/tab450.o
+	-mv term/450 $(DD)450
+	mv term/tab450.o term/450
+	-chmod 755 term/450
+	-chown bin term/450
+	ls -l term/450
+	-rm -f $(DD)450
+
+term/450-12:	$(SRC)/s7/croff/term/tab450-12.c $(CCDEP)
+	chdir term; $(CC) -c $(SRC)/s7/croff/term/tab450-12.c
+	strip term/tab450-12.o
+	-mv term/450-12 $(DD)450-12
+	mv term/tab450-12.o term/450-12
+	-chmod 755 term/450-12
+	-chown bin term/450-12
+	ls -l term/450-12
+	-rm -f $(DD)450-12
+
+term/450-12-8:	$(SRC)/s7/croff/term/tab450-12-8.c $(CCDEP)
+	chdir term; $(CC) -c $(SRC)/s7/croff/term/tab450-12-8.c
+	strip term/tab450-12-8.o
+	-mv term/450-12-8 $(DD)450-12-8
+	mv term/tab450-12-8.o term/450-12-8
+	-chmod 755 term/450-12-8
+	-chown bin term/450-12-8
+	ls -l term/450-12-8
+	-rm -f $(DD)450-12-8
+
+term/37:	$(SRC)/s7/croff/term/tab37.c $(CCDEP)
+	chdir term; $(CC) -c $(SRC)/s7/croff/term/tab37.c
+	strip term/tab37.o
+	-mv term/37 $(DD)37
+	mv term/tab37.o term/37
+	-chmod 755 term/37
+	-chown bin term/37
+	ls -l term/37
+	-rm -f $(DD)37
+
+term/tn300:	$(SRC)/s7/croff/term/tabtn300.c $(CCDEP)
+	chdir term; $(CC) -c $(SRC)/s7/croff/term/tabtn300.c
+	strip term/tabtn300.o
+	-mv term/tn300 $(DD)tn300
+	mv term/tabtn300.o term/tn300
+	-chmod 755 term/tn300
+	-chown bin term/tn300
+	ls -l term/tn300
+	-rm -f $(DD)tn300
+
+macros/npwbmm.m macros/npwbmm.mtoc macros/npwbmm.mcs: \
+		macros/npwbmm.src macros/mmcrunch
+	-mv macros/npwbmm.m $(DD)npwbmm.m
+	-mv macros/npwbmm.mtoc $(DD)npwbmm.mtoc
+	-mv macros/npwbmm.mcs $(DD)npwbmm.mcs
+	chdir macros; $(SH) mmcrunch npwbmm
+	chmod 644 macros/npwbmm.m macros/npwbmm.mtoc macros/npwbmm.mcs
+	-chown bin macros/npwbmm.m macros/npwbmm.mtoc macros/npwbmm.mcs
+	ls -l macros/npwbmm.m macros/npwbmm.mtoc macros/npwbmm.mcs
+	-rm -f $(DD)*
+
+macros/tpwbmm.m macros/tpwbmm.mtoc macros/tpwbmm.mcs: \
+		macros/tpwbmm.src macros/mmcrunch
+	-mv macros/tpwbmm.m $(DD)tpwbmm.m
+	-mv macros/tpwbmm.mtoc $(DD)tpwbmm.mtoc
+	-mv macros/tpwbmm.mcs $(DD)tpwbmm.mcs
+	chdir macros; $(SH) mmcrunch tpwbmm
+	chmod 644 macros/tpwbmm.m macros/tpwbmm.mtoc macros/tpwbmm.mcs
+	-chown bin macros/tpwbmm.m macros/tpwbmm.mtoc macros/tpwbmm.mcs
+	ls -l macros/tpwbmm.m macros/tpwbmm.mtoc macros/tpwbmm.mcs
+	-rm -f $(DD)*
+
+
+lib.b sccs.hf sq2006 units w2006 \
+tmac.a tmac.m tmac.mcs tmac.mtoc \
+tmac.org tmac.uom tmac.v :
+	echo "\n***** File $@ is missing *****\n"
+
+
+RC:	# dummy name to force re-compiling things.

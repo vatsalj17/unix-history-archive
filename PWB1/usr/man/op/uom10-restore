@@ -1,0 +1,248 @@
+.tr {"
+.tr }.
+.SC FILE~RESTORE~PROCEDURE September~14~1977
+.P
+During
+a system crash, files may be lost.
+Users may also accidently destroy
+their own files.
+In either event, the user will probably call
+or mail to the
+.I root
+to
+request that his/her file(s) be restored.
+When the user calls, make sure you get the complete
+.I pathname ,
+the time and date of the desired restoral source, and the approximate size
+of the file.
+.I Pathnames
+are composed as follows:
+.sp
+.I "/fsname/dirname/filename"
+.VL 25 10
+.LI "\fIfsname\fP ="
+the
+.I filesystem
+name (e.g.,
+.I b3 \|).
+.LI "\fIdirname\fP ="
+the complete directory name, including all
+sub-directories between the file and the
+.I fsname
+(e.g.,
+.I "source/s2"
+or
+.I actg \|).
+.LI "\fIfilename\fP ="
+the actual file name.
+.LE
+.P
+The operator should perform any outstanding file restores
+before all filesaves
+that could destroy the only good restoral source.
+.P
+There are, at present, two basic methods
+of restoring files: (1) from tape, or (2) from disk.
+The latter method is preferred, if you have a pack
+that contains a copy of the file.
+.HU "RESTORING FILES FROM DISK"
+.L1
+Make the file accessible 
+on an available spare disk drive,
+by performing the following steps:
+.L2
+Carefully,
+physically mount the backup pack (found by checking
+your Disk Log) on the drive and bring it to
+.I READY }
+.L2
+.B Mount ,
+as
+.I "read only" ,
+the device on which the backup filesystem resides.
+In the 
+.B mount
+command
+.I devname
+is the block device name of the filesystem being mounted (e.g.,
+.I /dev/rp12 \|).
+The filesystem should be
+.B mounted
+as
+.I /bck
+or some other currently unused mount point directory.
+.BS
+.BI
+#
+.UL "mount \fIdevname\fP /bck \*-r"
+.BE
+.L2
+Change your working directory to ``/bck/\c
+.I dirname ''
+(explanation of 
+.I dirname
+is the same as above).
+.BS
+.BI
+# 
+.UL "chdir /bck/\fIdirname\fP"
+.BE
+.L1
+Check to make sure a copy of the file exists.
+.BS
+.BI
+# 
+.UL "ls \*-l \fIfilename\fP"
+.BE
+.P
+The date the file was last written to and the number
+of characters it contains are pertinent information in
+determining that particular validity of the copy.
+.L1
+Copy the file into the desired
+.I pathname
+(the pathname given by the user).
+This may be accomplished as follows:
+.BS
+.BI
+# 
+.UL "cpx \fIfilename /fsname/dirname/filename\fP"
+.BE
+.L1
+Do a
+.B "ls \*-l"
+of the copied file.
+.BS
+.BI
+# 
+.UL "ls \*-l \fIfilename\fP"
+.BE
+.P
+Check this against the original 
+.B "ls \*-l"
+of the file.
+If the number of characters agree, the copy was successful.
+Check for the owner and the modes of the original file.
+.L1
+Notify the user either through the UNIX mail command or by telephone.
+.L1
+Return the system
+to its original configuration:
+.L2
+Logically 
+.B unmount
+the filesystem copy (\c
+.I devname
+for
+.B umount
+is also block, e.g.,
+.I /dev/rp12 \|).
+.BS
+.BI
+# 
+.UL "chdir /"
+.BI
+# 
+.UL "umount \fIdevname\fP"
+(watch for error messages, if any occur restart from preceding
+step)
+.BI
+# 
+.UL "mount"
+(to make sure the spare filesystem is no longer mounted)
+.BE
+.L2
+Log-off (\c
+.I "CTRL/d" \|)
+.L2
+Remove the pack using the following steps:
+.L3
+Turn off the disk drive containing the unmounted filesystem,
+by pressing the button labelled
+.I STOP }
+.L3
+Wait until the pack has completely stopped spinning.
+.L3
+Carefully remove the disk pack from the drive.
+.RM
+.bp
+.HU "RESTORING FILES FROM TAPE"
+.L1
+Copy the file from tape onto a disk.
+.L2
+Find an available
+device name on disk,
+where the data from tape can be read and stored (i.e. a
+.I devname
+that is logically
+.B unmount ed ,
+where there is no valuable data).
+This usually involves physically mounting a scratch disk
+pack on a spare drive.
+.L2
+Find the appropriate tape determined by
+checking the date on the tape labels.
+.L2
+Mount the tape on the tape drive on the system where the
+.I devname
+is available.
+.L2
+.B Login
+as
+.I root
+and
+.B read
+the tape onto the available
+.I devname
+(physical
+.I devname \|,
+e.g.,
+.I /dev/rrp10 \|).
+.BS
+.BI
+login: 
+.UL "root"
+.BI
+password: 
+.UL "!;%&?"
+.BI
+# 
+.UL "vc10 \fIfsname\fP /dev/rmt0 txxxx\fI devname\fP pxxxx"
+(for 800 bpi tapes)
+.BE
+or
+.BS
+.BI
+# 
+.UL "vc10 \fIfsname\fP /dev/rmt1 txxxx \fIdevname\fP pxxxx"
+(for 1600 bpi tapes)
+.BE
+.P
+Messages like
+.I "read error block N" \|\*F
+can \fInot\fP be ignored, and
+watch for fatal errors such as
+.I "read error \*-1" ;
+.B vc10
+should say
+.I END
+and tell you the number of blocks copied,
+when
+it is finished.
+.FS
+When this error occurs on the input device, the 10-block record currently being copied is zeroed out 
+(because the error is probably
+caused by a bad block on the tape).
+The probability is small, but this may occur in the very file you are attempting to restore, making
+this tape useless for backup.
+.FE
+.L1
+Now you have a copy on disk of the filesystem in which your
+file resides.
+You can now perform steps 
+.I A2
+through
+.I F2
+of RESTORING FILES FROM DISK (without
+physically removing any packs
+that are already mounted).

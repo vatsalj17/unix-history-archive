@@ -1,0 +1,44 @@
+.th ARCHIVE V 5/31/77
+.sh NAME
+ar \*- archive (library) file format
+.sh DESCRIPTION
+The archive command
+.it ar
+is used to combine several files into
+one.
+Archives are used mainly as libraries to be searched
+by the link-editor
+.it ld.
+.s3
+A file produced by
+.it ar
+has a magic number at the start,
+followed by the constituent files, each preceded by a file header.
+The magic number is
+177545(8)
+(it was chosen to be unlikely to occur anywhere else).
+The header of each file is 26 bytes long:
+.s3
+.nf
+struct archive {
+	char	a_name[14];	/* file name, null padded on right */
+	long	a_date;	/* modification time of file */
+	char	a_uid;	/* user ID of file owner */
+	char	a_gid;	/* group ID of file owner */
+	int	a_mode;	/* file mode */
+	long	a_size;	/* file size */
+};
+.fi
+.s3
+.i0
+Each file begins on a word boundary;
+a null byte is inserted between files if necessary.
+Nevertheless the size given reflects the
+actual size of the file exclusive of padding.
+.s3
+Notice there is no provision for empty areas in an archive
+file.
+.sh FILES
+/usr/include/archive.h
+.sh "SEE ALSO"
+ar(I), ld(I)

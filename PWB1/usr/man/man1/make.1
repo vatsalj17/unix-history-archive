@@ -1,0 +1,127 @@
+.th MAKE I 5/31/77
+.sh NAME
+make \*- make a program
+.sh SYNOPSIS
+.bd make
+[\c
+.bd \*-f
+descfile\c
+] [\c
+.bd \*-p\c
+] [\c
+.bd \*-i\c
+] [\c
+.bd \*-s\c
+] [\c
+.bd \*-r\c
+] [\c
+.bd \*-n\c
+] [\c
+.bd \*-t\c
+] file ...
+.sh DESCRIPTION
+.it Make
+may be used to mechanize program creation and maintenance,
+while ensuring that all constituents are current.
+A graph of dependencies is specified in the
+.it descfile(s).
+The standard input will be read if
+.bd \*-
+is given for
+.it descfile.
+If no
+.bd \*-f
+options are present,
+the file named
+.bd makefile
+or, if absent, the file named
+.bd Makefile
+in the current directory is used.
+The
+.bd \*-p
+option prints out a version of that graph.
+Each file name argument is `made', as described below.
+If no such arguments are present, the initial node in the description file is made.
+.s3
+The
+.it descfile
+consists of a sequence of entries that describe the
+prerequisites and operations for creating an object (usually a file).
+The first line of each entry contains the
+names of the objects to be made, followed by a colon, optionally followed by a list of other files that must
+be available and current in order to remake it.
+Text following a semicolon on the first line, and all immediately following lines
+that begin with a tab,
+are fed to the Shell to make the object.
+Each line is fed to a separate instance of the Shell.
+All text following a sharp is taken to be a comment.
+For example:
+.s3
+.in +5n
+.nf
+pgm: x.o y.o ; cc x.o y.o -lp
+	mv a.out pgm     # command to be done
+x.o: dcls
+.fi
+.in -5n
+.s3
+.it Make
+walks the graph of dependencies.
+If a needed object depends on another that is not present or is younger than itself, it is remade.
+If an object's name ends in `\fB.\fPo', the description file, and then the current directory,
+are searched for a corresponding name ending in `\fB.\fPr', `\fB.\fPf', `\fB.\fPc', `\fB.\fPs',
+`\fB.\fPl' (Lex), `\fB.\fPy' (Yacc-C).
+(These default rules are not applied if the
+.bd \*-r
+option is specified).
+If such a file is found and is younger than the object, a compilation command is executed.
+In the example above,
+if `dcls' has been changed since `pgm' was last made, `x.c' will be recompiled
+and `pgm' will be reloaded.
+.s3
+Each command line is printed before it is executed
+unless the
+.bd \*-s
+option is specified on the command line or the special name `\fB.\fPSILENT'
+appears in the description.
+The command lines are printed but not executed if the
+.bd \*-n
+option is specified.
+The date last modified is updated but the commands given are not executed for each file if the
+.bd \*-t
+option is specified.
+(This option is useful when a source change is known to be incremental or benign).
+.s3
+.it Make
+examines the
+.it exit\^\c
+(II) status returned by each executed command.
+If the status is non-zero
+(i.e., if an error occurred),
+.it make
+aborts, unless either
+(a) the
+.bd \*-i
+option was specified,
+or (b) the command name in the
+.it descfile
+was prefixed by `\*-'.
+.sh "SEE ALSO"
+.it "Make \- A Program for Maintaining Computer Programs"
+by S. I. Feldman.
+.sh DIAGNOSTICS
+No description file argument
+.br
+Cannot find description file
+.br
+Syntax error
+.br
+Don\*at know how to make xxx.
+.sh BUGS
+Many UNIX commands return random status, which will cause
+.it make
+to
+assume that the command failed.
+In case of trouble, use the
+.bd \*-i
+option or a minus sign on the command line.

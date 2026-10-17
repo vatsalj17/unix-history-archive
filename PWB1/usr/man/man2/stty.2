@@ -1,0 +1,182 @@
+.th STTY II 5/31/77
+.sh NAME
+stty \*- set mode of terminal
+.sh SYNOPSIS
+(stty = 31.)
+.br
+(file descriptor in r0)
+.br
+.ft B
+sys stty; arg
+.br
+.li
+...
+.br
+arg:  .byte ispeed, ospeed; .byte erase, kill; mode
+.s3
+.nf
+stty(fildes, arg)
+struct {
+	char	ispeed, ospeed;
+	char	erase, kill;
+	int 	mode;
+} *arg;
+.fi
+.ft R
+.s3
+.sh DESCRIPTION
+.it Stty
+sets mode bits and character speeds for the terminal whose file descriptor
+is passed in r0 (resp. is the first argument to the call).
+First, the system delays until the terminal is quiescent.
+The input and output speeds are set from the first two bytes
+of the argument structure
+as indicated by the following table,
+which corresponds to the
+speeds supported by the DH-11 interface.
+.s3
+.lp +8 4
+0	(hang up modem)
+.lp +8 4
+1	50 baud
+.lp +8 4
+2	75 baud
+.lp +8 4
+3	110 baud
+.lp +8 4
+4	134.5 baud
+.lp +8 4
+5	150 baud
+.lp +8 4
+6	200 baud
+.lp +8 4
+7	300 baud
+.lp +8 4
+8	600 baud
+.lp +8 4
+9	1200 baud
+.lp +8 4
+10	1800 baud
+.lp +8 4
+11	2400 baud
+.lp +8 4
+12	4800 baud
+.lp +8 4
+13	9600 baud
+.lp +8 4
+14	External A
+.lp +8 4
+15	External B
+.s3
+.i0
+In the current configuration,
+only 110, 150 and 300 baud are really supported on dial-up lines.
+The half-duplex line discipline
+required for the 202 modem (1200 baud)
+is not supplied.
+.s3
+The next two characters of the argument structure
+specify the erase and kill characters respectively.
+(Defaults are # and @.)
+.s3
+The
+.it mode
+contains several bits that determine the
+system's treatment of the terminal:
+.s3
+.lp +12 7
+100000	select one of two types of backspace delays
+.lp +12 7
+040000	select one of two types of form-feed and vertical-tab delays
+.lp +12 7
+030000	select one of four types of carriage-return delays
+.lp +12 7
+006000	select one of four types of tab delays
+.lp +12 7
+001400	select one of four types of new-line delays
+.lp +12 7
+000200	even parity allowed on input
+.lp +12 7
+000100	odd parity allowed on input
+.lp +12 7
+000040	raw mode
+.lp +12 7
+000020	map CR into LF; echo LF or CR as CR-LF
+.lp +12 7
+000010	echo (full duplex)
+.lp +12 7
+000004	map upper case to lower on input
+.lp +12 7
+000002	echo and print tabs as spaces
+.lp +12 7
+000001	hang up (drop `data terminal ready') after last close
+.i0
+.s3
+The delay bits specify how long
+transmission stops to allow for mechanical or other movement
+when certain characters are sent to the terminal.
+In all cases a value of 0 indicates no delay.
+.s3
+Backspace delays are currently unimplemented.
+.s3
+Form-feed/vertical-tab delay type 1
+lasts about 2 seconds.
+.s3
+Carriage-return delay types 1 and 2 last
+about .09 seconds, and
+type 3 lasts about .15 seconds.
+Types 2 and 3 have the side
+effect of not transmitting a carriage-return
+if at the leftmost column.
+.s3
+New-line delay type 1 is dependent on the current column
+and is tuned for the
+.if t \s-2TELETYPE\s+2\(rg
+.if n TELETYPE(Rg.)
+Model 37.
+Type 2 lasts about .03 seconds and
+type 3 lasts about .15 seconds.
+.s3
+Tab delay type 1 is dependent on the amount of movement
+and is tuned for the
+.if t \s-2TELETYPE\s+2
+.if n TELETYPE
+Model 37.
+Other types are unimplemented and are 0.
+.s3
+Characters with the wrong parity, as determined by bits 0200 and
+0100, are ignored.
+.s3
+In raw mode, every character is passed immediately
+to the program without waiting until a full line has been typed.
+No erase or kill processing is done;
+the end-of-file character (EOT), the interrupt character
+(DEL) and the quit character (FS) are not treated specially.
+.s3
+Mode 020 causes input carriage returns to be turned into
+new-lines;
+input of either CR or LF causes LF-CR both to
+be echoed
+(used for terminals without the newline function, i.e. most).
+.s3
+The upper case mode is used
+on terminals without lower case, see
+.it tty(IV).
+.s3
+The hangup mode 01
+causes the line to be disconnected
+when the last process with the line open closes it or terminates.
+It is useful when a port is to be used for some special
+purpose;
+for example, if it is associated
+with an ACU used to place outgoing calls.
+.s3
+This system call is also used with certain special
+files other than terminals,
+and is system dependent.
+.sh "SEE ALSO"
+stty(I), gtty(II), tty(IV)
+.sh DIAGNOSTICS
+The error bit
+(c-bit) is set if the file descriptor does not refer to a terminal.
+From C, a negative value indicates an error.

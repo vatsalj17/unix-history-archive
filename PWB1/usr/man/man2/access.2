@@ -1,0 +1,45 @@
+.th ACCESS II 5/31/77
+.sh NAME
+access \*- determine accessibility of file
+.sh SYNOPSIS
+.nf
+(access = 33.)
+.ft B
+sys	access; name; mode
+.s3
+access(name, mode)
+char *name;
+.ft R
+.fi
+.sh DESCRIPTION
+.it Access
+checks the given
+file
+.it name
+for accessibility according to
+.it mode,
+which is 4 (read), 2 (write) or 1 (execute) or a combination thereof.
+An appropriate error indication is returned if one or more
+of the desired access modes would not be granted.
+.s3
+The user and group IDs with respect to which permission is checked
+are the real UID and GID of the process, so this call is
+useful to set-UID programs.
+.s3
+Notice that it is only access bits that are checked.
+A directory may be announced as writable by
+.it access,
+but an attempt to open it for writing will fail
+(although files may be created there);
+a file may look excutable, but
+.it exec\^\c
+(II)
+will fail unless it is in proper format.
+.sh "SEE ALSO"
+stat(II)
+.sh DIAGNOSTICS
+C-bit is set on disallowed accesses, and the error code is in r0;
+from C,
+\-1 is returned and the error code is in
+.it errno.
+0 is returned from successful tests.

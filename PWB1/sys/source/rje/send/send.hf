@@ -1,0 +1,203 @@
+-570
+"UNIX System <> is not configured for <> RJE [to <>]."
+Send has decided, from the first card of your jobstream,
+whether you want IBM or UNIVAC RJE.  In addition, you may
+or may not have specified a particular host (158,168,1110).
+According to the configuration table, /usr/rje/lines, no
+such connection is provided from this system (/usr/rje/sys).
+-571
+"Aborted."
+The execution of send/gath has been terminated prematurely.
+A signal may have been received, a write error may have
+occurred, the process may have exceeded its core limit,
+or standard input may have been read too far.
+-572
+"Errors detected. Send anyway?"
+This question demands an answer (a string of characters
+terminated by a newline).  Anything beginning "y" or "Y" is 
+affirmative and causes the suspect jobstream to be submitted.
+Otherwise the jobstream is discarded.
+-573
+"Cannot execute queuer, <>."
+Send has located what it thinks is the proper RJE subsystem
+for your job but cannot execute the associated queueing program.
+Please bring this fact to the attention of PWB operations.
+-574
+"Core exceeded."
+The program has been unable to allocate more storage for
+keyword definitions.  Reduce the number of keywords or
+the depth of nesting of input sources (both on a global
+basis).
+-575
+"Cannot create temporary <>."
+Send writes the collected jobstream into a temporary
+file created in the "pool" subdirectory of the appropriate
+RJE subsystem.  The pool directory may have been made
+unwritable to prevent people from adding to a backlog
+of queued jobs.
+-576
+"Write error - {file too large|no space left|number <>}."
+Send/gath will abort if it encounters a write error.
+The first two errors are distinguished, because you
+may be able to do something about them.  Either segment
+your file into smaller pieces or clean up on disk blocks.
+Remaining errors are reported by number, as per intro(II).
+-577
+"Hang-up."
+A hang-up signal has been received (loss of carrier from tty).
+-578
+"Interrupt."
+An interrupt signal has been received (BREAK or DEL from tty).
+-579
+"Quit signal."
+A quit signal has been received (FS from tty).
+-580
+"Signal #<>."
+The process has received an unusual signal, which may indicate
+hardware problems.  The number of the signal is reported.
+-581
+"Line <> of <>, cannot open source <>."
+The specified input source cannot be opened.  If the
+source is an ordinary file argument, examine the name
+(which is repeated) for possible typographical errors.
+Extraneous spaces or tabs are not allowed.  If the source
+is cited on a control line, the -c flag may help.
+-582
+"Line <> of <>, format spec rejected."
+The line containing the format spec is reproduced
+following the diagnostic.  Either it does not conform
+to the syntax of fspec(PWB V), or it specifies
+unreasonable parameters, such as too many tabs or
+excessive s and m values.
+-583
+"Line <> of <>, bad control line ignored."
+The bad control line is reproduced following the
+diagnostic.  It may be too long.  In -s mode, it may
+contain non-graphics or undefined tabs.
+-584
+"Line <> of <>, non-graphic deleted."
+The transformed line is reproduced following the
+diagnostic.  The non-printing ASCII characters whose
+octal codes are 000-010,013-037,177 are excised,
+except when they occur within keywords or keyword
+replacements.
+-585
+"Line <> of <>, undefined tab deleted."
+The transformed line is reproduced following the
+diagnostic.  Tabs beyond the last position at which
+they are set by the format spec are excised.  See
+fspec(PWB V) to learn how to specify tab stops.
+-586
+"Line <> of <>, cannot reverse chdir."
+This diagnostic occurs at the end of included
+sources which have caused a change of current
+directory by citing an argument of the form
+"!chdir <>".  It indicates that the current
+directory cannot be reset to its previous value.
+-587
+"Line <> of <>, cannot run shell (<>)."
+The shell cannot be run on a series of $ arguments
+because a syscall (create, pipe or fork) has failed.
+The file which was to be shelled is reproduced
+following the diagnostic.  This probably indicates
+a scarcity of system resources.
+-588
+"Line <> of <>, default spec rejected."
+The rejected format spec is reproduced following
+the diagnostic.  It occurred in an argument of the
+form ":<>:".  Either the spec does not conform to the
+syntax of fspec(PWB V), or it specifies unreasonable
+parameters, such as too many tabs or excessive s and m
+values.
+-589
+"Line <> of <>, cannot chdir <>."
+It is not possible to execute the change of current
+directory specified by a "!chdir <>" argument.
+-590
+"Line <> of <>, cannot run command (<>)."
+The shell cannot be run for a ! argument because
+a syscall (pipe or fork) has failed.  The command
+which was to be executed is reproduced following
+the diagnostic.  This probably indicates a scarcity
+of system resources.
+-591
+"Line <> of <>, cannot redefine keyword."
+An attempt has been made to assign a new value to
+a keyword which is still active at some source level.
+The current definition of the keyword is reproduced
+following the diagnostic.
+-592
+"Line <> of <>, shell exit {type|code} <>."
+The shell which was invoked to process $ or ! arguments
+has terminated abnormally (type!=0) or has indicated
+error status upon exit (code!=0).  See wait(II).
+The shell file or command which was processed is
+reproduced following the diagnostic.  Since many
+standard UNIX commands (but few PWB commands) return
+an arbitrary status upon exit, you may want to follow
+them with an "exit 0", which will suppress the
+diagnostic.
+-593
+"Line <> of <>, long line detected."
+Gath has encountered a line which violates the s
+parameter of the current format specification.
+The line is reproduced following the diagnostic.
+-594
+"Line <> of <>, long line truncated."
+The transformed line is reproduced following the
+diagnostic.  Send/gath cannot process lines longer
+than about 300 bytes.  The length is further
+constrained by the s parameter of the current format
+specification.  If the line is to be included in
+a jobstream, its length cannot exceed 80 bytes (IBM)
+or 132 bytes (UNIVAC).
+-595
+"Line <> of <>, illegal card excised."
+The line which send will not allow to be included
+in a jobstream is reproduced following the diagnostic.
+Lines beginning "/*$" are excised from IBM jobs
+because they are interpreted as commands by HASP/JES2.
+The beginning of an IBM job is indicated by a line
+which begins with a "/".  UNIVAC runs begin with a
+line of the form "@RUN ..." or "`run ...", etc.
+Until the beginning of a jobstream is detected, all
+lines will be flushed.
+-596
+"Overrun on standard input."
+For the sake of efficiency, data is read from the input
+stream in blocks or 512 bytes.  Data which is not used
+up by the program is returned by seeking backwards on
+file descriptor zero.  Unfortunately, one cannot seek
+on pipes.  The input which is being piped to send/gath
+should not include any arguments of the form "-" or
+"-:prompt".  Neither should it attempt a logical
+end-of-file "~.".
+-597
+"Cannot <> - only <> {blocks|inodes} free on file system <>."
+Before it proceeds very far, send checks that there are
+1500 blocks and 50 inodes free on the file system of the
+destination RJE subsystem.  If there are not, send aborts.
+The queuer which send invokes also checks for free space,
+but it is somewhat more lenient.  If you have unneeded
+files on the full file system, please delete them.
+-598
+"..."
+These diagnostics are issued by the queueing program
+which is invoked by send.  They should only occur if
+a programming error violates the interface between
+the two programs.
+-599
+"<>qer: <>. Try again?"
+The queuer invoked by send has run into trouble,
+perhaps temporary.  Type "y" and newline to try
+again, or hit interrupt to cancel this attempt
+to send.  You might contact PWB operations.
+-send
+send [-lqy] [158,168,1110] file ...
+
+Control lines ("~ file2 ...") include additional files.
+-gath
+gath [-hi] file ...
+
+Control lines include additional files ("~ file2 ...")
+or collect the output of a command ("~!command arg ...").

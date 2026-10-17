@@ -1,0 +1,267 @@
+.tr ~ 
+.th FSDB VIII 5/31/77
+.sh NAME
+fsdb \*- file system debugger
+.sh SYNOPSIS
+.bd etc/fsdb
+special
+[ \*- ]
+.sh DESCRIPTION
+.it Fsdb
+can be used
+to patch up 
+a damaged file system
+after a crash.
+It has conversions
+to translate block and i-numbers
+into their corresponding disk addresses.
+Also included are mnemonic offsets
+to access different parts
+of an i-node.
+These greatly simplify the process
+of correcting control block entries
+or descending the file system tree.
+.s1
+.it Fsdb
+contains several error checking routines
+to verify i-node and block addresses.
+These can be disabled if necessary 
+by invoking 
+.it fsdb
+with the optional
+``\*-''
+argument
+or by the use of the
+``O''
+symbol.
+(\c
+.it Fsdb
+reads the i-size and f-size entries
+from the superblock of the file system
+as the basis for these checks.)
+.s1
+Numbers are considered decimal by default.
+Octal numbers must be prefixed
+with a zero.
+During any assignment operation,
+numbers are checked 
+for a possible truncation error
+due to a size mismatch
+between source and destination.
+.s1
+.it Fsdb
+reads a block at a time
+and will therefore work with raw as well as block
+I/O. 
+A buffer management routine 
+is used to retain commonly used
+blocks of data
+in order to reduce the number of read system calls.
+All assignment operations result
+in an immediate write-through
+of the corresponding block.
+.s1
+The symbols recognized by
+.it fsdb
+are:
+.s1
+.lp +13 8
+#	absolute address
+.lp +13 8
+i	convert from i-number to i-node address
+.lp +13 8
+b	convert to block address
+.lp +13 8
+d	directory slot offset
+.lp +13 8
++,\*-	address arithmetic
+.lp +13 8
+q	quit
+.lp +13 8
+>,<	save, restore an address
+.lp +13 8
+=	numerical assignment
+.lp +13 8
+=+	incremental assignment
+.lp +13 8
+=\*-	decremental assignment
+.lp +13 8
+="	character string assignment
+.lp +13 8
+O	error checking flip flop
+.lp +13 8
+p	general print facilities
+.lp +13 8
+f	file print facility
+.lp +13 8
+B	byte mode
+.lp +13 8
+W	word mode
+.lp +13 8
+D	double word mode
+.lp +13 8
+!	escape to shell
+.i0
+.s1
+The print facilities generate a formatted output
+in various styles.
+The current address is normalized 
+to an appropriate boundary before printing begins.
+It advances with the printing
+and is left at the address of the last item printed.
+The output can be terminated at any time
+by typing the delete character.
+If a number follows the ``p'' symbol,
+that many entries are printed.
+A check is made to detect block boundary overflows
+since logically sequential blocks are generally not physically
+sequential.
+If a count of zero is used, all entries to the end of the
+current block are printed.
+The print options available are:
+.s1
+.lp +13 8
+i	print as i-nodes
+.lp +13 8
+d	print as directories
+.lp +13 8
+o	print as octal words
+.lp +13 8
+e	print as decimal words
+.lp +13 8
+c	print as characters
+.lp +13 8
+b	print as octal bytes
+.i0
+.s1
+The
+``f''
+symbol is  used
+to print data blocks
+associated with the current i-node.
+If followed by a number,
+that block of the file is printed.
+(Blocks are numbered from zero.)
+The desired print option letter 
+follows the block number,
+if present,
+or the 
+``f''
+symbol.
+This print facility works
+for small as well as large files.
+It checks for special devices
+and that
+the block pointers
+used to find the data
+are not zero.
+.s1
+Dots, tabs and spaces may be used
+as function delimiters but are not necessary.
+A line with just a newline character
+will increment the current address
+by the size of the data type last printed.
+That is,
+the address is set to the next byte,
+word, double word, directory entry or i-node,
+allowing the user
+to step through a region of a file system.
+Information is printed
+in a format appropriate to the data type.
+Bytes, words and double words
+are displayed with the octal address
+followed by the value in octal and decimal.
+A ``.B'' or ``.D''
+is appended to the address
+for byte and double word values, respectively.
+Directories are printed as a
+directory slot offset
+followed by the decimal
+i-number and the character representation
+of the entry name.
+Inodes are printed
+with labelled fields
+describing each element.
+.s1
+The following mnemonics
+are used for i-node examination
+and refer to the current working i-node:
+.s1
+.lp +13 8
+md	mode
+.lp +13 8
+ln	link count
+.lp +13 8
+uid	user id number
+.lp +13 8
+gid	group id number
+.lp +13 8
+s0	high byte of file size
+.lp +13 8
+s1	low word of file size
+.lp +13 8
+a#	data block numbers (0 \*- 7)
+.lp +13 8
+at	access time
+.lp +13 8
+mt	modification time
+.lp +13 8
+maj	major device number
+.lp +13 8
+min	minor device number
+.i0
+.sh EXAMPLES
+.lp +16 16
+386i	prints i-number 386 in an i-node format.
+This now becomes the current working i-node.
+.s1
+.lp +16 16
+ln=4	changes the link count for the 
+working i-node to 4.
+.s1
+.lp +16 16
+ln=+1	increments the link count by 1.
+.s1
+.lp +16 16
+fc	prints, in ascii,
+block zero of the file associated
+with the working i-node.
+.s1 
+.lp +16 16
+a0b.p16o	would print the first 16
+block numbers for the file if it were large.
+(If it were small, this would print the 
+first 16 words of the file.)
+.s1
+.lp +16 16
+1i.fd	prints the first 32 directory
+entries for the root i-node of this file system.
+.s1
+.lp +16 16
+d5i.fc	changes the current i-node to that
+associated with the 5th directory entry
+(numbered from zero)
+found from the above command.
+The first 512 bytes of the file
+are then printed in ascii.
+.s1
+.lp +16 16
+1b.p0o	prints the superblock of this file system
+in octal.
+.s1
+.lp +16 16
+1i.a0b.d7=3	changes the i-number for the 
+seventh directory slot in the root directory to 3.
+This example also shows how several 
+operations can be combined on one command line.
+.s1
+.lp +16 16
+d7.nm="name"	changes the name field
+in the directory slot to the given string.
+Quotes are optional
+when used with ``nm''
+if the first character is alphabetic.
+.i0
+.sh SEE~ALSO
+directory(V), fs(V)
+.tr ~~

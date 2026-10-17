@@ -1,0 +1,332 @@
+.if n .ds v !
+.if n .tr !|
+.th TABS I 5/31/77
+.sh NAME
+tabs \*- set tabs on terminal
+.sh SYNOPSIS
+.bd tabs
+[tabspec]
+[\fB+f\fR]
+[\fB+m\fRn]
+[\fB+l\fRn]
+[\fB+t\fRtype]
+[\fB+q\fR]
+.sh DESCRIPTION
+.it Tabs
+sets the tab stops on the user's terminal according to the tab specification
+\fItabspec\fR,
+after clearing any previous settings.
+The user must of course be logged in on a terminal
+with remotely-settable
+hardware tabs,
+including the DASI450 (DIABLO 1620 or XEROX 1700),
+GSI300 (DTC300 or DASI300),
+DASI300S (DTC300S),
+HP2640B (HP2640A, HP2644A, HP2645A, etc.),
+.if t \s-2TELETYPE\s+2\(rg
+.if n TELETYPE(Rg.)
+Model 40/2,
+and General Electric TermiNet terminals.
+.s1
+Users of TermiNet terminals should be aware that they
+behave in a different way than most other terminals for some tab settings;
+the first number in a list of tab settings becomes the
+.it "left margin"
+on
+a TermiNet terminal.
+Thus, any list of tab numbers whose first element is other than 1 causes a
+margin to be left by a TermiNet, but not by other terminals.
+A tab list beginning with 1 causes the same
+effect regardless of terminal type.
+It is also possible to set a left margin on the
+DASI450 and DASI300S,
+although in a different way.
+.s1
+Four types of tab specification are accepted for
+.it tabspec:
+`canned', repetitive,
+arbitrary, and file.
+If no arguments are given, the default value is \fB\*-8\fR, i.e.,
+UNIX `standard' tabs.
+The lowest column number is 1 and the highest is 158.
+Note that for
+.it tabs,
+column 1 always refers to the leftmost column on a terminal,
+even one whose column markers
+begin at 0,
+e.g., the DASI300, DASI300S, and DASI450.
+.s1
+.lp +8 7
+\fB\*-\fIcode\fR	Gives the name of one of a set of `canned' tabs.
+The legal codes and their meanings are as follows:
+.s1
+.lp +8 7
+\fB\*-a\fR	1,10,16,36,72
+.br
+Assembler, IBM S/370, first format
+.s1
+.lp +8 7
+\fB\*-a2\fR	1,10,16,40,72
+.br
+Assembler, IBM S/370, second format
+.s1
+.lp +8 7
+\fB\*-c\fR	1,8,12,16,20,55
+.br
+COBOL, normal format
+.s1
+.lp +8 7
+\fB\*-c2\fR	1,6,10,14,49
+.br
+COBOL compact format (columns 1\*-6 omitted).
+Using this code, the first typed character corresponds to card column 7,
+one space gets you to column 8, and a tab reaches column 12.
+In order to get
+.it "send(I)"
+to prepend the blanks at the beginning, files using this tab setup
+should include a format specification (see
+.it "fspec\^\c"
+(V)) as follows:
+.br
+\fB<:t\*-c2 m6 s66 d:>\fR
+.s1
+.lp +8 7
+\fB\*-c3\fR	1,6,10,14,18,22,26,30,34,38,42,46,50,54,58,62,67
+.br
+COBOL compact format (columns 1\*-6 omitted), with more tabs than
+.bd \*-c2.
+THIS IS THE RECOMMENDED FORMAT FOR COBOL.
+The appropriate format specification is:
+.br
+\fB<:t\*-c3 m6 s66 d:>\fR
+.s1
+.lp +8 7
+\fB\*-f\fR	1,7,11,15,19,23
+.br
+FORTRAN
+.s1
+.lp +8 7
+\fB\*-p\fR	1,5,9,13,17,21,25,29,33,37,41,45,49,53,57,61
+.br
+PL/I
+.s1
+.lp +8 7
+\fB\*-s\fR	1,10,55
+.br
+SNOBOL
+.s1
+.lp +8 7
+\fB\*-u\fR	1,12,20,44
+.br
+UNIVAC 1100 Assembler
+.s2
+.i0
+In addition to these `canned' formats, three other types exist:
+.s1
+.lp +8 7
+\fB\*-\fIn\fR	A repetitive specification requests tabs at columns 1+\fIn\fR,
+1+2*\fIn\fR, etc.
+Note that such a setting leaves a left margin of \fIn\fR columns on TermiNet
+terminals
+.it only.
+Of particular importance is the value \fB\*-8\fR: this represents the
+UNIX `standard' tab setting, and is the most likely tab setting to be found
+at a terminal.
+It is required for use with the
+.it nroff\^\c
+(I)
+.bd \*-h
+option for high-speed output (about 10% speed increase).
+Another special case is the value \fB\*-0\fR, implying no tabs at all.
+.s3
+.lp +8 7
+\fIn1,n2,...\fR	 The arbitrary format permits the user to type any
+chosen set of numbers, separated by commas, in ascending order.
+Up to 40 numbers are allowed.
+The maximum tab value accepted is 158.
+If any number (except the first one) is preceded by a plus sign, it is taken
+as an increment to be added to the previous value.
+Thus, the tab lists 1,10,20,30 and 1,10,+10,+10 are considered identical.
+.s3
+.lp +8 7
+\fB\*-\*-\fIfile\fR	 If the name of a file is given,
+.it tabs
+reads the first line of the file, searching for a format specification
+(see
+.it "fspec(V)\c"
+).
+If it finds one there, it sets the tab stops according to it, otherwise it
+sets them as \fB\*-8\fR.
+If an actual format specification is found in the file, it is printed at the
+terminal to remind the user what it is, unless the
+.bd +f
+flag is also
+included to suppress this output.
+This type of specification may be used to make sure that a tabbed file is printed
+with correct tab settings, and would be used with the
+.it pr(I)
+command:
+.s1
+\fBtabs\fR \*-\*-file; \fBpr\fR file
+.s2
+.i0
+Any of the following may be used also;
+if a given flag occurs more than once,
+the last value given takes effect.
+.s2
+.lp +8 7
+\fB+f\fR	If the \*-\*-\c
+.it file
+type of tab specification is used and
+this option given, no tab specification is printed at the terminal,
+but the tab stops are set.
+This option is most useful when 
+.it tabs
+is invoked from a shell procedure or another command, rather than directly
+from a terminal.
+This option has no effect unless a \*-\*-\fIfile\fR form of specification
+is used.
+.s2
+.lp +8 7
+\fB+l\fIn\fR	The length argument gives the number of the rightmost column at
+which a tab will be set by a repetitive\*-style specification.
+The default value is 132,
+but may be different if the
+.bd +t
+argument implies a more appropriate value for the specific type of terminal being used.
+When examining printed output obtained from another computer,
+it is helpful to have tabs across the entire width of the terminal.
+Maximum usable values of \fIn\fR are 118 (TermiNet),
+132 (any DASI in 10-pitch mode),
+158 (any DASI in 12-pitch mode),
+and 80 (HP2640).
+Although
+.it tabs
+will accept larger values without diagnostics, using them may cause a terminal
+(especially a DASI) to behave strangely.
+.s2
+.lp +8 7
+\fB+m\fIn\fR	The margin argument may be used for TermiNet,
+DASI450, and DASI300S terminals.
+It causes
+all tabs to be moved over
+.it n
+columns by making column
+.it n+1
+the left margin.
+If
+.bd +m
+is given without a value of
+.it n,
+the value assumed is 10.
+For a TermiNet, the first value in the tab list should
+be 1,
+or the margin will move even further to the right.
+.s1
+To reset the left margin of a DASI450 to the normal(leftmost) position, type:
+.s1
+\fBtabs +t450 +m0\fR
+.s1
+The margin on a DASI450 or DASI300S is reset only when the
+.bd +m
+flag is given explicitly.
+The margin is not settable on a DASI300,
+and is settable on the DASI450 and DASI300S
+.it only
+when the
+.bd +t
+option is used (see below).
+.s2
+.lp +8 7
+\fB+q\fR	The
+(`quick') flag suppresses the emission of characters to clear
+previously set tabs.
+It can be used if the terminal is know to be clear
+already, i.e., just after it has been powered up or reset.
+.s2
+.lp +8 7
+\fB+t\fItype\fR	The terminal type can be supplied to help
+.it tabs
+optimize its output for specific kinds of terminals,
+and is sometimes required when certain functions of some terminals are desired.
+This argument interacts with
+.bd +l
+by setting different defaults for different terminals,
+and different maximum lengths.
+It interacts with
+.bd +m
+because different methods must be used to set margins
+on the various terminals.
+.s1
+Given below are the possible cases for
+.bd +t
+argument,
+listing argument value, maximum length,
+default length if \fB+l\fR is omitted, and notes.
+The notes give the following codes:
+\&`S' for a short (several characters) clearing sequence,
+\&`L' for a long sequence (about 60 characters),
+\&`M' for a settable margin,
+and a list of the terminal types expected.
+.s2
+.i0
+.if n .ta 9 18 26 31 35
+.if t .ta .8i 1.7i 2.5i 3.0i 3.5i
+.nf
+.if n .ul
+\fBValue	Maximum	Default	S/L	M	Terminal(s)\fR
+\fB+t300\fR	158	132	L		GSI300 (DTC300 or DASI300)
+\fB+tgsi\fR	"	"	"		"
+\fB+t300S\fR	158	132	S	M	DASI300S (DTC300S)
+\fB+tgsis\fR	"	"	"	"	"
+\fB+t450\fR	158	132	S	M	DASI450 (DIABLO 1620 or XEROX 1700)
+\fB+t1620\fR	"	"	"	"	"
+\fB+ttn\fR	118	118	S	M	TermiNet 300 or 1200
+\fB+thp\fR	80	80	L		HP2640A, HP2640B
+\fB+t40\*-2\fR	80	80	S		TELETYPE 40/2
+\fB+t\fR	158	132	S		any with settable tabs
+omitted	158	132	L		any with settable tabs
+.fi
+.s3
+.lp +8 7
+\&	Omitting the
+.bd +t
+argument entirely will work for most situations.
+You should probably try to type the least that will work,
+and be more specific only when necessary.
+.i0
+.s2
+Tab-setting is performed using the standard output.
+.sh DIAGNOSTICS
+"illegal tabs" when arbitrary tabs are ordered incorrectly, or include
+any value greater than 158.
+.br
+"illegal increment" when a zero or missing increment value is found in
+an arbitrary specification.
+.br
+"unknown tab code" when a `canned' code cannot be found.
+.br
+.br
+"can't open" if \*-\*-file option used, and file can't be opened.
+.br
+"file indirection" if \*-\*-file option used and the specification
+in that file points to yet another file.
+Indirection of this form is not permitted.
+.br
+.ne 5
+.sh "EXIT CODES"
+0 \*- normal
+.br
+1 \*- for any error
+.sh "SEE ALSO"
+fspec(V), nroff(I), reform(I), send(I)
+.br
+GSI300(VII), DASI450(VII), HP2640(VII), TERMINET(VII)
+.sh BUGS
+It is sad, but true,
+that it is often necessary to specify the terminal type.
+Various terminals use totally inconsistent ways of clearing tabs and
+setting margins.
+.it Tabs
+clears only 20 tabs (on terminals requiring a long sequence),
+but is willing to set 40.

@@ -1,0 +1,54 @@
+.th SHUTDOWN VIII 5/31/77
+.sh NAME
+shutdown \*- terminate all processing
+.sh SYNOPSIS
+.bd /etc/shutdown
+.sh DESCRIPTION
+.it Shutdown
+is part of the PWB/UNIX operation procedures.
+Its
+primary function is to terminate all currently running processes
+in an orderly and cautious manner.
+The procedure is designed to interact with the user
+(i.e., the person who invoked
+.it shutdown\^\c
+).
+.it Shutdown
+may instruct the user to perform some
+specific tasks, or to supply certain responses before execution
+can resume.
+.it Shutdown
+goes through the following steps:
+.s3
+.lp +3 3
+-	All users logged on the system are notified to log off the system
+by a broadcasted message. The user may display his/her own
+message at this time. Otherwise, the standard file save message
+is displayed, which resides in
+.it /etc/getoff.
+.s3
+.lp +3 3
+-	If the user wishes to run the file-save procedure,
+.it shutdown
+unmounts all file systems.
+.s3
+.lp +3 3
+-	All file systems' super blocks are updated before the system is to
+be stopped (see
+.it sync\^\c
+(I)).
+This must be done before re-booting the system,
+to insure file system integrity.
+.i0
+.sh DIAGNOSTICS
+The most common error diagnostic that will occur is
+.it "device busy."
+This diagnostic happens when a particular file system could not
+be unmounted.
+See
+.it umount\^\c
+(VIII).
+.sh FILES
+/etc/getoff
+.sh "SEE ALSO"
+umount(VIII)

@@ -1,0 +1,524 @@
+'''		macros for organization charts
+'''	@(#)combined nroff/troff version: orgcmacs 1.6 of 4/4/77
+.fc { }
+.tr ~ 
+'''		set fixed indent
+'''		(done twice so that 'previous' is the same)
+'nr )I 3
+'in \n()In
+'in \n()In
+'''		set switch to do indenting
+'nr }I 1
+'''		set switch for note table at end
+'nr }N 1
+'''	no adjust, no hyphenate
+'na
+'nh
+.if t 'po .5i
+'''	define default date
+.ds )D \n(mo/\n(dy/\n(yr
+'''	.HC - give head count numbers
+.de HC
+.nr }1 \\$1
+.nr }2 \\$2
+..
+'''	.DT - replaces default date
+.de DT
+.ds )D "\\$1
+..
+'''		.DN deptno deptname
+'''		provide department name and number
+.de DN
+.br
+.di
+.if \\n(dn .]D
+'''		start new page if not first DN
+.if !\\nC .if \\n(}d .bp
+'''		set page # counter
+.nr }p 0 1
+'''		determine if indentation is to be halted
+'if \\nI .nr }I 0
+'''		turn off switch if note table is not wanted
+'''		and set flag to ignore .SY macros
+.if \\nN .nr }N 0
+.if \\nN .nr S 1
+'''		throw out .SY macro if S set
+.if \\nS .rm SY
+'''		set internal register to value of T
+.nr }T \\nT
+'''		set internal register to value of R
+.nr }R \\nR
+'''	if C (center chart) then
+.if \\nC .nr }T 0\"no titles
+.if \\nC .nr }R 1\"show RV's
+.if \\nC .nr }I 1\"indent
+.if \\nC .ps 6
+.if \\nC .vs 8
+.if \\nC .ll 2u*\\n(.sp+1i
+.if \\nC .lt 2u*\\n(.sp+1i
+.if \\nC .in \\n()In\"fix up indent w/ new ps
+.if \\nC .in \\n()In\"and so w/ previous
+.if \\nC .wh 0
+.if \\nC .wh -.5i
+.if \\nC .]E
+.if \\nC .pl 32768u
+.if \\nC .nr nl 0
+.if \\nC .nr }B 32767
+'''		)d copy of dept no
+.ds )d \\$1
+.ds )n \\$2
+.br
+.di ]Z
+.sp
+'''	\"use BEL for \w delimiters
+.if !\\nC .ta 45n+\w~~x1111u
+.if !\\nC {}\\*()D}{
+.if !\\nC .sp
+.if !\\nC .ps +2
+.if !\\nC .if t \{.ft 3
+{}\\$1\(em\\$2}{
+.ft
+\}
+.if !\\nC .if n \{.ul 1000
+{}\\$1 - \\$2}{
+.ul 0
+\}
+.if !\\nC .ps
+.if !\\nC .sp
+'''		}d -- switch for new dept
+.nr }d 1
+..
+'''	.DI last first room ext
+'''	director info
+.de DI
+.ds )l "\\$1
+.]f "\\$2" Director
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 100~MTS~Director
+.if \\n(.$-5 .ds )t "\\$6
+.]I 0
+.if \\nC \\*()d
+.if \\nC .br
+.]N
+.if \\nC .br
+.if \\nC Director,
+.if \\nC .br
+.if \\nC  \f3\s+1\\*()n\fP\s0
+.if \\nC .sp
+.if \\nC (\\n(}1 BTL) (\\n(}2 Other)
+.if \\nC .sp
+.if \\nC .nr `d 1
+.in \\n()In
+..
+'''		.DH last first room ext
+'''		get dept head info
+.de DH
+.ds )l "\\$1
+.]f "\\$2" Head
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 100~MTS~Dept~Head
+.if \\n(.$-5 .ds )t "\\$6
+.]I 0
+.if \\nC \\*()d
+.if \\nC .br
+.]N
+.if \\nC .br
+.if \\nC Head,
+.if \\nC .br
+.if \\nC  \f3\s+1\\*()n\fP\s0
+.if \\nC .sp
+.if \\nC (\\n(}1 BTL) (\\n(}2 Other)
+.if \\nC .sp
+.in \\n()In
+..
+'''		DS last first room ext
+'''		get dept secy info
+.de DS
+.ds )l "\\$1
+.]f "\\$2" Secretary
+.ds )r "\\$3
+.]x "\\$4
+.ds )t ~
+.if \\n(.$-5 .ds )t "\\$6
+.if !\w\\*()yu-2n .]I 2
+.if \w\\*()yu-2n .]I \w\\*()yu
+.]N
+.if \\nC .if \\n(`d \{\
+.sp .5i
+\f3\s+1Organization \\*()d\fP\s0
+.br
+\\*()D
+.sp .5i
+.nr `d 0
+\}
+.in \\n()In
+..
+'''		.GR name
+'''		group within a dept
+.de GR
+.br
+.di
+.if \\n(dn .]D
+.br
+.if \\n(}S .bp
+.nr }S 0
+.di ]Z
+.sp
+.if t .ft 3
+.if t .if \\nC .ps+1
+.if n .ul 1000
+\\$1
+.if t .ft
+.if t .if \\nC .ps
+.if n .ul 0
+.br
+..
+'''		.]I arg
+'''		indent arg___ but maintain a fixed tab pos'n
+.de ]I
+'''		indent only if switch set (default is set)
+.if \\n(}I .in +\\$1n
+.if \\n(}I .ta 34n-\\$1n 45n-\\$1n 56n
+.if !\\n(}I .ta 34n 45n 56n
+..
+'''		names of people in dept
+'''		get last name (with initials), first name,
+'''			room and extension
+'''		set internal strings to these values
+'''		set appropriate margins
+'''		invoke ]N to actually set the line
+'''		.SV last first room ext
+'''		MTS Supervisor
+.de SV
+.ds )l "\\$1
+.]f "\\$2" Supv.
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 100~MTS~Supervisor
+.if \\n(.$-5 .ds )t "\\$6
+.]I 0
+.]N
+.in \\n()In
+..
+'''		.AS last first room ext
+'''		Acting supervisor
+.de AS
+.ds )l "\\$1
+.]f "\\$2" "Act. Supv."
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 100~MTS~Supervisor
+.if \\n(.$-5 .ds )t "\\$6
+.]I 0
+.]N
+.in \\n()In
+..
+'''		.MT last first room ext
+'''		MTS
+.de MT
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 100~MTS
+.if \\n(.$-5 .ds )t "\\$6
+.]I 2
+.]N
+.in \\n()In
+..
+'''		.AM last first room ext
+'''		AMTS
+.de AM
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 106~AMTS
+.if \\n(.$-5 .ds )t "\\$6
+.]I 2
+.]N
+.in \\n()In
+..
+'''		.ST last first room ext
+'''		STA
+.de ST
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 105~STA
+.if \\n(.$-5 .ds )t "\\$6
+.]I 4
+.]N
+.in \\n()In
+..
+'''		.TA last first room ext
+'''		TA
+.de TA
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 150~TA
+.if \\n(.$-5 .ds )t "\\$6
+.]I 4
+.]N
+.in \\n()In
+..
+'''		.LA last first room ext
+.de LA
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 152~LA
+.if \\n(.$-5 .ds )t "\\$6
+.]I 4
+.]N
+.in \\n()In
+..
+'''		.MG last first room ext
+'''	member admin. group (MAG)
+.de MG
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t MAG
+.if \\n(.$-5 .ds )t "\\$6
+.]I 2
+.]N
+.in \\n()In
+..
+'''		.BA last first room ext
+'''		business systems analyst
+.de BA
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 817~Bus.~Sys.~Anal.
+.if \\n(.$-5 .ds )t "\\$6
+.]I 2
+.]N
+.in \\n()In
+..
+'''		.BS last first room ext
+'''		business systems specialist
+.de BS
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 826~Bus.~Sys.~Spec.
+.if \\n(.$-5 .ds )t "\\$6
+.]I 2
+.]N
+.in \\n()In
+..
+'''		.GC last first room ext
+'''		general clerk
+.de GC
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 230~General~Clerk
+.if \\n(.$-5 .ds )t "\\$6
+.]I 6
+.]N
+.in \\n()In
+..
+'''		.SC last first room ext
+'''		service clerk
+.de SC
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 225~Service~Clerk
+.if \\n(.$-5 .ds )t "\\$6
+.]I 6
+.]N
+.in \\n()In
+..
+'''		.SS last first room ext
+'''		clerical
+.de SS
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 220~Sen.~Service~Clerk
+.if \\n(.$-5 .ds )t "\\$6
+.]I 6
+.]N
+.in \\n()In
+..
+'''		.AI last first room ext
+'''		staff aide
+.de AI
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 155~Staff Aide
+.if \\n(.$-5 .ds )t "\\$6
+.]I 6
+.]N
+.in \\n()In
+..
+'''		.CO last first room ext
+'''		computer operations
+.de CO
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t 170~Comp.~Equip.~Oper.
+.if \\n(.$-5 .ds )t "\\$6
+.]I 6
+.]N
+.in \\n()In
+..
+'''		.RV lst first room ext
+'''		handle resident/regular visitors
+'''		don't print RV's unless }R set via -rR1
+.de RV
+.ds )l "\\$1
+.]f "\\$2
+.ds )r "\\$3
+.]x "\\$4
+.ds )t (RV)
+.if \\n(.$-5 .ds )t "\\$6
+.]I 2
+.if \\n(}R .]N
+.if !\\n(}R .nr }y 0
+.in \\n()In
+..
+'''		.]f
+'''		set first name within parens if given
+.de ]f
+.if \w\\$1 .ds )f "(\\$1)~\f2\\$2\fP
+.if !\w\\$1 .ds )f  "
+..
+'''		.]x
+'''		set ext if given
+.de ]x
+.if \w\\$1 .ds )x "x\\$1
+.if !\w\\$1 .ds )x "~~~~~
+..
+'''		.]N 
+'''		generate name room ext line
+'''		optionally add code and title
+.de ]N
+.if \\n(}y .ti -\w\\*()yu
+.if \\n(}y \\*()y\\c
+.nr }y 0
+.if !\\nC \\*()l~\\*()f	{}\\*()r{~~\\*()x\\c
+.if !\\nC .ft 2
+.if !\\nC .if \\n(}T \\t\\*()t
+.if !\\nC .if !\\n(}T \\&
+.if !\\nC .ft
+.if \\nC .if \w@\\*()l@ \\*()l
+..
+'''		page header and footer
+.de ]C\"cut marks
+.po 0
+.lt 7.5i
+.if !\\n(.A .tl '\_''\_'
+.lt
+.po
+..
+.de ]E
+.if t .wh -1p ]C
+..
+.de ]H
+'''		lay out cut marks
+.if t .]C
+'sp .5i
+'ns
+..
+.de ]F
+.if !\\nC 'bp
+.if \\nC .]Q
+..
+.de ]Q
+.nr }b \\n(}c
+.if \\n(}b .po
+.if \\n(}b .bp
+.if \\n(}b .nr }c 0
+.if !\\n(}b .br
+.if !\\n(}b .rt
+.if !\\n(}b .po +3i
+.if !\\n(}b .nr }c 1
+..
+.de ]E
+.de ]G
+.pl .5i
+\\..
+.em ]G
+..
+.wh 0 ]H
+.wh -.5i ]F
+'''		number of lines from top of page to footer
+.nr }B 10.5i
+'''		.]D
+'''		dump any previous diversion
+.de ]D
+.if \\n(dn+\\n(nl-\\n(}B .sp 200
+.nf
+.in 0
+.]Z
+.fi
+.in 
+.rm ]Z
+.nr dn 0
+..
+'''		.SY arg
+'''		set a special symbol to arg
+'''		for prepending to next line
+.de SY
+.ds )y "\\$1
+.nr }y 1
+..
+'''		.NS
+'''		note start
+'''		begin itemization of any special symbols used
+.de NS
+.br
+.di
+.if \\n(dn .]D
+.br
+'''		divert note table to ]z if not wanted
+.if \\n(}N .di ]Z
+.if !\\n(}N .di ]z
+.nf
+.sp 2
+.if \\n(.A _____
+.if !\\n(.A \\l'2i'
+.ta 4n
+..
+'''		.NE
+'''		note end
+'''		REQUIRED -- even if no .NS
+'''		end definition of note table as well as entire dept
+.de NE
+.br
+.di
+.]D
+..
+.de SK
+.nr }S 1
+..
+'''		certain string values
+.ds DA \(dg
+.if n .ds DA -|
+.ds DD \(dd
+.if n .ds DD =|
+.ds CT \(ct
+.ds AT \\@
+.ds SH \\#
+.ds BU \(bu

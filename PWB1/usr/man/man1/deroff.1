@@ -1,0 +1,42 @@
+.th DEROFF I 5/31/77
+.sh NAME
+deroff \*- remove nroff, troff, and eqn constructs
+.sh SYNOPSIS
+.bd deroff
+[
+.bd \*-w
+]
+file ...
+.sh DESCRIPTION
+.it Deroff
+reads each file in sequence
+and removes all
+.it nroff
+and
+.it troff
+command lines, backslash constructions, macro definitions,
+and equations
+(between ``.EQ'' and ``.EN'' lines or between 
+delimiters)
+and writes the remainder on the standard output.
+.it Deroff
+follows chains of included files
+(``.so'' and ``.nx'' commands);
+if a file has already been included, a ``.so'' is ignored and a ``.nx'' terminates execution.
+If no input file is given,
+.it deroff
+reads from the standard input file.
+.s3
+If the
+.bd \-w
+flag is given, the output is a word list, one ``word'' (string of letters, digits, and apostrophes,
+beginning with a letter; apostrophes are removed) per line, and all other characters ignored.
+Otherwise, the output follows the original, with the deletions mentioned above.
+.s3
+.sh "SEE ALSO"
+nroff(I), troff(I), eqn(I)
+.sh DIAGNOSTICS
+Complains if a file cannot be opened.
+.sh BUGS
+Does not handle recursive backslash constructions like
+\\h'\\w'c''.

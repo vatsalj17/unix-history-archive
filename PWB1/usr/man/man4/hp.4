@@ -1,0 +1,78 @@
+.th HP IV 5/31/77
+.sh NAME
+hp \*- RP04/RP05/RP06 moving-head disk
+.sh DESCRIPTION
+The files
+.it "rp0 ... rp7"
+refer to sections of the RP04/RP05/RP06 disk drive 0.
+The files
+.it "rp10 ... rp17"
+refer to drive 1, etc.
+This is done since the size of
+of a full pack is over 100,000 blocks and
+internally the system is only capable
+of addressing 65536
+blocks.
+Also since the disk is so large,
+this allows it to be broken up
+into more manageable pieces.
+.s3
+The origin and size of the sections on each drive are
+as follows:
+.s3
+.br
+	section	start	length
+.br
+	0	0	11286
+.br
+	1	27	53504
+.br
+	2	155	53504
+.br
+	3	283	53504
+.br
+	4	27	65535
+.br
+	5	184	65535
+.br
+	6	341	29260
+.br
+	7	unassigned
+.s3
+The start address is a cylinder address,
+with each cylinder containing 418 blocks.
+For the RP06 drives, this table in the system must be changed to
+allow full addressing.
+It is unwise for all of these files to be present in one installation,
+since there is overlap in addresses and protection becomes
+a sticky matter.
+.s3
+The
+.it rp
+files
+access the disk via the system's normal
+buffering mechanism
+and may be read and written without regard to
+physical disk records.
+There is also a ``raw'' interface
+which provides for direct transmission between the disk
+and the user's read or write buffer.
+A single read or write call results in exactly one I/O operation
+and therefore raw I/O is considerably more efficient when
+many words are transmitted.
+The names of the raw RP files
+begin with
+.it rrp
+and end with a number which selects the same disk
+section as the corresponding
+.it rp
+file.
+.s3
+In raw I/O the buffer must begin on a word boundary,
+and counts should be a multiple of 512 bytes
+(a disk block).
+Likewise
+.it seek
+calls should specify a multiple of 512 bytes.
+.sh FILES
+/dev/rp*, /dev/rrp*

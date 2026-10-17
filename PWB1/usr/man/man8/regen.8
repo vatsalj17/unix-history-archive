@@ -1,0 +1,444 @@
+.th REGEN VIII 5/31/77
+.sh NAME
+regen \*- regenerate system directories
+.sh DESCRIPTION
+There are several system directories that contain
+various commands and archive libraries.
+These include
+.it "/bin, /usr/bin, /lib,"
+.it "/usr/lib, /etc, /usr/hasp,"
+and
+.it "/usr/fort."
+To facilitate the regeneration of these
+directories, the
+.it make\c
+(I)
+command is used.
+Each directory contains the
+.it make
+description files used to build, update, or regenerate
+the directory.
+If one description file suffices, it is named
+.it \fB.\fPmakefile;
+otherwise the files are named
+.it "\fB.\fPmakefile1, \fB.\fPmakefile2, ..."
+.s3
+For best results, you should be logged in as ``root'' (or as super-user).
+.s3
+For example, the following
+will recompile any
+.it /bin
+commands
+that are out-of-date with respect to their corresponding source files:
+.in +5n
+.nf
+.s3
+chdir /bin
+make \*-f \fB.\fPmakefile1
+make \*-f \fB.\fPmakefile2
+make \*-f \fB.\fPmakefile3
+.s3
+.fi
+.in -5n
+As another example, the following forces the recompilation
+of any
+.it /bin
+commands that call
+.it ctime\c
+(III),
+in addition to recompiling anything that is out-of-date in
+.it /bin:
+.in +5n
+.nf
+.s3
+chdir /bin
+make \*-f \fB.\fPmakefile1 CTIME=RC
+make \*-f \fB.\fPmakefile2 CTIME=RC
+make \*-f \fB.\fPmakefile3 CTIME=RC
+.s3
+.fi
+.in -5n
+The section on ``Time Zones'' below
+explains why this is useful.
+Similar arguments force recompilation of anything that uses the C compiler (CCDEP=RC),
+the assembler (ASDEP=RC),
+the
+.it yacc\c
+(I) processor (YACCDEP=RC),
+the ``\*-lS'' library (LSDEP=RC),
+the ``\*-lPW'' library (LPWDEP=RC),
+the ``\*-lpw'' library (LpwDEP=RC),
+and the UNIX operating system ``include'' files (SYSDEP=RC).
+.if t .sp -.5v
+.sh "Time Zones:"
+Commands such as
+.it ls\c
+(I)
+and
+.it date\c
+(I)
+give Eastern times (EST or EDT).
+This has been known to annoy
+non-East Coast (USA) and non-USA users.
+To get your local time,
+you must change
+.it ctime\c
+(III),
+which converts the GMT
+.it time\c
+(II)
+time-stamps to local time,
+and then regenerate all commands that use
+.it ctime.
+To be precise, you must:
+.s3
+.in +\w'\(em\ 'u
+.ti -\w'\(em\ 'u
+\(em\ Change
+.it ctime\c
+(III).
+The source currently lives in
+.it /sys/source/s4/ctime.c,
+and the object resides in the standard C library,
+.it /lib/libc.a.
+.s3
+.ti -\w'\(em\ 'u
+\(em\ Regenerate the standard C library, as follows:
+.s3
+.in +5n
+.nf
+chdir /lib
+make \*-f \fB.\fPmakefile1
+make \*-f \fB.\fPmakefile2
+make \*-f \fB.\fPmakefile3
+make \*-f \fB.\fPmakefile4
+.fi
+.in -5n
+.s3
+This works because,
+as a result of the change to the source for
+.it ctime\c
+(III),
+.it /lib/libc.a
+is now out-of-date with respect to
+its source,
+namely the
+.it ctime
+part.
+.s3
+.ti -\w'\(em\ 'u
+\(em\ Regenerate all directories,
+using the CTIME=RC option on the
+.it make
+command line:
+.s3
+.in +5n
+.nf
+chdir /bin
+make \*-f \fB.\fPmakefile1 CTIME=RC
+make \*-f \fB.\fPmakefile2 CTIME=RC
+make \*-f \fB.\fPmakefile3 CTIME=RC
+chdir /usr/bin
+make \*-f \fB.\fPmakefile1 CTIME=RC
+make \*-f \fB.\fPmakefile2 CTIME=RC
+make \*-f \fB.\fPmakefile3 CTIME=RC
+make \*-f \fB.\fPmakefile4 CTIME=RC
+chdir /lib
+make \*-f \fB.\fPmakefile1 CTIME=RC
+make \*-f \fB.\fPmakefile2 CTIME=RC
+make \*-f \fB.\fPmakefile3 CTIME=RC
+make \*-f \fB.\fPmakefile4 CTIME=RC
+chdir /usr/lib
+make \*-f \fB.\fPmakefile1 CTIME=RC
+make \*-f \fB.\fPmakefile2 CTIME=RC
+chdir /etc
+make \*-f \fB.\fPmakefile CTIME=RC
+chdir /usr/hasp
+make \*-f \fB.\fPmakefile CTIME=RC
+chdir /usr/fort
+make \*-f \fB.\fPmakefile CTIME=RC
+.fi
+.in -5n
+.in -\w'\(em\ 'u
+.s3
+The full directory list (as of this moment!)
+is given above for completeness.
+Some directories might not have anything that uses
+.it ctime.
+.s3
+Of course, you should test your new
+.it ctime
+before installing it in the standard C library.
+See also the ``BUGS'' section below.
+.if t .sp -.5v
+.sh "/bin:"
+Regeneration of
+.it /bin
+is straightforward,
+except for
+.it as\c
+(I),
+.it ld\c
+(I),
+and
+.it cc\c
+(I).
+The
+.it make
+description files for
+.it /bin
+do
+.it not
+automatically regenerate
+.it cc;
+instead, a separate procedure is used (see ``cc'' below).
+.s3
+.it As
+and
+.it ld
+are necessary to regenerate themselves.
+That is, one cannot re-assemble
+.it as
+unless a working
+.it as
+already exists.
+Thus, if something goes wrong and a bad
+.it as
+or
+.it ld
+is generated, you'll have to retrieve a working version from a backup tape.
+.s3
+The moral:
+before regenerating
+.it /bin,
+be sure that you either have a good backup tape,
+or else have emergency copies of
+.it as
+and
+.it ld
+somewhere.
+.if t .sp -.5v
+.sh "/usr/bin:"
+\&\fB.\fPmakefile1 and \fB.\fPmakefile2 regenerate the basic
+.it /usr/bin
+commands;
+\&\fB.\fPmakefile3 regenerates the SCCS commands;
+\&\fB.\fPmakefile4 regenerates
+.it eqn\c
+(I) and
+.it troff\c
+(I).
+If you do not have the PWB/UNIX
+.it troff\c
+(I) and
+.it eqn\c
+(I) package,
+\&\fB.\fPmakefile4 will fail.
+.if t .sp -.5v
+.sh "/lib:"
+As with
+.it as
+and
+.it ld
+in
+.it /bin,
+.it as2
+in
+.it /lib
+(``pass\ 2'' of
+.it as\c
+)
+can't be regenerated if it doesn't already exist.
+Also,
+.it c0,
+.it c1,
+.it c2,
+and
+.it cpp
+in
+.it /lib
+are parts of the C compiler,
+and the
+.it make
+description files for
+.it /lib
+do not automatically regenerate them
+(see ``cc'' below).
+.if t .sp -.5v
+.sh "/usr/lib:"
+\&\fB.\fPmakefile1 regenerates the basic
+.it /usr/lib
+modules;
+\&\fB.\fPmakefile2 regenerates tables used by
+.it eqn\c
+(I) and
+.it troff\c
+(I).
+If you do not have the PWB/UNIX
+.it troff\c
+(I) and
+.it eqn\c
+(I) package,
+\&\fB.\fPmakefile2 will fail.
+.if t .sp -.5v
+.sh "cc:"
+.it /bin/cc
+is just the tip of the C compiler iceberg.
+The real work is done by
+.it "c0, c1, c2,"
+and
+.it cpp
+in
+.it /lib.
+Since these programs work together,
+they must be updated carefully.
+Furthermore, since the C compiler is written in C,
+if you install a bad C compiler
+you'll have to retrieve a working version from a backup tape.
+.s3
+Therefore, the
+.it make
+procedures for
+.it /bin
+and
+.it /lib
+do not attempt to regenerate the C compiler.
+Instead, you must do it explicitly, by:
+.s3
+.in +5n
+.nf
+chdir /sys/c/c
+make \*-f makefile install clean
+.fi
+.in -5n
+.s3
+That creates
+.it "cc, c0, c1, c2,"
+and
+.it cpp
+in
+.it /sys/c/c,
+and, if no errors occur,
+moves them to
+.it /bin
+and
+.it /lib.
+``Clean'' just removes any object files
+(\fB.\fP\fIo\fP)
+left around.
+Note that the
+.it make
+description file for the C compiler is
+.it makefile
+(no leading `\fB.\fP').
+Only the
+.it make
+description files that live in object directories
+(such as
+.it /bin\c
+)
+start with `\fB.\fP'.
+.s3
+Often it is better to install a new version of the C compiler as
+.it ncc,
+so that it can be tested without destroying the old
+(working) version.
+The following creates and installs
+a complete new version of the C compiler as
+.it ncc:
+.s3
+.in +5n
+.nf
+chdir /sys/c/c
+make \*-f makefile PREF=n install clean
+.fi
+.in -5n
+.s3
+As before, this creates
+.it "cc, c0, c1, c2,"
+and
+.it "cpp"
+in
+.it /sys/c/c.
+But they are installed as
+.it "ncc, nc0, nc1, nc2,"
+and
+.it ncpp
+in
+.it /bin
+and
+.it /lib.
+This works because the
+.it cc
+driver
+looks at the name under which it was invoked.
+If the first character of the name is `c',
+it calls
+.it c0,
+etc., in
+.it /lib.
+But if the first character isn't `c',
+it prepends that character to the names of the load modules
+that it calls.
+Thus
+.it ncc
+calls
+.it "nc0, nc1, nc2,"
+and
+.it ncpp
+in
+.it /lib.
+.if t .sp -.5v
+.sh "/usr/hasp:"
+The
+.it \fB.\fPmakefile
+for
+.it /usr/hasp
+specifies whether your RJE system
+supports one or two lines.
+The following generates a two-line system:
+.in +5n
+.nf
+.s3
+chdir /usr/hasp
+make \*-f \fB.\fPmakefile NHASP=2
+.s3
+.fi
+.in -5n
+while:
+.in +5n
+.nf
+.s3
+chdir /usr/hasp
+make \*-f \fB.\fPmakefile NHASP=
+.s3
+.fi
+.in -5n
+generates a one-line system
+(the default is one-line).
+To change the default, change the ``NHASP='' line
+near the beginning of the
+.it \fB.\fPmakefile.
+.sh "SEE ALSO"
+make(I)
+.br
+.it "Make \*- A Program for Maintaining Computer Programs"
+by S. I. Feldman
+.sh "DIAGNOSTICS"
+``Don\*at know how to make xxx'':	The source file xxx doesn't exist.
+.sh FILES
+\&\fB.\fPmakefile*
+.sh BUGS
+Not every directory has a \fB.\fPmakefile.
+.s3
+.it Nroff\c
+(I)
+and
+.it troff\c
+(I)
+are fixed to Eastern Standard Time;
+they use their own conversion routines, instead of calling
+.it ctime\c
+(III).
+Fortunately, they use just the date,
+not the time-of-day.

@@ -1,0 +1,101 @@
+.th DATE I 5/31/77
+.sh NAME
+date \*- print and set the date
+.sh SYNOPSIS
+.bd date
+[ mmddhhmm[yy] ]
+[ +format ]
+.sh DESCRIPTION
+If no argument is given,
+or if the argument begins with ``+'',
+the current date and time are printed.
+Otherwise, the current date is set.
+The first
+.it mm
+is the month number;\fR
+.it dd
+is the day number in the month;\fR
+.it hh
+is the hour number (24 hour system);\fR
+the second
+.it mm
+is the minute number;\fR
+.it yy
+is the last 2 digits of the year number and is optional.
+For example:
+.s3
+.bd"      date 10080045"
+.s3
+sets the date to Oct 8, 12:45 AM.
+The current year is the default if no year is mentioned.
+The system operates in GMT.
+.it Date
+takes care of the conversion to and from
+local standard and daylight time.
+.s3
+If the argument begins with ``+,''
+the output of
+.it date
+is under the control of the user.
+The format for the output is similar to that of
+the first argument to
+.it printf(III).
+All output fields are of fixed size (zero padded
+if necessary).
+Each field descriptor is preceded by ``%''
+and will be replaced in the output by
+its corresponding value.
+A single ``%'' is encoded by ``%%''.
+All other
+characters are copied to the output without change.
+The string is always terminated with a newline character.
+.s3
+Field Descriptors:
+.s3
+.lp +5 3
+\fBn\fR	insert a newline character
+.lp +5 3
+\fBt\fR	insert a tab character
+.lp +5 3
+\fBm\fR	month of year \*- 01 to 12
+.lp +5 3
+\fBd\fR	day of month \*- 01 to 31
+.lp +5 3
+\fBy\fR	last 2 digits of year \*- 00 to 99
+.lp +5 3
+\fBH\fR	hour \*- 00 to 23
+.lp +5 3
+\fBM\fR	minute \*- 00 to 59
+.lp +5 3
+\fBS\fR	second \*- 00 to 59
+.lp +5 3
+\fBj\fR	julian date \*- 001 to 366
+.lp +5 3
+\fBw\fR	day of week \*- Sunday = 0
+.lp +5 3
+\fBa\fR	abbreviated weekday \*- Sun to Sat
+.lp +5 3
+\fBh\fR	abbreviated month \*- Jan to Dec
+.lp +5 3
+\fBr\fR	time in AM / PM notation
+.i0
+.s3
+.ne 8
+For example:
+.s3
+.bd "      date ""+DATE: %m/%d/%y%nTIME: %H:%M:%S""
+.s3
+would generate as output:
+.s3
+.bd "      DATE: 08/01/76"
+.br
+.bd "      TIME: 14:45:05"
+.s3
+.sh DIAGNOSTICS
+``No permission'' if
+you aren't the super-user and you try to change the date;
+``bad conversion'' if the date set is syntactically incorrect;
+``invalid option'' if the field
+descriptor is not recognizable.
+.sh FILES
+/dev/kmem

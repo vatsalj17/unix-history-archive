@@ -1,0 +1,63 @@
+.th GATH I 5/31/77
+.sh NAME
+gath \*- gather real and virtual files
+.sh SYNOPSIS
+.bd gath
+[\fB\-ih\fR] file ...
+.sh DESCRIPTION
+.it Gath
+concatenates the named files and writes them to standard output.
+Tabs are expanded into spaces according to
+the format specification for each file (see
+.it fspec\^\c
+(V)).
+The size limit and margin parameters of a format specification
+are also respected.
+Non-graphic characters other than tabs are identified
+by a diagnostic message and excised.
+The output of
+.it gath
+contains no tabs unless the
+.bd \-h
+flag is set, in which case it is written with standard tabs
+(every eighth column).
+.s3
+Any line of any of the files which begins with `~'
+is interpreted by
+.it gath
+as a control line.
+A line beginning `~ ' (tilde,space)
+specifies a sequence of files to be included at that point.
+A line beginning `~!' specifies a UNIX command;
+that command is executed,
+and its output replaces the `~!' line in the
+.it gath
+output.
+.s3
+Setting the
+.bd \-i
+flag prevents control lines from being interpreted
+and causes them to be output literally.
+.s3
+A file name of `\-' at any point refers to standard input,
+and a control line consisting of `~.' is a software end-of-file.
+Keywords may be defined by specifying a replacement string
+which is to be substituted for each occurrence of the keyword.
+Input may be collected directly from the terminal,
+with several alternatives for prompting.
+.s3
+In fact, all of the special arguments and flags recognized by the
+.it send
+command are also recognized and treated identically by
+.it gath.
+Several of them are only useful, however, in the context
+where an RJE job is being submitted.
+The same program implements the two commands, so
+.it gath
+has a potential which is not apparent from its name.
+Refer to the description of
+.it send
+for definitive information about
+.it gath.
+.sh "SEE ALSO"
+send(I), fspec(V)

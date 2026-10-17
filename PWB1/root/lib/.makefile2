@@ -1,0 +1,45 @@
+LIB = /lib
+
+SRC = /sys/source
+FSRC = /sys/fort
+
+MAKE = make
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = -as
+
+LD = -ld
+LDFLAGS = -s
+
+DD = TMP
+STICKY = OLD
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+
+# ------------
+#  Create lib.
+# ------------
+
+MAIN:		libc.a
+	-rm -f $(DD)*
+	-@echo "\n***** Following Files Still Present:";  ls -l $(DD)*;  echo "\n"
+	@echo "\n***** Following Sticky Files Still Present, Remove After Next Reboot:";\
+			 ls -l $(STICKY)*;  echo "\n"
+
+
+libc.a:		$(SRC)/s4/*.[cs] \
+		$(SRC)/s4/makefile $(ASDEP) $(CCDEP)
+	chdir $(SRC)/s4; $(MAKE) "LIB=$(LIB)" "CC=$(CC)" "AS=$(AS)" "DD=$(DD)" \
+			 in_libc.a clean
+
+
+RC:	# dummy name to force re-compiling things.

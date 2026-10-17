@@ -1,0 +1,183 @@
+.tr |
+.ds NR "\s-2NROFF\s+2
+.ds TR "\s-2TROFF\s+2
+.ds Nr "N\s-2ROFF\s+2
+.ds Tr "T\s-2ROFF\s+2
+.de bt
+.ftR
+.ie t .sp .4
+.el .sp
+.ne 1.1
+.ti \\n(}Iu
+..
+.de b1
+.br
+.ti \\n(}Iu
+..
+.de pg
+.ft R
+.fi
+.ie t .sp .4
+.el .sp
+.ne 1.1
+..
+.th NROFF\(slTROFF I 5/31/77
+.sh NAME
+nroff, troff \*- text formatters
+.sh SYNOPSIS
+\fBnroff\fR (or \fBtroff\fR)
+[ options ]
+files
+.sh DESCRIPTION
+\*(Nr and \*(TR accept lines of text interspersed with lines of
+format control information and
+format the text into a printable, paginated document
+having a user-designed style.
+\*(Nr and \*(TR are highly compatible with each other and it is almost always
+possible to prepare input acceptable to both.
+Conditional input is provided that enables
+the user to embed input expressly destined for either program.
+\*(Nr can prepare output directly for a variety of terminal types and
+is capable of utilizing the full resolution of each terminal.
+.pg
+An argument consisting of a single minus (\fB\-\fR) is taken to be
+a file name corresponding to the standard input.
+If no file names are given, input is taken from the standard input.
+The options, which may appear in any order so long as they appear
+before the filenames, are:
+.sp
+.i0
+.ta .2i 1.0i
+.Bd I 3
+.ftI
+	Option	Effect
+.br
+.ft
+.Bd I
+.ta .3i 1.0i
+.in +1.0i
+.bt
+	\fB\-o\fIlist\fR	\
+Print only pages whose page numbers appear in \fIlist\fR,
+which consists of numbers and number ranges
+separated by commas.
+A number range has the form \fIN\-M\fR
+and means pages \fIN\fR through \fIM\fR inclusive;
+an initial \fI\-N\fR means
+from the beginning to page \fIN;\fR and a final \fIN\-\fR means
+from \fIN\fR to the end.
+.bt
+	\fB\-n\fIN\fR	Number first generated page \fIN\fR.
+.bt
+	\fB\-s\fIN\fR	Stop every \fIN\fR pages.
+\*(Nr will halt prior to every \fIN\fR pages (default \fIN\fR\^=1)
+to allow paper loading or
+changing, and will resume upon receipt of a new-line character.
+\*(Tr will stop the phototypesetter every \fIN\fR pages,
+produce a trailer to allow the changing of cassettes,
+and will resume after the phototypesetter \s-1START\s+1 button is pressed.
+.bt
+	\fB\-m\fIname\fR	Prepends the macro file
+\fB\(slusr\(sllib\(sltmac.\fIname\fR
+to the input files.
+.bt
+	\fB\-r\fIaN\fR	Register \fIa\fR (one-character name) is set to \fIN\fR.
+.bt
+	\fB\-i\fP	Read standard input after the input files are exhausted.
+.bt
+	\fB\-q\fR	\
+Invoke the simultaneous input-output mode of the \fBrd\fR request.
+.sp
+.ne 3
+.ftI
+.Bd I 3
+		\*(Nr Only
+.br
+.Bd I
+.ft
+.bt
+	\fB\-T\fItype\fR	Specifies
+the output terminal type.
+Currently defined values for
+.it type
+are \fB37\fR for the (default)
+.if n TELETYPE(Rg.)
+.if t \s-2TELETYPE\s+2\(rg
+Model 37,
+\fBtn300\fR for the \s-2GE\s0 TermiNet\ 300 (or any terminal without half-line
+capabilities),
+\fB300\fR for the \s-1DASI\s+1-300,
+\fB450\fR for the \s-1DASI\s+1-450 (or Diablo Hyterm)
+and
+\fB300S\fR for the \s-1DASI\s+1-300S.
+For 12-pitch, use
+\fB300-12\fR, \fB300S-12\fR, and \fB450-12\fR.
+.bt
+	\fB\-e\fR	\
+Produce equally-spaced words in adjusted
+lines, using full terminal resolution.
+.bt
+	\fB\-h\fR	\
+Use output tabs during horizontal spacing
+to speed output and reduce output character count.
+Tab settings are assumed to be every
+8 nominal character widths.
+.sp
+.ne 3
+.ftI
+.Bd I 3
+		\*(Tr Only
+.br
+.Bd I
+.ft
+.bt
+	\fB\-t\fP	Direct output to the standard output instead
+of the phototypesetter.
+.bt
+	\fB\-f\fP	Refrain from feeding out paper and stopping
+phototypesetter at the end of the run.
+.bt
+	\fB\-w\fP	Wait until phototypesetter is available, if
+it is
+currently busy.
+.bt
+	\fB\-b\fR	\*(Tr will report whether the phototypesetter
+is busy or available.
+No text processing is done.
+.bt
+	\fB\-a\fP	Send a printable \s-1(ASCII)\s+1 approximation
+of the results to the standard output.
+.bt
+	\fB\-p\fIN\fR	Print all characters in point size \fIN\fR
+while retaining all prescribed spacings and motions,
+to reduce phototypesetter elasped time.
+.bt
+	\fB\-g\fR	Prepare output for the Murray Hill
+Computation Center phototypesetter and direct it to the standard output.
+.br
+.i0
+.sh FILES
+.dt
+/usr/lib/suftab	suffix hyphenation tables
+.br
+/tmp/ta00000	temporary file
+.br
+/usr/lib/tmac.*	standard macro files
+.br
+/usr/lib/term/*	(\*(NR only) terminal driving tables
+.br
+/usr/lib/font/*	(\*(TR only) font width tables
+.br
+.sh "SEE ALSO"
+.it "\*(Nr\s-1\(sl\s0\*(TR User's Manual"
+by J. F. Ossanna.
+.br
+.it "A \*(Tr Tutorial"
+by B. W. Kernighan.
+.br
+tbl(I).
+.br
+For \*(NR, see neqn(I), col(I), and tabs(I)
+.br
+For \*(TR, see eqn(I).
+.tr ||

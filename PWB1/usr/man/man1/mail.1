@@ -1,0 +1,100 @@
+.th MAIL I 5/31/77
+.sh NAME
+mail  \*-  send mail to designated users
+.sh SYNOPSIS
+.bd mail
+[\c
+.bd \*-yn\c
+]
+[ person ... ]
+.br
+.bd mail
+.bd \*-f
+file
+.sh DESCRIPTION
+.it Mail
+with no argument
+searches for a file
+called
+.bd .mail,
+prints it in reverse chronological order if it is nonempty,
+then asks if it should be saved.
+If the answer
+is
+.bd y,
+the mail is added to
+.bd mbox.
+In either case,
+.bd .mail
+is truncated to zero length.
+To leave
+.bd .mail
+untouched,
+hit `delete.'\ 
+The question can be answered on the command line
+with the argument \fB\*-y\fP or \fB\*-n\fP.
+.s3
+.it Mail
+tries to use
+.bd .mail
+and
+.bd mbox
+in the current directory.
+But if
+.bd .mail
+doesn't exist,
+.it mail
+uses
+.bd .mail
+and
+.bd mbox
+in your
+.it login
+directory instead.
+.s3
+When
+.it persons
+are named,
+.it mail
+takes the standard input up to an end-of-file
+(or a line with just `.')
+and adds it to each
+.it person's
+.bd .mail
+file.
+The message is preceded by the sender's name and a postmark.
+A
+.it person
+is a user name recognized by
+.it login\^\c
+(I).
+Mail
+is sent to the
+.it login
+directory of that user.
+.s3
+The
+.bd \*-f
+option causes the named file to be printed as if it were mail.
+.s3
+When a user logs in he is informed of the presence
+of mail.
+.s3
+To receive mail, a
+.bd .mail
+file must exist in your
+.it login
+directory, and it must be writable by everyone.
+However, it need not be readable by everyone.
+.sh FILES
+/etc/passwd		to identify sender and locate persons
+.br
+.li
+.mail			input mail
+.br
+mbox			saved mail
+.br
+/tmp/m?????	temp file
+.sh "SEE ALSO"
+write\^\c
+(I)

@@ -1,0 +1,11 @@
+if $n != 4 then
+  echo 'Usage: mkrp03 /dev/rp# number_of_blocks filesysname packname'
+	exit 1
+endif
+labelit  $1
+echo "Are you sure you want to write over $1? (type `y')?"
+= a </dev/tty
+if "$a" != y exit 0
+mkfs $1 $2
+icheck -s3 $1
+labelit $1 $3 $4

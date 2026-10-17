@@ -1,0 +1,206 @@
+.th REGEX III 5/31/77
+.sh NAME
+regcmp, regex \*- compile and execute regular expressions
+.sh SYNOPSIS
+.bd "char *regcmp(string1[,string2,...],0);"
+.br
+.bd "char *string1, *string2, ...;"
+.s3
+.bd "char *regex(re,subject[,ret0,...]);"
+.br
+.bd "char *re, *subject, *ret0, ...;"
+.br
+.sh DESCRIPTION
+.it Regcmp
+compiles a regular expression and returns a pointer to the compiled form.
+The regular expression is the concatenation of
+.it "string1, string2,"
+etc.
+.it Alloc(III)
+is used to create space for the vector.
+It is the user's responsibility to free unneeded space so allocated.
+A zero return from
+.it regcmp
+indicates an incorrect argument.
+.it Regcmp(I)
+has been written to generally preclude the need
+for this routine at execution time.
+.s3
+.it Regex
+executes a compiled pattern (\fIre\fP) against the \fIsubject\fP string.
+Additional arguments are passed to receive values back.
+.it Regex
+returns zero on failure or a pointer to the next unmatched character on success.
+A global character pointer
+\fI\_\_loc1\fP
+points to where the match began.
+.it Regcmp
+and
+.it regex
+were mostly borrowed from the editor,
+.it ed\^\c
+(I);
+however, the syntax and semantics have been changed slightly.
+.lp +35 34
+.s3
+\fIsymbols	meaning\fP
+.s3
+.lp +15 13
+[\*|]\*|*\fB.\fP^	These symbols retain their current meaning.
+.s3
+.lp +15 13
+$	Matches the end of the string; `\\n' matches the newline.
+.s3
+.lp +15 13
+\*-	Within brackets the minus means
+.it through.
+For example,
+[a\*-z] is equivalent to [abcd \fB.\*|.\*|.\fP xyz].
+The `\*-' can
+appear as itself only if used as the last or
+first character.
+For example, the character class expression
+\*|[\*|\*|]\*|\*-\*|]\*| matches the characters `\*|]\*|'
+and `\*-'.
+.s3
+.lp +15 13
++	A regular expression followed by `+' means
+.it "one or more times."
+For example, [0\*-9]+ is equivalent to [0\*-9][0\*-9]*
+.s3
+.lp +15 13
+\fI{m}\fP
+.lp +15 13
+\fI{m,}\fP
+.lp +15 13
+\fI{m,u}\fP	Integer values enclosed in {\*|} indicate the
+number of times the preceeding regular expression is to be applied.
+.it m
+is the minimum number and
+.it u
+is a number, less than 256, which is the maximum.
+If only
+.it m
+is present,e.g. {m},
+.it m
+indicates the exact number of times the regular
+expression is to be applied.
+{m,} is analogous to {m,infinity}.
+The plus (`+') and star (`*') operations are
+equivalent to {1,} and {0,} respectively.
+.s3
+.lp +15 13
+( .\*|.\*|. )$\fIn\fP	The value of the enclosed regular expression is
+to be returned.
+The matched string
+will be copied into the area pointed to by the
+.it retn
+argument (see the examples below).
+At present,
+at most ten enclosed regular expressions are allowed.
+.it Regex
+makes its assignments unconditionally.
+.s3
+.lp +15 13
+( .\*|.\*|. )	Parentheses are used for grouping.
+An operator, e.g. *,+,{\*|}, can work on a single character or a regular
+expression enclosed in parenthesis.
+For example, (a*(cb+)*)$0.
+.lp 0 0
+.i0
+.ne 6
+.s3
+Of necessity, all the above defined symbols are special.
+They must, therefore, be escaped to be used as themselves.
+.s3
+.ne 10
+Example 1:
+.br
+.in +5
+.nf
+char *cursor, *newcursor, *ptr;
+\&\fB.\fP\*|\fB.\fP\*|\fB.\fP
+newcursor = regex((ptr=regcmp("^\\n",0)),cursor);
+free(ptr);
+.s2
+.fi
+This example will match a leading newline in the subject string
+pointed at by cursor.
+.s2
+.in -5
+.nf
+Example 2:
+.in +5
+char ret0[9];
+char *newcursor, *name;
+\&\fB.\fP\*|\fB.\fP\*|\fB.\fP
+name = regcmp("([A\*-Za\*-z][A\*-za\*-z0\*-9\_]{0,7})$0",0);
+newcursor = regex(name,"123Testing321",ret0);
+.s2
+.fi
+This example will match through the string "Testing3" and will return
+the address of the character after the last matched character
+(i.e.,
+.it newcursor
+will point to the substring "21").
+The string "Testing3" will be copied to the
+character array
+.it ret0.
+.br
+.in -5
+.s2
+Example 3:
+.in +5
+.nf
+#include "file.i"
+char *string, *newcursor;
+\&\fB.\fP\*|\fB.\fP\*|\fB.\fP
+newcursor = regex(name,string);
+.s2
+.fi
+This example applies a precompiled regular expression
+in
+.it file.i
+against
+.it string
+(see
+.it regcmp\^\c
+(I)).
+.in -5
+.s3
+.it Regcmp
+and
+.it regex
+are kept in the
+.bd \-lPW
+library.
+.br
+.sh "SEE ALSO"
+regcmp(I), ed(I), alloc(III)
+.sh BUGS
+The user program may run out of memory if regcmp()
+is called iteratively without freeing the vectors no longer required.
+The following user-supplied replacement for
+.it alloc(III)
+re-uses
+the same vector saving time and space.
+.br
+.in +10
+.nf
+.s3
+/* user's program */
+.s2
+.in +5
+\&\fB.\fP\*|\fB.\fP\*|\fB.\fP
+.s2
+.in -5
+alloc(n) {
+static int rebuf[256];
+.in +5
+return &rebuf;
+.in -5
+}
+free(ptr)
+char *ptr;
+{}
+.in -10

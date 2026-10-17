@@ -1,0 +1,186 @@
+.th MM I 5/31/77
+.sh NAME
+mm \*- run off document with PWB/MM
+.sh SYNOPSIS
+.bd mm
+[\c
+options\c
+]\ [\c
+files\c
+]
+.sh DESCRIPTION
+The
+.it mm
+command can be used to run off documents using
+.it nroff\^\c
+(I)
+and the PWB/MM text formatting codes.
+It has options to specify
+preprocessing by 
+.it tbl\^\c
+(I)
+or by
+.it neqn\^\c
+(I)
+and for postprocessing by various output filters.
+The proper pipe sequences and the
+required arguments and flags for
+.it nroff\^\c
+(I)
+and PWB/MM
+are generated, depending on the options selected.
+For example, inclusion of the
+.bd \*-h
+.it nroff\^\c
+(I)
+flag
+occurs 
+unless
+.it col\^\c
+(I)
+is to be used
+or unless the
+.bd \*-450
+option is specified.
+.s3
+The options for
+.it mm
+are listed below.
+Any other arguments or flags, e.g. \fB\*-rC3\fP, are passed
+to
+.it nroff\^\c
+(I)
+or to PWB/MM, as appropriate.
+The options can occur in any order,
+but they must appear before the files.
+.s3
+.lp +10 10
+\fB\*-e\fP	\&\c
+.it neqn\^\c
+(I)
+processing is needed.
+.s3
+.lp +10 10
+\fB\*-t\fP	\&\c
+.it tbl\^\c
+(I)
+is needed.
+.s3
+.lp +10 10
+\fB\*-c\fP	\c
+.it col\^\c
+(I)
+is needed.
+.s3
+.lp +10 10
+\fB\*-12\fP	want 12 pitch mode.
+(Be sure that the 12-pitch switch is set on the terminal.)
+.s3
+.lp +10 10
+\fB\*-300\fP	output onto a DASI 300 terminal.
+This is the
+.it default
+terminal type.
+.s3
+.lp +10 10
+\fB\*-hp\fP	output onto a HP 2640A.
+.s3
+.lp +10 10
+\fB\*-450\fP	output onto a DASI 450.
+.s3
+.lp +10 10
+\fB\*-300S\fP	output onto a DASI 300S.
+.s3
+.lp +10 10
+\fB\*-300s\fP	output onto a DASI 300S.
+.s3
+.lp +10 10
+\fB\*-tn\fP	output onto a GE TermiNet 300.
+.s3
+.lp +10 10
+\fB\*-tn300\fP	output onto a GE TermiNet 300.
+.s3
+.lp +10 10
+\fB\*-ti\fP	output onto a Texas Instrument terminal.
+.s3
+.lp +10 10
+\fB\*-37\fP	output onto a TTY 37.
+.i0
+.s3
+If several terminal types are specified,
+the last one takes precedence.
+Note that 
+.bd \*-ti,
+.bd \*-tn,
+and
+.bd \*-tn300
+all do the same thing;
+they all imply \fB\*-c\fP,
+and work for any terminal that lacks reverse line feed capability.
+.s3
+As an example,
+.s3
+.lp +10 10
+\&	mm \*-t \*-450 \*-rC3 \*-12 qqsv*
+.s3
+.i0
+generates
+.s3
+.lp +10 10
+\&	tbl qqsv* \*v nroff \*-h \*-mm \*-rT1 \*-rC3 \*- \*v 450
+.i0
+.s3
+If no arguments are given,
+.it mm
+prints a list of options.
+.s3
+If only options
+and unreadable files are specified, then
+.it mm
+terminates silently.
+.sh HINTS
+.lp +5 5
+1.	\c
+.it mm
+may invoke
+.it nroff\^\c
+(I)
+with the \fB\*-h\fP flag.
+With this flag,
+.it nroff\^\c
+(I)
+assumes that the terminal has tabs set
+at every 8 character positions.
+.s3
+.lp +5 5
+2.	Use the
+.bd \*-o\c
+.it list
+option of
+.it nroff\^\c
+(I)
+to specify ranges of pages to be output.
+.s3
+.lp +5 5
+3.	When either
+.bd \-t
+or
+.bd \-e
+or both are specified and the
+.bd \-o\c
+.it list
+does 
+.it not
+cause the last page of the document to be printed,
+a ``broken pipe'' message from the Shell will result.
+.i0
+.tr ||
+.sh "SEE ALSO"
+nroff(I)
+.br
+.it "P\s-2WB/MM\s0 \- Programmer's Workbench Memorandum Macros"
+by D. W. Smith and J. R. Mashey.
+.br
+.it "Typing Documents with P\s-2WB/MM\s0"
+by D. W. Smith and E. M. Piskorik.
+.br

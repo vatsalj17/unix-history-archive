@@ -1,0 +1,83 @@
+
+SRC = /sys/source
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = as
+
+LD = ld
+LDFLAGS = -s
+
+MAKE = make
+SH = sh -v
+
+DD = TMP
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+LpwDEP =	# for -lpw lib.
+
+
+# ------------
+#  Create /usr/bin.
+# ------------
+
+SCCSMODS = admin bdiff chghist comb delta get help prt rmdel scv what
+
+MAIN:		$(SCCSMODS) sccsdiff
+	-rm -f $(DD)*
+	-@echo "\n***** Following Files Still Present:";  ls -l $(DD)*;  echo "\n"
+
+
+$(SCCSMODS):	\
+		$(SRC)/sccs4/makefile $(SRC)/sccs4/hdr/*.h \
+		$(SRC)/sccs4/cmd/*.c $(SRC)/sccs4/com/*.c
+
+$(SCCSMODS):	$(CCDEP) $(CTIME) $(LSDEP) $(LPWDEP) $(LpwDEP)
+	chdir $(SRC)/sccs4; $(MAKE) SCCS "CC=$(CC)"
+	-rm $(SRC)/sccs4/com/comobj.a
+	-mv admin $(DD)admin
+	-mv bdiff $(DD)bdiff
+	-mv chghist $(DD)chghist
+	-mv comb $(DD)comb
+	-mv delta $(DD)delta
+	-mv get $(DD)get
+	-mv help $(DD)help
+	-mv prt $(DD)prt
+	-mv rmdel $(DD)rmdel
+	-mv scv $(DD)scv
+	-mv what $(DD)what
+	mv $(SRC)/sccs4/cmd/admin .
+	mv $(SRC)/sccs4/cmd/bdiff .
+	mv $(SRC)/sccs4/cmd/comb .
+	mv $(SRC)/sccs4/cmd/delta .
+	mv $(SRC)/sccs4/cmd/get .
+	mv $(SRC)/sccs4/cmd/help .
+	mv $(SRC)/sccs4/cmd/prt .
+	mv $(SRC)/sccs4/cmd/rmdel .
+	ln rmdel chghist
+	-rm -f $(SRC)/sccs4/cmd/chghist
+	mv $(SRC)/sccs4/cmd/scv .
+	mv $(SRC)/sccs4/cmd/what .
+	strip $(SCCSMODS)
+	chmod 755 $(SCCSMODS)
+	-chown bin $(SCCSMODS)
+	ls -l $(SCCSMODS)
+	-rm -f $(DD)*
+
+sccsdiff:	$(SRC)/sccs4/cmd/sccsdiff
+	-mv sccsdiff $(DD)sccsdiff
+	cp $(SRC)/sccs4/cmd/sccsdiff sccsdiff
+	chmod 755 sccsdiff
+	-chown bin sccsdiff
+	ls -l sccsdiff
+	-rm -f $(DD)*
+
+RC:	# dummy name to force re-compiling things.

@@ -1,0 +1,475 @@
+.if n .ds _ "\|--\"
+.if t .ds _ \(em
+.if t .ds o \v'.4m'\s-38\s+3\v'-.4m'
+.if n .ds o \d8\u
+.EQ
+delim $$
+.EN
+.HC ^
+.tr {=
+.tr }.
+.SC HARDWARE~OPERATION~\*_~PDP~11/45,~/70 September~14~1977
+.HU "PDP 11/45, /70 CONSOLES"
+.PF "||- \\\\nP -||"
+.OF "||\\\\*(`b||"
+.EF "||\\\\*(`b||"
+.bp
+.HU "CONSOLE DESCRIPTION AND OPERATION"
+The following documentation is primarily intended to describe
+the
+.if t PDP\(rg
+.if n PDP (Rg.)
+11/70 console and its operation.
+Differences in the PDP 11/45 appear within brackets ``[\|]''.
+Those cases that are applicable to only one of the two systems
+are clearly labeled as such.
+.HU "PDP 11/45, /70 CONSOLE DESCRIPTION"
+The PDP 11/45 and 70 consoles are composed of the following:
+.AL
+.LI
+Power Key Switch
+(OFF/POWER/LOCK)
+.LI
+Mapping Lights (
+.UL "11/70 only"
+).
+.LI
+Seven Execution Indicator Lights displaying the following
+Central Processor (CPU) States:
+RUN, PAUSE, MASTER, USER, SUPERVISOR, KERNEL, DATA.
+.LI
+A 22-bit [18-bit]\*F Address Register Display.
+.FS
+This documentation shows
+differences for the PDP 11/45
+within brackets ``[\|]''.
+.FE
+.LI
+A 16-bit Data Register Display.
+.LI
+An Addressing Error (ADRS ERR) Indicator Light.
+.LI
+Parity Error (PAR ERR) Indicator Light (
+.UL "11/70 only"
+).
+.LI
+High and Low Parity Indicator Lights (
+.UL "11/70 only"
+).
+.LI
+A 22-bit [18-bit] Switch Register (CSW).
+.LI
+Control Knobs:
+.br
+.sp
+Address Display Select which can be set to any of 8 positions:
+.AL a 5 1
+.LI
+USER I
+.LI
+USER D
+.LI
+SUPERVISOR I
+.LI
+SUPERVISOR D
+.LI
+KERNEL I
+.LI
+KERNEL D
+.LI
+PROGRAM PHYSICAL
+.LI
+CONSOLE PHYSICAL
+.LE
+.sp
+Data Display Select which can be set to the following 4 positions:
+.AL a 5 1
+.LI
+DATA PATHS
+.LI
+BUS REGISTER
+.LI
+FPP $mu$ ADRS/CPU $mu$ ADRS
+.LI
+DISPLAY REGISTER
+.LE
+.LI
+Lamp Test Switch
+.LI
+Control Switches which are labelled:
+.AL a 5 1
+.LI
+LOAD ADRS (load address)
+.LI
+EXAM (examine)
+.LI
+CONT (continue)
+.LI
+ENABL/HALT (enable)
+.LI
+S-INST/S-BUS CYCLE (single instruction/bus cycle)
+.LI
+START
+.LI
+DEP (deposit)
+.LI
+REG EXAM (register examine,
+.UL "11/45 only"
+)
+.LI
+REG DEP (register deposit,
+.UL "11/45 only"
+)
+.LE
+.LE
+.HU "CONSOLE OPERATION \*_ SWITCH REGISTER"
+The
+.UL "Switch Register"
+consists of 22 [18 on the 11/45] switches labelled 0 through 21[17]
+(numbers correspond to bit positions).
+They are used to manually enter both addresses and data into the processor.
+.P
+To enter an address such as 173020\*o, the bits must be divided 
+into groups of three starting from the right.
+Bits 00-02 in the first group, bits 03-05 in the second group, 06-08
+in the third, 09-11 the fourth, 12-14 in the fifth, etc.
+.UL "In each group of 3 bits"
+an octal digit is indicated as follows:
+.VL 35 10
+.ne 6
+.LI zero
+All 3 switches down
+.br
+.sv 5
+.os
+.ne 6
+.LI one
+Lowest numbered switch (right-most bit) up.
+.br
+.sv 4
+.os
+.ne 6
+.LI two
+Middle switch up.
+.br
+.sv 5
+.os
+.ne 6
+.LI three
+Right and middle switches up.
+.br
+.sv 5
+.os
+.ne 6
+.LI four
+Left switch only, in group of three, up.
+.br
+.sv 4
+.os
+.ne 6
+.LI five
+Left and right switches up.
+.br
+.sv 5
+.os
+.ne 6
+.LI six
+Left and middle switches up.
+.br
+.sv 5
+.os
+.ne 6
+.LI seven
+All 3 switches up.
+.br
+.sv 5
+.os
+.LE
+.br
+.ne 40
+.P
+The arrows on the following two diagrams indicate which switches
+should be up to set 173020\*o
+in both the 11/70 and the 11/45.
+.br
+.sv 15
+.os
+.nf
+.if t .ta 1.5i 2.1i 2.7i 3.3i 4.0i 4.6i 5.2i 5.8i
+.if n .ta 18,26,34,42,50,58,66
+		one	seven	three	zero	two	zero
+.br
+.sp 2
+.sv 15
+.os
+	one	seven	three	zero	two	zero
+.br
+.fi
+.HU "CONSOLE OPERATION \*_ LIGHT TEST SWITCH"
+Depressing the Lamp Test switch should light all lamp indicators
+on the console.
+Any burnt-out lamps should be replaced at the next preventive maintenance
+session.
+.HU "CONSOLE OPERATION \*_ POWER KEY SWITCH"
+The Power Key controls CPU power in the following manner.
+.VL 35 10
+.LI "OFF"
+Power is off for CPU.
+.br
+.ne 3
+.LI "POWER"
+Power is on for CPU.
+.UL "This is the normal position"
+to enable use of all console controls.
+.br
+.ne 4
+.LI "LOCK"
+Power is on for CPU.
+Disables all control switches except for the Switch Register,
+Data Select, Address Select, and Power Key.
+.LE
+.HU "CONSOLE OPERATION \*_ STARTING AND STOPPING
+.UL Starting
+.br
+Once the power is on, execution can be started by setting ENABL/HALT toggle up,
+putting
+the starting address in the Switch Register, and depressing
+the LOAD ADRS Switch.
+Verify in the Address Register Display lights that the address was
+entered correctly, then depress START.
+The computer system RESETS and begins execution of the program instructions at the
+address specified by the current contents of the
+Address Display.
+Depressing start again has no effect, 
+when the CPU is in the RUN state.
+.P
+When
+START is depressed
+with the ENABL/HALT toggle in the halt position (down)
+the system will RESET,
+but not commence execution.
+.P
+.UL Stopping
+.br
+Depressing the ENABL/HALT toggle will HALT execution.
+.P
+.UL Continuing
+.br
+After the computer has been halted, execution can be resumed at the same point
+it was when halted by depressing the CONT switch.
+If still in the halted state CONTINUE will single cycle
+(either by CPU instruction or by Bus\*F cycle)
+with each depression (depending on the setting of the
+S-INST/S-BUS CYCLE switch).
+.FS
+The
+.I Bus
+(or UNIBUS)
+is the primary control and communications path
+connecting most of the PDP 11 system's components and peripherals.
+.FE
+If ENABLE is set, normal execution will resume.
+.HU "CONSOLE OPERATION \*_ CONTROL SWITCH FUNCTIONS"
+.UL "LOAD ADRS"
+loads the contents of the Switch Register into the CPU and
+displays it in the Address Display.
+The address displayed in the Address Display depends on the position of the
+Address Select knob.
+.P
+The
+.UL EXAM
+Switch being depressed causes the contents
+of the location specified in the Address Display to be
+displayed in the Data Display lights when the Data Select knob is in the DATA PATHS
+position.
+.P
+The
+.UL DEP
+switch being raised causes the current contents of the Switch Register
+to be deposited into the address specified by the current contents of the Address
+display.
+.P
+.UL CONT
+being depressed after the system is halted,
+causes the CPU to resume execution as described in
+the previous section on STARTING AND STOPPING.
+.P
+.UL ENABL/HALT
+is a two position switch whose functions also have been described in
+the previous section.
+.P
+.UL S/INST-S/BUS CYCLE
+affects only the operation of the CONTINUE switch.
+It controls whether execution stops after a single INSTRUCTION or a single
+BUS CYCLE.
+This switch has no effect when CPU is in the RUN state.
+.P
+.UL START
+starts execution or RESETS depending on the setting of the ENABL/HALT
+switch, as previously described.
+.P
+.UL "REG EXAM (11/45 only)"
+depressed causes
+the contents of the General Purpose Register specified by the low order 4 bits of the
+Bus Address Register to be displayed in the Data Display lights.
+.P
+.UL "REG DEP (11/45 only)"
+raised causes the contents of the Switch Register
+to be deposited into the General Purpose Register specified by the
+current contents of the CPU Bus Address Register.
+.P
+FOR FURTHER INSTRUCTIONS SEE THE PDP 11/45 PROCESSOR HANDBOOK.
+.HU "CONSOLE\ OPERATION\ \*_\ ADDRESS\ SELECT\ KNOB\ AND\ ^DISPLAY\ ^REGISTER"
+.UL "Address Select"
+provides an interpretation for the
+.UL "Address Display Register when set as follows:\*F
+.FS
+This documentation shows
+differences for the PDP 11/45 within brackets ``[\|]''.
+.FE
+.VL 35 10
+.ne 7
+.LI VIRTUAL
+(6 positions for USER, SUPERVISOR, and KERNEL)
+Indicates the current address as a 16-bit Virtual address (when the Memory Management
+Unit is turned on, i.e. UNIX is running, otherwise it indicates the
+true 16-bit Physical Address).
+.if t .br
+.UL "FOR DEBUGGING ONLY"
+.br
+.ne 3
+.LI "PROGRAM PHYSICAL"
+Displays a true 22-bit [18-bit]
+Physical Address for the current address reference.
+.UL "ALSO FOR DEBUGGING"
+.br
+.ne 3
+.LI "CONSOLE PHYSICAL"
+Display a 22-bit [16-bit] Physical Address
+to be used for ALL console operations
+such as LOAD ADRS, EXAM and DEP.
+.LE
+.HU "CONSOLE\ OPERATION\ \*_\ DATA\ SELECT\ KNOB\ AND\ ^DISPLAY\ ^REGISTER"
+The
+.UL "Data Select Knob"
+controls the contents of the 16-bit
+.UL "Data Display Register"
+according to the following settings:
+.VL 37 10
+.ne 3
+.LI "DATA\ PATHS"
+The
+.UL "normal mode"
+when performing console operations.
+Shows examined or deposited data.
+.br
+.ne 5
+.LI "DISPLAY REGISTER"
+Displays the current contents of the 16-bit write only ``Switch Register''.
+This is the normal position for the Data Select Switch
+when UNIX is running.
+.br
+.ne 2
+.LI "BUS REG"
+Displays the contents of the Bus Register.
+.br
+.ne 6
+.LI "$mu$\ ADRS\ FPP/CPU"
+Bits 15-08 display the current ROM\*F address of the Floating Point Processor microprogram.
+.FS
+.I ROM
+is an abbreviation for ``read only memory''.
+.FE
+.br
+Bits 07-00 display the current ROM address of the CPU microprogram.
+.LE
+.HU "CONSOLE\ OPERATION\ \*_\ DISPLAYING\ DATA\ AT\ A\ ^SPECIFIC\ ^ADDRESS"
+To display the data contained at address \fIX\fP\*o:
+.AL
+.LI
+Set Power Key to POWER position.
+.LI
+Set Address Select Knob to CONSOLE PHYSICAL.
+.LI
+Set Data Select Knob to DATA PATHS.
+.LI
+Enter \fIX\fP\*o into the Switch Register.
+.LI
+Depress LOAD ADRS.
+.LI
+Depress EXAM.
+.LI
+The Data Display lights will contain the data from address \fIX\fP\*o.
+.LI
+Depressing EXAM again will display the data from address \fIX\fP+2\*o.
+.HU "CONSOLE OPERATION \*_ EXECUTION INDICATOR LIGHTS"
+Lighting of each display indicates the following:
+.VL 35 10
+.ne 4
+.LI RUN
+The processor is executing instructions, including WAIT
+instructions, but is not in a Pause cycle.
+.br
+.ne 5
+.LI PAUSE
+The processor is in a Bus Pause or Interrupt Pause Cycle, waiting for
+a Unibus device or Memory.
+.br
+Or, the CPU has been halted from the console.
+.br
+.ne 4
+.LI MASTER
+The CPU is in control of the Unibus
+or during Console operations.
+.br
+.ne 3
+.LI "KERNEL SUPER USER"
+These lights
+show where the current memory reference is taking place.
+.br
+.ne 4
+.LI DATA
+Shows whether I (program) or D (data) space is being used 
+in the current memory reference.
+It is on when D space is used and off when I space is used.
+.LE
+.HU "CONSOLE OPERATION \*_ ADDRESS ERROR INDICATOR"
+.UL "ADRS ERR"
+is on when an addressing error occurs.
+(e.g., non-existent memory, access control violation,
+reference of unassigned memory pages).
+.HU "CONSOLE\ OPERATION\ \*_\ PARITY\ AND\ PAR\ ERR\ ^INDICATORS (11/70\ ^only)"
+.UL PARITY
+indicators display the parity bits associated with the HIGH and LOW bytes of the word currently
+read from Cache memory.
+Indicators are off during write operation.
+.P
+.UL "PAR ERR"
+indicator is lit when a Unibus or a memory parity error is flagged.
+.HU "CONSOLE OPERATION \*_ MAPPING INDICATORS (11/70 only)"
+The 16, 18, and 22 indicate the bits used for Memory Management mapping
+for each cycle.
+.bp
+.HU "TAPE DRIVE OPERATION \*_ TU10"
+Please file Chapter 3 of
+.if n DEC (Rg.)
+.if t DEC\(rg
+MAINTENANCE MANUAL DEC-00-TU10S-DC here.
+.bp
+.HU "TAPE DRIVE OPERATION \*_ TU16"
+Please file Sections 1.7 and 1.8 of DEC MAINTENANCE MANUAL EK-TU16-MM-001
+here.
+.bp
+.HU "DISK DRIVE OPERATION \*_ RP03"
+Please file Section 3 of DEC ISS MANUAL UD002341-1 here.
+.bp
+.HU "DISK DRIVE OPERATION \*_ RP04"
+Please file Section 3 of DEC ISS MANUAL UD002511-1 here.
+.bp
+.HU "DISK DRIVE OPERATION \*_ RP05"
+Please file ``operation'' section of DEC ISS MANUAL for
+RP05 disk drive here.
+.bp
+.HU "DISK DRIVE OPERATION \*_ RP06"
+Please file ``operation'' section of DEC ISS MANUAL for
+RP06 disk drive here.

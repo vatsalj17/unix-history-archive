@@ -1,0 +1,66 @@
+# Additional stuff that EXPORT users have to pay extra for.
+
+SRC = /sys/source
+
+CC = cc
+CCFLAGS = -O -s
+
+AS = as
+
+LD = ld
+LDFLAGS = -s
+
+DD = TMP
+STICKY = OLD
+
+#	Dependencies: set name to RC to force recomp.
+CTIME =		# for ctime(III).
+CCDEP =		# for C compiler, CC.
+ASDEP =		# for assembler.
+YACCDEP=	# for yacc(I).
+LPWDEP =	# for -lPW lib.
+LSDEP =		# for -lS lib.
+LPDEP =		# for -lp lib.
+
+MAKE = make
+SH = sh -v
+
+
+# ------------
+#  Create /usr/bin.
+# ------------
+
+MAIN:		FIRST eqn troff
+	-rm -f $(DD)*
+	-@echo "\n***** Following Files Still Present:";  ls -l $(DD)*;  echo "\n"
+	-@echo "\n***** Following Sticky Files Still Present, Remove After Next Reboot:"; \
+			ls -l $(STICKY)*;  echo "\n"
+
+FIRST:
+	@echo "\n***** This .makefile is only for the extra eqn/troff PWB package."
+	@echo "***** If you haven't bought that package, it will fail. *****\n"
+
+eqn:		$(SRC)/s7/eqn/e*.[cgh] $(CCDEP) $(YACCDEP) $(LSDEP)
+	chdir $(SRC)/s7/eqn;  $(SH) eqnrc
+	-chdir $(SRC)/s7/eqn;  rm -f *.o
+	rm $(SRC)/s7/eqn/y.tab.c
+	mv $(SRC)/s7/eqn/a.out a.out
+	chmod 755 a.out
+	-chown bin a.out
+	-mv eqn $(DD)eqn
+	mv a.out eqn
+	ls -l eqn
+	-rm -f $(DD)*
+
+troff:		$(SRC)/s7/croff/[nt]*.[ch] $(CCDEP)
+	chdir $(SRC)/s7/croff;  $(SH) bothrc;  $(SH) trc;
+	-chdir $(SRC)/s7/croff;  rm -f *.o
+	mv $(SRC)/s7/croff/troff a.out
+	chmod 4755 a.out
+	-chown adm a.out
+	-mv troff $(DD)troff
+	mv a.out troff
+	ls -l troff
+	-rm -f $(DD)*
+
+RC:	# dummy name to force re-compiling things.

@@ -1,0 +1,63 @@
+.th CPIO V 5/31/77
+.sh NAME
+cpio \*- format of cpio archive
+.sh SYNOPSIS
+.tr _\(ul
+.nf
+.ft B
+struct {
+	int	h_magic,
+		h_dev,
+		h_ino,
+		h_mode,
+		h_uid,
+		h_gid,
+		h_nlink,
+		h_majmin;
+	long	h_mtime;
+	int	h_namesize;
+	long	h_filesize;
+	char	h_name[h_namesize rounded to word];
+	char	data[h_filesize rounded to word];
+} archive;
+.ft R
+.fi
+.sh DESCRIPTION
+The
+.it contents
+of each file is recorded in an element
+of the array of varying length structures,
+.it archive,
+together with other items describing the file.
+Every instance of 
+.it h_magic
+contains the constant 070707.
+The items
+.it h_dev
+through 
+.it h_mtime
+have meanings explained in
+.it stat\^\c
+(II).
+The length of the null-terminated pathname
+.it h_name,
+including the null byte,
+is given by
+.it h_namesize.
+.s3
+The last record
+of the
+.it archive
+always contains the name `TRAILER!!!'.
+Special files, directories, and the trailer are recorded
+with 
+.it
+h_filesize
+= 0.
+.sh "SEE ALSO"
+cpio(I), stat(II)
+.sh BUGS
+This format should be reconciled with
+.it archive\^\c
+(V).
+.tr __

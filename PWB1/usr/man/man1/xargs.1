@@ -1,0 +1,259 @@
+.tr ~
+.th XARGS I 5/31/77
+.sh NAME
+xargs \*- construct argument list(s) and execute command
+.sh SYNOPSIS
+.bd xargs
+[\|flags\|] [ command [\|initial-args\|] ]
+.sh DESCRIPTION
+.s3
+.it Xargs
+combines the fixed
+.it initial-args
+with args read from standard input to execute the specified
+.it command
+one or more times.
+The
+.it command
+can either be executed for each line of args read, with all args read
+for each automatically-determined group of (at most
+.it size
+characters of) args read, or for each user-specifiable
+.it number
+of args read.
+.s3
+Specifically,
+.it xargs
+reads the standard input for arguments,
+using them to construct one or more arg lists with
+.it initial-args
+(if any), and executes
+.it command
+with each
+such constructed argument list;
+the directory containing
+.it command,
+which may also be a Shell file, must be in one's
+.it .path
+file.
+If
+.it command
+is omitted,
+.bd /bin/echo
+is used.
+Excepting the use of the insert option (\c
+.bd \-i
+flag, see below),
+arguments read in from standard input are defined to be contiguous
+strings of characters delimited by one or more blanks, tabs, or newlines;
+however, quoted strings
+(including embedded blanks or tabs)
+may also form all or part of an argument.
+.s3
+Excepting the
+.bd "\-i"
+option, each argument list will be constructed starting with the
+.it initial-args,
+followed by an appropriate number of
+arguments read from standard input.
+Flags
+.bd "\-i, \-l,"
+and
+.bd \-n
+modify how args are selected for each command invocation;
+when none of these flags are coded, each arg list is built from the continuously-read args
+from standard input, up to
+.it size
+characters per list maximum, until
+there are no more args.
+When there are flag conflicts (e.g.,
+.bd \-l
+vs.
+.bd \-n\c
+), the last flag has precedence.
+Flag values are:
+.s3
+.lp 20 15
+.bn \-x
+Causes
+.it xargs
+to terminate if any arg list would be greater than
+.it size
+characters;
+.bd \-x
+is forced by the options
+.bd \-i
+and
+.bd \-l.
+When neither of the options
+.bd "\-i, \-l,"
+or
+.bd \-n
+are coded, the total length of all args must be within the
+.it size
+limit.
+.s3
+.lp 20 15
+.bn \-l
+.it Command
+is executed for each non-null line of args from standard input.
+A line is considered to end with the first newline
+.it unless
+the last character of the line is a blank or a tab; in either of these
+cases, the blank/tab signals continuation through the next non-null line.
+Option
+.bd \-x
+is forced.
+.s3
+.lp 20 15
+.bn \-i\fRreplstr\fR
+Insert mode:
+.it command
+is executed for each line from standard input,
+taking the entire line as one entity, inserting it in
+.it initial-args
+for each occurrence of
+.it replstr.
+A maximum of 5 args in
+.it initial-args
+may each contain one or more instances of
+.it replstr.
+Blanks and tabs at the beginning of each line are thrown
+away, as are empty lines.
+Constructed args may not grow larger than 255 characters, and option
+.bd \-x
+is also forced.
+`{\*|}' is assumed for
+.it replstr
+if not specified.
+.s3
+.lp 20 15
+.bn \-n\fRnumber\fR
+Execute
+.it command
+using as many standard input args as possible, up to
+.it number
+args maximum.
+Fewer args will be used if their total size is greater than
+.it size
+characters, and for the last invocation if there are fewer than
+.it number
+args remaining.
+If option
+.bd \-x
+is also coded, each
+.it number
+args must fit in the
+.it size
+limitation, else
+.it xargs
+terminates execution.
+.s3
+.lp 20 15
+.bn \-t
+Trace mode: the
+.it command
+and each constructed arg list are echoed to file descriptor 2
+just prior to their execution.
+.s3
+.lp 20 15
+.bn \-p
+Prompt mode: the user is asked whether to execute
+.it command
+each invocation. Trace mode (\fB\-t\fP) is turned on
+to print the command instance to be executed,
+followed by the prompt `\fB?.\|.\|.\fP'. A reply of
+.bd y
+(optionally followed by anything) will execute the command; anything else, including
+just a carriage return, skips that particular invocation of
+.it command.
+.s3
+.lp 20 15
+.bn \-s\fRsize\fR
+The maximum total size of each arg list is set to
+.it size
+characters;
+.it size
+must be a positive integer less than or equal to 470. If
+.bd \-s
+is not coded, 470 is taken as the default.
+Note that the character count for
+.it size
+includes one extra character for each arg and the count of characters in the command name.
+.s3
+.lp 20 15
+.bn \-e\fReofstr\fR
+.it Eofstr
+is taken as the logical end-of-file string.
+Underbar (\|_\|) is assumed for
+the logical EOF string
+if \fB\-e\fP is not coded.
+\fB\-e\fP with no
+.it eofstr
+coded turns off the logical EOF string capability
+(underbar is taken literally).
+.it Xargs
+reads standard input until either end-of-file or the logical EOF string is encountered.
+.i0
+.s3
+In args read from standard input,
+characters may be escaped (by a `\\') outside of quoted strings; quoted
+strings are stripped of the delimiting quotes, with the contents taken literally.
+.s3
+.it Xargs
+will terminate if either it receives a return code of minus one from,
+or if it cannot execute,
+.it command.
+.sh EXAMPLES
+.s3
+The following will copy all files from directory $1 to directory $2, and echo each move
+command just before doing it:
+.s3
+.ti +10
+ls \|$1 \|| \|xargs \|\-i \|\-t \|mv \|$1/{\*|} \|$2/{\*|}
+.s3
+The following will combine the output of the parenthesized commands onto one line,
+which is then echoed to the file \fIlog\fP:
+.s3
+.ti +10
+(logname; \|date; \|echo \|$0 \|$*) \|| \|xargs \|>>log
+.s3
+The user is asked which files in the current directory are to be archived
+and archives them into \fIarch\fP (1.) one at a time, or (2.) many at a time.
+.s3
+.ti +10
+1.\ \|\ \|ls \|| \|xargs \|\-p \|\-l \|ar \|r \|arch
+.br
+.ti +10
+2.\ \|\ \|ls \|| \|xargs \|\-p \|\-l \|| \|xargs \|ar \|r \|arch
+.s3
+The following will execute \fIcom\fP with successive
+pairs of args originally typed as Shell arguments:
+.s3
+.ti +10
+echo \|$* \|| \|xargs \|\-n2 \|com
+.sh DIAGNOSTICS
+.s3
+arg list too long
+.br
+.it command
+not executed or returned \-1
+.br
+Missing quote? <string>
+.br
+too many args with
+.it replstr
+.br
+insert-buffer overflow
+.br
+max arg size with insertion via
+.it replstr
+exceeded
+.br
+unknown option: <option>
+.br
+0 < max-line-size <= 470: <\-s option as coded>
+.br
+#args must be positive int: <\-n option as coded>
+.br
+can't read from tty for \-p

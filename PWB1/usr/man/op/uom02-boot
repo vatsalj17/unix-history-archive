@@ -1,0 +1,296 @@
+.if n .ds 0 \d8\u
+.if t .ds o \v'.4m'\s-38\s+3\v'-.4m'
+.if n .tr | 
+.tr }.
+.SC BOOT~PROCEDURES September~14~1977
+.HU "BEFORE BOOTING"
+Make sure the system is
+.I idle }\|\*F
+.FS
+The system is
+.I idle
+when no 
+.I user
+processes are running.
+.FE
+If 
+.I UNIX
+is running,
+the system should be cleared via the UNIX SHUTDOWN PROCEDURE.
+.P
+The normal boot performed is a ROM BOOT.
+The TAPE BOOT is performed (on the 11/45 only) when loading a
+special system, 
+or when a ROM BOOT is impossible.
+.P
+When performing any boot procedure the Power Key Switch
+should be in the
+.I POWER
+position, the Address Select Knob should be in the
+.I "CONSOLE PHYSICAL"
+position, and the Data Select Knob should be in the
+.I "DATA PATHS"
+position.
+.P
+Before performing any procedure, please read that
+procedure
+.UL completely.
+.sp
+.HU "PDP 11/45 DISK BOOT"
+.L1
+Halt system (set 
+.I ENABL/HALT
+toggle down).
+.L1
+Depress
+.I START
+(this resets the system).
+.br
+.ne 26
+.L1
+Set CONSOLE ADDRESS SWITCHES (\c
+.I CSW \|)
+to
+the address of your ROM or Boot Strap Loader (e.g.,
+173020\*o\|).\*F
+.FS
+See
+\fIromboot\fP\|(VIII)
+in the P\s-3WB/UNIX\s+3 User's Manual
+for further details.
+.FE
+.br
+.sv 25
+.os
+.bp
+.L1
+Depress 
+.I "LOAD ADDRESS"
+toggle.
+.L1
+Set 
+.I ENABL/HALT
+toggle up.
+.L1
+Set console switches to appropriate settings.
+.br
+.ne 28
+.L2
+For 
+.I SINGLE-USER ,
+set
+173030\*o \*a
+.I CSW \|}
+.br
+.sv 25
+.os
+.L2
+For 
+.I MULTI-USER ,
+leave
+.I CSW
+at
+original settings.
+.L1
+Depress 
+.I START \|}
+.L1
+At console, enter:\*F
+.FS
+Information or commands entered by the operator appear underlined.
+The symbol \*(cr is used throughout this procedure to indicate a
+.I "carriage return" }
+.FE
+.BS
+.BI
+#
+.UL "00"
+=
+.UL "unix\*(cr"
+.BE
+.sp
+You enter the two zeroes, the system name,\*F and the
+\*(cr, all on the same line as the
+.I # }
+.FS
+If you are booting a special system, the name
+of that special system may be substituted for ``unix''.
+See
+\fIdiskboot\fP\|(VIII)
+for complete boot instructions.
+.FE
+.bp
+.RM
+.HU PDP~11/70~ROM~BOOT
+.L1
+Halt system (set 
+.I ENABL/HALT
+toggle down).
+.L1
+Depress
+.I START
+(this resets the system).
+.br
+.ne 28
+.L1
+Set CONSOLE ADDRESS SWITCHES (\c
+.I CSW \|)
+to
+165000\*o.
+.br
+.sv 25
+.os
+.L1
+Depress 
+.I "LOAD ADDRESS"
+toggle.
+.L1
+Set 
+.I ENABL/HALT
+toggle up.
+.L1
+Set 
+.I CSW
+to
+000000\*o
+(all CONSOLE ADDRESS SWITCHES down).\*F
+.FS
+If the default boot address on your
+ROM is not set to the correct boot device, entering zeroes will fail.
+See
+\fI11/70boot\fP\|(VIII)
+for complete instructions.
+.FE
+.L1
+Depress
+.I START }
+.L1
+Wait for console to
+respond with a
+.I # }
+.bp
+.L1
+Set console switches to appropriate settings:
+.br
+.ne 28
+.L2
+For 
+.I SINGLE-USER ,
+set
+173030\*o \*a
+.I CSW \|}
+.br
+.sv 25
+.os
+.L2
+For 
+.I MULTI-USER ,
+leave console switches at original settings.
+.L1
+At console, enter:
+.BS
+.BI
+#
+.UL "00"
+=
+.UL "unix\*(cr"
+.BE
+.sp
+You enter the two zeroes, the system name,\*F and the \*(cr, all on the same line as the
+.I # }
+.FS
+If you are booting a special system, the name
+of that special system may be substituted for ``unix''.
+See
+\fIdiskboot\fP\|(VIII)
+for complete boot instructions.
+.FE
+.bp
+.RM
+.HU "11/45 TAPE BOOT"
+.L1
+After the system is halted (\c
+.I ENABL/HALT
+toggle down), depress
+.I START
+(this resets the system).
+.L1
+Mount the appropriate tape on the tape drive (make sure tape is ready at
+.I "load point" \|).
+.br
+.ne 28
+.L1
+Set 
+the address of your ROM or Boot Strap Loader
+in the console switches (e.g.,
+173000\*o).
+.br
+.sv 25
+.os
+.L1
+Depress
+.I "LOAD ADDRESS"
+toggle.
+.L1
+Set
+.I ENABL/HALT
+toggle up.
+.L1
+Set console switches to appropriate settings:
+.L2
+For
+.I SINGLE-USER ,
+set
+173030\*o \*a
+.I CSW }
+.L2
+For
+.I MULTI-USER ,
+leave console switches at original settings.
+.L1
+Depress
+.I START
+(system will give you
+.I = \|)}
+.ne 10
+.L1
+At console, enter:
+.L2
+If loading
+.I UNIX
+.BS
+.BI
+.UL "unix\*(cr"
+.BE
+.L2
+If loading 
+a special system
+.BS
+.BI
+.UL ``filename''\*(cr
+.br
+(where
+.I filename
+is the name of the system 
+being loaded, e.g.,``pwbx0409'' )
+.BE
+.RM
+.bp
+.HU "GENERAL PROCEDURES AFTER BOOTING"
+After the boot is completed,
+UNIX will print a ``restricted rights'' message and tell you the
+System Name and the amount of memory
+available.
+The latter should be checked against a previous boot
+to be sure that all of memory is available. Otherwise,
+serious problems can occur.
+.L1
+If booting as part of 
+.I "SYSTEM RECOVERY" ,
+continue SYSTEM RECOVERY PROCEDURE.
+.L1
+If bringing up
+.I UNIX
+.I MULTI-USER ,
+perform UNIX INITIALIZATION
+PROCEDURE.

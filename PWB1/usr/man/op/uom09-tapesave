@@ -1,0 +1,111 @@
+.tr {"
+.tr }.
+.SC TAPE~BACKUP~PROCEDURES September~14~1977
+In addition to the backup packs created in the 
+.B filesave ,
+tape backups for each filesystem should be created once a week.
+One filesystem fits on each tape used, provided you are using your tape media at 1600 bpi.
+These tapes serve as long-term storage for files.
+.P
+The best way to make a backup tape is to make a copy of a Backup disk.
+This way tapes can be made while the system is available to the users.
+.HU "HOW TO MAKE A BACKUP TAPE"
+.L1
+A backup pack for the filesystem of which you wish to make a tape copy must be
+physically mounted on the spare drive.
+If no spare drive is available, tapes must be made directly from the
+filesystem that is normally on-line, on a \fIsingle-user\fP system.
+This can be done immediately after the
+.B filesave.
+.L1
+Tapes and packs for each backup should be found ahead of time.
+Tapes should not be reused before approximately 6-8 weeks.
+The correct backup pack and tape to use can be determined by checking the
+Disk and Tape Log(s).
+.L1
+To create a backup tape for a filesystem a
+.B vc10
+is performed (see \fBvolcopy\fP\|(VIII)).\*F
+.FS
+During the creation of a backup tape errors may occur.
+If ``read errors'' occur, the reliability of the disk pack is questionable.
+In any case the backup tape will be bad.
+Detailed description of these errors may be found below under RESTORING FILES FROM TAPE.
+.FE
+The type of device you copy to depends on the type of
+tape drive used:
+.br
+.if t  .sp .5v
+.if n .sp .sp
+For a 800~bpi(TU10) tape drive, use:
+.br
+.in +5
+.nf
+.UL "vc10 \fIfsname\fP /dev/rrp\fIX n packid\fP /dev/rmt0 \fItapeid\fP"
+.fi
+.sp
+.in -5
+For a 1600~bpi(TU16) tape drive, use:
+.br
+.in +5
+.nf
+.UL "vc10 \fIfsname\fP /dev/rrp\fIX n packid\fP /dev/rmt1 \fItapeid\fP"
+.in -5
+.fi
+.BL
+.BI
+.I fsname
+is the filesystem name (e.g.,
+.I a1
+or
+.I root \|)
+}
+.BI
+.I X
+is the number of the disk drive on which the
+.I fsname
+or its backup is mounted.
+.BI
+.I n
+is the number of the section of the pack on which the filesystem resides (e.g.,
+.I 0 ,
+.I 1 ,
+.I 2 ,
+.I 3 ,
+.I 4 ,
+.I 5 ,
+or
+.I 6 \|)}
+.br
+Examples:
+.VL 35 15 1
+.LI /dev/rrp14
+section 4 on drive 1
+.LI /dev/rrp41
+section 1 on drive 4
+.LI /dev/rrp0
+section 0 on drive 0
+.LI /dev/rrp65
+section 5 on drive 6
+.LI /dev/rrp64
+section 4 on drive 6
+.LE 1
+.BI
+.I packid
+is the five-character external pack label (e.g., p0452).
+.BI
+.I tapeid
+is the five-character external tape label (e.g., t0352).
+.BE
+.br
+Example:
+.if t .sp .5v
+.if n .sp
+.in +5
+.nf
+vc10 root /dev/rrp0 p0450 /dev/rmt1 t0432
+.fi
+.in -5
+.L1
+After backup tapes are created, packs should be returned to original locations
+and the tape identification numbers should be recorded in your Tape Log.

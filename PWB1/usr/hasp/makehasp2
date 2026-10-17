@@ -1,0 +1,96 @@
+# Makefile for hasp2 dirctory.  Must be copied to there & executed there.
+
+#		$(USR) is target file system for hasp2 & rje directories.
+SRC = /sys/source
+USR = /usr
+
+
+
+# ------------
+#  Create /usr/hasp2, by linking to $(USR)/hasp.
+# ------------
+
+MAIN:		hasp2copy hasp2disp hasp2halt hasp2init hasp2main \
+		hasp2qer hasp2recv hasp2xmit \
+		lsl ptran ptrans scan \
+		snoop1 testjob usage \
+		info job pool
+
+
+hasp2copy:	$(USR)/hasp/haspcopy
+	-rm -f hasp2copy
+	ln $(USR)/hasp/haspcopy hasp2copy
+
+hasp2disp:	$(USR)/hasp/haspdisp
+	-rm -f hasp2disp
+	ln $(USR)/hasp/haspdisp hasp2disp
+
+hasp2halt:	$(USR)/hasp/hasphalt
+	-rm -f hasp2halt
+	ln $(USR)/hasp/hasphalt hasp2halt
+
+hasp2init:	$(USR)/hasp/haspinit
+	-rm -f hasp2init
+	ln $(USR)/hasp/haspinit hasp2init
+
+hasp2main:	$(USR)/hasp/haspmain
+	-rm -f hasp2main
+	ln $(USR)/hasp/haspmain hasp2main
+
+hasp2qer:	$(USR)/hasp/haspqer
+	-rm -f hasp2qer
+	ln $(USR)/hasp/haspqer hasp2qer
+
+hasp2recv:	$(USR)/hasp/hasprecv
+	-rm -f hasp2recv
+	ln $(USR)/hasp/hasprecv hasp2recv
+
+hasp2xmit:	$(USR)/hasp/haspxmit
+	-rm -f hasp2xmit
+	ln $(USR)/hasp/haspxmit hasp2xmit
+
+lsl:	$(USR)/hasp/lsl
+	-rm -f lsl
+	ln $(USR)/hasp/lsl lsl
+
+ptran:	$(USR)/hasp/ptran
+	-rm -f ptran
+	ln $(USR)/hasp/ptran ptran
+
+ptrans:	$(USR)/hasp/ptrans
+	-rm -f ptrans
+	ln $(USR)/hasp/ptrans ptrans
+
+scan:	$(USR)/hasp/scan
+	-rm -f scan
+	ln $(USR)/hasp/scan scan
+
+snoop1:	$(USR)/hasp/snoop1
+	-rm -f snoop1
+	ln $(USR)/hasp/snoop1 snoop1
+
+testjob:	$(USR)/hasp/testjob
+	-rm -f testjob
+	ln $(USR)/hasp/testjob testjob
+
+usage:	$(USR)/hasp/usage
+	-rm -f usage
+	ln $(USR)/hasp/usage usage
+
+info:
+	mkdir info
+	chmod 755 info
+	-chown rje info
+
+job:
+	mkdir job
+	chmod 777 job
+	-chown rje job
+
+pool:
+	mkdir pool
+	chmod 777 pool
+	-chown rje pool
+
+
+RC:	# dummy name to force re-compiling things.

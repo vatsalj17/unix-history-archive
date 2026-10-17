@@ -1,0 +1,155 @@
+= p ":/bin:/usr/bin:"
+= v nroff
+= w /usr/man/pib
+= x /usr/man
+= y /usr/man/upm
+= z /usr/man/a
+= e '$v -ma $c $f'
+onintr error
+while $1
+	expr substr $1 1 1 | = k
+	if "$k" != - -a "$k" != + break
+	switch "$1"
+	: -A
+		= x qqsv
+		= y qqsv
+		breaksw
+	: -hp
+		= e '$v -ma $c $f|hp'
+		= a h
+		breaksw
+	: -450
+		= e '$v -ma $c $f|450'
+		= a g
+		breaksw
+	: -g
+		= e '$v -rV1 -ma $c $f|gsi +12'
+		= a g
+		breaksw
+	: -v
+		shift
+		= b $1
+		= e 'vp -b$b "$v $c -rV2 -ma $f"'
+		= a v
+		breaksw
+	: -t
+		= e 'troff -mt -w $c $f'
+		= a t
+		breaksw
+	: -s
+		= j s
+		breaksw
+	: default
+		= c "$c $1"
+	endsw
+	shift
+end
+: section
+expr index 12345678 "$1" | = d
+if "$d" = "$1" then 
+	shift
+endif
+if "$1" = "pib" then
+	= e '$v -mpib $c $f'
+	shift
+	if "$1" = all -o -z "$1" then
+: 		echo man pib "["76"]" nn__ for PWB PIB PY-76-nn__
+: 		echo man pib 75 nn__ for PIB PY-75-nn__
+		echo current PIBs are the following
+		(chdir $w;grep "\.SB" 77/* /dev/null ;grep "\.SB" 76/* ;grep "\.SB" 75/* )\
+			|sort -r|sed -e 'sX^\(..\)/X\1-X'
+		goto DONE
+	endif
+	date +%y|= h
+	if "$1" = 75 -o "$1" = 76 -o "$1" = 77 then
+		= h $1
+		shift
+	endif
+	while $1
+		= f $w/$h/$1
+		if ! -r $f then
+			= i "$i $1"
+			shift
+			continue
+		endif
+		pump|pump|= u 
+		$e
+!
+		$u
+		shift
+	end
+	if -n "$i" then
+		echo "\n\n\n"
+		echo PIB $h - $i not found
+	endif
+	goto DONE
+endif
+uname|= g
+expr substr $g 1 4| = g
+while $1
+	if ! "$d" = "0" then
+		= f $x/man$d/$1.$d
+		if -r $f goto OK
+		= f $y/man$d/$1.$d
+		if -r $f goto OK
+		= f $z/man$d/$1.$d
+		if -r $f goto OK
+	endif
+	= f $x/man1/$1.1
+	if ! -r $f then
+		= i 2
+		while $i -le 8
+			= f $x/man$i/$1.$i
+			if -r $f goto OK
+			expr $i + 1 |= i
+		end
+		if $g = pwba then
+			= i 1
+			while $i -le 8
+				= f $y/man$i/$1.$i
+				if -r $f goto OK
+				expr $i + 1 |= i
+			end
+			= i 1
+			while $i -le 8
+				= f $z/man$i/$1.$i
+				if -r $f goto OK
+				expr $i + 1 |= i
+			end
+		endif
+		echo "\n\n\n"
+		echo man page for $1 not found
+		if -z "$2" then
+			 goto error
+		else
+		if "$a" = v -o "$a" = t -o "$a" = h -o "$j" = s then
+			shift;continue
+		else
+			echo ""
+			echo "\n\n\n\n\n"
+			echo "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			echo "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			echo "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			if "$a" = g echo "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+			shift
+			continue
+		endif
+		endif
+	endif
+	: OK
+	if -n "$j" then
+		(sed -e '1,/SYNOP/d' -e '/DESC/,$d' <$f;echo .pl1)|\
+			nroff -ma -
+		shift
+		continue
+	endif
+	pump|pump|= u 
+	$e
+!
+	$u
+	shift
+end
+: DONE
+exit 0
+: error
+exit 1

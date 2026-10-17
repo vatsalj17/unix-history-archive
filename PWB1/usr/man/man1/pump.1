@@ -1,0 +1,79 @@
+.th PUMP I 5/31/77
+.sh NAME
+pump \*- Shell data transfer command
+.sh SYNOPSIS
+.bd pump
+[
+.bd \*-\c
+[\c
+subchar] ]
+[
+.bd +
+]
+[ eofstr ]
+.sh DESCRIPTION
+.it Pump
+is a filter that copies its
+standard input to standard output with possible substitution of Shell
+arguments and variables.
+It reads its input to end-of-file, or until it finds
+.it eofstr
+alone on a line.
+If not specified,
+.it eofstr
+is assumed to be `!'.
+Normally, Shell variable and argument values are substituted in the
+data stream, using `$' as the character to indicate their presence.
+The argument `\*-' alone suppresses all substitution,
+.it `\*-subchar'
+causes
+.it subchar
+to be used as the indicator character for substitution in place of `$'.
+Escaping is handled as in double quoted(") strings: the indicator character may
+be hidden by preceding it with a `\\'.
+Otherwise, `\\' and other characters are transmitted unchanged.
+The `+' flag causes all leading tab characters in the input to
+be thrown away, in order to permit readable indentation
+of text and
+.it eofstr.
+.it Pump
+may be used interactively and in pipelines.
+A common use is to get variable values into editor scripts.
+If $a, $b, and $c have the values A, B, and C respectively,
+the two sequences below are equivalent:
+.s3
+.tr ||
+.nf
+.if n .ta 30
+.if t .ta 2.5i
+pump \*-~ \*v ed file	ed file
+1,$s/~a$/~b/	1,$s/A$/B/
+?~c?	?C?
+!	q
+.fi
+.s3
+The sequence above will work at the terminal as well as in Shell procedures.
+.it Pump
+is an efficient and convenient replacement for multiple uses of
+.it "echo(I);"
+e.g., the following are equivalent:
+.s3
+.nf
+.if n .ta 30
+.if t .ta 2.5i
+pump >file	echo "$1" >file
+$1	echo "$2" >>file
+$2
+!
+.fi
+.s3
+.it Pump
+is actually implemented inside the Shell, although it executes as
+a separate process.
+.sh "SEE ALSO"
+echo(I), sh(I)
+.sh BUGS
+The size of
+.it eofstr
+is limited to 95 bytes,
+and it may not begin with `+'.

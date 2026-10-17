@@ -1,0 +1,132 @@
+.th PLOT V 5/31/77
+.sh NAME
+plot \*- graphics interface
+.sh DESCRIPTION
+Files of this format are produced by routines
+described in 
+.it plot\^\c
+(III), and are interpreted for various devices
+by commands described in
+.it plot\^\c
+(I).
+A graphics file is a stream of plotting instructions.
+Each instruction consists of an ASCII letter
+usually followed by bytes of binary information.
+The instructions are executed in order.
+A point is designated by
+four bytes representing
+the
+x and y
+values;
+each value
+is a signed integer.
+The last designated point in an
+.bd "l, m, n,"
+or
+.bd p
+instruction becomes the `current point'
+for the next instruction.
+.s3
+Each of the following descriptions begins with the name
+of the corresponding routine in
+.it plot\^\c
+(III).
+.s3
+.lp +3 3
+\fBm\fR	move: The next four bytes give a new current point.
+.s3
+.lp +3 3
+\fBn\fR	cont: Draw a line from the current point to
+the point given by the next four bytes.
+Not effective in
+.it vt0.
+See
+.it plot\^\c
+(I).
+.s3
+.lp +3 3
+\fBp\fR	point: Plot the point given by the next four bytes.
+.s3
+.lp +3 3
+\fBl\fR	line: Draw a line from the point given by the next
+four bytes to the point given by the following four bytes.
+.s3
+.lp +3 3
+\fBt\fR	label: Place the following ASCII string so that its
+first character falls on the current point.
+The string is terminated by a newline.
+.s3
+.lp +3 3
+\fBa\fR	arc:
+The first four bytes give the center, the next four give the
+starting point,
+and the last four give the end point of a circular arc.
+The least significant coordinate of the end point is
+used only to determine the quadrant.
+The arc is drawn counter-clockwise.
+Effective only in
+.it vt0.
+.s3
+.lp +3 3
+\fBc\fR	circle:
+The first four bytes give the center of the circle,
+the next two the radius.
+Effective only in
+.it vt0.
+.s3
+.lp +3 3
+\fBe\fR	erase: Start another frame of output.
+.s3
+.lp +3 3
+\fBf\fR	linemod: Take the following string, up to a newline,
+as the style for drawing further lines.
+The styles are
+`dotted,'
+`solid,' `longdashed,' `shortdashed,' and `dotdashed.'
+Effective only in 
+.it tek.
+.s3
+.lp +3 3
+\fBd\fR	dot: Begin a horizontal dotted line at the
+point given by the next four bytes.
+The following two bytes are a signed x-increment, and the
+two after are a word count.
+The indicated number of words follow.
+A point is plotted for each 1-bit in the list,
+and skipped for each 0-bit.
+Each point is offset rightward by the x-increment.
+Effective only in
+.it vt0.
+.s3
+.lp +3 3
+\fBs\fR	space: The next four bytes give
+the lower left corner of the plotting area;
+the following four give the upper right corner.
+The plot will be magnified or reduced to fit
+the device as closely as possible.
+.s3
+Space settings that exactly fill the plotting area
+with unity scaling appear below for
+devices supported by the filters of
+.it plot\^\c
+(I).
+The upper limit is just outside the plotting area.
+In every case the plotting area is taken to be square;
+points outside may be displayable on
+devices whose face isn't square.
+.s3
+.if t .ds mu \(mu
+.if n .ds mu x
+.lp +9 6
+tek	space(0, 3120, 0, 3120);
+.lp +9 6
+t300	space(0, 4096, 0, 4096);
+.lp +9 6
+t300s	space(0, 4096, 0, 4096);
+.lp +9 6
+t450	space(0, 4096, 0,4096)
+.lp +9 6
+vt0	space(0, 2048, 0, 2048);
+.i0
+.sh "SEE ALSO"
+plot(I), plot(III), graph(I)

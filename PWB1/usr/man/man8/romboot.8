@@ -1,0 +1,127 @@
+.th "ROM BOOT" VIII 5/31/77
+.sh NAME
+romboot \*- special ROM bootstrap loaders
+.sh DESCRIPTION
+To bootstrap programs from various storage media, standard
+.if t \s-2DEC\s+2\(rg
+.if n DEC (Rg.)
+ROM
+bootstrap loaders are often used.
+However, such standard loaders may not be compatible with UNIX
+bootstrap programs or may not exist on a particular system.
+Thus, special bootstrap loaders were designed which may be cut into a programmable
+ROM (M792 read-only-memory) or manually toggled into memory.
+.s3
+Each program is position-independent,
+that is, it may be located anywhere in memory.
+Normally, it is loaded into high core to avoid being overwritten.
+Each reads one block from drive 0 into memory starting at address 0
+and then jumps to address 0.
+To minimize the size, each assumes that a system INIT was generated prior
+to execution.
+Also,
+the address of one of the device registers is used to set the byte
+count register or word count register.
+In each case, this will read in at least 256 words, which is the
+maximum size of bootstrap programs.
+.s3
+On disk devices, block 0 is read,
+on tape devices, one block from the current position.
+Thus, the tape should be positioned at the load point (endzone if
+DECtape)
+prior to booting.
+Also, the standard \s-2DEC\s+2 bootstrap loader
+for magnetic tape may be emulated by
+positioning the tape at the load point and executing the
+bootstrap loader twice.
+.s3
+By convention, on PWB 11/45 systems, address 773\ 000 is the start of a tape bootstrap
+loader, and 773\ 020 the start of a disk bootstrap loader.
+The actual loaders used depend on the particular hardware configuration.
+.sh "SEE ALSO"
+70boot(VIII), unixboot(VIII)
+.rs
+.bp
+.SP 5
+.nf
+.ta 3n 14n 20n 27n 42n
+TC11 \- DECtape
+	012700		mov	$tcba,r0
+	177346
+	010040		mov	r0,\-(r0)	/use tc addr for wc
+	012740		mov	$3,\-(r0)	/read bn forward
+	000003
+	105710	1:	tstb	(r0)	/wait for ready
+	002376		bge	1b
+	112710		movb	$5,(r0)	/read forward
+	000005
+	105710	1:	tstb	(r0)	/wait for ready
+	002376		bge	1b	
+	005007		clr	pc	/transfer to zero
+.sp
+.ne 10
+TU10 \- Magnetic Tape
+	012700		mov	$mtcma,r0
+	172526
+	010040		mov	r0,\-(r0)	/use mt addr for bc
+	012740		mov	$60003,\-(r0)	/read, 800 bpi, 9 track
+	060030
+	105710	1:	tstb	(r0)	/wait for ready
+	002376		bge	1b
+	005007		clr	pc	/transfer to zero
+.sp
+.ne 11
+TU16 \- Magnetic Tape
+	012700		mov	$mtwc,r0
+	172442
+	012760		mov	$1300,30(r0)	/set 800 bpi, PDP format
+	001300
+	000030
+	010010		mov	r0,(r0)	/use mt addr for wc
+	012740		mov	$71,\-(r0)	/read
+	000071
+	105710	1:	tstb	(r0)	/wait for ready
+	002376		bge	1b
+	005007		clr	pc	/transfer to zero
+.sp
+.ne 10
+RK05 \- \s-2DEC\s+2 pack
+	012700		mov	$rkda,r0
+	177412
+	005040		clr	\-(r0)
+	010040		mov	r0,\-(r0)	/use rk addr for wc
+	012740		mov	$5,\-(r0)	/read
+	000005
+	105710	1:	tstb	(r0)	/wait for ready
+	002376		bge	1b
+	005007		clr	pc	/transfer to zero
+.sp
+.ne 13
+RP03 \- Disk Pack
+	012700		mov	$rpmr,r0
+	176726
+	005040		clr	\-(r0)
+	005040		clr	\-(r0)
+	005040		clr	\-(r0)
+	010040		mov	r0,\-(r0)	/use rp addr for wc
+	012740		mov	$5,\-(r0)	/read
+	000005
+	105710	1:	tstb	(r0)	/wait for ready
+	002376		bge	1b
+	005007		clr	pc	/transfer to zero
+.sp
+.ne 15
+RP04 \- Disk Pack
+	012700		mov	$rpcs1,r0
+	176700
+	012720		mov	$21,(r0)+	/read\-in preset
+	000021
+	012760		mov	$10000,30(r0)	/set to 16\-bits/word
+	010000
+	000030
+	010010		mov	r0,(r0)	/use rp addr for wc
+	012740		mov	$71,\-(r0)	/read
+	000071
+	105710	1:	tstb	(r0)	/wait for ready
+	002376		bge	1b
+	005007		clr	pc	/transfer to zero
