@@ -1,0 +1,569 @@
+COHERENT to-do list.
+
+Projects.
+Floppy tape formatting.
+Floppy tape volume management, e.g. something wrapped around gtar
+for multiple archives on a single tape.
+boot from b: (new BIOSES allow this)
+stop locking out interrupts for so long in vt*kb.c when switching sessions.
+drop from release:  kb,nkb,aha,ss
+Udo's big crash bug - run qfind -b every 15 min or so, and start up
+some big compiles.
+Hal - drop -q from fsck
+--
+uutry - begin it with #!/bin/sh
+fix fdisk command
+Allow update to systems with /usr et al mounted elsewhere than /dev/root.
+r09 /bin/sh fd leak, fix forthcoming from Nigel.
+Move date grave in /etc/brc to past fsck because pipe is used, and/or
+  modify date to read /dev/cmos directly, no pipe needed.
+Fix mkfs so it doesn't screw up when handed an excessive inode spec in the
+  proto file, or on the command line.
+Fix badscan so it doesn't write a bogus number of inodes into a proto file,
+  and so it doesn't complain about SCSI devices.
+Use *volatile* prn in device drivers.
+Udo:  Why does RAM need to be cleared on startup?
+floppy drive bug
+KBBOOT thing for fred
+__kdmapdisp()
+newusr appends ",fred" to user line for /etc/group, even for the first user
+give getDmaMem alignment waste to the sysmem pool
+foo.sh:  foo.sh crash
+iomap bug
+ftCmd signal bug
+getDmaMem configuration stuff
+io multiple segv bug
+Add D_DMA, D_TAPE, D_NOBRKUP, D_MP to sys/conf.h for devflag support.
+Nkb drivers - come up with a usable table, even before initial ioctl.
+All kb drivers - get rid of ad hoc timing loops.
+Nkb drivers: do scan set 1 before reboot.
+Nigel: /bin/sh, /usr/bin/ksh
+Save non-ndp libs before eradicating them.
+Steve - libc.a, ndp, 4.2.6 (mktime.o)  _ut versions 8/4
+Hal - drop non vt console, non-ndp libs, l.out binaries, old aha/ss.
+Hal - drop cvmail, modify startup accordingly.
+Fred - ddk man pages 8/3
+ipcs and related from Nigel.
+pending: Udo: startup.gtz
+Init from Chris, 4-user license. (needs fixing) 9/27
+Support for install with mountable /usr, etc - 9/13.
+Udo - Mitsumi and Sony CD-ROM drivers.
+Sound drivers from Anash and Jim and Hal.
+Fred - cdplayer.tgz, cdu.tgz, iso9660.tgz, mcd.tgz, on mwc, 10/12
+Fred - headers.tar, on mwc, 10/12 (probably not for r14).
+BSD String functions - move from libsocket.a to libc.a.
+
+Bits received or minor mods.
+
+
+R14 changes.
+============================
+Fri Dec  2 14:10:33 1994 CST
+============================
+etc/conf/fva_conf/keeplist - workaround parse error in ld 12/02
+etc/build, etc/fdisk 12/02
+etc/conf/at/Driver.o - disk parameter fix 12/02
+conf/kbd/italian, conf/kbd/italian.c - udo's fix 12/02
+lib/libc.a, ndp/lib/libc.a - timezone fix 12/02
+sh - fix for page fault problem during install 12/02
+
+R13 changes.
+============================
+Tue Nov 15 17:42:23 1994 CST
+============================
+
+Louis - delete #define DEBUG 0 form vt{n}kb.c drivers. 10/15
+Louis - fudge GCC MINOR number in <common/feature.h> 10/15
+Fred - mtune comments improved 10/14
+Jim - add /etc/profile to /conf/upd_suppress 10/17
+Jim - add mlp backend/* and controls to /conf/upd_suppress 10/17
+Louis - modify set_enable_status in conf_lib.sh, modify hai/mkdev so
+  that host and target devices are disabled if hai parent module is disabled.
+Louis - fix pty/mkdev to update /etc/ttys and /etc/ttytype properly. 11/8
+Hal - add device nodes for sd2-sd7 to /dev on boot floppy 10/20
+Fred - uname fixed, on gort 11/07
+Hal - minor change to shell_lib.sh, on gort 10/20
+Hal - fdisk - update for revised drive parameter ops, make gcc clean 11/07
+Louis - at.c for large IDE drives, ideinfo, 10/20
+Fred - apropos and man as shell scripts, 10/11.
+Steve - cc 4.6.1 on mwc 10/13
+Steve - [nt]roff.gz V4.1.2 mwc!~/steve 10/28
+Steve - mlp 1.6 on mwc 11/08
+Steve - libc and ndplibc 4.2.8.
+/usr/lib/libsocket.a from Nigel 94/10/04 bits and supporting socket files
+  in /etc: hosts hosts.equiv hosts.lpd inetd.conf networks protocols services
+Hal - /etc/mkdev now a shell script 11/07
+Fred - new help and man, on diskette 11/05
+Louis - signal bug fix for kernel. 11.07
+Hal - coff.h, add prototype for coffnlist () 11/07
+Hal - delete aha tree from /etc/conf. 10/11
+Hal - conf_lib.sh - make enable/disable dialogue saner. 10/11
+Chris - revised hai tree: cdrom.h, haiscsi.h, hdioctl.h - 10/5
+Chris - changes to mtune, at driver from 7/20.
+Hal - ftload acknowledgment to Conner and CMS - 10/5
+Fred - specials.r updated for nroff and troff_ps - 10/4
+Steve - mlp 1.3 on mwc - 10/4
+Louis - /usr/bin/makedepend - 10/4
+ipc_cred.c - msg structs - world usable bug fix from Louis - 7/19
+Update Taylor uucp to 1.05 (from gamma), fred.  Change a few perms. 10/3
+Delete uucheck. 10/3
+Fred - delete /usr/src/examples, /usr/src/alien, /usr/src/local (was empty),
+  /usr/bin/?pac, /usr/bin/fmap - 10/3
+Steve - libc.a, ndp, 4.2.6 (mktime.o) 8/4
+Hal: change cp to mv for pre-file in /etc/install, add comments 7/20
+Steve: recompile pr.c for COFF - 7/6
+Aug 24 hmon from hcp.
+Fred - COH man pages on mwc 9/6, have cd stuff.
+Move helpfile and helpindex from /etc to /usr/lib.
+Fred - new help.c, doesn't need /etc/help* 9/8
+conf/Coh_420.post - delete linking of help files from /etc to /usr/lib.
+Hal - almanac in default /etc/profile.
+Hal - error message fixed in chmog and links.
+Fred - yet another epson, on gort - 9/13.
+Fred - yet another tmac.an, on gort - 9/13.
+Fred - new almanac file, on mwc - 9/13.
+Steve: /usr/lib/terminfo:
+	chmog 755 bin bin `find . -type d`
+	chmog 644 bin bin `find . -type f`
+Steve: /bin/prps V2.4 07/08.
+Steve: fwtable V1.7 7/11
+cut, nm updated to Steve's Jul 1 bits (for Comeau).
+Fred - replace /usr/spool/mlp/backend/[default disk] with the contents
+  of scripts.tgz. 9/23
+Steve - mlp 1.2 - 9/23
+Steve - cdmp update to 2.3, source and bin on mwc - 9/20
+Steve - cc 4.6.1, cpp, cc0 - 9/20
+Steve - [nt]roff - .ft with no args - 9/15
+fl386.c (diskette driver) cleaned up some for gcc cleanliness. hal 9/27
+directories at & under /usr/include were publicly writable. hal 9/27
+sh, ksh updated to plug fd leak, use new value for WNOHANG - nigel 9/25
+coh.386/null.c - dev_ps was mistakenly storing group number (as in
+/etc/group) for process owner rather than process group number (as in
+  controlling terminal) of the process. chris/hal 9/26
+Recompile sys1.c for iBCS compliant waitpid (), now that <sys/wait.h> is
+  fixed (WNOHANG was wrong) - hal 9/26
+Use white on red for default underline in vga console driver, as per
+  SVR4. Steve/9/23
+Add CON_BEEP_SPEC to console driver. - steve/hal 9/22.
+Delete /etc/unmkfs - 9/20
+Update taylor dial file as per Jim, 9/13 - 9/20
+tmac.s was 544 bin bin, make it 444 - steve, 6/28
+/bin/man from fwb - 9/20
+fdformat - clean up screen after -a - 9/20.
+/etc/makeboot added from Jim - 9/20
+<kernel/x86io.h> - turn on delay after i/o ops (see printer bug report) - 9/13
+Try to update to libc.a 4.2.6 - pending.
+Delete /bin/awk, /usr/gnu/bin/mawk, add /usr/bin/awk (new version) - 9/12
+Update /bin/diff, /bin/sort, /usr/lib/tmac.an from Fred - 9/12
+Add /bin/ftbad.
+Delete mlp files /usr/spool/mlp/backend/hpfilter,hppar,hpserial - 9/7
+/bin/tape - 9/2
+Steve/Fred - mlp : (8/29)
+Hal - mmu.c - add prototypes and change address argument type in address
+  type check routines to __caddr_t 9/02
+Hal - <limits.h> add OPEN_MAX for Udo/X 8/22
+Hal - fl386.c - fix end of volume code, make gcc clean. 8/19
+Louis - fs2.c:inode_find () - fix deadlock condition. 8/19
+Louis - add DFCLC to <sys/con.h> to fix DDI/DKI last close bug.
+Hal/Steve - fix bug where cursor invisibility state was clobbered on
+  switching virtual consoles. 8/4
+Hal - change _base to something else in function prototypes in
+  <stdlib.h>, <sys/fd.h>, <sys/stream.h> since _base is a macro in
+  <stdio.h> - 8/4
+libc, ndplibc 4.2.5 from mwc.  shadow.h from mwc (steve)
+<stdio.h> - _base define changed from _f2p to (_f2p->_bp) - 7/27
+Again, delete #include <common/xdebug.h> from <stdlib.h> - 7/27
+Remove remacc from /etc/passwd on boot floppy 7/27
+gnu cpio 2.3 (we were using 2.1) on /usr/bin 7/27
+zcmp zdiff zforce zgrep zmore znew from alien added to /usr/bin 7/27
+Use new libl with Nigel's fixed lex. 7/26
+conf/hai/src/mkdev.sh - change tape nodes from 600 sys sys to 666 sys
+  sys 7/26
+io.386/alx.c - make same SILO_CHAR_COUNT fix as was done in asy.c for larger
+  silo size. hal 7/26
+<stdio.h> PROTO stuff for Comeau [cf. _gt, _pt members] steve 7/26.
+<coff.h> change T_ARG to T_VOID and FILEHDR to FILHDR 7/1 from Steve
+  (original fix was 94/5/28).
+<common/_limits.h> with __TWOSCOMP fix from nigel, already on gort.
+aha/mkdev - make device nodes.  hai/mkdev - slight clarification
+  in message. 7/26
+vtkb.c, vtnkb.c, console/src/Space.spc, mtune - make separate shift
+  status for different virtual console sessions a tunable option. 7/26
+<math.h> - atof prototype, shielded by feature tests. on gort, 7/25.
+
+R12 changes.
+============================
+Sun Jul  3 15:44:24 1994 CDT
+============================
+floppy tape support - conf/ft/src/*, etc. 7/22
+<sys/silo.h>, conf/asy/src/asy.c - add count field to silo, increase
+  silo size from 256 to 512, to get async throughput above 2560 cps. 7/22
+<sys/ktty.h> - bump OHILIM from 128 to 500 to get async throughput above
+  1280 cps. 7/22
+move utime.h from <sys/> to <>, nigel, 7/20
+<sys/asy.h>, asy.c - fix two bugs reported by Chris Cox - DTR getting stuck
+  on after certain programs open then close, and port hanging in close if
+  flow control is stopped - 7/14
+tty.c - at Nigel's suggestion, further simplify calls to pollwake () - 7/6.
+conf/mtune : increase AHA bus off time default from 4 to 8 usec - due to
+  overruns seen during simultaneous floppy tape/aha access - 7/6
+conf/mtune : Defaults to 0 for HAI disk, tape, and cdrom spec, at Chris's
+  request - 7/6
+proc.c - hex scheduling fix from louis - 7/5
+tape.c, <sys/tape.h> - add support for floppy tape seek, tell, and status,
+  and add minimal error reporting on all ioctls, which was completely
+  absent - 7/4
+tty.c - delete bogus clearing of event's e_procp field before several
+  calls to pollwake () - 7/4
+sys6.c - usigsuspend fix from Nigel - 7/2
+exec.c - scheduling fix from louis - 6/24
+
+R11 changes.
+============================
+Fri Jun 24 07:27:00 1994 CDT
+============================
+proc.h, sched.h, clock.c, proc.c, proc_init.c from Louis - prioritized
+  scheduler - 6/24
+bio.c, buf.h from Louis, adding support for physiock - 6/24
+fdc.c, fdc765.h - assorted minor changes to improve floppy tape and
+  diskette support.
+mchinit.c - protected, nonpaged mode startup code extracted from mmu.c
+  and made gcc clean - 6/16
+/dev/freemem 444 sys sys added 6/15
+die.c - mchirp - wrap text back around to beginning of screen when it
+  goes past bottom right corner. 6/13
+Add /dev/trace, "tr" device, TRACE_BUF_LEN_SPEC tunable parameter - 6/09
+fd.c, fs1.c, fs3.c: Lock count imbalance bug fix from Louis, icopymd
+  message fix - 6/09
+vtnkb.c, nkb.c - omit two more ACK while idle messages - 6/07
+fdc.c - enhanced status reports, fix a return value - 5/27
+Bump RLOCK_SPEC from 100 to 200 for jrd. 5/26
+Prototypes for internal kernel (old DKI) functions:
+  <coh/ bio.h, defer.h, i386lib.h, misc.h, proc.h, timeout.h> - 5/26
+Minor fixes to <sys/dmac.h>, <sys/fdc765.h> - 5/26
+
+R10 changes.
+============================
+Mon May 23 12:48:12 1994 CDT
+============================
+Udo: curses.h, term.h, /usr/bin/infocmp, /usr/bin/tic
+vtnkb.c, nkb.c - omit ACK while idle message from distribution 5/23
+dmac.c - incorrectly reported residual of zero as 65536 - 5/23
+k0.s - fix 16/32 bit botch in real mode startup - 5/12
+/dev - delete "ss" devices (obsolete) from /dev - 5/10
+dmac.c - dmaseg () was limiting dma transfers to 4k of address space,
+  rather than 64k - reported by hcp. 5/10
+/etc/conf/bin/idcheck - remove range check at start of check_vector () -
+  5/10
+/lib/cpp V4.2 from Comeau update
+
+R09 changes.
+============================
+Fri May  6 10:13:53 1994 CDT
+============================
+/usr/lib/libcurses.a, /usr/lib/ndp/libcurses.a updates from Udo 5/4
+Go back to r08 /bin/sh because r09 shell a) didn't pause for read_input
+  b) left gunk pipes in file system. - 5/4
+/etc/profile - change [ -f /etc/motd ... to [ -s /etc/motd for udo - 5/4
+/etc/build.u - Owervite becomes Overwrite (Addison) - 5/4
+/usr/lib/terminfo/?/* - replaced from udo's bits - 5/4
+/etc/termcap - fix xterm from udo - 5/4
+/etc/conf/bin/devadm: mkconf.c, mdev.h: STARTUP->START
+<sys/confinfo.h>: add EXTERN_CLOSE declaration to DECLARE_OPEN_CLOSE.
+  - found by Alex Nash 5/4
+/etc/conf/install_conf/sdevice - defaults for echo,loop,dump were
+  botched to "Y", restore to "N" - 5/4
+/bin/newgrp fixed and made r-s-x-x root bin from nigel 5/2
+sh, ksh, makeactions, makemacros, yyparse.c, lex, make, printf from nigel 5/2
+/usr/lib/shell_lib.sh Nigel's change to find_file merged 5/2
+new ps, wc with proper exit status - Louis 5/2
+new mlp suite: /usr/bin/cancel and links, /usr/bin/lp and links,
+/usr/bin/lpsched - from Louis 5/2
+Change {r}sd[a-d] in /dev to 600 sys sys (were 755 root root).  Change
+  {r}sdx in /dev to 600 root root.  This matches the at/rat permissions &
+  ownership.  Fix hai and ss mkdev scripts to do this also.  - Chris 5/3
+4/24 man pages and helpfiles from Fred 5/3
+Elvis 1.8; invoke elvprsv from /etc/rc; elvprsv, elvrec are 4755 root root;
+  /usr/preserve is 755 root root - 5/2
+at.c - Chris's attempt to fix the __PTOV() bug in the at driver. 5/2
+/etc/termcap - Steve's DL fix for console scrolling, merged with
+  other Udo fixes. 5/2
+/etc/brc.install, /etc/brc.update, /etc/default/msdos, /bin/mount -
+  replaced the master files in the distribution with templates so as
+  to eliminate the kluge edits formerly required at the end of disk1
+  of any run of COH diskettes.  Mkdist script changed accordingly - 5/2
+<float.h> - Steve's fixes for DBL_MAX and DBL_MIN - 4/30
+cc 4.5.1 - 4/30
+k0.s - clear NT flag in PSW and improve A20 timing on startup;
+  Udo's fix for "boot ()" entry point; Ring 0 halt tweak.
+  "reboot" once again lives up to its name. - 4/29
+seg.c - Louis's fix for "while (sbrk(4096))" crash - 4/25
+bld script - "ft" switch added - 4/13
+/usr/include/coh/proc.h, timeout.h created as steps toward gcc-clean kernel
+  - 4/13
+coh.386/proc.c, timeout.c - prototypes added for a couple exports - 4/13
+conf/ft subtree added for floppy tape - 4/13
+conf/install_conf/src/mdevice,sdevice - add "ft" line for floppy tape 4/13
+conf/vtnkb/src/vtnkb.c - change some cc function declarations so function name
+  is at beginning of line - 4/13
+coh.386/fs1.c - change read-only message to give major and minor numbers 4/13
+coh.386/rlock.c, conf/cohmain/src/Space.spc, conf/install_conf/src/mtune -
+  make RLOCKS tunable via RLOCKS_SPEC.  4/6
+/bin/cc - update to 4.4.6 4/4
+/lib/ndp/libm.a - replace older version (I think it lacked fpu opcodes) 4/4
+/lib/libc.a, /lib/ndp/libc.a - go to version 4.2.4 from Steve 4/4
+/etc/install - pre-file and suppress file support added by Louis  4/4
+/etc/newusr - vsh is not a login shell, has been removed from list of
+  login shells 4/4
+new man pages, helpfiles, and almanac from fred 4/3
+<sys/shm.h>, <sys/msg.h>, <sys/sem.h> - restore BCS-compatible pid
+  length. 2/28
+var.c - enable ftime as an 0x28 COFF system call 2/25
+<sys/types.h> - u_long et al added per fred and nigel 2/24
+/etc/profile - don't display /etc/motd if HOME is /etc. 2/23
+/etc/.profile - warning if umount.all fails 2/23
+/etc/shutdown - don't umount (leave that for /etc/.profile) 2/23
+md.c, mtune, cohmain/Space.c - X00_fix/X00_FIX added over LG's objection
+  to select either 1) allow our Xfree1.2 to run (has bug) or 2) let
+  developers use real KDDELIO, KDDISABIO 3/23
+mmu.c - mapPhysUser bug (byte lengths not a multiple of page size
+  erroneously rounded down) reported by Harry Pulley fixed 3/23
+coh.386/lib/assert.c - Udo's change from void to __NO_RETURN__ for
+  return type of assert_fail{2} 3/22
+mmu.c - getDmaMem bug (addr returned included filler below the alignment
+  address) reported by Alex Nash fixed 3/15
+fsck - expanded "memory allocation failed" error message - 3/14
+null.c, null.h, hmon.c, updates from udo - 3/14
+sig.c - suppress_job_sigchld updated so zombies won't be created - 3/14
+Change copyright in sign-on from 1993 to 1994.
+bio.c was not cc-compilable 3/8
+cxtype not smart about non-Cyrix. 3/8
+fl386.c was not cc-compilable; separated conditional compiles for
+  first and second recal 3/8
+msg386.c was not cc-compilable 3/8
+
+R08 changes.
+============================
+Mon Mar  7 19:42:23 1994 CST
+============================
+/etc/install, /etc/install.u, /usr/lib/shell_lib.sh - Fix begin bug in
+  r07 set. 3/7.
+Terminfo/termcap from Udo. 3/7
+Fred's new man command.  Improved usage;  improved index handling and
+  reduced memory requirements. 3/7
+/etc/conf/bin/cxtype glitch fixed.  3/7
+mkdev scripts for hai, aha, ss, asy, lp - changes to prompts per Doug's
+  recommendations - 3/7
+Steve's fsck fix - no page fault if fsck'ing a cpio diskette. 3/7
+
+=== kernel changes ===
+
+__PTOV() fault - Louis found a way to get this to happen, doing two
+consecutive brk()'s with the same argument.  Changes to fakedma.c,
+seg.c and (cosmetic) to mmu.c. 3/7
+
+Minimize character device strangeness at expense of performance - at
+Louis's suggestion, substitute io_buffer_req() for ioreq(). 3/7
+
+Merge Steve's {vt}mmas.s fixes. 3/7
+
+R07 changes.
+============
+Wed Mar  2 22:57:14 1994 CST
+============================
+
+/bin/cc 4.4.4 from Steve, fix to -g COFF output - 3/2
+
+/usr/bin/gzip, v 1.2.4, et al from Udo - 3/2
+
+/etc/conf/cohmain/mkdev to ask about Cyrix upgrade cache enable.  Global
+variable identifying CPU type, like the one that identifies ndp type
+(partly for testing, so we can patch it to fake out the kernel).  Add
+<sys/cyrix.h> - 3/2
+
+Advanced printer configuration, slightly humanizes LPTEST etc. - 3/2
+
+/etc/conf/vtnkb/src/vtnkb.c, /etc/conf/vtkb/src/vtkb.c - fixed the
+venerable bug where you lose data when switching sessions on a system
+with two video adapters. - 3/2
+
+/etc/conf/bin/idbld to invoke /etc/conf/*/mkdev followed by
+/etc/conf/bin/idmkcoh - 3/2
+
+Write mkdev's for at, ss, aha - so customers can change configuration
+after installation. - 3/2
+
+hai/mkdev invoked even if hai driver was not enabled, for customers with
+SCSI tape but no SCSI hard drive. - 3/2
+
+qfind page fault as fixed by Louis and Steve - 2/28
+
+Louis's provisional fix for df, to coh.386/sys5.c - 2/28
+
+Nigel's curses bug fixes, merged by Louis.  This is provisional, because
+Louis has more merging to do plus bringing Nigel, Udo, and himself into
+sync with the latest version. /usr/lib/libcurses.a,
+/usr/lib/ndp/libcurses.a - 2/28
+
+Bogus  fd0: head=0 <Missing Address Mark>
+when loading diskette 4 of 5 of 5-1/4" set.  Don't fully understand this
+one, but the problem goes away when the first recal is replaced by a
+seek to cyl 0.  (There is still another recal, which I did not change,
+in case the controller is out of sync with cylinder id's.)  Changed
+conf/fdc/src/fdc.c and conf/fd/src/fl386.c.
+
+255 head fix for hai154x, recently received from Chris. Also increased
+timeout in aha_hareset() to 1000 msec. 2/28
+
+iomap fix and related changes, including addition of __kdenabio(),
+__kddisabio(), __kdaddio(), and __kddelio() to the ddk.  Make i386/md.c
+gcc clean.  Changes to i386/md.c, i386/k0.s, conf/vtnkb/src/vtnkb.c,
+conf/nkb/src/nkb.c, conf/kb/src/kb.c, <sys/coherent.h>, <sys/vtkd.h> 2/28
+
+/etc/install was still stupid about resuming failed partial installs.
+Install is now a shell script, with recovery/retry, shell escapes, usw.
+Also modem config stuff now merged into asy/mkdev where it belongs,
+pending Steve's smart mux driver.
+- changed /etc/install, /etc/install.u, /etc/conf/asy/mkdev on dalek 2/23
+
+SEG_PWT (0x08) added to <sys/mmu.h>
+- dalek updated 2/22
+
+At end of upgrade, system hangs while running /conf/pwsetup.
+- fix to /conf/pwsetup from Nigel written to dalek 2/22
+
+Drop version printf from at driver.
+- driver source changed 2/22
+
+System does not stay in single user mode, regardless of exit status from
+/etc/brc.  System does not allow users to stay logged in.  Both are due
+to a bug in /etc/profile.
+- dalek updated (/etc/profile, /etc/motd) 2/21
+
+
+CHANGES FROM COHERENT 4.2.05 TO 4.2.06.
+---------------------------------------
+Sat Feb 19 15:51:43 1994 CST
+---------------------------------------
+/bin/login recompiled with latest ctime.c [2/19]
+
+/etc/build fix by louis, allow badscan of SCSI devices (needed for
+  removables) [2/19]
+
+/etc/mklost+found, contributed by louis [2/19]
+
+/etc/profile - add display of /etc/motd [2/17]
+
+/etc/build allows option of skipping badscan on "at" drives - Louis [02/15]
+
+/bin/make changes from Nigel (something about Udo's imake problem),
+merged by Louis [02/15]
+
+/bin/sed changes from Nigel (improved error reporting), merged by Louis
+[02/15]
+
+/etc/conf/pty/mkdev added by Louis, hacked by Hal [02/15]
+
+/bin/cc 4.4.3 [02/15]
+
+/lib/libc.a, /lib/ndp/libc.a 4.2.3 [02/15]
+
+Remove #include <common/xdebug.h> from stdlib.h [02/15]
+
+/usr/lib/roff/troff_pcl/fwt/Co* - rebuilt with the new fwtable from TFM
+files provided by HP. [02/15]
+
+/bin/fwtable V1.6 [02/15]
+
+/bin/ld V4.2.1 [02/15]
+
+/bin/test fix of empty arg (for Comeau) from Steve, refixed by Hal for
+no args. [02/14]
+
+Merge Fred's sanitized header comments. [02/13]
+
+Fix va_start in stdarg.h so g++ likes it, Nigel [02/09]
+
+Conditionalize inlining of div and ldiv in stdlib.h as gcc liked it
+but g++ did not, Nigel [02/09].
+
+Suppress R4 stat struct in __stat.h, per Nigel due to problems
+with Udo's GNU install [02/09] - new
+	/usr/include/sys/stat.h, /usr/include/common/__stat.h
+
+Floppy disk device nodes corrected, per Louis [02/09]:
+	/dev/f9d[01] /dev/rf9d[01] deleted
+	/dev/{r}dsk/f[01]3[dh] deleted, and remade
+	/dev/{r}dsk/f[01]3[dh]{t} remade
+
+/bin/sh - exec fixed [01/21]
+
+/usr/bin/ksh - arg 1, SIGINT, SIGQUIT fixed [01/21]
+
+Revised man pages from fred [last updated 01/10].
+
+Delete /dev/f9d[01] as the floppy driver no longer supports them [01/21].
+
+/bin/df - Louis's fix to use fstat/fstatfs instead of opening raw device;
+	goodbye DF_OLD, OLDSTYLE, etc.
+
+/usr/bin/vi (and links) - "cc" command didn't work properly
+
+/etc/wall - udo's fix to not hang when trying to access stuck pty's
+
+/usr/lib/uucp/sys - Louis's fix, adding remote-send/remote-receive/
+  local-send/local-receive lines to mwcbbs entry.
+
+/etc/conf/hai/mkdev - Fix screwup of "ID" vs. "i" variables.
+
+/etc/newusr - Fix add_user/newusr name problem.
+
+/usr/include/math.h - New prototypes for frexp, ldexp:
+	double		frexp		__PROTO ((double _x, int * _iptr));
+	double		ldexp		__PROTO ((double _x, int _i));
+
+/usr/include/limits.h - __SCHAR_MIN was misspelled.
+
+KERNEL (Includes some header changes.)
+--------------------------------------
+<sys/mmu.h>, i386/ff.c - __PTOV() now complains if given a bad physical
+  address, instead of simply nuking the system at an unknown time in
+  the future;  also, turn on PCD bit in map_pv(). [2/19]
+
+i386/trap.c, i386/k0.s, coh.386/coh.make, coh.386/cyrix.c coh.386/cyrix0.s,
+  coh.386/main.c - recognize Cyrix parts, optionally enable cache [2/19]
+
+<sys/buf.h>, coh.386/bio.c, coh.386/fd.c, coh.386/fs[123].c,
+  coh.386/sys3.c, conf/at/src/at.c, conf/fd/src/fl386.c,
+  conf/kb/src/kb.c - Louis's file system fixes from Jan, 1994 [2/19]
+
+i386/trap.c - fix syscall # in error message, Louis's [2/19]
+
+<kernel/x86io.h>, i386/lib/rep* - replace rep io instructions with
+  explicit loops, Nigel [2/19]
+
+<sys/msg.h>, <kernel/proc_lib.h>, coh.386/lib/proc_pid.c,
+  coh.386/lib/clib.make, conf/msg/src/msg386.c, conf/msg/src/Space.spc -
+  current_pid() fix by Nigel [2/18]
+
+conf/install_conf/src/mtune - add MSGQID_SPEC, MSGQSZ_SPEC [2/17]
+
+<kernel/ddi_cpu.h>,clock.c,main.c,proc.c,var.c - add cpu idle stuff [2/17]
+
+<kernel/proc_lib.h>,<kernel/sig_lib.h>,coh.386/sig.c,coh.386/lib/proc_find.c,
+  coh.386/lib/proc_setrun.c - add Nigel's signaling fixes [2/17]
+
+io.386/albaud.c - revise test for uart present since newer 16550's no longer
+  follow spec of IIR = xx00 xxxx. [02/12]
+
+conf/console/src/mkdev.sh, Space.spc, conf/install_conf/src/mtune,
+  conf/bin/src/kbdselect/kbdselect.c, conf/kbd/kblist,
+  conf/vtnkb/src/vtnkb.c - put Greek stuff back into installation [1/25]
+
+conf/hai/src/hai154x.c - hard reset rather than soft in hareset() [1/23]
+
+conf/hai/src/hai154x.c - condition-out is_154x()
+
+coh.386/proc.c, coh.386/lib/proc_init.c - fix for occasional ps panic
+
+i386/mmu.c - clear u area on startup (fix some install failures)

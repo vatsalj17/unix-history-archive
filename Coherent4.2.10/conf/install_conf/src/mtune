@@ -1,0 +1,380 @@
+# /etc/conf/install_conf/src/mtune
+# Tue Dec 20 22:15:23 1994 CST
+
+# The comments in this file describe the parameters within the kernel that
+# you can set to "tune" the behavior of the kernel and its associated
+# drivers.  These parameters are described here rather than in the COHERENT
+# manual because they change from time to time; as much as possible, we wish
+# to have the kernel's description files document themselves.
+
+# Each variable is described with has the following fields:
+
+# Parameter	 min	default	 max
+#  name	 	value	value	value
+
+# For example, consider the entry:
+
+# LOOP_COUNT	0	10	255
+
+# The name of the variable is "LOOP_COUNT".  Its minimum value is 0,
+# its maximum value is 255, and its default value is 10.
+# In most instances, editing a variable's entry means adjust its
+# default value; this is the value that is built into the kernel when
+# when you link it.  (You can use the command "patch" to "hot patch" an
+# existing kernel, but you should do this only in the last extremity -
+# with this command, you can easily damage your kernel beyond repair.)
+# You must not change the name of a variable; and in most instances
+# you must not change a variable's minimum or maximum values.
+
+# The following describes the tunable variables:
+
+# Number of loop-around connections supported in the "loopback" sample
+# STREAMS driver if that driver is configured into a kernel.
+LOOP_COUNT	0	10	255
+
+# Number of times that the "dump" sample STREAMS debugging module can be
+# pushed, system-wide, if that driver is configured into a kernel.
+DUMP_USERS	0	2	4
+
+# STREAMS_HEAP sets the amount of kernel memory that is allocated for use
+# in STREAMS messages.  Note that this is in addition to the buffer cache
+# and the memory allocated by the variable ALLSIZE.
+STREAMS_HEAP	8192	32768	131072
+
+# The next two variables set the maximum permissible size of, respectively,
+# a STREAMS message control block and a STREAMS message data block.
+STREAMS_MAXCTL	64	1024	8192
+STREAMS_MAXDATA	64	4096	16384
+
+# The next two variables set the number of virtual consoles for,
+# respectively, monochrome and color monitors.
+MONO_COUNT	0	4	8
+VGA_COUNT	0	4	8
+
+# The following variable sets the number of 512-byte blocks in the kernel's
+# buffer cache.  If this is set to zero, the kernel sets the size of
+# the buffer cache on its own, based on percentage of available RAM.
+NBUF_SPEC	0	0	5000
+
+# The next variable sets the number of hash queues that the kernel uses
+# to look up blocks in its buffer cache.  If this is set to zero, the
+# kernel uses the next lowest prime number below the number of blocks
+# in its buffer cache.
+NHASH_SPEC	0	1021	5000
+
+# This variable sets the number of in-core inode entries that the kernel
+# uses to cache file meta-data.
+NINODE_SPEC	0	256	1024
+
+# This variable sets the number of clists that the kernel uses.  clists are
+# used in almost all processing of console and serial I/O.
+NCLIST_SPEC	0	64	1024
+
+# This variable sets the total amount of memory reserved for the kernel's
+# pool of dynamically allocated memory (i.e., "kernel memory" or "kernel
+# space").  If this variable is set to zero, the kernel chooses a value
+# based on a rough percentage of memory avaiable when you boot your system.
+ALLSIZE_SPEC	0	0	4194304
+
+# This variable specifies the amount of memory in the "physical memory pool".
+# It applies only to certain special kinds of device driver that use direct
+# memory access (DMA), notably floppy tape.
+PHYS_MEM_SPEC	0	0	4194304
+
+# The sets the number of AT-style hard-disk drives in your system. Under
+# normal circumstances, the kernel reads this information from your system's
+# CMOS; thus, you need to set this variable only if your system has unusual
+# or incompatible hardware.
+AT_DRIVE_CT	0	0	2
+
+# These following two variables set, respectively, the number of the device
+# that holds the root file system, and the number of the device on which the
+# kernel should store pipes.  Each is a 16-bit number; the upper eight bits
+# give the device's major number, and the lower eight bits gives its minor
+# number.  Under normal circumstances, the AT tertiary boot program "tboot"
+# tells the kernel the number of the device from which it was booted; if
+# these variables are set to zero, the kernel assumes that the root file
+# system resides on that device, and that it should write its pipes to that
+# device.  Setting either value to non-zero overrides this behavior.
+# NB - be *very* careful when you set this variable!
+PIPEDEV_SPEC	0	0	65536
+ROOTDEV_SPEC	0	0	65536
+
+# If the following variable is set to a non-zero value, then the root
+# file system is mounted read-only.  This variable normally is set only
+# in the kernel that installs COHERENT from its floppy-disk distribution.
+# If you make the root file system to be read-only, then you must set
+# variable PIPEDEV_SPEC to the number of the device onto which the kernel
+# will write its pipes; if you fail to do so, the kernel you built will
+# not work.
+RONFLAG_SPEC	0	0	1
+
+# The following variables set magic values for shared memory and semaphores.
+# For details, see the Lexicon entries for "shmget()" and "semget()".
+SHMMNI_SPEC	10	100	400
+SHMMAX_SPEC	4096	65536	4194304
+SEMMNI_SPEC	10	10	1000
+SEMMNS_SPEC	60	60	6000
+SEMMSL_SPEC	25	25	2500
+SEMVMX_SPEC	32767	32767	65535
+
+# Certain systems have a problem with the floppy-disk change line.  This
+# causes them always to signal that the disk has been changed, which in turn
+# causes excessive reseeking.  This variable disables the extra recalibration.
+FL_DSK_CH_PROB	0	1	1
+
+# The following variables control a variety of aspects of the hardware
+# interface to the parallel printer port for the parallel-port driver
+# "lp".  For details on how to use them, see the Lexicon entry for "printer".
+LPTIME_SPEC	1	4	1000
+LPWAIT_SPEC	1	400	4194304
+LPTEST_SPEC	0	1	1
+LPT1_LP0_BUG	0	0	1
+LPT2_LP0_BUG	0	0	1
+LPT3_LP0_BUG	0	0	1
+
+LPT1_BASE_SPEC	0	0x3BC	0xFFF
+LPT2_BASE_SPEC	0	0x378	0xFFF
+LPT3_BASE_SPEC	0	0x278	0xFFF
+
+# The following variables affect the way certain file-system algorithms
+# manage the free-block list, and how far ahead the kernel tries to read
+# when an application appears to be doing sequential file I/O.
+FS_SORT_BLOCKS	0	1	1
+FS_READ_AHEAD	-1	4	8
+
+# If the following flag is set to a non-zero value, the kernel permits an
+# application to catch the signal SIGSEGV.  Few applications need to do this;
+# poorly written software may cause runaway segmentation violations if allowed
+# to catch this signal, which is why this is configured off by default.
+MISC_CATCH_SEGV	0	0	1
+
+# Number of pseudoterminal devices (pty's) - used by window managers
+# and other multisession apps.
+NUPTY_SPEC	0	8	128
+
+# If this flag is set to a non-zero value, the kernel sends reports of
+# process traps and page faults to the system console.
+MISC_CONSOLE_TRAP	0	1	1
+
+# If this flag is set to a non-zero value, the kernel sends reports of
+# unexpected non-maskable interrupts to the system console.  Systems
+# such as notebooks with power-management hardware send such interrupts to
+# the BIOS.
+MISC_NMI_TRAP	0	1	1
+
+# The following variables control settings for the floating-point coprocessor
+# and emulator settings - x87 family only.  NDP_CW sets the default coprocessor
+# control word at the start of a user process:  iBCS2 specifies a default of
+# 0x0272.  If NDP_DUMP is set to a non-zero value, the kernel dumps to the
+# console all register settings whenever a floating-point exception or
+# emulator trap occurs.  NDP_TYPE is as specified in <sys/ndp.h>.
+NDP_CW		0	0x0272	0xFFFF
+NDP_DUMP	0	0	1
+NDP_TYPE	0	0	4
+
+# If this flag is set to a non-zero value, the kernel dumps to the console
+# the value of each register whenever a user trap occurs, and attempts
+# to display a backtrace of the chain of calls within the user-mode process.
+USER_BACKTRACE	0	1	1
+
+# Hard disk translation parameters, aha driver.
+AHA_SD_HDS_SPEC		1	0	255
+AHA_SD_SPT_SPEC		1	0	255
+
+####
+# Hard disk controller settings, at driver.
+#
+# ATSREG_SPEC:     3f6=>normal polling; 1f7=>alternate polling.
+# ATNSECMAX_SPEC:  The maximum number of sectors the at driver
+#   will look ahead in the request queue when building a multi-sector
+#   transfer command.  The most common hardware limit is 256 sectors.
+####
+ATSECS_SPEC		1	6	300
+ATSREG_SPEC		0x1f7	0x3f6	0x3f6
+ATNSECMAX_SPEC		0	256	256
+
+# Host adapter settings, ss driver.
+# SS_HBATYPE is 
+#   0x00 - ST01/ST02
+#   0x80 - TMC-845/850/860/875/885
+#   0x40 - TMC-840/841/880/881
+# In SS_DISK_SPEC, 1's bit is on for SCSI id 0, 2's bit for SCSI id 1, etc.
+SS_DISK_SPEC		0	1	255
+SS_HBATYPE		0	0	0x80
+SS_INT_SPEC		1	5	15
+SS_BASE_SPEC		0xA000	0xCA00	0xFFFF
+
+# System internals.
+BAR_BAR		-0x80000000	0	0x7fffffff
+BAR_ENTRY	-0x80000000	0	0x7fffffff
+
+# Greek keyboard option in vtnkb.  1=enabled, 0=disabled.
+VTGREEK_SPEC	0		0	1
+
+# The following parameters specify the number of message queues, and the
+# default maximum size of each message queue in bytes.
+MSGQID_SPEC	1	50	400
+MSGQSZ_SPEC	1	4096	8192
+
+# If CPU is a Cyrix upgrade part (not a Cyrix OEM part), then internal cache
+# may be turned on from software.  Set CYRIX_CACHE_SPEC to 1 to enable
+# internal cache if Cyrix upgrade part detected.
+# Set CYRIX_CPU_SPEC nonzero to defeat Cyrix CPU autosensing by COHERENT.
+CYRIX_CACHE_SPEC	0	0	1
+CYRIX_CPU_SPEC		0	0	0xFFFF
+
+# Setting X00_FIX nonzero disables console ioctls KDDELIO and KDDISABIO.
+# Do this when running the Xfree1.2 MWC X11 port to get around a minor bug.
+X00_FIX			0	1	1
+
+# Number of record locks, system wide.
+RLOCKS_SPEC		10	200	1000
+
+# Number of 32-kilobyte floppy-tape segment buffers.
+# This takes up space only if the "ft" device is enabled in file sdevice.
+FT_NBUF_SPEC		2	32	127
+
+# Some floppy-tape drives support soft select.  There are two protocols.
+# 0=hard select.
+# 1=Archive/Conner/Mountain/Summit.
+# 2=Colorado Memory Systems.
+FT_SOFT_SELECT_SPEC	0	1	2
+
+# Set this to make the driver try to configure soft select or unit number.
+FT_AUTO_CONFIG_SPEC	0	1	1
+
+# Size of trace buffer, if allocated.
+TRACE_BUF_LEN_SPEC	1024	65536	1048576
+
+# Keep separate shift status for different virtual console sessions if nonzero.
+SEP_SHIFT		0	0	1
+
+# Set to 1 to enable audible beep from console driver, 0 for silent.
+CON_BEEP_SPEC		0	1	1
+
+###
+# hai: These variable tune the host-adapter-independent SCSI driver. 
+#
+# To tune the variables given here, either run script /etc/conf/hai/mkdev,
+# or use the command tc/conf/bin/idtune to tune the values by hand.  mkdev
+# should work for most users, but hand tuning will be needed by who have
+# hardware that is similar but different, e.g. "clones", which always seems
+# to differ in some slight way from the real McCoy. No matter what you do,
+# never change the default values in this file. For details, see the Lexicon
+# entries for mtune, stune, and hai.
+###
+
+###
+# Variables needed for all host adapters.  They are bitmapped
+# values that show which types of devices are installed where. Set the
+# bits for your particular hardware. For example:
+#
+#	My hard disks are at id's 0 and 1 so HAI_DISK_SPEC gets 3.
+#	My Tape drive is id:2 so HAI_TAPE_SPEC gets 4.
+#	My CD-ROM drive is at id 3 so HAI_CDROM_SPEC gets 8.
+###
+HAI_DISK_SPEC	0	0	255
+HAI_TAPE_SPEC	0	0	255
+HAI_CDROM_SPEC	0	0	255
+
+###
+# HAI_HAINDEX_SPEC is the index into the master host adapter table for 
+# the host adapter module for your system. The current index table is listed
+# below.
+#
+#	index		host module
+#	-----		-----------
+#	  0		hai154x
+#	  1		haiss
+###
+HAI_HAINDEX_SPEC	0	0	1
+
+###
+# HAI154X: Tunables for the Adaptec 154x controllers.
+#
+# These values tune the Adaptec 154x Host adapters. Everything
+# here is configured for the defaults. The BUSONTIME/BUSOFFTIME
+# settings are in microseconds and reflect the defaults established
+# at reset time by the host adapter. The XFERSPEED parameter is set
+# is set from the following table:
+#
+# 	Setting:	Speed
+# 	--------	---------
+# 	0		 5.0 Mb/s
+# 	1		 6.7 Mb/s
+# 	2		 8.0 Mb/s
+# 	3		10.0 Mb/s
+# 	4		 5.7 Mb/s *
+#
+# Other values are possible here which custom tune the DMA read and write
+# Speeds individualy. For more information see the AHA-1540B/AHA-1542B 
+# Technical Reference Manual from Adaptec (408)945-8600.
+###
+HAI154X_BASE		0x100	0x330	0xfff
+HAI154X_INTR		1	11	15
+HAI154X_DMA		0	5	7
+HAI154X_HAID		0	7	7
+HAI154X_XFERSPEED	0	0	4
+HAI154X_BUSOFFTIME	2	11	15
+HAI154X_BUSONTIME	1	4	64
+
+###
+# HAISS: Tunables for the TMC-950/9C50 base host adapters.
+#
+# 
+# TYPE is the type of the card The value comes from this table:
+#
+#	Type	Controller
+#	----	--------------------------------------
+#	0	Seagate ST01/02
+#	1	Future Domain TMC-845/850/860/875/885
+#	2	Future Domain TMC-840/841/880/881
+#
+# INTR is the interrupt vector the card is set to. You can use this
+# card under DOS without the interrupt vector on you will get slow
+# performance or none at all. Double check this.
+#
+# BASE is the base address for the card. This is the base address of the
+# card if you have a Future Domain host adapter or a Seagate with a 
+# 8k ROM. Later Seagates had a 16k. If you have a 16k ROM add 200 hex to
+# to the base address of the card for this tunable. Ex: If you have a Seagate
+# with a 16k ROM jumpered for C800 (the default) it's base address is 
+# C800 hex + 0200 hex or CA00 hex.
+#
+# SLOWDEV is a bitmask of devices that require slow REQ/ACK handshake on
+# every byte transfered. So far this is only tape drives and CD-ROM
+# drives.
+###
+HAISS_TYPE	0	0	2
+HAISS_INTR	3	5	15
+HAISS_BASE	0xa000	0xca00	0xe000
+HAISS_SLOWDEV	0	0	255
+
+###
+# The CACHE variable sets the size of the tape cache to use.
+# Take note that PHYS_MEM_SPEC must but tuned at least this big or
+# the tape driver will not be able to initialize itself.
+#
+# The TDCBUG variable turns on special processing for Tandberg
+# TDC3600 drives. This variable is a bitmask like HAISS_SLOWDEV and
+# HAI_TAPE_SPEC.
+###
+HAICT_CACHE		0	16384	262144
+HAICT_TDCBUG		0	0	255
+
+###
+# These parameters control the heads/sectors per track parameters for 
+# The disk driver. These values shown here are the default values for
+# adaptec cards. They are also the defaults for all drives which are
+# not patched to different values by the BIOS. These configure the
+# system for 1 MB per cylinder. Our fdisk program will limit users to
+# the first 1 Gigabyte on any drive over a Gigabyte so you may have
+# to change these.
+###
+HAISD_MAXREQ		0	16	32
+
+HAI_SD_HDS_SPEC		1	64	255
+HAI_SD_SPT_SPEC		1	32	255
+
+# end of /etc/conf/mtune.

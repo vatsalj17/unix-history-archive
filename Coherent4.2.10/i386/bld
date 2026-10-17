@@ -1,0 +1,110 @@
+# bld - make 386 kernel
+#
+# requires a running 386 kernel
+#
+
+sync
+unset TARGET
+
+report_error () {
+	echo -n bld: $* 1>&2
+}
+
+. /usr/lib/shell_lib.sh
+source_path $0 "HOME_DIR="
+parent_of $HOME_DIR "TOP_DIR="
+CONF_PATH=$TOP_DIR/conf:$TOP_DIR/conf/install_conf:$CONF_PATH
+
+export K386LIB=$TOP_DIR/conf/lib
+echo "K386LIB=$K386LIB"
+
+GCC=
+while [ $# -gt 0 ]
+do
+	ARG=$1
+	case $ARG in
+
+	fha | fva | lambda | gort | ft)
+		CONFDIR="$TOP_DIR/conf/${ARG}_conf"
+		TARGET=${TARGET-/tmp/${ARG}_kernel}
+		;;
+
+	gcc)	GCC=gcc
+		;;
+
+	sc)	CFLAGS=${CFLAGS}" -DGORT"
+		;;
+
+	ticom)	# piggy's Tiwanese 4 port card
+		PATCH="${PATCH} AL_ADDR+8=0x2b0 AL_ADDR+12=0x2b8"
+		;;
+
+	xl)	PATCH="${PATCH} ftCon=ftxlcon PHYS_MEM=589824"
+		;;
+
+	-c)	shift
+		CFLAGS="$CFLAGS $1"
+		;;
+
+	--conf)	shift
+		CONFDIR="$TOP_DIR/conf/$1"
+		;;
+
+	-f)	FORCE_KERNEL=force_kernel
+		;;
+
+	-o)	shift
+		TARGET=$1
+		;;
+
+	-d|-n)	MAKE_SETTINGS="$MAKE_SETTINGS $ARG";
+		;;
+	*=*)	PATCH="${PATCH} ${ARG}"
+		;;
+
+	*)
+echo "Usage:  $0  {fha | fva | sc | ticom}"
+echo "	{-o target} {-conf confdir} {-c cflags} {addr=value}..."
+		exit 1
+		;;
+	esac
+	shift
+done
+
+if [ -f "$TARGET" -a "$FORCE_KERNEL" = force_kernel ]; then
+	rm $TARGET
+fi
+
+make $MAKE_SETTINGS CFLAGS="${CFLAGS}" $GCC || exit 1
+
+TARGET=${TARGET-/at386.test}
+CONF_PATH=$CONFDIR:$CONF_PATH
+
+# Locate all of the individual configuration files
+
+find_and_set () {
+	find_file $1 $CONF_PATH "$2=" \
+		"report_error File \'$1\' is not found in $CONF_PATH; exit 126"
+}
+
+find_and_set mtune MTUNE_FILE
+find_and_set stune STUNE_FILE
+find_and_set mdevice MDEV_FILE
+find_and_set sdevice SDEV_FILE
+find_and_set Makefile MAKE_FILE
+find_and_set template.mak TEMPL_FILE
+find_and_set keeplist KEEP_FILE
+
+(cd ../conf
+ make TARGET=$TARGET CONFDIR=$CONFDIR CFLAGS="$CFLAGS" \
+	MTUNE_FILE=$MTUNE_FILE STUNE_FILE=$STUNE_FILE \
+	MDEV_FILE=$MDEV_FILE SDEV_FILE=$SDEV_FILE \
+	TEMPL_FILE=$TEMPL_FILE KEEP_FILE=$KEEP_FILE\
+	FORCE_KERNEL="$FORCE_KERNEL" $GCC) || exit 1
+
+case "$PATCH" in
+'')	;;
+*)	set -x
+	/conf/patch $TARGET $PATCH || exit 1
+	;;
+esac
