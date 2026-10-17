@@ -1,0 +1,80 @@
+.\" @(#)ypinit.8 1.2 85/04/05 SMI;
+.TH YPINIT 8 "1 February 1985"
+.SH NAME
+ypinit - build and install yellow pages database
+.SH SYNOPSIS
+.B ypinit
+.B \-m
+.br
+.B ypinit
+.B \-s
+master_name
+.fi
+.SH DESCRIPTION
+.IX  "ypinit command"  ""  "\fLypinit\fP \(em make yellow pages database"
+.IX  "make yellow pages database"  ""  "make yellow pages database \(em \fLypinit\fP"
+.IX  "create yellow pages database"  ""  "create yellow pages database \(em \fLypinit\fP"
+.IX  "build yellow pages database"  ""  "build yellow pages database \(em \fLypinit\fP"
+.IX  "install yellow pages database"  ""  "install yellow pages database \(em \fLypinit\fP"
+.IX  "yellow pages"  "make database"  ""  "make database \(em \fLypinit\fP"
+.I Ypinit
+sets up a yellow pages (YP) server's database.
+It can be used to set up a master server or a slave server.
+You must be the superuser to run it.
+It asks a few questions, which are self-explanatory,
+and reports success or failure to the terminal.
+.PP
+It sets up a master server
+using the simple model in which that server
+is master to all maps in the data base.
+This is the way to bootstrap the YP system;
+later if you want you can change the association of maps to masters
+by changing the information in the YP map named
+.IR ypmaps .
+All databases are built from scratch,
+either from information available to the program at runtime,
+or from the ASCII data base files in
+.IR /etc .
+The list of which files will be used to generate the databases
+is below in the FILES section.
+All of these files should be in their traditional form,
+rather than the abbreviated form used on client machines,
+which primarily use the YP services to access the same information.
+.PP
+A slave YP server database is set up by copying
+an existing database from a running server.
+The
+.I master_name
+argument should be the host name of YP server,
+which is either actually the master server for all the maps,
+or a server the data base of which is believed to be up-to-date and stable.
+If your network uses different server machines
+acting as the master of different maps,
+of course no single machine will be
+the master of all maps.
+This doesn't matter;
+the yp data bases will converge automatically in time,
+and the process can be sped up somewhat by using
+.IR yppush (8) 
+and 
+.IR yppull (8).
+Just choose a YP server which is up, reachable, and stable.
+.SH OPTIONS
+.TP
+.B \-m
+Indicates that the local host is to be the YP master.
+.TP
+.B \-s
+Set up a slave database.
+.SH FILES
+.nf
+/etc/passwd
+/etc/group
+/etc/hosts
+/etc/networks
+/etc/services
+/etc/protocols
+/etc/netgroup
+.fi
+.SH "SEE ALSO"
+makedbm(8), ypfiles(8), yppush(8), ypmake(8)

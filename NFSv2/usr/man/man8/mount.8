@@ -1,0 +1,202 @@
+.\" @(#)mount.8 1.8 85/04/05 SMI; from UCB 4.2
+.TH MOUNT 8 "12 March 1985"
+.SH NAME
+mount, umount \- mount and dismount filesystems
+.SH SYNOPSIS
+.B /etc/mount
+.br
+.B /etc/mount \-p
+.br
+.B /etc/mount
+.BR \-a [ fv ][ t
+type ]
+.br
+.B /etc/mount
+[
+.BR \-frv ][ to
+type options ] [ fsname ] [ dir ]
+.LP
+.B /etc/umount
+[
+.B \-av
+] [ fsname | dir ] ...
+.SH DESCRIPTION
+.IX  "mount command"  ""  "\fLmount\fP \(em mount file system"
+.IX  "mount file system"  ""  "mount file system \(em \fLmount\fP"
+.IX  "file system"  "mount"  ""  "mount \(em \fLmount\fP"
+.IX  "umount command"  ""  "\fLumount\fP \(em unmount file system"
+.IX  "unmount file system"  ""  "unmount file system \(em \fLumount\fP"
+.IX  "demount file system"  ""  "demount file system \(em \fLumount\fP"
+.IX  "file system"  "unmount"  ""  "unmount \(em \fLumount\fP"
+.IX  "file system"  "demount"  ""  "demount \(em \fLumount\fP"
+.I Mount
+announces to the system that a filesystem
+.I fsname
+is to be attached to the file tree at the directory
+.IR dir .
+The directory
+.I dir
+must already exist.
+It becomes the name of the newly mounted root.  The contents of
+.I dir
+are hidden until the filesystem is unmounted.
+If
+.I fsname
+is of the form host:path the filesystem type is assumed to be
+.IR nfs (4).
+.LP
+.I Umount
+announces to the system that the filesystem 
+.I fsname
+previously mounted on directory
+.I dir
+should be removed.  Either the filesystem name or the mounted-on
+directory may be used.
+.LP
+.I Mount
+and
+.I umount
+maintain a table of mounted filesystems in
+.IR /etc/mtab ,
+described in
+.IR mtab (5).
+If invoked without an argument,
+.I mount
+displays the table.  If invoked with only one of
+.I fsname
+or
+.I dir
+mount searches
+.I /etc/fstab
+for an entry whose
+.I dir
+or
+.I fsname
+field matches the given argument.
+For example,
+.nf
+	\fBmount\fP /usr
+and
+	\fBmount\fP /dev/xy0g
+are shorthand for
+	\fBmount\fP /dev/xy0g /usr
+if this line is in \fI/etc/fstab\fR
+	/dev/xy0g /usr 4.2 rw 1 1
+.fi
+.SH "MOUNT OPTIONS"
+.TP
+.B \-a
+Attempt to mount all the filesystems described in
+.IR /etc/fstab .
+In this case,
+.I fsname
+and
+.I dir
+are taken from
+.IR /etc/fstab .
+If a type is specified all of the filesystems in
+.I /etc/fstab
+with that type will be mounted.
+.TP
+.B \-o
+The next argument is a string that specifies mount options.
+Valid options are: ro, rw, quota, noquota, hard, soft.
+Hard and soft only make sense on
+.IR nfs (4)
+filesystems.  Options are separated by commas.
+The options
+.I ro
+and
+.I rw
+stand for read-only and read-write;
+.I rw
+is the default.
+Since quotas are not implemented,
+.I noquota
+is the default.
+With a hard remote mount,
+.I mount
+tries forever if the
+.IR mountd (8c)
+server does not respond.
+Once the filesystem is mounted,
+access requests will retry forever if the
+.IR nfsd (8)
+server does not respond.
+Hard is the default.
+With a soft remote mount, if the
+.IR mountd (8c)
+server does not respond,
+.I mount
+forks a background copy to retry forever.
+Once the soft mount completes,
+access requests will fail with
+.SM [ETIMEDOUT]
+if the
+.IR nfsd (8)
+server does not respond.
+.TP
+.B \-r
+Mount the specified filesystem read-only.  This is a shorthand for:
+.br
+	\fBmount \-o ro\fR fsname dir
+.br
+Physically write-protected and magnetic tape filesystems must be mounted
+read-only, or errors will occur when access times are updated,
+whether or not any explicit write is attempted.
+.TP
+.B \-t
+The next argument is the filesystem type.
+The accepted types are: 4.2, nfs, and pc; see
+.IR fstab (5)
+for a description of the legal filesystem types.
+.TP
+.B \-f
+Fake a new
+.I /etc/mtab
+entry, but do not actually mount any filesystems.
+.TP
+.B \-p
+Print the list of mounted filesystems in a format suitable for use in 
+.IR /etc/fstab .
+.TP
+.B \-v
+Verbose \(em
+.I mount
+displays a message indicating the filesystem being mounted.
+.SH "UMOUNT OPTIONS"
+.TP
+.B \-a
+Attempt to unmount all the filesystems currently mounted.
+In this case,
+.I fsname
+is taken from
+.IR /etc/mtab .
+.TP
+.B \-v
+Verbose \(em
+.I umount
+displays a message indicating the filesystem being unmounted.
+.SH EXAMPLES
+.nf
+.ta \w'mount \-o hard server:/usr/src /usr/src 'u
+mount /dev/xy0g /usr            	mount a local disk
+mount \-ft 4.2 /dev/nd0 /       	fake an entry for nd root
+mount \-at 4.2                  	mount all 4.2 filesystems
+mount \-t nfs serv:/usr/src /usr/src	mount remote filesystem
+mount serv:/usr/src /usr/src    	same as above
+mount \-o hard serv:/usr/src /usr/src	same as above but hard mount
+mount \-p > /etc/fstab          	save current mount state
+.fi
+.SH FILES
+.DT
+/etc/mtab	mount table
+.br
+/etc/fstab	filesystem table
+.SH "SEE ALSO"
+mount(2), nfsmount(2), unmount(2), fstab(5), mountd(8c), nfsd(8c)
+.SH BUGS
+Mounting filesystems full of garbage will crash the system.
+.LP
+No more than one user should mount a disk partition "read-write" or
+the file system may become corrupted.

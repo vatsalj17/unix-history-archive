@@ -1,0 +1,60 @@
+.\" @(#)statfs.2 1.4 85/04/04 SMI; from UCB 4.2
+.TH STATFS 2 "1 February 1985"
+.SH NAME
+statfs \- get file system statistics
+.SH SYNOPSIS
+.nf
+.ft B
+#include <sys/vfs.h>
+.sp.5
+statfs(path, buf)
+char *path;
+struct statfs *buf;
+.sp.5
+fstatfs(fd, buf)
+int fd;
+struct statfs *buf;
+.fi
+.IX  statfs  ""  \fLstatfs\fP
+.IX  "file system"  statfs  ""  \fLstatfs\fP
+.IX  "get file system statistiics"
+.IX  statistics  "get file system"
+.SH DESCRIPTION
+.I Statfs
+returns information about a mounted file system.
+.I Path
+is the pathname of any file within the mounted filesystem.
+.I Buf
+is a pointer to a
+.I statfs
+structure defined as follows:
+.IP
+.ta \w'#define'u +\w'fsid_t\0\0'u +\w'f_spare[7]\0\0'u
+.nf
+typedef struct {
+	long	val[2];
+} fsid_t;
+.sp.5
+struct statfs {
+	long	f_type; 	/* type of info, zero for now */
+	long	f_bsize;	/* fundamental file system block size */
+	long	f_blocks;	/* total blocks in file system */
+	long	f_bfree;	/* free blocks */
+	long	f_bavail;	/* free blocks available to non-superuser */
+	long	f_files;	/* total file nodes in file system */
+	long	f_ffree;	/* free file nodes in fs */
+	fsid_t	f_fsid; 	/* file system id */
+	long	f_spare[7];	/* spare for later */
+};
+.fi
+.PP
+Fields that are undefined for a particular file system are set to \-1.
+.I Fstatfs
+returns the same information about an open file referenced by descriptor
+.IR fd .
+.SH "RETURN VALUE
+Upon successful completion, a value of 0 is returned.
+Otherwise, \-1 is returned and the global variable
+.I errno
+is set to indicate the error.
+.SH "SEE ALSO"

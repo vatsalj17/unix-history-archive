@@ -1,0 +1,168 @@
+.\" @(#)ypserv.8 1.2 85/04/05 SMI;
+.TH YPSERV 8 "1 February 1985"
+.SH NAME
+ypserv \- yellow pages server and binder processes
+.SH SYNOPSIS
+.B /etc/ypserv
+.br
+.B /etc/ypbind
+.SH DESCRIPTION
+.IX  "ypserv command"  ""  "\fLypserv\fP \(em yellow pages server process"
+The yellow pages (YP) provides a simple network lookup service.
+YP consists of databases and processes.
+The databases are
+.IR dbm (3)
+files in a directory tree rooted at
+.IR /etc/yp ,
+described in
+.IR ypfiles (5).
+The processes are
+.IR /etc/ypserv ,
+the YP database server, and
+.IR /etc/ypbind ,
+the YP binder.
+The programmatic interface to YP is described in
+.IR ypclnt (3N).
+Administrative tools are described in
+.IR yppush (8)
+and
+.IR ypcat (1).
+Database generation and maintenance tools are described in
+.IR ypinit (8),
+.IR ypmake (8),
+and
+.IR makedbm (8).
+.PP
+Both
+.I ypserv
+and
+.I ypbind
+are daemons:
+they are typically activated at system startup time from
+.IR /etc/rc.local ,
+and theoretically run forever.
+.I Ypserv
+runs only on YP server machines with a complete YP database.
+.I Ypbind
+runs on all machines using YP services,
+both YP client machines and YP servers.
+.PP
+The
+.I ypserv
+daemon has two functions:
+to look up information in its local database (or YP maps),
+and to keep that database consistent with those of its peers.
+.PP
+The operations performed by
+.I ypserv
+are defined in the header file
+.IR <rpcsvc/yp_prot.h> .  
+Communication to and from
+.I ypserv
+is by means of RPC calls.
+Lookup functions are supplied (as a C library) in the
+.I ypclnt
+package, defined in the header file 
+.I <rpcsvc/ypclnt.h>
+and described in
+.IR ypclnt (3N).
+There are three types of functions:
+.IR match ,
+.IR "get first" ,
+and
+.IR "get next" .
+The
+.I match
+operation takes a key,
+and returns the associated value within a named map and domain.
+(Domains are described in
+.I ypfiles (8).)
+The
+.I "get first"
+operation returns the first key-value pair
+within a named map and domain, and
+.I "get next"
+can be used to enumerate the remainder.
+There are other operations performed by
+.IR ypserv :
+they either give back information internal to the process itself,
+or are useful in speeding up the update propagation algorithm which
+is discussed in the next paragraph.
+Non-lookup functions are accessible to programmers
+by coding the RPC calls defined in
+.IR <rpcsvc/yp_prot.h> ,
+and at the shell level by using the tools
+.IR yppush ,
+.IR yppull ,
+and
+.IR yppoll ,
+all described in
+.IR yppush (8).
+.PP
+This paragraph discusses how map updates propagate among YP servers,
+and how propagation converges.
+Each map is associated with a version (or order) number.
+Each
+.I ypserv
+process communicates with its peers,
+and tries to find the map availible with the greatest order number.
+The order number is set at the time the map is is generated.
+Each map is associated with a distinguished YP server host,
+called the map's master.
+Updates to that map should be done only at the map's master \(em
+maps should be generated only on their master host.
+As each
+.I ypserv
+tries to find the version of any map containg the greatest order number,
+it first tries to communicate with the map's master.
+If the master is unreachable, it chooses another peer at random,
+and will transfer that map from any peer that has a map
+containing an order number greater than the one in the map it currently has.
+.PP
+This paragraph discusses the
+.I ypbind
+process, whose function is to remember information
+that lets clients on a single node communicate with
+.I ypserv
+processes.
+.I Ypbind
+must be running on every network node;
+.I ypserv
+may or may not be running on the same node,
+but must be running somewhere on the network.
+The information
+.I ypbind
+remembers is called a binding \(em
+the association of a domain name
+with the internet address of the YP server,
+and the port on that host at which the
+.I ypserv
+process is listening for service requests.
+The process of binding is driven by client requests.
+As a request for an unbound domain comes in, the
+.I ypbind
+process broadcasts on the net trying to find a
+.I ypserv
+process that claims to serve maps within that domain.
+Since binding is accomplished by broadcasting,
+there must be at least one
+.I ypserv
+process on every net.
+Once a domain is bound by a particular
+.IR ypbind ,
+that same binding is given to every client process
+on the node running that
+.IR ypbind .
+The binding is verified before it is given out
+to a client process.
+If
+.I ypbind
+is unable to speak to the
+.I ypserv
+process using its binding it marks the domain as unbound,
+tells the client process that the domain is unbound,
+and tries again to bind the domain.
+Requests for binding received by an unbound domain
+will fail immediately.  
+.SH "SEE ALSO"
+ypclnt(3N), ypfiles(5), makedbm(8), ypcat(8), ypinit(8), ypmake(8), yppush(8)

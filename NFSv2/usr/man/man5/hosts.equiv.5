@@ -1,0 +1,110 @@
+.\" @(#)hosts.equiv.5 1.2 85/04/04 SMI; from UCB 4.2
+.TH HOSTS.EQUIV 5 "1 February 1985"
+.SH NAME
+hosts.equiv \- list of trusted hosts
+.SH DESCRIPTION
+.IX  "hosts.equiv file"  ""  "\fLhosts.equiv\fP \(em trusted hosts list"
+.IX  "trusted hosts list"  ""  "trusted hosts list \(em \fLhosts.equiv\fP"
+.I Hosts.equiv
+resides in directory
+.I /etc
+and contains a list of trusted hosts.
+When an
+.IR rlogin (1)
+or
+.IR rsh (1)
+request from such a host is made, 
+and the initiator of the request is in
+.IR /etc/passwd ,
+then no further validity checking is done.
+That is,
+.I rlogin
+does not prompt for a password, and
+.I rsh
+completes successfully.
+So a remote user is ``equivalenced'' to a local user
+with the same user ID when the remote user is in
+.IR hosts.equiv .
+.PP
+The format of
+.I hosts.equiv
+is a list of names, as in this example:
+.IP
+.ft L
+ host1
+ host2
+ +@group1
+ -@group2
+.ft P
+.PP
+A line consisting of a simple host name
+means that anyone logging in from that host is trusted.
+A line consisting of
+.I +@group
+means that all members of that network group are trusted.
+A line consisting of
+.I \-@group
+means that members of that group are not trusted.
+Programs scan
+.I hosts.equiv
+linearly, and stop at the first hit
+(either positive for hostname and +@ entries,
+or negative for \-@ entries).
+A line consisting of a single +
+means that everyone is trusted.
+.PP
+The
+.I .rhosts
+file has the same format as
+.IR hosts.equiv .
+When user
+.I XXX
+executes
+.I rlogin
+or
+.IR rsh ,
+the
+.I .rhosts
+file from
+.IR XXX 's
+home directory is conceptually concatenated onto the end of
+.I hosts.equiv
+for permission checking.
+However, \-@ entries are not sticky.
+If a user is excluded by a minus entry from
+.I hosts.equiv
+but included in
+.IR .rhosts ,
+then that user is considered trusted.
+In the special case when the user is root,
+then only the
+.I /.rhosts
+file is checked.
+.PP
+It is also possible to have two entries
+(separated by a single space)
+on a line of these files.
+In this case, if the remote user is equivalenced by the first entry,
+then that user is allowed to log in as any member of the second entry.
+Thus
+.IP
+.ft L
+ sundown john
+.ft P
+.PP
+allows anyone from sundown to log in as
+.IR john ,
+and
+.IP
+.ft L
+ +@group1 +@group2
+.ft P
+.PP
+allows any member of
+.I netgroup1
+to log in as a member of
+.IR netgroup2 .
+.SH FILES
+/etc/hosts.equiv
+.SH "SEE ALSO"
+rlogin(1), rsh(1), netgroup(5)

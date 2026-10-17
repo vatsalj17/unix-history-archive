@@ -1,0 +1,38 @@
+.\" @(#)nfsd.8c 1.4 85/04/05 SMI;
+.TH NFSD 8C "1 February 1985"
+.SH NAME
+nfsd, biod \- NFS daemons
+.SH SYNOPSIS
+.B /etc/nfsd
+[ nservers ]
+.sp .5
+.B /etc/biod
+[ nservers ]
+.SH DESCRIPTION
+.IX  "nfsd command"  ""  "\fLnfsd\fP \(em NFS daemon"
+.IX  "biod command"  ""  "\fLbiod\fP \(em NFS daemon"
+.IX  servers  nfsd  ""  "\fLnfsd\fP \(em NFS daemon"
+.IX  servers  biod  ""  "\fLbiod\fP \(em NFS daemon"
+.I Nfsd
+starts the 
+.IR nfs (4)
+server daemons that handle client filesystem requests.
+.I Nservers
+is the number of file system request daemons to start.
+This number should be based on the load expected on this server;
+four is a good number.
+If
+.I nservers
+is not specified it defaults to one.
+.PP
+.I Biod
+starts
+.I nservers
+asynchronous block I/O daemons.
+This command is used on a NFS client to handle read-ahead and write-behind
+of buffer cached blocks.
+A good value for
+.I nservers
+is four; if not specified it defaults to one.
+.SH "SEE ALSO"
+mountd(8c), exports(5)

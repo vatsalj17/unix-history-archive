@@ -1,0 +1,46 @@
+.\" @(#)netgroup.5 1.2 85/04/04 SMI;
+.TH NETGROUP 5 "1 February 1985"
+.SH NAME
+netgroup \- list of network groups
+.SH DESCRIPTION
+.IX  "netgroup file"  ""  "\fLnetgroup\fP \(em network groups list"
+.I Netgroup
+defines network wide groups,
+which are used for permission checking when doing
+remote mounts, remote logins, and remote shells.
+Each line of the
+.I netgroup
+file defines a group and has the format
+.IP
+ groupname member1 member2 ....
+.PP
+where member\fIi\fP\| is either another group name, or a triple:
+.IP
+ (hostname, username, domainname)
+.PP
+Any of three fields can be empty,
+in which case it signifies a wild card.
+Thus
+.IP
+ universal (,,)
+.PP
+defines a group to which everyone belongs.
+.PP
+Network groups are accessed through the yellow pages.
+The database actually used by the yellow pages are in these two files:
+.IP
+ /etc/yp/\fIdomainname\fP/netgroup.dir
+ /etc/yp/\fIdomainname\fP/netgroup.pag
+.PP
+These files can be created from
+.I /etc/netgroup
+using
+.IR makedbm (8).
+.SH FILES
+/etc/netgroup
+.br
+/etc/yp/\fIdomainname\fP/netgroup.dir
+.br
+/etc/yp/\fIdomainname\fP/netgroup.pag
+.SH "SEE ALSO"
+getnetgrent(3), exportfs(8), makedbm(8), ypserv(8)

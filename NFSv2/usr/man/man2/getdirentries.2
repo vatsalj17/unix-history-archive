@@ -1,0 +1,97 @@
+.\" @(#)getdirentries.2 1.3 85/04/04 SMI; from UCB 4.2
+.TH GETDIRENTRIES 2 "29 July 1984"
+.SH NAME
+getdirentries \- gets directory entries in a filesystem independent format
+.SH SYNOPSIS
+.nf
+.ft B
+#include <sys/dir.h>
+.PP
+.ft B
+cc = getdirentries(d, buf, nbytes, basep)
+int cc, d;
+char *buf;
+int nbytes;
+long *basep
+.fi
+.IX  getdirentries  ""  \fLgetdirentries\fP
+.IX  "file system"  getdirentries  ""  \fLgetdirentries\fP
+.IX  directory  "get entries"
+.SH DESCRIPTION
+.I Getdirentries
+attempts to put directory entries
+from the directory referenced by the descriptor
+.I d
+into the buffer pointed to by
+.IR buf ,
+in a filesystem independent format.
+Up to
+.I nbytes
+of data will be transferred.
+.I Nbytes
+must be greater than the block size associated with the file, see
+.IR stat(2) .
+Sizes less than this may cause errors on certain filesystems.
+.PP
+The data in the buffer is a series of
+.I direct
+structures.
+The 
+.I direct
+structure is defined as
+.PP
+.RS
+.ta 8n +\w'unsigned\0short\0'u
+.nf
+struct direct {
+	unsigned long	d_fileno;
+	unsigned short	d_reclen;
+	unsigned short	d_namlen;
+	char    	d_name[MAXNAMELEN + 1];
+};
+.fi
+.RE
+.PP
+The
+.I d_fileno
+entry is a number which is unique for each distinct file in the filesystem.
+Files that are linked by hard links (see
+.IR link(2) )
+have the same
+.IR d_fileno .
+The
+.I d_reclen
+entry is the length, in bytes, of the directory record.
+The
+.I d_name
+and
+.I d_namelen
+entries specify the actual file name and its length.
+.PP
+Upon return, the actual number of bytes transferred is returned.
+The current position pointer associated with
+.I d
+is set to point to the next block of entries.
+The pointer is not necessarily incremented by the number of bytes returned by
+.IR getdirentries .
+If the value returned is zero, the end of the directory has been reached.
+The current position pointer may be set and retrieved by
+.IR lseek(2) .
+The
+.I basep
+entry is a pointer to a location into which the current position
+of the buffer just transferred is placed.
+It is not safe to set the current position pointer to any value other than
+a value previously returned by
+.I lseek(2)
+or a value previously returned in
+.I basep
+or zero.
+.SH "RETURN VALUE
+If successful, the
+number of bytes actually transferred is returned.
+Otherwise, a \-1 is returned and the global variable
+.I errno
+is set to indicate the error.
+.SH "SEE ALSO"
+open(2), lseek(2)

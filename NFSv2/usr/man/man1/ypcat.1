@@ -1,0 +1,112 @@
+.TH YPCAT 1 "1 February 1985"
+.\" @(#)ypcat.1 1.2 85/04/05 SMI; from UCB 4.2
+.SH NAME
+ypcat - print values in a YP data base
+.SH SYNOPSIS
+.B ypcat
+[
+.B \-a
+] [
+.B \-k
+] [
+.B \-t
+] [
+.B \-d
+domainname ]
+\ keyword
+.IX  "ypcat command"  ""  "\fLypcat\fP \(em print values from YP database"
+.IX  "print values from YP database"  ""  "print values from YP database \(em \fLypcat\fP"
+.IX  "yellow pages"  "print values from database"  ""  "print values from database \(em \fLypcat\fP"
+.SH DESCRIPTION
+.I Ypcat
+prints out values in a yellow pages (YP) map specified by a
+.IR keyword ,
+which may be either a
+.I mapname
+or an abbreviated mapname.
+Since
+.I ypcat
+employs YP network services,
+the location of the YP server cannot be supplied.
+.PP
+Suppose you want to look at the system password file.
+Each machine has a file
+.IR /etc/passwd ,
+containing only a small amount of information.
+The network-wide password database is served by the YP,
+and holds information in a map named
+.IR passwd.byname ,
+whose abbreviated name is
+.IR passwd .
+Thus, to see the system passwords, you type:
+.IP
+.ft L
+ypcat passwd
+.ft P
+.PP
+Here is a list of abbreviated mapnames,
+full mapnames, and corresponding system files:
+.IP
+.nf
+.ta \w'short name\0\0'u +\w'protocols.bynumber\0\0'u
+passwd  	passwd.byname   	/etc/passwd
+group   	group.byname    	/etc/group
+hosts   	hosts.byaddr    	/etc/hosts
+networks	networks.byaddr 	/etc/networks
+services	services.byname 	/etc/services
+protocols	protocols.bynumber	/etc/protocols
+netgroup	netgroup        	/etc/netgroup
+.fi
+.PP
+A list of all maps in the default domain can be seen by typing:
+.IP
+.ft L
+ypcat -k ypmaps
+.ft P
+.PP
+A list of all the known domains can be seen by typing:
+.IP
+.ft L
+ypcat -d yp_private -k ypdomains
+.ft P
+.PP
+.SH OPTIONS
+.TP
+.B \-a
+Get all the key_value pairs back from the YP,
+including private symbols.
+These are uninteresting to almost everyone.
+.TP
+.B \-k
+Dump the keys, as well as the values.
+Keys are already within the values for maps
+interesting to most users.
+Here again, the extra information you get back is generally uninteresting.
+Exceptions are those maps in which the value is null
+(that is, all of the information in the map is in the keys),
+or maps in which the key is not part of the value.
+None of the maps derived from files that have an ASCII version in
+.I /etc
+fall into those classes.
+.TP
+.B \-t
+Inhibit translation of abbreviated mapname to mapname.
+For example,
+.I "ypcat \-t passwd"
+will fail because there is no file named
+.IR passwd ,
+while
+.I "ypcat passwd"
+will be translated to
+.IR "ypcat passwd.byname" .
+The purpose of this option is to let you specify a mapname
+which is also a keyword name.
+.TP
+.B \-d
+Used to specify a domain other that the default domain.
+The default domain is returned by
+.IR domainname (8).
+The default domain is the one that is interesting
+to most users.
+.SH "SEE ALSO"
+ypfiles(8), yppush(8), newpasswd(8)

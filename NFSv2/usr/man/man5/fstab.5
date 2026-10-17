@@ -1,0 +1,126 @@
+.\" @(#)fstab.5 1.6 85/04/04 SMI;
+.TH FSTAB 5 "12 March 1985"
+.SH NAME
+fstab \- static information about filesystems
+.SH SYNOPSIS
+.B #include <mntent.h>
+.SH DESCRIPTION
+.IX  "fstab file"  ""  "\fLfstab\fP \(em fileystem static information"
+.IX  "fileystem static information"  ""  "fileystem static information \(em \fLfstab\fP"
+The file
+.I /etc/fstab
+describes the filesystems and swapping partitions used by the local machine.
+The system administrator can modify it with a text editor.
+It is read by commands that mount, unmount, dump, restore,
+and check the consistency of filesystems;
+also by the system in providing swap space.
+The file consists of a number of lines like this:
+.nf
+.sp .5
+	\fIfsname dir type opts freq passno\fR
+.sp .5
+for example:
+.sp .5v
+	/dev/xy0a / 4.2 rw,noquota 1 2
+.sp .5v
+.fi
+.LP
+The entries from this file are accessed using the routines in
+.IR getmntent (3),
+which returns a structure of the following form:
+.PP
+.RS
+.ta \w'#define'u +\w'char\0\0'u +\w'*mnt_fsname;\0\0'u
+.nf
+struct mntent {
+	char	*mnt_fsname;	/* filesystem name */
+	char	*mnt_dir;	/* filesystem path prefix */
+	char	*mnt_type;	/* 4.2, nfs, swap, or ignore */
+	char	*mnt_opts;	/* rw, ro, noquota, quota, hard, soft */
+	int	mnt_freq;	/* dump frequency, in days */
+	int	mnt_passno;	/* pass number on parallel fsck */
+};
+.fi
+.RE
+.PP
+Fields are separated by white space;
+a `#' as the first non-white character indicates a comment.
+.PP
+The
+.I mnt_type
+field determines how the 
+.I mnt_fsname
+and 
+.I mnt_opts
+fields will be interpreted.
+Here is a list of the filesystem types currently supported,
+and the way each of them interprets these fields:
+.ta \w'mnt_fsname\0\0'u
+.TP 10
+.B 4.2
+mnt_fsname	Must be a block special device.
+.br
+mnt_opts	Valid options are ro, rw, quota, noquota.
+.TP 10
+.B NFS
+mnt_fsname	The path on the server of the directory to be served.
+.br
+mnt_opts	Valid options are ro, rw, quota, noquota, hard, soft.
+.TP 10
+.B SWAP
+mnt_fsname	Must be a block special device swap partition.
+.br
+mnt_opts	Ignored.
+.PP
+If the
+.I mnt_type
+is specified as
+.I ignore
+then the entry is ignored.
+This is useful to show disk partitions not currently used.
+.PP
+The field
+.I mnt_freq
+indicates how often each partition should be dumped by the
+.IR dump (8)
+command (and triggers that command's
+.B w
+option, which determines what filesystems should be dumped).
+Most systems set the
+.I mnt_freq
+field to 1, indicating that filesystems are dumped each day.
+.PP
+The final field
+.I mnt_passno
+is used by the consistency checking program
+.IR fsck (8)
+to allow overlapped checking of filesystems during a reboot.
+All filesystems with
+.I mnt_passno
+of 1 are checked first simultaneously,
+then all filesystems with
+.I mnt_passno
+of 2, and so on.
+It is usual to make the
+.I mnt_passno
+of the root filesystem have the value 1,
+and then check one filesystem on each available disk drive
+in each subsequent pass, until all filesystem partitions are checked.
+.LP
+The
+.I /etc/fstab
+file is read only by programs, and never written;
+it is the duty of the system administrator to maintain this file.
+The order of records in
+.I /etc/fstab
+is important because
+.I fsck,
+.I mount,
+and
+.I umount
+process the file sequentially;
+filesystems must appear after filesystems they are mounted within.
+.SH FILES
+/etc/fstab
+.SH SEE ALSO
+getmntent(3), fsck(8), mount(8), quotacheck(8), quotaon(8)

@@ -1,0 +1,43 @@
+.\" @(#)exports.5 1.2 85/04/04 SMI;
+.TH EXPORTS 5 "1 February 1985"
+.SH NAME
+exports \- NFS file systems being exported
+.SH SYNOPSIS
+.B /etc/exports
+.SH DESCRIPTION
+.IX  "NFS exported file systems"  ""  "NFS exported file systems \(em \fLexportfs\fP"
+The file
+.I /etc/exports
+describes the file systems which are being exported to 
+.IR nfs (4)
+clients.  It is created by the system administrator
+using a text editor and processed by the
+.I mount
+request daemon
+.IR mountd (8c)
+each time a mount request is received.
+.PP
+The file consists of a list of file systems and the
+.IR netgroups (5)
+or machine names allowed to remote mount each file system.
+The file system names are left justified and followed by
+a list of names separated by white space.
+The names will be looked up in
+.I /etc/netgroups
+and then in
+.IR /etc/hosts .
+A file system name with no name list following means export to everyone.
+A ``#'' anywhere in the file indicates a comment
+extending to the end of the line it appears on.
+.SH EXAMPLE
+.PP
+.ft L
+.nf
+/usr       clients               # export to my clients
+/usr/local                       # export to the world
+/usr2      phoenix sun sundae    # export to only these machines
+.fi
+.SH FILES
+/etc/exports
+.SH SEE ALSO
+mountd(8c)

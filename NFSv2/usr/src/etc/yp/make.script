@@ -1,0 +1,157 @@
+#
+#	@(#)make.script 1.1 85/05/30 SMI
+#
+DIR =/etc
+DOM = `domainname`
+NOPUSH = ""
+
+all: passwd group hosts networks services protocols netgroup
+
+passwd.time: $(DIR)/passwd
+	-@if [ -f $(DIR)/passwd ]; then \
+		awk 'BEGIN { FS=":"; OFS="\t"; } { print $$1, $$0 }' \
+		  $(DIR)/passwd  | makedbm - /etc/yp/$(DOM)/passwd.byname; \
+		awk 'BEGIN { FS=":"; OFS="\t"; } { print $$3, $$0 }' \
+		  $(DIR)/passwd | makedbm - /etc/yp/$(DOM)/passwd.byuid; \
+		touch passwd.time; \
+		echo "updated passwd"; \
+		if [ ! $(NOPUSH) ]; then \
+			/etc/yp/yppush passwd.byname; \
+			/etc/yp/yppush passwd.byuid; \
+			echo "pushed passwd"; \
+		else \
+			: ; \
+		fi \
+	else \
+		echo "couldn't find $(DIR)/passwd"; \
+	fi
+
+group.time: $(DIR)/group
+	-@if [ -f $(DIR)/group ]; then \
+		awk 'BEGIN { FS=":"; OFS="\t"; } { print $$1, $$0 }' \
+		    $(DIR)/group | makedbm - /etc/yp/$(DOM)/group.byname; \
+		awk 'BEGIN { FS=":"; OFS="\t"; } { print $$3, $$0 }' \
+		    $(DIR)/group | makedbm - /etc/yp/$(DOM)/group.bygid; \
+		touch group.time; \
+		echo "updated group"; \
+		if [ ! $(NOPUSH) ]; then \
+			/etc/yp/yppush group.byname; \
+			/etc/yp/yppush group.bygid; \
+			echo "pushed group"; \
+		else \
+			: ; \
+		fi \
+	else \
+		echo "couldn't find $(DIR)/group"; \
+	fi
+
+hosts.time: $(DIR)/hosts
+	-@if [ -f $(DIR)/hosts ]; then \
+		sed -e "/^#/d" -e s/#.*$$// $(DIR)/hosts | /etc/yp/stdhosts \
+		    | awk '{for (i = 2; i <= NF; i++) print $$i, $$0}' \
+		    | makedbm - /etc/yp/$(DOM)/hosts.byname; \
+		/etc/yp/stdhosts $(DIR)/hosts | \
+		    awk 'BEGIN { OFS="\t"; } $$1 !~ /^#/ { print $$1, $$0 }' \
+		    | makedbm - /etc/yp/$(DOM)/hosts.byaddr; \
+		cp /etc/yp/$(DOM)/hosts.byname.pag /etc/yp/yp_private; \
+		cp /etc/yp/$(DOM)/hosts.byname.dir /etc/yp/yp_private; \
+		touch hosts.time; \
+		echo "updated hosts"; \
+		if [ ! $(NOPUSH) ]; then \
+			/etc/yp/yppush hosts.byname; \
+			/etc/yp/yppush hosts.byaddr; \
+			/etc/yp/yppush -d yp_private hosts.byname; \
+			echo "pushed hosts"; \
+		else \
+			: ; \
+		fi \
+	else \
+		echo "couldn't find $(DIR)/hosts"; \
+	fi
+
+networks.time: $(DIR)/networks
+	-@if [ -f $(DIR)/networks ]; then \
+		sed -e "/^#/d" -e s/#.*$$// $(DIR)/networks | awk \
+		    '{print $$1, $$0; for (i = 3;i <= NF;i++) print $$i,$$0}' \
+		    | makedbm - /etc/yp/$(DOM)/networks.byname; \
+		awk 'BEGIN { OFS="\t"; } $$1 !~ /^#/ { print $$2, $$0 }' \
+		   $(DIR)/networks | makedbm - /etc/yp/$(DOM)/networks.byaddr;\
+		touch networks.time; \
+		echo "updated networks"; \
+		if [ ! $(NOPUSH) ]; then \
+			/etc/yp/yppush networks.byname; \
+			/etc/yp/yppush networks.byaddr; \
+			echo "pushed networks"; \
+		else \
+			: ; \
+		fi \
+	else \
+		echo "couldn't find $(DIR)/networks"; \
+	fi
+
+services.time: $(DIR)/services
+	-@if [ -f $(DIR)/services ]; then \
+		awk 'BEGIN { OFS="\t"; } $$1 !~ /^#/ { print $$2, $$0 }' \
+		    $(DIR)/services| makedbm - /etc/yp/$(DOM)/services.byname;\
+		touch services.time; \
+		echo "updated services"; \
+		if [ ! $(NOPUSH) ]; then \
+			/etc/yp/yppush services.byname; \
+			echo "pushed services"; \
+		else \
+			: ; \
+		fi \
+	else \
+		echo "couldn't find $(DIR)/services"; \
+	fi
+
+protocols.time: $(DIR)/protocols
+	-@if [ -f $(DIR)/protocols ]; then \
+		awk 'BEGIN { OFS="\t"; } $$1 !~ /^#/ { print $$2, $$0 }' \
+		    $(DIR)/protocols | makedbm - \
+		    /etc/yp/$(DOM)/protocols.bynumber; \
+		sed -e "/^#/d" -e s/#.*$$// $(DIR)/protocols | awk \
+		    '{print $$1,$$0; for (i = 3;i <= NF;i++) print $$i, $$0}' \
+		    | makedbm - /etc/yp/$(DOM)/protocols.byname; \
+		touch protocols.time; \
+		echo "updated protocols"; \
+		if [ ! $(NOPUSH) ]; then \
+			/etc/yp/yppush protocols.byname; \
+			/etc/yp/yppush protocols.bynumber; \
+			echo "pushed protocols"; \
+			else \
+			: ; \
+		fi \
+	else \
+		echo "couldn't find $(DIR)/protocols"; \
+	fi
+
+netgroup.time: $(DIR)/netgroup
+	-@if [ -f $(DIR)/netgroup ]; then \
+		makedbm $(DIR)/netgroup /etc/yp/$(DOM)/netgroup; \
+		touch netgroup.time; \
+		echo "updated netgroup"; \
+		if [ ! $(NOPUSH) ]; then \
+			/etc/yp/yppush netgroup; \
+			echo "pushed netgroup"; \
+		else \
+			: ; \
+		fi \
+	else \
+		echo "couldn't find $(DIR)/netgroup"; \
+	fi
+
+passwd: passwd.time
+group: group.time
+hosts: hosts.time
+networks: networks.time
+services: services.time
+protocols: protocols.time
+netgroup: netgroup.time
+$(DIR)/passwd:
+$(DIR)/group:
+$(DIR)/hosts:
+$(DIR)/networks:
+$(DIR)/services:
+$(DIR)/protocols:
+$(DIR)/netgroup:

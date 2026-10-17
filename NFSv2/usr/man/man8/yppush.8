@@ -1,0 +1,91 @@
+.\" @(#)yppush.8 1.2 85/04/05 SMI;
+.TH YPPUSH 8 "1 February 1985"
+.SH NAME
+yppush, yppull, yppoll - yellow pages administration utilities
+.SH SYNOPSIS
+.B yppush
+[
+.B \-h
+hostname ] [
+.B \-d
+domainname ]
+mapname
+.br
+.B yppull
+[
+.B \-h
+hostname ] [
+.B \-d
+domainname ]
+mapname
+.br
+.B yppoll
+[
+.B \-h
+hostname ] [
+.B \-d
+domainname ]
+mapname
+.SH DESCRIPTION
+.IX  "yppush command"  ""  "\fLyppush\fP \(em yellow pages administration"
+.IX  "yppull command"  ""  "\fLyppull\fP \(em yellow pages administration"
+.IX  "yppoll command"  ""  "\fLyppoll\fP \(em yellow pages administration"
+These commands supply an interface to the running yellow pages (YP) system.
+They make use of YP services themselves,
+which must be available at the site where the commands are issued.
+The issuing site may be a yp client; it need not be a server.
+The
+.IR rpcinfo (8)
+program may be useful for determining if the YP processes
+.I ypserv
+and
+.I ypbind
+are up and running at a site.
+The processes that comprise the YP system are described in 
+.IR ypserv (8).
+The YP database format is described in 
+.IR ypfiles (5).
+.PP
+.I Yppush
+tells a master YP server process
+.RI ( ypserv )
+to direct its peer processes to set the master
+of the named map to that master server,
+and to get a new copy of the named map.
+If the host is not the master of the named map,
+the command will succeed,
+but no action will be taken by the YP server.
+.PP
+.I Yppull
+tells a slave YP server process
+.RI ( ypserv )
+to try and get a more recent copy of the named map,
+preferably from the map's master.
+If the server is the master of the named map,
+the command will succeed,
+but no action will be taken by the YP server.
+.PP
+.I Yppoll
+asks a
+.I ypserv
+(master or slave) for information about one map.
+The information returned is whether the map exists at the site,
+what version number is in the map,
+and which server is thought to be the map's master.
+.SH OPTIONS
+.TP
+.B \-h
+Specifies the
+.I hostname
+on which the
+.I ypserv
+process is running.
+The default is the local host.
+.TP
+.B \-d
+Specifies an alternate
+.I domainname
+for the YP.
+The default is the domain for the local host.
+.SH "SEE ALSO"
+rpcinfo(8), ypserv(8), ypfiles(5)

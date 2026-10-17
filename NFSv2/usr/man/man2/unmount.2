@@ -1,0 +1,48 @@
+.\" @(#)unmount.2 1.2 85/04/04 SMI; from UCB 4.2
+.TH UNMOUNT 2 "1 February 1985"
+.SH NAME
+unmount \- remove a file system
+.SH SYNOPSIS
+.nf
+.ft B
+unmount(name)
+char *name;
+.fi
+.IX  unmount  ""  \fLunmount\fP
+.IX  "file system"  unmount  ""  \fLunmount\fP
+.IX  "remove file system"
+.IX  "demount file system"
+.SH DESCRIPTION
+.I Unmount
+announces to the system that the directory
+.I name
+is no longer to refer to the root of a mounted file system.
+The directory
+.I name
+reverts to its ordinary interpretation.
+.SH "RETURN VALUE
+.I Unmount
+returns 0 if the action occurred; \-1 if
+if the directory is inaccessible or
+does not have a mounted file system,
+or if there are active files in the mounted 
+file system.
+.SH ERRORS
+.I Unmount
+may fail with one of the following errors:
+.TP 15
+[EINVAL]
+The caller is not the super-user.
+.TP 15
+[EINVAL]
+.I Name
+is not the root of a mounted file system.
+.TP 15
+[EBUSY]
+A process is holding a reference to a file located
+on the file system.
+.SH "SEE ALSO"
+mount(2), mount(8), umount(8)
+.SH BUGS
+The error codes are in a state of disarray; too many errors
+appear to the caller as one value.

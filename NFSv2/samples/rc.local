@@ -1,0 +1,45 @@
+#
+#	@(#)rc.local 1.9 85/02/21 SMI; from UCB 4.2
+#
+/bin/hostname sunvax
+/bin/domainname sun
+/etc/ifconfig il0 `hostname` -trailers up
+echo -n 'starting rpc services:'				>/dev/console
+if [ -f /etc/portmap ]; then
+	/etc/portmap; echo -n ' portmap'	 		>/dev/console
+fi
+if [ -f /etc/ypserv -a -d /etc/yp/`domainname` ]; then
+	/etc/ypserv; echo -n ' ypserv'				>/dev/console
+fi
+if [ -f /etc/ypbind ]; then
+	/etc/ypbind; echo -n ' ypbind'				>/dev/console
+fi
+echo '.'							>/dev/console
+if [ -f /etc/routed ]; then
+	/etc/routed & echo ' starting router'			>/dev/console
+fi
+/etc/mount -vat nfs						>/dev/console
+#echo -n 'check quotas: '					>/dev/console
+#	/usr/etc/quotacheck -a					>/dev/console
+#echo 'done.'							>/dev/console
+#/usr/etc/quotaon -a
+/etc/dmesg | grep UNIX | /usr/ucb/tail -1 >/tmp/t1
+grep -v UNIX /etc/motd >>/tmp/t1
+mv /tmp/t1 /etc/motd
+#
+/usr/etc/savecore /usr/crash					>/dev/console
+echo -n 'local daemons:'					>/dev/console
+if [ -f /usr/lib/sendmail -a -f /usr/lib/sendmail.cf ]; then
+	(cd /usr/spool/mqueue; rm -f nf* lf*)
+	/usr/lib/sendmail -bd -q1h & echo -n ' sendmail'	>/dev/console
+fi
+#
+# if nfs daemon exists and /etc/exports file exists become nfs server
+#
+if [ -f /etc/nfsd -a -f /etc/exports ]; then
+	/etc/nfsd 4 & echo -n ' nfsd'		 		>/dev/console
+fi
+if [ -f /etc/biod ]; then
+	/etc/biod 4; echo -n ' biod'		 		>/dev/console
+fi
+echo '.'							>/dev/console

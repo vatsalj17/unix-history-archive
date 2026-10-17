@@ -1,0 +1,56 @@
+.\" @(#)ypmake.8 1.2 85/04/05 SMI;
+.TH YPMAKE 8 "1 February 1985"
+.SH NAME
+ypmake \- rebuild yellow pages database
+.SH SYNOPSIS
+.B cd
+.B /etc/yp
+.B ;
+.B make
+.SH DESCRIPTION
+.IX  "ypmake command"  ""  "\fLypmake\fP \(em rebuild yellow pages database"
+.IX  "rebuild yellow pages database"  ""  "rebuild yellow pages database \(em \fLypmake\fP"
+.IX  "yellow pages"  "rebuild database"  ""  "rebuild database \(em \fLypmake\fP"
+There is a
+.I Makefile
+in
+.IR /etc/yp
+for building the yellow pages database.
+With no arguments,
+.I make
+creates
+.I dbm
+databases for everything that is out of date,
+and then executes
+.IR yppush (8)
+to notify slave databases that there has been a change.
+.PP
+Typing
+.I "make passwd"
+will create and
+.I yppush
+just the password database (assuming it is out of date).
+Likewise,
+.I "make hosts"
+and
+.I "make networks"
+will create and
+.I yppush
+the host and network files,
+.I /etc/hosts
+and
+.IR /etc/networks .
+.PP
+There are three special variables:
+DIR, which gives the directory of the source files;
+NOPUSH, which when non-null inhibits doing a
+.I yppush
+of the new database files;
+and DOM, used to construct a domain
+other than the master's default domain.
+The default for DIR is
+.IR /etc ,
+and the default for NOPUSH is
+the null string.
+.SH "SEE ALSO"
+makedbm(8), ypserv(8)

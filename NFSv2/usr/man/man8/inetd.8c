@@ -1,0 +1,89 @@
+.\" @(#)inetd.8c 1.9 85/04/05 SMI;
+.TH INETD 8  "28 February 1985"
+.SH NAME
+inetd \- internet services daemon
+.SH SYNOPSIS
+.B /etc/inetd
+[
+.B \-d
+]
+.SH DESCRIPTION
+.IX  "inetd command"  ""  "\fLinetd\fP \(em internet services daemon"
+.IX  servers  inetd  ""  "\fLinetd\fP \(em internet services daemon"
+.I Inetd
+is the internet super-server which invokes all internet
+server processes as needed.  Connection-oriented
+services are invoked each time a connection is made,
+by creating a process.  This process is passed the connection
+as file descriptor 0 and an argument of the form ``sourcehost.sourceport''
+where sourcehost is hex and sourceport is decimal.
+.LP
+Datagram oriented services are invoked when a datagram arrives;
+a process is created and passed the connection as file
+descriptor 0.  Inetd will look at the socket where
+datagrams arrive again only after this process completes.
+The paradigms for such proceses are either to read off the
+incoming datagram and then fork and exit, or to process the
+arriving datagram and then time out.
+.LP
+.IR Inetd 
+consults
+.IR servers (5)
+when it is invoked, and supports whatever services are in that file.
+.LP
+An rcp server can be started from inetd.  The only differences
+from the usual code are that svcudp_create should be called as:
+.IP " "
+transp = scvudp_create(0)
+.LP
+since inet passes a socket file as descriptor 0, and
+svc_register should be called as:
+.IP " "
+svc_register(PROGNUM, VERSNUM, service, transp, 0)
+.LP
+with the final flag as 0, since the program will already have
+been registered by inetd.  If you want to exit from the server
+process and return control to inet, you must explicitly exit
+since  scv_run never returns.
+.LP
+The format of entries in \fI/etc/servers\fP for rpc services is:
+.RS
+.sp
+.B rcp udp
+.I server-program program-number version-number
+.sp
+.RE
+where 
+.I server-program
+is the C code implementing the server, and 
+.I program-number, version-number
+are the program, and version numbers, respectively of the
+service.  The keyword \fBudp\fP can be replaced by \fBtcp\fP
+for \fItcp\fP\|-based services.
+.LP
+If the same program handles multiple versions, the version
+number can be specified as a range:
+.RS
+.sp
+.B rcp udp /usr/etc/rstatd 100001 1-2
+.SH OPTIONS
+.TP
+.B \-d
+Specifies that debugging traces are to be turned on for
+connection-oriented (TCP) services.
+.SH FILES
+/etc/servers	list of internet server processes
+.SH "SEE ALSO"
+servers(5), comsat(8C), ftpd(8C), rexecd(8C), rlogind(8C),
+syslog(8), rshd(8C), talkd(8C), telnetd(8C), tftpd(8C)
+.SH BUGS
+.LP
+There is no provision for selectively invoking TCP debugging packet tracing
+per-service.
+.LP
+Should reread the
+.I /etc/servers
+file on receipt of a SIGHUP signal.
+The
+.I /etc/servers
+file can have no more than 26 lines.

@@ -1,0 +1,1706 @@
+.\" @(#)c9.net.impl 1.1 85/04/09	Sun Microsystems
+.OH 'Network Implementation''Page \\\\n(PN'
+.EH 'Page \\\\n(PN''Network Implementation'
+.OF 'Sun Microsystems''Release 2.0'
+.EF 'Sun Microsystems''Release 2.0'
+.RP
+.rm DY
+.TL
+.ps 20
+Network Implementation
+.NH
+Introduction
+.LP
+This report describes the internal structure of
+the networking facilities of the Sun Workstation version of the
+\*(Un operating system.  
+These facilities are derived from the networking
+facilities added at U.C. Berkeley in the Berkeley 4.2 release of the system.
+The system provides a uniform user interface to networking,
+and a structure that permits system implementors to add new facilities.
+The internal structure is not visible to the user,
+rather it is intended to aid implementors of communication protocols
+and network services by providing a framework that
+promotes code sharing and minimizes implementation effort.
+.LP
+The reader is expected to be familiar with the C programming
+language and system interface, as described in the
+.I "System Interface Overview"
+at the beginning of the Sun"
+.I "System Interface Manual" .
+Basic understanding of network communication concepts is assumed;
+where required any additional ideas are introduced.
+.LP
+The remainder of this document
+provides a description of the system internals,
+avoiding, when possible, those portions utilized only
+by the interprocess communication facilities.
+.NH
+Overview
+.LP
+If we consider the International Standards Organization's (ISO)
+Open System Interconnection (OSI) model of
+network communication [ISO81] [Zimmermann80],
+the networking facilities
+described here correspond to a portion of the
+session layer (layer 3) and all of the transport and
+network layers (layers 2 and 1, respectively).
+.LP
+The network layer provides possibly imperfect
+data transport services with minimal addressing
+structure.
+Addressing at this level is normally host to host,
+with implicit or explicit routing optionally supported
+by the communicating agents. 
+.LP
+At the transport
+layer the notions of reliable transfer, data sequencing,
+flow control, and service addressing are normally
+included.  
+Reliability is usually managed by 
+explicit acknowledgement of data delivered.  
+Failure
+to acknowledge a transfer results in retransmission of
+the data.  
+Sequencing may be handled by tagging
+each message handed to the network layer by a
+.I "sequence number"
+and maintaining
+state at the endpoints of communication to utilize
+received sequence numbers in reordering data which
+arrives out of order.
+.LP
+The session layer facilities may provide forms of
+addressing which are mapped into formats required
+by the transport layer, service authentication
+and client authentication, etc.  
+Various systems
+also provide services such as data encryption and
+address and protocol translation.
+.LP
+The following sections begin by describing some of the common
+data structures and utility routines, then examine
+the internal layering.  
+The contents of each layer
+and its interface are considered.  
+Certain of the
+interfaces are protocol implementation specific.  
+For
+these cases examples have been drawn from the Internet [Cerf78]
+protocol family.  
+Later sections cover routing issues,
+the design of the raw socket interface and other
+miscellaneous topics.
+.NH
+Goals
+.LP
+The networking system was designed with the goal of supporting
+multiple 
+.I "protocol families"
+and addressing styles.  
+This required
+information to be ``hidden'' in common data structures which
+could be manipulated by all the pieces of the system, but which
+required interpretation only by the protocols which ``controlled''
+it.  
+The system described here attempts to minimize
+the use of shared data structures to those kept by a suite of
+protocols (a 
+.I "protocol family" ), 
+and those used for rendezvous
+between ``synchronous'' and ``asynchronous'' portions of the
+system (for example, queues of data packets are filled at interrupt
+time and emptied based on user requests).
+.LP
+A major goal of the system was to provide a framework within
+which new protocols and hardware could easily be supported.
+To this end, a great deal of effort has been extended to
+create utility routines which hide many of the more
+complex and/or hardware dependent chores of networking.
+Later sections describe the utility routines and the underlying
+data structures they manipulate.
+.NH
+Internal Address Representation
+.LP
+Common to all portions of the system are two data structures.
+These structures are used to represent
+addresses and various data objects.
+Addresses, internally are described by the 
+.I sockaddr
+structure,
+.LS
+struct sockaddr {
+	short	sa_family;	/* data format identifier */
+	char	sa_data[14];	/* address */
+};
+.LF
+All addresses belong to one or more 
+.I "address families"
+which define their format and interpretation.
+The 
+.I sa_family
+field indicates which address family the address
+belongs to, the 
+.I sa_data
+field contains the actual data value.
+The size of the data field, 14 bytes, was selected based on a study
+of current address formats
+.NH
+Memory Management
+.LP
+A single mechanism is used for data storage: memory buffers, or
+.I mbuf 's.
+An mbuf is a structure of the form:
+.LS
+struct mbuf {
+	struct	mbuf *m_next;	/* next buffer in chain */
+	u_long	m_off;		/* offset of data */
+	short	m_len;		/* amount of data in this mbuf */
+	short	m_type;		/* mbuf type (accounting) */
+	u_char	m_dat[MLEN];	/* data storage */
+	struct	mbuf *m_act;	/* link in higher-level mbuf list */
+};
+.LF
+The 
+.I m_next
+field is used to chain mbufs together on linked lists, while the 
+.I m_act
+field allows lists of mbufs to be accumulated.  
+By convention, the mbufs common to a single object
+(for example, a packet) are chained together with the 
+.I m_next
+field, while groups of objects are linked via the 
+.I m_act
+field (possibly when in a queue).
+.LP
+Each mbuf has a small data area for storing information, 
+.I m_dat .
+The 
+.I m_len
+field indicates the amount of data, while the 
+.I m_off
+field is an offset to the beginning of the data from the base of the
+mbuf.  
+Thus, for example, the macro 
+.I mtod , 
+which converts a pointer
+to an mbuf to a pointer to the data stored in the mbuf, has the form
+.LS
+#define	mtod(x,t)	((t)((int)(x) + (x)->m_off))
+.LF
+(note the 
+.I t
+parameter, a C type cast, is used to cast
+the resultant pointer for proper assignment).
+.LP
+In addition to storing data directly in the mbuf's data area, data
+of page size may be also be stored in a separate area of memory.
+The mbuf utility routines maintain
+a pool of pages for this purpose and manipulate a private page map
+for such pages.  
+The virtual addresses of
+these data pages precede those of mbufs, so when pages of data are
+separated from an mbuf, the mbuf data offset is a negative value.
+An array of reference counts on pages is also maintained
+so that copies of pages may be made without core to core
+copying  (copies are created simply by duplicating the relevant
+page table entries in the data page map and incrementing the associated
+reference counts for the pages).  
+Separate data pages are currently used only
+when copying data from a user process into the kernel,
+and when bringing data in at the hardware level.  
+Routines which
+manipulate mbufs are not normally aware if data is stored directly in 
+the mbuf data array, or if it is kept in separate pages.
+.LP
+The following utility routines are available for manipulating mbuf
+chains:
+.IP "\f7m = m_copy(m0, off, len);\fP"
+.br
+The 
+.I m_copy
+routine create a copy of all, or part, of a
+list of the mbufs in 
+.I m0 .  
+.I Len
+bytes of data, starting 
+.I off
+bytes from the front of the chain, are copied. 
+Where possible, reference counts on pages are used instead
+of core to core copies.  The original mbuf chain must have at
+least 
+.I off
+\&+ 
+.I len
+bytes of data.  If 
+.I len
+is specified as M_COPYALL, all the data present, offset
+as before, is copied.  
+.IP "\f7m_cat(m, n);\fP"
+.br
+The mbuf chain, 
+.I n , 
+is appended to the end of 
+.I m .
+Where possible, compaction is performed.
+.IP "\f7m_adj(m, diff);\fP"
+.br
+The mbuf chain, 
+.I m
+is adjusted in size by 
+.I diff
+bytes.  
+If 
+.I diff
+is non-negative, 
+.I diff
+bytes
+are shaved off the front of the mbuf chain.  
+If 
+.I diff
+is negative, the alteration is performed from back to front.
+No space is reclaimed in this operation, alterations are
+accomplished by changing the 
+.I m_len
+and 
+.I m_off
+fields of mbufs.
+.IP "\f7m = m_pullup(m0, size);\fP"
+.br
+After a successful call to \fIm_pullup\fP, the mbuf at
+the head of the returned list, \fIm\fP, is guaranteed
+to have at least \fIsize\fP
+bytes of data in contiguous memory (allowing access via
+a pointer, obtained using the \fImtod\fP macro).
+If the original data was less than \fIsize\fP bytes long,
+\fIlen\fP was greater than the size of an mbuf data
+area (112 bytes), or required resources were unavailable,
+\fIm\fP is 0 and the original mbuf chain is deallocated.
+.IP
+This routine is particularly useful when verifying packet
+header lengths on reception.  
+For example, if a packet is
+received and only 8 of the necessary 16 bytes required
+for a valid packet header are present at the head of the list
+of mbufs representing the packet, the remaining 8 bytes
+may be ``pulled up'' with a single \fIm_pullup\fP call.
+If the call fails the invalid packet will have been discarded.
+.LP
+By insuring mbufs always reside on 128 byte boundaries
+it is possible to always locate the mbuf associated with a data
+area by masking off the low bits of the virtual address.
+This allows modules to store data structures in mbufs and
+pass them around without concern for locating the original
+mbuf when it comes time to free the structure.
+The \fIdtom\fP macro is used to convert a pointer into an mbuf's
+data area to a pointer to the mbuf,
+.LS
+#define	dtom(x)	((struct mbuf *)((int)x & ~(MSIZE-1)))
+.LF
+Mbufs are used for dynamically allocated data structures such as
+sockets, as well as memory allocated for packets.  
+Statistics are
+maintained on mbuf usage and can be viewed by users using the
+\fInetstat\fP(8) program.
+.NH
+Internal Layering
+.LP
+The internal structure of the network system is divided into
+three layers.  
+These layers correspond to the services provided by the socket
+abstraction, those provided by the communication protocols,
+and those provided by the hardware interfaces.  
+The communication
+protocols are normally layered into two or more individual
+cooperating layers, though they are collectively viewed
+in the system as one layer providing services supportive
+of the appropriate socket abstraction.
+.LP
+The following sections describe the properties of each layer
+in the system and the interfaces each must conform to.
+.NH 2 
+Socket Layer
+.LP
+The socket layer deals with the interprocess communications
+facilities provided by the system.  A socket is a bidirectional
+endpoint of communication which is ``typed'' by the semantics
+of communication it supports.  The system calls described in
+the \fISystem Interface Overview\fP are used to manipulate sockets.
+.LP
+A socket consists of the following data structure:
+.LS
+struct socket {
+	short	so_type;		/* generic type */
+	short	so_options;		/* from socket call */
+	short	so_linger;		/* time to linger while closing */
+	short	so_state;		/* internal state flags */
+	caddr_t	so_pcb;			/* protocol control block */
+	struct	protosw *so_proto;	/* protocol handle */
+	struct	socket *so_head;	/* back pointer to accept socket */
+	struct	socket *so_q0;		/* queue of partial connections */
+	short	so_q0len;		/* partials on so_q0 */
+	struct	socket *so_q;		/* queue of incoming connections */
+	short	so_qlen;		/* number of connections on so_q */
+	short	so_qlimit;		/* max number queued connections */
+	struct	sockbuf so_snd;		/* send queue */
+	struct	sockbuf so_rcv;		/* receive queue */
+	short	so_timeo;		/* connection timeout */
+	u_short	so_error;		/* error affecting connection */
+	short	so_oobmark;		/* chars to oob mark */
+	short	so_pgrp;		/* pgrp for signals */
+};
+.LF
+.bp
+.LP
+Each socket contains two data queues, \fIso_rcv\fP and \fIso_snd\fP,
+and a pointer to routines which provide supporting services. 
+The type of the socket, \fIso_type\fP is 
+defined at socket creation time and used in selecting
+those services which are appropriate to support it.  
+The supporting
+protocol is selected at socket creation time and recorded in
+the socket data structure for later use.  
+Protocols are defined
+by a table of procedures, the \fIprotosw\fP structure, which will
+be described in detail later.  
+A pointer to a protocol specific
+data structure,
+the ``protocol control block'' is also present in the socket structure.
+Protocols control this data structure and it normally includes a
+back pointer to the parent socket structure(s) to allow easy
+lookup when returning information to a user 
+(for example, placing an error number in the \fIso_error\fP
+field).  
+The other entries in the socket structure are used in
+queueing connection requests, validating user requests, storing
+socket characteristics (for example,
+options supplied at the time a socket is created), and maintaining
+a socket's state.
+.LP
+Processes ``rendezvous at a socket'' in many instances.  
+For instance,
+when a process wishes to extract data from a socket's receive queue
+and it is empty, or lacks sufficient data to satisfy the request,
+the process blocks, supplying the address of the receive queue as
+an ``wait channel' to be used in notification.  
+When data arrives
+for the process and is placed in the socket's queue, the blocked
+process is identified by the fact it is waiting ``on the queue''.
+.NH 3
+Socket State
+.LP
+A socket's state is defined from the following:
+.LS 0
+#define	SS_NOFDREF	   0x001  /* no file table ref any more */
+#define	SS_ISCONNECTED	   0x002  /* socket connected to a peer */
+#define	SS_ISCONNECTING	   0x004  /* in process of connecting to peer */
+#define	SS_ISDISCONNECTING 0x008  /* in process of disconnecting */
+#define	SS_CANTSENDMORE	   0x010  /* can't send more data to peer */
+#define	SS_CANTRCVMORE	   0x020  /* can't receive more data from peer */
+#define	SS_CONNAWAITING	   0x040  /* connections awaiting acceptance */
+#define	SS_RCVATMARK	   0x080  /* at mark on input */
+#define	SS_PRIV		   0x100  /* privileged */
+#define	SS_NBIO		   0x200  /* non-blocking ops */
+#define	SS_ASYNC	   0x400  /* async i/o notify */
+.LF
+The state of a socket is manipulated both by the protocols
+and the user (through system calls).
+When a socket is created the state is defined based on the type of
+input/output the user wishes to perform.  
+\&``Non-blocking'' I/O  implies
+a process should never be blocked to await resources.  
+Instead, any
+call which would block returns prematurely
+with the error EWOULDBLOCK (the service request may be partially
+fulfilled, for example, a request for more data than is present).
+.LP
+If a process requested ``asynchronous'' notification of events
+related to the socket the SIGIO signal is posted to the process.
+An event is a change in the socket's state,
+examples of such occurances are: space
+becoming available in the send queue, new data available in the
+receive queue, connection establishment or disestablishment, etc. 
+.LP
+A socket may be marked ``priviledged'' if it was created by the
+super-user.  
+Only priviledged sockets may
+send broadcast packets, or bind
+addresses in priviledged portions of an address space.
+.NH 3 
+Socket Data Queues
+.LP
+A socket's data queue contains a pointer to the data stored in
+the queue and other entries related to the management of
+the data.  
+The following structure defines a data queue:
+.LS 0
+struct sockbuf {
+	short	sb_cc;		/* actual chars in buffer */
+	short	sb_hiwat;	/* max actual char count */
+	short	sb_mbcnt;	/* chars of mbufs used */
+	short	sb_mbmax;	/* max chars of mbufs to use */
+	short	sb_lowat;	/* low water mark */
+	short	sb_timeo;	/* timeout */
+	struct	mbuf *sb_mb;	/* the mbuf chain */
+	struct	proc *sb_sel;	/* process selecting read/write */
+	short	sb_flags;	/* flags, see below */
+};
+.LF
+Data is stored in a queue as a chain of mbufs.  
+The actual
+count of characters as well as high and low water marks are
+used by the protocols in controlling the flow of data.
+The socket routines cooperate in implementing the flow control
+policy by blocking a process when it requests to send data and
+the high water mark has been reached, or when it requests to
+receive data and less than the low water mark is present
+(assuming non-blocking I/O has not been specified).
+.LP
+When a socket is created, the supporting protocol ``reserves'' space
+for the send and receive queues of the socket.
+The actual storage associated with a
+socket queue may fluctuate during a socket's lifetime, but is assumed
+this reservation will always allow a protocol to acquire enough memory
+to satisfy the high water marks.
+.LP
+The timeout and select values are manipulated by the socket routines
+in implementing various portions of the interprocess communications
+facilities and will not be described here.
+.LP
+A socket queue has a number of flags used in synchronizing access
+to the data and in acquiring resources;
+.LS 0
+#define	SB_LOCK	0x01	/* lock on data queue (so_rcv only) */
+#define	SB_WANT	0x02	/* someone is waiting to lock */
+#define	SB_WAIT	0x04	/* someone is waiting for data/space */
+#define	SB_SEL	0x08	/* buffer is selected */
+#define	SB_COLL	0x10	/* collision selecting */
+.LF
+The last two flags are manipulated by the system in implementing
+the select mechanism.
+.NH 3 
+Socket Connection Queueing
+.LP
+In dealing with connection oriented sockets (for example, SOCK_STREAM)
+the two sides are considered distinct.  
+One side is termed
+\fIactive\fP, and generates connection requests.  
+The other
+side is called \fIpassive\fP and accepts connection requests.
+.LP
+From the passive side, a socket is created with the option
+SO_ACCEPTCONN specified, 
+creating two queues of sockets: \fIso_q0\fP for connections
+in progress and \fIso_q\fP for connections already made and
+awaiting user acceptance.
+As a protocol is preparing incoming connections, it creates
+a socket structure queued on \fIso_q0\fP by calling the routine
+\fIsonewconn\fP().  
+When the connection
+is established, the socket structure is then transfered
+to \fIso_q\fP, making it available for an accept.
+.LP
+If an SO_ACCEPTCONN socket is closed with sockets on either
+\fIso_q0\fP or \fIso_q\fP, these sockets are dropped.
+.NH 2 
+Protocol Layer(s)
+.LP
+Protocols are described by a set of entry points and certain
+socket visible characteristics, some of which are used in
+deciding which socket type(s) they may support.  
+.LP
+An entry in the ``protocol switch'' table exists for each
+protocol module configured into the system.  
+It has the following form:
+.LS 0
+struct protosw {
+	short	pr_type;		/* socket type used for */
+	short	pr_family;		/* protocol family */
+	short	pr_protocol;		/* protocol number */
+	short	pr_flags;		/* socket visible attributes */
+    /* protocol-protocol hooks */
+	int	(*pr_input)();		/* input to protocol (from below) */
+	int	(*pr_output)();		/* output to protocol (from above) */
+	int	(*pr_ctlinput)();	/* control input (from below) */
+	int	(*pr_ctloutput)();	/* control output (from above) */
+    /* user-protocol hook */
+	int	(*pr_usrreq)();		/* user request */
+    /* utility hooks */
+	int	(*pr_init)();		/* initialization routine */
+	int	(*pr_fasttimo)();	/* fast timeout (200ms) */
+	int	(*pr_slowtimo)();	/* slow timeout (500ms) */
+	int	(*pr_drain)();		/* flush any excess space possible */
+};
+.LF
+A protocol is called through the \fIpr_init\fP entry before any other.
+Thereafter it is called every 200 milliseconds through 
+the \fIpr_fasttimo\fP entry and
+every 500 milliseconds through the \fIpr_slowtimo\fP for timer based actions.
+The system will call the \fIpr_drain\fP entry if it is low on space and
+this should throw away any non-critical data.
+.LP
+Protocols pass data between themselves as chains of mbufs using
+the \fIpr_input\fP and \fIpr_output\fP routines.  \fIPr_input\fP
+passes data up (towards
+the user) and \fIpr_output\fP passes it down (towards the network); control
+information passes up and down on \fIpr_ctlinput\fP and \fIpr_ctloutput\fP.
+The protocol is responsible for the space occupied by any the
+arguments to these entries and must dispose of it.
+.LP
+The \fIpr_userreq\fP routine interfaces protocols to the socket
+code and is described below.
+.LP
+The \fIpr_flags\fP field is constructed from the following values:
+.LS 0
+#define	PR_ATOMIC	0x01	/* exchange atomic messages only */
+#define	PR_ADDR 	0x02	/* addresses given with messages */
+#define	PR_CONNREQUIRED	0x04	/* connection required by protocol */
+#define	PR_WANTRCVD	0x08	/* want PRU_RCVD calls */
+#define	PR_RIGHTS	0x10	/* passes capabilities */
+.LF
+.bp
+.LP
+Protocols which are connection-based specify the PR_CONNREQUIRED
+flag so that the socket routines will never attempt to send data
+before a connection has been established.  
+If the PR_WANTRCVD flag
+is set, the socket routines will notfiy the protocol when the user
+has removed data from the socket's receive queue.  
+This allows
+the protocol to implement acknowledgement on user receipt, and
+also update windowing information based on the amount of space
+available in the receive queue.  
+The PR_ADDR field indicates any
+data placed in the socket's receive queue will be preceded by the
+address of the sender.  
+The PR_ATOMIC flag specifies each \fIuser\fP
+request to send data must be performed in a single \fIprotocol\fP send
+request; it is the protocol's responsibility to maintain record
+boundaries on data to be sent.  
+The PR_RIGHTS flag indicates the
+protocol supports the passing of capabilities;  this is currently
+used only the protocols in the \*(Un protocol family.
+.LP
+When a socket is created, the socket routines scan the protocol
+table looking for an appropriate protocol to support the type of
+socket being created.  
+The \fIpr_type\fP field contains one of the
+possible socket types (for example, SOCK_STREAM), while the \fIpr_family\fP
+field indicates which protocol family the protocol belongs to.
+The \fIpr_protocol\fP field contains the protocol number of the
+protocol, normally a well known value.
+.NH 2 
+Network-Interface Layer
+.LP
+Each network-interface configured into a system defines a
+path through which packets may be sent and received.
+Normally a hardware device is associated with this interface,
+though there is no requirement for this (for example, all
+systems have a software ``loopback'' interface used for 
+debugging and performance analysis).
+In addition to manipulating the hardware device, an interface
+module is responsible
+for encapsulation and deencapsulation of any low level header
+information required to deliver a message to it's destination.
+The selection of which interface to use in delivering packets
+is a routing decision carried out at a
+higher level than the network-interface layer.  
+Each interface
+normally identifies itself at boot time to the routing module
+so that it may be selected for packet delivery.
+.LP
+An interface is defined by the following structure,
+.bp
+.LS 0
+struct ifnet {
+	char	*if_name;		/* name, for example, "en" or "lo" */
+	short	if_unit;		/* sub-unit for lower level driver */
+	short	if_mtu;			/* maximum transmission unit */
+	int	if_net;			/* network number of interface */
+	short	if_flags;		/* up/down, broadcast, etc. */
+	short	if_timer;		/* time 'til if_watchdog called */
+	int	if_host[2];		/* local net host number */
+	struct	sockaddr if_addr;	/* address of interface */
+	union {
+		struct	sockaddr ifu_broadaddr;
+		struct	sockaddr ifu_dstaddr;
+	} if_ifu;
+	struct	ifqueue if_snd;		/* output queue */
+	int	(*if_init)();		/* init routine */
+	int	(*if_output)();		/* output routine */
+	int	(*if_ioctl)();		/* ioctl routine */
+	int	(*if_reset)();		/* bus reset routine */
+	int	(*if_watchdog)();	/* timer routine */
+	int	if_ipackets;		/* packets received on interface */
+	int	if_ierrors;		/* input errors on interface */
+	int	if_opackets;		/* packets sent on interface */
+	int	if_oerrors;		/* output errors on interface */
+	int	if_collisions;		/* collisions on csma interfaces */
+	struct	ifnet *if_next;
+};
+.LF
+Each interface has a send queue and routines used for 
+initialization, \fIif_init\fP, and output, \fIif_output\fP.
+If the interface resides on a system bus, the routine \fIif_reset\fP
+will be called after a bus reset has been performed. 
+An interface may also
+specify a timer routine, \fIif_watchdog\fP, which should be called
+every \fIif_timer\fP seconds (if non-zero).
+.LP
+The state of an interface and certain characteristics are stored in
+the \fIif_flags\fP field.  
+The following values are possible:
+.LS 0
+#define	IFF_UP  	0x1	/* interface is up */
+#define	IFF_BROADCAST	0x2	/* broadcast address valid */
+#define	IFF_DEBUG	0x4	/* turn on debugging */
+#define	IFF_ROUTE	0x8	/* routing entry installed */
+#define	IFF_POINTOPOINT	0x10	/* interface is point-to-point link */
+#define	IFF_NOTRAILERS	0x20	/* avoid use of trailers */
+#define	IFF_RUNNING	0x40	/* resources allocated */
+.LF
+If the interface is connected to a network which supports transmission
+of \fIbroadcast\fP packets, the IFF_BROADCAST flag will be set and
+the \fIif_broadaddr\fP field will contain the address to be used in
+sending or accepting a broadcast packet.  
+If the interface is associated
+with a point to point hardware link (for example, a DEC DMR-11), the
+IFF_POINTOPOINT flag will be set and \fIif_dstaddr\fP will contain the
+address of the host on the other side of the connection.  
+These addresses
+and the local address of the interface, \fIif_addr\fP, are used in
+filtering incoming packets.  
+The interface sets IFF_RUNNING after
+it has allocated system resources and posted an initial read on the
+device it manages.  
+This state bit is used to avoid multiple allocation
+requests when an interface's address is changed.  
+The IFF_NOTRAILERS
+flag indicates the interface should refrain from using a \fItrailer\fP
+encapsulation on outgoing packets.
+.LP
+The information stored in an \fIifnet\fP structure for point to point
+communication devices is not currently used by the system internally.
+Rather, it is used by the user level routing process in determining
+host network connections and in initially devising routes (refer to
+chapter 10 for more information).
+.LP
+Various statistics are also stored in the interface structure.  
+These may be viewed by users using the \fInetstat\fP(1) program.
+.LP
+The interface address and flags may be set with the SIOCSIFADDR and
+SIOCSIFFLAGS ioctls.  
+SIOCSIFADDR is used to initially define each
+interface's address; SIOGSIFFLAGS can be used to mark
+an interface down and perform site-specific configuration.
+.NH
+Socket/Protocol Interface
+.LP
+The interface between the socket routines and the communication
+protocols is through the \fIpr_usrreq\fP routine defined in the
+protocol switch table.  
+The following requests to a protocol module are possible:
+.LS 0
+#define	PRU_ATTACH	0	/* attach protocol */
+#define	PRU_DETACH	1	/* detach protocol */
+#define	PRU_BIND	2	/* bind socket to address */
+#define	PRU_LISTEN	3	/* listen for connection */
+#define	PRU_CONNECT	4	/* establish connection to peer */
+#define	PRU_ACCEPT	5	/* accept connection from peer */
+#define	PRU_DISCONNECT	6	/* disconnect from peer */
+#define	PRU_SHUTDOWN	7	/* won't send any more data */
+#define	PRU_RCVD	8	/* have taken data; more room now */
+#define	PRU_SEND	9	/* send this data */
+#define	PRU_ABORT	10	/* abort (fast DISCONNECT, DETATCH) */
+#define	PRU_CONTROL	11	/* control operations on protocol */
+#define	PRU_SENSE	12	/* return status into m */
+#define	PRU_RCVOOB	13	/* retrieve out of band data */
+#define	PRU_SENDOOB	14	/* send out of band data */
+#define	PRU_SOCKADDR	15	/* fetch socket's address */
+#define	PRU_PEERADDR	16	/* fetch peer's address */
+#define	PRU_CONNECT2	17	/* connect two sockets */
+/* begin for protocols internal use */
+#define	PRU_FASTTIMO	18	/* 200ms timeout */
+#define	PRU_SLOWTIMO	19	/* 500ms timeout */
+#define	PRU_PROTORCV	20	/* receive from below */
+#define	PRU_PROTOSEND	21	/* send to below */
+.LF
+A call on the user request routine is of the form,
+.LS 0
+error = (*protosw[].pr_usrreq)(up, req, m, addr, rights);
+	int error;
+	struct socket *up;
+	int req;
+	struct mbuf *m, *rights;
+	caddr_t addr;
+.LF
+.bp
+.LP
+The mbuf chain, \fIm\fP, and the address are optional parameters.
+The \fIrights\fP parameter is an optional pointer to an mbuf
+chain containing user specified capabilities (see the \fIsendmsg\fP
+and \fIrecvmsg\fP system calls).  
+The protocol is responsible for
+disposal of both mbuf chains.  
+A non-zero return value gives a \*(Un
+error number which should be passed to higher level software.
+The following paragraphs describe each
+of the requests possible.
+.IP PRU_ATTACH
+.br
+When a protocol is bound to a socket (with the \fIsocket\fP
+system call) the protocol module is called with this
+request.  
+It is the responsibility of the protocol module to
+allocate any resources necessary.
+The ``attach'' request
+will always precede any of the other requests, and should not
+occur more than once.
+.IP PRU_DETACH
+.br
+This is the antithesis of the attach request, and is used
+at the time a socket is deleted.  
+The protocol module may
+deallocate any resources assigned to the socket.
+.IP PRU_BIND
+.br
+When a socket is initially created it has no address bound
+to it.  
+This request indicates an address should be bound to
+an existing socket.  
+The protocol module must verify the
+requested address is valid and available for use.
+.IP PRU_LISTEN
+.br
+The ``listen'' request indicates the user wishes to listen
+for incoming connection requests on the associated socket.
+The protocol module should perform any state changes needed
+to carry out this request (if possible).  
+A ``listen'' request
+always precedes a request to accept a connection.
+.IP PRU_CONNECT
+.br
+The ``connect'' request indicates the user wants to establish
+an association.  
+The \fIaddr\fP parameter supplied describes
+the peer to be connected to.  
+The effect of a connect request
+may vary depending on the protocol.  
+Virtual circuit protocols,
+such as TCP [Postel80b], use this request to initiate establishment of a
+TCP connection.  
+Datagram protocols, such as UDP [Postel79], simply
+record the peer's address in a private data structure and use
+it to tag all outgoing packets.  
+There are no restrictions
+on how many times a connect request may be used after an attach.
+If a protocol supports the notion of \fImulti-casting\fP, it
+is possible to use multiple connects to establish a multi-cast
+group.  
+Alternatively, an association may be broken by a
+PRU_DISCONNECT request, and a new association created with a
+subsequent connect request; all without destroying and creating
+a new socket.
+.IP PRU_ACCEPT
+.br
+Following a successful PRU_LISTEN request and the arrival
+of one or more connections, this request is made to
+indicate the user
+has accepted the first connection on the queue of
+pending connections.  
+The protocol module should fill
+in the supplied address buffer with the address of the
+connected party.
+.IP PRU_DISCONNECT
+.br
+Eliminate an association created with a PRU_CONNECT request.
+.IP PRU_SHUTDOWN
+.br
+This call is used to indicate no more data will be sent and/or
+received (the \fIaddr\fP parameter indicates the direction of
+the shutdown, as encoded in the \fIsoshutdown\fP system call).
+The protocol may, at its discretion, deallocate any data
+structures related to the shutdown.
+.IP PRU_RCVD
+.br
+This request is made only if the protocol entry in the protocol
+switch table includes the PR_WANTRCVD flag.
+When a user removes data from the receive queue this request
+will be sent to the protocol module.  
+It may be used to trigger
+acknowledgements, refresh windowing information, initiate
+data transfer, etc.
+.IP PRU_SEND
+.br
+Each user request to send data is translated into one or more
+PRU_SEND requests (a protocol may indicate a single user
+send request must be translated into a single PRU_SEND request by
+specifying the PR_ATOMIC flag in its protocol description).
+The data to be sent is presented to the protocol as a list of
+mbufs and an address is, optionally, supplied in the \fIaddr\fP
+parameter.  
+The protocol is responsible for preserving the data
+in the socket's send queue if it is not able to send it immediately,
+or if it may need it at some later time (for example, for retransmission).
+.IP PRU_ABORT
+.br
+This request indicates an abnormal termination of service.  
+The protocol should delete any existing association(s).
+.IP PRU_CONTROL
+.br
+The ``control'' request is generated when a user performs a \*(Un
+\fIioctl\fP system call on a socket (and the ioctl is not
+intercepted by the socket routines).  
+It allows protocol-specific
+operations to be provided outside the scope of the common socket
+interface.  
+The \fIaddr\fP parameter contains a pointer to a static
+kernel data area where relevant information may be obtained or returned.
+The \fIm\fP parameter contains the actual \fIioctl\fP request code
+(note the non-standard calling convention).
+.IP PRU_SENSE
+.br
+The ``sense'' request is generated when the user makes an \fIfstat\fP
+system call on a socket; it requests status of the associated socket. 
+There currently is no common format for the status returned. 
+Information which might be returned includes per-connection statistics,
+protocol state, resources currently in use by the connection, the
+optimal transfer size for the connection (based on windowing information
+and maximum packet size).  
+The \fIaddr\fP parameter contains a pointer
+to a static kernel data area where the status buffer should be placed.
+.IP PRU_RCVOOB
+.br
+Any ``out-of-band'' data presently available is to be returned.  
+An
+mbuf is passed in to the protocol module and the protocol
+should either place
+data in the mbuf or attach new mbufs to the one supplied if there is
+insufficient space in the single mbuf.
+.IP PRU_SENDOOB
+.br
+Like PRU_SEND, but for out-of-band data.
+.IP PRU_SOCKADDR
+.br
+The local address of the socket is returned, if any is currently
+bound to the it.  The address format (protocol specific) is returned
+in the \fIaddr\fP parameter.
+.IP PRU_PEERADDR
+.br
+The address of the peer to which the socket is connected is returned.
+The socket must be in a SS_ISCONNECTED state for this request to
+be made to the protocol.  
+The address format (protocol specific) is
+returned in the \fIaddr\fP parameter.
+.IP PRU_CONNECT2
+.br
+The protocol module is supplied two sockets and requested to
+establish a connection between the two without binding any
+addresses, if possible.  
+This call is used in implementing
+the
+.IR socketpair (2)
+system call.
+.LP
+The following requests are used internally by the protocol modules
+and are never generated by the socket routines.  
+In certain instances,
+they are handed to the \fIpr_usrreq\fP routine solely for convenience
+in tracing a protocol's operation (for example, PRU_SLOWTIMO).
+.IP PRU_FASTTIMO
+.br
+A ``fast timeout'' has occured.  
+This request is made when a timeout
+occurs in the protocol's \fIpr_fastimo\fP routine.  
+The \fIaddr\fP
+parameter indicates which timer expired.
+.IP PRU_SLOWTIMO
+.br
+A ``slow timeout'' has occured.  
+This request is made when a timeout
+occurs in the protocol's \fIpr_slowtimo\fP routine.  
+The \fIaddr\fP
+parameter indicates which timer expired.
+.IP PRU_PROTORCV
+.br
+This request is used in the protocol-protocol interface, not by the
+routines.  
+It requests reception of data destined for the protocol and
+not the user.  
+No protocols currently use this facility.
+.IP PRU_PROTOSEND
+.br
+This request allows a protocol to send data destined for another
+protocol module, not a user.  
+The details of how data is marked
+\&``addressed to protocol'' instead of ``addressed to user'' are
+left to the protocol modules.  No protocols currently use this facility.
+.NH
+Protocol/Protocol Interface
+.LP
+The interface between protocol modules is through the \fIpr_usrreq\fP,
+\fIpr_input\fP, \fIpr_output\fP, \fIpr_ctlinput\fP, and
+\fIpr_ctloutput\fP routines.  
+The calling conventions for all
+but the \fIpr_usrreq\fP routine are expected to be specific to
+the protocol
+modules and are not guaranteed to be consistent across protocol
+families.  
+We will examine the conventions used for some of the Internet
+protocols in this section as an example.
+.NH 2 
+pr_output
+.LP
+The Internet protocol UDP uses the convention,
+.LS
+error = udp_output(inp, m);
+	int error;
+	struct inpcb *inp;
+	struct mbuf *m;
+.LF
+where the \fIinp\fP, ``\fIin\fPternet
+\fIp\fProtocol \fIc\fPontrol \fIb\fPlock'',
+passed between modules conveys per connection state information, and
+the mbuf chain contains the data to be sent.  
+UDP performs consistency checks, appends its header, calculates a
+checksum, etc. before passing the packet on to the IP module:
+.bp
+.LS
+error = ip_output(m, opt, ro, allowbroadcast);
+	int error;
+	struct mbuf *m, *opt;
+	struct route *ro;
+	int allowbroadcast;
+.LF
+The call to IP's output routine is more complicated than that for
+UDP, as befits the additional work the IP module must do.
+The \fIm\fP parameter is the data to be sent, and the \fIopt\fP
+parameter is an optional list of IP options which should
+be placed in the IP packet header.  
+The \fIro\fP parameter is
+is used in making routing decisions (and passing them back to the
+caller).  
+The
+final parameter, \fIallowbroadcast\fP is a flag indicating if the
+user is allowed to transmit a broadcast packet.  
+This may
+be inconsequential if the underlying hardware does not support the
+notion of broadcasting.
+.LP
+All output routines return 0 on success and a \*(Un error number
+if a failure occured which could be immediately detected
+(no buffer space available, no route to destination, etc.).
+.NH 2
+pr_input
+.LP
+Both UDP and TCP use the following calling convention,
+.LS
+(void) (*protosw[].pr_input)(m);
+	struct mbuf *m;
+.LF
+Each mbuf list passed is a single packet to be processed by
+the protocol module.
+.LP
+The IP input routine is a software interrupt level routine,
+and so is not called with any parameters.  
+It instead communicates
+with network interfaces through a queue, \fIipintrq\fP, which is
+identical in structure to the queues used by the network interfaces
+for storing packets awaiting transmission.
+.NH 2 
+pr_ctlinput
+.LP
+This routine is used to convey ``control'' information to a
+protocol module (i.e. information which might be passed to the
+user, but is not data).  
+This routine, and the \fIpr_ctloutput\fP
+routine, have not been extensively developed, and thus suffer
+from a ``clumsiness'' that can only be improved as more demands
+are placed on it.
+.LP
+The common calling convention for this routine is,
+.LS
+(void) (*protosw[].pr_ctlinput)(req, info);
+	int req;
+	caddr_t info;
+.LF
+The \fIreq\fP parameter is one of the following,
+.bp
+.LS 0
+#define	PRC_IFDOWN	      0  /* interface transition */
+#define	PRC_ROUTEDEAD	      1  /* select new route if possible */
+#define	PRC_QUENCH	      4  /* some said to slow down */
+#define	PRC_HOSTDEAD	      6  /* normally from IMP */
+#define	PRC_HOSTUNREACH	      7  /* ditto */
+#define	PRC_UNREACH_NET	      8  /* no route to network */
+#define	PRC_UNREACH_HOST      9  /* no route to host */
+#define	PRC_UNREACH_PROTOCOL 10  /* dst says bad protocol */
+#define	PRC_UNREACH_PORT     11  /* bad port # */
+#define	PRC_MSGSIZE	     12  /* message size forced drop */
+#define	PRC_REDIRECT_NET     13  /* net routing redirect */
+#define	PRC_REDIRECT_HOST    14  /* host routing redirect */
+#define	PRC_TIMXCEED_INTRANS 17  /* packet lifetime expired in transit */
+#define	PRC_TIMXCEED_REASS   18  /* lifetime expired on reass q */
+#define	PRC_PARAMPROB	     19  /* header incorrect */
+.LF
+while the \fIinfo\fP parameter is a ``catchall'' value which
+is request dependent.  
+Many of the requests have obviously been
+derived from ICMP (the Internet Control Message Protocol),
+and from error messages defined in the 1822 host/IMP convention
+[BBN78].  
+Mapping tables exist to convert control requests to \*(Un
+error codes which are delivered to a user.
+.NH 2 
+pr_ctloutput
+.LP
+This routine is not currently used by any protocol modules.
+.NH
+Protocol/Network-Interface Interface
+.LP
+The lowest layer in the set of protocols which comprise a
+protocol family must interface itself to one or more network
+interfaces in order to transmit and receive
+packets.  
+It is assumed that
+any routing decisions have been made before handing a packet
+to a network interface, in fact this is absolutely necessary
+in order to locate any interface at all (unless, of course,
+one uses a single ``hardwired'' interface).  
+There are two
+cases to be concerned with, transmission of a packet,
+and receipt of a packet; each will be considered separately.
+.NH 2 
+Packet Transmission
+.LP
+Assuming a protocol has a handle on an interface, \fIifp\fP,
+a (struct ifnet *),
+it transmits a fully formatted packet with the following call,
+.LS
+error = (*ifp->if_output)(ifp, m, dst)
+	int error;
+	struct ifnet *ifp;
+	struct mbuf *m;
+	struct sockaddr *dst;
+.LF
+The output routine for the network interface transmits the packet
+\fIm\fP to the \fIdst\fP address, or returns an error indication
+(a \*(Un error number).  
+In reality transmission may
+not be immediate, or successful; normally the output
+routine simply queues the packet on its send queue and primes
+an interrupt driven routine to actually transmit the packet.
+For unreliable mediums, such as the Ethernet, ``successful''
+transmission simply means the packet has been placed on the cable
+without a collision.  
+On the other hand, an 1822 interface guarantees
+proper delivery or an error indication for each message transmitted.
+.bp
+.LP
+The model employed in the networking system attaches no promises
+of delivery to the packets handed to a network interface, and thus
+corresponds more closely to the Ethernet.  
+Errors returned by the
+output routine are normally trivial in nature (no buffer space, 
+address format not handled, etc.).
+.NH 2 
+Packet Reception
+.LP
+Each protocol family must have one or more ``lowest level'' protocols.
+These protocols deal with internetwork addressing and are responsible
+for the delivery of incoming packets to the proper protocol processing
+modules.  
+In the PUP model [Boggs78] these protocols are termed Level 1 protocols,
+in the ISO model, network layer protocols.  
+In our system each such
+protocol module has an input packet queue assigned to it.  
+Incoming
+packets received by a network interface are queued up for the protocol
+module and a software interrupt is posted to initiate processing.  
+.LP
+Three macros are available for queueing and dequeueing packets,
+.IP "IF_ENQUEUE(ifq, m)"
+.br
+This places the packet \fIm\fP at the tail of the queue \fIifq\fP.
+.IP "IF_DEQUEUE(ifq, m)"
+.br
+This places a pointer to the packet at the head of queue \fIifq\fP 
+in \fIm\fP.  A zero value will be returned in \fIm\fP if the queue
+is empty.
+.IP "IF_PREPEND(ifq, m)"
+.br
+This places the packet \fIm\fP at the head of the queue \fIifq\fP.
+.LP
+Each queue has a maximum length associated with it as a simple form
+of congestion control.  
+The macro IF_QFULL(ifq) returns 1 if the queue
+is filled, in which case the macro IF_DROP(ifq) should be used to
+bump a count of the number of packets dropped and the offending
+packet dropped.  
+For example, the following code fragment is commonly
+found in a network interface's input routine,
+.LS 
+if (IF_QFULL(inq)) {
+	IF_DROP(inq);
+	m_freem(m);
+} else
+	IF_ENQUEUE(inq, m);
+.LF
+.NH
+Gateways and Routing Issues
+.LP
+The system has been designed with the expectation that it will
+be used in an internetwork environment.  
+The ``canonical''
+environment was envisioned to be a collection of local area
+networks connected at one or more points through hosts with
+multiple network interfaces (one on each local area network),
+and possibly a connection to a long haul network (for example,
+the ARPANET).  
+In such an environment, issues of
+gatewaying and packet routing become very important.  
+Certain of these issues, such as congestion
+control, have been handled in a simplistic manner or specifically
+not addressed.
+Instead, where possible, the network system
+attempts to provide simple mechanisms upon which more involved
+policies may be implemented.  
+As some of these problems become
+better understood, the solutions developed will be incorporated
+into the system.
+.LP
+This section will describe the facilities provided for packet
+routing.  
+The simplistic mechanisms provided for congestion
+control are described in chapter 12.
+.NH 2 
+Routing Tables
+.LP
+The network system maintains a set of routing tables for
+selecting a network interface to use in delivering a 
+packet to its destination.  
+These tables are of the form:
+.LS 0
+struct rtentry {
+	u_long	rt_hash;		/* hash key for lookups */
+	struct	sockaddr rt_dst;	/* destination net or host */
+	struct	sockaddr rt_gateway;	/* forwarding agent */
+	short	rt_flags;		/* see below */
+	short	rt_refcnt;		/* no. of references to structure */
+	u_long	rt_use;			/* packets sent using route */
+	struct	ifnet *rt_ifp;		/* interface to give packet to */
+};
+.LF
+The routing information is organized in two separate tables, one
+for routes to a host and one for routes to a network.  
+The distinction between hosts and networks is necessary so
+that a single mechanism may be used
+for both broadcast and multi-drop type networks, and
+also for networks built from point-to-point links (e.g
+DECnet [DEC80]).
+.LP
+Each table is organized as a hashed set of linked lists.
+Two 32-bit hash values are calculated by routines defined for
+each address family; one based on the destination being
+a host, and one assuming the target is the network portion
+of the address.  
+Each hash value is used to
+locate a hash chain to search (by taking the value modulo the
+hash table size) and the entire 32-bit value is then
+used as a key in scanning the list of routes.  
+Lookups are applied first to the routing
+table for hosts, then to the routing table for networks.
+If both lookups fail, a final lookup is made for a ``wildcard''
+route (by convention, network 0).
+By doing this, routes to a specific host on a network may be
+present as well as routes to the network.  This also allows a
+\&``fall back'' network route to be defined to an ``smart'' gateway
+which may then perform more intelligent routing.
+.LP
+Each routing table entry contains a destination (who's at
+the other end of the route), a gateway to send the packet
+to, and various
+flags which indicate the route's status and type (host or
+network).  
+A count
+of the number of packets sent using the route is kept for
+use in deciding between multiple routes to the same destination
+(see below), and a count of ``held references'' to the dynamically
+allocated structure is maintained to insure memory reclamation
+occurs only when the route is not in use.  
+Finally a pointer to the
+a network interface is kept; packets sent using
+the route should be handed to this interface.
+.LP
+Routes are typed in two ways: either as host or network, and as
+\&``direct'' or ``indirect''.  
+The host/network
+distinction determines how to compare the \fIrt_dst\fP field
+during lookup.  
+If the route is to a network, only a packet's
+destination network is compared to the \fIrt_dst\fP entry stored
+in the table.  
+If the route is to a host, the addresses must
+match bit for bit.
+.LP
+The distinction between ``direct'' and ``indirect'' routes indicates
+whether the destination is directly connected to the source.
+This is needed when performing local network encapsulation.  
+If
+a packet is destined for a peer at a host or network which is
+not directly connected to the source, the internetwork packet
+header will
+indicate the address of the eventual destination, while
+the local network header will indicate the address of the intervening
+gateway.  
+.bp
+.LP
+Should the destination be directly connected, these addresses
+are likely to be identical, or a mapping between the two exists.
+The RTF_GATEWAY flag indicates the route is to an ``indirect''
+gateway agent and the local network header should be filled in
+from the \fIrt_gateway\fP field instead of \fIrt_dst\fP, or 
+from the internetwork destination address.
+.LP
+It is assumed multiple routes to the same destination will not
+be present unless they are deemed \fIequal\fP in cost (the
+current routing policy process never installs multiple routes
+to the same destination).
+However, should multiple routes to the same destination exist,
+a request for a route will return the ``least used'' route
+based on the total number of packets sent along this route.
+This can result in a ``ping-pong'' effect (alternate packets
+taking alternate routes), unless protocols ``hold onto''
+routes until they no longer find them useful;  either because
+the destination has changed, or because the route is lossy.
+.LP
+Routing redirect control messages are used to dynamically
+modify existing routing table entries as well as dynamically
+create new routing table entries.  
+On hosts where exhaustive
+routing information is too expensive to maintain (for example, work
+stations), the
+combination of wildcard routing entries and routing redirect
+messages can be used to provide a simple routing management
+scheme without the use of a higher level policy process. 
+Statistics are kept by the routing table routines
+on the use of routing redirect messages and their
+affect on the routing tables.  These statistics may be
+viewed using \fInetstat\fP\|(1).
+.LP
+Status information other than routing redirect control messages
+may be used in the future, but at present they are ignored.
+Likewise, more intelligent ``metrics'' may be used to describe
+routes in the future, possibly based on bandwidth and monetary
+costs.
+.NH 2 
+Routing Table Interface
+.LP
+A protocol accesses the routing tables through
+three routines,
+one to allocate a route, one to free a route, and one
+to process a routing redirect control message.
+The routine \fIrtalloc\fP performs route allocation; it is
+called with a pointer to the following structure,
+.LS
+struct route {
+	struct	rtentry *ro_rt;
+	struct	sockaddr ro_dst;
+};
+.LF
+The route returned is assumed ``held'' by the caller until
+disposed of with an \fIrtfree\f
+P call.  Protocols which implement
+virtual circuits, such as TCP, hold onto routes for the duration
+of the circuit's lifetime, while connection-less protocols,
+such as UDP, currently allocate and free routes on each transmission.
+.LP
+The routine \fIrtredirect\fP is called to process a routing redirect
+control message.  
+It is called with a destination address and 
+the new gateway to that destination.  
+If a non-wildcard route
+exists to the destination, the gateway entry in the route is modified 
+to point at the new gateway supplied.  
+Otherwise, a new routing
+table entry is inserted reflecting the information supplied.  
+Routes
+to interfaces and routes to gateways which are not directly accesible
+from the host are ignored.
+.NH 2 
+User-Level Routing Policies
+.LP
+Routing policies implemented in user processes manipulate the
+kernel routing tables through two \fIioctl\fP calls.  
+The commands SIOCADDRT and SIOCDELRT add and delete routing entries,
+respectively; the tables are read through the /dev/kmem device.
+The decision to place policy decisions in a user process implies
+routing table updates may lag a bit behind the identification of
+new routes, or the failure of existing routes, but this period
+of instability is normally very small with proper implementation
+of the routing process.  
+Advisory information, such as ICMP
+error messages and IMP diagnostic messages, may be read from
+raw sockets (described in the next section).
+.LP
+One routing policy process has already been implemented.  The
+system standard ``routing daemon'' uses 
+a variant of the Xerox NS Routing Information
+Protocol [Xerox82] to maintain up to date routing tables in our local
+environment.  
+Interaction with other existing routing protocols,
+such as the Internet GGP (Gateway-Gateway Protocol), may be
+accomplished using a similar process.
+.NH
+Raw Sockets
+.LP
+A raw socket is a mechanism which allows users direct access
+to a lower level protocol.  
+Raw sockets are intended for knowledgeable
+processes which wish to take advantage of some protocol
+feature not directly accessible through the normal interface, or 
+for the development of new protocols built atop existing lower level
+protocols.  
+For example, a new version of TCP might be developed at the
+user level by utilizing a raw IP socket for delivery of packets.
+The raw IP socket interface attempts to provide an identical interface
+to the one a protocol would have if it were resident in the kernel.
+.LP
+The raw socket support is built around a generic raw socket interface,
+and (possibly) augmented by protocol-specific processing routines.
+This section will describe the core of the raw socket interface.
+.NH 2 
+Control Blocks
+.LP
+Every raw socket has a protocol control block of the following form,
+.LS 0
+struct rawcb {
+	struct	rawcb *rcb_next;	/* doubly linked list */
+	struct	rawcb *rcb_prev;
+	struct	socket *rcb_socket;	/* back pointer to socket */
+	struct	sockaddr rcb_faddr;	/* destination address */
+	struct	sockaddr rcb_laddr;	/* socket's address */
+	caddr_t	rcb_pcb;		/* protocol specific stuff */
+	short	rcb_flags;
+};
+.LF
+All the control blocks are kept on a doubly linked list for
+performing lookups during packet dispatch.  
+Associations may
+be recorded in the control block and used by the output routine
+in preparing packets for transmission.  
+The addresses are also
+used to filter packets on input; this will be described in more
+detail shortly.  
+If any protocol specific information is required,
+it may be attached to the control block using the \fIrcb_pcb\fP
+field. 
+.LP
+A raw socket interface is datagram oriented.  
+That is, each send
+or receive on the socket requires a destination address.  
+This
+address may be supplied by the user or stored in the control block
+and automatically installed in the outgoing packet by the output
+routine.  
+Since it is not possible to determine whether an address
+is present or not in the control block, two flags, RAW_LADDR and
+RAW_FADDR, indicate if a local and foreign address are present.
+Another flag, RAW_DONTROUTE, indicates if routing should be performed
+on outgoing packets.  
+If it is, a route is expected to be 
+allocated for each ``new'' destination address.  
+That is, the first time a packet is
+transmitted a route is determined, and thereafter each time the
+destination address stored in \fIrcb_route\fP differs from
+\fIrcb_faddr\fP, or \fIrcb_route.ro_rt\fP is zero, the old
+route is discarded and a new one allocated. 
+.NH 2 
+Input Processing
+.LP
+Input packets are ``assigned'' to raw sockets based on a simple
+pattern matching scheme.  
+Each network interface or protocol gives packets
+to the raw input routine with the call:
+.LS
+raw_input(m, proto, src, dst)
+	struct mbuf *m;
+	struct sockproto *proto, struct sockaddr *src, *dst;
+.LF
+The data packet then has a generic header prepended to it of the
+form
+.LS
+struct raw_header {
+	struct	sockproto raw_proto;
+	struct	sockaddr raw_dst;
+	struct	sockaddr raw_src;
+};
+.LF
+and it is placed in a packet queue for the ``raw input protocol'' module.
+Packets taken from this queue are copied into any raw sockets that
+match the header according to the following rules,
+.IP 1)
+The protocol family of the socket and header agree.
+.IP 2)
+If the protocol number in the socket is non-zero, then it agrees
+with that found in the packet header.
+.IP 3)
+If a local address is defined for the socket, the address format
+of the local address is the same as the destination address's and
+the two addresses agree bit for bit.
+.IP 4)
+The rules of 3) are applied to the socket's foreign address and the packet's
+source address.
+.LP
+A basic assumption is that addresses present in the
+control block and packet header (as constructed by the network
+interface and any raw input protocol module) are in a canonical
+form which may be ``block compared''.
+.NH 2 
+Output Processing
+.LP
+On output the raw \fIpr_usrreq\fP routine 
+passes the packet and raw control block to the
+raw protocol output routine for any processing required before
+it is delivered to the appropriate network interface.  The
+output routine is normally the only code required to implement
+a raw socket interface.
+.NH
+Buffering and Congestion Control
+.LP
+One of the major factors in the performance of a protocol is
+the buffering policy used.  
+Lack of a proper buffering policy
+can force packets to be dropped, cause falsified windowing
+information to be emitted by protocols, fragment host memory,
+degrade the overall host performance, etc.  
+Due to problems
+such as these, most systems allocate a fixed pool of memory
+to the networking system and impose
+a policy optimized for ``normal'' network operation.  
+.LP
+The networking system developed for \*(Un
+is little different in this respect.  
+At boot time a fixed amount of memory is allocated by
+the networking system.  
+At later times more system memory
+may be requested as the need arises, but at no time is
+memory ever returned to the system.  
+It is possible to
+garbage collect memory from the network, but difficult.  
+In order to perform this garbage collection properly, some
+portion of the network will have to be ``turned off'' as
+data structures are updated.  
+The interval over which this
+occurs must kept small compared to the average inter-packet
+arrival time, or too much traffic may
+be lost, impacting other hosts on the network, as well as
+increasing load on the interconnecting mediums.  
+In our
+environment we have not experienced a need for such compaction,
+and thus have left the problem unresolved.
+.LP
+The mbuf structure was introduced in chapter 5.  
+In this
+section a brief description will be given of the allocation
+mechanisms, and policies used by the protocols in performing
+connection level buffering.
+.NH 2 
+Memory Management
+.LP
+The basic memory allocation routines place no restrictions on
+the amount of space which may be allocated.  
+Any request made
+is filled until the system memory allocator starts refusing
+to allocate additional memory.  
+When the current quota of memory
+is insufficient to satisfy an mbuf allocation request, the
+allocator requests enough new pages from the system to satisfy
+the current request only.  
+All memory owned by the network is
+described by a private page table used in remapping pages to
+be logically contiguous as the need arises.  
+In addition, an
+array of reference counts parallels the page table and is used
+when multiple copies of a page are present.
+.LP
+Mbufs are 128 byte structures, 16 fitting in a 2048 byte
+page of memory.  
+When data is placed in mbufs, if possible,
+it is copied or remapped into logically contiguous pages of
+memory from the network page pool.  
+Data smaller than the size
+of a page is copied into one or more 112 byte mbuf data areas. 
+.NH 2 
+Protocol Buffering Policies
+.LP
+Protocols reserve fixed amounts of
+buffering for send and receive queues at socket creation time.  
+These
+amounts define the high and low water marks used by the socket routines
+in deciding when to block and unblock a process.  
+The reservation
+of space does not currently
+result in any action by the memory management
+routines, though it is clear if one imposed an upper
+bound on the total amount of physical memory allocated to the network,
+reserving memory would become important.
+.bp
+.LP
+Protocols which provide connection level flow control do this
+based on the amount of space in the associated socket queues.  
+That is, send windows are calculated based on the amount of free space
+in the socket's receive queue, while receive windows are adjusted
+based on the amount of data awaiting transmission in the send queue.
+Care has been taken to avoid the ``silly window syndrome'' described
+in [Clark82] at both the sending and receiving ends.
+.NH 2 
+Queue Limiting
+.LP
+Incoming packets from the network are always received unless
+memory allocation fails.  
+However, each Level 1 protocol input queue
+has an upper bound on the queue's length, and any packets
+exceeding that bound are discarded.  
+It is possible for a host to be
+overwhelmed by excessive network traffic (for instance a host
+acting as a gateway from a high bandwidth network to a low bandwidth
+network).  
+As a ``defensive'' mechanism the queue limits may be
+adjusted to throttle network traffic load on a host.
+Consider a host willing to devote some percentage of
+its machine to handling network traffic. 
+If the cost of handling an
+incoming packet can be calculated so that an 
+acceptable ``packet handling rate''
+can be determined, then input queue lengths may be dynamically
+adjusted based on a host's network load and the number of packets
+awaiting processing.  
+Obviously, discarding packets is
+not a satisfactory solution to a problem such as this
+(simply dropping packets is likely to increase the load on a network);
+the queue lengths were incorporated mainly as a safeguard mechanism.
+.NH 2 
+Packet Forwarding
+.LP
+When packets can not be forwarded because of memory limitations,
+the system generates a ``source quench'' message.  
+In addition,
+any other problems encountered during packet forwarding are also
+reflected back to the sender in the form of ICMP packets.  
+This helps hosts avoid unneeded retransmissions.
+.LP
+Broadcast packets are never forwarded due to possible dire
+consequences.  
+In an early stage of network development, broadcast
+packets were forwarded and a ``routing loop'' resulted in network
+saturation and every host on the network crashing.
+.NH 1 
+Out of Band Data
+.LP
+Out of band data is a facility peculiar to the stream socket
+abstraction defined.  
+Little agreement appears to exist as
+to what its semantics should be.  
+TCP defines the notion of ``urgent data'' as in-line, while the 
+NBS protocols [Burruss81]
+and numerous others provide a fully independent logical
+transmission channel along which out of band data is to be
+sent.
+In addition, the amount of the data which may be sent as an out
+of band message varies from protocol to protocol; everything
+from 1 bit to 16 bytes or more.
+.LP
+A stream socket's notion of out of band data has been defined
+as the lowest reasonable common denominator (at least reasonable
+in our minds);
+clearly this is subject to debate.  
+Out of band data is expected
+to be transmitted out of the normal sequencing and flow control
+constraints of the data stream.  
+A minimum of 1 byte of out of
+band data and one outstanding out of band message are expected to
+be supported by the protocol supporting a stream socket.
+It is a protocols prerogative to support larger sized messages, or
+more than one outstanding out of band message at a time.
+.LP
+Out of band data is maintained by the protocol and usually not
+stored in the socket's send queue.  
+The PRU_SENDOOB and PRU_RCVOOB
+requests to the \fIpr_usrreq\fP routine are used in sending and
+receiving data.
+.sp 1c
+.ps 16
+.br
+.B
+Appendix A: Acknowledgements and References
+.R
+.ps
+.sp 0.5c
+.LP
+The internal structure of the system is patterned after the Xerox PUP
+architecture [Boggs79], while in certain places the Internet protocol
+family has had a great deal of influence in the design.  
+The use of
+software interrupts for process invocation is based on similar
+facilities found in the VMS operating system.  
+Many of the ideas
+related to protocol modularity, memory management, and network
+interfaces are based on Rob Gurwitz's TCP/IP implementation for the
+4.1BSD version of \*(Un on the VAX [Gurwitz81].
+.sp 1c
+.ps 16
+.br
+.B
+Appendix B: References
+.R
+.ps
+.sp 0.5c
+.LP
+.IP [Boggs79] 20
+Boggs, D. R., J. F. Shoch, E. A. Taft, and R. M. Metcalfe;
+\fIPUP: An Internetwork Architecture\fP.  Report CSL-79-10.
+XEROX Palo Alto Research Center, July 1979.
+.IP [BBN78] 20
+Bolt Beranek and Newman;
+\fISpecification for the Interconnection of Host and IMP\fP.
+BBN Technical Report 1822.  May 1978.
+.IP [Cerf78] 20
+Cerf, V. G.;  The Catenet Model for Internetworking.
+Internet Working Group, IEN 48.  July 1978.
+.IP [Clark82] 20
+Clark, D. D.;  Window and Acknowledgement Strategy in TCP. 
+Internet Working Group, IEN Draft Clark-2.  March 1982.
+.IP [DEC80] 20
+Digital Equipment Corporation;  \fIDECnet DIGITAL Network
+Architecture \- General Description\fP.  Order No.
+AA-K179A-TK.  October 1980.
+.IP [Gurwitz81] 20
+Gurwitz, R. F.;  VAX-UNIX Networking Support Project \- Implementation
+Description.  Internetwork Working Group, IEN 168.
+January 1981.
+.IP [ISO81] 20
+International Organization for Standardization.
+\fIISO Open Systems Interconnection \- Basic Reference Model\fP.
+ISO/TC 97/SC 16 N 719.  August 1981.
+.IP [Joy82a] 20
+Joy, W.; Cooper, E.; Fabry, R.; Leffler, S.; and McKusick, M.;
+\fISystem Interface Overview\fP.  Computer Systems Research Group,
+Technical Report 5.  University of California, Berkeley.  Draft
+of September 1, 1982.
+.IP [Postel79] 20
+Postel, J., ed.  \fIDOD Standard User Datagram Protocol\fP.
+Internet Working Group, IEN 88.  May 1979.
+.IP [Postel80a] 20
+Postel, J., ed.  \fIDOD Standard Internet Protocol\fP.
+Internet Working Group, IEN 128.  January 1980.
+.IP [Postel80b] 20
+Postel, J., ed.  \fIDOD Standard Transmission Control Protocol\fP.
+Internet Working Group, IEN 129.  January 1980.
+.IP [Xerox81] 20
+Xerox Corporation.  \fIInternet Transport Protocols\fP. 
+Xerox System Integration Standard 028112.  December 1981.
+.IP [Zimmermann80] 20
+Zimmermann, H.  OSI Reference Model \- The ISO Model of
+Architecture for Open Systems Interconnection.
+IEEE Transactions on Communications.  Com-28(4); 425-432.  April 1980.

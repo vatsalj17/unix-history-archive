@@ -1,0 +1,516 @@
+.\" @(#)c2.net.svcs 1.1 85/04/09	Sun Microsystems
+.OH 'Network Services''Page \\\\n(PN'
+.EH 'Page \\\\n(PN''Network Services'
+.OF 'Sun Microsystems''Release 2.0'
+.EF 'Sun Microsystems''Release 2.0'
+.RP
+.rm DY
+.TL
+.ps 20
+Network Services Guide
+.NH
+Introduction
+.LP
+This document is intended for users who have
+a general interest in network services.
+Although this is not a manual for system administrators,
+the material is heavily slanted in that direction.
+.LP
+Sun provides several network services,
+such as Network Disk (ND),
+and the Network File System (NFS),
+discussed in the document
+.I "Sun's Network File System" .
+The yellow pages are another network service
+offered for the first time on the 2.0 release.
+They permit password information and host addresses
+for an entire network to be held in a single database.
+This greatly eases the task of system and network administration.
+Sun will provide more network services in the future.
+.NH
+What Are The Yellow Pages?
+.LP
+The yellow pages (YP) constitute a distributed network lookup service:
+.IP \(bu
+YP is a lookup service: it maintains a set of databases for querying.
+Programs can ask for the value associated with a particular key,
+or all the keys, in a database.
+.IP \(bu
+YP is a network service: programs need not know the location of data,
+or how it is stored.  
+Instead, they use a network protocol
+to communicate with a database server that knows those details.
+.IP \(bu
+YP is distributed: databases are fully replicated
+on several machines, known as YP servers.
+Servers propagate updated databases among themselves, ensuring consistency.
+At steady state, it doesn't matter which server answers a request;
+the answer is the same everywhere.
+.NH 2 
+The YP Map
+.LP
+The yellow pages serve information stored in YP
+.I maps .
+Each map contains a set of keys and associated values.
+For example, the
+.I hosts
+map contains (as keys) all host names on a network,
+and (as values) the corresponding Internet addresses.
+Each YP map has a
+.I mapname ,
+used by programs to access data in the map.
+Programs must know the format of the data in the map.
+Currently, most maps are derived from ASCII files formerly found in
+.I /etc :
+.I passwd ,
+.I group ,
+.I hosts ,
+.I networks ,
+and others.  
+The format of data in the YP map is in most cases identical
+to the format of the ASCII file.  
+Maps are implemented by
+.I dbm (3)
+files located in subdirectories of
+.I /etc/yp
+on YP server machines.
+.NH 2 
+The YP Domain
+.LP
+A YP
+.I domain
+is a named set of YP maps.
+You can determine your YP domain by executing the
+.I domainname (1)
+command.  
+Note that YP domains are different
+from both Internet domains and
+.I sendmail
+domains.  
+A YP domain is simply a directory in
+.I /etc/yp
+containing a set of maps.
+.bp
+.LP
+A domain name is required for retrieving data from a YP database.
+For instance, if your YP domain is
+.I sun
+and you want to find the Internet address of host
+.I dbserver ,
+you must ask YP for the value associated with the key
+.I dbserver
+in the map
+.I hosts.byname
+within the YP domain
+.I sun .
+Each machine on the network belongs to a default domain, set in
+.I /etc/rc.local
+at boot time with the
+.I domainname (8)
+command.
+.LP
+A YP server holds all the maps of a YP domain in a subdirectory of
+.I /etc/yp ,
+named after the domain.
+In the example above, maps for the
+.I sun
+domain would be held in
+.I /etc/yp/sun .
+Every YP server must have the directory
+.I /etc/yp/yp_private ,
+which contains information about servers, domains, and maps.
+This information is used internally by the YP.
+For completeness, the YP server machine is its own client.
+.NH 2 
+Servers And Clients
+.LP
+Servers provide resources, while clients consume them.
+A server or a client is not necessarily the same thing as a machine.
+To illustrate, let's consider two different services:
+the NFS (network file system) and the YP.
+.IP NFS 5
+The NFS allows client machines to mount remote filesystems
+and access files in place,
+provided a server machine has exported the filesystem.
+However, a server that exports filesystems
+may also mount remote filesystems exported by other machines,
+thus becoming a client.
+So a given machine may be both server and client,
+or client only, or server only.
+Furthermore, NFS servers and clients
+need not coincide with ND servers and clients.
+.IP YP 5
+The YP server, by contrast, is a process rather than a machine,
+running on a machine that may be neither ND server nor NFS server. 
+All processes that make use of YP services are YP clients.
+Sometimes clients are served by YP servers on the same machine,
+but other times by YP servers running on another machine.
+To further muddy the waters,
+processes on master YP server machines (discussed below)
+don't use YP services at all, and aren't YP clients.
+But processes using YP services on slave YP servers are YP clients.
+.NH 2 
+Masters and Slaves
+.LP
+YP servers are either master or slave.
+For any map, one YP server is designated the master,
+and all changes to the map should be made on that machine.
+The changes propagate from master to slaves.
+A newly built map is timestamped internally when
+.I makedbm
+creates it.  
+If you build a YP map on a slave server,
+you will break the YP update algorithm (temporarily),
+and you will have to get all versions in synch manually.
+Moral: after you decide which server is the master,
+do all database updates and builds there, not on slaves.
+.LP
+It is possible for different maps to have different servers as master.
+Therefore, a given server may be a master with regard to one map,
+and a slave with regard to another.
+This can get confusing quickly.
+It is suggested that a single server be master for all the maps created by
+.I ypinit
+in a single domain.  
+This document assumes the simple case,
+in which one server is the master for all maps in the database.
+.bp
+.NH
+Overview of the Yellow Pages
+.LP
+In releases before 2.0, each machine on the network had its own copy of
+.I /etc/hosts ,
+a file containing the Internet address of each machine on the network.
+Every time a machine was added to the network, each
+.I /etc/hosts
+file had to be updated.
+.LP
+The YP is a network service containing network-wide databases such as
+.I /etc/hosts .
+There are servers spread throughout the network
+containing copies of the databases.
+When an arbitrary machine on the network wants to look up something in
+.I /etc/hosts ,
+it makes an RPC call to one of the servers to get the information.
+One server is the master \(em the only one whose database may be modified.
+The other servers are slaves, and they are periodically updated
+so that their information is in synch with that of the master. 
+.LP
+The YP can serve up any number of databases.
+Normally that will include files that previously lived in
+.I /etc ,
+such as
+.I /etc/hosts
+and
+.I /etc/networks .
+However, users can add their own databases to the YP.
+.LP
+The YP itself simply serves up information,
+and has no idea what it means.
+Thus there are two parts of YP we need to consider:
+how it operates, and what files formerly in
+.I /etc
+now live in the YP.
+This has serious ramifications for users.
+.NH 2 
+The YP Network Service
+.NH 3 
+Naming
+.LP
+Imagine a company with two different networks,
+each of which has its own separate list of hosts and passwords.
+Within each network, user names, numerical user IDs,
+and host names are unique.
+However, there is duplication between the two networks.
+If these two networks are ever connected, chaos could result.
+The host name, returned by the
+.I hostname (1)
+command and the
+.I gethostname ()
+system call, may no longer uniquely identify a machine.
+Thus a new command and system call,
+.I domainname (1)
+and
+.I getdomainname(2)
+have been added.  
+In the example above,
+each of the two networks could be given a different domain name.
+However, it is always simpler to use a single domain whenever possible.
+.LP
+The relevance of domains to YP is that data is stored in
+.I /etc/yp/ domainname.
+In particular, a machine can contain data for several different domains.
+.NH 3 
+Data Storage
+.LP
+The data is stored in
+.I dbm (3)
+format.  
+Thus the database
+.I hosts.byname
+for the domain
+.I sun
+is stored as
+.I /etc/yp/sun/hosts.byname.pag
+and
+.I /etc/yp/sun/hosts.byname.dir .
+The command
+.I makedbm (8)
+takes an ASCII file such as
+.I /etc/hosts
+and converts it into a
+.I dbm
+file suitable for use by the YP.
+However, system administrators normally use the makefile in
+.I /etc/yp
+to create new
+.I dbm
+files (read on for details).
+This makefile in turn calls
+.I makedbm .
+.bp
+.NH 3 
+Servers
+.LP
+To become a server, a machine must contain the YP databases,
+and must also be running the YP daemon
+.I ypserv .
+The
+.I ypinit (8)
+command invokes this daemon automatically.
+It also takes a flag saying whether you are creating a master or a slave.
+When updating the master copy of a database,
+you can force the change to be propagated to all the slaves with the
+.I yppush (8)
+command.  
+This pushes the information out to all the slaves.
+Conversely, from a slave, the
+.I yppull (8)
+command gets the latest information from the master.  
+The makefile in
+.I /etc/yp
+first executes
+.I makedbm
+to make a new database, and then calls
+.I yppush
+to propagate the change throughout the network.
+.NH 3 
+Clients
+.LP
+Remember that a client machine (which is not a server)
+does not contain any data itself, but rather makes an RPC call
+to a YP server each time it needs information from a YP database.  
+The
+.I ypbind (8)
+daemon caches the name of a server.  
+When a client boots,
+.I ypbind
+broadcasts asking for the name of the YP server.
+Similarly, if the cached server crashes,
+.I ypbind
+broadcasts asking for the name of a new server.  
+The
+.I ypwhich (1)
+command gives the name of the server that
+.I ypbind
+currently points at.
+.LP
+Since client machines no longer have entire copies of files in the YP,
+a new command
+.I ypcat (1)
+has been provided.
+The command
+.LW "ypcat hosts"
+is equivalent to
+.LW "cat /etc/hosts"
+in a pre 2.0 system; as you might guess,
+.LW "ypcat passwd"
+is equivalent to
+.LW "cat /etc/passwd" .
+To look for someone's password entry,
+searching through the password file no longer suffices;
+you have to issue the following command
+.LS
+% ypcat passwd | grep userid
+.LF
+where you replace
+.LW userid
+with the login name you're searching for.
+.NH 2 
+Default YP Files
+.LP
+By default, Sun workstations have six files from
+.I /etc
+in the YP:
+.I /etc/passwd ,
+.I /etc/groups ,
+.I /etc/networks ,
+.I /etc/hosts ,
+.I /etc/services ,
+and
+.I /etc/protocols .
+In addition, there is a new file
+.I netgroup ,
+which many sites ought to create and put in the YP database.
+.LP
+Library routines such as
+.I getpwent (3) ,
+.I getgrent (3) ,
+and
+.I gethostent (3)
+have been rewritten to take advantage of the YP.
+Thus, C programs that call these library routines
+will have to be relinked in order to function correctly.
+.NH 3 
+Hosts
+.LP
+The hosts file is stored as two different files in the YP.
+The first,
+.I hosts.byname ,
+is indexed by hostname.
+The second,
+.I hosts.byaddr ,
+is indexed by Internet address.
+Remember that this actually expands into four files, with suffixes
+.I .pag ,
+and
+.I .dir .
+When a user program calls the library routine
+.I gethostbyname (3),
+a single RPC call to a server retrieves the entry from the
+.I hosts.byname
+file.  
+Similarly,
+.I gethostbyaddr (3)
+retrieves the entry from the
+.I hosts.byaddr
+file.  
+Of course if the YP is not running (which is caused by commenting
+.I ypbind
+out of the
+.I /etc/rc
+file), then
+.I gethostbyname
+will read the
+.I /etc/hosts
+files, just as it always has.
+.bp
+.LP
+Although the
+.I ypcat
+command is a general YP database print program,
+it knows about the standard files in the YP.  
+Thus
+.LW "ypcat hosts"
+is translated into
+.LW "ypcat hosts.byaddr" ,
+since there is no file called
+.I hosts
+in the YP.
+.LP
+Normally, the hosts file for the YP will be the same as the
+.I /etc/hosts
+file on the machine serving as a YP master.
+In this case, the makefile in
+.I /etc/yp
+will check to see if
+.I /etc/hosts
+is newer than the
+.I dbm
+file.  
+If it is, it will use a simple
+.I sed
+script to recreate
+.I hosts.byname
+and
+.I hosts.byaddr ,
+run them through
+.I makedbm (8)
+and then call
+.I yppush (8).
+See
+.I ypmake (8)
+for details.
+.NH 3 
+Passwd
+.LP
+The
+.I passwd
+file is similar to the
+.I hosts
+file.  
+It exists as two separate files,
+.I passwd.byname
+and
+.I passwd.byuid .
+The
+.I ypcat
+program prints it, and
+.I ypmake
+updates it.  
+However, if
+.I getpwent (3)
+always went directly to the YP as does
+.I gethostent (3),
+then everyone would be forced to have an identical password file!
+Consequently,
+.I getpwent
+reads the local
+.I /etc/passwd
+file, just as it always did.
+But now it interprets ``+'' entries in the password file to mean,
+interpolate entries from the YP database.
+If you wrote a simple program using
+.I getpwent
+to print out all the entries from your password file,
+it would print out a virtual password file:
+rather than printing out + signs,
+it would print out whatever entries the local password file
+included from the YP database.
+The difference between
+.I /etc/hosts
+and
+.I /etc/passwd
+is discussed in more detail in the section
+\&``How Security is Changed with the Yellow Pages,''
+part of the
+.I "System Administrator's Manual" .
+.NH 3 
+Others
+.LP
+Of the other four files in
+.I /etc ,
+.I /etc/group
+is treated like
+.I /etc/passwd ,
+in that
+.I getgrent()
+will only consult the YP if explicitly told to do so by the
+.I /etc/group
+file.  
+The files
+.I /etc/networks ,
+.I /etc/protocols ,
+.I /etc/services ,
+and
+.I /etc/networks
+are treated like
+.I /etc/hosts :
+for these files, the library routines go directly to the YP,
+without consulting the local files.
+.NH 3 
+Changing your passwd
+.LP
+To change data in the YP, you must log onto the master machine,
+and edit databases there;
+.I ypwhich (1)
+tells where the master server is.
+However, since changing a password is so commonly done, the
+.I yppasswd (1)
+command has been provided to change your YP password.
+It has the same user interface as the
+.I passwd (1) 
+command.  
+This command will only work if the
+.I yppasswdd (8c)
+server has been started up on the YP master server machine.

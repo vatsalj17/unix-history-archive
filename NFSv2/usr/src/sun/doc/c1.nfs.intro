@@ -1,0 +1,940 @@
+.\" @(#)c1.nfs.intro 1.1 85/04/09	Sun Microsystems
+.OH 'Network File System''Page \\\\n(PN'
+.EH 'Page \\\\n(PN''Network File System'
+.OF 'Sun Microsystems''Release 2.0'
+.EF 'Sun Microsystems''Release 2.0'
+.RP
+.rm DY
+.TL
+.ps 20
+Sun's Network File System
+.NH
+Introduction
+.LP
+This document gives an overview of Sun's network file system,
+which allows users to mount directories across the network,
+and then to treat remote files as if they were local.
+The first section is a bit elementary, so advanced users
+may want to skip straight to the examples of how it works.
+Beginning users may not be interested in the third section,
+which discusses network file system architecture.
+.LP
+The Network File System (NFS) is a facility
+for sharing files in a heterogeneous environment
+of machines, operating systems, and networks.
+Sharing is accomplished by mounting a remote filesystem,
+then reading or writing files in place.
+The NFS is open-ended,
+and Sun Microsystems encourages customers and other vendors
+to take advantage of the interface
+to extend the capabilities of other systems.
+.LP
+A distributed network of personal workstations
+can provide more aggregate computing power than a mainframe computer,
+with far less variation in response time over the course of the day.
+Thus, a network of personal computers is generally
+more cost-effective than a central mainframe computer,
+particularly when considering the value of people's time.
+However, for large programming projects and database applications,
+a mainframe has often been preferred,
+because all files can be stored on a single machine.
+.LP
+Those who work with unconnected personal computers
+know the inconveniences resulting from data fragmentation.
+Even in a network environment,
+sharing programs and data has sometimes been difficult.
+Files either had to be copied to each machine where they were needed,
+or users had to log in to the remote machine with the required files.
+Network logins were time-consuming,
+and having multiple copies of a file got confusing
+as incompatible changes were made to separate copies.
+.LP
+To solve this problem,
+Sun designed a distributed filesystem
+that permits client systems to gain access
+to shared files on a remote system.
+Client machines request resources
+provided by other machines, called servers.
+A server machine makes particular filesystems available,
+which client machines can mount as local filesystems.
+Thus, users can access remote files
+as if they were on the local machine.
+.LP
+The NFS was not designed by extending the \*(Un\(dg
+operating system onto the network.
+.FS 
+\(dg \*(Un is a trademark of AT&T in the USA and other countries
+.FE
+Instead, the NFS was designed to fit into Sun's
+network services architecture.
+Thus, NFS is not a distributed operating system,
+but rather, an interface to allow
+a variety of machines and operating systems
+to play the role of client or server.
+Sun has opened the NFS interface to customers and other vendors,
+in order to encourage the development of a rich set of applications
+working together on a single network.
+.bp
+.NH 2
+Computing Environments
+.LP
+The current computing environment in many businesses and universities
+looks like this:
+.PS
+Abox: box wid 1.5i ht 1.5i "Mainframe"
+move from Abox right 1.25i
+Bbox: box "terminal2"
+move from Bbox up .5i
+Cbox: box "terminal1"
+move from Bbox down .50i
+Dbox: box "terminal3"
+move from Dbox down .50i
+Gbox: box "terminal4"
+move from Abox.sw right .25i
+line down .50i
+Eell: ellipse ht .25i wid .50i
+line from Eell.e down .50i
+line from Eell.w down .50i
+arc cw from end of 2nd line to end of 3rd line
+move from Abox.sw right 1.25i
+line down .50i
+Fell: ellipse ht .25i wid .50i
+line from Fell.e down .50i
+line from Fell.w down .50i
+arc cw from end of 5th line to end of 6th line
+line from Abox.e to Bbox.w
+line from Abox.e to Cbox.w
+line from Abox.e to Dbox.w
+line from Abox.e to Gbox.w
+.PE
+.LP
+The major problem with this environment
+is competition for CPU cycles.
+The workstation environment solves that problem,
+but introduces more disk drives into the picture.
+A network of workstations looks like this:
+.PS
+Abox: box ht .25i wid 4.5i "ethernet"
+move from Abox.sw right 1i
+line down .5i
+Cbox: box wid 1i "workstation1"
+line from Cbox.s down .25i
+Eell: ellipse ht .2i wid .4i
+line from Eell.e down .4i
+line from Eell.w down .4i
+arc cw from end of 3rd line to end of 4th line
+move from Abox.sw right 2.5i
+line down .5i
+Dbox: box wid 1i "server"
+move from Dbox.sw right .1i
+line down .25i
+Fell: ellipse ht .25i wid .5i
+line from Fell.e down .5i
+line from Fell.w down .5i
+Aarc: arc cw from end of 7th line to end of 8th line
+move from Dbox.se left .1i
+line down .25i
+Mell: ellipse ht .25i wid .5i
+line from Mell.e down .5i
+line from Mell.w down .5i
+arc cw from end of 10th line to end of 11th line
+move from Abox.nw right .25i
+line up .5i
+Hbox: box wid 1i "workstation2"
+move from Abox.nw right 1.75i
+line up .5i
+Ibox: box wid 1i "workstation3"
+move from Abox.nw right 3.25i
+line up .5i
+Jbox: box wid 1i "workstation4"
+move from Abox.sw right 4i
+line down .5i
+Lastbox: box wid 1i ht 1i "printer"
+.PE
+.LP
+Sun's goal with NFS was to make all disks available as needed.
+Individual workstations have access to all information
+residing anywhere on the network.
+Printers and supercomputers may also be available
+somewhere on the network.
+.NH 2
+Terms and Concepts
+.LP
+A machine that provides resources to the network is a
+.I server ,
+while a machine that employs these resources is a
+.I client .
+A machine may be both a server and a client.
+A person logged in on a client machine is a
+.I user ,
+while a program or set of programs that run on a client is an
+.I application .
+There is a distinction between
+the code implementing the operations of a filesystem,
+(called
+.I "filesystem operations" ),
+and the data making up the filesystem's structure and contents
+(called
+.I "filesystem data" ).
+.LP
+A traditional \*(Un
+filesystem is composed of directories and files,
+each of which has a corresponding
+.I inode
+(index node),
+containing administrative information about the file,
+such as location, size, ownership, permissions, and access times.
+.I Inodes
+are assigned unique numbers within a filesystem,
+but a file on one filesystem could have the same number
+as a file on another filesystem.
+This is a problem in a network environment, because
+remote filesystems need to be mounted dynamically,
+and numbering conflicts would cause havoc.
+To solve this problem, Sun has designed the
+virtual file system (VFS), based on the
+.I vnode ,
+a generalized implementation of
+.I inodes
+that are unique across filesystems.
+.LP
+The Remote Procedure Call (RPC) facility
+provides a mechanism whereby one process (the 
+.I caller
+process) can have another process (the 
+.I server
+process) execute a procedure call,
+as if the caller process had executed the procedure call
+in its own address space (as in the local model of a procedure call).
+Because the caller and the server are now two separate processes,
+they no longer have to live on the same physical machine.  
+.LP
+The RPC mechanism is implemented as a library of procedures,
+plus a specification for portable data transmission,
+known as the eXternal Data Representation (XDR).
+Both RPC and XDR are portable,
+providing a kind of standard I/O library
+for interprocess communication.
+Thus programmers now have a standardized access to sockets
+without having to be concerned about the low-level details of the 
+.LW accept ,
+.LW bind,
+and
+.LW select
+procedures.
+.LP
+The Yellow Pages (YP) is a network service
+to ease the job of administering networked machines.
+The YP is a centralized read-only database.
+For a client on the network file system,
+this means that an application's access to data served by the YP
+is independent of the relative locations of the client and the server.
+The YP database on the server
+provides password, group, network, and host information
+to client machines.
+.NH 2
+Comparison with Predecessors
+.LP
+The Network File System (NFS) is composed of a modified \*(Un
+kernel, a set of library routines,
+and a collection of utility commands.
+The NFS presents a network client with a complete remote filesystem.
+Since NFS is largely transparent to the user,
+this document tells you about things you might not otherwise notice.
+Sun's NFS is an open system that can accommodate
+other machines on the net, even non-\*(Un
+systems, without compromising security.
+.LP
+Sun users may be familiar with
+.LW rcp.
+It is a remote copy utility program
+that uses the networking facilities of 4.2 BSD
+to copy files from one machine to another.
+.LW Rcp 
+allows data transfer only in units of files.
+The client of
+.LW rcp
+supplies the path name of a file on a remote machine,
+and receives a stream of bytes in return.
+Access control is based on
+the client's login name and host name.
+.LP
+The major problem with
+.XW rcp
+is that it is not transparent to the user,
+who winds up with a redundant copy of the desired file.
+The NFS, by contrast, is transparent \(em
+only one copy of the file is necessary.
+Another problem is that
+.XW rcp
+does nothing but copy files.
+In a sense,
+there needs to be one remote command
+for every regular command:
+for example,
+.XW rdiff
+to perform differential file comparisons across machines.
+By providing entire filesystems,
+NFS makes this unnecessary.
+.bp
+.NH
+Examples of How it Works
+.NH 2
+Mounting a Remote Filesystem
+.LP
+Suppose that you want to read some on-line manual pages.
+These pages are not available on the server machine, called
+.LW server ,
+but are available on a machine called
+.LW docserv .
+You can mount the directory containing the manuals as follows:
+.LS
+client#  \f(LB/etc/mount docserv:/usr/man /usr/man\fP
+.LF
+Note that you have to be superuser in order to do this.
+Now you can use the
+.LW man
+command whenever you want.
+Try running the
+.LW df
+command after you've mounted the remote filesystem.
+Its output will look something like this:
+.LS
+Filesystem            kbytes    used   avail capacity  Mounted on
+/dev/nd0                4775    2765    1532    64%    /
+/dev/ndp0               5695    3666    1459    72%    /pub
+server:/lib             7295    4137    2428    63%    /lib
+server:/usr            39315   31451    3932    89%    /usr
+server:/usr2          326215  245993   47600    84%    /usr2
+docserv:/usr/man      346111  216894   94605    70%    /usr/man
+.LF
+Here is a diagram of the three machines involved here.
+Ellipses represent machines,
+boxes represent remote filesystems,
+and dotted boxes represent ND partitions.
+.PS
+SRV: ellipse wid .6i ht .3i "server"
+move from SRV.s down .75i
+S0: box invis wid .5i ht .25i "/usr"
+S1: box invis wid .5i ht .25i with .e at S0.w
+S2: box invis wid .5i ht .25i "/lib" with .e at S1.w
+S3: box invis wid .5i ht .25i with .w at S0.e
+S4: box invis wid .5i ht .25i "/usr2" with .w at S3.e
+line from SRV.s to S0.n
+line from SRV.s to S2.n
+line from SRV.s to S4.n
+
+move from SRV right 2.5i
+DOC: ellipse wid .6i ht .3i "docserv"
+move from DOC.s down .75i
+D0: box invis wid .5i ht .25i
+D1: box invis wid .5i ht .25i "/lib" with .e at D0.w
+D2: box invis wid .5i ht .25i "/usr" with .w at D0.e
+line from DOC.s to D1.n
+line from DOC.s to D2.n
+move from D2.s down .75i
+D3: box invis wid .5i ht .25i
+D4: box invis wid .5i ht .25i "/usr/bin" with .e at D3.w
+D5: box invis wid .5i ht .25i "/usr/man" with .w at D3.e
+line from D2.s to D4.n
+line from D2.s to D5.n
+
+move from SRV down 2; move right .5i
+CLI: ellipse wid .6i ht .3i "client"
+move from CLI.s down .75i
+C0: box wid .5i ht .25i "/lib"
+C1: box invis wid .5i ht .25i with .e at C0.w
+C2: box dotted wid .5i ht .25i "/pub" with .e at C1.w
+C3: box invis wid .5i ht .25i with .e at C2.w
+C4: box dotted wid .5i ht .25i "/" with .e at C3.w
+C5: box invis wid .5i ht .25i with .w at C0.e
+C6: box wid .5i ht .25i "/usr" with .w at C5.e
+C7: box invis wid .5i ht .25i with .w at C6.e
+C8: box wid .5i ht .25i "/usr2" with .w at C7.e
+line from CLI.s to C0.n
+line from CLI.s to C2.n
+line from CLI.s to C4.n
+line from CLI.s to C6.n
+line from CLI.s to C8.n
+move from C6.s down .75i
+C10: box invis wid .5i ht .25i "lib"
+C11: box invis wid .5i ht .25i with .e at C10.w
+C12: box invis wid .5i ht .25i "bin" with .e at C11.w
+C13: box invis wid .5i ht .25i with .w at C10.e
+C14: box wid .7i ht .25i "/usr/man" with .w at C13.e
+line from C6.s to C10.n
+line from C6.s to C12.n
+line from C6.s to C14.n
+.PE
+.NH 2 
+Exporting a Filesystem
+.LP
+Suppose that you and a colleague
+need to work together on a programming project.
+The source code is on your machine, in the directory
+.I /usr/proj .
+It does not matter whether your workstation
+is a diskless node, or has local disk.
+Suppose that after creating the proper directory,
+your colleague tried to remote mount your directory.
+Unless you have explicitly exported the directory,
+your colleague's remote mount will fail
+with a ``permission denied'' message.
+.LP
+To export a directory, become superuser, and edit the file
+.I /etc/exports .
+If your colleague is on a machine named
+.LW cohort ,
+then you need to put this one line in
+.I /etc/exports :
+.LS
+/usr/proj	cohort
+.LF
+Without the keyword
+.LW cohort ,
+anybody on the network could remote mount your directory
+.LW /usr/proj .
+The NFS mount request server
+.I mountd (8c)
+will read the
+.I /etc/exports
+file if necessary whenever it receives a request for a remote mount.
+Now your colleague can remote mount the source directory
+by issuing this command:
+.LS
+cohort#  \f(LB/etc/mount client:/usr/proj /usr/proj\fP
+.LF
+Since both you and your colleague will be able to change files on
+.I /usr/proj ,
+it would be best to use the
+.I sccs (1)
+source code control system for concurrency control.
+.NH 2 
+Administering a Server Machine
+.LP
+System administrators must know how to set up
+the NFS server machine so that client workstations
+can mount all the necessary filesystems.
+You export filesystems (that is, make them available)
+by placing appropriate lines in the
+.I /etc/exports
+file.  
+Here is a sample
+.I /etc/exports
+file for a typical server machine:
+.LS
+/
+/usr
+/usr2
+/usr/src	staff
+.LF
+The pathnames specified in
+.I /etc/exports
+must be real filesystems \(em
+that is, directory mount points for disk devices.
+The root filesystem must be exported so that
+.I /lib
+is available to NFS clients.
+A netgroup, such as
+.LW staff ,
+may be specified after the filesystem,
+in which case remote mounts are limited to machines
+that are a member of this netgroup.
+At any one time, the system administrator can see
+which filesystems have been remote mounted,
+by executing the
+.I showmount (8)
+command.
+.bp
+.NH
+Architecture of NFS
+.NH 2 
+Design Goals
+.NH 3 
+Transparent Information Access
+.LP
+Users are able to get directly to the files they want
+without knowing the network address of the data.
+To the user, all universes look alike:
+there seems to be no difference between
+reading or writing a file contained on a private disk,
+and reading or writing a file on a disk in the next building.
+Information on the network is truly distributed.
+.NH 3
+Different Machines and Operating Systems
+.LP
+No single vendor can supply tools
+for all the work that needs to get done,
+so appropriate services must be integrated on a network.
+In keeping with its policy of supplying open systems,
+Sun is promoting the NFS as a standard for the exchange of data
+between different machines and operating systems.
+.NH 3 
+Easily Extensible
+.LP
+A distributed system must have an architecture that
+allows integration of new software technologies
+without disturbing the extant software environment.
+To allow this, the NFS provides network services,
+rather than a new network operating system.
+That is, the NFS does not depend on
+extending the underlying operating system onto the network,
+but instead offers a set of protocols for data exchange.
+These protocols can be easily extended.
+.NH 3 
+Easy Network Administration
+.LP
+The administration of large networks can be complicated and time-consuming.
+Sun wishes to make sure that a set of network filesystems
+is no more difficult to administer
+than a set of local filesystems on a timesharing system.
+\*(Un
+has a convenient set of maintenance commands developed over the years.
+Some new utilities are provided for network administration,
+but most of the old utilities have been retained.
+.LP
+The Yellow Pages (YP) facility is the first example of
+a network service made possible with NFS.
+By storing password information and host addresses in a centralized database,
+the yellow pages ease the task of network administration.
+An overview of the YP facility is presented in the
+.I "Network Services Guide" .
+.LP
+The most obvious use of the YP is for administration of
+.I /etc/passwd .
+Since the NFS uses a \*(Un
+protection scheme across the network,
+it is advantageous to have a common
+.I /etc/passwd
+database for all machines on the network.
+The YP allows a single point of administration,
+and gives all machines access to a recent version of the data,
+whether or not it is held locally.
+To install the YP version of
+.I /etc/passwd ,
+existing applications were not changed;
+they were simply relinked with library routines
+that know about the YP service.
+Conventions have been added to library routines that access
+.I /etc/passwd
+to allow each client to administer its own local subset of
+.I /etc/passwd ;
+the local subset modifies the client's view of the system version.
+Thus, a client is not forced to completely bypass the system administrator
+in order to accomplish a small amount of personalization.
+.LP
+The YP interface is implemented using RPC and XDR,
+so the service is available to
+non-UNIX operating systems and non-Sun machines.
+YP servers do not interpret data,
+so it is possible for new databases to take advantage
+of the YP service without modifying the servers.
+.NH 3 
+Reliable
+.LP
+Reliability of the \*(Un-based
+filesystem derives primarily from the robustness of the 4.2BSD filesystem.
+In addition, the file server protocol is designed
+so that client workstations can continue to operate
+even when the server crashes and reboots.
+This property is shared with the current ND protocol,
+and has proven to be quite desirable.
+Sun achieves continuation after reboot without making assumptions
+about the fail-stop nature of the underlying server hardware.
+.LP
+The major advantage of a stateless server is robustness in the
+face of client, server, or network failures.
+Should a client fail, it is not necessary for a server
+(or human administrator) to take any action to continue normal operation.
+Should a server or the network fail,
+it is only necessary that clients continue to attempt to complete
+NFS operations until the server or network gets fixed.
+This robustness is especially important
+in a complex network of heterogeneous systems,
+many of which are not under the control
+of a disciplined operations staff,
+and which may be running untested systems often rebooted without warning.
+.NH 3 
+High Performance
+.LP
+The flexibility of the NFS allows configuration for a variety of
+cost and performance trade-offs.
+For example, configuring servers with large, high-performance disks,
+and clients with no disks,
+may yield better performance at lower cost than having
+many machines with small, inexpensive disks.
+Furthermore, it is possible to distribute the filesystem data
+across many servers and get the added benefit of multiprocessing
+without losing transparency.
+In the case of read-only files,
+copies can be kept on several servers to avoid bottlenecks.
+.LP
+Sun has also added several performance enhancements to the NFS,
+such as ``fast paths'' to eliminate the work done for high-runner operations,
+asynchronous service of multiple requests, cacheing of disk blocks,
+and asynchronous read-ahead and write-behind.
+The fact that cacheing and read-ahead occur on both client and server
+effectively increases the cache size and read-ahead distance.
+Cacheing and read-ahead do not add state to the server;
+nothing (except performance) is lost if cached information is thrown away.
+In the case of write-behind, both the client and server
+attempt to flush critical information to disk whenever necessary,
+to reduce the impact of an unanticipated failure;
+clients do not free write-behind blocks
+until the server verifies that the data is written.
+.LP
+Our performance goal was to achieve the same throughput as a
+previous release of the system that used the network only as a disk
+(and thus did not permit sharing).
+This goal has been achieved.
+.NH 2 
+The NFS Implementation
+.LP
+In the Sun implementation of the NFS,
+there are three entities to be considered:
+the operating system interface,
+the virtual file system (VFS) interface,
+and the network file system (NFS) interface.
+The \*(Un operating system interface has been preserved
+in the Sun implementation of the NFS,
+thereby insuring compatibility for existing applications.
+.bp
+.LP
+.I Vnodes 
+are a re-implementation of
+.I inodes
+that cleanly separate filesystem operations
+from the semantics of their implementation.
+Above the VFS interface, the operating system deals in
+.I vnodes ;
+below this interface, the filesystem may or may not implement
+.I inodes .
+The VFS interface can connect the operating system
+to a variety of filesystems (for example, 4.2 BSD or MS-DOS).
+A local VFS connects to filesystem data on a local device.
+.LP
+The remote VFS defines and implements the NFS interface,
+using the remote procedure call (RPC) mechanism.
+RPC allows communication with remote services in a manner
+similar to the procedure calling mechanism
+available in many programming languages.
+The RPC protocols are described using the
+external data representation (XDR) package.
+XDR permits a machine-independent representation
+and definition of high-level protocols on the network.
+.LP
+The figure below shows the flow of a request
+from a client (at the top left)
+to a collection of filesystems.
+.PS
+Abox:  box invis ht .2i "sys calls"
+move from Abox down .50i
+Bbox:  box ht .5i wid .75i "vnode"
+move from Bbox down .75i
+Cbox:  box same "VFS"
+move from Cbox left .75i
+Dbox:  box same "other" "VFS"
+move from Cbox right .75i
+Ebox:  box same "remote" "VFS"
+move from Cbox down .75i
+Fell: ellipse ht .25i wid .50i
+line from Fell.e down .50i
+line from Fell.w down .50i
+arc cw from end of first line to end of last line
+move from Ebox down .75i
+Gbox: box ht .5i wid .75i "RPC/" "XDR"
+Hbox: box invisible wid .75i ht 1.5i with .sw at Gbox.se
+Ibox: box ht .5i wid .75i "RPC/" "XDR" with .sw at Hbox.se
+move from Ibox up .75i
+Jbox: box same "NFS" "server"
+move from Jbox right .75i
+Kbox: box same "4.2BSD" "VFS"
+move from Kbox up .75i
+Lbox: box same "vnode"
+move from Kbox down .75i
+Mell: ellipse ht .25i wid .50i
+line from Mell.e down .50i
+line from Mell.w down .50i
+arc cw from end of 3rd line to end of last line
+move from Hbox down 1.25i
+Nbox: box ht .25i wid 3.5i "ethernet"
+arrow from Abox.s to Bbox.n
+arrow from Bbox.s to Cbox.n
+arrow from Bbox.w to Dbox.n
+arrow from Bbox.e to Ebox.n
+arrow from Cbox.s to Fell.n
+arrow from Ebox.s to Gbox.n
+arrow from Gbox.s down .50i
+line <- from Ibox.s down .50i
+arrow from Ibox.n to Jbox.s
+arrow from Jbox.n to Lbox.w
+arrow from Lbox.s to Kbox.n
+arrow from Kbox.s to Mell.n
+.PE
+In the case of access through a local VFS,
+requests are directed to filesystem data on devices
+connected to the client machine.
+In the case of access through a remote VFS,
+the request is passed through the RPC and XDR layers onto the net.
+In the current implementation, Sun uses the UDP/IP protocols
+and the Ethernet.
+On the server side, requests are passed through
+the RPC and XDR layers to an NFS server;
+the server uses
+.I vnodes
+to access one of its local VFSs and service the request.
+This path is retraced to return results.
+.bp
+.LP
+Sun's implementation of the NFS
+provides five types of transparency:
+.IP 1.
+.I "Filesystem Type:"
+The
+.I vnode ,
+in conjunction with one or more local VFSs (and possibly remote VFSs)
+permits an operating system (hence client and application)
+to interface transparently to a variety of filesystem types.
+.IP 2.
+.I "Filesystem Location:"
+Since there is no differentiation between a local and a remote VFS,
+the location of filesystem data is transparent.
+.IP 3.
+.I "Operating System Type:"
+The RPC mechanism allows interconnection of a variety
+of operating systems on the network,
+and makes the operating system type of a remote server transparent.
+.IP 4.
+.I "Machine Type:"
+The XDR definition facility allows a variety of machines
+to communicate on the network and makes the machine type of a
+remote server transparent.
+.IP 5.
+.I "Network Type:"
+RPC and XDR can be implemented for a variety
+of network and internet protocols,
+thereby making the network type-transparent.
+.LP
+Simpler NFS implementations are possible
+at the expense of some advantages of the Sun version.
+In particular, a client (or server) may be added to the network by
+implementing one side of the NFS interface.
+An advantage of the Sun implementation
+is that the client and server sides are identical;
+thus, it is possible for any machine to be client, server or both.
+Users at client machines with disks can arrange to share over the NFS
+without having to appeal to a system administrator,
+or configure a different system on their workstation.
+.NH 2 
+The NFS Interface
+.LP
+As mentioned in the preceding section,
+a major advantage of the NFS is the ability to mix filesystems.
+In keeping with this, Sun encourages other vendors to develop
+products to interface with Sun network services.
+RPC and XDR have been placed in the public domain,
+and serve as a standard for anyone wishing to develop
+applications for the network.
+Furthermore, the NFS interface itself is open and can be used by anyone
+wishing to implement an NFS client or server for the network.
+.LP
+The NFS interface defines traditional filesystem operations for
+reading directories,
+creating and destroying files,
+reading and writing files,
+and reading and setting file attributes.
+The interface is designed so that file operations address files with
+an uninterpreted identifier, starting byte address, and length in bytes.
+.LP
+Commands are provided for NFS servers to initiate service (
+.I mountd ),
+and to serve a portion of their filesystem to the network (
+.I /etc/exports ). 
+Many commands are provided for constructing
+the YP database facility.
+A client builds its view of the filesystems
+available on the network with the
+.I mount
+command.
+.LP
+The NFS interface is defined so that a server can be
+.I stateless . 
+This means that a server does not have to remember from one transaction
+to the next anything about its clients, transactions completed
+or files operated on.  For example, there is no 
+.I open
+operation,
+as this would imply state in the server;  of course, the
+\*(Un interface uses an 
+.I open
+operation, but the information in the \*(Un
+operation is remembered by the client for use in later NFS operations.
+.bp
+.LP
+An interesting problem occurs when a \*(Un application 
+.I unlink s
+an open file.  This is done to achieve the effect of a temporary file
+that is automatically removed when the application terminates.
+If the file in question is served by the NFS, the \fIunlink\fP
+will remove the file, since the server does not remember that the file is
+open.  Thus, subsequent operations on the file will fail.
+In order to avoid state on the server, the client operating system
+detects the situation, renames the file rather than unlinking it, and
+.I unlink s 
+the file when the application terminates.  In certain failure
+cases, this leaves unwanted ``temporary'' files on the server;
+these files are removed as a part of periodic filesystem maintenance.
+.LP
+Another example of how the NFS provides a friendly
+interface to \*(Un without introducing state is the
+.I mount
+command.
+A \*(Un client of the NFS
+\&``builds'' its view of the filesystem on its local devices using the
+.I mount
+command;  thus, it is natural for the \*(Un
+client to initiate its contact with the NFS and build its view
+of the filesystem on the network
+via an extended 
+.I mount
+command.
+This 
+.I mount
+command does not imply state in the server, since
+it only acquires information for the client
+to establish contact with a server.
+The 
+.I mount
+command may be issued at any time, but is typically
+executed as a part of client initialization.
+The corresponding
+.I unmount
+command (which replaces the \*(Un
+.I umount ) 
+is only an informative message to the server, 
+but it does change state in
+the client by modifying its view of the filesystem on the network.
+.LP
+The major advantage of a stateless server is robustness in the
+face of client, server or network failures.  
+Should a client
+fail, it is not necessary for a server (or human administrator)
+to take any action to continue normal operation.  
+Should a
+server or the network fail, it is only necessary that clients
+continue to attempt to complete NFS operations until the
+server or network is fixed. 
+This robustness is especially important in a
+complex network of heterogeneous systems, many of which are not under the
+control of a disciplined operations staff and may be running
+untested systems and/or may be rebooted without warning.
+.LP
+An NFS server can be a client of another NFS server.
+However, a server will not act as an intermediary between a client and
+another server.  
+Instead, a client may ask what remote mounts the server
+has and then attempt to make similar remote mounts.  
+The decision to disallow
+intermediary servers is based on several factors.  
+First, the existence
+of an intermediary will impact the performance characteristics of the
+system;  the potential performance implications are so complex that it
+seems best to require direct communication between a client and server.
+Second, the existence of an intermediary complicates access control;
+it is much simpler to require a client and server to establish direct
+agreements for service.  
+Finally, disallowing intermediaries prevents
+cycles in the service arrangements;  Sun prefers this to detection or
+avoidance schemes.
+.LP
+The NFS currently implements \*(Un file protection
+by making use of the authentication mechanisms built into RPC.
+This retains transparency for clients and applications that make use of
+\*(Un file protection.
+Although the RPC definition allows other authentication schemes,
+their use may have adverse effects on transparency.
+.LP
+Although the NFS is \*(Un-friendly, it does not support all \*(Un
+filesystem operations.
+For example, the ``special file'' abstraction of devices
+is not supported for remote filesystems
+because it is felt that the interface to devices would greatly
+complicate the NFS interface; instead, devices are implemented in
+a local 
+.I /dev
+VFS.  
+Other incompatibilities are
+due to the fact that NFS servers are
+stateless.  
+For example, file locking and guaranteed APPEND_MODE
+are not supported in the remote case.
+.bp
+.LP
+Our decision to omit certain features from the NFS is motivated
+by a desire to preserve the stateless implementation of servers and to
+define a simple, general interface to be implemented and used by a wide
+variety of customers.  The availability of open RPC and NFS
+interfaces means that customers and users who need stateful or complex features
+can implement them ``beside'' or ``within'' the NFS.
+Sun is considering implementation of a set of tools for use by applications
+that need file or record locking, replicated data, or other features implying
+state and/or distributed synchronization;  however, these will not be made
+part of the base NFS definition.
+.NH
+Network Documentation Roadmap
+.LP
+The document
+.I "Network Services Guide"
+is intended for users who have a general interest in network services.
+It explains the yellow pages facility in some detail.
+Although it is not a manual for system administrators,
+the material is heavily slanted in that direction.
+.LP
+The document
+.I "Remote Procedure Call Programming Guide"
+is intended for programmers who wish to write
+network applications using remote procedure calls,
+thus avoiding low-level system primitives based on sockets.
+Readers must be familiar with the C programming language,
+and should have a working knowledge of network theory.
+.LP
+The document
+.I "External Data Representation Protocol Specification"
+is intended for programmers writing
+complicated applications using remote procedure calls,
+who need to pass complicated data across the network.
+It is also a reference guide for system programmers
+implementing Sun's Network File System on new machines.
+.LP
+The document
+.I "Remote Procedure Call Protocol Specification"
+is a reference guide for system programmers
+implementing Sun's Network File System on new machines.
+It is of little interest to programmers writing network applications.
+.LP
+The document
+.I "Network File System Protocol Specification"
+is a reference guide for system programmers
+implementing Sun's Network File System on new machines.
+It is of little interest to programmers writing network applications.
+.LP
+The document
+.I "Yellow Pages Protocol Specification"
+is a reference guide for system programmers
+implementing a Yellow Pages database facility on new machines.
+It is of little interest to programmers writing network applications.
+.LP
+The document
+.I "Inter-Process Communications Primer" ,
+taken from Berkeley's 4.2 release,
+is for system programmers who need to use
+low-level networking primitives based on sockets.
+Since remote procedure calls are easier to use than sockets,
+this primer is of little interest to most network programmers.
+.LP
+The document
+.I "Network Implementation"
+describes the low-level networking primitives in the 4.2 \*(Un
+kernel.
+It is of interest primarily to system programmers and aspiring
+\*(Un gurus.

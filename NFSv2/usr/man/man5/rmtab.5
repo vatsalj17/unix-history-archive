@@ -1,0 +1,53 @@
+.\" @(#)rmtab.5 1.2 85/04/04 SMI;
+.TH RMTAB 5 "1 February 1985"
+.SH NAME
+rmtab \- remotely mounted file system table
+.SH DESCRIPTION
+.IX  "rmtab file"  ""  "\fLrmtab\fP \(em remote mounted file system table"
+.I Rmtab
+resides in directory
+.I /etc
+and contains a record of all clients
+that have done remote mounts of file systems from this machine.
+Whenever a remote
+.I mount
+is done, an entry is made in the
+.I rmtab
+file of the machine serving up that file system.
+.I Umount
+removes entries, if of a remotely mounted file system.
+.I "Umount \-a"
+broadcasts to all servers, and informs them that they should remove
+all entries from
+.I rmtab
+created by the sender of the broadcast message.
+By placing a
+.I "umount \-a"
+command in
+.IR /etc/rc.boot ,
+.I rmtab
+tables can be purged of entries made by a crashed host,
+which upon rebooting did not remount the same file systems it had before.
+The table is a series of lines of the form
+.IP
+ hostname:directory
+.PP
+This table is used only to preserve information between crashes,
+and is read only by
+.IR mountd (8)
+when it starts up.
+.I Mountd
+keeps an in-core table,
+which it uses to handle requests from programs like
+.IR showmount (1)
+and
+.IR shutdown (8).
+.SH FILES
+/etc/rmtab
+.SH "SEE ALSO"
+showmount(1), mountd(8), mount(8), umount(8), shutdown(8)
+.SH BUGS
+Although the
+.I rmtab
+table is close to the truth,
+it is not always 100% accurate.

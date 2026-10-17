@@ -1,0 +1,53 @@
+.\" @(#)getnetgrent.3n 1.2 85/04/04 SMI; from UCB 4.2
+.TH GETNETGRENT 3N "1 February 1985"
+.SH NAME
+getnetgrent, setnetgrent, endnetgrent, innetgr \- get network group entry
+.SH SYNOPSIS
+.nf
+.ft B
+innetgr(netgroup, machine, user, domain)
+char *netgroup, *machine, *user, *domain;
+.sp.5
+setnetgrent(netgroup)
+char *netgroup
+.sp.5
+endnetgrent()
+.sp.5
+getnetgrent(machinep, userp, domainp)
+char **machinep, **userp, **domainp;
+.fi
+.IX  "get network group entry"
+.IX  "set network group entry"
+.IX  "network group entry"  get
+.IX  "group entry"  "get network"
+.IX  "getnetgrent function"  ""  "\fLgetnetgrent\fP \(em get network group entry"
+.IX  "setnetgrent function"  ""  "\fLsetnetgrent\fP \(em get network group entry"
+.IX  "endnetgrent function"  ""  "\fLendnetgrent\fP \(em get network group entry"
+.IX  "innetgr function"  ""  "\fLinnetgr\fP \(em get network group entry"
+.SH DESCRIPTION
+\fIInngetgr\fP returns 1 or 0, depending on whether
+\fInetgroup\fP contains the machine, user, domain triple as a member.
+Any of the three strings machine, user, or domain can be NULL, in
+which case it signifies a wild card.
+.PP
+\fIGetnetgrent\fP
+returns the next member of a network group.  After the call,
+machinep will contain a pointer to a string containing the name
+of the machine part of the network group member, and similarly
+for userp and domainp.  Getnetgrent will
+malloc space for the name.  This space is released when a endnetgrent
+call is made.
+Getnetgrent returns 1 if it succeeding in obtaining another
+member of the network group, 0 if it has reached the
+end of the group.
+.PP
+.I Setnetgrent
+establishes the network group from which getnetgrent will
+obtain members, and also restarts calls to getnetgrent
+from the beginning of the list.  If the previous setnetgrent
+call was to a different network group, a endnetgrent call is
+implied.
+.I Endnetgrent
+frees the space allocated during the getnetgrent calls.
+.SH FILES
+/etc/netgroup

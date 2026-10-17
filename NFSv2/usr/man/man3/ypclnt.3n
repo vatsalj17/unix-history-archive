@@ -1,0 +1,263 @@
+.\" @(#)ypclnt.3n 1.2 85/04/04 SMI; from UCB 4.2
+.TH YPCLNT 3N "1 February 1985"
+.SH NAME
+yp_bind yp_get_default_domain yp_unbind yp_match yp_first ypclnt_first yp_next ypclnt_next \- yellow pages client interface
+.SH SYNOPSIS
+.ft B
+.nf
+#include <rpcsvc/ypclnt.h>
+.sp.5
+yp_bind(indomain);
+char *indomain;
+.sp.5
+yp_get_default_domain(outdomain);
+char **outdomain;
+.sp.5
+void yp_unbind(indomain)
+char *indomain;
+.sp.5
+yp_match(indomain, inmap, inkey, inkeylen, outval, outvallen)
+char *indomain;
+char *inmap;
+char *inkey;
+int inkeylen;
+char **outval;
+int *outvallen;
+.sp.5
+yp_first(indomain, inmap, outkey, outkeylen, outval, outvallen)
+ypclnt_first(indomain, inmap, outkey, outkeylen, outval, outvallen)
+char *indomain;
+char *inmap;
+char **outkey;
+int *outkeylen;
+char **outval;
+int *outvallen;
+.sp.5
+yp_next(indomain, inmap, inkey, inkeylen, outkey, outkeylen, outval, outvallen);
+ypclnt_next(indomain, inmap, inkey, inkeylen, outkey, outkeylen, outval, outvallen);
+char *indomain;
+char *inmap;
+char *inkey;
+int inkeylen;
+char **outkey;
+int *outkeylen;
+char **outval;
+int *outvallen;
+.sp.5
+char *yperr_string(code)
+int code;
+.fi
+.IX  "yp_bind function"  ""  "\fLyp_bind\fP \(em yellow pages client interface"
+.IX  "yp_get_default_domain function"  ""  "\fLyp_get_default_domain\fP \(em yellow pages client interface"
+.IX  "yp_unbind function"  ""  "\fLyp_unbind\fP \(em yellow pages client interface"
+.IX  "yp_match function"  ""  "\fLyp_match\fP \(em yellow pages client interface"
+.IX  "yp_first function"  ""  "\fLyp_first\fP \(em yellow pages client interface"
+.IX  "ypclnt_first function"  ""  "\fLypclnt_first\fP \(em yellow pages client interface"
+.IX  "yp_next function"  ""  "\fLyp_next\fP \(em yellow pages client interface"
+.IX  "ypclnt_next function"  ""  "\fLypclnt_next\fP \(em yellow pages client interface"
+.IX  "yellow pages client interface"
+.SH DESCRIPTION
+This package of functions is an interface
+to the yellow pages (YP) network service.
+The package can be loaded from the standard library,
+.IR /lib/libc.a .
+In the synopsis above,
+all input parameters names begin with ``in'',
+while output parameters begin with ``out''.
+Output parameters of type
+.I "char **"
+should be addresses of uninitialized character pointers.
+Memory is allocated by the YP client package using
+.IR malloc (3),
+and may be freed if the user code has no continuing need for it.
+.PP
+For all
+.IR outkey s
+and
+.IR outval s,
+two extra bytes of memory are allocated at the end,
+containing newline and NULL,
+but these two bytes are not reflected in
+.IR outkeylen .
+.PP
+Information is stored in the yellow pages system
+as sets of key-value pairs, called
+.IR entries ,
+with no imposed or assumed structure to the key or the value;
+both are counted binary objects.
+A named set of key-value pairs is called a YP
+.I map,
+and is implemented as a pair of
+.IR dbm (3)
+data base files.
+.I Maps
+are objects within named 
+.I domains,
+which are implemented by Unix directories.  
+Although map names must be unique within a domain,
+the same map name may appear in multiple domains.
+As a map is a named set of key-value pairs,
+so is a domain a named set of maps.
+Every map must be referenced as an object in some domain.
+Both map names and domain names are non-null printable ASCII strings.
+Null-length domain and map names will be rejected
+by the YP client interface, as will null pointers.
+.PP
+Network hosts, both servers and clients, have a 
+.I default
+domain, which is set at system startup by
+.IR domainname (8).
+The default domain may be fetched by calling 
+.IR yp_get_default_domain() .
+In general, client processes should make no assumption
+concerning the domain parameter that is to be passed in the calls to 
+.IR yp_match() ,
+.IR yp_first() ,
+.IR ypclnt_first() ,
+.IR yp_next() ,
+and 
+.IR ypclnt_next() ,
+but should, rather, use the domain name returned by 
+.IR yp_get_default_domain() .
+.PP
+All the functions in this package which are of type
+.B int,
+return 0 if they succeed,
+and a failure code
+.RI (YPERR_ xxxx )
+otherwise.
+Failure codes are described below
+in the DIAGNOSTICS section.
+.PP
+To use the YP services,
+the client process must be ``bound'' to a YP server
+that serves the appropriate domain.
+A client is bound to a YP server
+when the client knows the internet address of the server,
+the port on which the server is listening for requests,
+and it has set up an RPC path to that YP server.
+Binding doesn't need to be done explicitly by user code;
+it will be done automatically when
+.IR yp_match() ,
+.IR yp_first() ,
+.IR ypclnt_first() ,
+.IR yp_next() ,
+or 
+.I ypclnt_next()
+is called for a domain that is not bound.  
+The binding may, however,
+be explicitly made by the client by a call to 
+.IR yp_bind() .
+This is useful for processes that make use of a backup strategy
+(e.g., a local file) in case YP services are not available.
+.PP
+Binding allocates (uses up) one of the client
+process' socket descriptors;
+each bound domain costs one socket descriptor. 
+If, however, 
+.IR yp_match() ,
+.IR yp_first() ,
+.IR ypclnt_first() ,
+.IR yp_next() ,
+or 
+.I ypclnt_next()
+is called naming a domain which is already bound,
+no further binding needs to be done.
+No new resource will be allocated on a per-call basis.
+.PP
+If an RPC failure results upon use of a bound domain,
+that domain will be unbound automatically by the YP client code,
+and an indication of the RPC error will be returned.
+At that point, the client process will retry forever
+until the operation succeeds, provided that 
+.I ypbind
+is running, and either
+a) the client process can't bind to a server for the proper domain, or
+b) RPC requests to the server fail.
+.PP
+.I Yp_unbind()
+is available at the client interface for processes
+that need to explicitly manage their socket descriptor resoures,
+and which need to access maps in multiple domains.
+The call to 
+.I yp_unbind()
+will free the socket allocated by the binding for the passed domain,
+and will tear down the RPC path to the YP server process.
+.PP
+.I Yp_match
+returns the value associated with the passed key.
+The key passed as the match value must be exact;
+no pattern matching is available.
+.PP
+.I Yp_first
+returns the first key-value pair from the named map in the named domain.
+The concept of first (and, for that matter, of next)
+is particular to the structure of the YP map data base processing:
+there is no relation in retrieval order
+to either the lexical order within any original (non-YP) data base,
+or to any obvious numerical sorting order on the keys,
+the values, or the key-value pairs.
+The only ordering guarantee made is that if the
+.I yp_first()
+function is called on a particular map, and then the
+.I yp_next()
+function is repeatedly called on the same map
+until the call fails with a reason of YPERR_NOMORE,
+every entry in the data base will be seen exactly once.
+Further, if the same sequence of operations is performed on the same map,
+the entries will be seen in the same order.
+.I Yp_first()
+will not return any entry from a map
+whose key begins with the sequence ``YP_'';
+such symbols are assumed to be private symbols used by the YP system.
+In general, those entries are of no interest to the client process.
+If the client process needs to see them, 
+.I ypclnt_first()
+will do no filtering of YP private symbols.
+.PP
+.I Yp_next()
+returns the next key-value pair in a named map.
+The input key should be one returned from a call to 
+.I yp_first()
+(to get the second pair) or one returned from the nth call to 
+.I yp_next()
+(to get the nth + second pair).
+Any valid key may be used,
+and is syntactically correct with respect to the retrieval,
+but any key save the two mentioned previously
+will yield a result which is semantically meaningless.
+Again, if the client process needs to see all
+of the entries in the map, including the YP private symbols,
+.I ypclnt_next()
+does no filtering to eliminate those entries.
+.PP
+.I Yperr_string()
+returns a pointer to an error message string
+that is null-terminated but contains no period or newline.
+.SH FILES
+/usr/include/rpcsvc/ypclnt.h
+.br
+/usr/include/rpcsvc/yp_prot.h
+.SH "SEE ALSO"
+dbm(3x), makedbm(8), newpasswd(8), ypfiles(8), ypinit(8), yppush(8), ypserv(8)
+.SH DIAGNOSTICS
+All functions except
+.I yp_unbind()
+return 0 if the requested operation is successful,
+or one of the following errors if the operation fails.
+.IP
+.ta \w'#define\0'u +\w'YPERR_BADARGS\0\0'u +\w'1\0\0'u
+.nf
+#define YPERR_BADARGS	1	/* args to function are bad */
+#define YPERR_RPC	2	/* RPC failure - domain has been unbound */
+#define YPERR_DOMAIN	3	/* can't bind to server on this domain */
+#define YPERR_MAP	4	/* no such map in server's domain */
+#define YPERR_KEY	5	/* no such key in map */
+#define YPERR_YPERR	6	/* internal yp server or client error */
+#define YPERR_RESRC	7	/* resource allocation failure */
+#define YPERR_NOMORE	8	/* no more records in map database */
+#define YPERR_PMAP	9	/* can't communicate with portmapper */
+#define YPERR_YPBIND	10	/* can't communicate with ypbind */
+#define YPERR_YPSERV	11	/* can't communicate with ypserv */
+#define YPERR_NODOM	12	/* local domain name not set */
+.fi

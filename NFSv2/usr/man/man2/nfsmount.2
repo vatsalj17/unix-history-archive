@@ -1,0 +1,85 @@
+.\" @(#)nfsmount.2 1.2 85/04/04 SMI; from UCB 4.2
+.TH NFSMOUNT 2 "1 February 1985"
+.SH NAME
+nfsmount \- mount an NFS file system
+.SH SYNOPSIS
+.nf
+.ft B
+nfsmount(addr, fh, dir, rwflag, hard)
+struct sockaddr_in *addr;
+fhandle_t *fh;
+char *freq;
+int rwflag;
+int hard;
+.fi
+.IX  nfsmount  ""  \fLnfsmount\fP
+.IX  "system operation support"  nfsmount  ""  \fLnfsmount\fP
+.IX  "network file system"  nfsmount  ""  \fLnfsmount\fP
+.SH DESCRIPTION
+.I Nfsmount
+mounts an
+.IR NFS (4)
+file system on the directory
+.IR dir .
+.I Addr
+is the
+.IR UDP (4)
+address of the server that owns the file system to mount.
+.I Fh
+is a file handle, obtained from the server,
+to identify the root directory on the server that is being mounted.
+.PP
+The
+.I rwflag
+argument determines whether
+the file system can be written on; if it is 0 writing
+is allowed, if non-zero no writing is done.
+.PP
+The
+.I hard
+argument determines whether the remote file system
+is mounted hard or soft.
+A soft mount causes an error to be returned when a remote access times out.
+Hard mounts cause the access to retry until the server responds.
+A value of 1 indicates a hard mount.
+.SH "RETURN VALUE
+.I Nfsmount
+returns 0 if the action occurred, \-1 if
+some error occurred.
+.SH ERRORS
+.I Nfsmount
+will fail when one of the following occurs:
+.TP 15
+[EPERM]
+The caller is not the super-user or the path name given for
+.I dir
+contains characters with the high bit set.
+.TP 15
+[ENAMETOOLONG]
+The path name for
+.I dir
+is too long.
+.TP 15
+[ELOOP]
+.I Dir
+contains a symbolic link loop.
+.TP 15
+[ETIMEDOUT]
+The server at
+.I addr
+is not accessable.
+This can only happen if the
+.I hard
+flag is set.
+.TP 15
+[ENOTDIR]
+A component of the path prefix in
+.I dir
+is not a directory.
+.TP 15
+[EBUSY]
+Another process currently
+holds a reference to 
+.IR fh .
+.SH "SEE ALSO"
+mount(2), unmount(2), mount(8)
