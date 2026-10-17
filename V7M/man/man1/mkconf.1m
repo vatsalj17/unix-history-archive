@@ -1,0 +1,146 @@
+.TH MKCONF 1M
+.SH NAME
+mkconf \- generate configuration tables
+.SH SYNOPSIS
+mkconf
+.SH DESCRIPTION
+.I Mkconf
+examines a machine configuration table on its
+standard input.
+Its output is three files
+.I l.s
+,
+.I c.c
+and
+.I mch0.s.
+The first is an assembler program that represents the interrupt vectors
+located in low memory addresses;
+the second contains initialized
+block and character device switch tables;
+the third is a header file for the machine language
+assist file (mch.s),
+which selects the tape to be used for core dumps and
+specifies whether or not floating point
+support is included in mch.s.
+.PP
+Input to
+.I mkconf
+is a sequence of lines.
+The following describe devices on the machine:
+.PP
+.RS 5
+.nf
+.DS
+pc	(PC11)
+lp	(LP11)
+rf	(RS11)
+hs	(RS03/RS04)
+ml	(ML11)
+tc	(TU56)
+rk	(RK03/RK05)
+rl	(RL01/2)
+tm	(TU10)
+rp	(RP03)
+hp	(RM02/3, RP04/5/6 on first RH)
+hm	(RM02/3, RP04/5/6 on second RH)
+hk	(RK06/7)
+ht	(TU16)
+ts	(TS11)
+rx2	(RX02)
+dc*	(DC11)
+kl*	(KL11/DL11-ABC)
+dl*	(DL11-E)
+dp*	(DP11)
+dn*	(DN11)
+dh*	(DH11)
+dhdm*	(DM11-BB)
+du*	(DU11)
+dz*	(DZ11)
+.RE
+.fi
+.PP
+The devices marked with * may be preceded by a number telling
+how many are to be included.
+The console typewrite is automatically included;
+don't count it as part of the KL or DL specification.
+Count DN's in units of 4 (1 system unit).
+The hs and ml devices are mutually exclusive.
+.PP
+The following lines are also accepted.
+.TP 5
+.BI "root " "dev minor"
+The specified block device (e.g.
+.BR hp )
+is used for the root.
+.I minor
+is a decimal number giving the minor device.
+This line must appear exactly once.
+.TP 5
+.BI "swap " "dev minor"
+The specified block device is used for swapping.
+If not given the root is used.
+.TP 5
+.BI "pipe " "dev minor"
+The specified block device
+is used to store pipes.
+If not given the root is used.
+.TP 5
+.BI "swplo " number
+.TP 5
+.BI "nswap " number
+Sets the origin (block number) and size of the area used for
+swapping.
+By default, the not very useful numbers
+4000 and 872.
+.TP 5
+.BI "dump " "dev addr"
+Selects the tape to be used as the
+core dump device.
+The dev specification is one of the three
+tapes ht, tm, or ts, and addr is an
+optional tape CSR address specification.
+If dump is ommitted, mkconf will make the core dump
+tape selection.
+.TP 5
+.B pack
+Include the packet driver.
+By default it is left out.
+.TP 5
+.B mpx
+Include the multiplexor driver.
+By default it is left out.
+.TP 5
+.B nfp
+Do not include floating point support in the
+machine language assist file, the default is to
+include floating point.
+.TP 5
+.B ov
+Causes mkconf to create the file "covld"
+which is used by the makefile in /sys/conf
+to link the overlay unix kernel.
+Must be specified if the overlay kernel is
+to be generated.
+.TP 5
+.B nsid
+Must be specified if a non-spearate I & D
+space unix system is to be generated.
+By default, a separate I & D space
+unix system is generated.
+If "ov" is specified, "nsid" is ignored by mkconf.
+
+.SH FILES
+l.s, c.c, mch0.s	output files
+.SH SEE ALSO
+`Setting up Unix', in Volume 2.
+.br
+`Regenerating System Software', in Volume 2.
+.SH BUGS
+The set of devices it knows about, the set of drivers included,
+and the set of devices on the machine
+are mutually incomparable.
+Some handwork is certain to be necessary.
+Because of floating vectors that may have been missed,
+It is mandatory to check the
+.I l.s
+file to make sure it corresponds with reality.

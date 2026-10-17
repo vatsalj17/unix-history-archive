@@ -1,0 +1,50 @@
+
+	UNIX/v7m 2.0 disk layout for RM02/3 and RP04/5/6 (hp)
+
+				RP04/5	RP06	RM02/3
+
+	sectors/track		22	22	32
+	tracks/cylinder		19	19	5
+	cylinders/pack		411	815	823
+	blocks/cylinder		418	418	160
+	blocks/pack		171798	340670	131680
+	( RM02/3 bad sector file - cyl 822 track 4 )
+
+pseudo	start	# of	cyl	# of	usage
+disk	block	blocks	range	cyl's
+
+0	     0	  9614	  0- 22	 23	rp0, root for rp04/5/6
+1	  9614	  8778	 23- 43	 21	swap, swap area for rp04/5/6
+2	 18392	  8778	 44- 64	 21	rp2, /sys, system sources rp04/5/6
+3	 27170	144210	 65-409	345	rp3, /usr, user + sources rp04/5
+4	 27170	313082	 65-813	749	rp3, /usr, user + sources rp06
+5	171798	168454	411-813	403	user, rest of rp06
+6	     0	171380	  0-409	410	user, all of rp04/5
+7	     0	340252	  0-813	814	user, all of rp06
+
+pseudo	start	# of	cyl	# of	usage
+disk	block	blocks	range	cyl's
+
+0	     0	  9600	  0- 59	 60	rp0, root for rm02/3
+1	  9600	  8800	 60-114	 55	swap, swap area for rm02/3
+2	 18400	  8000	115-164	 50	rp2, /sys, system sources rm02/3
+3	 26400	105120	165-821	657	rp3, /usr, user + sources rm02/3
+4					spare, for avoiding bad blocks
+5					spare, for avoiding bad blocks
+6					spare, for avoiding bad blocks
+7	     0	131520	  0-821	822	all of rm02/3 disk pack
+
+	rm03p serial # 141721 bad blocks
+
+cyl	track	sector	disk 0	disk 2	disk 3	disk 4	disk 7
+
+058	0	04	  9284				  9284
+332	0	18		 34738	 34738		 53138
+333	0	18		 34898	 34898		 53298
+412	4	07		 47655	 47655		 66055
+413	4	07		 47815	 47815		 66215
+419	0	29		 48669	 48669		 67069
+576	1	05		 73797		 17157	 92197
+744	3	00		100736		 44096	119136
+808	0	00		110880		 54240	129280
+821	4	09		113097		 56457	131497

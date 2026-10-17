@@ -1,0 +1,435 @@
+/*
+*	RK06/07 disk driver
+*/
+
+#include "../h/param.h"
+#include "../h/systm.h"
+#include "../h/buf.h"
+#include "../h/conf.h"
+#include "../h/dir.h"
+#include "../h/user.h"
+
+/*
+*
+*	The following  structure defines the order of the Control
+*	and Status registers for the RK06/07
+*
+*/
+struct device
+{
+	int	hkcs1;		/* Control and Status register 1 */
+	int	hkwc;		/* Word Count Register */
+	caddr_t	hkba;		/* Memory Address Register */
+	int	hkda;		/* Track Sector Address Register */
+	int	hkcs2;		/* Control And Status Register 2 */
+	int	hkds;		/* Drive Status Register */
+	int	hkerr;		/* Error Register */
+	int	hkas;		/* High byte is Attention Summary | Low is Offset Reg. */
+	int	hkdc;		/* Desired Cylinder Register */
+	int	dum;		/* Dummy for unused location */
+	int	hkdb;		/* Data Buffer */
+	int	hkmr1;		/* Maintenance Register 1 */
+	int	hkec1;		/* ECC Position Register */
+	int	hkec2;		/* ECC Pattern Register */
+	int	hkmr2;		/* Maint. Register 2 */
+	int	hkmr3;		/* Maint. Register 3 */
+};
+
+#define	HKADDR	((struct device *)0177440)	/* RK6/711 address */
+#define	NHK	2				/* number of drives on system */
+#define	NSECT	22				/* number of sectors per pack */
+#define	NTRAC	3				/* number of tracks per cylinder */
+#define NUMTRY 28				/* max retry count */
+
+/*
+*
+*	The structure hk_sizes defines the logical separation of a disk pack
+*	into mountable file systems.
+*
+*	The file systems are named in numeric order.
+*
+*		the first entry in hk_sizes describes file system hk0
+*		the next hk1  , etc.
+*
+*	The nblocksnblocks entry specifies the number of blocks (512 bytes) in
+*	the file system.
+*
+*	The cyloffcyloff entry specifies the offset+1 from the physical beginning
+*	of the pack to the beginning of the file system in cylinderscylinders
+*
+*/
+struct	size
+{
+	daddr_t	nblocks;
+	int	cyloff;
+} hk_sizes[8] =
+{
+	9636,	0,	/* cyl   0-145, root on rk06/7		*/
+	8910,	146,	/* cyl 146-280, swap on rk06/7		*/
+	8514,	281,	/* cyl 281-409, rest of rk06 pack	*/
+	26598,	411,	/* cyl 411-813, rest of rk07 pack	*/
+	0,	0,	/* spare, for avoiding bad blocks	*/
+	0,	0,	/* spare, for avoiding bad blocks	*/
+	27060,	0,	/* cyl   0-409, all of rk06 pack	*/
+	53724,	0,	/* cyl   0-813, all of rk07 back	*/
+};
+
+/*
+*
+*		NOT IMPLEMENTED AT THIS TIME
+*	The following definitions specify the offset values used during error recovery
+*
+*/
+#define P400	020		/* +400  RK06 , +200  RK07 */
+#define M400	0220		/* -400  RK06 , -200  RK07 */
+#define P800	040		/* +800  RK06 , +400 RK07 */
+#define M800	0240		/* -800  RK06 , -400  RK07 */
+#define P1200	060		/* +1200  RK06 , +600  RK07 */
+#define M1200	0260		/* -1200  RK06 , -600 Rk07 */
+/*
+*
+*	The following array defines the order in which the offset values defined above
+*	are used during error recovery.
+*
+*/
+int	hk_offset[16] =
+{
+	P400, M400, P400, M400,
+	P800, M800, P800, M800,
+	P1200, M1200, P1200, M1200,
+	0, 0, 0, 0,
+};
+
+int hk_drvtyp[NHK];		/* This array contains the drive type for each  drive on the system */
+char hk_mntflg[NHK];		/* This array contains a special flag for each drive on the system */
+				/* it is set to indicate that a drive type is known to the system */
+char hk_recal[NHK];		/* recalibrate flag */
+
+struct buf	hktab;		/* This is the buffer header used exclusivly by the RK06/07 for block I/O */
+				/* the structure is the same as buf.h but useage is slightly different */
+
+struct buf	rhkbuf;		/* This buffer header is used by the RK06/07 for raw I/O. struct. same as hktab */
+
+/*
+*	Control and Status bit definitions for  hkcs1
+*/
+#define GO	01			/* GO bit */
+#define SELECT	01			/* Select Function */
+#define PAKACK	02			/* Pack Acknowledge Function */
+#define DCLR	04			/* Drive Clear Function */
+#define UNLOAD	06			/* Unload Heads Function */
+#define STRSPN	010			/* Start Spindle Function */
+#define RECAL	012			/* Recalibrate Function */
+#define OFFSET	014			/* Offset Function */
+#define SEEK	016			/* Seek Function */
+#define RCOM	020			/* Read Command */
+#define WCOM	022			/* Write Command */
+#define RHDR	024			/* Read Header	*/
+#define WHDR	026			/* Write Header	*/
+#define WCHK	030			/* Write Check Function */
+#define IEI	0100			/* Interrupt Inable bit */
+#define CRDY	0200			/* Controller Ready bit */
+#define SEL7	02000			/* Select RK07 bit */
+#define CTO	04000			/* Controller Time Out bit */
+#define CFMT	010000			/* Controller Format bit */
+#define DTCPAR	020000			/* Drive to Controller Parity Error */
+#define DINTR	040000			/* Drive Interrupt bit */
+#define CCLR	0100000			/* Controller Clear bit */
+#define CERR	0100000			/* Controller Error bit */
+
+/*
+*	Control and Status bit definitions for  hkcs2
+*/
+#define DLT	0100000			/* Data Late error */
+#define WCE	040000			/* Write Check Error */
+#define UPE	020000			/* Unibus Parity Error */
+#define NED	010000			/* Nonexistent Drive error */
+#define NEM	04000			/* Nonexistent Memory error */
+#define PGE	02000			/* Programming error */
+#define MDS	01000			/* Multiple Drive Select error */
+#define UFE	0400			/* Unit Field Error */
+#define SCLR	040			/* Subsystem Clear bit */
+#define BAI	020			/* Bus Address Increment Inhibit bit */
+#define RLS	010			/* Release bit	*/
+
+/*
+*	Control and Status bit definitions for  hkds
+*/
+#define SVAL	0100000			/* Status Valid bit */
+#define CDA	040000			/* Current Drive Attention bit */
+#define PIP	020000			/* Position In Progress bit */
+#define WRL	04000			/* Write Lock bit */
+#define DDT	0400			/* Disk Drive Type bit */
+#define DRDY	0200			/* Drive Ready bit */
+#define VV	0100			/* Volume Valid bit */
+#define DROT	040			/* Drive Off Track Error */
+#define SPLS	020			/* Speed Loss Error	*/
+#define ACLO	010			/* Drive AC Low */
+#define DOFST	04			/* Drive Offset bit */
+#define DRA	01			/* Drive Available bit */
+
+/*
+*	Control and Status bit definitions for  hkerr
+*/
+#define DCK	0100000			/* Data Check error */
+#define DUNS	040000			/* Drive Unsafe error */
+#define OPI	020000			/* Operation Incomplete error */
+#define DTE	010000			/* Drive Timing error */
+#define DWLE	04000			/* Drive Write Lock error */
+#define IDAE	02000			/* Invalid Disk Address Error */
+#define COE	01000			/* Cylinder Overflow Error	*/
+#define HRVC	0400			/* Header Vertical Redundance Check Error */
+#define BSE	0200			/* Bad Sector Error */
+#define ECH	0100			/* Error Correction Hard error */
+#define DTYE	040			/* Drive Type error */
+#define FMTE	020			/* Format Error */
+#define CDPAR	010			/* Controller To Driver Parity Error */
+#define NXF	04			/* Nonexecutable Function Error */
+#define SKI	02			/* Seek Incomplete error */
+#define ILF	01			/* Illegal Function Error */
+
+#define trksec av_back
+#define cylin b_resid
+
+struct	ios	hk_ios[NHK];
+#define DK_N	1
+#define	DK_T	3
+
+
+/*
+*
+*	The following routine determines the drive type of the selected unit, saves drive type in hk_drvtyp
+*	and sets flag in hk_mntflg.
+*
+*/
+hkdsel(drn)
+{
+		int count, pri;
+
+		count = drn;					/* pick up the drive number */
+		hk_drvtyp[count] = 0;				/* set default drive type to RK06 */
+		HKADDR->hkcs2 = count;				/* load drive number in hkcs2 */
+		HKADDR->hkcs1 = SELECT;				/* do a select function */
+		while((HKADDR->hkcs1 & CRDY) == 0);		/* wait for ready */
+		if(HKADDR->hkcs1 & CERR && HKADDR->hkerr & DTYE){
+			hk_drvtyp[count] = SEL7;		/* Error.  Drive type is RK07 */
+			HKADDR->hkcs1 = CCLR;			/* Controller clear */
+			while((HKADDR->hkcs1 & CRDY)==0);	/* wait for ready */
+		}
+		hk_mntflg[count] = '1';				/* set mnt flag and return */
+		hk_ios[drn].dk_tr = DK_T;
+		pri = spl6();
+		dk_iop[DK_N] = &hk_ios[0];
+		dk_nd[DK_N] = NHK;
+		splx(pri);
+}
+/*
+*
+*	hkstrategy checks for overflow errors
+*
+*/
+hkstrategy(bp)
+register struct buf *bp;
+{
+	register int unit;
+	long sz;
+
+	if(bp->b_flags & B_PHYS)
+		mapalloc(bp);		/* if not block i/o see about allocating ubmap */
+	unit = minor(bp->b_dev);	/* pickup unit number from buffer header */
+	sz = bp->b_bcount;		/* pickup size from buffer header. should be 512 bytes */
+	sz = (sz+511)>>9;		/* convert to number of blocks */
+
+	/* if unit requested is greater than number available 
+	* or
+	* block number is < 0
+	* or
+	* block number +size is > number of blocks in file system
+	* ERROR
+	*/
+	if(unit >= (NHK<<3) ||
+	  bp->b_blkno < 0 ||
+	  bp->b_blkno+sz >= hk_sizes[unit&007].nblocks) {
+		bp->b_flags |= B_ERROR;		/* set ERROR flag */
+		iodone(bp);			/* call iodone to return buffer to pool */
+		return;				/* bye bye */
+	}
+
+/*
+*	no error so continue 
+*/
+	bp->av_forw = NULL;		/* clear the available forward link in the buffer header */
+	spl5();				/* set priority to 5.  don't want to be interrupted by drive right now */
+	if (hktab.b_actf == NULL)
+		hktab.b_actf = bp;	/* grab the header pointer for later use by hkintr */
+	else
+		hktab.b_actl->av_forw = bp; /* already linked. so make a forward link for next buffer */
+	hktab.b_actl = bp;		/* and make a back link */
+	if(hktab.b_active == NULL)
+		hkstart();		/* if drive not active call hkstart */
+	spl0();
+}
+
+hkstart()
+{
+	register struct buf *bp;
+	register int unit;
+	int com,cn,tn,sn,dn;
+	daddr_t bn;
+
+	if ((bp = hktab.b_actf) == NULL)
+		return;					/* no buffer link */
+	hktab.b_active++;				/* say that we're active */
+	unit = minor(bp->b_dev);			/* get the unit and file system number */
+	dn = unit>>3;					/* strip file sys number and load drive number in dn */
+	if(hk_mntflg[dn] != '1'){
+		hkdsel(dn);				/* if no mntflg then call hkdsel to determine drive type */
+		if(HKADDR->hkcs2 & NED){
+			bp->b_flags |= B_ERROR;		/* returned from hkdsel with error */
+			deverror(bp, HKADDR->hkcs2, HKADDR->hkerr);
+			HKADDR->hkcs1 = CCLR;
+			while((HKADDR->hkcs1 & CRDY) == 0);
+			hktab.b_active = NULL;	/* not active */
+			iodone(bp);		/* return buffer */
+			return;			/* bye bye */
+		}
+	}
+	bn = bp->b_blkno;				/* get the block number */
+	cn = (bn/(NSECT*NTRAC)) + hk_sizes[unit&07].cyloff;		/* calculate the cylinder number */
+	sn = bn%(NSECT*NTRAC);				/* calculate the */
+	tn = sn/NSECT;					/* track number */
+	sn = sn%NSECT;					/* get the sector number */
+	if((HKADDR->hkds & VV) ==0){
+		HKADDR->hkcs2 = dn;
+		HKADDR->hkcs1 = hk_drvtyp[dn]|PAKACK|GO;		/* set volume valid */
+		while ((HKADDR->hkcs1 & CRDY) == 0);	/* wait for ready */
+	}
+	HKADDR->hkdc = cn;				/* load the desired cylinder */
+	HKADDR->hkda = (tn<<8)|sn;			/* and the track , sector */
+	HKADDR->hkba = bp->b_un.b_addr;			/* get memory address */
+	HKADDR->hkwc = -(bp->b_bcount>>1);		/*  compliment and load the word count */
+	com = ((bp->b_xmem&3)<<8)|IEI|GO;		/* set up extended memory , interrupt enable , and go bits */
+	if(bp->b_flags & B_READ)
+		com |= RCOM; else
+		com |= WCOM;				/* set write command */
+	com |= hk_drvtyp[dn];				/* set drive type */
+	HKADDR->hkcs2 = dn;				/* select drive number */
+	HKADDR->hkcs1 = com;				/*  and load it all into hkcs1 */
+	hk_ios[dn].dk_busy++;
+	hk_ios[dn].dk_numb++;
+	unit = bp->b_bcount>>6;			/* more here */
+	hk_ios[dn].dk_wds += unit;
+/*				Thats all.	*/
+}
+
+
+hkintr()
+{
+	register struct buf *bp;
+	register int ctr,as,i,j,dn;
+
+
+	if(hktab.b_active == NULL)
+		return;			/* false interrupt. just return */
+	while((HKADDR->hkcs1 & CRDY) == 0);	/* !Wait for controller ready! */
+	dn = HKADDR->hkcs2 & 07;	/* get drive number */
+	bp = hktab.b_actf;		/* grab buffer header pointer */
+	if(hk_recal[dn] == '1')
+		goto drecal;		/* recalibrate in progress */
+	if(HKADDR->hkcs1 & CERR)
+	{
+		if(++hktab.b_errcnt >= NUMTRY || HKADDR->hkcs2 & NED ||
+			HKADDR->hkerr & (DWLE|FMTE|BSE))
+		{
+			bp->b_flags |= B_ERROR;	/* Fatal error End it */
+			deverror(bp, HKADDR->hkcs2, HKADDR->hkerr);
+			HKADDR->hkcs2 = SCLR; /* Subsystem clear */
+			while((HKADDR->hkcs1 & CRDY) == 0);
+			hk_recal[dn] = ' '; /* reset the recal in progess flag */
+			hktab.b_active = NULL; /* reset the active flag */
+			goto out;
+		}
+		if(HKADDR->hkerr & (DTE|IDAE|BSE|NXF|DUNS) &&
+			(HKADDR->hkcs2 & (MDS|UFE)) == 0 &&
+			(HKADDR->hkcs1 & CTO) == 0)
+		{
+			HKADDR->hkcs1 = CCLR;
+			while((HKADDR->hkcs1 & CRDY)==0);
+			HKADDR->hkcs2 = dn;
+			HKADDR->hkcs1 = (hk_drvtyp[dn]|DCLR|GO);
+			while((HKADDR->hkcs1 & CRDY)==0);
+		}
+		if(HKADDR->hkcs1 & CTO || HKADDR->hkcs2 & (MDS|UFE))
+		{
+			HKADDR->hkcs2 = SCLR;
+			while((HKADDR->hkcs1 & CRDY)==0);
+		}
+		if(HKADDR->hkds & DROT || HKADDR->hkerr & (OPI|SKI))
+		{
+			hk_recal[dn]  = '1';
+			HKADDR->hkcs1 = CCLR;
+			while((HKADDR->hkcs1 & CRDY)== 0);
+			HKADDR->hkcs2 = dn;
+			HKADDR->hkcs1 = (hk_drvtyp[dn]|DCLR|GO);
+			while((HKADDR->hkcs1& CRDY)==0);
+			HKADDR->hkcs1 = (hk_drvtyp[dn]|IEI|RECAL|GO);
+			return;
+	drecal:
+			HKADDR->hkcs1 = (hk_drvtyp[dn]|SELECT);
+			while((HKADDR->hkcs1 & CRDY)==0);
+			if((HKADDR->hkds & DRDY)==0)
+			{
+				HKADDR->hkcs1 = (hk_drvtyp[dn]|IEI|SELECT);
+				return;
+			}
+			hk_recal[dn] = ' ';
+		}
+		if((bp->b_flags & B_PHYS) == 0 &&
+			(HKADDR->hkerr & (DCK|ECH)) == DCK)
+		{
+			i = HKADDR->hkec1 -1;
+			j = i & 017;
+			i >>=4;
+			if(i >= 0 && i <256)
+			{
+			bp->b_un.b_words[i] ^= HKADDR->hkec2 << j;
+			bp->b_un.b_words[i+1] ^= HKADDR->hkec2 >> (16 - j);
+			}
+			printf("%D ",bp->b_blkno);
+			prdev("ECC",bp->b_dev);
+			HKADDR->hkcs1 = CCLR;
+			while((HKADDR->hkcs1 & CRDY)==0);
+			hktab.b_active = NULL;
+		}
+		if(hktab.b_active != NULL)
+		{
+			HKADDR->hkcs1 = CCLR;
+			while ((HKADDR->hkcs1 & CRDY)==0);
+			hktab.b_active = NULL;
+			hkstart();
+			return;
+		}
+	}
+out:
+	hktab.b_active = NULL;
+	hk_ios[dn].dk_busy = 0;
+	hktab.b_errcnt = 0;
+	hktab.b_actf = bp->av_forw;
+	bp->b_resid = 0;
+	iodone(bp);
+	hkstart();
+}
+
+
+
+hkread(dev)
+dev_t dev;
+{
+	physio(hkstrategy, &rhkbuf, dev, B_READ);
+}
+
+hkwrite(dev)
+dev_t dev;
+{
+	physio(hkstrategy, &rhkbuf, dev, B_WRITE);
+}

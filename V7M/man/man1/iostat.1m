@@ -1,0 +1,112 @@
+.TH IOSTAT 1M 
+.SH NAME
+iostat \- report I/O statistics
+.SH SYNOPSIS
+.B iostat
+[ option ] ...
+[ drive ] ...
+[ interval [ count ] ]
+.SH DESCRIPTION
+.I Iostat
+delves into the system and reports certain statistics kept about
+input-output activity.
+Information is kept about up to six different disks
+(HP, HM, HK, ML, RP, RL) and about typewriters.
+For each disk drive, I/O completions and number of words transferred
+are counted; for typewriters collectively, the number
+of input and output characters are counted.
+Also, each sixtieth of a second,
+the state of each disk drive is examined
+and a tally is made if the disk drive is active.
+The processor state is also examined,
+this tally goes into
+one of four categories, depending on whether the system is
+executing in user mode, in `nice' (background)
+user mode, in system mode, or idle.
+The
+.I iostat
+reports are for all types of activity,
+seeks as well as data transfers,
+on all drives that have had any I/O
+activity since the system was booted,
+inactive and nonexistent drives are ignored.
+.PP
+The optional
+.I drive
+argument allows the reports to be limited to
+a specified subset of the available drives.
+Up to six drive names, of the form;
+hp0, ml1, rl3, rp4, etc., may be specified.
+Reports will be generated for only those
+drives which exist and have been active.
+.PP
+The optional
+.I interval
+argument causes
+.I iostat
+to report once each
+.I interval
+seconds.
+The first report is for  all time since a reboot and each
+subsequent report is for the last interval only.
+.PP
+The optional
+.I count
+argument restricts the number of reports.
+.PP
+With no option argument
+.I iostat
+reports for each disk the number of transfers per minute,
+the milliseconds
+per average seek,
+and the milliseconds per data transfer exclusive of seek time.
+It also gives the percentage of time the system has
+spend in each of the four categories mentioned above.
+.PP
+The following options are available:
+.TP
+.B \-t
+Report the number of characters of terminal IO per second as well.
+.TP
+.B \-i
+Report the percentage of time spend in each
+of the four categories mentioned above,
+the percentage of time each disk controller was active
+(seeking or transferring,
+the percentage of time any diks drive was active,
+and the percentage of time spent in `IO wait:'
+idle, but with a disk drive active.
+.TP
+.B \-s
+Report the raw timing information for each
+active disk drive.
+The information consists of;
+the disk controller name and drive number,
+the disk's transfer rate (microseconds/word),
+the percentage of the total system time that the
+drive had I/O activity,
+the number of transfers on that drive,
+and the number of words transferred by the drive.
+.TP
+.B \-b
+Report on the usage of I/O buffers.
+The report gives;
+the number of buffers in the pool,
+the number of buffered reads,
+number of read-ahead blocks, number of buffer cache hits,
+number of buffered writes, and
+the number of I/O operations on each buffer
+starting with the first one.
+.TP
+.B \-d
+Print the date and time at the head of the report.
+.TP
+.B \-a
+Print the total time in minutes at the end of the report.
+.SH FILES
+/dev/mem, /unix
+.SH BUGS
+The accuracy of the 
+.I iostat
+reports is subject to the sixtieth
+of a second granularity of the system clock.

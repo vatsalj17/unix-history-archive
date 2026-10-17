@@ -1,0 +1,93 @@
+.TH HK 4 
+.SH NAME
+hk \- RK611/RK06, RK07 moving head disk
+.SH DESCRIPTION
+The octal representation of the minor device number is encoded
+.IR idp ,
+where
+.IR i
+is an interleave flag,
+.I d
+is a physical drive number,
+and
+.I p
+is a pseudodrive (subsection) within a physical unit.
+If
+.IR i
+is 0,
+the origins and sizes of the pseudodisks on each drive,
+counted in cylinders of 66 512-byte blocks,
+are:
+.nf
+.PP
+	disk	start	length
+	0	0	146
+	1	146	135
+	2	281	129
+	3	411	403
+	4	0	0
+	5	0	0
+	6	0	410
+	7	0	814
+.fi
+.PP
+If
+.IR i
+is 1, the minor device consists of the specified
+pseudodisk on drives numbered 0 through the designated
+drive number. Successively numbered blocks are
+distributed across the drives in rotation.
+.PP
+Systems distributed for these devices
+use disk 0 for the root, disk 1 for swapping,
+disk 2 for the system sources, and
+disk 3 (rk07) or disk 6 (rk06 drive 1)
+for a mounted user file system.
+Disk 6 (RK06) or disk 7 (RK07) may
+be used to create a mounted user
+file system, which consists
+of an entire disk pack.
+Pseudodisks 6 and 7 should not be used
+on the system disk pack, because they cover
+the entire pack.
+.PP
+The
+block
+files
+access the disk via the system's normal
+buffering mechanism
+and may be read and written without regard to
+physical disk records.
+.PP
+A `raw' interface
+provides for direct transmission between the disk
+and the user's read or write buffer.
+A single read or write call results in exactly one I/O operation
+and therefore raw I/O is considerably more efficient when
+many words are transmitted.
+The names of the raw files
+conventionally
+begin with
+an extra `r.'
+In raw I/O the buffer must begin on a word boundary.
+.SH FILES
+/dev/rp?, /dev/rrp?
+.br
+/dev/hk?, /dev/rhk?
+.SH SEE ALSO
+/usr/doc/hksizes
+.SH BUGS
+In raw I/O
+.I read
+and
+.IR write (2)
+truncate file offsets to 512-byte block boundaries,
+and
+.I write
+scribbles on the tail of incomplete blocks.
+Thus,
+in programs that are likely to access raw devices,
+.I read, write
+and
+.IR lseek (2)
+should always deal in 512-byte multiples.

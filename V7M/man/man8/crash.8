@@ -1,0 +1,366 @@
+.TH CRASH 8 
+.SH NAME
+crash \- what to do when the system crashes
+.SH DESCRIPTION
+This section gives at least a few clues about how to proceed if the
+system crashes.
+It can't pretend to be complete.
+.PP
+.I Bringing it back up.
+If the reason for the crash is not evident
+(see below for guidance on `evident')
+you may want to try to dump the system if you feel up to
+debugging.
+At the moment a dump can be taken only on magtape.
+With a tape mounted and ready,
+stop the machine, load address 1000, and start.
+This should write a copy of all of core
+on the tape with an EOF mark.
+Caution:
+Any error is taken to mean the end of core has been reached.
+This means that you must be sure the ring is in,
+the tape is ready, and the tape is clean and new.
+The system will halt after the completion of a
+successful dump or hang in a tight loop
+if the dump fails.
+If the dump fails, you can try again,
+by loading address 1000 and restarting.
+The registers are saved on the first dump
+attempt only, so nothing is lost by restarting.
+See below for what to do with the tape.
+.PP
+In restarting after a crash,
+always bring up the system single-user.
+This is accomplished by following the directions in
+.IR boot (8)
+as modified for your particular installation.
+When it is running,
+perform a
+.I fsck (1m)
+on all file systems which could have been in use at the time
+of the crash.
+If any serious file system problems are found, they should be repaired.
+When you are satisfied with the health of your disks,
+check and set the date if necessary,
+then come up multi-user.
+This is accomplished
+by typing an EOT (control d).
+.PP
+To even boot \s8UNIX\s10 at all,
+three files (and the directories leading to them)
+must be intact.
+First,
+the initialization program
+.I /etc/init
+must be present and executable.
+If it is not,
+the CPU will loop in user mode at location 6.
+For
+.I init
+to work correctly,
+.I /dev/console
+and
+.I /bin/sh
+must be present.
+If either does not exist,
+the symptom is best described
+as thrashing.
+.I Init
+will go into a
+.I fork/exec
+loop trying to create a
+Shell with proper standard input and output.
+.PP
+If you cannot get the system to boot,
+a runnable system must be obtained from
+a backup medium.
+The root file system may then be doctored as
+a mounted file system as described below.
+If there are any problems with the root
+file system,
+it is probably prudent to go to a
+backup system to avoid working on a
+mounted file system.
+.PP
+.I Repairing disks.
+The first rule to keep in mind is that an addled disk
+should be treated gently;
+it shouldn't be mounted unless necessary,
+and if it is very valuable yet
+in quite bad shape, perhaps it should be dumped before
+trying surgery on it.
+This is an area where experience and informed courage count for much.
+.PP
+The problems reported by
+.I icheck
+typically fall into two kinds.
+There can be
+problems with the free list:
+duplicates in the free list, or free blocks also in files.
+These can be cured easily with an
+.I icheck \-s.
+If the same block appears in more than one file
+or if a file contains bad blocks,
+the files should be deleted, and the free list reconstructed.
+The best way to delete such a file is to use
+.IR  clri (1),
+then remove its directory entries.
+If any of the affected files is really precious,
+you can try to copy it to another device
+first.
+.PP
+.I Dcheck
+may report files which
+have more directory entries than links.
+Such situations are potentially dangerous;
+.I clri
+discusses a special case of the problem.
+All the directory entries for the file should be removed.
+If on the other hand there are more links than directory entries,
+there is no danger of spreading infection, but merely some disk space
+that is lost for use.
+It is sufficient to copy the file (if it has any entries and is useful)
+then use
+.I clri
+on its inode and remove any directory
+entries that do exist.
+.PP
+Finally,
+there may be inodes reported by
+.I dcheck
+that have 0 links and 0 entries.
+These occur on the root device when the system is stopped
+with pipes open, and on other file systems when the system
+stops with files that have been deleted while still open.
+A
+.I clri
+will free the inode, and an
+.I icheck -s
+will
+recover any missing blocks.
+.PP
+The
+.I icheck
+,
+.I dcheck
+and
+.I clri
+information given above is for reference only,
+.I fsck (1m)
+should be used instead of
+.I icheck
+and
+.I dcheck
+for file system repairs,
+see 
+.I fsck (1m)
+for more detail.
+.PP
+.I Why did it crash?
+UNIX types a message
+on the console typewriter when it voluntarily crashes.
+Here is the current list of such messages,
+with enough information to provide
+a hope at least of the remedy.
+The message has the form `panic: ...',
+possibly accompanied by other information.
+Left unstated in all cases
+is the possibility that hardware or software
+error produced the message in some unexpected way.
+.HP 5
+blkdev
+.br
+The
+.I getblk
+routine was called with a nonexistent major device as argument.
+Definitely hardware or software error.
+.HP 5
+devtab
+.br
+Null device table entry for the major device used as argument to
+.I getblk.
+Definitely hardware or software error.
+.HP 5
+iinit
+.br
+An I/O error reading the super-block for the root file system
+during initialization.
+.HP 5
+no fs
+.br
+A device has disappeared from the mounted-device table.
+Definitely hardware or software error.
+.HP 5
+no imt
+.br
+Like `no fs', but produced elsewhere.
+.HP 5
+no clock
+.br
+During initialization,
+neither the line nor programmable clock was found to exist.
+.HP 5
+I/O err in swap
+.br
+An unrecoverable I/O error during a swap.
+Really shouldn't be a panic,
+but it is hard to fix.
+.HP 5
+out of swap space
+.br
+A program needs to be swapped out, and there is no more swap space.
+It has to be increased.
+This really shouldn't be a panic, but there is no easy fix.
+.HP 5
+out of swap
+.br
+No room in the swap area to hold the
+argument list while a process does an exec (2).
+Swap area size should be increased.
+.HP 5
+no procs
+.br
+The process table has overflowed, increase NPROC
+in param.h.
+.HP 5
+timeout table overflow
+.br
+The timeout table is not large enough.
+.HP 5
+zero wchan or sleeping on wchan 0
+.br
+A process is waiting on an address (wchan)
+of zero, which is illegal.
+.HP 5
+Running a dead proc
+.br
+The system attempted to activate a "zombie"
+process.
+.HP 5
+parity
+.br
+A memory parity error has occurred, can be
+accompanied by memory error registers on
+certian processors.
+.HP 5
+trap
+.br
+An unexpected trap has occurred within the system.
+This is accompanied by five numbers:
+a `ka6', which is the contents of the segmentation
+register for the area in which the system's stack is kept;
+`aps', which is the location where the hardware stored
+the program status word during the trap;
+`pc', program counter and `ps', processor status
+word at the time of the trap;
+and a `trap type' which encodes
+which trap occurred.
+The trap types are:
+.TP 10
+0
+bus error
+.br
+.ns
+.TP 10
+1
+reserved instruction
+.br
+.ns
+.TP 10
+2
+BPT/trace
+.br
+.ns
+.TP 10
+3
+IOT
+.br
+.ns
+.TP 10
+4
+power fail
+.br
+.ns
+.TP 10
+5
+EMT
+.br
+.ns
+.TP 10
+6
+recursive system call (TRAP instruction)
+.br
+.ns
+.TP 10
+7
+Programmed interrupt request
+.br
+.ns
+.TP 10
+10
+floating point trap
+.br
+.ns
+.TP 10
+11
+segmentation violation
+.PP
+In some of these cases it is
+possible for octal 20 to be added into the trap type;
+this indicates that the processor was in user mode when the trap occurred.
+If you wish to examine the stack after such a trap,
+either dump the system, or use the console switches to examine core;
+the required address mapping is described below.
+.PP
+.I Interpreting dumps.
+All file system problems
+should be taken care of before attempting to look at dumps.
+The dump should be read into the file
+.I /usr/sys/core;
+.IR  cp (1)
+will do.
+At this point, you should execute
+.I ps \-alxk
+and
+.I who
+to print the process table and the users who were on
+at the time of the crash.
+You should dump (
+.IR  od (1))
+the first 30 bytes of
+.I /usr/sys/core.
+Starting at location 4,
+the registers R0, R1, R2, R3, R4, R5, SP
+and KDSA6 (KISA6 for non-separate I & D CPU's) are stored.
+These are not the values of the registers
+at the time of the crash, those values are stored on the
+kernal stack, pointed to by `aps'.
+Next, take the value of KA6 (location 022(8) in the dump)
+multiplied by 0100(8) and dump 01000(8) bytes starting from there.
+This is the per-process data associated with the process running
+at the time of the crash.
+Relabel
+the addresses 140000 to 141776.
+R5 is C's frame or display pointer.
+Stored at (R5) is the old R5 pointing to the previous
+stack frame.
+At (R5)+2
+is the saved PC of the calling procedure.
+Trace
+this calling chain until
+you obtain an R5 value of 141756, which
+is where the user's R5 is stored.
+If the chain is broken,
+you have to look for a plausible
+R5, PC pair and continue from there.
+Each PC should be looked up in the system's name list
+using
+.IR  adb (1)
+and its `:' command,
+to get a reverse calling order.
+In most cases this procedure will give
+an idea of what is wrong.
+A more complete discussion
+of system debugging is impossible here.
+.SH SEE ALSO
+clri(1), icheck(1), dcheck(1), boot(8), fsck(1m)

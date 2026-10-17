@@ -1,0 +1,70 @@
+.TH RX 4 
+.SH NAME
+rx  \- RX02 floppy disk
+.SH DESCRIPTION
+.I RX?
+refers to an entire disk as a single sequentially-addressed
+file.
+The physical disk sector size is 128 bytes
+for single density and 256 bytes for double density,
+the logical block size
+is 512 bytes.
+Each diskette has 500 logical blocks, single
+density and 1001 logical blocks, double density.
+The minor device numbers have the following
+significance:
+.br
+.nf
+
+	name	minor device	unit	density
+	----	------------	----	-------
+	rx0	     0		  0	single
+	rx1	     1		  1	single
+	rx2	     2		  0	double
+	rx3	     3		  1	double
+.fi
+.PP
+The
+.I rx
+files
+discussed above access the disk via the system's normal
+buffering mechanism
+and may be read and written without regard to
+physical disk records.
+There is also a `raw' interface
+which provides for direct transmission between the disk
+and the user's read or write buffer.
+A single read or write call results in exactly one I/O operation
+and therefore raw I/O is considerably more efficient when
+many words are transmitted.
+The names of the raw RX files
+begin with
+.I rrx
+and end with a number which selects the same disk
+as the corresponding
+.I rx
+file.
+.PP
+In raw I/O the buffer must begin on a word boundary,
+and counts should be a multiple of 512 bytes
+(a disk block).
+Likewise
+.I seek
+calls should specify a multiple of 512 bytes.
+.SH FILES
+/dev/rx?, /dev/rrx?
+.SH BUGS
+In raw I/O
+.I read
+and
+.IR write (2)
+truncate file offsets to 512-byte block boundaries,
+and
+.I write
+scribbles on the tail of incomplete blocks.
+Thus,
+in programs that are likely to access raw devices,
+.I read, write
+and
+.IR lseek (2)
+should always deal in 512-byte multiples.

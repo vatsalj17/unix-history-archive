@@ -1,0 +1,183 @@
+This `README' file has been modified to reflect the state
+of the addenda relative to Unix/v7m Release 2.0 .
+DO NOT !, attempt to implement any part of this addenda
+without first completely reading and understanding this
+file. The text pertaining to each item of the addenda has
+been split into two halves, the original WECo text followed
+by a `*' then the comments about how the item pertains to
+Unix/v7m Release 2.0 . The bottom line is that all items
+which need to be installed have been, except for `awk' & `f77'.
+
+Addenda to UNIX 7th edition distribution tape, 12/2/80.
+
+Format: tar(1), 800 bpi.
+
+Contents:
+	
+	README: this descriptive file.
+	*
+	README: Unix/v7m version of this file.
+	
+	lp.c: the missing line printer driver that
+	      belongs in /usr/sys/dev/lp.c.
+	      The program comes from PWB, and needs minor
+	      changes to work in version 7; see comment
+	      at head of program.
+	*
+	lp.c: has been installed, no action required.
+	
+	lpr: a directory containing the lpr utility and
+	      its daemon lpd.
+	      See lpr/makefile for instructions on putting it
+	      together.
+	*
+	lpr: has been installed.
+	
+	lpd.8: the manual section for the line printer daemon.
+	*
+	lpd.8: has been installed.
+
+	fgrep.c: new source for fgrep(1) corrects certain
+	      troubles with keys with common prefixes
+	*
+	fgrep.c: has been installed.
+	
+	c2: directory containing C optimizer cured of
+	      certain instances of overoptimism.
+	      The existing C makefile works
+	*
+	c2: has been installed, DO NOT take any action !
+
+	awk: directory with complete new awk processor,
+	      see README and makefile therein
+	*
+	awk: the makefile contained some errors,
+		which were fixed. `awk' will make
+		successfully but has not been
+		installed because the `test' archive
+		is in some new format that is not understood
+		by unix version seven !
+
+
+
+
+
+
+	tmac.r: macros to simulate old "roff" in "nroff",
+	      to support -mr option mentioned in roff(1)
+	*
+	tmac.r: has been installed.
+
+	f77: directory with complete new fortran compiler,
+	      contains makefiles.
+	      Further improvements to the I/O library have
+	      been made at UC Berkeley, and may be obtainable
+	      from them.
+	*
+	f77: has not been installed, good luck with this one !
+
+	malloc.c: new source for malloc(3) corrects rare bug
+	*
+	malloc.c: the new malloc has been installed in /lib/libc.a
+		and all commands that use malloc, except for `awk'
+		and `f77' have been regenerated.
+
+	dev: directory with more robust mag tape drivers for /usr/sys/dev
+	*
+	dev: these tape drivers are from PWB or somewhere strange,
+		they will not compile on unix version seven.
+		The Unix/v7m drivers are better anyway !
+
+	fsck: directory with new, stringent file system checking
+	      program and manual section, far superior to old
+	      [ind]check.  It checks some data not maintained
+	      by v7, in particular superblock counts; resulting
+	      complaints are harmless
+	*
+	fsck: fsck would also not compile on unix version seven,
+		becuase it comes from internal unix or PWB again.
+		However this program is importent enough to be fixed
+		so it has been. Also the harmless messages mentioned above
+		will not occur, any error message that does occur is real !
+
+Other bug fixes:
+
+/usr/sys/h/param.h: CMAPSIZ and SMAPSIZ
+	should both be defined as (NPROC/2)
+	otherwise trouble will occur with very large
+*
+This does not work on small configurations.
+Unix/v7m Release 2.0 has fixed this problem.
+
+/usr/sys/conf/low.s: replace br7+7. with br7+10.
+	memories
+*
+fixed in Unix/v7m long ago.
+
+/usr/src/cmd/sed/sed0.c: delete continue after
+	case '\0' in compile() 
+*
+nothing has been done with this one.
+
+/usr/src/cmd/cu.c: args 1 and 2 of some ioctl calls
+	may be interchanged
+	a ~ may be lacking from references to ECHO or CRMOD
+	in case (f == 1) of mode(f)
+*
+nothing has been done with this one.
+
+
+
+
+
+
+
+
+The following bugs exist, no fix is included.
+      (1) adb does not report floating registers correctly
+	*
+	This has been fixed in Unix/v7m Release 2.0 .
+
+      (2) ldiv, lmod fail with largest negative dividend
+          (these implement division of longs in C);
+          the division (unsigned)32768/1 also fails
+	*
+	There several problems with ldiv & lrem, they have
+	been cleaned up in Unix/v7m Release 2.0 .
+
+      (3) dump(1) maintains ddate incorrectly.
+          This bug is relatively innocuous; it causes
+          more dumping than necessary on some occasions.
+	*
+	nothing has been done.
+
+      (4) join(1) treats null keys as end of file
+	*
+	nothing has been done.
+
+      (5) sort -t includes the following tab in some field comparisons
+	*
+	nothing has been done.
+
+      (6) hs(4) is irrevocably lost
+	*
+	not quite as irrevocably as one might think !
+
+      (7) exec writes arguments into swap space with buffered
+          I/O, which may happen physically much later, after
+          the space has been used for a core image.  The
+          solution is to preallocate
+          a portion of swap space to this single purpose.
+	*
+	nothing has been done.
+
+      (8) break is turned into a DEL regardless
+          of what the current interrupt character is
+	*
+	nothing has been done.
+
+      (?) and others, see warranty
+	*
+	"
+	Unix/v7m Release 2.0 has too many other bug fixes
+	to discuss here.

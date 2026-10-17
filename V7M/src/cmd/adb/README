@@ -1,0 +1,28 @@
+
+			ADB MAKE PROCEDURE
+
+			Fred Canter 8/23/81
+
+
+	There are now three versions of adb, `adb40' for non-separate
+	I & D space CPU's, `adb70' for separate I & D space CPU's, and
+	`adb40ov' for non-separate I & D space CPU's using the overlay
+	text kernel. Each of the three adb versions also has two variations,
+	one without the floating point interpreter, for use with CPU's
+	having the FP11 hardware and one with the floating point interpreter
+	included, to be used with CPU's that do not have the FP11.
+	CPU's without the FP11 hardware must use the version of adb with
+	the floating point interpreter included, CPU's with the FP11 may
+	use either version, but the non interpreter version is optimal
+	because it contains less code. The three versions of adb destributed
+	with the system all contain the floating point interpreter code.
+	The following `make' procedure is used to create the three versions
+	of adb and copy them to /bin. The `makefile' in /bin is used
+	to select the version of adb appropriate to the CPU being used:
+
+	make -f mf04 cp		(non I & D CPU, with FP11)
+	make -f mf04f cp	(non I & D CPU, without FP11)
+	make -f mf70 cp		(I & D CPU, with FP11)
+	make -f mf70f cp	(I & D CPU, without FP11)
+	make -f mf40ov cp	(non I & D CPU, with FP11, overlay kernel)
+	make -f mf40ovf cp	(non I & D CPU, without FP11, overlay kernel)

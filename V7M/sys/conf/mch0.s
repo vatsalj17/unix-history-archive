@@ -1,0 +1,7 @@
+HTDUMP = 1
+TUDUMP = 0
+TSDUMP = 0
+
+HTCS1	= 172440
+
+.fpp	= 1

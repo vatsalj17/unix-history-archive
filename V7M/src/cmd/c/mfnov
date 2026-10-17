@@ -1,0 +1,16 @@
+CFLAGS = -O -n -s
+
+all:	c0
+
+cmp:	all
+	cmp c0 /lib/c0
+	rm c0 *.o
+
+cp:	all
+	cp c0 /lib/c0
+	rm c0 *.o
+
+c0: c00.o c01.o c02.o c03.o c04.o c05.o
+	cc $(CFLAGS) -o c0 c00.o c01.o c02.o c03.o c04.o c05.o
+
+c00.o c01.o c02.o c03.o c04.o c05.o: c0.h

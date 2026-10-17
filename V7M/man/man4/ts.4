@@ -1,0 +1,81 @@
+.TH TS 4 
+.SH NAME
+ts \- TS11 magtape interface
+.SH DESCRIPTION
+The file
+.I mt1
+refers to the DEC TS11 magtape.
+When opened for reading or writing,
+the tape is not rewound.
+When closed, it is rewound (unless the 0200 bit is on, see below).
+If the tape was open for writing, a double end-of-file is written.
+If the tape is not to be rewound the 
+tape is backspaced to just between the two
+tapemarks.
+.PP
+A standard tape consists of a
+series of 512 byte records terminated by a double
+end-of-file.
+To the extent possible, the system makes
+it possible, if inefficient, to treat
+the tape like any other file.
+Seeks have their usual meaning and it is possible
+to read or write a byte at a time.
+Writing in very small units is inadvisable,
+however, because it tends to create monstrous record
+gaps.
+.PP
+The TS11 operates at 1600 BPI only and
+the driver does not support 
+multiple units.
+If the 0200 bit is on (initial digit 2 or 3), the tape is not rewound
+on close.
+Note that the
+minor device number has no necessary connection
+with the file name, and in fact
+.IR tp (1)
+turns the short name
+.I x
+into
+`/dev/mtx '.
+.PP
+The
+.I mt
+files discussed above are useful
+when it is desired to access the tape in a way
+compatible with ordinary files.
+When foreign tapes are to be dealt with, and especially
+when long records are to be read or written, the
+`raw' interface is appropriate.
+The associated file may be named
+.I "rmt1"
+but the same minor-device considerations
+as for the regular files still apply.
+.PP
+Each
+.I read
+or
+.I write
+call reads or writes the next record on the tape.
+In the write case the record has the same length as the
+buffer given.
+During a read, the record size is passed
+back as the number of bytes read, provided it is no greater
+than the buffer size;
+if the record is long, an error is indicated.
+In raw tape I/O, the buffer must begin on a word boundary
+and the count must be even.
+Seeks are ignored.
+A zero count is returned when a tape mark is read;
+another read will fetch the first record of the
+next tape file.
+.SH FILES
+/dev/mt1,
+/dev/rmt1,
+/dev/nrmt1
+.SH "SEE ALSO"
+tp(1)
+.SH BUGS
+In raw I/O, there should be a way
+to perform forward and backward record and file spacing and
+to write an EOF mark explicitly.

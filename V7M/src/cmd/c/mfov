@@ -1,0 +1,48 @@
+LIBES =
+CFLAGS = -O -n -s -DOVERLAY
+
+all:	ovc0 c1 c2
+
+fall:	fc1
+
+cmp:	all
+	cmp ovc0 /lib/ovc0
+	cmp c1 /lib/c1
+	cmp c2 /lib/c2
+	rm ovc0 c1 c2 *.o
+
+cp:	all
+	cp ovc0 /lib/ovc0
+	cp c1 /lib/c1
+	cp c2 /lib/c2
+	rm ovc0 c1 c2 *.o
+
+fcp:	fc1
+	cp fc1 /lib/fc1
+	rm fc1 c1*.o
+
+ovc0: c00.o c01.o c02.o c03.o c04.o c05.o
+	cc $(CFLAGS) -o ovc0 c00.o c01.o c02.o c03.o c04.o c05.o $(LIBES)
+
+c00.o c01.o c02.o c03.o c04.o c05.o: c0.h
+
+c1: c10.o c11.o c12.o c13.o table.o
+	cc $(CFLAGS) -o c1 c10.o c11.o c12.o c13.o table.o $(LIBES)
+
+fc1: c10.o c11.o c12.o c13.o table.o
+	cc $(CFLAGS) -f -o fc1 c10.o c11.o c12.o c13.o table.o $(LIBES)
+
+c10.o c11.o c12.o c13.o: c1.h
+
+table.o: table.s cvopt
+	cvopt <table.s >table.i
+	-as -o table.o table.i
+	rm table.i
+
+c2: c20.o c21.o
+	cc -n -O -s -o c2 c20.o c21.o $(LIBES)
+
+c20.o c21.o: c2.h
+
+cvopt:	cvopt.c
+	cc $(CFLAGS) -o cvopt cvopt.c $(LIBES)

@@ -1,0 +1,46 @@
+.TH SHUTDOWN 8
+.SH NAME
+shutdown \- orderly system shutdown
+.SH SYNOPSIS
+.B /etc/shutdown
+[ time ]
+.SH DESCRIPTION
+The
+.I shutdown
+command allows the super-user and no one else
+to bring the system down in an orderly fashion.
+Shutdown may only be run from the
+console terminal.
+The optional
+.I time
+argument is the time delay in minutes
+until the shutdown will occur.
+If the
+.I time
+is not given shutdown will ask for the
+shutdown time delay.
+.PP
+Once invoked 
+.I shutdown
+; disables logins for all but the console terminal,
+sends a shutdown warning message to all
+logged in users every minute until shutdown time arrives,
+sends a final shutdown warning message,
+kills all processes except process group zero,
+dismounts all but the root file system,
+syncs the disks, and brings the system
+down to single-user mode.
+The shutdown may be aborted by typing a
+`delete' on the console terminal.
+.SH FILES
+/etc/sdloglock	disables user logins
+.br
+/unix		system namelist
+.br
+/dev/mem	core memory
+.br
+/dev		searched to find swap device and tty names
+.SH BUGS
+Multi-user mode cannot be reestablished by typing
+control D (EOT) after the shutdown has reached 
+single-user mode, the system must be rebooted.

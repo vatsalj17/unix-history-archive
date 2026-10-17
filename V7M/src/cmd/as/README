@@ -1,0 +1,21 @@
+
+To assemble files intended for overlay use, a special
+assembler is needed.  The changes are in as11.s and as27.s.
+The code is controlled by the symbol 'overlay', look at the
+makefile.  The files ov.s and nov.s define the symbol
+appropriately for the overlay or non-overlay version of the
+assembler.  The overlay assembler is installed as /bin/ovas
+and /lib/ovas2.  Note that this could probably be better done
+with an option to the assembler, but I was in a hurry and the
+assembler is pretty ugly to muck around with.
+
+The basic problem is that all resolution of global text addresses
+must be delayed until the file is processed with the C overlay
+loader (covld) so that if the file lives in an overlay, all references
+to the global text symbols can be changed to references to the thunk
+that corresponds to the procedure.  The normal assembler resolves all
+references to text symbols that are defined in the current assembly.
+The overlay assembler forces all references to global text symbols
+to be treated as references to undefined external symbols, to be
+resolved by covld.
+

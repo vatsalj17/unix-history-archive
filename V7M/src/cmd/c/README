@@ -1,0 +1,26 @@
+
+The C compiler was changed in two places to build a version
+suitable for use with the overlayed kernel.  The header file
+c0.h defines the size of the stack frame (STAUTO, actually
+the offset to the first auto variable).  The value is controlled
+by the symbol OVERLAY; define it to get the overlay version.
+(The way I do this is to change the makefile by adding -DOVERLAY
+to the definition of CFLAGS.)  Files c02.c and c11.c were also
+changed so that the value STAUTO is properly propagated
+through the compiler.  Look for the symbol SETSTK to find the
+changes.  Note the both passes of the compiler must be replaced,
+as well as adding the new first pass ovc0.
+
+The make procedure has been modified to make both the overlay
+and non-overlay C compilers.
+The make procedure is as follows:
+
+	make -f mfnov c0	(makes c0 pass)
+	make -f mfov ovc0 c1 c2	(makes other passes)
+
+Fred Canter 8/30/81
+
+Cc was changed to call the overlay first pass if the -V option
+is specified.  The -V option also causes the overlay assembler
+to be called.
+

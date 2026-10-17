@@ -1,0 +1,849 @@
+.TL
+Regenerating System Software
+.AU
+Charles B. Haley
+Dennis. M. Ritchie
+.AI
+.MH
+.PP
+This document has been updated to include
+the modifications to 
+.UX
+version
+seven by the Unix Systems Engineering group at DIGITAL.
+.sp 3
+.ce 1
+Unix/v7m Release 2.1
+.sp 2
+.ce 3
+Fred Canter
+.AI
+.MK
+.sp 2
+.PP
+Digital Equipment Corporation assumes no responsibilities
+for this software and makes no warranties or
+guaranties as to its suitability or completeness.
+.bp
+.SH
+Introduction
+.PP
+This document discusses how to
+assemble or compile various parts of the
+unix
+system software.
+This may be necessary because
+a command or library is accidentally
+deleted or otherwise
+destroyed;
+also, it may be desirable to install a modified
+version of some command or library routine.
+A few commands depend
+to some degree on the current configuration
+of the system;
+thus in any new system modifications to some commands
+are advisable.
+Most of the likely modifications
+relate to the standard disk devices contained
+in the system.
+For example, the df(1) (`disk free')
+command has built into it the names of
+the standardly present disk storage drives
+(e.g. `/dev/rf0', `/dev/rp0').
+Df(1) takes an argument to indicate which
+disk to examine, but it is convenient
+if its default argument is adjusted to
+reflect the ordinarily present devices.
+The companion document `Setting up UNIX'
+discusses which commands are likely to require
+changes.
+Several of the command sources `include' the
+file <sys/param.h>, it may be necessary to
+recompile some or all of these commands
+if the system tunable parameters are changed,
+see System Tuning below.
+.bp
+.SH
+Where Commands and Subroutines Live
+.PP
+The
+source files for commands and subroutines reside
+in several subdirectories
+of the directory /usr/src.
+These subdirectories, and a general
+description of their contents, are
+.IP cmd 12
+Source files for commands.
+.IP libc/stdio 12
+Source files making up the `standard i/o package'.
+.IP libc/sys 12
+Source files for the C system call interfaces.
+.IP libc/gen 12
+Source files for most of the remaining routines described
+in section 3 of the manual.
+.IP libc/crt 12
+Source files making up the C runtime support package, as
+in call save-return and long arithmetic.
+.IP libc/csu 12
+Source for the C startup routines.
+.IP games 12
+Source for (some of) the games.
+No great care has been taken to try to make it obvious how
+to compile these; treat it as a game.
+.IP libF77 12
+Source for the Fortran 77 runtime library, exclusive of IO.
+.IP libI77 12
+Source for the Fortran 77 IO runtime routines.
+.IP libdbm 12
+Source for the `data-base manager' package
+.I dbm
+(3).
+.IP libfpsim 12
+Source for the floating-point simulator routine.
+.IP libm 12
+Source for the mathematical library.
+.IP libplot 12
+Source for plotting routines.
+.bp
+.SH
+Commands
+.PP
+The regeneration of most commands
+is straightforward.
+The `cmd' directory will contain either a source file
+for the command or a subdirectory containing the set
+of files that make up the command.
+If it is a single file the command
+.DS
+cd /usr/src/cmd
+cmake cmd_name
+.DE
+suffices. (Cmd_name is the name of the command you
+are playing with.)
+The result of the cmake command will be an executable version.
+If you type
+.DS
+cmake \-cp cmd_name
+.DE
+the result
+will be copied to /bin
+(or perhaps /etc or other places if appropriate).
+.PP
+The cmake command has been modified
+to make the alternate version of certian
+commands required for operation
+of unix version seven on the PDP11/23,
+PDP11/24, PDP11/34, PDP11/40, and PDP11/60
+processors. These commands are compiled by
+.DS
+cmake cmd_name40
+.DE
+and are named as follows:
+.DS
+dcheck40
+dump40
+dumpdir40
+icheck40
+ncheck40
+restor40
+.DE
+.bp
+.PP
+Prior to making a command the correct version
+of the parameter file must be copied to
+/usr/include/sys/param.h, use /sys/h/param_ov.h
+for non separate I and D space CPUs and /sys/h/param_id.h
+for separate I and D space CPUs.
+In order to simplify this process a `makefile'
+has been provided, which automatically
+selects the correct parameter file, recompiles all
+necessary commands, and installs them in
+/bin or /etc as cmd_name40 or cmd_name70.
+For non separate I and D space CPUs use:
+.DS
+cd /usr/src/cmd
+make cmd40
+.DE
+For separate I and D space CPUs use:
+.DS
+cd /usr/src/cmd
+make cmd70
+.DE
+The command `make all' can be used to make
+both cmd40 and cmd70.
+The `makefile' in /bin can then be used
+to copy desired version of each command
+to its normal name, i.e., dump40 or dump70
+to dump, etc.
+.PP
+If the source files are in a subdirectory there will be a `makefile'
+(see make(1)) to control the regeneration.
+After changing to the proper directory (cd(1)) you type one of the following:
+.IP "make all" 12
+The program is compiled and loaded; the executable is
+left in the current directory.
+.IP "make cp" 12
+The program is compiled and loaded, and the executable is
+installed.
+Everything is cleaned up afterwards;
+for example .o files are deleted.
+.IP "make cmp" 12
+The program is compiled and loaded, and the executable is compared
+against the one in /bin.
+.PP
+Some of the makefiles have other options. Print (cat(1)) the ones you
+are interested in to find out.
+.PP
+The makefile for the tar command
+has been updated to make tar40,
+which is requried for non separate I & D 
+space processors.
+.PP
+There are now six versions of `adb',
+in order to deal with the various types
+of unix kernels and the absence of
+floating point hardware. Refer to the
+`README' file in `/usr/src/cmd/adb'
+for information on how to select the appropriate
+version of adb and how to generate it.
+.bp
+.SH
+The Assembler
+.PP
+The assembler consists of two executable files:
+/bin/as and /lib/as2.
+The first is the 0-th pass:
+it reads the source program, converts it to
+an intermediate form in a temporary file `/tmp/atm0?',
+and estimates the final locations
+of symbols.
+It also makes two or three other temporary
+files which contain the ordinary symbol table,
+a table of temporary symbols (like 1:)
+and possibly an overflow intermediate file.
+The program /lib/as2
+acts as an ordinary multiple pass assembler
+with input taken from the files produced by /bin/as.
+.PP
+The source files for /bin/as
+are named `/usr/src/cmd/as/as1?.s'
+(there are 9 of them);
+/lib/as2 is produced
+from the source files
+`/usr/src/cmd/as/as2?.s';
+they likewise are 9 in number.
+Considerable care should be exercised
+in replacing either component of the
+assembler.
+Remember that if the assembler is lost,
+the only recourse is to replace it from some backup storage;
+a broken assembler cannot assemble itself.
+.PP
+There is now a second assembler `ovas',
+which is used by the overlay C compiler to
+generate the overlay text unix kernel.
+The `makefile' in `/usr/src/cmd/as'
+has been modified to make the overlay
+assembler.
+The file `/usr/src/cmd/as/README'
+contains more information on the overlay assembler.
+.SH
+The C Compiler
+.PP
+There is now an overlay C compiler, used to
+generate the overlay text unix kernel.
+The overlay C compiler and its make
+procedure have been integrated with the
+standard C compiler.
+The file `/usr/src/cmd/c/README'
+further explains the overlay C compiler and its generation.
+.PP
+The C compiler consists of
+seven routines:
+`/bin/cc',
+which calls the phases of the compiler proper,
+the compiler control line expander `/lib/cpp',
+the assembler (`as'), and the loader (`ld').
+The phases of the C compiler are
+`/lib/c0' or `/lib/ovc0', which is the first phase of the compiler;
+`/lib/c1', which is the second phase of the compiler;
+and `/lib/c2', which is the optional
+third phase optimizer.
+The loss of the C compiler is as serious
+as that of the assembler.
+.bp
+.PP
+The source for /bin/cc
+resides in `/usr/src/cmd/cc.c'.
+Its loss alone (or that of c2) is not fatal.
+If needed,
+prog.c can be compiled by
+.DS
+/lib/cpp prog.c >temp0
+/lib/c0 temp0 temp1 temp2
+/lib/c1 temp1 temp2 temp3
+as \- temp3
+ld \-n /lib/crt0.o a.out \-lc
+.DE
+.PP
+The source for the compiler proper is in the
+directory /usr/src/cmd/c.
+The first phase (/lib/c0) or (/lib/ovc0)
+is generated from the files c00.c, ..., c05.c,
+which must be compiled by the C compiler.
+There is also c0.h, a header file
+.I included
+by the C programs of the first phase.
+To make a new /lib/c0 and /lib/ovc0 use
+.DS
+make -f mfnov c0
+make -f mfov ovc0
+.DE
+Before installing the new c0s, it is prudent to save the old ones someplace.
+.PP
+The second phase of C (/lib/c1)
+is generated from the source files c10.c, ..., c13.c,
+the include-file c1.h, and a set
+of object-code tables combined into table.o.
+To generate a new second phase use
+.DS
+make -f mfov c1
+.DE
+It is likewise prudent to save c1 before
+installing a new version.
+In fact in general it is wise to save the
+object files for the C compiler so that
+if disaster strikes C can be reconstituted
+without a working version of the compiler.
+.PP
+In a similar manner,
+the third phase of the C compiler
+(/lib/c2)
+is made up from the files
+c20.c and c21.c together with c2.h,
+and is compiled by the command:
+.DS
+make -f mfov c2
+.DE
+Its loss is not critical since it is completely optional.
+.PP
+The set of tables mentioned above
+is generated from the file
+table.s.
+This `.s' file is not in fact assembler source;
+it must be converted by use of the 
+.I cvopt
+program, whose source and object are
+located in the C directory.
+Normally this is taken care of by make(1). You
+might want to look at the makefile to see what it does.
+.bp
+.SH
+UNIX
+.PP
+The source and object programs for UNIX are kept in
+the subdirectories of
+.I /sys.
+In the subdirectory 
+.I h
+there are several files ending in `.h';
+these are header files which are
+picked up (via `#include ...')
+as required by each system module.
+The file param.h contains the parameters
+for unix, there are two versions
+of this file, param_ov.h for the
+PDP11/23, PDP11/24, PDP11/34, PDP11/40, and PDP11/60
+and param_id.h for the PDP11/44,
+PDP11/45, PDP11/55, and PDP11/70.
+The subdirectory
+.I dev
+consists mostly of the device drivers
+together with a few other things.
+The subdirectory
+.I sys
+is the rest of the system.
+The files LIB1_id in sys and LIB2_id in dev
+are archives (ar(1)) which contain the object versions
+of the routines in the directory,
+for the separate I & D space processors.
+The overlay text kernel object modules are
+in ovdev and the overlay system objects and a
+partial archive (LIB1_ov) are in ovsys.
+.PP
+Subdirectory
+.I conf
+contains the files which control
+device configuration of the system.
+.I L.s
+specifies the
+contents of the interrupt vectors;
+.I c.c
+contains the tables which relate device numbers
+to handler routines.
+A third file,
+mch_ov.s or mch_id.s ,
+contains all the
+machine-language code in the system.
+A fourth file,
+.I mch0.s ,
+is generated by mkconf(1) and contains
+flags indicating what sort of tape drive is available
+for taking crash dumps.
+It also specifies the device address of
+the tape controller used for crash dumps.
+The mch0.s file also contains a parameter
+for controlling the inclusion of floating
+point support in the machine language code.
+.bp
+.PP
+The first step in the unix system generation
+process is to select the unix
+kernel that is most appropriate for your
+type of processor, there are three.
+The separate I & D space kernel `unix_id' is
+used with the PDP11/44, PDP11/45, PDP11/55,
+and PDP11/70 processors. The overlay text kernel
+`unix_ov' is used with the PDP11/23, PDP11/24, PDP11/34,
+PDP11/40, and PDP11/60 processors.
+The `unix_i' kernel is only used for the
+preconfigured unix systems needed to initially
+load unix onto the system disk from the distribution tape.
+After the type of kernel has been chosen,
+use the following procedure to make unix:
+.IP 1.
+Examine the appropriate parameter file
+(param_ov.h or param_id.h), you will find several
+`#define ...' statements used to control the inclusion
+of various features in the kernel.
+The features are ACCT, FP, SEP_ID, DH, MX,
+UBUSMAP, PARITY, and LCKPHYS, their meanings
+are explained by the comments in the parameter file.
+Features are excluded by commenting out the
+define statements in the parameter file.
+The system tuning parameters, NBUF, NPROC and the
+like, are also in the parameter file. It is not advisable to modify
+these for the first system generation,
+the best thing to do is make unix for your configuration
+and test it, then experiment with the tuning parameters.
+.IP 2.
+The device drivers contain statements defining
+the CSR address and the number of units
+to be supported. Check the drivers for the devices
+in your configuration to insure that these
+values are correct, edit the drivers if necessary.
+.bp
+.IP 3.
+You must insure that the `sys' and `dev' archives
+are up to date, the archives supplied with the system are current.
+If no changes to the drivers or the parameter
+file were made in steps 1 and 2, then no action is required.
+There are two methods of updating the archives
+(LIB1 and LIB2). The first is to recompile all the
+source files and recreate the archives as follows:
+.DS
+cd /sys/conf
+make all??
+.DE
+where ?? is the CPU type,
+23, 24, 34, 40, 44, 45, 55, 60, or 70.
+This would normally not be necessary unless
+the system tuning parameters in param.h are changed.
+The second method is to recompile only the
+source files that were chenged and rearchive them
+as follows:
+.DS
+cd /sys/conf
+mksys_id file1 file2 ... file6
+or
+mkdev_id file1 file2 ... file6
+.DE
+for unix_id or
+.DS
+cd /sys/conf
+mksys_ov file1 file2 ... file6
+or
+mkdev_ov file1 file2 ... file6
+.DE
+for unix_ov.
+As many as six source files may be recompiled
+at once, only the filename is typed, not the`.c'.
+These `mk' files automatically select the
+appropriate parameter file and copy it to
+param.h.
+For example if the hp and dz drivers were changed
+the commands would be:
+.DS
+cd /sys/conf
+mkdev_id hp dz
+.DE
+those drivers will be recompiled and replaced
+in the LIB2_id archive.
+If the parameter file was changed in step 1,
+the comments in that file indicate which
+source files must be recompiled.
+.bp
+.IP 4.
+Prepare a configuration file, named `unixconf'
+or something like that, which describes your system
+configuration.
+Use mkconf(1m) and the many existing `conf'
+files in /sys/conf as a guide.
+If the overlay text kernel is to be used,
+the `conf' file must contain the `ov'
+declaration.
+.IP 5.
+Run the mkconf program with the `conf' file
+as input:
+.DS
+mkconf <unixconf
+.DE
+mkconf will print a list of the configured
+devices and their vectors.
+.IP 6.
+Examine the core dump tape CSR address, in
+mch0.s to verify that is matches your hardware.
+You may need to edit the low core vector file
+`l.s' to correct the device interrupt vectors,
+in any case examine `l.s' to insure that the vectors
+match your configuration.
+It is wise to print the configuration tables, in
+the file `c.c', and verify that the correct devices
+are entered in the bdevsw and cdevsw tables. You will need
+a copy of `c.c' later on anyway.
+.IP 7.
+Use the `makefile', in /sys/conf to make unix
+as follows:
+.DS
+make unix??
+.DE
+where ?? is the CPU type, 23, 24, 34, 40,
+44, 45, 55, 60, 70.
+.IP 8.
+When the make is
+done, the new system is present in the
+current directory as `unix_ov' or `unix_id'.
+It should be tested before destroying the currently
+running `/unix', this is best done by doing something like
+.DS
+mv /unix /ounix
+mv unix_ov /unix
+.DE
+or
+.DS
+mv unix_id /unix
+.DE
+You must be super-user to move unix to the root.
+If the new system doesn't work, you can still boot `ounix'
+and come up (see boot(8)).
+When you have satisfied yourself that the new system works,
+remove /ounix.
+.bp
+.SH
+Installing new devices
+.PP
+Refer to mkconf(1m) and the `Unix/v7m Software Description'
+for information on what devices are supported by
+Unix/v7m.
+The information in this section is of general
+interest, however, the steps described below
+are only necessary if you need to add a new device
+that is not presently supported by mkconf(1m).
+.PP
+To install a new driver, compile it and put it into its
+library.
+The best way to put it into the library is
+to edit its name into the `mkdev'
+files in `/sys/conf' and the `mklib' files
+in /sys/dev, and then use `mkdev' to recompile and archive it.
+There is no LIB2 device driver library for the
+overlay kernel, `unix_ov'.
+.PP
+Next, the device's interrupt vector must be entered in l.s.
+This is probably already done by the routine mkconf(1), but if the
+device is esoteric or nonstandard you will have to massage
+l.s by hand.
+This involves placing a pointer to a callout routine
+and the device's priority level in the vector.
+Use some other device (like the console) as a guide.
+Notice that the entries in l.s must be in order
+as the assembler does not permit moving the
+location counter `.' backwards.
+The assembler also does not permit assignation of
+an absolute number to `.', which is the
+reason for the `. = ZERO+100' subterfuge.
+If a constant smaller than 16(10) is added to the
+priority level,
+this number will be available as the first argument of the interrupt routine.
+This stratagem is used when
+several similar devices share the same interrupt routine
+(as in dl11's).
+.PP
+If you have to massage l.s, be sure to add the code
+to actually transfer to the interrupt routine. Again use
+the console as a guide. The apparent strangeness of this code
+is due to running the kernel in separate I&D space.
+The
+.I call
+routine
+saves registers as required and prepares a C-style
+call on the actual interrupt routine
+named after the `jmp' instruction.
+When the routine returns,
+.I call
+restores the registers and performs an
+rti instruction.
+As an aside, note that
+external names in C programs have an
+underscore (`_') prepended to them.
+.bp
+.PP
+The second step which must be performed to add a 
+device unknown to mkconf is
+to add it to the configuration table
+/sys/conf/c.c.
+This file contains two subtables,
+one for block-type devices, and one for character-type devices.
+Block devices include disks, DECtape, and magtape.
+All other devices are character devices.
+A line in each of these tables gives all the information
+the system needs to know about the device handler;
+the ordinal position of the line in the table implies
+its major device number, starting at 0.
+.PP
+There are four subentries per line in the block device table,
+which give its open routine, close routine, strategy routine, and
+device table.
+The open and close routines may be nonexistent,
+in which case the name `nulldev' is given;
+this routine merely returns.
+The strategy routine is called to do any I/O,
+and the device table contains status information for the device.
+.PP
+For character devices, each line in the table
+specifies a routine for open,
+close, read, and write, and one which sets and returns
+device-specific status (used, for example, for stty and gtty
+on typewriters).
+If there is no open or close routine, `nulldev' may
+be given; if there is no read, write, or status
+routine, `nodev' may be given.
+Nodev sets an error flag and returns.
+.PP
+The final step which must
+be taken to install a device is to make a special file for it.
+This is done by mknod(1), to which you must specify the
+device class (block or character),
+major device number (relative line in the configuration table)
+and minor device number
+(which is made available to the driver at appropriate times).
+.PP
+The documents
+`Setting up Unix' and
+`The Unix IO system'
+may aid in comprehending these steps.
+.bp
+.SH
+The Library libc.a
+.PP
+The library /lib/libc.a is where most of the subroutines
+described in sections 2 and 3 of the manual are kept.
+This library
+can be remade using the following commands:
+.DS
+cd /usr/src/libc
+sh compall
+sh mklib
+mv libc.a /lib/libc.a
+.DE
+If single routines need to be recompiled and replaced, use
+.DS
+cc \-c \-O x.c
+ar vr /lib/libc.a x.o
+rm x.o
+.DE
+The above can also be used to put new items into the library.
+See ar(1), lorder(1), and tsort(1).
+.PP
+The routines in /usr/src/cmd/libc/csu (C start up) are not in
+libc.a. These are separately assembled and put into
+/lib. The commands to do this are
+.DS
+cd /usr/src/libc/csu
+as \- x.s
+mv a.out /lib/x
+.DE
+where x is the routine you want.
+.SH
+Other Libraries
+.PP
+Likewise,
+the directories containing the source for the other libraries
+have files compall (that recompiles everything)
+and mklib (that recreates the library).
+.bp
+.SH
+System Tuning
+.PP
+There are several tunable parameters in the system. These set
+the size of various tables and limits. They are found in the
+file /sys/h/param.h as manifests (`#define's),
+remember that there are two versions of this file,
+param_ov.h and param_id.h.
+Their values are rather generous in the system as distributed.
+Our typical maximum number of users is about 20, but there are
+many daemon processes.
+The values of the parameters in the param_ov.h file
+are set for about 10 users.
+.PP
+When any parameter is changed, it is prudent to recompile
+the entire system, as discussed above.
+A brief discussion of each follows:
+.IP NBUF 12
+This sets the size of the disk buffer cache. Each buffer is 512 bytes.
+This number should be around 25 plus NMOUNT,
+or as big as can be if the above number of
+buffers cause the system to not fit in memory.
+.IP NFILE 12
+This sets the maximum number of open files. An entry is made in
+this table every time a file is `opened' (see open(2), creat(2)).
+Processes share these table entries across forks (fork(2)). This number
+should be about the same size as NINODE below. (It can be a bit smaller.)
+.IP NMOUNT 12
+This indicates the maximum number of mounted file systems. Make it
+big enough that you don't run out at inconvenient times.
+.IP MAXMEM 12
+This sets an administrative limit on the amount of memory
+a process may have.
+It is set automatically if the amount of physical memory is small,
+and thus should not need to be changed.
+.IP MAXUPRC 12
+This sets the maximum number of processes that any one user can
+be running at any one time. This should be set just large enough
+that people can get work done but not so large that a user can
+hog all the processes available (usually by accident!).
+.IP NPROC 12
+This sets the maximum number of processes that can be
+active.
+It depends on the demand pattern of the typical user;
+we seem to need about 8 times the number
+of terminals.
+.DE
+.IP NINODE 12
+This sets the size of the inode table. There is one entry in the inode
+table for every open device, current working directory,
+sticky text segment,
+open file, and mounted device.
+Note that if two users have a file open there is still only one entry
+in the inode table. A reasonable rule of thumb for the size of
+this table is
+.DS
+NPROC + NMOUNT + (number of terminals)
+.DE
+.IP SSIZE 12
+The initial size of a process stack. This may be made bigger
+if commonly run processes have large data areas on the stack.
+.IP SINCR 12
+The size of the stack growth increment.
+.IP NOFILE 12
+This sets the maximum number of files that any one process can have
+open.
+20 is plenty.
+.IP CANBSIZ 12
+This is the size of the typewriter canonicalization buffer. It is
+in this buffer that erase and kill processing is done. Thus this
+is the maximum size of an input typewriter line. 256 is usually
+plenty.
+.IP CMAPSIZ 12
+The number of fragments that memory can be broken into. This should
+be big enough that it never runs out.
+This parameter automatically grows as NPROC is increased.
+.IP SMAPSIZ 12
+Same as CMAPSIZ except for secondary (swap) memory.
+.IP NCALL 12
+This is the size of the callout table. Callouts are entered in this
+table when some sort of internal system timing must be done, as in
+carriage return delays for terminals. The number must be big enough
+to handle all such requests.
+.IP NTEXT 12
+The maximum number of simultaneously executing pure programs. This
+should be big enough so as to not run out of space under heavy load.
+A reasonable rule of thumb is about
+.br
+.nf
+.sp
+(number of terminals) + (number of sticky programs)
+.br
+.fi
+.IP NCLIST 12
+The number of clist segments. A clist segment is 6 characters.
+NCLIST should be big enough so that the list doesn't become exhausted
+when the machine is busy. The characters that have arrived from a terminal
+and are waiting to be given to a process live here. Thus enough space
+should be left so that every terminal can have at least one average
+line pending (about 30 or 40 characters).
+.IP TIMEZONE 12
+The number of minutes westward from Greenwich. See `Setting Up UNIX'.
+.IP DSTFLAG 12
+See `Setting Up UNIX' section on time conversion.
+.IP MSGBUFS 12
+The maximum number of characters of system error messages saved. This
+is used as a circular buffer.
+.IP NCARGS 12
+The maximum number of characters in an exec(2) arglist. This
+number controls how many arguments can be passed
+into a process.
+5120 is practically infinite.
+.IP HZ 12
+Set to the frequency of the system clock (e.g., 50 for
+a 50 Hz. clock).
+.bp
+.SH
+System tuning on non separate I & D space CPUs
+.PP
+The overlay text unix kernel is used for the
+non separate I & D space processors,
+PDP11/23, PDP11/24, PDP11/34, PDP11/40,
+and PDP11/60.
+The system tuning parameters are set for
+about 10 users, as follows:
+.DS
+NBUF	= 14
+NINODE	= 100
+NFILE	= 80
+NPROC	= 70
+NTEXT	= 25
+NCLIST	= 125
+.DE
+.PP
+The following table can be used
+as an aid when tuning unix version seven on
+the non separate I & D space CPUs. It lists the name
+of the paramter, the size increase
+in bytes of incrementing the parameter by one,
+and the source files which
+must be recompiled if the parameter is changed.
+.DS
+PARAMETER	SIZE	FILES
+
+NBUF		542	c.c, bio.c , main.c
+NINODE		 74	c.c, alloc.c, iget.c, sys3.c
+NFILE		  8	c.c, mx2.c, fio.c, iget.c
+NMOUNT		  6	c.c, alloc.c, iget.c, nami.c, sys3.c
+			(one system buffer per NMOUNT)
+MAXUPRC		  0	c.c, sys1.c
+NOFILE		  0	c.c, fio.c, slp.c, sys1.c, sys3.c
+CMAPSIZ		  4	c.c, (any file that `includes' map.h)
+SMAPSIZ		  4	c.c, (any file that `includes' map.h)
+NCALL		  6	c.c, clock.c
+NPROC		 28	c.c
+NTEXT		 12	c.c, text.c
+NCLIST		  8	c.c, prim.c
+			(clists are larger on I & D space CPUs)
+.DE
+.PP
+The size of the overlay text kernel can be
+reduced by deselecting unneeded features in the
+param_ov.h, rebuilding the sys and dev archives, and
+remaking unix, as described in the section on generating UNIX
+above.

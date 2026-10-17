@@ -1,0 +1,136 @@
+.TH HP 4 
+.SH NAME
+hp \- RH-11/RM02, RP04, RP05, RP06 moving-head disk
+   \- RH-70/RM03, RP04, RP05, RP06 moving-head disk
+   \- RH-11/ML11 solid state disk
+   \- RH-70/ML11 solid state disk
+.SH DESCRIPTION
+The octal representation of the minor device number is encoded
+.IR idp ,
+where
+.I i
+is an interleave flag,
+.I d
+is a physical drive number,
+and
+.I p
+is a pseudodrive (subsection) within a physical unit.
+If
+.I i
+is 0,
+the origins and sizes of the pseudodisks on each drive,
+counted in cylinders of 418 512-byte blocks,
+for the RP04/5/6 are:
+.nf
+.PP
+	disk	start	length
+	0	0	23
+	1	23	21
+	2	44	21
+	3	65	345
+	4	65	749
+	5	411	403
+	6	0	410
+	7	0	814
+.fi
+.PP
+The pseudodisks for the RM02/3 are:
+.nf
+.PP
+	disk	start	length
+	0	0	60
+	1	60	55
+	2	115	50
+	3	165	657
+	4	0	0
+	5	0	0
+	6	0	0
+	7	0	822
+.fi
+.PP
+If
+.I i
+is 1, the minor device consists of the specified 
+pseudodisk on drives numbered 0 through the designated
+drive number.
+Successively numbered blocks are distributed
+across the drives in rotation.
+.PP
+Systems distributed for these devices
+use disk 0 for the root, disk 1 for swapping,
+disk 2 for the system souces, and
+disk 3 (rp04/5 & rm02/3), or disk 4 (rp06)
+for a mounted user file system.
+.PP
+The ML11 solid state disk may be
+connected to the RH11 or RH70 massbus
+disk controller in conjunction with
+RM and RP disks.
+The ML11 may be used for the swap device
+or perhaps mounted on /tmp.
+The ML11 has switch-selectable transfer
+rates of 0.25 mb, 0.5 mb, 1.0 mb,
+and 2.0 mb per second. The following transfer
+rate restrictions apply:
+.br
+.nf
+	0.25 mb		all CPU's
+	0.5  mb		all CPU's
+	1.0  mb		PDP 11/70 with RH70 only
+	2.0  mb		NO PDP11 CPU's
+.fi
+.PP
+The RM02/3, RP04/5/6, and ML11 disks
+may be attached to a second RH11 or RH70
+massbus disk controller at the alternate address
+and vector. In this case these disks are
+referenced as
+.IR hm? .
+.
+.PP
+The
+block
+files
+access the disk via the system's normal
+buffering mechanism
+and may be read and written without regard to
+physical disk records.
+.PP
+A `raw' interface
+provides for direct transmission between the disk
+and the user's read or write buffer.
+A single read or write call results in exactly one I/O operation
+and therefore raw I/O is considerably more efficient when
+many words are transmitted.
+The names of the raw files
+conventionally
+begin with
+an extra `r.'
+In raw I/O the buffer must begin on a word boundary,
+and raw I/O to an interleaved device is likely to have
+disappointing results.
+.SH FILES
+/dev/rp?, /dev/rrp?
+.br
+/dev/hp?, /dev/rhp?
+.br
+/dev/hm?, /dev/rhm?
+.SH SEE ALSO
+/usr/doc/hpsizes
+.SH BUGS
+In raw I/O
+.I read
+and
+.IR write (2)
+truncate file offsets to 512-byte block boundaries,
+and
+.I write
+scribbles on the tail of incomplete blocks.
+Thus,
+in programs that are likely to access raw devices,
+.I read, write
+and
+.IR lseek (2)
+should always deal in 512-byte multiples.
+.PP
+Raw device drivers don't work on interleaved devices.
