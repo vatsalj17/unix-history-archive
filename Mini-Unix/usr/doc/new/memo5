@@ -1,0 +1,61 @@
+.NH
+Summary
+.PP
+Since MX uses no segmentation unit, no protection
+is provided for the user program.
+Thus new user programs must be debugged carefully.
+In practice, the use of the C language limits the user's program's
+use of the program counter and stack pointer
+thus limiting damage and usually causing a bus error
+before anything drastic happens.
+The lack of a segmentation unit does have its advantages.
+It means the user can directly access all I/O registers on the UNIBUS
+and does not have to write special device drivers
+interfaced with the file system to control the special
+peripherals.
+Thus in cases where a real-time program is to be run,
+one may disable the system clock to inhibit
+unwanted clock interrupts and also swapping
+of processes.
+One may also catch clock interrupts during the running
+of user programs if the clock is to be used for
+user program timing control.
+The clock should then be restored to system control
+upon exit from the user program.
+.PP
+There is also another set of user programs available
+under MX which may be used to ease transition from
+DOS, the DEC operating system, to UNIX for those
+installations now using the DEC DOS operating system
+on a PDP-11 CPU.
+This package consists of a macro-assembler and a
+linker-loader for assembling programs
+written under DOS for the DEC macro-assembler.
+The result is a UNIX 'a.out' file.
+.PP
+The normal configuration for MX includes a PDP-11/10
+CPU with 28K words of memory and two RK05 disk
+cartridges for secondary.
+The PDP-11/10 processor is slower than the PDP-11/40
+processor and does not have the full instruction set
+of the PDP-11/40 processor, thus requiring the emulation
+of the missing instructions.
+A typical C compilation requires about twice the total
+time of that required on the equivalent PDP-11/40
+configuration.
+However, response to the editor commands is not
+significantly longer than on a more powerful CPU.
+The cost of a minimum configuration:
+.DS
+PDP-11/10 CPU
+28K words memory
+2 RK05 disk drives
+KL11 interface to control console
+DL11E interface to dial-up line
+60 cycle clock
+.DE
+is of the order of $20,000 at today's prices (December 1976).
+This provides an inexpensive tool for software development
+in a UNIX time-sharing environment for those
+configurations which have insufficient hardware
+to support a full Version 6 UNIX system.

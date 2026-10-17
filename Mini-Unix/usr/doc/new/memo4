@@ -1,0 +1,162 @@
+.NH
+UNIX User Program Modifications
+.PP
+Since the MX system uses no segmentation unit, all
+user programs must be compiled and relocated
+to start at address 060000.
+Under MX, the C programs are relocated automatically
+using the 'ld' program which has been modified
+as described below.
+For assembly-language source programs, the 'a.out'
+program may be relocated either using the 'reloc'
+program or the 'ld' program.
+The various user programs which have been modified
+from the standard Version 6 UNIX or new programs
+which are supported but not mentioned in the UNIX
+Programmer's Manual (4) are described below.
+.NH 2
+ar
+.LP
+The archive program supported is a version which is updated
+from that described in the UNIX Programmer's Manual.
+It is written in the C language and has some new keys added.
+However the documentation still applies.
+.NH 2
+bc
+.LP
+The 'bc' command works as in the standard UNIX system
+but cannot be used interactively since pipes
+are not implemented in the system.
+In generating the source for 'bc' using the 'yacc'
+compiler-compiler, the source must be edited slightly
+to make it simulate the use of pipes.
+.NH 2
+check
+.LP
+The \fBcheck\fR program is not described in the UNIX Programmer's
+Manual.
+However, it combines most of the individual features of
+\fBdcheck, icheck\fR and \fBncheck\fR as described in the manual.
+A flag of \fI-l\fR will do the equivalent
+of \fBncheck\fR with no flags.
+All other flags described for \fBdcheck, icheck\fR and \fBncheck\fR
+apply.
+.NH 2
+Debugger
+.LP
+The debugger \fBdb\fR has been slightly modified in order to ease debugging
+under the MINI-UNIX system.  The default relocation address of all programs
+is assumed to be 60000(8).  If the flag '-a' is given when the debugger
+is invoked, the relocation address is assumed to be zero.  This is useful
+for debugging the system.
+.PP
+The default address can be changed by editing 'db1.s' and setting the 
+variable 'uorg' equal to the new relocation address.
+Then the source code should be re-assembled.
+If none of the changes are desired, the variable \fImx\fR in \fIdb1.s\fR
+should be set to 0 and the source code re-assembled.
+.NH 2
+Kdmp
+.LP
+This program is used to extract a dump of the complete system (28K words)
+from the swap area on disk.
+The core image produced in the file "kore" may
+then be debugged post-mortem.
+Consult system source code for the actual disk tracks used.
+If a system crash occurs and the core image of the system
+is written out to disk, the system should be booted up
+single-user.
+Immediately, one should execute "kdmp" (preferably
+on an uncorrupted file system) before the swap
+area is over-written.
+.NH 2
+Ld
+.LP
+The \fBld\fR program has been modified to relocate the program
+origin to 060000 automatically.
+This is to facilitate the compilation of C programs
+under the MINI-UNIX system.
+Note that all assembly programs, after being assembled,
+must be relocated to 060000 either by using the link
+editor \fBld\fR or the relocation program \fBreloc\fR.
+The relocation origin may be changed from 060000
+by changing the value of the TOPSYS parameter
+in \fIld.c\fR to the appropriate value.
+.PP
+Using the \fI'-a'\fR option flag with \fBld\fR turns
+off the relocation of a program's origin.
+The program is then assumed to start execution
+at location 0.
+This is useful for link editing the MINI-UNIX system itself
+or any other program which starts execution at location 0.
+.NH 2
+Mkpt
+.LP
+The \fBmkpt\fR program constructs a prototype file
+given a specification file for direct input to
+the \fBmkfs\fR program.
+Run "man 8 mkpt" for details.
+.NH 2
+Ps
+.LP
+The process status command outputs basically the same
+information as that of the Version 6 UNIX \fBps\fR command.
+It has been modified to take into consideration
+the different process table layout and the different
+swapping technique used in MINI-UNIX.
+.NH 2
+Reloc
+.LP
+This Program is used to relocate all relocatable symbols
+in a program.
+Thus "reloc a.out 60000" will relocate
+all relocatable symbols in "a.out" and relocate the
+starting address of the program (absolute zero)
+to 060000.
+It must be used with all assembler output programs
+if the link-editor is not required.
+.NH 2
+Sh
+.LP
+Since the MINI-UNIX system does not support pipes, the shell has been
+modified to simulate pipes through the use of disk files.  When a
+command line which requires the use of a pipe is detected, a disk
+file is created and opened for reading and writing.  The file is
+immediately unlinked, so that the name is available for another pipe
+right away.  The file is called '.__pf'.  Hopefully this name will
+not conflict with any user file names.
+Thus, the symbol '|' in a shell command line becomes equivalent to
+\&'> .__pf ; < .__pf'.  The command:
+.DS
+	% prog1 | prog2
+.DE
+translates into:
+.DS
+	% prog1 > .__pf ; prog2 < .__pf
+.DE
+The process writing on the pipe writes everything into the file, and
+when it exits, the reader process is swapped in.  It reads what the
+writer has written on the pipe file.  The only danger in this type
+of implementation is due to the limitation of space on the file system being used.
+A very large amount of information going through a pipe could
+fill up the disk.
+Except for this, the pseudo-pipe code is transparent to the user.
+.PP
+The \fBsync\fR command has been added to the shell.
+Thus the system call is made directly from the shell
+and no other process is spawned.
+.NH 2
+Typo
+.LP
+This program checks for the most likely spelling errors
+in a document.
+It has been modified somewhat to enable it to fit
+in 16K words of memory.
+.NH 2
+Yacc
+.LP
+The source for the \fByacc\fR compiler has been edited to change
+some table sizes to make it run in 16K words of memory.
+Further editing of symbols at the beginning of \fIy0.c\fR may be
+required to make up a \fByacc\fR compiler with different
+table sizes for a particular application.

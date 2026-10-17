@@ -1,0 +1,103 @@
+.NH
+System Features
+.PP
+The Operating System itself is written
+in the high-level language, C (2) and as
+such bears a strong resemblance to the standard
+UNIX Operating System which runs on the
+PDP-11/40, 11/45 and 11/70 computers.
+Because of the memory address space limitation
+due to the lack of a segmentation unit,
+the system size is generally kept to
+12K words in size.
+Thus its capabilities are somewhat less
+than those of the standard UNIX system,
+especially in the area of inter-process communication
+and interactive debugging.
+The number of processes (and users) which MINI-UNIX (MX)
+can comfortably support is in general much less than for the
+standard UNIX system.
+No more than four users are recommended for MX.
+Currently the number of processes allowed is thirteen.
+This is a 'sysgen' parameter.
+The address space available to a user program is 16K words.
+This enables almost all user programs which run under Version 6 UNIX
+to run unmodified under MX.
+The exceptions are noted in a later section.
+The capabilities of MX fall somewhere in between those
+of standard Version 6 UNIX and those of the LSX
+operating system (3).
+LSX is a single-user UNIX-compatible system
+for the LSI-11 micro-processor using
+floppy disks as secondary storage.
+.PP
+MX supports all of the UNIX system calls of the Version 6
+UNIX operating system with the exception of:
+ptrace, pipe, prof, setgid and getgid.
+For the sake of completeness the status of implementation
+of the system calls are summarized in an Appendix.
+Thus MX supports all UNIX user programs with the exception
+of programs which use the above mentioned system calls.
+User programs are compiled and relocated to start
+at address 060000 and may occupy up to 16K words of memory.
+Up to 13 processes may exist at any one time, although only one process
+may be in core and running.
+This should be sufficient to handle up to four simultaneous users.
+Since no memory relocation is available, the complete
+user program image must be swapped out to bring in
+a new user program.
+Hence no sharing of text is possible.
+No software memory management is required.
+Scheduling is done on a simple round-robin basis
+with each process in the run state receiving
+a two second time slice.
+.PP
+The file system supported by MX is identical to that provided
+by the UNIX time-sharing system.
+The structure of the super-block and of the file inodes
+is maintained.
+MX supports the identical file system hierarchical
+structure and makes the same distinctions between
+ordinary files, directories and special files.
+Removable file systems are supported as well.
+Hence 'mount' and 'umount' system requests are treated
+identical to those in standard UNIX.
+Under MX, a file's size is limited to one megabyte.
+Large files are supported, but huge files (two level
+indirect block) are not.
+Groups are not supported in MX.
+Thus a file has only a given owner user ID and no group ID.
+Read, write and execute permission bits
+are available for both owner and non-owner of a file.
+The set-user ID bit is also supported in MINI-UNIX.
+.PP
+No interactive debugging is possible in MX since the 'ptrace'
+system call is not implemented.
+One may still use the C debugger 'cdb' but cannot plant
+breakpoint traps in the running image of a child process.
+It may only be used for post-mortem debugging on
+core images.
+The profiling of a process to determine where
+it is spending its time is also not permitted.
+Pipes have not been implemented in the MX system
+for two reasons.
+One is that it requires too much code in the system
+which is already butting its head
+against the top.
+Two is that the overhead required in switching
+from the process writing the pipe to the process
+reading the pipe involves a process swap.
+Filters, however are simulated at the command level
+as discussed in the next section.
+.PP
+Some other features have been stripped out of the system
+in MX in the interest of minimizing system address space.
+Upon reading a file block, "read-ahead" is not invoked.
+This contributes only slightly to a loss in throughput.
+Physical I/O has also not been implemented.
+This precludes the ability to read large contiguous
+pieces of disk directly into the user's address space
+without system side-buffering.
+The system buffering scheme is much simpler than in standard UNIX
+but a maximum of only eight buffers may be allocated
+in a minimum system configuration.

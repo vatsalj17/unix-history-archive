@@ -1,0 +1,57 @@
+chdir mxsys
+sh shs
+chdir ../dev
+sh shs
+chdir ..
+sh shld
+mv a.out /rkmx
+chdir mxsys
+e low.s
+/rk =/s/1/0/p
+/rp =/s/0/1/p
+w
+e conf.c
+/rk/s/.*/\/*	& *\//p
+/rp/s/\/\*//
+s/\*\///p
+w
+q
+as low.s;mv a.out ../low.o
+cc -c -O conf.c
+mv conf.o ../conf.o
+chdir ..
+sh shld
+mv a.out /rpmx
+chdir mxsys
+e low.s
+/rp =/s/1/0/p
+/hp =/s/0/1/p
+w
+e conf.c
+/rp/s/.*/\/*	& *\//p
+/hp/s/\/\*//
+s/\*\///p
+w
+q
+as low.s;mv a.out ../low.o
+cc -c -O conf.c
+mv conf.o ../conf.o
+chdir ..
+sh shld
+mv a.out /hpmx
+chdir mxsys
+e low.s
+/hp =/s/1/0/p
+/rk =/s/0/1/p
+w
+e conf.c
+/hp/s/.*/\/*	& *\//p
+/rk/s/\/\*//
+s/\*\///p
+w
+q
+as low.s;mv a.out ../low.o
+cc -c -O conf.c
+mv conf.o ../conf.o
+chdir ..
+sh shld

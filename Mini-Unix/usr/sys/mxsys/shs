@@ -1,0 +1,9 @@
+cc -c -O *.c
+mv conf.o ../conf.o
+as low.s;mv a.out ../low.o
+as mch.s;mv a.out mch.o
+as emul.s;mv a.out emulo
+ld -a -x -r *.o
+mv a.out syso
+ar r ../lib1 syso emulo
+rm syso emulo

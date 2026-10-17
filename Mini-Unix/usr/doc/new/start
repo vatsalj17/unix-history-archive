@@ -1,0 +1,768 @@
+.TL
+SETTING UP MINI-UNIX \- Sixth Edition
+.PP
+Enclosed are:
+.IP 1.
+`UNIX Programmer's Manual,' Sixth Edition.
+.IP 2.
+Documents with the following titles:
+.DS
+Setting Up MINI-UNIX \- Sixth Edition
+The UNIX Time-Sharing System
+C Reference Manual
+Programming in C \- A Tutorial
+UNIX Assembler Reference Manual
+A Tutorial Introduction to the UNIX Text Editor
+UNIX for Beginners
+RATFOR \- A Preprocessor for a Rational Fortran
+YACC \- Yet Another Compiler-Compiler
+NROFF Users' Manual
+The UNIX I/O System
+A Manual for the Tmg Compiler-writing Language
+On the Security of UNIX
+The M6 Macro Processor
+A System for Typesetting Mathematics
+DC \- An Interactive Desk Calculator
+BC \- An Arbitrary Precision Desk-Calculator Language
+The Portable C  Library (on UNIX)
+MINI-UNIX Summary
+Regenerating System Software
+.DE
+.IP 3.
+The MINI-UNIX software on magtape or disk pack.
+.PP
+If you are set up to do it,
+it might be a good idea immediately to make a copy of the disk
+or tape to guard against disaster.
+The tape contains 12100 512-byte records
+followed by a single file mark;
+only the first 4000 512-byte blocks on the disk
+are significant.
+.PP
+The system as distributed corresponds to three fairly
+full RK packs.
+The first contains the binary version of all programs, and the
+source for the operating system itself;
+the second contains all remaining source programs;
+the third contains manuals intended to be
+printed using the formatting programs roff or nroff.
+The `binary' disk is enough to run the system,
+but you will almost certainly want to modify some source
+programs.
+.SH
+Making a Disk From Tape
+.PP
+If your system
+is on magtape,
+perform the following bootstrap procedure to obtain
+a disk with the binaries.
+.IP 1.
+Mount magtape on drive 0 at load point.
+.IP 2.
+Mount formatted disk pack on drive 0.
+.IP 3.
+Key in and execute at 100000
+.RT
+.DS
+  TU10			  TU16
+012700			Use the DEC ROM or other
+172526			means to load block 1
+010040			(i.e. second block) at 800 BPI
+012740			into location 0 and transfer
+060003			to 0.
+000777
+.DE
+.IP
+The tape should move and the CPU loop.
+(The TU10 code is
+.I
+not
+.R
+the DEC bulk ROM for tape;
+it reads block 0, not block 1.)
+.IP 4.
+Halt and restart the CPU at 0.
+The tape should rewind.
+The console should type `='.
+.IP 5.
+Copy the magtape to disk by the following.
+This assumes TU10 and RK05; see 6 below for other
+devices.
+The machine's printouts are shown in italic
+(the `=' signs should be considered italic).
+Terminate each line you type by carriage return or line-feed.
+.DS
+= tmrk
+.I
+disk offset
+.R
+0
+.I
+tape offset
+.R
+100		(See 6 below)
+.I
+count
+.R
+1		(The tape should move)
+= tmrk
+.I
+disk offset
+.R
+1
+.I
+tape offset
+.R
+101		(See 7 below)
+.I
+count
+.R
+3999		(The tape moves lots more)
+=
+.DE
+To explain:
+the
+.I
+tmrk
+.R
+program copies tape to disk with the given offsets and counts.
+Its first use copies a bootstrap program
+to disk block 0;
+the second use copies the file system itself onto the disk.
+You may get back to `=' level by starting
+at 137000.
+.IP 6.
+If you have TU16 tape
+say `htrk' instead of `tmrk' in the above example.
+If you have an RP03 disk, say `tmrp' or `htrp',
+and use a 99 instead of 100 tape offset.
+If you have an RP04 disk, use `tmhp' or `hthp' instead or
+`tmrk', and use a 98 instead of 100 tape offset.
+The different offsets load bootstrap programs
+appropriate to the disk they will live on.
+.IP 7.
+This procedure generates the `binary' disk; the `source' disk
+may be generated on another RK pack by using a tape offset of 4101 instead of
+101.
+The `document' disk is at offset 8101 instead of 101.
+Unless you have only a single RK drive,
+it is probably wise to wait on generating these disks.
+Better tools are available using MINI-UNIX itself.
+.SH
+Booting MINI-UNIX
+.PP
+Once the MINI-UNIX `binary' disk is obtained, the system is booted
+by keying in and executing one of the following programs at 100000.
+These programs correspond to the DEC bulk ROMs
+for disks, since they read in and execute block 0 at location 0.
+.DS
+  RK05		  RP03		  RP04
+012700		012700		Use the DEC ROM or other
+177414		176726		means to load block 0 into
+005040		005040		location 0 and transfer
+005040		005040		to 0.
+010040		005040
+012740		010040
+000005		012740
+105710		000005
+002376		105710
+005007		002376
+			005007
+.DE
+Now follow the indicated dialog,
+where `@' and `#' are prompts:
+.DS
+@ rkmx		(or `rpmx' or `hpmx')
+.I
+login:  \fRroot
+.I
+#
+.R
+.DE
+MINI-UNIX uses 12K words of memory for the system
+and 16K words for user programs.
+Most of the MINI-UNIX software will run with
+12K words of memory,
+but some things require much more.
+.PP
+MINI-UNIX is now running,
+and the `UNIX Programmer's manual' applies;
+references below of the form X-Y mean the subsection named
+X in section Y of the manual.
+The `#' is the prompt from the MINI-UNIX Shell,
+and indicates you are logged in as the super-user.
+The only valid user names are
+`root' and `bin'.
+The root is the super-user and bin
+is the owner of nearly every file in the file system.
+.PP
+Before MINI-UNIX is turned up completely,
+a few configuration dependent exercises must be
+performed.
+At this point,
+it would be wise to read all of the manuals
+and to augment this reading with hand to hand
+combat.
+It might be instructive to examine
+the Shell run files
+mentioned below.
+.SH
+Reconfiguration
+.PP
+The MINI-UNIX system running is configured to
+run on an 11/10 with the given disk
+and the console teletype (KL)
+and using the EIS (extended instruction set) 
+software emulation package.
+This may not be the correct
+configuration for your system.
+Print (cat-I)
+the file /usr/sys/run.
+This file is a set of Shell commands
+that will completely recompile the system source,
+install it in the correct libraries and build the
+three configurations for rk, rp and hp.
+.PP
+Using the Shell file as a guide,
+edit low.s (trap vectors) and conf.c (configuration tables)
+to include the
+device controllers on your system.
+Choose from:
+.DS
+pc	(PC11)
+lp	(LP11)
+rf	(RS11)
+hs	(RS03/RS04)
+tc	(TU56)
+rk	(RK03/RK05)
+tm	(TU10)
+rp	(RP03)
+hp	(RP04)
+ht	(TU16)
+dc	(DC11)
+kl	(KL11/DL11-ABC)
+dl	(DL11-E)
+dp	(DP11)
+dn	(DN11)
+dh	(DH11)
+dhdm	(DM11-BB)
+.DE
+The console typewriter is automatically included;
+don't count it in the kl specification.
+In low.s, the appropriate parameters at the beginning
+of the file should be set to 1 to include the 
+corresponding device drivers.
+Also if you have a PDP-11/40 with the extended
+instruction set (EIS), set the parameter eis = 1 in low.s.
+In conf.c, take out the appropriate comment delimiters
+to include a particular device controller in the
+.I
+cdevsw
+.R
+or
+.I
+bdevsw
+.R
+tables.
+Edit in the comment delimiters to exclude
+a particular device controller.
+Take a careful look at
+low.s to make sure that all the devices that you
+have are assembled in the correct interrupt vectors.
+If your configuration is non-standard, you will
+have to modify low.s to fit your configuration.
+.PP
+There are certain magic numbers and
+configuration parameters imbedded in various
+device drivers that you may want to change.
+The device addresses of each device
+are defined in each driver.
+In case you have any non-standard device
+addresses,
+just change the address and recompile.
+(The device drivers are in the directory
+/usr/sys/dev.)
+.PP
+The DC11 driver is set to run 14 lines.
+This can be changed in dc.c.
+.PP
+The DH11 driver will only handle a single DH
+with a full complement of 16 lines.
+If you have less,
+you may want to edit dh.c.
+.PP
+The DN11 driver will handle 3 DN's.
+Edit dn.c.
+.PP
+The DP11 driver can only handle a single DP.
+This cannot be easily changed.
+.PP
+The KL/DL driver is set up to run
+a single DL11-A, -B, or -C (the console)
+and no DL11-E's.
+To change this, edit
+kl.c to have NKL11 reflect the total number of
+DL11-ABC's and
+NDL11 to reflect the number of DL11-E's.
+So far as the driver is concerned,
+the difference between the devices is
+their addresses.
+.PP
+The line printer driver is set up
+to print the 96 character set
+on 80 column paper
+(LP11-H)
+with indenting.
+Edit lp.c.
+.PP
+All of the disk and tape drivers
+(rf.c, rk.c, rp.c, tm.c, tc.c,
+hs.c, hp.c, ht.c)
+are set up to run 8 drives and should not
+need to be changed.
+The big disk drivers (rp.c and hp.c)
+have partition tables in them which you
+may want to experiment with.
+.PP
+After all the corrections
+have been made,
+use /usr/sys/run as a guide to recompile the
+changed drivers, install them in /usr/sys/lib2
+and to assemble the trap vectors (low.s)
+and the configuration table (conf.c).
+After all this,
+link edit the objects (ld-I)
+using the Shell file
+.I
+shld.
+.R
+The final object file (a.out) should be
+renamed /mx and booted.
+See Boot Procedures-VIII for a discussion
+of booting.
+(Note: remember, before booting,
+always perform
+a sync-VIII
+to force delayed output to the disk.)
+.SH
+Special Files
+.PP
+Next you must put in all of the special files in
+the directory /dev using mknod-VIII.
+Print the configuration file
+conf.c created above.
+This is the major
+device switch of each device class (block and character).
+There is one line for each device configured in your system
+and a null line for place holding for those devices
+not configured.
+The block special devices are put in first
+by executing the following generic command
+for each disk or tape drive.
+(Note that some of these files already exist
+in the directory /dev.
+Examine each file with ls-I with \-l flag to
+see if the file should be removed.)
+.DS
+	/etc/mknod /dev/NAME b MAJOR MINOR
+.DE
+The NAME is selected from the following list:
+.DS
+low.s	NAME	device
+rf	rf0	RS fixed head disk
+tc	tap0	TU56 DECtape
+rk	rk0	RK03 RK05 moving head disk
+tm	mt0	TU10 TU16 magtape
+rp	rp0	RP moving head disk
+hs	hs0	RS03 RS04 fixed head disk
+hp	hp0	RP04 moving head disk
+.DE
+The major device number is selected by counting the
+line number (from zero)
+of the device's entry in the block configuration table.
+Thus the first entry in the table bdevsw would be
+major device zero.
+.PP
+The minor device is the drive number,
+unit number or partition as described
+under each device in section IV.
+The last digit of the name
+(all given as 0 in the table above)
+should reflect the minor device number.
+For tapes where the unit is dial selectable,
+a special file may be made for each possible
+selection.
+.PP
+The same goes for the character devices.
+Here the names are arbitrary except that
+devices meant to be used
+for teletype access should be named
+/dev/ttyX, where X is any character.
+The files tty8 (console), mem, kmem, null are
+already correctly configured.
+.PP
+When all the special files have been created,
+care should be taken to change
+the access modes (chmod-I)
+on these files to appropriate values.
+.SH
+The Source Disk
+.PP
+You should now extract the source disk.
+This can be done as described above
+or the MINI-UNIX command dd-I may be used.
+The disk image begins at block 4100 on the tape,
+so the command
+.DS
+dd if=/dev/mt0 of=/dev/rk1 count=4000 skip=4100
+.DE
+might be used to extract the disk
+to RK drive 1.
+.PP
+This disk should be mounted (mount-VIII) on /usr/source; it contains
+directories of source code.
+In each directory is a Shell file run that
+will recompile all the source in the directory.
+These run files should be consulted whenever
+you need to recompile.
+.SH
+Floating Point
+.PP
+MINI-UNIX only supports the 11/45 FP11-B
+floating point unit.
+For machines without this hardware,
+there is a user subroutine
+available that will catch illegal instruction
+traps and interpret floating point operations.
+(See fptrap-III.)
+The system as delivered has this code included
+in all commands that have floating point.
+This code is never used if the FP hardware
+is available and therefore does not
+need to be changed.
+The penalty is a little bit of disk space and
+loading time for the few floating commands.
+.PP
+The C compiler in /usr/source/c probably
+should be changed if floating point is available.
+The fpp flag in c0t.s should be set and
+C should be recompiled and reloaded and
+installed.
+This allows floating point C programs to be
+compiled without the \-f flag and prevents
+the floating point interpreter from getting
+into new floating programs.
+(See /usr/source/c/run.)
+.SH
+Time Conversion
+.PP
+If your machine is not in the Eastern time zone,
+you must edit (ed-I) the subroutine
+/usr/source/s4/ctime.c to reflect your local time.
+The variable `timezone' should be changed
+to reflect the time difference between local time and GMT.
+For EST, this is 5*60*60; for PST it would be 8*60*60.
+This routine also contains the names of the
+standard and Daylight Savings time zone;
+so `EST' and `EDT' might be changed to `PST' and `PDT'
+respectively.
+Notice that these two names are in upper case
+and escapes may be needed (tty-IV).
+Finally, there is a `daylight'
+flag;
+when it is 1 it causes the
+time to shift to Daylight Savings automatically
+between the last Sundays in April and October
+(or other algorithms in 1974 and 1975).
+Normally this will not have to be reset.
+After ctime.c has been edited
+it should be compiled and installed in
+its library.
+(See /usr/source/s4/run.)
+Then you should
+(at your leisure)
+recompile and reinstall
+all programs performing time conversion.
+These include:
+(in s1)
+date, dump, ls, cron,
+(in s2)
+mail, pr, restor, who, sa and tp.
+.SH
+Disk Layout
+.PP
+If
+there are to be more file systems mounted than just the root,
+use mkfs-VIII to create the new file system and
+put its mounting in the file /etc/rc (see init-VIII and mount-VIII).
+(You might look at /etc/rc anyway to
+see what has been provided for you.)
+.PP
+There are two considerations in deciding how to adjust the arrangement
+of things on your disks:
+the most important is making sure there is adequate space
+for what is required;
+secondarily, throughput should be maximized.
+The RK disk (or its image)
+as distributed has 4000 blocks for file storage,
+and the remainder of the disk (872 blocks)
+is set aside for swap space.
+This is sufficient to support up to 13 concurrent
+processes.
+If more processes are required,
+the swap space size in param.h must be increased.
+.PP
+Many common system programs (C, the editor, the assembler etc.)
+create intermediate files in the /tmp directory,
+so the file system where this is stored also should be made
+large enough to accommodate
+most high-water marks.
+In an idle state about 900 free blocks
+on the file system where /tmp resides
+should be sufficient.
+All the programs that create files in /tmp try to take
+care to delete them, but most are not immune to
+events like being hung up upon, and can leave dregs.
+The directory should be examined every so often and the old
+files deleted.
+.PP
+Exhaustion of user-file space is certain to occur
+now and then;
+the only mechanisms for controlling this phenomenon
+are occasional use of du-I and threatening
+messages of the day and personal letters.
+.PP
+The efficiency with which MINI-UNIX is able to use the CPU
+is largely dictated by the configuration of disk controllers.
+For general time-sharing applications,
+the best strategy is to try to split user files,
+the root directory (including the /tmp directory)
+and the swap area among three controllers.
+Ideally, one would have user files on an RP,
+the root on an RF fixed-head disk, and swap on an RK.
+This is best since the RK has a faster transfer
+rate than the rather slow RF, and in swapping
+the transfer rate rather than access time
+is the dominant influence on throughput.
+.PP
+Once you have decided how to make best use
+of your hardware, the question is how to initialize it.
+If you have the equipment,
+the best way to move a file system
+is to dump it (dump-VIII) to magtape,
+use mkfs-VIII to create the new file system,
+and restore the tape.
+If you don't have magtape,
+dump accepts an argument telling where to put the dump;
+you might use another disk or DECtape.
+Sometimes a file system has to be increased in logical size
+without copying.
+The super-block of the device has a word
+giving the highest address which can be allocated.
+For relatively small increases, this word can be patched
+using the debugger (db-I)
+and the free list reconstructed using icheck-VIII.
+The size should not be increased very greatly
+by this technique, however,
+since although the allocatable space will increase
+the maximum number of files will not (that is, the i-list
+size can't be changed).
+Read and understand the description given in file system-VI
+before playing around in this way.
+.PP
+If you have only an RP disk,
+see section rp-IV for some suggestions
+on how to lay out the information on it.
+The file systems distributed on tape, containing the binary, the source,
+and the manuals,
+are each only 4000 blocks long.
+Perhaps the simplest way to integrate the latter two
+into a large file system is to extract the
+tape into the upper part of the RP,
+dump it,
+and restore it into an empty, non-overlapping
+file system structure.
+If you have to merge a file system into another, existing one,
+the best bet is to
+use ncheck-VIII
+to get a list of names, then edit this list
+into a sequence of mkdir and cp commands
+which will serve as input to the Shell.
+(But notice that owner information is
+lost.)
+.SH
+New Users
+.PP
+Install new users by editing the password file
+/etc/passwd (passwd-V).
+You'll have to make current directories for the new users
+and change their owners to the
+newly installed name.
+Login as each user to make sure the password
+file is correctly edited.
+For example:
+.DS
+ed /etc/passwd
+$a
+joe::10:1::/usr/joe:
+.li
+.
+w
+q
+mkdir /usr/joe
+chown joe /usr/joe
+login joe
+ls \-la
+login root
+.DE
+This will make a new login entry for joe.
+His default current directory is
+/usr/joe
+which has been created.
+The delivered password file
+has the user
+.I
+hl
+.R
+in it to be used as a prototype.
+.SH
+Multiple Users
+.PP
+If MINI-UNIX is to support simultaneous
+access from more than just the console teletype,
+the file /etc/ttys (ttys-V) has to be edited.
+For some historical reason tty8 is the name of the console typewriter.
+To add new typewriters be sure the device is configured
+and the special file exists, then set
+the first character of the appropriate line of /etc/ttys to 1
+(or add a new line).
+Note that if the special file is inaccessible when init tries to create a process
+for it, the system will thrash trying and retrying to open it.
+.SH
+File System Health
+.PP
+Periodically (say every day or so) and always after a crash,
+you should check all the file systems for consistency
+(icheck, dcheck-VIII).
+It is quite important to execute sync (VIII)
+before rebooting or taking the machine down.
+This is done automatically every 30 seconds by the update
+program (VIII) when a multiple-user system is running,
+but you should do it anyway to make sure.
+.PP
+Dumping of the file system should be done regularly,
+since once the system is going it is very easy to
+become complacent.
+Complete and incremental dumps are easily done with
+the dump command (VIII) but restoration of individual
+files is painful.
+Dumping of files by name is best done by
+tp (I) but the number of files is limited.
+Finally if there are enough drives entire
+disks can be copied using cp-I, or preferably with
+dd-I using an appropriate
+block count.
+Note that there is no stand-alone program
+with MINI-UNIX that will restore any of these formats.
+Unless some action has been taken to
+prevent destruction of a running version of
+MINI-UNIX, you can find yourself stranded even though
+you have backup.
+.SH
+MINI-UNIX and UNIX Differences
+.PP
+The source for all MINI-UNIX user programs which
+are different from those in standard UNIX is in the directory
+/usr/sys/source.
+If the system size changes from 12K words or these programs
+must be re-compiled for other reasons, the source
+in this directory must be used in place of the corresponding
+source in the /usr/source/s1 and /usr/source/s2
+directories.
+In particular, the two programs
+.I
+ld
+.R
+and
+.I
+db
+.R
+know about the system size in order to reflect
+the fact that user programs have been relocated
+by the link editor to begin execution at the default
+memory location of 060000 for a 12K word system.
+Using a "-a" flag with these two programs
+will cause them to revert to standard UNIX mode,
+using an absolute zero (0) as the origin of the binary program
+in question.
+.PP
+There are a number of differences between the capabilities
+of MINI-UNIX and standard UNIX of which the user should be aware.
+The concept of "groups" is not supported in
+MINI-UNIX;
+no profiling is done in MINI-UNIX;
+it is not possible to interactively debug another running process
+in MINI-UNIX.
+User programs are limited to 16K words in size
+and the sharing of text is not possible.
+Pipes are not implemented in the system;
+rather they are implemented as "pseudo-pipes"
+in the Shell command.
+Thus complex commands such as:
+.sp
+.ti+5
+nm a.out | grep _c | pr -3
+.sp
+are still possible.
+However the commands are executed sequentially,
+saving data in intermediate files.
+The
+.ul
+bc
+command, in particular, works as in the standard UNIX
+system but cannot be used interactively since pipes
+are not implemented in the system.
+The source for the
+.ul
+yacc
+compiler has been edited to change some table sizes
+to make it run in 16K words of memory.
+You may want to edit y0.c further to make up a
+.ul
+yacc
+with different table sizes for your particular application.
+.bp
+.SH
+Odds and Ends
+.PP
+The programs
+dump,
+icheck, dcheck, ncheck, and df
+(source in /usr/source/s1 and /usr/source/s2)
+should be changed to
+reflect your default mounted file system devices.
+Print the first few lines of these
+programs and the changes will be obvious.
+.PP
+If you would like to share any MINI-UNIX compatible
+software with others,
+please let us know about it.
+If you find bugs in the software or the
+documentation,
+again let us know.
+.PP
+Lastly,
+a UNIX users' group has been formed.
+To get on their mailing list,
+send your name(s) and address to:
+.DS
+Prof. Melvin Ferentz
+Physics Dept.
+Brooklyn College of CUNY
+Brooklyn, N.Y. 11210
+.DE
+.PP
+.sp3
+.DS
+		Heinz Lycklama
+.DE

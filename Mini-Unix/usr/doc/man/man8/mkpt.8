@@ -1,0 +1,150 @@
+.th MKPT VIII 4/18/74
+.sh NAME
+mkpt - make prototype file for use by mkfs
+.sh SYNOPSIS
+.bd /etc/mkpt
+spec
+proto
+.sh DESCRIPTION
+.it Mkpt
+constructs a prototype file
+.it proto
+according to the directions found
+in the specification file
+.it spec.
+The specification file must contain the name of the  boot file
+as the first token, the size of the file system to be created
+as the second token and the size of the i-list in blocks
+as the third token.
+The next set of tokens comprise the specification for 
+the root file.
+See
+.it mkfs
+(VIII) for the correct format of the above tokens.
+.s3
+All of the following tokens consist of directory names.
+Directory names followed by a ':' are made directory entries
+in the
+.it proto
+file.
+Directory names not terminated by a ':'
+are scanned by
+.it mkpt
+and all entries are put in the
+.it proto
+file (recursively).
+If no ':' terminated directory name
+appears, all entries taken from the
+specified directories are entered into the
+.it proto
+file as originating from the root directory.
+A directory name terminated by a ':' and
+followed immediately by another directory name terminated by a ':'
+will be entered as an empty directory entry
+in the
+.it proto
+file.
+A directory name terminated by a ':' may be
+followed by as many directory names not
+terminated by ':'s as desired.
+.s3
+A directory name terminated by a ':' may be several levels deep,
+e.g. usr/usra: .
+All subsequent directory names terminated by ':'
+will be put in the directory 'usr' .
+One may back up a directory level
+by means of the entry '..:' .
+This enables one to extract selectively
+certain sub-directories of a given directory.
+.s3
+Editing of the
+.it proto
+file will only be required if
+one wishes to change the names of some files.
+Otherwise the
+.it proto
+file may be used exactly as is to create
+a new file system using
+.it mkfs
+(see
+.it mkfs
+(VIII)).
+.s3
+Some sample specification files follow:
+.s3
+.nf
+.in+5
+/usr/mdec/uboot
+4872 55
+d\*-\*-777 3 1
+bin: /bin
+lib: /lib
+dev: /dev
+etc: /etc
+tmp:
+usr:
+mnt:
+crp:
+.s3
+.in-5
+and
+.in+5
+.s3
+/usr/mdec/uboot
+42000 500
+d\*-\*-777 3 1
+/usr
+.s3
+.in-5
+and
+.in+5
+.s3
+/usr/mdec/uboot
+20000 300
+d\*-\*-777 3 1
+usra: /usr/usr1 /usr/usr2 /usr/usr3
+usrb: /usr/usr4
+usrc:
+usrd: /usr/usr5
+.s3
+.in-5
+and
+.in+5
+.s3
+/usr/mdec/uboot
+35000 450
+d\*-\*-777 3 1
+/
+.s3
+.in-5
+and
+.in+5
+.s3
+/usr/mdec/uboot
+4000 80
+d\*-\*-777 3 1
+bin: /bin
+etc: /etc
+dev: /dev
+lib: /lib
+tmp:
+usr/usra: /usr/usra
+usrb: /usr/usrb
+usrc:
+bin: /usr/bin
+..:
+mnt:
+crp:
+.s3
+.fi
+.in-5
+.sh "SEE ALSO"
+file system(V), directory(V), boot procedures(VIII).
+.sh DIAGNOSTICS
+There are diagnostics for non-existent or non-readable
+directories.
+.sh BUGS
+If a very large
+.it proto
+file is created, it cannot be
+edited to make any changes.

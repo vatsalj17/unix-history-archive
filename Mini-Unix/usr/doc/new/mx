@@ -1,0 +1,113 @@
+.po +6
+.tr ~ 
+.nf
+~
+~
+~
+.ta 50
+
+MX - Mini-Unix for PDP-11/10	October 2, 1975
+.sp 2
+	H. Lycklama
+.fi
+.sp 6
+A version of the UNIX operating system has been written for
+the PDP-11/10 computer.
+The system supports all of the standard "system calls"
+.he ""- % -"
+of the PDP-11/40, PDP-11/45 and PDP-11/70 versions of UNIX
+with the exception of: trace, pipe, prof, getgid and setgid.
+The entire system resides in 12K words of memory
+and is written in the C-language.
+Since the PDP-11/10 computer does not support the extended
+instruction set (e.g. mul, div, ash, ashc, etc.)
+an emulation package is included in the system to
+emulate these instructions.
+.sp
+User programs are compiled and relocated to start
+at address 060000 and may occupy up to 16K words of memory.
+Up to 13 processes may exist at any one time,
+although only one process may be in core and running.
+This should be sufficient to handle up to
+4 simultaneous users.
+Scheduling is done on a simple round-robin basis
+with each process in the "run-state"
+receiving a 2 second time-slice.
+A process is simply swapped out at the end of its
+time-slice and the next runnable
+process swapped in.
+.sp
+The operating system supports all UNIX user programs
+which run on the PDP-11/40, PDP-11/45 and PDP-11/70
+computers, with the exception of programs which
+use the above mentioned system calls.
+A few user programs were modified to run on the PDP-11/10
+version of UNIX.
+These include "ps" to deal with the different process
+table structure and "ld" to relocate all user programs
+up to address 060000.
+All user programs were recompiled in order to relocate
+them to start at address 060000.
+Filters may be simulated at the command level
+by replacing the sh syntax "|" by ">sh.out;<sh.out".
+.sp
+Since the PDP-11/10 CPU has no segmentation unit,
+no protection is provided for the user program.
+Thus new user programs must be debugged carefully.
+The PDP-11/10 processor is slower than the PDP-11/40
+processor and does not have the full instruction set of the
+PDP-11/40 processor, thus requiring the
+emulation of the missing instructions.
+A typical C compilation requires about twice
+the total time of that required
+on the equivalent PDP-11/40 configuration.
+However response to the editor commands
+is not significantly longer than
+on a more powerful CPU.
+Features which are not provided in the MX version
+of UNIX include "read-ahead" and physical I/O.
+This is due to the limited system address space available.
+Only 6 system buffers are provided.
+.sp
+.ti+5
+The current configuration on which the operating system
+runs includes:
+.sp
+.nf
+.in+10
+PDP-11/10 CPU
+28K words memory
+2 RK05 disk  drives.
+KL11 interface to Decwriter
+DL11-E asynchronous line interface for dial-up lines
+60 cycle clock.
+.fi
+.in-10
+.sp
+The cost of the above configuration to the Bell
+System is of the order of $26,000 including an 18% discount.
+A minimum configuration with only one RK05 disk and no DL11-E
+interface can be obtained for approximately $21,000.
+More recent price reductions on PDP-11/10
+configurations may result in a total system cost of
+less than $20,000.
+This provides a very inexpensive tool for software
+development in a UNIX time-sharing environment.
+.sp4
+MH-1352-HL-JER	H. Lycklama
+.sp4
+Copy to:
+.nf
+
+Dept. 8234
+G.L. Baldwin
+M.D. McIlroy
+D.J. Lando
+G.L. Link
+G.W.R. Luderer
+J.F. Maranzano
+H.S. McDonald
+E.N. Pinson
+D.M. Ritchie
+B.A. Tague
+.fi
