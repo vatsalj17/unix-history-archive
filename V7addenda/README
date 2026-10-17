@@ -1,0 +1,84 @@
+Addenda to UNIX 7th edition distribution tape, 12/2/80.
+
+Format: tar(1), 800 bpi.
+
+Contents:
+	
+	README: this descriptive file.
+	
+	lp.c: the missing line printer driver that
+	      belongs in /usr/sys/dev/lp.c.
+	      The program comes from PWB, and needs minor
+	      changes to work in version 7; see comment
+	      at head of program.
+	
+	lpr: a directory containing the lpr utility and
+	      its daemon lpd.
+	      See lpr/makefile for instructions on putting it
+	      together.
+	
+	lpd.8: the manual section for the line printer daemon.
+
+	fgrep.c: new source for fgrep(1) corrects certain
+	      troubles with keys with common prefixes
+	
+	c2: directory containing C optimizer cured of
+	      certain instances of overoptimism.
+	      The existing C makefile works
+
+	awk: directory with complete new awk processor,
+	      see README and makefile therein
+
+	tmac.r: macros to simulate old "roff" in "nroff",
+	      to support -mr option mentioned in roff(1)
+
+	f77: directory with complete new fortran compiler,
+	      contains makefiles.
+	      Further improvements to the I/O library have
+	      been made at UC Berkeley, and may be obtainable
+	      from them.
+
+	malloc.c: new source for malloc(3) corrects rare bug
+
+	dev: directory with more robust mag tape drivers for /usr/sys/dev
+
+	fsck: directory with new, stringent file system checking
+	      program and manual section, far superior to old
+	      [ind]check.  It checks some data not maintained
+	      by v7, in particular superblock counts; resulting
+	      complaints are harmless
+
+	
+Other bug fixes:
+
+/usr/sys/h/param.h: CMAPSIZ and SMAPSIZ
+	should both be defined as (NPROC/2)
+	otherwise trouble will occur with very large
+/usr/sys/conf/low.s: replace br7+7. with br7+10.
+	memories
+/usr/src/cmd/sed/sed0.c: delete continue after
+	case '\0' in compile() 
+/usr/src/cmd/cu.c: args 1 and 2 of some ioctl calls
+	may be interchanged
+	a ~ may be lacking from references to ECHO or CRMOD
+	in case (f == 1) of mode(f)
+
+The following bugs exist, no fix is included.
+      (1) adb does not report floating registers correctly
+      (2) ldiv, lmod fail with largest negative dividend
+          (these implement division of longs in C);
+          the division (unsigned)32768/1 also fails
+      (3) dump(1) maintains ddate incorrectly.
+          This bug is relatively innocuous; it causes
+          more dumping than necessary on some occasions.
+      (4) join(1) treats null keys as end of file
+      (5) sort -t includes the following tab in some field comparisons
+      (6) hs(4) is irrevocably lost
+      (7) exec writes arguments into swap space with buffered
+          I/O, which may happen physically much later, after
+          the space has been used for a core image.  The
+          solution is to preallocate
+          a portion of swap space to this single purpose.
+      (8) break is turned into a DEL regardless
+          of what the current interrupt character is
+      (?) and others, see warranty
