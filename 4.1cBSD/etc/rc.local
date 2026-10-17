@@ -1,0 +1,26 @@
+/bin/hostname ucbmonet
+/usr/ucb/strings /vmunix | grep UNIX >/tmp/t1
+grep -v UNIX /etc/motd >>/tmp/t1
+mv /tmp/t1 /etc/motd
+/etc/savecore /a/crash
+echo -n 'local daemons:'					>/dev/console
+if [ -f /etc/telnetd ]; then
+	/etc/telnetd & echo -n ' telnetd'			>/dev/console
+fi
+if [ -f /etc/ftpd ]; then
+	/etc/ftpd & echo -n ' ftpd'				>/dev/console
+fi
+if [ -f /etc/tftpd ]; then
+	/etc/tftpd & echo -n ' tftpd'				>/dev/console
+fi
+if [ -f /etc/courierd ]; then
+	/etc/courierd & echo -n ' courierd'			>/dev/console
+fi
+if [ -f /etc/syslog ]; then
+	/etc/syslog & echo -n ' syslog'				>/dev/console
+fi
+if [ -f /usr/lib/sendmail ]; then
+	(cd /usr/spool/mqueue; rm -f lf*)
+	/usr/lib/sendmail -bd -q1h & echo -n ' sendmail'	>/dev/console
+fi
+echo '.'							>/dev/console

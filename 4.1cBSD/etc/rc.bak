@@ -1,0 +1,85 @@
+HOME=/; export HOME
+PATH=/bin:/usr/bin
+if [ -r /fastboot ]
+then
+	rm -f /fastboot
+	echo Fast boot ... skipping disk checks >/dev/console
+elif [ $1x = autobootx ]
+then
+	echo Automatic reboot in progress... >/dev/console
+	date >/dev/console
+	/etc/fsck -p >/dev/console
+	case $? in
+	0)
+		date >/dev/console
+		;;
+	4)
+		/etc/reboot -n
+		;;
+	8)
+		echo "Automatic reboot failed... help!" >/dev/console
+		exit 1
+		;;
+	12)
+		echo "Reboot interrupted" >/dev/console
+		exit 1
+		;;
+	*)
+		echo "Unknown error in reboot" > /dev/console
+		exit 1
+		;;
+	esac
+else
+	date >/dev/console
+fi
+rm -f /etc/nologin
+: should fix up the password lock file here if present
+cp /dev/null /etc/mtab
+chmod 666 /etc/motd
+/etc/swapon -a							>/dev/console
+/etc/mount -a							>/dev/console
+sh /etc/rc.local
+				echo preserving editor files 	>/dev/console
+(cd /tmp; /usr/lib/ex3.7preserve -a)
+				echo clearing /tmp 		>/dev/console
+(cd /tmp; rm -f *)
+				echo -n standard daemons:	>/dev/console
+/etc/update;			echo -n ' update'		>/dev/console
+/etc/cron;			echo -n ' cron'			>/dev/console
+/etc/accton /usr/adm/acct;	echo -n ' accounting'		>/dev/console
+if [ -d /usr/net/bin ]; then
+	sh /usr/net/bin/start &	
+				echo -n ' berknet'		>/dev/console
+fi
+/etc/comsat;			echo -n ' mail'			>/dev/console
+if [ -f /dev/cul0 ]; then
+	/usr/lib/dnd > /usr/adm/dndbug
+				echo -n ' dialer'		>/dev/console
+fi
+cd /usr/spool
+rm -f uucp/LCK.*
+if [ -f /dev/lp ]; then
+	rm -f lpd/lock; /usr/lib/lpd; echo -n ' printer'	>/dev/console
+fi
+if [ -f /dev/vp0 ]; then
+	rm -f vpd/lock; /usr/lib/vpd; echo -n ' versatec'	>/dev/console
+fi
+if [ -f /dev/va0 ]; then
+	rm -f vad/lock;	/usr/lib/vad; echo -n ' varian'		>/dev/console
+fi
+				echo '.'			>/dev/console
+cd /
+				echo -n starting network:	>/dev/console
+
+if [ -f /etc/rshd ]; then
+	/etc/rshd & echo -n ' rshd'				>/dev/console
+	/etc/rexecd & echo -n ' rexecd'				>/dev/console
+	/etc/rlogind & echo -n ' rlogind'			>/dev/console
+	/etc/rwhod & echo -n ' rwhod'				>/dev/console
+fi
+if [ -f /etc/routed ]; then
+	/etc/routed & echo -n ' routed'				>/dev/console
+fi
+				echo '.'			>/dev/console
+				date				>/dev/console
+exit 0
