@@ -1,0 +1,16 @@
+: Shell file to make LSI-UNIX system for DEC RX11
+: floppy disks and non-LSI PDP-11 processor, e.g. 11/05
+: Assumes all c routines have been previously compiled
+
+as header.dec.s low.s
+mv a.out low.dec.o
+as header.dec.s mch.s
+mv a.out mch.dec.o
+as header.dec.s emul.s
+mv a.out emul.dec.o
+ld -s -a -X low.dec.o mch.dec.o emul.dec.o decfd.o  alloc.o bio.o \
+	clock.o fio.o iget.o kl.o main.o nami.o rdwri.o sig.o slp.o \
+	subr.o sys*.o trap.o
+mv a.out lsx.dec
+: echo "Warning: For 10K LSX system, size must be less than 046000"
+size lsx.dec

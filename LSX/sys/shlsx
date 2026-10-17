@@ -1,0 +1,16 @@
+: Shell file to make LSI-UNIX system for DEC RX11
+: floppy disks and LSI-11 processor.
+
+as header.lsx.s low.s
+mv a.out low.lsx.o
+as header.lsx.s mch.s
+mv a.out mch.lsx.o
+as header.lsx.s emul.s
+mv a.out emul.lsx.o
+ld -X low.lsx.o mch.lsx.o emul.lsx.o decfd.o  alloc.o bio.o \
+	clock.o fio.o iget.o kl.o main.o nami.o rdwri.o sig.o slp.o \
+	subr.o sys*.o trap.o
+mv a.out lsx
+: echo "Warning: For 10K LSX system, size must be less than 046000"
+: echo "         for 8k lsx system size must be less than 036500"
+size 
