@@ -1,0 +1,1651 @@
+/*
+ ***********************************************************************
+ *                                                                     *
+ *                X    X   XXXX   XXXXX    XXXX			       *
+ *                XX  XX  X    X  X    X  X			       *
+ *                X XX X  X    X  X    X   XXXX			       *
+ *                X    X  X    X  X    X       X		       *
+ *                X    X  X    X  X    X  X    X		       *
+ *                X    X   XXXX   XXXXX    XXXX			       *
+ *                                                                     *
+ *	The following defines represent certain improvements and       *
+ *	enhancements to the unix 'op sys'. To negate the effect of     *
+ *	these changes just delete the define by commenting it out.     *
+ *	Corrections of obvious deficiencies and so on are not to be    *
+ *	`ifdefed' since they will always be required. See FIXES below  *
+ *                                                                     *
+ *	For those who intend to alter the 'op sys' please bear the     *
+ *	following points in mind:                                      *
+ *                                                                     *
+ *	1. please indicate   time - date - who                         *
+ *                                                                     *
+ *	2. why was mod needed.  what was done.  how it was done.       *
+ *	   which source modules were altered.  etc . . .	       *
+ *                                                                     *
+ *	3. any other information which may be considered helpful       *
+ *	     for a person following your alterations.                  *
+ *                                                                     *
+ *						Ian J.		       *
+ *                                                                     *
+ ***********************************************************************
+								       */
+
+#define	_1170
+       /*
+	*	bio.c once.c m70.s l70.s trap.c user.h
+	*	rdwri.c sys1.c
+	*
+	*	includes stuff specific to 70 cpu's.
+	*	such as UNIBUS MAP etc...
+	*	Use JNR m70.s which handles floating point properly,
+	*	handles an 11/70 cpu as an 11/70 cpu - that is to
+	*	say uses the ERROR registers properly etc...
+	*	This entails altering 'trap' ,user.h and l.s
+	*/
+
+/* ( no UNIBUS_MAP )
+#ifdef	_1170
+#define	UNIBUS_MAP
+#endif	_1170
+	/*
+	 *	bio.c	powerf.s m70.s
+	 *
+	 *	enable code for Unibus Map.
+	 *
+	 *	note must define 'ubdmap' in m70.s if mapped.buffers
+	 *
+	 */
+/* (not _1145)
+#define	_1145
+       /*
+	*	bio.c once.c m45.s l45.s trap.c user.h
+	*	rdwri.c sys1.c
+	*
+	*	includes stuff specific to 45 cpu's.
+	*	Use JNR m45.s which handles floating point properly,
+	*	handles an 11/45 cpu as an 11/45 cpu - that is to
+	*	say uses the ERROR registers properly etc...
+	*	This entails altering 'trap' ,user.h and l.s
+	*/
+
+/* (not _1140)
+#define	_1140
+       /*
+	*	clock.c param.h slp.c
+	*
+	*	includes stuff specific to 40 cpu's.
+	*/
+
+#define	FPU
+       /*
+	*	user.h	m70.s	m45.s
+	*
+	*	FP11-b or FP11-c installed 
+	*/
+
+#define	RHSTART
+       /*
+	*	bio.c
+	*
+	*	include code for newer type controllers
+	*	e.g. RJP04 on RH70 or RP04 on RH11
+	*/
+
+/* (no DEVSTART)
+#define	DEVSTART
+	/*
+	 *	bio.c
+	 *
+	 *	rk type contollers on system !!
+	*/
+
+/* (not PROG_CLOCK)
+#define	PROG_CLOCK
+       /*
+	*	clock.c once.c
+	*
+	*	if you have a programmable clock only
+	*	saves some code ...
+	*/
+
+#define	SHARED_DATA
+       /*
+	*	Ian Johnstone	FEBRUARY '76	
+	*
+	*	sig.c slp.c sys4.c sysent.c trap.c user.h
+	*	sys1.c	text.c	text.h  once.c param.h
+	*
+	*	New special a.out magic number 0412 signifies shared data
+	*	segment (r/w text area).  Must be swapped out on last use
+	*	not just abandoned.  Swap synchronization initially a problem,
+	*	definitive solution made AUG 77 in conjunction with 
+	*	LOWER_TEXT_SWAPS alteration.
+	*	`x_spid' and word 6 of A.OUT header contain shared data
+	*	identification field - inode pointer not good enough (not unique),
+	*	since shared data segments are shared between any number
+	*	of co-operating processes.
+	*	Initially implemented to support UNSW batch system.
+	*	P and V system calls implemented to allow process
+	*	synchronization.  LKED does the linking needed for
+	*	creation of 412 a.outs.
+	*	db4.s needs to be altered to define text,data,stack size
+	*	displacements in user.h. cdb,ddt too.
+	*/
+
+#define	ZOMBIE
+       /*
+	*	Chris Maltby	MARCH 77
+	*
+	*	sys1.c	proc.h	sys4.c	slp.c	clock.c
+	*
+	*	Several variables in the proc structure are used to store
+	*	post-mortem information about processes.  This avoids the swap
+	*	out & in of previous version for exit & wait.  Process
+	*	terminations (exit&wait) go substantially faster.
+	*	Alternative process structure pz_* contains definition of
+	*	process area for dead processes.  A few of the scheduling
+	*	routines have been altered so that no attempts are made
+	*	to alter the process area of `dead'ns'.
+	*/
+
+#define	INIT_FIX
+       /*
+	*	Chris Maltby	MARCH 77
+	*
+	*	sys1.c
+	*
+	*	/etc/init (process one) only woken up when required.
+	*	Previously every process termination in the system woke
+	*	the init process. This is only necessary if the parent
+	*	of the dying process is already dead. ``the whole piece
+	*	of code that deals with this is still a mess''.
+	*	PS needs to know of this alteration.
+	*
+	*	Piers Lauder	AUGUST 77
+	*
+	*	The whole thing re-written using a single scan of the
+	*	proc array (up to 4 previously). MORE efficient. 
+	*	Now the code is understandable.
+	*
+	*/
+
+#define	TIME_LIMITS
+       /*
+	*	Chris Maltby	MARCH 77
+	*
+	*	clock.c	param.h	user.h sys4.c sysent.c sig.c proc.h
+	*
+	*	User area variables 'u.u_cpusec' and 'u.u_tix' contain
+	*	seconds and clock ticks left before time limit expiry.
+	*	A signal SIGCPULT is generated when
+	*	cpusec becomes zero.  A process with a limit of zero is
+	*	not restricted - this is normal state.
+	*	Limit passed to children so that if `n' seconds
+	*	to go before expiry before fork, after
+	*	fork each process will have `n' seconds to go!!
+	*
+	*	Ian Johnstone	AUGUST 77
+	*
+	*	sys4.c sysent.c user.h
+	*
+	*	New system call "clktim" is implemented by these changes.
+	*	Allows user to request a signal SIGTIMEOUT in `n' seconds(real)
+	*	`n' is passed in r0. If p_rtl is non-zero then a real
+	*	time limit has been set. When a limit has been set
+	*	the clock interrupt routine decrements p_rtl once a second
+	*	until zero when the signal is sent. This involves little extra
+	*	cost to the system as the whole proc array is scanned each
+	*	second anyway. Main cost is extra word in process table entry.
+	*	Limit passed to children so that if 'n' seconds
+	*	to go before expiry before fork, after fork each process
+	*	will have 'n' seconds before being signalled.
+	*/
+
+#define	GPROCS
+       /*
+	*	received JUNE 77 second mailing (Rand)
+	*
+	*	sys1.c	sysent.c
+	*
+	*	Returns system proc array to user. Returns also the number of
+	*	process slots.
+	*	PS modified to use this - makes PS go faster
+	*/
+
+#ifndef	ZOMBIE
+#define	BETTER_EXIT
+       /*
+	*	john lions class of '76
+	*
+	*	sys1.c
+	*
+	*	Shrink process to USIZE on entry to exit.
+	*/
+#endif	ZOMBIE
+
+#define	BETTER_TIME
+       /*
+	*	Ian Johnstone & Andrew Hume SEPTEMBER 76
+	*
+	*	alloc.c
+	*
+	*	update() always updates on root file system super block.
+	*	After booting time more likely to be correct.  Also allows
+	*	knowledge of when a system crashed to within 30 seconds.
+	*	Omitting to set date at BOOT of system less likley
+	*	to cause havoc with incremental dumps.
+	*/
+
+#define EP_ADDRESS
+       /*
+	*	Craig McGregor	AUGUST 76
+	*
+	*	sys1.c	user.h
+	*
+	*	Implement entry point address as described in programmers
+	*	manual.
+	*
+	*	db4.s needs to be altered to define text,data,stack size
+	*	displacements in user.h. ps,cdb,ddt too.
+	*/
+
+#ifdef	_1140
+#define	BIG_UNIX
+#endif
+       /*
+	*	Jeff Rottman	jul 77
+	*
+	*	once.c m40.s user.h
+	*
+	*	This mod is a means of expanding the available addressing
+	*	space for the resident operating system on pdp-11/40 style
+	*	memory-management UNIX systems. A new linker `sysld' is
+	*	used to generate such a system - A sysld command file specifies
+	*	the division of the resident system into _s_e_g_m_e_n_t_s, one of
+	*	which, the _r_o_o_t segment, is always addressable using
+	*	segmentation pages 0 through 4. All the other segments
+	*	share page 5, and are addressable only when running. Page
+	*	6, as is usual, is reserved for the _U-table addressing, and
+	*	page 7 for the I/O page.
+	*
+	*/
+
+#define	VICAR
+       /*
+	*	Chris Maltby JUNE 77	Ian Johnstone AUGUST 77
+	*
+	*	systm.h user.h ( with side effects in tty.c )
+	*
+	*	Utilize `u.u_heap' as scratch area for erase and delete
+	*	processing.  Eliminates canonb[] from systm.h.
+	*	Saves space.
+	*/
+
+#define	NEW_TIMEOUT
+       /*
+	*	Piers Lauder	AUGUST 77
+	*
+	*	m40.s m45.s clock.c param.h systm.h
+	*
+	*	New timeout function utilises blocks off the clist
+	*	for increased efficiency.
+	*/
+
+/* (not UN_TIMEOUT)
+#ifdef	NEW_TIMEOUT
+#define	UN_TIMEOUT
+#endif
+       /*
+	*	Piers Lauder	AUGUST 77
+	*
+	*	clock.c
+	*
+	*	Allows cancellation of the effect of a previous call
+	*	to timeout.
+	*/
+
+/* (not SETPSW)
+#define	SETPSW
+       /*
+	*	clock.c sys4.c sysent.c trap.c m40.s m45.s
+	*/
+
+#define CBLOCK_16
+       /*
+	*	Piers Lauder   AUGUST 77
+	*
+	*	m70.s m40.s m45.s once.c tty.c
+	*
+	*	Allow larger cblocks. PUTC,GETC re-written to be 15% faster,
+	*	as well as being parametric.
+	*/
+
+#define TTY_TRUE_RAW
+       /*
+	*	Piers Lauder	AUGUST 77
+	*
+	*	tty.c tty.h & all tty drivers
+	*
+	*	Allows the use of full 8 bit data
+	*	on tty lines iff RAW flag set
+	*	and other flags except HUPCL are reset.
+	*/
+
+#define	TTY_HISPEED
+       /*
+	*	Piers Lauder	AUGUST 77
+	*
+	*	tty.c tty.h & all tty drivers
+	*
+	*	Provides suitable water marks for high speed terminals.
+	*/
+
+/* (not TTY_FLOW_CONTROL)
+#define	TTY_FLOW_CONTROL
+       /*
+	*	Piers Lauder	AUGUST 77
+	*
+	*	tty.c tty.h & getty stty
+	*
+	*	Allows tty.c to drive DIABLO type terminals
+	*	at high baud rates ( >= 1200 )
+	*/
+
+#define	STACK_LIMIT
+       /*
+	*	Peter Hewitt & Dave Horsfall & Craig McGregor  	MAY 77
+	*
+	*	once.c param.h
+	*
+	*	Implement stack limit register.
+	*/
+
+#define	SMDATE
+       /*
+	*	UNIX version 6 with mod by Ian Johnstone AUGUST 77
+	*
+	*	sys4.c sysent.c
+	*
+	*	Enable smdate from level 6 system distribution.
+	*	This call was originally commented out because of
+	*	problems with incremental dumps - pseudo old
+	*	files not dumped.  Smdate as implemented
+	*	now only allows super-user to modify the access date
+	*	hopefully super users know what they are doing.
+	*/
+
+#define	NEW_SLEEP
+       /*
+	*	Piers Lauder + Ian Johnstone	AUGUST 77
+	*
+	*	proc.h sys2.c clock.c systm.h param.h sys4.c
+	*
+	*	Sleep system calls now do unique sleeps
+	*	( avoiding thrashing on wakeups of TOUT )
+	*	
+	*	Each proc entry has one additional word p_stl
+	*	which when non-zero indicates that a sleep is in progress
+	*	once a second the clock interrupt routine decrements this
+	*	count, when reaches zero process woken up.  This involves
+	*	little extra overhead as the proc array is already scanned
+	*	once a second for other purposes.
+	*/
+
+#ifdef	 BIG_UNIX
+#define	ONCE
+#endif
+       /*
+	*	Ian Johnstone AUGUST 77
+	*
+	*	once.c(main.c) slp.c tty.c bio.c alloc.c c.c
+	*
+	*	Normally this change only in effect when BIG_UNIX is in effect
+	*	however there exists no reason why ONCE can not be used without
+	*	BIG_UNIX.  main.c renamed once.c.  The initialization routines
+	*	cinit,binit,iinit are moved to once.c from tty.c,bio.c and
+	*	alloc.c respectively by this change.  Also estabur,nseg,sureg
+	*	are moved from once.c to slp.c.  Buffer allocation(declaration)
+	*	is moved to c.c (in conf).
+	*/
+
+#ifdef	_1170
+#define CRASH_TRACE
+#endif
+
+       /*
+	*	Ian Johnstone AUGUST 77
+	*
+	*	trap.c param.h
+	*
+	*	When system panics print out contents
+	*	of cpu error registers.
+	*/
+
+/* (not MALLOC_CHECK)
+#define MALLOC_CHECK
+       /*
+	*	Ian Johnstone + Andrew Hume  AUGUST 77
+	*
+	*	malloc.c
+	*
+	*	Introduce means of gathering statistics of memory
+	*	and swap space allocation under unix.
+	*	Statistics gathered from this change instigated the
+	*	LOWER_TEXT_SWAPS mod below.
+	*/
+
+#define	RAW_BUFFER_POOL
+       /*
+	*	Ian Johnstone	SEPTEMBER 77
+	*
+	*	once.c bio.c and others disk/tape raw i/o interfaces as reqd.
+	*
+	*	In order to improve system performance allocate 'NRAWBUFS'
+	*	buffer headers - these headers to be used for swapping and
+	*	general raw i/o. Instead if using 'swbuf' for all swap
+	*	i/o in the system, allocate from the raw buffer pool.
+	*	If 'physio' is passed a null buffer pointer then
+	*	it will allocate a buffer for the i/o and free it on completion
+	*	of the i/o.  Current raw i/o interfaces then do not have to be
+	*	altered unless desired.  The main benefit to these interfaces
+	*	will be that on multiple devices overlapped seeks will
+	*	possible, also ordered queueing of raw
+	*	i/o requests can also be done. (assuming a clever driver)
+	*	Improves swapping.  'NRAWBUFS' should be 2 greater
+	*	than the expected number of simultaneous raw i/o operations
+	*	to prevent lockout of swap i/o.
+	*
+	*/
+
+#define SLOSHED
+       /*
+	*	Chris Maltby	SEPTEMBER 77
+	*
+	*	tty.c
+	*
+	*	Change to canon to allow erases to delete kills
+	*	In the process rewrote it to be more
+	*	deterministic (and better).
+	*	Handles \ erase-char properly. ie. doesnt assume '#' & '@'
+	*	For penny-pinchers this change costs 44 bytes
+	*
+	*/
+
+#define	LOWER_TEXT_SWAPS
+       /*
+	*	Chris Maltby	SEPTEMBER 77
+	*
+	*	slp.c text.c text.h
+	*
+	*	This alteration drastically reduces the number of swaps
+	*	undertaken by UNIX. For example on Ian J's 11/70 swapping
+	*	was reduced by about 85%. What more can I say !!
+	*	When attaching to a shared text segment that was not
+	*	already core resident the following procedure was
+	*	followed:
+	*		1. If in swap space goto 6
+	*		2. Expand process size to enable read of
+	*		   text from the a.out.
+	*		3. Read text segment.
+	*		4. Allocate swap space for text segment
+	*		   and swap the segment out 
+	*		5. Expand process size to USIZE.
+	*		6. Swap out process!!
+	*		7. Call sched.
+	*	When the process is swapped back in to core
+	*	all will magically be taken care of.
+	*
+	*	This is a little inefficient to say the least and
+	*	47 % of all swaps counted were for 1024 bytes.
+	*
+	*	The new scheme:
+	*		1. if in swap space goto 6
+	*		2. Expand process size to enable read of
+	*		   text from the a.out.
+	*		3. Read text segment.
+	*		4. Separate User Per Process area and text Segment
+	*		   and install text segment in core. Mark it as not yet
+	*		   swapped.
+	*		5. Continue execution of process
+	*		6. Swap in text segment.
+	*		7. goto 5
+	*	Note that only if required will the shared text segment now
+	*	be swapped. It is now possible to run a shared
+	*	text program that will cause no swapping if
+	*	the program is not "sticky bit"ed.
+	*
+	*		AND all this only costs 98 bytes...
+	*/
+
+#define	BUFFER_AGING
+       /*
+	*	Jeff Rottman	Sep 77
+	*
+	*	buf.h bio.c
+	*
+	*	Allow proper handling of write behind blocks
+	*	on freelist. Put at head of free queue those blocks
+	*	that have to be written.
+	*/
+
+/* (not SLOW_CONSOLE)
+#define SLOW_CONSOLE
+       /*
+	*	ian johnstone	oct 77
+	*
+	*	prf.c
+	*
+	*	enable the generation of filler characters
+	*	by system putchar routine - if '\r' output
+	*/
+
+#define	LARGE_FILE_REFERENCES
+	/*
+	 *	Ian Johnstone	Nov '77
+	 *
+	 *	user.h fio.c sys1.c sys3.c
+	 *
+	 *	Allows > 127 references to a file structure,
+	 *	up to maximum of 255 with ENREF error if exceeded.
+	 *	Previously this condition would cause (catastrophic)
+	 *	errors.
+	 */
+
+#define	ERROR_LOG
+	/*
+	 *	Piers Lauder	Nov '77
+	 *
+	 *	prf.c	c.c
+	 *
+	 *	change putchar to allow system program "errlogger"
+	 *	to record "printf" messages instead of console.
+	 *	Implements device "/dev/errlog".
+	 *	see /usr/source/s1/errlog.c for error logger code.
+	 */
+
+#define	NICE_PUTCHAR
+	/*
+	 *	Piers Lauder	Nov '77
+	 *
+	 *	prf.c
+	 *
+	 *	change putchar to use tty driver for non-panic
+	 *	messages only if cpu prty <= five
+	 */
+
+/* (not TTY_INVCASE)
+#define	TTY_INVCASE
+	/*
+	 *	Piers Lauder	Nov '77
+	 *
+	 *	tty.h tty.c
+	 *
+	 *	handle inverted case terminals
+	 *	yes - they exist.
+	 */
+
+#define	COOL_NO_SPACE
+	/*
+	 *	Piers Lauder	Nov '77
+	 *
+	 *	alloc.c
+	 *
+	 *	Since most programs ignore errors on write,
+	 *	attempt to be a little less enthusiastic
+	 *	with "no space" messages. The change is a
+	 *	call to sleep on "lbolt", the effect is to
+	 *	slow up programs doing repeated write calls
+	 *	after no space error.
+	 */
+
+/* (not ILLEGAL_C)
+#define	ILLEGAL_C
+	/*
+	 *	Piers Lauder	Nov '77
+	 *
+	 *	partab.c	bx.c
+	 *
+	 *	Enhance the table to know about communication
+	 *	bytes which are illegal in a 7-bit + parity
+	 *	protocol.
+	 */
+
+#define	UPRINTS
+	/*
+	 *	Piers Lauder	Jan '78
+	 *
+	 *	prf.c
+	 *
+	 *	This includes code implementing the routine "uprints"
+	 *	which will print a system message on the tty
+	 *	associated with the current process.
+	 *	If caller is silly enough to use this routine when
+	 *	cpu priority is greater than five then nothing happens.
+	 */
+
+#define	DELAY
+	/*
+	 *	Piers Lauder	Jan '78
+	 *
+	 *	clock.c
+	 *
+	 *	this includes code implementing the routine "delay"
+	 *	which will delay the caller for a period using a
+	 *	"timeout - sleep - wakeup" sequence.
+	 */
+
+#define	MAX_PROC
+	/*
+	 *	Ian Johnstone	Jan '78
+	 *
+	 *	clock.c	sig.c	slp.c	sys1.c	sys4.c	proc.h
+	 *
+	 *	Keep track of which slot in the proc table is the last one
+	 *	in use, and when searching the proc table only go up to maxproc
+	 *	rather than &proc[NPROC].  This does speed things up a little.
+	 *	Ken Thompson is also supposed to have found that the
+	 *	system spends most of its time scanning the proc array.
+	 *	For example ps is now many times faster less to transfer less to scan.
+	 *	For example consider a system with NPROC=200 and 5 active processes
+	 *	ZOMBIE defined - WITHOUT MAX_PROC time for executing wait was 1.18ms
+	 *	- WITH MAX_PROC time for executing wait was 0.34ms - thus the benefits
+	 *	are obvious in those parts of the system that search the proc table.
+	 *	NOTE:	time == elapsed time == user time + system time
+	 *	These values obtained on AGSM's 11/70
+	 */
+#ifdef	MAX_PROC
+/* (no HIGH_PROC )
+#define	HIGH_PROC
+	/*
+	 *	Ian Johnstone	Jan '78
+	 *
+	 *	proc.h	slp.c
+	 *
+	 *	Enable code to keep proc high water mark in high_proc.
+	 */
+#endif
+
+#define	LRU_INODE
+	/*
+	 *	UNKNOWN HACKER -- university of toronto
+	 *	Improved debugged installed Ian Johnstone Jan 78
+	 *
+	 *	inode.h	iget.c	clock.c	sys3.c	sys4.c
+	 *
+	 *	Incore inode structures are allocated on an LRU basis, and
+	 *	if a requested Inode is still in core, it is not read in
+	 *	again.  This seems to dramatically speed up pathname
+	 *	searches, which do an awful lot of iget's and iput's.
+	 *	For example a stat of a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a
+	 *	previously took 1.1 seconds (avg) per call this change
+	 *	reduces this to 0.07 seconds (avg) !!!!
+	 *	These tests carried out on AGSM 11/70 (1 RP04)
+	 */
+
+/* (not U_LOCK)
+#define	U_LOCK
+	/*
+	 *	Pies Lauder	Feb '78
+	 *
+	 *	sys4.c	bio.c
+	 *
+	 *	provide code to implement system calls "slockon", "slockoff"
+	 *	so that super users may lock themselves in memory.
+	 */
+
+/* (not IGNORE_SIGNALS)
+#define	IGNORE_SIGNALS
+	/*
+	 *	Piers Lauder	Apr '78
+	 *
+	 *	proc.h	sig.c	slp.c	sys1.c	sys4.c
+	 *
+	 *	Introduce "p_ignsig" - a sixteen bit boolean array
+	 *	in which "true" means that the correspondingly
+	 *	numbered signal is being ignored. Basically this
+	 *	stops swaps for ignored signals.
+	 */
+
+#define	MEM_PAR_INTR
+	/*
+	 *	Piers Lauder	Apr '78
+	 *	Ian Johnstone	May '78
+	 *
+	 *	once.c	trap.c
+	 *
+	 *	For 11/40s enable parity checking if it exists (once.c).
+	 *	In trap.c report all memory parity errors, if user mode
+	 *	then SIGMEMPAR the process.
+	 */
+
+/* (no POWER_FAIL)
+#define	POWER_FAIL
+	/*
+	 *	Ian Johnstone	May '78
+	 *
+	 *	l70.s powerf.s m70.s
+	 *	conf.h c.c dz.c dj.c hp.c rk.c msc.c kl.c lp.c cr.c
+	 *	crd.c ht.c tm.c prf.c user.h
+	 *
+	 *	If defined all singing all dancing powerfail recovery.
+	 *	If not defined just loop ....
+	 */
+
+/* (not U_DELAY)
+#ifdef	DELAY
+#define	U_DELAY
+#endif
+	/*
+	 *	Piers Lauder	Apr '78
+	 *
+	 *	sys4.c	sysent.c
+	 *
+	 *	Implement new system call "sdelay" for sleeping for a number of ticks.
+	 */
+
+#define	AUSAM16
+#define	AUSAML
+	/*
+	 *	Andrew Hume - Peter Ivanov - Ian Johnstone
+	 *	Piers Lauder - John Lions - Chris Maltby
+	 *	Greg Rose
+	 *
+	 *	bio.c dz.c rk.c tty.c inode.h
+	 *	alloc.c clock.c debug.c fio.c iget.c
+	 *	malloc.c nami.c once.c pipe.c rdwri.c
+	 *	sig.c slp.c subr.c sys1.c sys2.c
+	 *	sys3.c sys4.c sysent.c text.c trap.c
+	 *	user.h proc.h pzomb.h systm.h
+	 *
+	 *	AUSAM16 - change to support 16 bit user id's
+	 *	AUSAML  - Limit structures
+	 *		limits system call (sys4)
+	 *		proc limits (sys1)
+	 *		modified wait (sys1)
+	 *
+	 */
+
+#define LOCKING
+	/*
+	 *	Greg Rose	Mar 78
+	 *
+	 *	defines.h fio.c iget.c inode.h param.h rdwri.c
+	 *	sys1.c sys2.c sys3.c sysent.c user.h
+	 *
+	 *	Enables the locking and unlocking of files to ensure safe
+	 *	read/write accesses on a "n-reader, one writer" basis.
+	 *	One new system call (no 56.) see man2/locking.2 for details.
+	 */
+#ifndef	AUSAM16 | LOCKING
+#define	GROUP_ACCESS
+#endif
+       /*
+	*	so well established no known author !!
+	*
+	*	fio.c	sysent.c	sys4.c
+	*
+	*	allow groups access checking etc.
+	*	by defing this symbol will allow unix so
+	*	generated to support groups as distributed
+	*	by BELL - yuk.
+	*/
+
+#define	MANY_USERS
+       /*
+	*	C. Maltby			6/4/78
+	*
+	*	slp.c	clock.c
+	*
+	*	Really a fix to allow for more CPU bound
+	*	in-core tasks. Where there are likely to be several
+	* 	of these then original BELL 'SCHMAG' (clock.c) and
+	*	the 'PRIORATE' in setpri could lead the scheduler
+	*	to select a CPU-bound task first.
+	*
+	*	SCHMAG	 ==> clock ticks/second upper limit for I/O bound things
+	*
+	*	PRIORATE ==> rate at which cpu-bound priority is dropped
+	*		minimum user priority is
+	*		PUSER + 255 / PRIORATE + p_nice
+	*/
+
+#define	MORE_USER_PRIORITIES
+       /*
+	*	Chris	Maltby	May 78
+	*
+	*	param.h	sys4.c
+	*
+	*	Changes PUSER to 64, thus allowing a greater diversity
+	*	of user priority levels. Coupled with MANY USERS mod
+	*	it provides better scheduling on busy machines
+	*/
+
+/* ( no SWITCH_DISPLAY )
+#define	SWITCH_DISPLAY
+       /*
+	*	Chris Maltby	APR 78
+	*
+	*	slp.c	m70.s
+	*
+	* 	make an interesting display in location 70
+	*	count of swtch's in last 8 ticks
+	*/
+
+/* ( no DEBUG_SWAP )
+#define	DEBUG_SWAP
+       /*
+	*	Peter Ivanov, John Lions, and Greg Rose	APR 78
+	*
+	*	slp.c	clock.c	bio.c	debug.c
+	*
+	*	certain debugging aids inserted to check
+	*	for erroneous swaps. We used this to find
+	*	the bug in LOWER_TEXT_SWAPS.
+	*/
+
+#define BETTER_PANIC
+       /*
+	*	slp.c	prf.c
+	*
+	*	Greg Rose and John Lions	APR 78
+	*	Ian Johnstone			MAY 78
+	*	
+	*	Changes to "swtch" to make it refuse to
+	* 	schedule processes during a panic.
+	*	The first panic is the most important - remember
+	*	its message string only.
+	*/
+
+#define	TTY_CONNECT
+#define	TTY_SPECIAL_POWERS
+       /*
+	*
+	*	user.h	tty.h	tty.c	c.c	conf.h	sysent.c
+	*	param.h
+	*
+	*	Ian Johnstone	MAY 78
+	*	Chris Maltby	APR 79
+	*
+	*	Support for the logical connection of two tty ports.
+	*	(A great assistance for inter-machine communication!)
+	*	NEW sys call:
+	*		mov	master-fd,r0
+	*		mov	slave-fd, r1
+	*		sys	connect; type; cntrl-char
+	*	where
+	*		master-fd and slave-fd are files descriptors associated
+	*		with terminal ports ( dj-dz-kl ).
+	*	if type is
+	*
+	*	0	Then function is disconnect. Master and slave must
+	*		be same tty.
+	*
+	*	1	Function is CONNECT (log)
+	*
+	*		ALL chars received from master or slave tty are
+	*		re-directed to the output queue of the other.
+#ifdef	TTY_SPECIAL_POWERS
+	*
+	*	2	Function is VIEW
+	*		Master tty monitors receives a copy of all
+	*		output (and input) sent to slave. Input at master
+	*		is sent to master's input queue.
+	*
+	*	3	Function is GRAB
+	*		Slave tty is disconnected from system, and
+	*		master takes its place. The master appears to be
+	*		the slave tty.
+	*
+	*	4	Function is SHARE
+	*		Similar to VIEW, but input typed at master tty
+	*		appears as if typed at slave tty.
+#endif	TTY_SPECIAL_POWERS
+	*
+	*	If slave == master or if either slave or master is already
+	*	redirected, no connection takes place.
+	*
+	*	IF the cntrl-char is received from the master tty
+	*	then -
+	*		1. the connect system call returns to caller.
+	*		2. all re-direction of ttys stops.
+	*/
+
+/* ( no TTY_SUSER )
+#define	TTY_SUSER
+       /*
+	*	Chris Maltby	MAY 78
+	*	Ian Johnstone	JUN 78
+	*
+	*	tty.c
+	*
+	*	Non-super users restricted to 'TTY_MAXSPD' baud as max
+	*	attainable speed !!
+	*	ONLY super-users may 'stty/gtty' terminals that are
+	*	not the controlling tty for the process.
+	*/
+
+#define	SYS_TIME
+	/*
+	 *	Ian Johnstone	MAY 78
+	 *
+	 *	m70.s trap.c
+	 *
+	 *	Include code (optionally) in m70.s to return
+	 *	the systems idea of the time (hh:mm).
+	 *	Found to be useful for noting times of system crashes !!
+	 *	call:	systime( timstr )
+	 *		char timestr[6];
+	 *
+	 */
+
+#define	QMOUNT
+	/*
+	 *	Ian Johnstone - Greg Rose - Chris Maltby	MAY 78
+	 *
+	 *	iinit.h	bio.c	alloc.c	sys3.c
+	 *
+	 *	Use buffers out of buffer pool for mounted
+	 *	super-blocks mark these buffers with B_MOUNT flag
+	 *	Main advantage is that when an update happens
+	 *	buffers need not be allocated to copy super-blocks to
+	 *	but can merely be written in-place !!
+	 *	icheck -s, df ... should work better too
+	 *	NOTE: MUST BE USED IF MAPPED_BUFFERS IN USE *******
+	 */
+
+#define	MAPPED_BUFFERS
+#ifndef	ZOMBIE
+#define	ZOMBIE
+#endif	ZOMBIE
+#ifndef	QMOUNT
+#define	QMOUNT
+#endif	QMOUNT
+	/*
+	 *	Ian Johnstone - Greg Rose - Chris Maltby	MAY 78
+	 *
+	 *	alloc.c   binit.h   bio.c     buf.h
+	 *	crd.c     defines.h iget.c    iinit.h
+	 *	lp.c      nami.c    once.c    param.h
+	 *	rdwri.c   subr.c    sys1.c    sys3.c
+	 *	systm.h   user.h    
+	 *
+	 *	Use KDA5 to page buffers from the buffer pool.
+	 *	In binit at system startup the buffer pool is
+	 *	malloced and the buffer headers setup to addrees
+	 *	them - if UNIBUS_MAP defined then b_xmem & b_addr
+	 *	are set up so that unibus map will work - otherwise
+	 *	b_xmem & b_addr contain full n-bit address.
+	 *	This change costs 8Kb from kernal data space (loss of reg)
+	 *	but does recover the data space previously occupied
+	 *	by the buffers.
+	 *	The only hassle is having to load KA5 prior to accessing
+	 *	a buffers contents, bswtch (m70.s) will do this given 
+	 *	address of buffer header.
+	 */
+
+#define	MALLOC_UMAP
+       /*
+	*	Chris Maltby			Jun 78
+	*
+	*	param.h	systm.h	binit.c	bio.c
+	*
+	*	ONLY relevant if UNIBUS_MAP defined.
+	*	Allows better allocation of UNIBUS-MAP via
+	*	a call to malloc to allocate only as much as is
+	*	required for this I/O. Avoids problem with previous 
+	*	method when used with MAPPED_BUFFERS. This should
+	*	allow multiple raw I/O's and swaps.
+	*
+	*	MUST BE USED WITH MAPPED_BUFFERS
+	*/
+
+#define	ACCESS
+       /*
+	*	bell labs ....	JUN 78
+	*
+	*	sys2.c sysent.c
+	*
+	*	implement access system call
+	*	see sys2.c for details
+	*/
+
+/* (not	PROFILE)
+#define PROFILE
+	/*
+	 *	Greg Rose	July 78.
+	 *
+	 *	once.c m70.s
+	 *
+	 *	Allows the taking of an arbitrarily detailed profile of the system.
+	 *	The profile is kept in the supervisor mode data space, and hence
+	 *	can be done in space-constrained systems (like ours) which previously
+	 *	could not take it.
+	 */
+
+#define	SWAP_CHECK
+	/*
+	 *	Piers Lauder				Nov '78
+	 *
+	 *	sys1.c
+	 *
+	 *	This is basically an attempt to limit panics - out of swap"
+	 *	for systems with small swap areas. The method is to prevent
+	 *	all process creation and process expansion unless there is
+	 *	at least "maxmem" memory left in the swap-map.
+	 *	'uprints' used to notify user of this - ian J
+	 */
+
+#ifndef	GPROCS
+#define	GETTAB
+#endif	GPROCS
+	/*
+	 *	Craig McGregor	..	77/09/02
+	 *
+	 *	sys4.c sysent.c
+	 *
+	 *	A system call for allowing user programs to
+	 *	access executive tables.
+	 *	This is similar to gprocs but more general
+	 *	and has tighter checking of user's buffer.
+	 *	Previously a user found the address of an
+	 *	area from the symbol table in "/unix" and
+	 *	read "/dev/kmem" to examint the table.
+	 */
+
+#define	PROCESS_QUEUES
+	/*
+	 *	Chris Maltby (ala PWB-Unix)	Apr '79
+	 *
+	 *	slp.c text.c mch.s systm.h proc.h pzomb.h
+	 *	sig.c ...
+	 *
+	 *	This change allows ready-to-run processes to
+	 *	be linked together (via p_link proc entry).
+	 *	Time spent in swtch is considerably smaller
+	 *	if you have a large proc table. Also provides
+	 *	an improved sched which ages 'easy' core, as
+	 *	well as allowing separate swapping of text seg
+	 *	and data. This results in less lost memory
+	 *	due to holes being too small, and should therefore
+	 *	reduce swapping.
+	 *	The SWAIT state disappears; and a new function
+	 *	'qswtch' appears, which must be used instead
+	 *	of swtch if the current process is still in the
+	 *	SRUN state.
+	 */
+
+/* ( no TTY_MULTIPLEXED_PORTS )
+#ifdef	TTY_CONNECT
+#define	TTY_MULTIPLEXED_PORTS
+#endif	TTY_CONNECT
+	/*
+	 *	Piers Lauder	May '79
+	 *
+	 *	tty.h tty.c mx.c
+	 *
+	 *	implement indirect driver for multiplexing many tty ports
+	 *	onto any real tty line.
+	 */
+
+/* ( no HASHED_BUFFERS )
+#define	HASHED_BUFFERS
+	/*
+	 *	Greg Rose.			May 79.
+	 *
+	 *	buf.h	bio.c	binit.h	conf.h	c.70.
+	 *
+	 *	This mod is used to (greatly) speed searching of the
+	 *	device list for a particular buffer. The device
+	 *	lists are coalesced into one large hash table.
+	 *	The hashing function operates on both the dev and blkno.
+	 */
+
+#define NEWCOPYSEG
+	/*
+	 *	Greg Rose.			May 79.
+	 *
+	 *	m70.s
+	 *
+	 *	New copyseg and clearseg routines.
+	 *	copyseg and clearseg changed to use kernel register
+	 *	instead of user, hence 'mov' instructions instead
+	 *	of (abortionately slow) m[ft]pi instructions.
+	 *	Speed up (according to profiling) about 60-70%.
+	 *
+	 *	m70.s only (above define has no real meaning)
+	 */
+
+#define	CIRCULAR_PIPE
+/* (no	READ_THEN_FREE)
+#define	READ_THEN_FREE
+	/*
+	 *	Colin Webb.			May 79.
+	 *
+	 *	pipe.c (only)
+	 *
+	 *	Uses a circular buffering stategy for pipes. This has two
+	 *	advantages.
+	 *	1)  Pipes are more likely to be able to accept a write, and
+	 *	    and thus a read call, giving higher transfer rates.
+	 *	2)  The amount in the pipe is available to fstat, in the
+	 *	    field i_size1. A process may now determine if there is
+	 *	    stuff to read before reading it.
+	 *	If READ_THEN_FREE is defined, then blocks are dissociated
+	 *	from the pipe after they have been read, thus not requiring
+	 *	a read later on when they are written again. This is most
+	 *	useful if you have a small buffer pool, and thus little
+	 *	chance of the buffer being present, and anyway it only is
+	 *	really useful if the programs talking on the pipe are not
+	 *	using 512 byte reads and writes.
+	 */
+
+/*
+ ***********************************************************************
+ *                                                                     *
+ *	        XXXXXX     X    X    X  XXXXXX   XXXX		       *
+ *	        X          X     X  X   X       X		       *
+ *	        XXXXX      X      XX    XXXXX    XXXX		       *
+ *	        X          X      XX    X            X		       *
+ *	        X          X     X  X   X       X    X		       *
+ *	        X          X    X    X  XXXXXX   XXXX		       *
+ *                                                                     *
+ *	Please document all necessary fixes (fix obvious bugs) to the  *
+ *	'op sys' here. no defines etc just documentation. Same plea    *
+ *	with respect to documenting mods apply.			       *
+ *	To indicate a fix in source code just put a comment on altered *
+ *	lines referencing 'fixnnn' and document it here.	       *
+ *                                                                     *
+ ***********************************************************************
+								       */
+/*
+ *	fix000
+ *		Ian Johnstone	AUGUST 77
+ *
+ *		bio.c	file.h	filsys.h	ino.h	inode.h
+ *		alloc.c	clock.c	fio.c	iget.c	nami.c	once.c
+ *		pipe.c	rdwri.c	sig.c	subr.c	sys1.c	sys2.c
+ *		sys4.c	text.c	proc.h	systm.h	user.h
+ *
+ *		These alterations mainly concerned with
+ *		utilizing the facilities of the latest C compiler.
+ *		All char * and int * which really were of unsigned type
+ *		have been altered.
+ *		Register arguments to procedures declared where noted
+ *		Ian Johnstone	early 77
+ *		All int [2] type whose purpose was to implement 32-bit
+ *		arithmetic have been declared long - code altered as required
+ *		to cope with new declarations.
+ *		Ian Johnstone et al 77
+ *		Correctly declare pointers. for example if a pointer
+ *		is a pointer to an inode structure then declare it thus
+ */
+/*
+ *	fix001
+ *		Jeff Rottman	JUNE 77
+ *
+ *		bio.c	rdwri.c	
+ *
+ *		It has been suggested that `read ahead'
+ *		may cause deadly embraces, so dmr/bio.c
+ *		can be modded to stop read ahead if desired.
+ *		The problem exists when ever the number of
+ *		processes in "breada"  +  the number of processes
+ *		in "exec"  +  the number of mounted file systems
+ *		exceeds NBUF.
+ */
+/*
+ *	fix002
+ *		Dave Horsfall	APRIL 77
+ *		Ian Johnstone	APRIL 78 (corrected)
+ *
+ *		bio.c
+ *
+ *		There appears to be a race condition in swap() whereby
+ *		the same priority (PSWP) was used to wait for completion of
+ *		i/o and for the buffer. A lower priority now used for
+ *		buffer allocation sleep.  See bio.c
+ */
+/*
+ *	fix003
+ *		John Lions `op sys' class 76
+ *
+ *		sig.c
+ *
+ *		No limit to priority because of typo.
+ *		See sig.c
+ */
+/*
+ *	fix004
+ *		UNSW
+ *
+ *		text.c
+ *
+ *		No swap error panic given ?
+ */
+/*
+ *	fix005
+ *		UNSW
+ *
+ *		trap.c
+ *
+ *		Partial fix to overlaying which signal is being
+ *		processed.
+ *			****** WITHDRAWN *****
+ *
+ */
+/*
+ *	fix006
+ *
+ *		George Goble purdue university JUNE 77
+ *
+ *		sys2.c
+ *
+ *		Chdir sys call could leave free "leaves"
+ *			chdir /tmp
+ *			mkdir a; chdir a
+ *			rmdir /tmp
+ *			cp /null orphan
+ *			chdir /null
+ */
+/*
+ *	fix007
+ *		Piers Lauder	AUGUST 77
+ *
+ *		tty.c
+ *
+ *		Get tty.c to echo nl to cr on half duplex terminals
+ *		with CRMOD set.
+ */
+/*
+ *	fix008
+ *		Piers Lauder	AUGUST 77
+ *
+ *		tty.c
+ *
+ *		Fix tty.c not to call device start routine
+ *		if timing out.
+ */
+/*
+ *	fix009
+ *		**************************
+ *		fix made unnecessary by
+ *		SLOSHED modification
+ *	 	**************************
+ *
+ *		Piers Lauder AUGUST 77
+ *
+ *		Maptab.c changed to allow other escaped
+ *		characters e.g.	'\b'.
+ *
+ */
+/*
+ *	fix010
+ *
+ *		Piers Lauder	AUGUST 77
+ *
+ *		Cret in m40.s & m45.s changed to allow long values
+ *		to be returned.
+ *			****** WITHDRAWN *****
+ */
+/*
+ *	fix011
+ *		Piers Lauder	AUGUST 77
+ *
+ *		once.c
+ *
+ *		Console start up printout "mem =" altered to give Kb.
+ */
+/*
+ *	fix012
+ *		1976
+ *
+ *		once.c(main.c)
+ *
+ *		Saves time at initialisation.
+ *		The author hereby declares that no infringement
+ *		of Western Electric copyrights is intended.
+ */
+/*
+ *	fix013
+ *		Chris Maltby	SEPTEMBER 77
+ *
+ *		fio.c
+ *
+ *		Super user can now change to zero
+ *		mode directories.  (fio.c)
+ */
+/*
+ *	fix014
+ *		P A Hardie	uni of saskatchewan
+ *
+ *		tty.c
+ *
+ *		"lost characters fix"
+ *		Ttwrite in tty.c - the mod stops ttstart being interrupted
+ *		and losing the character it was about to output.
+ */
+/*
+ *	fix015
+ *		Greg Rose & Chris Maltby	UNSW
+ *
+ *		trap.c m40-45-70.s
+ *
+ *		make system do t bit tracing properly.
+ *		Rti's are done from all traps except
+ *		t or bpt traps.
+ */
+/*	fix016
+ *		Piers Lauder	Nov '77
+ *
+ *		prf.c
+ *
+ *		always output panic messages
+ *		even if switches down
+ */
+/*	fix017
+ *		Piers Lauder	Nov '77
+ *
+ *		bio.c
+ *
+ *		ensure b-resid always zero - drivers may not always
+ *		do this
+ */
+/*	fix018
+ *		Piers Lauder	Apr '78
+ *
+ *		sig.c
+ *
+ *		Prevent SIGINS from overlaying other signals.
+ *		( only if simulating floating point )
+ */
+/*	fix019
+ *		Piers Lauder	Apr '78
+ *		Chris Maltby	May '78
+ *
+ *		slp.c
+ *
+ *		Remove spl6() from "sched" while searching proc array.
+ *		It is not clear why this was done in the first place,
+ *		and its effect of locking out interrupts for several
+ *		milliseconds was disastrous for high frequency interrupts.
+ *		At sloop in sched protect runin from the clock !!
+ *		also protect runout after spl6 removed.
+ */
+/*
+ *	fix020
+ *		Apr '78
+ *
+ *		bio.c
+ *
+ *		correct code that checks if physical i/o
+ *		is wholly within data/stack spaces.
+ *		the following should have worked but didn't !!
+ *		 	mov	$fd,r0		/ fd is files descriptor
+ *						/ for raw i/o
+ *			sys	read ; 64 ; 64	/ this generated a segmentation
+ *						/ error !!
+ *		The correction is simplicity itself - merely subtract one
+ *		from the sum of 'base+u.u_count'.
+ */
+/*	fix021
+ *		APR 78
+ *
+ *		sig.c
+ *
+ *		Don't even create 'core' file if this is a setuid
+ *		process!!. Just test earlier.
+ */
+/*
+ *	fix022
+ *		MAY 78
+ *
+ *		tty.c
+ *
+ *		A really triffic bug this one !!
+ *		when tabs are being expanded in ttyoutput the
+ *		assumption is made that the character queues never fill
+ *		this assumption is FALSE hence infinite loops can occur !!
+ *
+ */
+/*
+ *	fix023
+ *		MAY 78
+ *
+ *		m70.s powerf.s trap.c
+ *
+ *		instead of these routines magically knowing about
+ *		certain displacements in the user structure define
+ *		their addresses and use these indirectly to reference
+ *		the desired location...
+ */
+/*
+ *	fix024
+ *		MAY78
+ *
+ *		slp.c
+ *
+ *		p_cpu not being initialized in newproc.
+ *		causing new processes to inherit this value
+ *		from last process to occupy the proc slot.
+ *		APR79
+ *		p_cpu & p_time are now inherited from parent
+ *		process. This avoids abuse of fork call to
+ *		achieve better priority
+ */
+/*
+ *	fix025
+ *		JUN 78
+ *
+ *		fixes etc from bell for level 6 - more docco to come
+ *		see V6UNIX subdirectory for all details
+ *		beware some mods do not work !!
+ *		eg closef change in fio.c
+ */
+/*
+ *	fix026
+ *		JUN 78
+ *
+ *		alloc.c	sys3.c filsys.h
+ *
+ *		Avoid locking problems in ialloc & ifree.
+ *		Improves search for free inodes (makes it faster).
+ */
+/*
+ *	fix027
+ *		JUN 78
+ *
+ *		once.c
+ *
+ *		Avoid parity errors at start up - use suiword
+ *		instead of fuibyte.  Also free all of core in one
+ *		hit not in zillions of little chunks.
+ */
+/*
+ *	fix028
+ *		JUN 78
+ *
+ *		trap.c
+ *
+ *		Remove special significance of system call 63.
+ *		You may now use it for anything. Indirect calls
+ *		of indir will now give SIGSYS.
+ */
+/*
+ *	fix029
+ *		jun 78
+ *
+ *		sys4.c
+ *
+ *		chmod system call does not alter modify time - only access time
+ */
+/*
+ *	fix030
+ *		JUN 78
+ *
+ *		bio.c buf.h fio.c sys3.c
+ *
+ *		Ian Johnstone & Chris Maltby
+ *
+ *		When a block device is closed ensure ALL blocks
+ *		from the device are disposed of in a proper manner.
+ *
+ *		"binval(dev)" added to bio.c so that ALL blocks belonging
+ *		to dev are marked with B_INVAL so that "getblk" and
+ *		"incore" will not find them if dev re-opened.
+ *		"binval" also sets B_AGE so that if block is
+ *		later freed it will be place at the top of the free
+ *		queue.
+ *
+ *		"closef" will only call device block close routine
+ *		iff dev not currently mounted.
+ *
+ *		"closef" and "sumount" both call "binval" to invalidate
+ *		the appropriate blocks.
+ *
+ *		NOTE:	after a dev has been umounted it is thus
+ *			no longer possible on re-mounting the dev
+ *			to get spurious results caused by finding
+ *			blocks left over from before the umount.
+ *			ditto for close and re-open
+ *
+ *		NOTE:	if you're wondering why this bug has not been
+ *			noticed before then you may be comforted by
+ *			the knowledge that it was first observed by
+ *			us on a MAPPED_BUFFERS system with 128 buffers
+ *			- so that natural wastage did not occur
+ *			quick enough !!!!!!!
+ */
+/*
+ *	fix031
+ *		AUG 78
+ *
+ *		source code altered for ceates with correct modes
+ *
+ */
+/*
+ *	fix032
+ *		AUG 78
+ *
+ *		user.h	dz.c dj.c lp.c
+ *
+ *		define 'EOPENFAIL' return this error when an open
+ *		fails on a single use device.
+ *
+ */
+/*
+ *	fix033
+ *		AUG 78
+ *
+ *		tty.c
+ *
+ *		by popular demand - if '\b' is erase character then
+ *		echo '\b',' ','\b' to make it look pretty. persons
+ *		normally use backspace as char erase on video terminals
+ *		(by convention) - a slosh preceding a '\b' is not
+ *		handled as nicely as it could be.
+ */
+/*
+ *	fix034
+ *		SEP 78
+ *
+ *		sys2.c
+ *
+ *		Tell system call to return the position in the file
+ *		in R0, R1.
+ */
+/*
+ *	fix035
+ *		APR 79
+ *
+ *	swapdev to be opened just like rootdev.
+ *	important if your disk driver needs an open to init the disks.
+ */
+/*
+ *	fix036
+ *		Jun 79
+ *
+ *	Provide routine fkword(addr) which checks for the existence
+ *	of a word in kernel D space. The returned value is 1 if the
+ *	word exists, otherwise it is 0.
+ */
+/*
+ *	fix037
+ *		Jun 79
+ *
+ *	fix routines 'fu' 'fui' 'su' 'sui' word & byte to set
+ *	u.u_error to EFAULT on error, so that a value of -1
+ *	can be detected.
+ *	This fixes a bug in exec typified by the command "time cat ''".
+ */
+/*
+ *	fix038
+ *		Jun 79
+ *
+ *	inode.h pipe.c rdwri.c
+ *
+ *	A flag IPIPE is added to the inode, which is tested in writei
+ *	to determine whether a bawrite or a bdwrite should be done.
+ *	As the information in a pipe is quite transitory, and cannot be
+ *	recovered in the event of a system crash, a bdwrite removes the
+ *	unnecessary IO traffic, and doubles pipe transfer rates.
+ */
+/*
+ *	fix039
+ *		Jul '79
+ *
+ *	sys3.c
+ *
+ *	Check for super user in 'mount' and 'umount'. We don't want
+ *	the masses mucking around with our disks. If this is what you
+ *	really want, then /etc/mount can be made setuid to root.
+ */
+/*
+ *	fix040
+ *		Jul '79
+ *
+ *	nami.c
+ *
+ *	Check if a directory becomes greater than 4095 files and return
+ *	new error code EDBIG. The fix is required because only i_size1 is
+ *	used when searching directories. If the 4096'th entry is made then
+ *	the directory appears to be zero length. A malicious program could
+ *	really do damage this way.
+ */
+/*
+ *	fix041
+ *		Jul '79
+ *
+ *	tty.h	tty.c	param.h
+ *
+ *	The bug was that if exactly CANBSIZ-1 chars were typed at terminal
+ *	and then a CR, Reading the tty would return CANBSIZ, and then 0 on
+ *	the next read (often resulting in a log off). Given that TTYHOG and
+ *	CANBSIZ are so intertwined, CANBSIZ is redefined to be TTYHOG, and
+ *	TTYHOG is now TTYHOG-1. CANBSIZ declaration disappears, and the
+ *	definition of TTYHOG moves from tty.h to param.h. Also the TTYHOG'th
+ *	char is echoed.
+ */
+/*
+ *	fix042
+ *		Oct '79
+ *
+ *	sys4.c sig.c
+ *
+ *	as indicated in John Lions commentary,
+ *	the signal number was not checked for being negative
+ *	hence it was possible to use a negative signal no
+ *	to cause certain areas (say uid) to be overwritten in
+ *	the per process area.
+ */
+/*
+ *	fix043
+ *		Oct '79
+ *
+ *	sys1.c
+ *
+ *	Change to exec so that a process may only trace another
+ *	if it owns it, or is the super-user.  This prevents
+ *	misuse of tracing to read core images of programs,
+ *	when the normal permissions may not allow this.
+ *	It also prevents rewriting shared data areas.
+ */

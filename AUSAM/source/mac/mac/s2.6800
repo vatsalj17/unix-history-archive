@@ -1,0 +1,49 @@
+		title	"Test sample 2"
+;
+;	Sample heathkit m6800 program #2
+;
+;		Turn all displays off and on.
+;		Displays hex value at disp+1
+;
+;		Uses monitor subroutines redis,
+;				outch, outhex.
+;
+redis		equ	0xfcbc
+outch		equ	0xfe3a
+outhex		equ	0xfe28
+;
+digadd		equ	0xf0
+;
+;
+start
+		jsr	redis			; first displ address.
+;
+clear
+		clr	a
+		jsr	outch			; turn all segs off
+		ldx	digadd			; next display
+		cpx	#0xc10f			; last display yet ?
+		bne	clear
+		bsr	hold
+		jsr	redis			; first disp address.
+;
+disp
+		lda	a,#0x08			; hex value to display
+;
+out
+		jsr	outhex			; output char
+		ldx	digadd			; next display
+		cpx	#0xc10f			; last display yet ?
+		bne	out
+		bsr	hold
+		bra	start			; do again
+;
+hold
+		ldx	#0xff00			; time to wait
+;
+wait
+		dex
+		bne	wait			; time out yet ?
+		rts
+;
+		end

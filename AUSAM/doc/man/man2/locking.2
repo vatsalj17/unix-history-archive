@@ -1,0 +1,93 @@
+.th LOCKING II 11-6-78
+.sh NAME
+readlock, writelock, unlock, lock \*- perform locking on a file
+.sh SYNOPSIS
+.br
+(lock = 56.; not in assembler)
+.br
+(file descriptor in r0)
+.br
+.ft B
+sys	lock;	mode
+.ft R
+.br
+.ft B
+lock(mode,fildes)
+.br
+readlock(fildes)
+.br
+writelock(fildes)
+.br
+unlock()
+.ft R
+.sh DESCRIPTION
+These system calls are used to protect multiple accesses to a file through
+an "n reader, one writer" type of protocol.
+Readers and writers have effectively equal priorities \*- neither can
+indefinitely lock out the other.
+.s3
+.it Mode
+determines the type of locking:
+.ti +5
+0: lock for reading
+.ti +5
+1: lock for writing
+.ti +5
+2: unlock
+.br
+In the case of unlock, the file descriptor argument is ignored and need not
+be specified.
+.s3
+.it Readlock
+locks the file in question from being modified by writing until at least
+the next
+.it unlock.
+(Note \*- this does not include truncation of a file by "creat".)
+.s3
+.it Writelock
+locks the file for exclusive access (read or write) until the next
+.it unlock.
+.s3
+.it Unlock
+unlocks a file that was previously locked.
+.s3
+Only one file can be locked at a time; this restriction is not severe but
+guarantees absence of deadlocks. If a file is already locked, a call to
+.it readlock
+or
+.it writelock
+effectively does an
+.it unlock
+first.
+Children cannot inherit a lock; if a process forks while a file is locked,
+the child loses its lock.
+If a locked file is closed, it is unlocked as well.
+.s3
+Part of the mode of a file specifies whether or not it is to obey locking
+protocols. If the bit 02000 (previously set-group-id)
+is set in the mode, locking before accessing
+will be enforced. If the bit is not set, calls to
+.it readlock
+or
+.it writelock
+will return an error.
+.s3
+If a file mode has the 010 bit (execute by group) set,
+opening or creating the file will lock it automatically.
+It is
+.it readlocked
+iff it was opened for reading only.
+.s3
+Files with both of these bits set will be
+accessible by unmodified programs as if there were no locking operative,
+but expect trouble if a program attempts to do overlapped input or output
+operations on two such files simultaneously.
+.sh "SEE ALSO"
+Open(II), Creat(II), Close(II), Chmod(I & II)
+.sh DIAGNOSTICS
+From assembler, c bit set. From C, -1 is returned.
+An error is returned from the locking routines if the file does not have the
+"locking protocol" bit set.
+An error is returned from
+.it unlock
+if the file was not locked.

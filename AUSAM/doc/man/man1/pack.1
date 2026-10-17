@@ -1,0 +1,50 @@
+.th PACK I 12/12/75
+.sh NAME
+pack  \*-  compress files
+.sh SYNOPSIS
+.bd pack
+[-] [\fB-s\fR] filename ...
+.sh DESCRIPTION
+Packs the specified files.  Each input file, f, is replaced by
+a packed file, f.z, with the same mode as that of f.  Packed files
+can be restored to their original form using unpack(I) or pcat(I).
+.s3
+.it Pack
+uses Huffman (minimum redundancy) codes on a byte by byte
+basis.  If the `-' flag argument is used, the number of times each
+byte is used, its relative frequency, and the code for the byte
+is printed on the standard output.
+.s3
+The amount of compression obtained depends on the size of the
+input file, and the character distribution.  Since a decoding
+tree forms the first part of the '.z' files, it is not worthwhile
+to pack files smaller than three blocks, unless the character
+distribution is very skewed, such as in printer plots or pictures.
+If no disk blocks are saved by packing, the original file will be
+left unchanged.
+.s3
+Typically, text files are reduced to 60-75% of their original size;
+Load modules, which use a larger character set and have a more
+uniform distribution of characters, show little compression, the
+packed versions being about 90% of the original size.
+.s3
+If the
+.it -s
+flag is used, the modified time of the
+.it .z
+files will be set to that of the original files. This is
+useful when pack is used to recover disk space so as not to
+interfere with incremental dumps.
+.sh RESTRICTIONS
+The last segment of the filename must contain fewer than thirteen
+characters to allow space for the appended '.z' extension.
+Directories cannot (and should not) be compressed.
+.sh FILES
+.it .z
+Files created
+.br
+Input files unlinked (unless protected)
+.sh "SEE ALSO"
+UNPACK(I), PCAT(I), SMDATE(II)
+.sh AUTHOR
+Steve Zucker

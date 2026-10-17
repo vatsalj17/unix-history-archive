@@ -1,0 +1,43 @@
+#include	"../param.h"
+#include	"../buf.h"
+#ifdef ONCE
+	char	buffers[NBUF][514] ;
+#endif
+
+int	(*bdevsw[])()
+{
+	&nulldev,	&nulldev,	&rkstrategy, 	&rktab,	/* rk 	0 */
+	&nodev,		&nodev,		&nodev,		0,	/* tm 	1 */
+	0
+};
+
+int	(*cdevsw[])()
+{
+	&klopen,   &klclose,  &klread,   &klwrite,  &klsgtty,	/* console 	0 */
+	&nodev,    &nodev,    &nodev,    &nodev,    &nodev,	/* pc 	1 */
+	&lpopen,   &lpclose,  &nodev,    &lpwrite,  &lpsgtty,	/* lp 	2 */
+	&nodev,    &nodev,    &nodev,    &nodev,    &nodev,	/* lv 	3 */
+	&nulldev,  &nulldev,  &mmread,   &mmwrite,  &nodev,	/* mem 	4 */
+	&nodev,    &nodev,    &nodev,    &nodev,    &nodev,	/* gld 	5 */
+	&nodev,    &nodev,    &nodev,    &nodev,    &nodev,	/* tm 	6 */
+	&djopen,   &djclose,  &djread,   &djwrite,  &djsgtty,	/* dj 	7 */
+	&nodev,    &nodev,    &nodev,    &nodev,    &nodev,	/* crd 	8 */
+	&nodev,    &nodev,    &nodev,    &nodev,    &nodev,	/* vp 	9 */
+	&nulldev,  &nulldev,  &rkread,   &rkwrite,  &nodev,	/* rk 	10 */
+	&nodev,    &nodev,    &nodev,    &nodev,    &nodev,	/* ta 	11 */
+	&nodev,    &nodev,    &nodev,    &nodev,    &nodev,	/* dr 	12 */
+	&yjopen,   &yjclose,  &yjread,   &nodev,    &nodev,	/* cybjd 	13 */
+	&yjopen,   &yjclose,  &nodev,    &yjwrite,  &nodev,	/* cybju 	14 */
+	&ycopen,   &ycclose,  &ycread,   &nodev,    &nodev,	/* cybcd 	15 */
+	&ycopen,   &ycclose,  &nodev,    &ycwrite,  &nodev,	/* cybcu 	16 */
+	&nodev,    &nodev,    &nodev,    &nodev,    &nodev,	/* crdb 	17 */
+	&craopen,  &crclose,  &crread,   &nodev,    &crsgtty,	/* cr 	18 */
+	&crbopen,  &crclose,  &crread,   &nodev,    &crsgtty,	/* crb 	19 */
+	&syopen,   &nulldev,  &syread,   &sywrite,  &sysgtty,	/* tty 	20 */
+	0
+};
+
+int	rootdev	{(0<<8)|8};
+int	swapdev	{(0<<8)|0};
+int	swplo	1452;	/* cannot be zero */
+int	nswap	984;

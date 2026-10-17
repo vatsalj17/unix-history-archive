@@ -1,0 +1,30 @@
+.th NEWFSTAT III 12/4/78
+.sh NAME
+newfstat \*- get status of open file (with 16-bit uid)
+.sh SYNOPSIS
+.bd "newfstat( fildes, statb )"
+.br
+.bd "struct statbuf *statb;"
+.sh DESCRIPTION
+This call is identical to
+.it newstat
+(III),
+except that it operates on open files instead of files given by name.
+.it Statbuf
+is defined as a C-structure in 
+.it /usr/include/stat16.h.
+.s3
+This routine uses the system call
+.it fstat
+(II)
+to set up
+.it statb
+and then fixes up the 
+.it uid
+in a contiguous word-bounded 16 bits.
+.sh FILES
+/usr/include/stat16.h	(\ for declaration of statbuf\ )
+.sh "SEE ALSO"
+fstat (II), newstat (III)
+.sh DIAGNOSTICS
+-1 indicates an error, 0 success.

@@ -1,0 +1,95 @@
+.th SWITCH I 5/31/77
+.sh NAME
+switch \*- shell multi-way branch command
+.sh SYNOPSIS
+.bd switch
+arg
+.br
+: label1
+.br
+	commands...
+.br
+.bd "	breaksw"
+.br
+\&. . .
+.br
+: labeln
+.br
+	commands...
+.br
+.bd "	breaksw"
+.br
+.bd ": default"
+.br
+	commands...
+.br
+.bd endsw
+.sh DESCRIPTION
+.it Switch
+searches forward in the input file for the first one of:
+.s3
+.lp +5 5
+1.	a label that pattern-matches
+.it arg.
+The pattern-matching used is that of the Shell in
+generating argument lists.
+.lp +5 5
+2.	the label
+.it default.
+.lp +5 5
+3.	a matching
+.it endsw
+command.
+.s3
+.i0
+The Shell resumes reading commands from the next line after the location
+where the search stopped.
+Thus,
+.it switch
+supplies a `case' or `computed goto' statement
+similar to that of C.
+Because `:' is ignored by the Shell, several labels may occur in order,
+so that the same sequence of commands is
+executed for several different values of
+.it arg.
+.s3
+The
+.it breaksw
+command searches forward to the next unmatched
+.it endsw,
+and is normally used at the end of the sequence of commands
+following each label.
+It may be omitted to allow common code to be shared among label values.
+Several
+.it breaksw
+commands may be written on the same line to exit from that many levels
+of nested
+.it switch\*-endsw
+pairs.
+.s3
+The optional label
+.it default
+should be placed last,
+since
+.it switch
+always stops upon discovering it.
+The construct can be nested: any labels enclosed by a
+.it switch-endsw
+pair are ignored by an outer
+.it switch.
+The most common use of
+.it switch
+is to process `flag' arguments in a shell procedure.
+.sh "SEE ALSO"
+if(I), sh(I), while(I)
+.sh DIAGNOSTICS
+switch: missing endsw
+.br
+breaksw: missing endsw
+.sh BUGS
+None of these commands should be hidden behind semicolons.
+Nested groups hidden behind
+.it if
+or
+.it else
+may also cause trouble.

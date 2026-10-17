@@ -1,0 +1,67 @@
+.th LIMITS II "Mar 78"
+.sh NAME
+limits \*- return or set limits structure
+.sh SYNOPSIS
+(limits = 60.)
+.ft B
+.br
+sys limits; addr; function
+.s3
+limits(addr, function)
+.br
+struct lnode *addr;
+.br
+int function;
+.ft R
+.sh DESCRIPTION
+This system call manipulates the AUSAM in\*-core limits structure
+according to the function value.
+.s3
+.lp +10 9
+Function	Meaning
+.s3
+.lp +10 9
+0	The user's own limits structure is returned at address
+.bd addr\c
+\&.
+.s3
+.lp +10 9
+1	The limits structure associated with uid passed in the limits
+structure at address
+.bd addr
+is returned at
+.bd addr\c
+\&.
+.s3
+.lp +10 9
+2	All active limits structures are returned into the array of
+limits structures starting at address
+.bd addr\c
+, which should be large enough to contain them.
+.s3
+.lp +10 9
+3	Allocates and initializes a limits structure with the structure
+passed at address
+.bd addr\c
+\&.
+This call is restricted to the super user.
+.s3
+.i0
+Any other function is illegal, and will return an error of EINVAL.
+The call returns the number of limits structures returned (in r0).
+.sh "SEE ALSO"
+/usr/include/lnode.h        declares a limits structure
+.sh DIAGNOSTICS
+ENOLIM can be returned by functions 0 and 1 to indicate that
+the desired limits structure does not exist.
+.br
+ENOROOTLIM is returned by an attempt to establish
+a limits structure with a uid of 0.
+.br
+ETOOMANYU is returned if there is no space left in the in\*-core
+limits table.
+.br
+ELIMEXIST is returned if the limits structure already exists for
+the desired uid in function 3.
+.s3
+From C, all errors cause a \*-1 to be returned.

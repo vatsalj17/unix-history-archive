@@ -1,0 +1,107 @@
+.th LINK I 12/17/75
+.sh NAME
+link \*- fortran linker
+.sh SYNOPSIS
+.bd link
+-flags ... files
+.sh DESCRIPTION
+The named object files are combined to produce a runnable UNIX module.
+The flags are as follows:
+.s3
+.ft I
+.lp +9 8
+flag	meaning
+.ft R
+.s3
+.lp +9 8
+-ls	print a load map
+.s3
+.lp +9 8
+-no	produce no out file
+.s3
+.lp +9 8
+-p1	combine text and data segments.
+Make the out file non-shareable.
+.s3
+.lp +9 8
+-ns	place no symbol information in the out file
+.s3
+.lp +9 8
+-go	place only global symbols in the out file
+.s3
+.lp +9 8
+-o=fn	place the out code in the named file.
+.s3
+.lp +9 8
+-m=fn	place the load map in the named file. If the
+file name is blank, the load map is directed
+to the standard output (implies "-ls").
+.s3
+.lp +9 8
+-nl	library modules are excluded from the map and 
+cross reference.
+.s3
+.lp +9 8
+-cr:xxx	A global cross reference is produced on the
+listing file. The optional flags (xxx) are:
+.s3
+.lp +17 8
+a	symbols in alphabetical order
+(default is module order).
+.lp +17 8
+t	omit symbols used only once.
+.lp +17 8
+s	omit symbols declared but not
+referenced.
+.lp +17 8
+f	omit internal fortran-type
+symbols.
+.s3
+.lp +9 8
+-id	Set for separate i/d space. Fortran programs
+may not be separated.
+.i0
+.dt
+.s3
+If no out file is explicitly specified, and -no is not indicated, the
+name of the out file is that of the first object file with the extension ".out" .
+If no map file is explicitly specified, and -ls is indicated, the name of
+the map file is that of the first object file with the extension ".map".
+If an object file cannot be opened, the extension ".obj"
+is appended to the file name, and another open is attempted. The following
+special flags may be mixed with the file names:
+.s3
+.ft I
+.lp +9 8
+flag	meaning
+.ft R
+.s3
+.lp +9 8
+-f4	this is an abbreviation for the fortran
+library "/lib/f4"
+.s3
+.lp +9 8
+-i:n	the name is declared as an undefined global.
+this is useful for dragging in library
+routines at a special place in the out file.
+.s3
+.lp +9 8
+-e:n	the name is not considered sufficient grounds
+to enter a library module until countered by
+an "-i:". It is not clear what this is useful
+for.
+.i0
+.dt
+.s3
+.ul
+Example:
+.s3
+A fortran compile, load and go with subroutines from before and no error messages:
+.s3
+.nf
+		fortran main
+		link main sub1 sub2 sub3 "-i:$short" -f4
+		main.out
+.fi
+.s3
+.sh BUGS

@@ -1,0 +1,83 @@
+.th CTIME III 10/15/73
+.sh NAME
+ctime, ijtime, localtime  \*-  convert date and time to ASCII
+.sh SYNOPSIS
+.ft B
+char *ctime(tvec)
+.br
+long tvec;
+.s3
+.ft R
+[from Fortran]
+.br
+.ft B
+double precision ctime
+.br
+.li
+... = ctime(dummy)
+.s3
+char *ijtime()
+.s3
+int *localtime(tvec)
+.br
+long tvec;
+.sh DESCRIPTION
+.it Ctime
+converts a time in the long int
+.it tvec
+such as returned by time (II)
+into ASCII
+and returns a pointer to a
+character string
+in the form
+.s3
+    Sun Sep 16 01:03:52 1973\\n\\0
+.s3
+All the fields have constant width.
+.s3
+.it Ijtime
+returns a character string similar to the above,
+giving the present system time.
+.s3
+The
+.it localtime
+entry returns a pointer to an integer vector containing
+the broken-down time.
+The value is a pointer
+to an array whose components are
+.s3
+.lp +5 5
+0	seconds
+.lp +5 5
+1	minutes
+.lp +5 5
+2	hours
+.lp +5 5
+3	day of the month (1-31)
+.lp +5 5
+4	month (0-11)
+.lp +5 5
+5	year \*- 1900
+.lp +5 5
+6	day of the week (Sunday = 0)
+.lp +5 5
+7	day of the year (0-365)
+.lp +5 5
+8	Daylight Saving Time flag if non-zero
+.i0
+.s3
+A routine named
+.it ctime
+is also available from Fortran.
+Actually it more resembles the
+.it time
+(II) system entry in that it returns the number of seconds
+since the epoch
+0000 GMT Jan. 1, 1970
+(as a floating-point number).
+.sh "SEE ALSO"
+time(II)
+.sh AUTHOR
+Ian Johnstone
+(University of New South Wales)
+.sh BUGS

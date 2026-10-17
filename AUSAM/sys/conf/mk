@@ -1,0 +1,20 @@
+echoall
+:    make a hp02 system - small swap area on hp01
+cp c.hp10 c.c
+cc -c c.c
+as -o m70.o m70.s
+as -o powerf.o powerf.s
+as -o l70.o l70.s
+ld -x -r -d l70.o powerf.o m70.o c.o ../lib1 ../lib2 ; nm -ug
+rm -f unix.new02* >/dev/null ; sysfix a.out unix.new02s
+:	make a hp02 system - large swap area on hp11
+cp unix.new02s unix.new02
+db unix.new02
+_swplo`
+22572.!
+_nswap`
+4180.!
+%
+:    protect
+chmod  0  unix.new02 unix.new02s ; chown bin unix.new02 unix.new02s
+rm -f *.o a.out c.c >/dev/null

@@ -1,0 +1,1027 @@
+.ds t "ENHANCEMENTS
+.tr ~ 
+.nh
+.de H
+.in 0
+.sp
+\\$1\\h'-\\w'\\$1'u'\\$1\\h'-\\w'\\$1'u'\\$1\\h'-\\w'\\$1'u'\\$1\\h'-\\w'\\$1'u'\\$1:~~~
+..
+.ll 85
+.pl 12i
+.lt \n(.lu
+.ta 8,16,24,32,40,48,56,64,72,80
+.de HD
+'sp 2
+.tl 'UNSW system''\\*t'
+'sp 2
+.ns
+..
+.de FO
+'bp
+..
+.wh 0 HD
+.wh -4 FO
+.sp 2
+.sp 2
+.ce
+.cu
+ENHANCEMENTS to level 6 UNIX
+.sp 3
+All modifications to UNIX have been made
+with  #IFDEFs etc ..
+This method is not entirely satisfactory
+but it has worked reasonably successfully in the past.
+It is only
+now that the level of changes has reached a point
+where this technique is
+unacceptable.
+.sp 1
+One program that has been an invaluable aid
+to our system development work has been SYSDUMP
+- a system core dump analyser.
+The code for dump
+in m??.s has been expanded so that dumps may be taken to
+RK05 and TU16.
+SYSDUMP has lots of options that enable
+a very quick diagnosis of dump to be made.
+.sp 1
+Below appears a summary of the major system changes
+made.  The names in bold indicate the name by which the modification
+is known.
+.sp 2
+.H "_1170
+Includes code specific to 70 cpu's,
+such as UNIBUS MAP etc.
+Use an m70.s which handles floating point properly,
+handles an 11/70 cpu as an 11/70 cpu - that is to
+say uses the ERROR registers etc...  properly.
+1170 memory parity is fully supported
+so that the system only panics when
+there is no alternative.
+.H "UNIBUS_MAP
+Enable code for Unibus Map.
+You need this only if you have Unibus devices on your 11/70.
+.H "_1145
+Includes stuff specific to 45 cpu's.
+Use an m45.s which handles floating point properly.
+.H "_1140
+Includes stuff specific to 40 cpu's.
+.H "FPU
+FP11-b or FP11-c installed.
+.H "RHSTART
+Include code for newer type controllers
+e.g. RJP04 on RH70 or RP04 on RH11.
+.H "DEVSTART
+rk type controllers on system !!
+.H "PROG_CLOCK
+If you don't have a programmable clock will
+save some code ...
+.H "SHARED_DATA
+New special a.out magic number 0412 signifies shared data
+segment (r/w text area).  Must be swapped out on last use,
+not just abandoned.
+\&'x_spid' and word 6 of A.OUT header contain shared data
+identification field the inode pointer is not good enough (not unique),
+since shared data segments are shared between any number
+of co-operating processes.
+Initially implemented to support UNSW batch system.
+P and V system calls implemented to allow process
+synchronization.  LKED does the linking needed for
+creation of 412 a.outs.
+.H "ZOMBIE
+Several variables in the proc structure are used to store
+post-mortem information about processes.  This avoids the swap
+out & in of previous version for exit & wait.  Process
+terminations (exit&wait) go substantially faster.
+Alternative process structure pz_* contains definition of
+process area for dead processes.  A few of the scheduling
+routines have been altered so that no attempts are made
+to alter the process area of 'dead'ns'.
+.H "INIT_FIX
+/etc/init (process one) only woken up when required.
+Previously every process termination in the system woke
+the init process. This is only necessary if the parent
+of the dying process is already dead.
+The whole thing re-written using a single scan of the
+proc array (up to 4 previously). MORE efficient.
+Now the code is understandable.
+.H "TIME_LIMITS
+User area variables 'u.u_cpusec' and 'u.u_tix' contain
+seconds and clock ticks left before CPU time limit expiry.
+A signal SIGCPULT is generated when
+cpusec becomes zero.  A process with a limit of zero is
+not restricted - this is the normal state.
+.br
+New system call "clktim" is implemented.
+Allows user to request a signal SIGTIMEOUT in 'n' seconds(real)
+\&'n' is passed in r0. If p_rtl is non-zero then a real
+time limit has been set. When a limit has been set
+the clock interrupt routine decrements p_rtl once a second
+until zero when the signal is sent. This involves little extra
+cost to the system as the whole proc array is scanned each
+second anyway. Main cost is extra word in process table entry.
+.H "GPROCS
+Returns system proc array to user. Returns also the number of
+process slots.
+PS modified to use this - makes PS go faster
+.H "BETTER_EXIT
+Shrink process to USIZE on entry to exit.
+.H "BETTER_TIME
+Update() always updates the time on root file system super block.
+After booting time more likely to be correct.  Also allows
+knowledge of when a system crashed to within 30 seconds etc..
+Omitting to set date at BOOT of system less likely
+to cause havoc with incremental dumps etc..
+.H "EP_ADDRESS
+Implement entry point address as described in programmers
+manual.
+.H "BIG_UNIX
+This mod is a means of expanding the available addressing
+space for the resident operating system on pdp-11/40 style
+memory-management UNIX systems. A new linker 'sysld' is
+used to generate such a system - A sysld command file specifies
+the division of the resident system into _s_e_g_m_e_n_t_s, one of
+which, the _r_o_o_t segment, is always addressable using
+segmentation pages 0 through 4. All the other segments
+share page 5, and are addressable only when running. Page
+6, as is usual, is reserved for the _U-table addressing, and
+page 7 for the I/O page.
+.H "VICAR
+Utilize 'u.u_heap' (between u and stack) as scratch area for erase and delete
+processing.  Eliminates canonb[] from systm.h.
+.H "NEW_TIMEOUT
+New timeout function utilises blocks off the clist
+for increased efficiency.
+Also allows cancellation of the effect of a previous call
+to timeout.
+.H "CBLOCK_16
+Allow 16 byte or larger cblocks. PUTC,GETC re-written to be 15% faster,
+as well as being parametric.
+.H "TTY_TRUE_RAW
+Allows the use of full 8 bit data
+on tty lines iff RAW flag set
+and other flags except HUPCL are reset.
+.H "TTY_HISPEED
+Provides suitable water marks for high speed terminals.
+You will need to check clist capacity.
+.H "TTY_FLOW_CONTROL
+Allows tty.c to drive DIABLO type terminals
+at high baud rates ( >= 1200 )
+.H "STACK_LIMIT
+Implement stack limit register.
+It is better to catch stack overflows as soon as possible - 
+working out what's happened otherwise is a little difficult.
+.H "SMDATE
+Enable smdate from level 6 system distribution.
+This call was originally commented out because of
+problems with incremental dumps - pseudo old
+files not dumped.  Smdate as implemented
+now only allows super-user to modify the access date
+hopefully super users know what they are doing.
+It's very useful for restoring from dumps.
+.H "NEW_SLEEP
+Sleep system calls now do unique sleeps thus 
+avoiding thrashing on wakeups of TOUT.
+Each proc entry has one additional word p_stl
+which when non-zero indicates that a sleep is in progress.
+Once a second the clock interrupt routine decrements this
+count; when it reaches zero the process is woken up.  This involves
+little extra overhead as the proc array is already scanned
+once a second for other purposes.
+.H "ONCE
+Normally this change only in effect when BIG_UNIX is in effect
+however there exists no reason why ONCE can not be used without
+BIG_UNIX.  main.c renamed once.c.  The initialization routines
+cinit,binit,iinit are moved to once.c from tty.c,bio.c and
+alloc.c respectively by this change.  Also estabur,nseg,sureg
+are moved from once.c to slp.c.  Buffer allocation(declaration)
+is moved to c.c (in conf).
+This is 'normally' used with BIG_UNIX because BIG_UNIX allows
+once only code to be discarded after initialization of the system!!
+.H "CRASH_TRACE
+When system panics, print out contents
+of 11/70 CPU error registers.
+.H "MALLOC_CHECK
+malloc.c
+Introduce means of gathering statistics of memory
+and swap space allocation under unix.
+Statistics gathered from this change instigated the
+LOWER_TEXT_SWAPS mod.
+.H "RAW_BUFFER_POOL
+In order to improve system performance allocate 'NRAWBUFS'
+buffer headers - these headers to be used for swapping and
+general raw i/o. Instead of using 'swbuf' for all swap
+i/o in the system, allocate from the raw buffer pool.
+If 'physio' is passed a null buffer pointer then
+it will allocate a buffer for the i/o and free it on completion
+of the i/o.  Current raw i/o interfaces then do not have to be
+altered unless desired.  The main benefit to these interfaces
+will be that on multiple devices overlapped seeks will
+be possible, also ordered queueing of raw
+i/o requests can be done (assuming a clever driver).
+Improves swapping.  'NRAWBUFS' should be 2 greater
+than the expected number of simultaneous raw i/o operations
+to prevent lockout of swap i/o.
+.H "SLOSHED
+Change to canon to allow erases to delete kills.
+In the process rewrote it to be more
+deterministic (and better).
+Handles \ erase-char properly, ie. doesn't assume '#' & '@'.
+For byte-pinchers this change costs 44 bytes.
+.H "LOWER_TEXT_SWAPS
+This alteration drastically reduces the number of swaps
+undertaken by UNIX. For example on one 11/70 swapping
+was reduced by about 85%
+(NOT every one can expect this improvement).
+When attaching to a shared text segment that was not
+already core resident the following procedure was
+followed:
+.br
+.in +7
+.ti -3
+1. If in swap space goto 6
+.ti -3
+2. Expand process size to enable read of
+text from the a.out.
+.ti -3
+3. Read text segment.
+.ti -3
+4. Allocate swap space for text segment
+and swap the segment out
+.ti -3
+5. Expand process size to USIZE.
+.ti -3
+6. Swap out process!!
+.ti -3
+7. Call sched.
+.sp 1
+.in -7
+When the process is swapped back in to core
+all will magically be taken care of.
+This is a little inefficient to say the least and
+47 % of all swaps counted were for 1024 bytes.
+.sp 1
+The new scheme:
+.in +7
+.ti -3
+1. if in swap space goto 6
+.ti -3
+2. Expand process size to enable read of
+text from the a.out.
+.ti -3
+3. Read text segment.
+.ti -3
+4. Separate User Per Process area and text Segment
+and install text segment in core. Mark it as not yet
+swapped.
+.ti -3
+5. Continue execution of process
+.ti -3
+6. If text will fit in core, swap it in.
+.ti -3
+7. Else swap process out and wait for scheduler.
+.ti -3
+8. Continue execution of process.
+.sp 1
+.in -7
+When a sticky bit process exits or re-execs then establish text area
+in swap space if it has not already been done.
+.sp 1
+Note that only if required will the shared text segment now
+be swapped. It is now possible to run a shared
+text program that will cause no swapping if
+the program is not "sticky bit"ed.
+AND all this only costs 98 bytes...
+.H "BUFFER_AGING
+Allow proper handling of write-behind blocks
+on freelist. Put at head of free queue those blocks
+that have to be written.
+.H "LARGE_FILE_REFERENCES
+Allows > 127 references to a file structure,
+up to maximum of 255 with ENREF error if exceeded.
+Previously this condition would cause catastrophic
+errors.
+.H "ERROR_LOG
+Change putchar to allow system program "errlogger"
+to record "printf" messages instead of console.
+Implements device "/dev/errlog".
+See s1/errlog.c for error logger code.
+.H "NICE_PUTCHAR
+Change putchar to use tty driver for non-panic
+messages.
+.H "TTY_INVCASE
+Handle inverted case terminals.
+Yes - they exist!
+.H "COOL_NO_SPACE
+Since most programs ignore errors on write,
+attempt to be a little less enthusiastic
+with "no space" messages. The change is a
+call to sleep on "lbolt", the effect is to
+slow up programs doing repeated write calls
+after no space error.
+.H "UPRINTS
+This includes code implementing the routine "uprints"
+which will print a system message on the tty
+associated with the current process.
+.H "DELAY
+This includes code implementing the routine "delay"
+which will delay the caller for a period using a
+"timeout - sleep - wakeup" sequence.
+.H "MAX_PROC
+Keep track of which slot in the proc table is the last one
+in use, and when searching the proc table only go up to maxproc
+rather than &proc[NPROC].  This does speed things up a little.
+Ken Thompson is reported to have found that the
+system spends much of its time scanning the proc array.
+For example ps is now many times faster; less to transfer, less to scan.
+For example consider a system with NPROC=200 and 5 active processes
+ZOMBIE defined - WITHOUT MAX_PROC time for executing wait was 1.18ms
+- WITH MAX_PROC time for executing wait was 0.34ms - thus the benefits
+are obvious in those parts of the system that search the proc table.
+NOTE: time == elapsed time == user time + system time.
+These values obtained on AGSM's 11/70
+.H "HIGH_PROC
+Enable code to keep proc high water mark in high_proc.
+.H "LRU_INODE
+Incore inode structures are allocated on an LRU basis, and
+if a requested Inode is still in core, it is not read in
+again. This dramatically speeds up pathname
+searches, which do an awful lot of iget's and iput's.
+.H "IGNORE_SIGNALS
+Introduce "p_ignsig" - a sixteen bit boolean array
+in which "true" means that the correspondingly
+numbered signal is being ignored. Basically this
+stops swaps for ignored signals.
+.H "MEM_PAR_INTR
+For 11/40s enable parity checking if it exists (once.c).
+In trap.c report all memory parity errors, if user mode
+then SIGMEMPAR the process.
+.H "POWER_FAIL
+If defined all singing all dancing powerfail recovery.
+Problems with DEC hardware means this is not fully tested - it works
+some of the time.
+Other times disks and processor go into strange states not described in
+the processor handbook.
+.H "U_DELAY
+Implement new system call "sdelay" for sleeping for a number of ticks.
+.H "AUSAM
+AUSAML  - Limit structures
+limits system call.
+AUSAM16 - change to support 16 bit user id's &
+proc limits.
+.br
+SEE separate documentation attached.
+.H "LOCKING
+Enables the locking and unlocking of files to ensure safe
+read/write accesses on a "n-reader, one writer" basis.
+One new system call (no 56.) - see man2/locking.2 for details.
+.H "MANY_USERS
+Really a fix to allow for more CPU bound
+in-core tasks. Where there are likely to be several
+of these then original BELL 'SCHMAG' (clock.c) and
+the 'PRIORATE' in setpri could lead the scheduler
+to select a CPU-bound task first.
+.br
+SCHMAG ==> clock ticks/second upper limit for I/O bound things.
+.br
+PRIORATE ==> rate at which cpu-bound priority is dropped.
+.H "MORE_USER_PRIORITIES
+Changes PUSER to 64, thus allowing a greater diversity
+of user priority levels. Coupled with MANY_USERS mod
+it provides better scheduling on busy machines.
+.H "SWITCH_DISPLAY
+Make an interesting display in location 70
+of count of swtch's in last 8 ticks.
+.H "DEBUG_SWAP
+Certain debugging aids inserted to check
+for erroneous swaps. We used this to find
+the bug in LOWER_TEXT_SWAPS that was independently
+found by Peter Colinston (UK users group).
+.H "BETTER_PANIC
+Changes to "swtch" to make it refuse to
+schedule processes during a panic.
+The first panic is the most important - remember
+its message string only.
+.H "TTY_CONNECT
+Support for the logical connection of two tty ports.
+(A great assistance for inter-machine communication!)
+NEW sys call:
+.in +10
+mov	master-fd,r0
+.br
+mov	slave-fd, r1
+.br
+sys	connect; type; cntrl-char
+.in -10
+where master-fd and slave-fd are files descriptors associated
+with terminal ports (dj-dz-kl).
+If type is
+.in +15
+.ti -5
+0    then function is disconnect. Master and slave must be same tty.
+.ti -5
+1    function is CONNECT (log).
+ALL chars received from master or slave tty are
+re-directed to the output queue of the other.
+.ti -5
+2    Function is VIEW.
+Master tty monitors receives a copy of all
+output (and input) sent to slave. Input at master
+is sent to master's input queue.
+.ti -5
+3    Function is GRAB.
+Slave tty is disconnected from system, and
+master takes its place. The master appears to be
+the slave tty.
+.ti -5
+4    Function is SHARE.
+Similar to VIEW, but input typed at master tty
+appears as if typed at slave tty.
+.in -15
+.sp
+IF the cntrl-char is received from the master tty
+then -
+.in +10
+1. the connect system call returns to caller.
+2. all re-direction of ttys stops.
+.in -10
+.H "TTY_SUSER
+Non-super users restricted to 'TTY_MAXSPD' baud as max
+attainable speed.
+ONLY super-users may 'stty/gtty' terminals that are
+not the controlling tty for the process - stops abuses.
+.H "SYS_TIME
+Include code (optionally) in m70.s to return
+the system's idea of the time (hh:mm).
+Found to be useful for noting times of system crashes,
+reporting powerfails that have been recovered from and
+parity errors that have not 
+caused a panic.
+.H "MAPPED_BUFFERS
+Use KDA5 to page buffers from the buffer pool.
+In binit at system startup the buffer pool is
+malloc'd and the buffer headers setup to address
+them - if UNIBUS_MAP defined then b_xmem & b_addr
+contain the unibus address - otherwise
+b_xmem & b_addr contain full n-bit address.
+This change costs 8Kb from kernal data space (loss of reg)
+but does recover the data space previously occupied
+by the buffers.
+The only hassle is having to load KA5 prior to accessing
+a buffer's contents, bswtch (m70.s) will do this given
+address of buffer header.
+Of course buffers must be only 512 bytes long, so you need the fix in
+iget which stops access of word 257. KA5 is set up to reference a page
+only 512 bytes long. This has caused no crashes on our system.
+.H "QMOUNT
+Don't allocate new buffers for mounted
+super-blocks - mark ordinary buffers with B_MOUNT flag
+Main advantage is that when an update happens
+buffers need not be allocated to copy super-blocks to disk
+but can merely be written in-place !!
+Reads to disk block 1 return the real super block, not the one
+at the last sync.
+df etc... should work better too.
+.br
+.H "MALLOC_UMAP
+ONLY relevant if UNIBUS_MAP defined.
+Allows better allocation of UNIBUS-MAP via
+a call to malloc to allocate only as much as is
+required for this I/O. Avoids problem with previous
+method when used with MAPPED_BUFFERS. This 
+allows simultaneous raw I/O's and swaps.
+If your buffer pool is sufficiently large (> 352) it
+may not be possible to swap a very large process. Tough.
+.br
+MUST BE USED WITH MAPPED_BUFFERS
+.H "ACCESS
+Implement access system call.
+Allows access to a file to be checked using the real uid
+of a process this is very useful for setuid commands where
+a lot of checking (messy) can be replaced by a sinle call
+to access.
+.H "PROFILE
+Allows the taking of an arbitrarily detailed profile of the system.
+Can only be done on 11/45 or 11/70, as
+the profile is kept in the supervisor mode data space.
+A programmable clock is required.
+.H "SWAP_CHECK
+This is basically an attempt to limit "panic - out of swap"
+for systems with small swap areas. The method is to prevent
+all process creation and process expansion unless there is
+at least "maxmem" memory left in the swap-map.
+'uprints' is used to notify user of this.
+.H "GETTAB
+A system call for allowing user programs to
+access executive tables.
+This is similar to gprocs but more general
+and has tighter checking of user's buffer.
+.H "PROCESS_QUEUES
+This change allows ready-to-run processes to
+be linked together (via p_link proc entry).
+Time spent in swtch is considerably smaller
+if you have a large proc table. Also provides
+an improved sched which ages 'easy' core, as
+well as allowing separate swapping of text seg
+and data.
+.H "HASHED_BUFFERS
+This mod is used to (greatly) speed searching of the
+device list for a particular buffer. The device
+lists are coalesced into one large hash table.
+The hashing function operates on both the dev and blkno.
+.H "NEWCOPYSEG
+New copyseg and clearseg routines.
+copyseg and clearseg changed to use kernel register
+instead of user, hence 'mov' instructions instead
+of (abortionately slow) m[ft]pi instructions.
+.H "CIRCULAR_PIPE
+Uses a circular buffering strategy for pipes. This has two
+advantages. Pipes are more likely to be able to accept a write, and
+and thus a read call, giving higher transfer rates.
+Also, the amount in the pipe is available to fstat, in the
+field i_size1. A process may now determine if there is
+stuff to read before reading it.
+.ds t "CORRECTIONS
+.bp
+.ce
+.cu
+CORRECTIONS to level 6 code.
+.sp 1
+These are changes that correct errors in the code or make modifications
+that we consider necessary. You will need diff to tell the difference
+between our code and the original.
+.br
+The identification 'fixnnn' is probably useless here but...
+.sp 3
+.H "fix000
+These alterations are mainly concerned with
+utilizing the facilities of the latest C compiler.
+All char * and int * which really were of unsigned type
+have been altered.
+Register arguments to procedures declared where noted.
+All int [2] type whose purpose was to implement 32-bit
+arithmetic have been declared long - code altered as required
+to cope with new declarations.
+Correctly declare pointers. for example if a pointer
+is a pointer to an inode structure then declare it thus.
+.H "fix001
+It has been suggested that 'read ahead'
+may cause deadly embraces, so dmr/bio.c
+can be modded to stop read ahead if desired.
+The problem exists when ever the number of
+processes in "breada"  +  the number of processes
+in "exec"  +  the number of mounted file systems
+exceeds NBUF.
+.H "fix002
+There appears to be a race condition in swap() whereby
+the same priority (PSWP) was used to wait for completion of
+i/o and for the buffer. A lower priority now used for
+buffer allocation sleep.  See bio.c
+.H "fix003
+No lower limit to user's priority because of typo.
+See sig.c
+.H "fix004
+Panic calls for all swap errors...
+.H "fix006
+Chdir sys call could leave free "leaves". (Disk errors)
+.nf
+EG:
+.in +7
+chdir /tmp
+mkdir a; chdir a
+rmdir /tmp/a
+cp /null orphan
+chdir /tmp
+.in -7
+.fi
+.H "fix007
+Get tty.c to echo nl to cr on half duplex terminals
+with CRMOD set.
+.H "fix008
+Fix tty.c not to call device start routine
+if timing out.
+.H "fix011
+Console start up printout "mem =" altered to give available memory in K-bytes.
+.H "fix013
+Super user can now chdir to
+directories which have no search permissions.  (fio.c)
+.H "fix014
+"lost characters fix".
+ttwrite in tty.c - the mod stops ttstart being interrupted
+and losing the character it was about to output.
+.H "fix015
+Make system do T-bit tracing properly.
+Rti's are done from all traps except
+trace or bpt traps.
+.H "fix016
+Always output panic messages
+even if switches down.
+.H "fix017
+Ensure b_resid always zero - drivers may not always
+do this.
+.H "fix018
+Prevent SIGINS from overlaying other signals
+if simulating floating point.
+.H "fix019
+Remove spl6() from "sched" while searching proc array.
+It is not clear why this was done in the first place,
+and its effect of locking out interrupts for several
+milliseconds was disastrous for high frequency interrupts.
+.H "fix020
+Correct code that checks if physical i/o
+is wholly within data/stack spaces.
+the following should have worked but didn't !!
+.nf
+.in +7
+	mov	fd,r0		/ fd is files descriptor
+				/ for raw i/o
+	sys	read; 64. ; 64.	/ this generated a segmentation
+				/ error !! when the size
+				/ of text + data == 128.
+	.=64.^.
+	.=.+64.
+.fi
+.in -7
+The correction is simplicity itself - merely subtract one
+from the sum of 'base+u.u_count'.
+.H "fix021
+Don't even create 'core' file if this is a setuid
+process!! Just test earlier.
+.H "fix022
+A really triffic bug this one !!
+When tabs are being expanded in ttyoutput the
+assumption is made that the character queues never fill
+- this assumption is FALSE hence infinite loops can occur !!
+.H "fix023
+Instead of these routines magically knowing about
+certain displacements in the user structure define
+their addresses and use these indirectly to reference
+the desired location...
+.H "fix024
+p_cpu not being initialized in newproc.
+causing new processes to inherit this value
+from last process to occupy the proc slot.
+.H "fix025
+Fixes, etc, from BELL for level 6.
+.H "fix026
+Avoid locking problems in ialloc & ifree.
+Improves search for free inodes (makes it faster).
+.H "fix027
+Avoid parity errors at start up - use suiword
+instead of fuibyte.  Also free all of core in one
+hit not in zillions of little chunks.
+.H "fix028
+Remove special significance of system call 63.
+You may now use it for anything. Indirect calls
+of indir will now give SIGSYS.
+.H "fix029
+Chmod system call does not alter modify time - only access time.
+This mod could be arguably described
+as an enhancement.
+.H "fix030
+When a block device is closed ensure ALL blocks
+from the device are disposed of in a proper manner.
+"binval(dev)" added to bio.c so that ALL blocks belonging
+to dev are marked with B_INVAL so that "getblk" and
+"incore" will not find them if dev re-opened.
+"binval" also sets B_AGE so that if block is
+later freed it will be place at the top of the free
+queue.
+"closei" will only call device block close routine
+iff dev not currently mounted.
+"closei" and "sumount" both call "binval" to invalidate
+the appropriate blocks.
+.br
+.in +7
+.ti -6
+NOTE: after a dev has been umounted it is thus
+no longer possible on re-mounting the dev
+to get spurious results caused by finding
+blocks left over from before the umount.
+ditto for close and re-open
+.br
+.ti -6
+NOTE: if you're wondering why this bug has not been
+noticed before then you may be comforted by
+the knowledge that it was first observed by
+us on a MAPPED_BUFFERS system with 128 buffers
+- so that natural wastage did not occur
+quick enough !!!!!!!
+.in -7
+.H "fix032
+Define 'EOPENFAIL' - return this error when an open
+fails on a single use device.
+Perror gives a more meaningful diagnostic.
+.H "fix033
+By popular demand \- if '\\b' is erase character then
+echo '\\b',' ','\\b' to make it look pretty.
+.H "fix034
+Tell system call to return the position in the file
+in R0, R1.
+.H "fix035
+swapdev to be opened just like rootdev.
+Important if your disk driver needs an open to init the disks.
+.H "fix036
+Provide routine fkword(addr) which checks for the existence
+of a word in kernel D space. The returned value is 1 if the
+word exists, otherwise it is 0.
+.H "fix037
+Fix routines 'fu' 'fui' 'su' 'sui' word & byte to set
+u.u_error to EFAULT on error, so that a value of -1
+can be detected.
+.H "fix038
+A flag IPIPE is added to the inode, which is tested in writei
+to determine whether a bawrite or a bdwrite should be done.
+As the information in a pipe is quite transitory, and cannot be
+recovered in the event of a system crash, a bdwrite removes the
+unnecessary IO traffic, and doubles pipe transfer rates.
+Also, in readi, if all the data in a pipe block
+has been read, there is no need to write it out at all
+so turn off the delayed-write bit.
+.H "fix039
+Check for super user in 'mount' and 'umount'. We don't want
+the masses mucking around with our disks.
+.H "fix040
+Check if a directory becomes greater than 4095 files and return
+new error code EDBIG. The fix is required because only i_size1 is
+used when searching directories.
+.H "fix041
+The bug was that if exactly CANBSIZ-1 chars were typed at terminal
+and then a CR, reading the tty would return CANBSIZ, and then 0 on
+the next read (often resulting in a log off). Given that TTYHOG and
+CANBSIZ are so intertwined, CANBSIZ is redefined to be TTYHOG, and
+TTYHOG is now TTYHOG-1. CANBSIZ declaration disappears, and the
+definition of TTYHOG moves from tty.h to param.h.
+.H "fix042
+A signal number is not checked for being negative
+hence it is possible to use a negative signal number
+to cause certain areas (say uid) to be overwritten in
+the per process area.
+.H "fix043
+Change to exec so that a process may only trace another
+if it owns it, or is the super-user.  This prevents
+misuse of tracing to read core images of programs,
+when the normal permissions may not allow this.
+It also prevents rewriting shared data areas.
+.ds t "DRIVERS
+.bp
+.ce
+.cu
+DRIVERS added
+.sp 3
+.in +7
+.ti -7
+cr.c	Card reader driver for UNSW home grown buffered reader.
+.sp
+.ti -7
+crd.c	Driver for standard DEC CR11 card reader.
+.sp
+.ti -7
+dj.c	Will drive multiple DJ11's. Supports hardware silo on input.
+.sp
+.ti -7
+dz.c	This DZ11 driver will handle Dial-in lines and will
+handshake with terminals that use Data Terminal Ready to
+control output. Also supports silo on input.
+.sp
+.ti -7
+ei.c	UT200 (modified) Emulator on DP11. Talks to our version of
+QUEBEC Export-Import in the best way. There are other
+versions of this driver for DU11's and for the standard KRONOS
+(NOS) E/I; Although the exact version you need is maybe not
+here, it should not be too difficult to change our one.
+Tuning it up to your of Export is a different problem.
+.sp
+.ti -7
+lp.c	This driver will support both standard DEC LP05/LP11 and CDC
+lineprinters. It features block buffering and settable
+parameters (stty calls). High speed (>200LPM) line printers
+are handled better since buffers are used to queue chars for
+output. No longer is system cpu bound when printing !!!
+.sp
+.ti -7
+msc.c	Driver for Microcomputer Systems controller with Ampex
+DM9100 drives. Optimises seeking and rotation and does 
+overlapped seeks for multiple drives. A la RK05 driver from
+Children's Museum.
+.sp
+.ti -7
+rk.c	Modified Children's Museum (Boston) RK05 driver. MANY bugs
+fixed and has an improved scheme for optimizing layout. Will
+also support pseudo rk05's such as PERTEC which don't have
+overlapped seeks. Layout scheme places logical block one in
+center of the disk, ie inodes are at disk centre thus
+reducing seeking time.
+Restricted raw I/O's can still be done. This was impossible on
+original driver.
+.sp
+.ti -7
+tm.c	TU10 driver which supports all features of our TU16 driver
+and more. Stty calls can be used for tape positioning etc.
+.sp
+.ti -7
+hp.c	Driver for RP04 on massbuss/unibus.
+Optimises seeking and rotation and does overlapped seeks for
+multiple drives.
+.ds t "MDEC
+.bp
+.ce
+.cu
+MDEC
+.sp 3
+.H "hp92boot
+This loads programs up to 92kb from rp04. (It could have bugs..)
+.sp1
+.H "hpsboot
+A better rp04 bootstrap. Features are:
+Indirect blocks,
+Boots from any cylinder,
+Boots any pathname,
+Recovers better from errors,
+If 407 a.out take note of text & data size
+and stop loading iff file too big,
+Much smaller !!
+.sp1
+.H "mksatp
+Make a stand-alone tape.
+.sp1
+.H "msboot
+A bootstrap for Micro-computer systems controller with Ampex
+DM9100 drives.
+.sp1
+.H "rkboot
+Boots optimized layout rk05 disks.
+Knows about indirect blocks - they are handled efficiently.
+.sp1
+.H "rkdf
+Stand alone RK copier, formatter etc ..
+.ds t "other goodies
+.bp
+.ce
+.cu
+A RANDOM SAMPLE OF OTHER GOODIES
+.sp 3
+From 'S1' and 'S2' the following have been selected (arbitarily)
+as being useful programs from this distribution
+and hence worthy of comment
+.sp 2
+.nf
+absout		Turns DEC absolute loader format into an a.out file.
+ask		Asks a question and returns TRUE if answer is yes.
+banner		Full 64 character set
+cc		New control line #else, conditional expressions for #ifdef.
+		Listings with nesting depth can be requested.
+chmod		Rewrite chmod.s in C !!
+chown		Rewrite chown.s in C -- flag -s saves modify date
+clri		Modified to work on multiple inodes.
+copy		Ex a distribution tape + some new flags.
+coreit		Prints out core dump summary
+cp		This version checks correctly for cp to same file
+cr		Reads cards from card reader and strips off trailing blanks
+dcopy		File system straightener - layout a filesystem in best possible way
+df		If used with no args uses the file system of working directory.
+diff		New flag -d - enables full listing with all differences
+		very useful for looking at distributions
+edrecon		Reconstructs ed file after crash.
+em		QMC thing with new features: join command, ...
+entab		Converts spaces to tabs where suitable -- and "detab" vice-versa
+errlog		uses /dev/errlog to log system errors on /usr/adm/errlog
+ipatch		Some serious bugs fixed
+lked		turns a 407 image into a 412 (shared-data) image
+log		talks to other systems + full file transfer protocol
+lpd		new all singing all dancing
+lpr		new lp spooler
+prstop		Abort current lpr output
+dtp		New Dynamic TP:- large blocks, does directories, ...
+		this distribution was created with this program
+pack,unpack	Very useful programs for saving space - uses a
+pcat		  sophisticated technique for file compression
+		  Originally from a distribution tape modified here
+		  to use longs and not floting point.
+ps		New flags, new format -- all singing all dancing
+rmdir		This version of rmdir checks for all sorts
+		  of errors that previously went unchecked.
+sh		Many fixes, changes, safe for super-users
+shutdown		Shuts down system nicely -- uses SIGTERMINATE.
+slp		Sets line printer modes with stty call.
+speed		Version of cat that does backspace optimising.
+timelim		Puts a cpu time limit on a command
+unlink		Unequivocal unlink.
+.fi
+.ds t "AVAILABLE SOFTWARE
+.bp
+.ce
+.cu
+.ds t "AVAILABLE SOFTWARE
+AVAILABLE SOFTWARE
+.sp 3
+.de x
+.ne 5
+.sp 1
+.ti 0
+\\$1\\h'-\\w'\\$1'u'\\$1\\h'-\\w'\\$1'u'\\$1\\h'-\\w'\\$1'u'\\$1\\h'-\\w'\\$1'u'\\$1   
+..
+Below is a list of MAJOR items of software which can now be obtained
+for UNIX. The list is not exhaustive but such a list may be helpful to
+others who are looking for software for UNIX.  If any person reading
+this knows of other items of significance then please, please let
+me or preferably the newsletter know.
+.sp 3
+.in + 7
+.x "FORTRAN 4-PLUS
+Need DEC licence plus licence from CULC - cost $US3000 - produces good
+code and runs very quickly.
+BUT it has bugs and documentation is poor.
+.nf
+.in +7
+Commercial Union Leasing Corporation
+115 East 57th Street
+New York   NY  10022
+.fi
+.in -7
+.x "FORTRAN-IV
+Need DEC licence. Came from Princeton University.
+Good and reliable, some bugs (none too serious) documentation
+sufficient.
+.x "PASCAL
+Written in C and AS - works well - used widely on campus for
+teaching undergraduates.
+A good compiler and interpreter with good documentation.
+.nf
+.in +7
+Bill Joy
+CS Division
+Department of EE and CS
+UC Berkeley
+Berkeley, California 94704
+.fi
+.in -7
+.x "SPITBOL
+Is an implementation of SNOBOL4 - a good implementation, good documentation.
+A few minor bugs with unevaluated expressions.
+.nf
+.in +7
+Dewar Information Systems Corp
+221 West Lake Street
+Oak Park, ILLINOIS  60302
+.fi
+.in -7
+.x "BASIC-11
+need DEC licence - includes matrix operations - works well
+.nf
+.in +7
+Undergraduate Science Center
+Harvard University
+1 oxford street
+CaMbridge, mass. 02138
+.fi
+.in -7
+.x "BASIC-PLUS
+Need DEC licence.
+This implementation corresponds to RSTS/E 5B.
+Origin of it is unknown.
+.x "INFORMATION SYSTEM
+is a general-purpose information storage and retrieval system - a database
+management package - supports very fast access to keyed items, concurrent
+updates by multiple users - also easily maintained.  Documentation good
+- some bugs but not too serious. Cost is
+based on the encompassing budget of
+the group who will use it.
+All things considered it is very inexpensive
+considering the facilities offered.
+.x "IDA
+Interactive Data Analysis is written in Fortran and provides an
+excellent statistical analysis package for student use - excellent
+diagnostics and more importantly provides good assistance where
+necessary if the user doesn't understand what is required.
+.nf
+.in +7
+Graduate School of Business
+University of Chicago
+Chicago,  Illinois  60637
+.fi
+.in -f
+
+.x "WATFOR-WATBOL
+These well known student compilers for Fortran and Cobol
+are now available under UNIX.
+.nf
+.in +7
+Sandra Ward
+Computer Systems Group
+University of Waterloo
+Waterloo  Ontario  Canada   N2l 3GL
+.fi
+.in -7
+.x "BMD
+PDP11 Version 2 of BMDP77 - a complete implementation of the
+MAY 1978 release from UCLA.  Cost is $250 for two-years for degree-granting
+institutions.  UNIX version has just become available.
+.nf
+.in +7
+Software Development Corp
+Middlebury College
+PO Box 500
+Middlebury  Vermont  05753
+.fi
+.in -7

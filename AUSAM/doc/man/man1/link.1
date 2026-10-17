@@ -1,0 +1,326 @@
+.th LINK I 12/17/75
+.sh NAME
+link \*- fortran linker
+.sh SYNOPSIS
+.bd link
+-flags ... files
+.sh DESCRIPTION
+The named object files are combined to produce a runnable UNIX module.
+The flags are as follows:
+.s3
+.ft I
+.lp +9 8
+flag	meaning
+.ft R
+.s3
+.lp +9 8
+-ls	print a load map
+.s3
+.lp +9 8
+-no	produce no out file
+.s3
+.lp +9 8
+-p1	combine text and data segments.
+Make the out file non-shareable.
+.s3
+.lp +9 8
+-ns	place no symbol information in the out file
+.s3
+.lp +9 8
+-go	place only global symbols in the out file
+.s3
+.lp +9 8
+-o=fn	place the out code in the named file.
+.s3
+.lp +9 8
+-m=fn	place the load map in the named file. If the
+file name is blank, the load map is directed
+to the standard output (implies "-ls").
+.s3
+.lp +9 8
+-nl	library modules are excluded from the map and 
+cross reference.
+.s3
+.lp +9 8
+-cr:xxx	A global cross reference is produced on the
+listing file. The optional flags (xxx) are:
+.s3
+.lp +17 6
+a	symbols in alphabetical order
+(default is module order).
+.lp +17 6
+t	omit symbols used only once.
+.lp +17 6
+s	omit symbols declared but not
+referenced.
+.lp +17 6
+f	omit internal fortran-type
+symbols.
+.s3
+.lp +9 8
+-id	Set for separate i/d space. Fortran programs
+may not be separated.
+.s3
+.mc |
+.lp +9 8
+-od	The octal debugger program (odt) is linked into the
+user program and will start when the program is run.
+See ODT(I) when it is written.
+.s3
+.lp +9 8
+-ov	select overlay mode.
+The first file in the list contains the overlay directives.
+The assumed extension is ".odf".
+See below.
+.i0
+.mc
+.dt
+.s3
+If no out file is explicitly specified, and -no is not indicated,
+the name of the out file is that of the first
+object file with the extension ".out".
+If no map file is explicitly specified, and -ls is indicated, the name of
+the map file is that of the first object file with the extension ".map".
+.	If an object file cannot be opened, the extension ".obj"
+.	is appended to the file name, and another open is attempted.
+.mc |
+If the object file cannot be opened with extension ".obj" appended
+to the file name, another open is attempted without the extension.
+The following
+.mc
+special flags may be mixed with the file names:
+.s3
+.ft I
+.lp +9 8
+flag	meaning
+.ft R
+.s3
+.lp +9 8
+-f4	this is an abbreviation for the fortran
+library "/lib/f4"
+.s3
+.mc |
+.lp +9 8
+-l:lib	specifies a name for an object file library.
+The default suffix for a library file is ".olb".
+The library is searched for in "/lib" and then in "/usr/lib".
+.s3
+.lp +9 8
+-fd	The fortran debugger (fdt) is linked into the user program.
+This switch must be used before the "-f4" switch.
+See FDT(I) when it is written.
+.s3
+.mc
+.lp +9 8
+-i:n	the name is declared as an undefined global.
+this is useful for dragging in library
+routines at a special place in the out file.
+.s3
+.lp +9 8
+-e:n	the name is not considered sufficient grounds
+to enter a library module until countered by
+an "-i:". It is not clear for what this is useful.
+.mc |
+{ One possible use occurs when using multiple libraries.
+If two libraries each contain a module with the same entry point,
+the "-e" switch may be used to stop the module from the first
+library from being loaded. }
+.i0
+.mc
+.dt
+.s3
+.ul
+Example:
+.s3
+A fortran compile, load and go with subroutines from before and no error messages:
+.s3
+.nf
+		fortran main
+.fi
+.mc |
+.nf
+		link main sub1 sub2 sub3 '-i:$short' -f4
+.fi
+.mc
+.nf
+		main.out
+.fi
+.s3
+.mc |
+OVERLAY FACILITY
+.s3
+The overlay facility implemented in this linker is a very simple one.
+It is a multi-region arrangement; it is not tree-structured.
+On entry to an overlayed program, the system attempts to find the the
+associated program file, first checking the current directory,
+and then "/usr/bin".
+Each entry point in an overlay segment referenced from
+another region has the apparent address of the entry point
+changed so that on a call to the routine,
+the overlay handler is entered instead.
+The overlay handler checks whether the segment containing
+the required routine is in memory or not;
+if not, the segment is read into memory from the program file
+before continuing execution at the actual entry point.
+.s3
+An overlay structure may be specified to link by means
+of an overlay descriptor file (odf). The presence of an odf is
+indicated by the switch -ov; in this case, the odf must be the
+first filename mentioned in the command.
+.s3
+e.g.  link -ov -p1 odfname otherfiles libraries -f4
+.s3
+The overlay scheme (based upon RT-11's) is a multi-region arrangement;
+it is not tree-structured.
+.s3
+.ul
+The overlay descriptor file:
+.s3
+.lp +5 3
+1.	Tabs and blanks around filenames are ignored completely.
+Empty lines are also ignored.
+.s3
+.lp +5 3
+2.	The first line must contain only the string ".root".
+.s3
+.lp +5 3
+3.	A segment (i.e. a group of routines which are to be
+simultaneously resident in a region) is specified by
+connecting the filenames with hyphens.
+.s3
+.lp +5 3
+4.	A line containing only the string ".region" specifies
+the start of a new region.
+.s3
+.lp +5 3
+5.	The last line must contain only the string ".end".
+.s3
+.lp +5 3
+6.	The only valid characters for use in filenames in
+the odf are `a'-`z', `A'-`Z', `0'-`9', `.' and `_'.
+.s3
+.lp +5 3
+7.	The root region must contain only one segment.
+.s3
+.lp +5 3
+9.	If any of these rules is violated,
+the message "bad overlay descriptor file." appears and the link is terminated.
+.i0
+.dt
+.s3
+.nf
+e.g.
+
+	.root
+		mainprog-sub1-sub2
+	.region
+		sub3-sub4
+		sub5-sub6-sub7-
+		sub8
+	.region
+		sub9-sub10
+		sub11-sub12-sub13
+	.end
+.fi
+.s3
+This example specifies five segments:
+.s3
+.lp +10 9
+.ul
+segment	contains:
+.s3
+.lp +10 5
+0	mainprog, sub1 and sub2 - this is the root segment.
+Also contains modules loaded from libraries etc.
+.lp +10 5
+1	sub3 and sub4
+.lp +10 5
+2	sub5, sub6, sub7 and sub8
+.lp +10 5
+3	sub9 and sub10
+.lp +10 5
+4	sub11, sub12 and sub13
+.i0
+.dt
+.s3
+and three regions:
+.s3
+.lp +10 9
+.ul
+region	contains:
+.s3
+.lp +10 5
+0	segment 0 - this is the root region
+.lp +10 5
+1	either segment 1 or 2
+.lp +10 5
+2	either segment 3 or 4
+.i0
+.dt
+.s3
+.bd "IMPORTANT NOTES"
+.s3
+.lp +5 3
+1.	There is no logical limit to the number of regions or segments.
+.s3
+.lp +5 3
+2.	A routine may not call routines in a different
+segment of the same region.
+.s3
+so in the above example,
+assuming that each file contains a subroutine of the same name:
+.s3
+.in +3
+mainprog, sub1 & sub2 may call any routine;
+.s3
+sub4 may call sub1, sub2, sub3, sub9, sub10, sub11, sub12 or sub13.
+Depending upon the language, sub4 may even call itself.
+.s3
+.lp +5 3
+3.	When an overlayed program is executed, the load file must be in
+either the current directory or "/usr/bin".
+If the overlay handler cannot open the program file the message
+"Can't open overlay file" appears and the run is terminated.
+.s3
+.lp +5 3
+4.	If an error occurs in reading from the program file,
+the message "Fatal overlay disk error" appears and the run is terminated.
+.s3
+.lp +5 3
+5.	The overlay area in memory is actually at the bottom of
+the BSS area.
+The overlay segments are stored at the end of the program file,
+after the symbol table;
+this means that the symbol table shouldn't be removed from
+the program file with the `strip' command as the overlay segments
+will be removed also; it is necessary to use the "-ns" switch
+at link time.
+.s3
+.lp +5 3
+6.	Common blocks are forced into the root segment;
+this means that they are never overlayed and so retain their
+integrity throughout the program's execution.
+.s3
+.lp +5 3
+7.	Variables in routines which are overlayed will be reset to
+their initial values each time the overlay segment containing
+them has to be read into memory again
+(i.e. because another segment was loaded in the meantime).
+If a variable is required to retain its current
+value it should be placed in a common block.
+.s3
+.i0
+.dt
+.s3
+.mc
+.sh BUGS
+To do anything smarter such as tree structured overlays the
+linker would probably need a complete rewrite.
+.br
+The linker is still capable of producing a core dump if
+it encounters a corrupted object file.
+.br
+The linker has noticed strange psect attributes in some object files;
+this is caused by strange defaults in some macro assemblers.
+.br
+Some error messages get split between file descriptor 1 and 2.

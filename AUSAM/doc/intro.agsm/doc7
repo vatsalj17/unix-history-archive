@@ -1,0 +1,534 @@
+.SH "Getting the Most Out of UNIX"
+Most users will be quite happy
+with the subset of UNIX described
+above.
+UNIX can be used for many more
+things than just editing.
+It can be used to format text
+(documents).
+Many languages are implemented on it.
+This section describes some of the
+features of UNIX which make life
+quite a deal easier.
+.H 2 "What Else Does 'ls -l' Tell You"
+When you type
+.DS
+
+	% ls -l
+
+.DE
+you might get the following
+.DS
+
+	total 59
+	drwx---r-x  2 joe         112 Dec 08 08:28 andy
+	-rw-------  1 joe          71 Aug 01 18:07 docq
+	-rw-------  1 joe       23748 Dec 08 08:34 edit.tut.z
+	-rw----r--  1 joe       11358 Dec 08 08:55 infix.p
+	-rw-------  1 joe        9496 Nov 07 10:34 intro.ar
+	-rw-------  1 joe         143 Dec 04 09:50 mbox
+	-rw-------  1 joe        4544 Nov 01 23:05 points.f4p
+	drwx---r-x  2 joe        2031 Dec 07 17:22 run
+	-rwx---r-x  1 joe          57 Dec 05 09:28 spl
+	-rw-------  1 joe         397 Dec 08 13:59 title
+
+.DE
+The above example will show you some
+of the characteristics of files.
+The first field (called the mode)
+will now be explained,
+ie. for example "-rwx---rwx".
+The first character in this field
+indicates whether the file is a
+file ("-") or a directory ("d").
+The next three characters indicate
+the read-write-execute permissions
+for the owner of the file.
+Read permission implies that the
+owner of the file can read the file,
+ie. can cat it,
+or in the case of a directory,
+that the owner can read it,
+ie. typing 'ls' reads the directory
+to find the names of the files in that directory.
+Write permission is the corresponding
+ability to write onto the file,
+ie. you can change it.
+In the case of a directory
+it means that the user can
+create new files and directories
+(which entails writing the
+file name into the directory).
+Execute permission allows the file to be
+run (executed) by the owner,
+as a command,
+or in the case of a directory,
+it signifies whether the owner
+can change directory into the
+directory.
+.P
+The next three characters are always "---".
+The last three are the
+read-write-execute permissions
+for other users.
+These have the same functions as for the
+owner of the file.
+As an example '-rwx---r-x' indicates
+that the owner of the file can read,
+write and execute this file.
+Other users can only read and execute the
+file.
+.P
+The size of the file
+(in characters)
+is printed to the left of the
+date that the file was last modified,
+ie. the date on which the file was last changed.
+.H 2 "How to Change the Mode of Your Files"
+To change the mode of a file or directory
+is almost as simple as adding a few numbers.
+If you consider the following codes to
+represent all of the permissions for each
+user,
+you just add the required codes,
+then pass this as an argument to a command
+called 'chmod'.
+.P
+The codes are:-
+.DS
+
+	owner read permission~~~~~~400
+	owner write permission~~~~~200
+	owner execute permission~~~100
+	other read permission~~~~~~~~4
+	other write permission~~~~~~~2
+	other execute permission~~~~~1
+
+.DE
+.P
+As an example,
+suppose that you would like a file called
+"test" to be read-write-execute by you
+(the owner),
+and read-execute by others.
+Adding the appropriate codes you get
+.DS
+
+	400 + 200 + 100 + 4 + 1 = 705
+
+.DE
+So to change the mode of the file called
+"test" you type
+.DS
+
+	% chmod 705 test
+
+.DE
+.P
+If you now type 
+.DS
+
+	% ls -l
+
+.DE
+you will see that "test" has the required mode.
+.H 2 "Procedure Files"
+A procedure file is a file
+which contains commands
+which are to be executed
+as they would if you typed
+the commands in manually.
+As an example,
+assume that "cleanup" contains the following
+.DS
+
+	% cat cleanup
+	rm temp junk
+	ls -l
+	%
+
+.DE
+then if you type
+.DS
+
+	% sh cleanup
+
+.DE
+it will have the effect of removing
+"temp" and "junk"
+and then giving you an "ls~-l".
+In this way you have created a command
+for yourself,
+except that you have to type in "sh"
+in front if it.
+To avoid having to explicitly
+invoke 'sh' to execute the file,
+there is a way in which you can tell
+the shell to execute this procedure
+file merely by typing its name.
+If you type
+.DS
+
+	% chmod 700 cleanup
+	%
+
+.DE
+the system is told that the file "cleanup" is
+to become executable.
+So now whenever you type
+.DS
+
+	% cleanup
+
+.DE
+it will do the same function
+as it did earlier.
+Now "cleanup" has become a command,
+which can be executed like any other command
+described so far.
+.P
+As with other commands,
+this also can have arguments.
+In any procedure file you can
+refer to the first argument as
+"$1", the second as "$2", etc.
+You can use these arguments
+in any way that you wish,
+either as files,
+as commands,
+or as other arguments to other commands.
+As an example the following procedure
+file will run the command given to
+it as the first argument,
+then pack the next two arguments
+.DS
+
+	% cat run
+	$1		(execute the first argument as a command)
+	pack $2 $3	(pack the next two arguments)
+	%
+
+.DE
+.P
+For example,
+if you typed in
+.DS
+
+	% run ls fred junk
+
+.DE
+it will execute 'ls',
+ie. give you a listing of your files.
+It will then pack "fred" and "junk".
+.P
+Again before executing this procedure
+file you must indicate to the system
+that the file is to be executable
+by typing
+.DS
+
+	% chmod 700 run
+
+.DE
+.P
+Don't call any of your procedure file
+the same name as any system command.
+If you do, confusion will surely arise.
+This is because when the shell looks for the program to execute your command,
+it looks firstly at your files and if it can't find it there, it
+looks in a special library of system commands.
+Hence, if you called a file 'pr', this means that the shell would always execute
+this file instead of the command 'pr'.
+If your file did a 'rm' of its argument, this would be disastrous!
+.H 2 "UNIX as a Servant"
+When you log in,
+it would be convenient if
+a set of commands were executed
+to do such things as,
+changing the erase character to
+backspace (set).
+This can be done be having
+a file called ".profile",
+which is just a procedure file
+which contains a set of commands
+to be executed upon login.
+The file must be executable
+(ie. type in 'chmod 700 .profile').
+.H 2 "Directories"
+A 'directory' is a special type of file.
+A directory is,
+if you like,
+a filing cabinet,
+in which you can store more
+files and/or directories.
+Directories are used to keep
+everything well ordered.
+For example, if you had a project to
+simulate a company,
+then it would be wise to
+create a directory which contains
+all of the necessary programs,
+data, etc.
+to be used on the project.
+In this way you can keep
+several projects
+distinct,
+with all their relevant data
+stored in separate directories.
+.P
+To create a directory you type
+.DS
+
+	% mkdir proj
+	%
+
+.DE
+and you will create a directory
+with the name "proj".
+Typing in 'ls' now will produce a listing
+of all your files and the directory
+you have just created.
+But how can you use this directory?
+If you type
+.DS
+
+	% cd proj
+	%
+
+.DE
+you will now be in the directory "proj"
+('cd' stands for change directory).
+All that has happened is that you have moved
+from where you were,
+to the directory "proj".
+Typing 'ls' will produce the following
+.DS
+
+	% ls
+	%
+
+.DE
+which indicates that you have no
+files or directories here.
+You can go and create more files
+or directories here as you would
+before.
+Let's assume that you had just
+created a file called "temp"
+in this directory.
+To see what is in the file you
+just type 'cat temp'
+.P
+To get back to the directory
+directly above the one you are
+in now you type
+.DS
+	% cd ..
+.DE
+The directory above "proj"
+is your initial directory,
+so typing 'ls' will print out all your
+old familiar files.
+.P
+To access a file in "proj",
+there are two things you can do.
+The first is to change
+directory to "proj",
+then cat the file.
+The second thing you can do
+is to type,
+for example,
+.DS
+
+	% cat proj/temp
+
+.DE
+and 
+you will get a listing of the contents
+of the file "temp" which is in the directory
+"proj"
+.P
+In fact whenever you wish
+to access any file,
+type in the file pathname,
+ie. the series of directories
+which leads to where the file
+lives.
+For example,
+the following
+.DS
+
+	../bin/temp
+
+.DE
+refers to a file called "temp"
+which is in
+a directory called "bin" which is in
+a directory called ".."
+(which is the directory above the one
+you are currently in).
+.P
+\&'pwd' will print the name of the current directory.
+.DS
+
+	% pwd
+	/user3/stewed.ants/joe
+
+.DE
+.P
+If this seems a bit mystifying, a diagram may help.
+The following diagram represents the structure of directories and
+files discussed above.
+In this 'tree' representation,
+directories have lines descending from them
+to other directories or files.
+This makes it easy to find what directory any
+.ul
+particular
+file or directory belongs to.
+This directory is called the 'parent' directory (for that file) and,
+in the diagram,
+is situated immediately above the file (or directory).
+.sp
+.ne 14
+.nf
+~~~~~~~~~~~~~~~~~~~~(root)
+~~~~~~~~~~~~~~~~~~~~~/|\\
+~~~~~~~~~~~~~~~~~~~~/~|~\\
+~~~~~~~~~~~~~~~~~~~~~~~~user3
+~~~~~~~~~~~~~~~~~~~~~~~~/|\\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~stewed.ants
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~/~~|~~\\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~/~~~|~~~\\
+~~~~~~~~~~~~~~~~~~~~~~~~~mary~~joe
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~/~\\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~/~~~\\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~proj~~~bin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~|
+~~~~~~~~~~~~~~~~~~~~~~~~~~temp~~~~temp
+.fi
+.H 2 "Private Bin\'s"
+Most commands on UNIX are programs.
+Therefore they must reside in a directory
+somewhere.
+The command 'ls' is actually '/bin/ls',
+and the command 'pp' is actually '/usr/bin/pp'.
+When you type in a command,
+the shell will look for that command
+in your current directory.
+If the command is found
+it will execute the file.
+If the command is not found,
+the shell will look for it
+in '/bin'.
+Again if it finds it there
+it will execute it.
+If it is not there it
+will look in '/usr/bin' and
+execute the command if it found it.
+If if does not find it in any
+of these directories the shell
+will print the message
+.DS
+
+	[file]: not found
+
+.DE
+.P
+This is fine for all commands except
+your own,
+because if you are not in the directory
+in which your file resides you
+must give a pathname to execute the file.
+This can become quite tedious if you have
+forgotten where you are, or if
+you are many directories away from where
+the program lives.
+Hence it would be very convenient if you
+could have a directory of your own
+which the shell searches through to
+find the program.
+If you create a directory called 'bin'
+in your initial directory
+(the directory you are placed in
+upon login),
+you can store there any program,
+then when you type in a command
+the shell will look for the program
+in your current directory,
+in your 'bin' directory
+(which must be in your initial directory),
+in '/bin' and then in '/usr/bin',
+in that order.
+.P
+As an example,
+if your command "cleanup" was heavily
+used in many directories you could
+do the following
+(assuming that you are in your initial directory)
+.DS
+
+	% mkdir bin		(make a directory called 'bin')
+	% mv cleanup bin/cleanup	(put "cleanup" in directory 'bin')
+
+.DE
+then whenever you wish to run "cleanup" you type
+.DS
+
+	% cleanup
+
+.DE
+and your file called "cleanup" in your
+directory 'bin' will be executed.
+.P
+In this way you can create your own
+library of commands.
+.H 2 "Text Formatting"
+Text formatting is the process by which material typed in almost any old
+style can be transformed into a document literally ready for printing.
+It is fairly straightforward to do and all the work is done by the
+command 'nroff'.
+The text has various commands (such as take a new paragraph) inserted in it.
+For all the juicier details,
+consult the section in this manual on "UNIX Document Processing".
+.H 2 "What Else?"
+The programs and utilities discussed so far
+have been concerned with the editing
+and formatting of files of text.
+.P
+For other activities like "number-crunching"
+or statistical analysis
+different programs must be used.
+For these activities the system supports
+.DL
+.LI
+two statistical packages.
+IDA is orientated to the beginner and analysis of managerial problems.
+BMD is orientated to the 'normal' analysis of data and is better for
+larger projects.
+.LI
+the MANECON package.
+This is a collection of programs for analysing problems under uncertainty.
+.LI
+programming languages.
+The main languages are
+.AL 1
+.LI
+basicp - a version of Basic Plus.
+.LI
+watbol - a student orientated compiler for COBOL.
+.LI
+f4p - a highly optimised FORTRAN IV compiler.
+.LI
+watfor - a student orientated FORTRAN IV compiler.
+.LI
+pascal - a high level language for easy programming.
+.LI
+C - an efficent high level language.
+.LE
+.LE
+.sp
+Other more esoteric languages like LISP, SNOBOL, MODULA and BC are also available.
+.P
+Most documentation for the above programs is available in the "AGSM System Guide".
+The rest is obtainable from system staff.

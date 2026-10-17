@@ -1,0 +1,75 @@
+.th PG I 3/7/77
+.sh NAME
+pg \*- page a file on a display terminal
+.sh SYNOPSIS
+pg [name]
+.sh DESCRIPTION
+.it Pg
+allows the user to page through a file on a display terminal.
+On display commands
+.it pg
+shows one page of the file. The size of the page can be set by
+the user, the default value is 22.
+The user can establish a "print" file, where he may write pages
+of the file.
+Using the "p" command the user creates a file; every page that gets looked
+at is then also put on that file. This feature can dynamically turned on and
+off.
+.it Pg
+has  a notion of the "current" line. This current line is changed by display
+commands.
+.br
+The page "around" the current line is displayed. The page offset
+determines the number of lines displayed before the current line.
+When no file-name is given, it uses the standard input. This makes it
+usable as a filter.
+.br
+^ and $ may be used in search-strings for beginning and end of line.
+.br
+Commands allowed are the following:
+.br
+display commands:
+.br
+	<num>	set current line to <num>
+.br
+	$	set current line to the end of the file
+.br
+	.	do not change the current line
+.br
+	+	increment the current line by one page.
+.br
+	-	decrement the current line by one page
+.br
+	+<num>	increment the current line by <num>
+.br
+	-<num>	decrement the current line by <num>
+.br
+	/str/	set current line to next occurrence of "str"
+.br
+	//	same as above, use last given string
+.br
+miscellaneous commands:
+.br
+	r<num>	set page offset to <num>.
+.br
+	s<num>	set page size to <num>
+.br
+.in +16
+.ti -16
+	p file	create a printfile named "file" and start copying the output to that file.
+.in -16
+.br
+	p+	turn printing on the printfile on
+.br
+	p-	turn printing on the printfile off.
+.br
+	!cmnd	call shell and execute cmnd
+.br
+	q	quit
+.br
+Error messages are self-explanatory.
+.sh BUGS
+Deletes are not yet correctly caught. The internal tables get
+in trouble sometimes.
+.sh AUTHOR
+Sape Mullender, Informatika V.U. Amsterdam

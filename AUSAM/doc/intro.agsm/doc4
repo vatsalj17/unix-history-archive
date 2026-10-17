@@ -1,0 +1,510 @@
+.SH "Files"
+.H 2 "Creating Files"
+Here are two common ways
+of creating files.
+.P
+The first way is to use the editor.
+Below is
+an example of the creation of a file
+("points")
+containing coordinate points to be used by a program.
+.DS
+
+	% em points
+	EDITOR
+	Open: No such file or directory
+	>a
+		10.0	5.0
+		11.0	8.5
+		12.0	13.7
+		13.0	19.2
+		14.0	31.0
+	.
+	>w
+	53
+	>q
+	%
+
+.DE
+The creation of the data is done using a command 'a'
+(which stands for 'append').
+After this command is typed,
+all text following is appended to the file.
+To indicate that no more data is to be appended
+you type a '.'
+'cu
+on a line by itself.
+After this is done the editor is ready to
+take commands again (signified by the prompt ">").
+You then copy this data to the file by typing 'w'.
+You then exit from the editor.
+.sp
+.P
+The second way to create a file
+is to "redirect standard output".
+This is just a way of saying "put
+the output of a program on a file
+instead of the terminal".
+As an example,
+if you wish to create
+a file which has a list of
+all your files on a file called "fred2"
+you type
+.DS
+
+	% ls > fred2
+
+.DE
+and again the system will respond
+.DS
+
+	%
+
+.DE
+The use of ">" in the above command
+indicates that the output is
+to be placed onto a file called "fred2".
+This sort of redirection can be
+used with any program that puts output
+on the terminal.
+.P
+You can also tell a program to take
+its input from a file instead of from the
+terminal by a similar mechanism.
+Suppose that you wished to mail
+three people, 'larry', 'curly', and 'mo'
+the same mail,
+but you didn't want to
+type the mail three times.
+One way to do this is to create a
+file containing
+the mail you want these three people
+to receive.
+An example of this is
+.DS
+
+	% em temp
+	EDITOR
+	Open: No such file or directory
+	>a
+		good morning everybody
+
+		I will be giving a seminar on
+		computing next Wednesday,
+		if interested please contact me
+
+				jack
+	.
+	>w
+	124
+	>q
+	% mail larry < temp
+	% mail curly < temp
+	% mail mo < temp
+	% rm temp
+
+.DE
+which means to mail all three people,
+but take the mail from the file called "temp"
+instead of the terminal.
+When you use this form of redirection
+you do not have to type in [control]d.
+After the mail is sent you can remove the
+file called "temp" by giving the last command,
+which removes the specified file.
+.P
+The use of "<" and ">" in any command can be considered
+as the direction in which the input or output
+is going.
+Any command can contain both "<" and ">".
+.P
+You may consider this quite adequate but there is a further form of
+redirection called a 'pipe'.
+Pipes are used to direct the output of one
+program to the input of another\*F.
+.FS
+i.e. the output is 'piped' to the input of the other program.
+.FE
+.P
+Why do we have pipes?
+Well, we don't have to!
+Lets say we wanted a list of our files arranged in columns.
+One way would be
+.DS 1
+% ls > temp
+% mc < temp
+~~~~~~~~O~~~~~~~T~~~~~~~back~~~~mult~~~~regs~~~~run~~~~~sim85~~~sim85c
+~~~~~~~~sys.s~~~temp
+% rm temp
+.DE
+Another is
+.DS 1
+% ls ^ mc
+~~~~~~~~O~~~~~~~T~~~~~~~back~~~~mult~~~~regs~~~~run~~~~~sim85~~~sim85c
+~~~~~~~~sys.s~~~temp
+.DE
+Which do you prefer?
+.H 2 "Changing A File"
+Changing a file is done be using a program called the editor.
+I will give a short summary of commands used when editing
+a file,
+but I suggest that you read 'Edit: A Tutorial'
+to gain more insight into the editor and all
+it offers.
+.P
+To edit a file called "fred" you type
+.DS
+
+	% em fred
+
+.DE
+If "fred" already exists the editor may respond
+with respond with
+.DS
+
+	EDITOR
+	48
+	>
+
+.DE
+which means that there are 48 characters in the
+file and that the editor is now waiting for
+you to give it commands (">" is a prompt).
+If the file doesn't exist then the editor
+will respond
+.DS
+
+	EDITOR
+	Open: No such file or directory
+	>
+
+.DE
+which says that the file doesn't exist
+and the editor is now waiting for you to
+enter commands.
+If "fred" does exist,
+the editor
+will respond with
+.DS
+
+	EDITOR
+	48
+	>
+
+.DE
+then to see all of the lines in the file you
+type the command
+.DS
+
+	>1,$p
+
+.DE
+which means that from line number 1 to
+the end of the file (signified by $) print each
+line (signified by p). The editor will respond
+with the contents of "fred":
+.DS
+
+	This is a test
+	hullo world, this is Unix Editor
+	>
+
+.DE
+.P
+You may now wish to change the "hullo" into "hello"
+so to find the line with "hullo"
+on it you type
+.DS
+
+	>/hullo/
+
+.DE
+and the editor prints
+.DS
+
+	hullo world, this is Unix Editor
+	>
+
+.DE
+You now wish to swap "hullo" with "hello"
+so you type
+.DS
+
+	>s/hullo/hello/p
+
+.DE
+which causes the following to be printed by em
+.DS
+
+	hello world, this is Unix Editor
+	>
+
+.DE
+.P
+The editor doesn't actually work on
+your file,
+it uses a temporary copy
+just in case you inadvertently make a
+mistake you wish to undo.
+To copy this updated temporary file
+into your file you type the command
+.DS
+
+	>w
+
+.DE
+and the editor will respond
+with
+.DS
+
+	48
+	>
+
+.DE
+which indicates the number of characters
+written to the file "fred".
+.P
+Now that your editing session is over
+you wish to leave the editor,
+so you give the command
+.DS
+
+	>q
+
+.DE
+and the terminal prints
+.DS
+
+	%
+
+.DE
+which indicates that you have left the
+editor and are again "talking"
+to the system (called UNIX).
+.H 2 "Changing the Name of a File"
+What happens if you want to
+rename your "fred2" file "test"?
+If you type
+.DS
+
+	% mv fred2 test
+
+.DE
+the result would be that "fred2"
+is now called "test". Typing in
+.DS
+
+	% ls
+
+.DE
+will produce
+.DS
+
+	O
+	T
+	back
+	fred
+	mult
+	regs
+	run
+	sim85
+	sim85c
+	sys.s
+	test
+	%
+
+.DE
+.P
+The "mv" command (which stands for move)
+renames the first file
+the second file.
+If the second file already existed
+it is replaced.
+.P
+There are certain characters that you should
+.ul
+not
+use in file names\*F.
+.FS
+for full details see the shell documentation elsewhere in this manual.
+.FE
+The following characters are at least slightly dangerous:
+.ce
+.sp
+? # @ ^ < > * [ ] - ; : (space) (tab) " ' \\ | % & $ = ( ) !
+.P
+\&'!' and '-' are
+dangerous only as the first character.
+These characters are not so much dangerous, as inconvenient.
+They have special meanings to the shell and are best not used\*F.
+.FS
+which doesn't leave you with much, but life wasn't meant to be easy.
+.FE
+Spaces (or blanks) and tabs are used to separate arguments and
+their (attempted) use in file names is a
+common mistake made by beginners.
+.H 2 "Creating a Copy of a File"
+Let's suppose that you now wish to
+have a copy of the contents
+of the file "fred" in a file "junk".
+This could be done using the editor,
+but there is a simpler way.
+If you typed
+.DS
+
+	% cp fred junk
+	%
+
+.DE
+you would then have
+the contents of the file "fred"
+in the file "junk".
+.P
+The command cp (copy)
+copies the first file into the
+second file. 
+If the second file
+already existed it is overwritten.
+Typing in
+.DS
+
+	% ls
+
+.DE
+will now produce
+.DS
+
+	O
+	T
+	back
+	fred
+	junk
+	mult
+	regs
+	run
+	sim85
+	sim85c
+	sys.s
+	test
+	%
+
+.DE
+.P
+Note that "junk" will contain exactly the same information that
+"fred" does.
+.H 2 "Removing Files"
+Suppose now you didn't want to keep
+"fred".
+How can you remove it?
+Typing
+.DS
+
+	% rm fred
+	%
+
+.DE
+will remove "fred".
+"rm" can be given
+many file names,
+and will remove all of the files
+specified
+(too many names and the system
+will give an error message).
+\&'ls' will now produce
+.DS
+
+	O
+	T
+	back
+	junk
+	mult
+	regs
+	run
+	sim85
+	sim85c
+	sys.s
+	test
+	%
+
+.DE
+.H 2 "Transfering Files Between Users"
+If you wish to have a
+copy of another user's file,
+there is a procedure which
+can be used to obtain the copy.
+Assume that 'joe' has a file
+called "info" which you would
+like to have a copy of.
+Firstly you and 'joe' should
+both log on.
+Then 'joe' must type
+the following
+.DS
+
+	% cp info /tmp/info
+
+.DE
+and then you must type
+.DS
+
+	% cp /tmp/info info
+
+.DE
+and you will have the required copy.
+.P
+When doing this it is essential
+that 'joe' does not log off
+before you take the copy,
+as this will destroy the copy
+you were about to take.
+.P
+If, after you typed in 'cp /tmp/info info'
+you received the message
+.DS
+
+	/tmp/info: Permission denied
+
+.DE
+it usually means that you are not
+permitted to read 'joe's file.
+This can be changed by 'joe'
+typing
+the magical command
+.DS
+
+	% chmod 707 /tmp/info
+
+.DE
+which allows other people to access the file.
+Then you type in
+.DS
+
+	% cp /tmp/info info
+
+.DE
+again.
+If any other messages occur,
+you should determine what what wrong
+as any errors may result in the loss of
+your files.
+.H 2 "What If You Lose A File?"
+Every night on this system
+a copy is made
+on magnetic tape
+of all the users files
+which have been
+.ul
+changed
+within
+the last three days.
+This is done in case you happen
+to inadvertently destroy
+a file which had essential
+information on it.
+As further protection, a copy is made of every file each Monday night.
+These copies are called
+"incremental dumps" and "complete
+file system dump" respectively.
+.P
+If you should inadvertently destroy a file, contact the system staff as
+in section 2.5.

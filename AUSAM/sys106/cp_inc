@@ -1,0 +1,64 @@
+I = /usr/include/
+
+copy:	$Ibuf.h $Iconf.h $Idefines.h $Ifile.h $Ifilsys.h $Iino.h \
+	$Iinode.h $Ilnode.h $Iparam.h $Iproc.h $Ipzomb.h $Ireg.h \
+	$Iseg.h $Isystm.h $Itext.h $Itty.h $Iuser.h
+
+$Ibuf.h:	buf.h
+	cp buf.h $Ibuf.h
+
+$Iconf.h:	conf.h
+	cp conf.h $Iconf.h
+
+$Idefines.h:	defines.h
+	cc -LO defines.h
+	sed 's/^.... .. //' < defines.l > defines.h
+	rm -f defines.l
+	cp defines.h $Idefines.h
+
+$Ifile.h:	file.h
+	cp file.h $Ifile.h
+
+$Ifilsys.h:	filsys.h
+	cp filsys.h $Ifilsys.h
+
+$Iino.h:	ino.h
+	cp ino.h $Iino.h
+
+$Iinode.h:	inode.h
+	cp inode.h $Iinode.h
+
+$Ilnode.h:	lnode.h
+	cp lnode.h $Ilnode.h
+
+$Iparam.h:	param.h
+	echo '#include "defines.h"' > frig.h
+	echo '#include "param.h"' >> frig.h
+	cc -LOI frig.h
+	sed -n -e "/^param.h/s/param.h		.... .. //p" < frig.l > param.h
+	rm frig.h frig.l
+	cp param.h $Iparam.h
+
+$Iproc.h:	proc.h
+	cp proc.h $Iproc.h
+
+$Ipzomb.h:	pzomb.h
+	cp pzomb.h $Ipzomb.h
+
+$Ireg.h:	reg.h
+	cp reg.h $Ireg.h
+
+$Iseg.h:	seg.h
+	cp seg.h $Iseg.h
+
+$Isystm.h:	systm.h
+	cp systm.h $Isystm.h
+
+$Itext.h:	text.h
+	cp text.h $Itext.h
+
+$Itty.h:	tty.h
+	cp tty.h $Itty.h
+
+$Iuser.h:	user.h
+	cp user.h $Iuser.h

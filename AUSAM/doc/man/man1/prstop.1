@@ -1,0 +1,68 @@
+.th PRSTOP I 1978
+.sh NAME
+prstop, restart, repeat \*- line printer control
+.sh SYNOPSIS
+.bd prstop
+[-n]
+.br
+.bd restart
+[-n]
+.br
+.bd repeat
+[-n]
+.sh DESCRIPTION
+These three commands control
+.it lpd
+(the LinePrinter Daemon).
+.it Lpd
+is the program that actually prints
+what
+.it lpr
+has spooled.
+The optional -n (where n is a single digit)
+selects which
+.it lpd
+is to be controlled.
+If no -n is supplied then the main
+lineprinter's
+.it lpd
+is controlled.
+.s3
+These commands will only work if
+the listing currently being output on the
+selected printer is owned by
+the user invoking them.
+.s3
+.it Prstop
+will cancel the current output on the selected printer.
+An appropriate message will appear on the output.
+.s3
+.it Restart
+will cancel
+the current listing and restart the entire listing from the beginning
+complete with banner page.
+.s3
+.it Repeat
+will cause the listing on the printer to be repeated from the beginning
+after the present copy on the printer has completed.
+.sh "SEE ALSO"
+lpr (I)
+.sh DIAGNOSTICS
+.ta 19
+Done:	when command has been successful
+.br
+Bad arg:	when invalid printer specified
+.br
+No permission:	user does not own job currently printing
+.br
+Printer inactive:	no output on specified printer
+.sh BUGS
+Care should be taken that the listing in question does not complete
+before
+.it prstop
+aborts it.
+.it Prstop
+aborts the listing currently
+.ul
+on
+the printer and so pressing stop is a good idea.

@@ -1,0 +1,34 @@
+1) register unions of <= 2 bytes should be possible.
+
+2) optimize
+	movb	x,r0
+	bic	$!377,r0
+   to
+	clr	r0
+	bisb	x,r0
+
+3) type transfer operators
+
+4) typeof operator for above
+
+5) complex arithmetic
+
+6) compiler options to:
+	a) restrict the number of registers with which code
+		is generated.
+	b) generate offsets relative to the sp rather than
+		r5
+	c) these would allow doing away with some calls on
+		csave/cret at the cost of
+		i) no dynamic allocation on the stack
+		ii) forced stack clean-up on call to cret
+		iii) probably push/pop of all arguments
+
+7) compiler should figure out the static amount of stack used
+	by each procedure and make this number available
+
+8) dynamic arrays
+
+9) better code for some bit field operations like compare
+	Also generally no need for bit extract to take
+	two registers.

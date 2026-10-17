@@ -1,0 +1,264 @@
+.HE "AUSAM" " " "Section 2"
+.bp
+.NS 0 "2."
+The "/etc/passwd" File
+.PA
+This is the key file for user validation and contains a copy of frequently
+used individual user data.
+.NS 5 "2.1"
+File format
+.PA
+The file is NOT standard ASCII as the previous "/etc/passwd" file was.
+Entries are of variable length made up of a fixed length binary block of data
+followed by a variable length character block.
+.PA
+Approximately the first 10K bytes in the file are used to contain
+a hash table pointing to linked lists
+of password entries whose "login name" hashes to the same value, and a
+table of direct uid pointers (to password entries).
+.PA
+The format of the table is as follows.
+.IN
+long	hashtable[PWHASHSIZE];	/* the hash table */
+long	uidpointers[PWTABSIZE];	/* uid pointer table */
+.OT
+.PA
+The format of a password entry is as follows.
+.IN 1 
+struct pwent
+{
+	long		pw_next;		/* seek address of next entry in list */
+	long		pw_last;		/* seek address of previous entry in list */
+/*
+ *	The following will be part of a limits structure
+ */
+	unsigned	pw_uid;		/* integer uid */
+	unsigned	pw_shares;	/* number of shares held */
+	long		pw_usage;	/* accumulated usage figure */
+	unsigned	pw_cmask[CMASKSIZE];	/* class mask of this user */
+	unsigned	pw_flags;	/* some handy flags */
+	unsigned	pw_dlimit;	/* users disc limit in blocks */
+	unsigned	pw_doverflw;	/* amount disc limit may be exceeded
+					before encountering masonary */
+	char		pw_plimit;	/* users process count limit */
+	char		pw_climit;	/* users core limit in K bytes */
+/*
+ *	The rest does not reside in core
+ */
+	char		pw_pword[8];	/* encrypted password */
+	long		pw_contime;	/* total accumulated connect time */
+	long		pw_cputime;	/* total accumulated cpu time */
+	long		pw_extime;	/* time at which last limit struct freed */
+				/* ie the last time the user did anything */
+	char		pw_warn;		/* number of warnings, eg re disc space */
+	char		pw_pages;	/* line printer pages limit in 10s */
+/*
+ *	The super user will need to have limits of -1 (maximum).
+ *
+ *	In UNSWDCS's case the LA180s run approx. 4 times slower than our larger
+ *	printer. The pages limit could therefore be right shifted 2 places
+ *	when used as an LA180 limit.
+ *
+ *	Now follow a set of counts relating to the lengths of character strings.
+ *	The strings, all null terminated, follow sequentially immediately
+ *	after the last count. "char *"s are used so that they may be converted
+ *	to string pointers in core.
+ */
+	char		*pw_strings[PWSLENCNT];	/* variable length string pointers */
+/*
+ *	The pointer array elements point to the following:
+ *
+ *	0	login name
+ *	1	initial directory pathname
+ *	2	initial shell pathname
+ *	3	users first name
+ *	4	users last name
+ *	5	"other" general data field
+ *
+ *
+ *	A good sized string buffer (say 200 bytes)
+ *	should be provided for "getpwuid" and "getpwlog".
+ */
+#define	SSIZ		200	/* a goodly size */
+/*
+ *
+ *	Data item	Notes and routines which create or modify entry
+ *
+ *	pw_next		*pwent routines and pwedit
+ *	pw_last		*pwent routines and pwedit
+ *	pw_pword[8]	pwedit and passwd
+ *	pw_uid		*pwent routines and pwedit
+ *	pw_shares	pwedit
+ *	pw_usage		init and pwedit
+ *	pw_flags		init, login and pwedit
+ *
+ *		flags have uses as follow
+ *
+ *		01	DAWARN		one warning given during term. sess.
+ *		02	DLIMIT		no further disc output allowed
+ *		04	ASYNCKILL	kill all async procs at logoff time
+ *		010	ASYNCNICE	force async procs to background at log off
+ *		020
+ *		.
+ *		.			spares
+ *		.
+ *		0100000
+ *
+ *	pw_dlimit	pwedit
+ *	pw_contime	init and pwedit
+ *	pw_cputime	init and pwedit
+ *	pw_extime	init and pwedit
+ *	pw_climit	pwedit
+ *	pw_plimit	pwedit
+ *	pw_warn		login and pwedit
+ *	pw_pages	pwedit
+ *	pw_strings[]	*pwent routines
+ *
+ *	
+ */
+}
+.OT
+The restriction to eight character login names has been removed.
+.ES
+.NS 5 "2.2"
+Functions
+.PA
+Eight functions are provided to access and manipulate the password
+file. They are:
+.BP 8 7
+1)	addpwent (&pe)
+.NP
+2)	delpwent (&pe)
+.NP
+3)	chngpwent (&pe)
+.NP
+4)	getpwuid (&pe, sbuf, size)
+.NP
+5)	getpwlog (&pe, sbuf, size)
+.NP
+6)	updtpwent(&pe)
+.NP
+7)	pwfile(s)
+.NP
+8)	pwclose()
+.EP
+with definitions as
+.IN 10
+struct pwent pe;
+char	sbuf[BUFFERSIZE];
+char	*s;
+int	uid, size;
+.OT
+.BP 6 4
+1)	addpwent (&pe)
+.PA
+This function is called with the address of a "pwent" structure.
+All "pw_strings" will be accessed via these pointers.
+.PA
+The function inserts the new user in the password file and returns the user
+ID assigned.
+.NP
+2)	delpwent (&pe)
+.PA
+This function is called with the address of a "pwent" structure.
+All "pw_strings" will be accessed via these pointers.
+.PA
+The function verifies the existence of the passwd entry and deletes it.
+The function returns 0 if the entry did not exist, 1 if deletion
+was normal and -1 on error.
+.NP
+3)	chngpwent (&pe)
+.PA
+This function is called with the address of a "pwent" structure.
+All "pw_strings" will be accessed via these pointers.
+.PA
+The login name and uid of the "pe" entry must match the target password
+entry.
+All other fields may be modified.
+The function returns 1 for a successful modification, 0
+if the login name or uid fields are wrong and -1 on error.
+.NP
+4)	getpwuid (&pe, sbuf, size)
+.PA
+This function is called with the address
+of a "pwent" structure, the address of a string
+buffer area and a size.
+.PA
+The password entry whose "login name" matches that pointed to by
+"pe->pw_strings[LNAME]" is found.
+The fixed portion of the password entry will be read into the
+"pwent" structure.
+If "size" is zero only the "pwent" structure will be read.
+If "size" is non-zero
+those strings which may be read completely will be read
+into the string buffer.
+and their pointers (pw_strings), which are stored as lengths in the
+passwd file will
+be converted into string pointers to data in the string buffer supplied.
+The pointers for strings which cannot be read
+will remain as an indicator of any extra buffer space needed.
+Thus the total string area size may be obtained
+by using one call with a size of zero and adding the "pw_strings"
+lengths.
+.PA
+The function returns the summed size of the string lengths, the
+passed size if the sum exceeds this value or -1 if the entry does not
+exist or an error has occurred.
+.NP
+5)	getpwlog (&pe, sbuf, size)
+.PA
+This function is called with
+the address
+of a "pwent" structure, the address of a string
+buffer area and a size.
+.PA
+The password entry whose "uid" is the same as "pe->pw_uid" is found.
+The fixed portion of the password entry will be read into the
+"pwent" structure.
+If "size" is zero only the "pwent" structure will be read.
+If "size" is non-zero
+those strings which may be read completely will be read
+into the string buffer.
+and their pointers (pw_strings), which are stored as lengths in the
+passwd file will
+be converted into string pointers to data in the string buffer supplied.
+The pointers for strings which cannot be read
+will remain as an indicator of any extra buffer space needed.
+Thus the total string area size may be obtained
+by using one call with a size of zero and adding the "pw_strings"
+lengths.
+.PA
+The function returns the summed size of the string lengths, the
+passed size if the sum exceeds this value or -1 if the entry does not
+exist or an error has occurred.
+.NP
+6)	updtpwent (&pe)
+.PA
+This function is called with the address of a "pwent" structure.
+The "pw_strings" pointers are not accessed.
+.PA
+The fixed portion of the password entry whose "uid" is the same as "pe->pw_uid"
+is rewritten from from the area pointed to by "pe".
+The "pw_next" and "pw_last" entries are updated.
+.PA
+The function returns 1 if the update was normal, 0 for failure
+and -1 for error.
+.NP
+7)	pwfile(s)
+.PA
+The name of the password file is changed from "/etc/passwd" to the string
+pointed at by "s".
+This call should be made before any other.
+.NP
+8)	pwclose()
+.PA
+The passwd file is closed.
+.EP
+.ES "2.2"
+.NS 5 "2.3"
+Included file
+.PA
+All programs which access the password file may include a file "passwd.h"
+with all useful definitions.
+.ES "2.3"
+.ES "2."

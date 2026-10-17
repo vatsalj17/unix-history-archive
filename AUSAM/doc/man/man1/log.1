@@ -1,0 +1,82 @@
+.th LOG I 3/3/79
+.sh NAME
+log \*- file exchange package for remote unices
+.sh SYNOPSIS
+.bd log
+remote
+.sh DESCRIPTION
+.it Log
+enables communication to another operating system
+via an asynchronous tty interface
+(possibly a dial up tty line)
+in a transparent fashion (almost).
+When in this mode (known as ``tty'' mode) each character 
+entered is tranferred directly to the tty
+interface connecting to the remote machine.
+The result is that the
+local terminal appears to be connected
+directly to the remote computer.
+All redirection of characters is done
+by the system at interrupt time so
+.it logging
+to a remote machine from a busy machine works 
+without delays due to the local system.
+The other mode (known as ``file'' mode)
+is not so fortunate.
+.s3
+After invoking
+.it log
+the user is in the transparent ``tty'' mode
+talking to the remote computer.
+The quit code
+reported at the start of ``tty'' mode
+returns the tty to ``file'' mode,
+and if, hopefully, you have been talking to another UNIX system,
+you may now exchange files with it (\c
+.it log
+will invoke an image of itself to talk to on the other system).
+.it Log
+now uses a moderately sophisticated file exchange protocol for
+transferring binary files with full crc checks, timeouts, etc.
+The number of bytes transferred is reported at the end of each transfer.
+.s3
+A short command listing is printed if a carriage-return is typed.
+There is a facility for local escape to the shell,
+and for changing the quit code.
+To facilitate file tranferring between machines,
+the user is able to change directories.
+In ``file'' mode, `s' or `DEL' will terminate
+.it log.
+Note that this does not log the user off the
+remote machine - it is essential that he does this himself
+before terminating.
+.s3
+.ul
+LOG COMMANDS
+            t[ty]
+            p[ut] local-file [remote-file]
+            g[et] remote-file [local-file]
+            q[uit] new-code
+            !{shell command}
+            c[d] directory
+            s[top]
+.sh "SEE ALSO"
+.it utalk
+(I) to talk to less intelligent systems
+.sh DIAGNOSTICS
+.it Log
+may report protocol errors.
+Too many mean you have a bad line
+(which will slow up file transfer).
+The message `no response from remote' means the two machines have
+failed to synchronise. If the message persists, seek help.
+.sh AUTHOR
+Ian Johnstone
+(University of New South Wales)
+.br
+Piers Lauder
+(University of Sydney)
+.sh BUGS
+Listing large files in ``tty'' mode will
+lose characters if the remote line has a higher speed
+than your output device.

@@ -1,0 +1,77 @@
+.th LOOK VIII "17 Mar 1979"
+.sh NAME
+look  \*-  scans system arrays for particular processes
+.sh SYNOPSIS
+.bd look
+[
+.bd \*-f
+][
+.bd \*-k
+][
+.bd \*-n
+][
+.bd \*-s
+] file
+.sh DESCRIPTION
+.it Look
+scans the system's inode, file, text, and proc arrays,
+and the user areas, searching for all processes that
+satisfy a given condition.  Normally, this condition
+is that the process is active on the given mountable file system
+(which may be specified either by the block\-device
+name, or the file it is mounted on).
+All processes that are executing shared text/data programs,
+or have open files, or have their current directories, within
+the specified file system, are printed out.
+.s3
+The options, which may appear in any order, are:
+.s3
+.lp +16 14
+\fI-f\fB	All processes that are accessing the given file
+(which need not be a file system)
+are printed out.  The processes could be executing the
+given file (if it is shared text/data),
+or using it as the current directory, or accessing it
+as a file.
+.s3
+.lp +16 14
+\fI-k\fB	The processes found for either condition are signalled
+instead of being printed out.  The current signal used is number 14
+(System Termination).
+.s3
+.lp +16 14
+\fI-n\fB	\fINcheck\fB is executed after \fIlook\fB is finished,
+to look up the various inodes printed out.  As the number of arguments
+the \fIncheck\fB is limited, only the first few inodes found will
+be passed to \fIncheck\fB.
+.s3
+.lp +16 14
+\fI-s\fB	The output is sorted in order of terminal identifying letter.
+.s3
+.i0
+.dt
+.it Look
+is thus useful for finding (and perhaps killing) any processes that
+are active on a disk that is to be unmounted.
+It can also be used to assist in replacing sharable\-text programs
+(such as the shell) by finding any active occurrences.
+Note that processes that are printed out may be accessing other files
+too \*- only those files of interest are printed out.
+.s3
+.sh FILES
+/dev/mem, /dev/swap, /unix
+.sh "SEE ALSO"
+ncheck (VIII)
+.sh DIAGNOSTICS
+If no processes are found accessing an "active" inode,
+an appropriate message is printed out.
+.sh BUGS
+.it Look
+runs at very high priority, as it must take
+a very quick snap\*-shot of the system arrays and user areas.
+In a busy system, it is likely that these will be changing,
+and the results may therefore be incorrect.  This is only
+a problem when looking up user-areas (particularly if swapped\*-out),
+where a consistency\*-check is made to ensure that the user
+is still there!  If this test fails, the message `Retrying...'
+is printed out.

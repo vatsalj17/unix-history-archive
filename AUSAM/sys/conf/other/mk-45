@@ -1,0 +1,11 @@
+echoall
+cp c.45 c.c
+cc -c c.c
+as -o m45.o m45.s
+as -o l.o data.s l45.s
+ld -x -r -d l.o m45.o c.o ../lib1 ../lib2
+nm -ug
+rm -f $1 >/dev/null ; sysfix a.out $1
+:    protect
+chmod 0 $1
+rm -f *.o a.out c.c >/dev/null

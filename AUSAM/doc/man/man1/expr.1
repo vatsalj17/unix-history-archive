@@ -1,0 +1,92 @@
+.th EXPR I 5/31/77
+.sh NAME
+expr \*- evaluate arguments as an algebraic expression
+.sh SYNOPSIS
+.bd expr
+arg ...
+.sh DESCRIPTION
+The arguments are taken as an expression.
+After evaluation, the result is written on the standard output.
+Terms of the expression must be separated by blanks.
+Characters special to the Shell,
+i.e., `*', `\*v', `&', `(', and `)',
+must be escaped.
+.s3
+The operators and keywords are listed below.
+Characters that need to be escaped are preceded by `\\'.
+The list is in order of increasing precedence,
+with equal precedence operators grouped within `{\|}' symbols.
+.s3
+.in +3m
+.it expr
+\\\*|\*v
+.it expr
+.s3
+.it expr
+\\&
+.it expr
+.s3
+.it expr
+{ +, \*- }
+.it expr
+.s3
+.it expr
+{ \\*, /, % }
+.it expr
+.s3
+.bd substr
+.it "expr expr expr"
+.s3
+.bd length
+.it expr
+.s3
+.bd index
+.it "expr expr"
+.s3
+\\(
+.it expr
+\\)
+.s3
+.i0
+The result of
+.it substr
+is that portion of the first expression
+(possibly null)
+which is defined by the offset (second expression, starting at `1') and the
+span (third expression).
+A large span value can be given to obtain the remainder of the string.
+.s3
+.it Length
+returns the length in characters of the expression that follows.
+.s3
+.it Index
+searches the first expression for the first character
+that matches a character from the second expression.
+It returns the character position number if it succeeds,
+or `0' if it fails.
+.s3
+The
+.it expr
+command is handy with Shell variables.
+For example:
+.s3
+.tr ||
+	expr substr xxx$a "(" length xxx$a \*- 2 ")" 3 \*v = b
+.s3
+assigns the last three characters of the
+Shell variable
+.it $a
+into the variable
+.it $b.
+.s3
+Note that `0' is returned to indicate a zero value,
+rather than the null string.
+Strings containing blanks or other special characters should be quoted.
+.sh DIAGNOSTICS
+Grumbles from
+.it yacc\^\c
+(I)
+for syntax violations.
+.br
+"Non-numeric argument" if the argument needs to be, but is not,
+an integer.

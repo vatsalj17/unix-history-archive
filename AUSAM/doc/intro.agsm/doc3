@@ -1,0 +1,280 @@
+.SH "How is Information Stored on the Machine?"
+.P
+Information is stored on the machine in files.
+A file
+can store
+the data which is to be operated on in some way
+by a program or a file can contain a program
+which acts on data.
+(Even a terminal
+is considered by the
+system to be a file.)
+.P
+Every file is denoted by a unique
+name which can be up to 14 characters
+long.
+The characters may be non-alphanumeric
+(eg. '-', '.', ...),
+but a word of warning!
+Some files are generally used for temporary
+storage only,
+and are removed every night.
+If you create a file called "temp*"\*F or "a.out"
+for instance,
+.FS
+by "temp*" I mean any file name beginning
+with "temp".
+.FE
+it will be removed during the
+night,
+so don't have valuable information in any
+file with the above names\*F.
+.FS
+all the following files are removed nightly,
+*.map, *.lst, *.l, tmp*, temp*, core, a.out,
+TEMP*, RTEMP*, STEMP*.
+.FE
+.P
+Don't get alarmed if another user uses the same name for one of his files
+as you do.
+They are considered by the system to be distinct because they are in
+different accounts.
+.H 2 "What Files Do You Have?"
+To find the names of all your files,
+just type
+.DS
+
+	% ls
+
+.DE
+and a list of the file names will appear in alphabetical
+order,
+like the following
+.DS
+
+	O
+	T
+	back
+	mult
+	regs
+	run
+	sim85
+	sim85c
+	sys.s
+	temp
+
+.DE
+If you have so many files that the list goes off
+the screen,
+or if you want a concise listing then try
+.DS
+
+	% ls ^ mc
+
+.DE
+and the list of files will be printed for you
+in columns:
+.DS
+
+~~~~~~~~O~~~~~~~T~~~~~~~back~~~~mult~~~~regs~~~~run~~~~~sim85~~~sim85c
+~~~~~~~~sys.s~~~temp
+
+.DE
+More information
+about files
+will be found
+in the sections
+"Common Commands" and "Advanced Usage".
+.H 2 "The Contents of a File"
+There are several ways in which
+the contents of a file may be seen.
+If you want to see a file quickly with a minimum
+of fuss you should use a program called "cat".
+To see the contents
+of your file called "fred2" type
+.DS
+
+	% cat fred2
+
+.DE
+and you will get
+.DS
+
+	O
+	T
+	back
+	fred
+	fred2
+	mult
+	regs
+	run
+	sim85
+	sim85c
+	sys.s
+	%
+
+.DE
+which is,
+you will recall,
+a listing of all
+your files.
+You can also see several files
+at once,
+for example,
+by typing
+.DS
+
+	% cat fred fred2
+
+.DE
+and you will get
+.DS
+
+	This is a test
+	hello world, this is Unix Editor
+	O
+	T
+	back
+	fred
+	fred2
+	mult
+	regs
+	run
+	sim85
+	sim85c
+	sys.s
+	%
+
+.DE
+.P
+"pr" will print files in a manner best
+suited to hard copy
+(or non-display type) terminals.
+Every page has a heading,
+page number and the date.
+There are 51 lines to one
+DECwriter page,
+so to print "fred" you type
+.DS
+
+	% pr -l51 fred\*F
+
+.DE
+.FS
+please note the argument is the letter 'l' not the digit '1'.
+The 'l' stands for 'lines per page'.
+.FE
+The -l51 tells "pr" that there are 51 lines
+to one page. After typing the above command the following
+will be printed
+.DS
+
+	Nov 28 13:16 1978  fred Page 1
+
+	This is a test
+	hello world, this is Unix Editor
+
+	( + 47 blank lines )
+
+.DE
+If this file had been much longer then the date etc.
+would appear at the top of every page
+.P
+The previous two commands are useful
+when you wish to see what's in a file when
+you are at a terminal.
+The third method
+of viewing files is to use the command
+"lpr".
+This is especially useful if the files are large.
+If you type
+.DS
+
+	% lpr fred
+
+.DE
+the terminal will respond
+.DS
+
+	%
+
+.DE
+but you haven't got a listing to see.
+The listing of "fred" will be sent to
+a large, high-speed printer called
+a "line printer" (hence the name "lpr").
+The line printer at the AGSM is located in
+room 410 at the opposite end of the floor
+to the AGSM library.
+When you pick up your listing from the
+line printer room there will be a "header"
+on the first page
+which contains,
+among other things,
+your login name.
+.P
+When you pick up your listing from
+the line printer,
+it is possible that there will
+be several other users' listings
+there also.
+If this is the case then you are
+requested to separate all the listings
+and place them in the shelving provided.
+Treat other peoples' listings as you
+would have them treat yours.
+.P
+This third form of listing is very useful
+when the file is very long or a
+permanent listing is required. To "lpr"
+your two files just type
+.DS
+
+	% lpr fred fred2
+
+.DE
+and the line printer will produce a listing
+with a header,
+and then the two files,
+both beginning on new pages.
+.P
+If you wanted the formatting that "pr"
+offers and would like it on the line
+printer then type
+.DS
+
+	% pr fred ^ lpr\*F
+
+.DE
+.FS
+the symbol "^" denotes a 'pipe' and will be explained later.
+.FE
+and you will get a listing of what "pr"
+produces on the line printer.
+.H 2 "Differences Between Files"
+.P
+There are two types of files.
+The first type of files are text files
+which have printable characters on them,
+and are generally
+used for
+human consumption
+or input to programs.
+The second type of file are those which
+contain machine instructions (i.e. programs)
+and do not appear to contain useful information.
+These files are usually called "binary files".
+.P
+All binary files,
+when printed on the screen,
+will produce garbage,
+blanking the screen
+quite often.
+When you lpr a binary file the line printer
+will just print a few characters at the beginning
+of a new page.
+It will do this perhaps two hundred times,
+hence wasting many sheets of paper.
+\&'lpr'ing binary files is not regarded
+as a joke as it wastes a lot of paper,
+so be careful of which files you lpr.

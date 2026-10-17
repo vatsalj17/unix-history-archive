@@ -1,0 +1,77 @@
+.th MKACC VIII 3/3/79
+.sh NAME
+mkacc \*- interactive account creater
+.sh SYNOPSIS
+.bd mkacc
+class [ -o ][ -c ]
+.sh DESCRIPTION
+.bd Mkacc
+creates user accounts and initial directories using data obtained
+from class account templates,
+interactively or from a file.
+If input originates from a terminal,
+.bd mkacc
+prompts for a new "login name".
+If the login name does not yet exist, further information is requested,
+namely the users "family name" and users "other names".
+If the account already exists,
+.bd mkacc
+asks whether you require the class mask bits altered to reflect
+the additional class.
+.s3
+The flags have the following meanings:
+.s3
+.lp +6 4
+flag	meaning
+.s3
+.lp +6 4
+\fB\*-c\fR	assume answer 'yes' to "shall I change" question
+in non interactive mode.
+.s3
+.lp +6 4
+\fB\*-o\fR	ask for additional information for the 'other' field of the password
+entry.
+.s3
+.i0
+.dt
+.s3
+If 'pw_cmask[CMASKSIZE-1]&01', it is assumed that the entire class mask
+should be cleared before setting the new class bit.
+This is useful for end of year/session cleanups, where setting the top
+class bit marks all those users who should go.
+As new users are added, duplicates automatically become normal users again
+and those users left really must go.
+.s3
+Data accepted from a file must be on separate lines, as with interactive
+input.
+.sh FILES
+.nf
+/usr/lib/pwe/tplts		where the class templates live
+.br
+/etc/passwd			the pasword file
+.br
+/usr/include/classincludes.h	the include file which include the templates
+.br
+.fi
+.sh "SEE ALSO"
+adjust(VIII), pp(I), passwd(V).
+.sh DIAGNOSTICS
+All self explanitory.
+.sh AUTHOR
+Peter Ivanov, University of New South Wales.
+.sh BUGS
+Yes.
+Two real ones.
+.bd Mkacc
+is not very sensible about wrong multiples of lines from a file as input.
+Imagine the troubles if you invoked 'mkacc ACLASS -o -c' and forgot to
+check that each new user was specified by FOUR lines of data.
+Second bug is that the class templates are compiled in, not read when needed.
+This leads to an overly complicated class template, a large amount of
+initialised data in
+.bd mkacc,
+and the need to recompile
+.bd mkacc
+every time changes are made to included files such as 'class.h'.
+.s3
+This will be fixed in due course.

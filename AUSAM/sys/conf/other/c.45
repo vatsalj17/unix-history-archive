@@ -1,0 +1,32 @@
+#include	"../param.h"
+/*
+ */
+
+int	(*bdevsw[])()
+{
+	&nulldev,	&nulldev,	&rkstrategy, 	&rktab,	/*  0  ->  rk          */
+	&tmopen,	&tmclose,	&tmstrategy, 	&tmtab,	/*  1  ->  tm          */
+	0
+};
+
+int	(*cdevsw[])()
+{
+	&klopen,   &klclose,  &klread,   &klwrite,  &klsgtty,	/*  0  ->  console     */
+	&dhopen,   &dhclose,  &dhread,   &dhwrite,  &dhsgtty,	/*  1  ->  dh          */
+	&nulldev,  &nulldev,  &mmread,   &mmwrite,  &nodev,	/*  2  ->  mem         */
+	&nulldev,   &nulldev,  &rkread,   &rkwrite,  &nodev,	/*  3  ->  rk          */
+	&tmopen,   &tmclose,  &tmread,   &tmwrite,  &nodev,	/*  4  ->  tm          */
+	&syopen,   &nulldev,  &syread,   &sywrite,  &sysgtty,	/*  5  ->  sys         */
+#ifdef	ERROR_LOG
+	&elopen,   &elclose,  &elread,   &nodev,  &nulldev,	/*  6  ->  el          */
+#endif
+#ifndef	ERROR_LOG
+	&nodev,    &nodev,    &nodev,    &nodev,  &nodev,	/*  6  -> el 	*/
+#endif
+	0
+};
+
+int	rootdev	 { (000<<8) | 010} ;	/*** root device  optimised rk0 ***/
+int	swapdev	 { (000<<8) | 000  } ;	/*** swap device on rk0 ***/
+int	swplo	1452 ;	/* cannot be zero */
+int	nswap	  { ( 4872 / 2 ) - 1452 };

@@ -1,0 +1,147 @@
+.th PS I 3/20/74
+.sh NAME
+ps \*- process status
+.sh SYNOPSIS
+.bd ps
+[-]
+[\fBaxlkcpsuzt\fR[c]]
+[ namelist [ corefile ] ]
+.sh DESCRIPTION
+.it Ps
+prints certain indicia about active
+processes.
+The
+.bd a
+flag asks for information about all processes with typewriters (ordinarily
+only one's own processes are displayed);
+.bd x
+asks even about processes with no typewriter;
+.bd l
+asks for a long listing.
+Ordinarily only the typewriter number (if not one's own),
+the process number,
+the time used by the process,
+and an approximation to the command line are given.
+The
+.bd z
+flag will include two lines giving the time since the last system boot,
+and the percentage idle time.
+If the
+.bd k
+flag is specified,
+the file
+.it /usr/sys/core
+is used in place of
+.it /dev/mem.
+This is used for
+postmortem system debugging.
+An alternative core file may be given as a third argument.
+If a second argument is given,
+it is taken to be the file containing the system's namelist.
+.s3
+The CPU time used by the process is printed and
+is controlled by the flags
+.it p,c,u,s
+where the meanings are:
+.sp
+.in +5
+.ti -4
+p - The time used by the particular process is included
+.sp
+.ti -4
+c - The time used by dead children of the process is included
+.sp
+.ti -5
+Default is
+.it p.
+(\fIaxpc\fR will account for all time used by the system)
+.sp
+.ti -4
+u - Only the user time used is listed.
+.sp
+.ti -4
+s - Only the system time used is listed.
+.sp
+.in -5
+Default is
+.it us.
+.s3
+If the
+.it t
+flag is specified only processes on your terminal
+or on terminal
+.it c
+will be included in the listing. Thus \fIps at0\fR will list
+all processes on terminal `0'.
+.s3
+The long listing is columnar and contains
+.s3
+.lp +5 0
+The name of the process's control typewriter.
+.s3
+.lp +5 0
+Flags associated with the process.
+01: in core;
+02: system process;
+04: locked in code (e.g. for physical I/O);
+10: being swapped;
+20: being traced by another process.
+.s3
+.lp +5 0
+The state of the process.
+0: nonexistent;
+S: sleeping;
+W: waiting;
+R: running;
+Z: terminated;
+T: stopped.
+.s3
+The user ID of the process owner.
+.s3
+The process ID of the process; as in certain cults it is possible to kill a process
+if you know its true name.
+.s3
+The priority of the
+process; high numbers mean low priority.
+If a `+' follows the priority then the process has a positive nice,
+a `-' means a negative nice (high priority),
+a blank means that the process has not been niced.
+.s3
+The size in blocks of the core image of the process.
+.s3
+The event for which the process is waiting or sleeping;
+if blank, the process is running.
+.s3
+The time that the process has used, as controlled by the
+.it pcus
+flags.
+.s3
+The command and its arguments.
+.s3
+.i0
+.dt
+.it Ps
+makes an educated guess as to the file name
+and arguments given when the process was created
+by examining core memory or the swap area.
+The method is inherently somewhat unreliable and in any event
+a process is entitled to destroy this information,
+so the names cannot be counted on too much.
+.sh FILES
+/unix		system namelist (only required for
+.bd k
+flag)
+.br
+/dev/mem	core memory
+.br
+/usr/sys/core	alternate core file
+.br
+/dev		searched to find typewriter names
+.br
+/dev/swap	swap device
+.sh "SEE ALSO"
+kill (I), gprocs (II), times (II)
+.sh BUGS
+Sometimes swapping occurs while
+.it ps
+is running resulting in strange times and command names.

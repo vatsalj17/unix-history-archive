@@ -1,0 +1,117 @@
+#include	"../defines.h"
+#include	"../param.h"
+
+	/*---------- fix023 ----------*/
+
+#include	"../user.h"
+/*
+ *	instead of m70.s m45.s m40.s powerf.s magically knowing
+ *	about certain offsets into the user structure
+ *	define their address of their locations
+ */
+
+#ifdef	FPU
+int *uufec	&u.u_fec;	/* used in m70.s */
+int *uufsav	&u.u_fsav;	/* used in m70.s */
+#endif	FPU
+int *uuerror	&u.u_error;	/* used by powerf.s & m70.s */
+
+	/*---------- fix023 ----------*/
+
+/*
+ */
+
+int	(*bdevsw[])()
+{
+#ifndef	POWER_FAIL
+	&hpopen,	&nulldev,	&hpstrategy, 	&hptab,	/*  0  ->  hp          */
+	&htopen,	&htclose,	&htstrategy, 	&httab,	/*  1  ->  ht          */
+#else
+	&hpopen,	&nulldev,	&hpstrategy, 	&hptab,	&hppowf,	/*  0  ->  hp          */
+	&htopen,	&htclose,	&htstrategy, 	&httab,	&htpowf,	/*  1  ->  ht          */
+#endif	POWER_FAIL
+	0
+};
+
+int	(*cdevsw[])()
+{
+#ifndef	POWER_FAIL
+#ifndef	TTY_CONNECT
+	&klopen,   &klclose,  &klread,   &klwrite,  &klsgtty,	/*  0  ->  console     */
+	&lpopen,   &lpclose,  &nodev,    &lpwrite,  &lpsgtty,	/*  1  ->  lp          */
+	&djopen,   &djclose,  &djread,   &djwrite,  &djsgtty,	/*  2  ->  dj          */
+	&nulldev,  &nulldev,  &mmread,   &mmwrite,  &nodev,	/*  3  ->  mem         */
+	&hpopen,   &nulldev,  &hpread,   &hpwrite,  &nodev,	/*  4  ->  hp          */
+	&htopen,   &htclose,  &htread,   &htwrite,  &nodev,	/*  5  ->  ht          */
+	&nodev,  &nodev,  &nodev,   &nodev,    &nodev,	/*  6  ->  crd          */
+	&nodev,  &nodev,  &nodev,   &nodev,    &nodev,	/*  7  ->  crdb         */
+	&syopen,   &nulldev,  &syread,   &sywrite,  &sysgtty,	/*  8  ->  sys         */
+	&dzopen,   &dzclose,  &dzread,   &dzwrite,  &dzsgtty,	/*  9  ->  dz          */
+#ifdef	ERROR_LOG
+	&elopen,   &elclose,  &elread,   &nodev,  &nulldev,	/* 10  ->  el          */
+#else
+	&nodev,    &nodev,    &nodev,    &nodev,  &nodev,	/* 10  -> el 	*/
+#endif	ERROR_LOG
+#else
+	&klopen,   &klclose,  &klread,   &klwrite,  &klsgtty,   &kl11,	/*  0  ->  console     */
+	&lpopen,   &lpclose,  &nodev,    &lpwrite,  &lpsgtty,     0,	/*  1  ->  lp          */
+	&djopen,   &djclose,  &djread,   &djwrite,  &djsgtty,   &dj11,	/*  2  ->  dj          */
+	&nulldev,  &nulldev,  &mmread,   &mmwrite,  &nodev,       0,	/*  3  ->  mem         */
+	&hpopen,   &nulldev,  &hpread,   &hpwrite,  &nodev,       0,	/*  4  ->  hp          */
+	&htopen,   &htclose,  &htread,   &htwrite,  &nodev,       0,	/*  5  ->  ht          */
+	&nodev,  &nodev,  &nodev,   &nodev,    &nodev,       0,	/*  6  ->  crd          */
+	&nodev,  &nodev,  &nodev,   &nodev,    &nodev,       0,	/*  7  ->  crdb         */
+	&syopen,   &nulldev,  &syread,   &sywrite,  &sysgtty,       0,	/*  8  ->  sys         */
+	&dzopen,   &dzclose,  &dzread,   &dzwrite,  &dzsgtty,   &dz11,	/*  9  ->  dz          */
+#ifdef	ERROR_LOG
+	&elopen,   &elclose,  &elread,   &nodev,  &nulldev,       0,	/* 10  ->  el          */
+#else
+	&nodev,    &nodev,    &nodev,    &nodev,  &nodev,       0,	/* 10  -> el 	*/
+#endif	ERROR_LOG
+/*NO	&mxopen,   &mxclose,  &mxread,   &mxwrite,  &mxsgtty,   &mxtty,	/*  11  ->  mx          */
+#endif	TTY_CONNECT
+#else
+#ifndef	TTY_CONNECT
+	&klopen,   &klclose,  &klread,   &klwrite,  &klsgtty,	&klpowf,	/*  0  ->  console     */
+	&lpopen,   &lpclose,  &nodev,    &lpwrite,  &lpsgtty,	&lppowf,	/*  1  ->  lp          */
+	&djopen,   &djclose,  &djread,   &djwrite,  &djsgtty,	&djpowf,	/*  2  ->  dj          */
+	&nulldev,  &nulldev,  &mmread,   &mmwrite,  &nodev,	&nulldev,	/*  3  ->  mem         */
+	&hpopen,   &nulldev,  &hpread,   &hpwrite,  &nodev,	&nulldev,	/*  4  ->  hp          */
+	&htopen,   &htclose,  &htread,   &htwrite,  &nodev,	&nulldev,	/*  5  ->  ht          */
+	&nodev,  &nodev,  &nodev,   &nodev,    &nodev,	&nodev,	/*  6  ->  crd          */
+	&nodev,  &nodev,  &nodev,   &nodev,    &nodev,	&nulldev,	/*  7  ->  crdb         */
+	&syopen,   &nulldev,  &syread,   &sywrite,  &sysgtty,	&nulldev,	/*  8  ->  sys         */
+	&dzopen,   &dzclose,  &dzread,   &dzwrite,  &dzsgtty,	&dzpowf,	/*  9  ->  dz          */
+#ifdef	ERROR_LOG
+	&elopen,   &elclose,  &elread,   &nodev,  &nulldev,	&nulldev,	/* 10  ->  el          */
+#else
+	&nodev,    &nodev,    &nodev,    &nodev,  &nodev,	&nulldev,	/* 10  -> el 	*/
+#endif	ERROR_LOG
+#else
+	&klopen,   &klclose,  &klread,   &klwrite,  &klsgtty,   &kl11,	&klpowf,	/*  0  ->  console     */
+	&lpopen,   &lpclose,  &nodev,    &lpwrite,  &lpsgtty,     0,	&lppowf,	/*  1  ->  lp          */
+	&djopen,   &djclose,  &djread,   &djwrite,  &djsgtty,   &dj11,	&djpowf,	/*  2  ->  dj          */
+	&nulldev,  &nulldev,  &mmread,   &mmwrite,  &nodev,       0,	&nulldev,	/*  3  ->  mem         */
+	&hpopen,   &nulldev,  &hpread,   &hpwrite,  &nodev,       0,	&nulldev,	/*  4  ->  hp          */
+	&htopen,   &htclose,  &htread,   &htwrite,  &nodev,       0,	&nulldev,	/*  5  ->  ht          */
+	&nodev,  &nodev,  &nodev,   &nodev,    &nodev,       0,	&nodev,	/*  6  ->  crd          */
+	&nodev,  &nodev,  &nodev,   &nodev,    &nodev,       0,	&nulldev,	/*  7  ->  crdb         */
+	&syopen,   &nulldev,  &syread,   &sywrite,  &sysgtty,       0,	&nulldev,	/*  8  ->  sys         */
+	&dzopen,   &dzclose,  &dzread,   &dzwrite,  &dzsgtty,   &dz11,	&dzpowf,	/*  9  ->  dz          */
+#ifdef	ERROR_LOG
+	&elopen,   &elclose,  &elread,   &nodev,  &nulldev,       0,	&nulldev,	/* 10  ->  el          */
+#else
+	&nodev,    &nodev,    &nodev,    &nodev,  &nodev,       0,	&nulldev,	/* 10  -> el 	*/
+#endif	ERROR_LOG
+#endif	TTY_CONNECT
+#endif	POWER_FAIL
+	0
+};
+#ifndef	MAPPED_BUFFERS
+	char	buffers[NBUF][512] ;	/* fix025 */
+#endif	MAPPED_BUFFERS
+
+int	rootdev	 { (000<<8) | 002 }  ;	/*** root device on 3rd logical disk on the ist rwp04 ***/
+int	swapdev	 { (000<<8) | 005 }  ;	/*** swap device on 6th logical disk on the 1st rwp04 ***/
+int	swplo		    24662    ;	/***   this value  cannot be zero ***/
+int	nswap	  	{ 2090   }  ; 	/***  5 rp04 cylinders   ***/

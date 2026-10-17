@@ -1,0 +1,63 @@
+.th PP I 10/1/1979
+.sh NAME
+pp \*- print administrative information on designated users
+.sh SYNOPSIS
+.bd pp
+[ -pstring ][ -u uids ] [ login-names ]
+.sh DESCRIPTION
+.bd PP
+prints the administrative information
+of the given list of login names, and if '-u' is included as a flag
+the list is assumed to be user IDs.
+If no arguments are given then
+.bd pp
+will use the login name of the person that executed
+the command.
+.s2
+The listing is divided into three sections. They are:
+.s3
+.lp +9 9
+LIMITS:	The amount of system resources that may be used by the account
+and how much is currently being used. If the limit is
+zero, then the account may use any amount of that resource.
+An account's disc usage is calculated by
+adding two disc units for each file entry
+and one unit for each block (512 bytes) of space it consumes.
+The number of pages that may be used by the account on the
+line printer is three times the printer limit for the
+LA-180 (DEC-printer) and ten times that limit for other line printers.
+.s2
+.lp +9 9
+STRINGS:	The login name, its initial shell and directory,
+and a description of the owner of the account.
+.s2
+.lp +9 9
+GENERAL:	The encrypted password, the total time the account
+has used the computer,
+the time the account was last used,
+the groups of terminals the account may log on to,
+and other information deemed useful by the establishment.
+.i0
+.dt
+.s2
+The '-pstring' argument may be used to direct
+.bd pp
+to an alternate password file, whose path name is 'string'.
+.sh FILES
+/etc/passwd	password file
+.sh "SEE ALSO"
+who(I), passwd(I), passwd(V)
+.sh DIAGNOSTICS
+\&'Uid does not exist ?!!' and
+\&'login name does not exist ?!!' are self-explanatory.
+.br
+\&'Malformed directory' and
+\&'No permission' result when the program could not search
+a directory.
+.br
+Other errors may occur but the diagnostics are usually obvious
+and self-explanatory.
+.sh AUTHOR
+Peter Ivanov (UNSW)
+.sh BUGS
+Won't accept ranges of user IDs.

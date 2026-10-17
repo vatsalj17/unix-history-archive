@@ -1,0 +1,18 @@
+: run [ prog ]
+cp /dev/null temp$$$.o
+rm -f *.o
+if $1x = x  goto all
+: loop
+echoall
+cc -c -O $1.c
+shift
+if $1x != x goto loop
+ar rv ../lib2
+rm *.o
+exit
+: all
+echoall
+cc -c -O *.c
+ar rv ../lib2 hp.o ht.o mem.o kl.o dz.o dj.o lp.o sys.o partab.o tty.o bio.o mx.o
+rm *.o
+exit

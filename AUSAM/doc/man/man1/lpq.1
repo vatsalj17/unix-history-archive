@@ -1,0 +1,98 @@
+.th LPQ I 1/8/79
+.sh NAME
+lpq \*- spool area enquiry
+.sh SYNOPSIS
+.bd lpq
+[ -flags ]
+.sh DESCRIPTION
+.it Lpq
+lists the jobs waiting in the spool area for printing by the local
+printer. Its behavior may be modified by the following flags.
+.s3
+.lp +11 10
+.ft I
+flag    meaning
+.ft R
+.s1
+.lp +11 10
+-\fB0\fR
+.lp +11 10
+-\fB1\fR
+.lp +11 10
+-\fB2\fR	Selects the printer for which the listing is to apply
+(0 is the default).
+.s2
+.lp +11 10
+-\fBa\fR	Normally only jobs owned by you are listed, this flag
+causes all jobs to be shown.
+.s2
+.lp +11 10
+-\fBr\fR	this allows the selected removal of jobs from the queue.
+.i0
+.dt
+.s2
+The listing produced indicates the order in which the jobs will be printed
+on the printer in question.
+If the '\fBr\fR' flag has been specified and there are jobs present that
+you are capable of deleting (mortals may only delete the jobs that they
+originally sent to be printed) the prompt "Delete:" will appear.
+The valid response to this is a comma separated list of numbers
+or something of the form "n\ -\ m" which indicates
+a range of numbers.
+.s3
+The listing contains
+.s1
+.lp +11 10
+Job number	this is the number which is used to identify a particular
+job when deleting it.
+.s1
+.lp +11 10
+Date
+.lp +11 10
+Time	time of day when the job was sent to the printer.
+.s1
+.lp +11 10
+Owner	the login name of the owner.
+.s1
+.lp +11 10
+Banner	the banner that will be printed on that job.
+.s1
+.lp +11 10
+Size	the approximate size in pages.
+.s1
+.lp +11 10
+Origin
+.lp +22 10
+NULL	ignore this job
+.lp +22 10
+unix	spooled from unix by lpr
+.lp +22 10
+cyber	arrived as a remote cyber batch printout
+.lp +22 10
+batch	arrived from local unix batch
+.s1
+.lp +11 10
+tty	if present, specifies the terminal to which the 'lpd finished'
+message will be sent
+.s1
+.lp +11 10
+message	indicates the message, if any, that will be prepended
+to the 'finished' message
+.s2
+.i0
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 14
+/tmp/lpd	spool area
+/etc/passwd	password file to get login names
+.sh "SEE ALSO"
+lpr (I), lpd (VIII)
+.sh AUTHOR
+Perry Brown
+.sh BUGS
+.fi
+The program will die and stay dead if the spool area directory ever
+grows too large (of the order of 2000 files). If this happens
+something will need to be done to bring "." back to a more managable
+size

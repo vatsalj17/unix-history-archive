@@ -1,0 +1,99 @@
+
+Main changes to 'ed' (= 'e' = 'em') not listed in the UPM :
+
+1.  New commands :
+
+	a.  tin		will cause an automatic 'w' every n minutes.
+
+	b.  (.,.+1)j	joins the addressed lines together.  The effect is
+			as though the end-of-lines had been replaced with
+			blanks.  Thus, for example, '1,$jp' turns the file
+			into one (long?) line, and prints it.
+
+	c.  (.,.+1)jc	joins the addressed lines together, as above.  The
+			difference is that this form 'compresses' the lines,
+			leaving only one blank at the join (throws away any
+			other blanks or tabs).
+
+	d.  cd pathname	changes the current working directory.  The pathname
+			may not contain the short-cuts '%' or '\@'.  Upon
+			exit from ed, you will be back where you started.
+
+	e.  ^t and ^p	in open-mode ('o' command) will backup one character
+			and skip to the end of the line, respectively.
+
+	f.  z		print the contents of the current search buffer.
+			(In case you forgot, or those #'s got too much)
+
+2.  Extensions to existing commands :
+
+	a.  wa filename	appends the editor's buffer onto the end of filename.
+
+	b.  %n or "n or &n	will list n lines around, after, or above dot.
+				Default values are such as to fill the screen.
+				'n' will be remembered.
+
+	c.  o mode rubouts preserve the line properly even when you have
+				inserted 'nl's.
+
+3.  Alterations/Additions :
+
+	a.  The default search-string for global searches has been made '/^/'.
+	    Thus 'g', followed by a command, is (almost) equivalent to '1,$',
+	    followed by that command.  Thus, for example, 'gp' will print
+	    all lines in the file.
+	    The difference between 'g' and '1,$' is shown by commands which
+	    alter the number of lines - e.g. 'gjc' will join-and-compress
+	    every second line to the preceding line, whereas '1,$jc'
+	    will join-and-compress all lines into one line.
+
+	b.  The character '&' in a search-string is replaced by the previous
+	    search-string, unless escaped with a '\'.
+
+	c.  The '%' in a shell command line is replaced with the current
+	    file name, unless escaped with a '\'.
+
+	d.  Labels are maintained on lines affected by s, x, and o commands,
+	    and are maintained on the first lines of lines affected by c and
+	    j commands.
+
+	e.  Error routine drastically altered.  When ed is invoked in a shell
+	    command file, or is fed a file of edit-commands, and an error
+	    occurs, the line number at which that error occurred is printed
+	    out.  If that error was anything but a match-fail, or a non-
+	    existent edit-file, the rest of the input file is skipped.
+	    When invoked with a '-' flag, e.g. 'e - filename', match-fail
+	    and non-existent edit-file messages are suppressed.
+	    The error messages were changed from '?' and '??' to a slightly
+	    more verbose message.  This may be suppressed by invoking ed with
+	    a '-s' flag : e.g. 'e -s filename'.
+	    Match-fails in global searches result in a suitable message.
+
+	f.  All nulls ( = '\0' = chr(0)) in the input file are removed.
+	    This was always done - you are now told how many were removed.
+	    Generally, this means you blew it - e.g. you tried to edit
+	    an a.out, or an obj, or a directory, etc.
+	    Also, a line-feed is added onto the last line of the input file
+	    if there was not one there.
+
+	g.  Several flags have been added :
+
+		-e	puts ed into 'elfic' mode, which forbids e, f, and w
+			commands, forbids an r command not followed by a file
+			name, and does an automatic w on quitting.
+
+		-l	executes an 'l' (by default) instead of a 'p',
+			when a line number or newline is given without
+			a command.
+
+	h.  The construction [seq] now allows ranges. '[a-z]' works as in
+	    glob. '-' may be escaped by '\'. Much taedium is releived.
+
+
+
+Please note that I am not responsible for all these changes, and have my own
+opinion on how useful some of them are ....
+
+						Kevin F. Hill
+
+						  UNSWDCS

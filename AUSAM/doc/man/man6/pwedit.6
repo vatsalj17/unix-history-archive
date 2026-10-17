@@ -1,0 +1,170 @@
+.th pwedit VI 13/2/78
+.sh NAME
+pwedit \*- manipulate the password file
+.sh SYNOPSIS
+.ft B
+pwedit [ - [ n ] [ m ] [ u ] [ c ] [ x ] [ t\fIstring\fB ]
+.br
+		[ p\fIstring\fB ] [ filename ]
+.ft R
+.sh DESCRIPTION
+.bd Pwedit
+is an interactive editor used to create and maintain the password
+(\fB/etc/passwd\fR)
+file under the modified accounting and resource management system (AUSAM)
+used at the AGSM and the Universities of N.S.W. and Sydney.
+.s3
+.bd Pwedit
+is normally invoked with no arguments
+and may be given one of four commands to begin editing.
+These are:
+.s3
+.lp +10 8
+add	used to add a new password entry.
+.s3
+.lp +10 8
+delete	used to remove an existing password entry.
+.s3
+.lp +10 8
+change	used to alter an existing password entry, including the variable
+length strings section.
+The old entry is deleted and a new entry created.
+.s3
+.lp +10 8
+update	used to alter an existing password entry, excluding the
+variable length strings section.
+The complete entry is not rewritten.
+.i0
+.dt
+.s3
+Giving a command causes the program to prompt, for data identifying the
+password entry, as follows:
+.s3
+.lp +12 10
+"uid="	requests the decimal uid of the user.
+.s3
+.lp +12 10
+"lname="	requests the users login name.
+.i0
+.dt
+.s3
+Both requested items should be terminated by a carriage return,
+and the login name must be enclosed in double quotes.
+.s3
+For all commands except
+.bd delete
+an "elfic" mode editor is created to manipulate the entry
+to be added, updated or changed.
+When the editor exits,
+.bd pwedit
+accepts the modified data and alters the password file accordingly.
+.s3
+The action of control flags and arguments will now be discussed in detail.
+.s3
+.ft I
+.lp +10 8
+key	meaning
+.ft R
+.s3
+.lp +10 8
+\fBn\fR	causes passwords not to be encrypted for additions.
+This flag should be used when rebuilding the password file after garbage collection
+so that passwords are not doubly encrypted.
+.s3
+.lp +10 8
+\fBm\fR	causes the home directory specified in an additions to be created,
+and its owner changed to the new user.
+.s3
+.lp +10 8
+\fBu\fR	allows uids not within the sites uid range to be specified for additions.
+This flag should be used when rebuilding the password file after
+garbage collection so that uids like root are not transposed.
+.s3
+.lp +10 8
+\fBc\fR	causes explanatory comments to be added to
+the editor temporary files and "\fB-x\fR" option output.
+.s3
+.lp +10 8
+\fBx\fR	causes the entire contents of the password file
+to be decoded and placed on standard output.
+This option is used to copy the password entries
+before the password file is recreated to remove garbage which accumulates
+from changes or deletions.
+.s3
+.lp +10 8
+\fBt\fIstring\fR	\fIstring\fR is used as the
+filename (in /usr/lib/pwe/[tplts] [dflts])
+from which templates and defaults are to be taken
+for additions.
+.s3
+.lp +10 8
+\fBp\fIstring\fR	\fIstring\fR is used as the name for an alternate password file.
+.i0
+.dt
+.s3
+The optional filename argument implies that input entries
+should be taken from this file.
+.s3
+As the password file will grow
+as entries are changed, added and deleted, it should be compacted (garbage
+collected) periodically.
+Any garbage, if not collected,
+will not slow password routine execution times and collection need only
+be done for the sake of file size.
+.s3
+To compact the password file, follow the procedure below:
+.s3
+.lp +9 5
+1)	ensure that the system is in single user mode
+and is quiescent so that nothing will be modifying the password file.
+.s3
+.lp +9 5
+2)	type "pwedit -x > a_file" to extract all valid entries
+.s3
+.lp +9 5
+3)	use the "pwcreat" program to clear and reinitialise the
+password file. This program creates the initial null hash tables and uid tables.
+.s3
+.lp +9 5
+4)	type "pwedit -n -u a_file" to reconstruct all valid password entries.
+Pwedit will print an error message at the
+end of the file.
+The item number in this message is one more than the total
+number of users in the password file.
+.i0
+.dt
+.s3
+There exists a version of pwedit called "pwconv" used in
+changing from the original Level 6 UNIX
+password file to the AUSAM equivalent.
+The only difference between the two versions is that pwconv
+accepts a stripped down entry specification as input
+when reading from a file.
+.s3
+The exact form of the entry required is obvious from the code
+in the "getce" routine of "pwconv.c"
+.sh FILES
+.s3
+/tmp/pweaXXXXX		elfic editor input
+.br
+/tmp/eXXXXX		elfic editor temporary
+.br
+/usr/lib/pwe/tplts/*	template files
+.br
+/usr/lib/pwe/dflts/*	default files
+.br
+In /usr/lib/pwe/[tplts] or [dflts]
+.br
+default			the default template or default file
+.sh "SEE ALSO"
+.s3
+pwconv.c, pwcreat.c, pp.c, password accessing routines document.
+.sh DIAGNOSTICS
+.s3
+Largely self explanatory.
+.sh AUTHOR
+.s3
+Peter Ivanov, Dept. Computing Science, U.N.S.W.
+.sh BUGS
+.s3
+Yes, a few non-fatal but annoying ones. They will be fixed, eventually.

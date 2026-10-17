@@ -1,0 +1,129 @@
+.th GETTY VIII 4/4/78
+.sh NAME
+getty  \*- set typewriter mode
+.sh SYNOPSIS
+.mc |
+.bd /etc/getty
+tty_id tty_type
+.fl
+.mc
+.sh DESCRIPTION
+.it Getty
+is invoked
+by
+.it init
+(VIII)
+immediately after a typewriter is opened
+following a dial-up.
+It reads the user's name and password,
+.mc |
+and then invokes the user's shell program.
+.mc
+While reading the name
+.it getty
+attempts to adapt the system to the speed and type of terminal
+being used.
+.s3
+.mc |
+.it Init
+calls
+.it getty
+with two arguments specified by the
+.it ttys
+file entry, the first for the typewriter line,
+and the second for the probable tty type.
+.mc
+Types
+other than `0' can be used to make
+.it getty
+treat the line specially.
+.s3
+Normally, it
+sets the speed of the interface to 300 baud,
+specifies that raw mode is to be used (break on every character),
+that echo is to be suppressed, and either parity
+allowed.
+It types the ``login:'' message,
+which includes the characters which put the Terminet 300
+terminal into full-duplex and
+return the GSI terminal to non-graphic mode.
+Then the user's name is read, a character at a time.
+If a null character is received, it is assumed to be the result
+of the user pushing the ``break'' (``interrupt'') key.
+The speed is then
+changed to 150 baud and the ``login:'' is typed again,
+this time including the character
+sequence which puts a Teletype 37
+into full-duplex.
+If a subsequent null character is received,
+the speed is changed back to 300 baud.
+.s3
+The user's name is terminated by a new-line or
+carriage-return character.
+The latter results in the system being set to
+treat carriage returns appropriately (see
+.it stty
+(II)).
+.s3
+The user's name is scanned to see if
+it contains any lower-case alphabetic characters; if not,
+and if the name is nonempty, the
+system is told to map any future upper-case characters
+into the corresponding lower-case characters.
+.mc |
+The name is then validated in the
+.it /etc/passwd
+file and a password requested.
+If all is ok,
+the user limits structure is set up,
+accounting files are updated,
+and the user is informed of the
+date and time
+and the
+existence of
+.it .mail
+and message-of-the-day files.
+.it Getty
+initializes the working directory,
+then executes a command interpreter (usually
+.it sh
+(I)) according to specifications found in the password file.
+.fl
+.mc
+.sh FILES
+.mc |
+/etc/utmp	accounting
+.br
+/usr/adm/wtmp	accounting
+.br
+.li
+.mail		mail
+.br
+/etc/motd	message-of-the-day
+.br
+/etc/passwd	password file
+.fl
+.mc
+.sh "SEE ALSO"
+.mc |
+mail (I),
+passwd (I),
+.br
+stty (II),
+.br
+passwd (V),
+.br
+init (VIII),
+AUSAM (VIII),
+.fl
+.mc
+.sh DIAGNOSTICS
+.mc |
+`Who?' if the name is unknown.
+.br
+`Wrong password'.
+.br
+`No Shell,', `cannot open password file,' `no directory':
+consult a UNIX programming counselor.
+.mc
+.sh BUGS

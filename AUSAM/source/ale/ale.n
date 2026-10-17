@@ -1,0 +1,280 @@
+.tr ~ 
+.nr O 12	\" page offset
+.nr W 80	\" line length
+.nr B 1
+.nr L 72	\" 12i for Qume
+.so /usr/lib/tmac.m
+.SA 1
+.nr Hy 0
+.nr Pt 1
+.SA 1
+.ds HF 3 3 3
+.de HX	\"increase spacing by 2 and setup header strings
+.sp 2
+..
+.PH "''ALE''"
+.PF "''-\\\\nP-''"
+.H 1 "Ale"
+Ale is a program which takes a sequence of addresses and,
+depending on the switches used,
+generates files suitable for the production of letters,
+envelopes or labels.
+.H 1 "Usage"
+.ti -5
+ale [-pr] [-let] [-lab] [-env] [-o file] [-s] [-c] [-dx] [-wnn] [-lnn] [-pnn] [-inn] [file...]
+.P
+The flags have the following meanings:
+.ML " "
+.LI
+-pr - a printout of the input to be made on the destination.
+The output will be double spaced.
+A common use of this option would be
+.DS
+	ale -pr files... ^ lpr -1
+.DE
+.LI
+-let - Indicates letters are to be produced on file tempA
+.LI
+-lab - Indicates labels are to be produced on file tempL.
+.LI
+-env - Indicates envelopes are to be produced on file tempE.
+.LI
+-o file - this specifies the output file on which the
+letters/labels/envelopes are to be produced.
+Letters will be produced on 'fileA',
+labels will be produced on 'fileL',
+and envelopes on 'fileE'.
+The default is 'temp'.
+.LI
+-s - do all work silently.
+\&'Ale' usually gives an error message to any error
+occuring in the text. The error message indicates which
+file (if not standard input) the error occured in,
+the line number that it occured on,
+and an error message indicating the source of the error.
+If you use the '-s' option, no error diagnostics are given.
+.LI
+-c - Ignore capital letters in surname.
+Usually only the first letter of the surname is allowed to
+be capitalized, this flag turns this checking off.
+.LI
+-dx - the letter x defines the destination and is one of
+.DL 5 1
+.LI
+q - QUME (default if not specified),
+.LI
+l - LA180, (the decprinter)
+.LI
+p - LP05. (the line printer)
+.LE
+.P
+The following flags should only be used to change the default
+specifications for the destination.
+.LI
+-wnn - specifies a page width of nn to be used.
+The defaults are those normally used on the destination.
+(which are QUME - 100, LP05 - 132, LA180 - 136)
+.LI
+-lnn - specifies the page length (in lines) to be used.
+The defaults are those normally used on the destination.
+(QUME - 72, LP05 - 66, LA180 - 51)
+.LI
+-pnn - specifies the pitch of the destination.
+The defaults are those normally used on the destination.
+(QUME - 12, LP05 and LA180 - 10).
+.LI
+-inn - specify the number of lines/inch
+The defaults are those normally used on the destination.
+(QUME - 6, LP05 and LA180 - 8)
+.LE
+.P
+The input comes from the file(s),
+or if these are not specified,
+standard input,
+thus 'ale' can be piped to.
+Options may be placed in any order,
+but must come before any files.
+.P
+If none of the options -let, -lab, -env are specified,
+only a syntax check is performed.
+This will indicate almost all of the errors in the files.
+The possible error that a syntax check would miss are
+typically output dependent information,
+i.e. too many lines for a label.
+.H 1 "Input Format"
+The input must be in the following format:
+.sp
+.ce
+[comment] <field> { <sep> <field> } $ [Dear]
+.ML ""
+.LI
+Blank lines between addresses are ignored.
+Blank lines within fields are flagged as errors.
+.LI
+Comment is optional and consists of the maximal string of characters
+terminated by a colon on that line.
+.LI
+A field is a string of characters terminated by a <sep> or a $.
+It corresponds to one line of the address.
+Leading and trailing blanks are stripped.
+<sep> consists of a comma optionally followed by
+a newline.
+.LI
+The 'Dear' field is optional and exists if and only if
+there exist non blank characters
+between the '$' and the newline following.
+.LE
+.P
+The following characters are legal
+.ul
+only
+in comments.
+Their presence elsewhere is an error.
+The illegal characters are !#%*<=>?@[]\\^_|{} .
+Any of these characters is flagged as an error.
+.P
+The following is an example of a valid address:
+.sp 2
+.DS
+	xx,12,abh: Mr Jack M Jones, 123 Abacrombie St Jackstown,
+	Appletree 4524, Afganastan$
+.DE
+.sp 2
+The following is invalid:
+.sp 2
+.DS
+	xx,12,abh: Mr Jack M Jones, 123 Abacrombie St Jackstown
+	Appletree 4524, Afganastan$
+.DE
+.sp 2
+This is because there is no ',' on the end of the first
+line.
+The error message that this would invoke should indicate
+that you could have left off a ',' or a '$'.
+.H 1 "Output"
+.H 2 "Letters"
+The output for letters will be in the following format:
+.DS
+	field
+	field
+	  .
+	  .
+	field
+	<blank line>
+	Dear xxxx
+	<blank line>
+.DE
+.P
+The fields are as they appear in the input but folded if they exceed the line length.
+If the 'Dear' line is not specified in the input, it will be determined
+from the first field, which is assumed to contain a title and name.
+.P
+The first field should be in the format
+.ce
+.sp
+title initials and/or first-names surname
+.P
+The title is the maximal string of valid, non-blank characters
+and can contain any combination of the following:
+.ne 5
+.ML "" "" 1
+.LI
+Mr
+.LI
+Mrs
+.LI
+Miss
+.LI
+Ms
+.LI
+Sir
+.LI
+Dr
+.LI
+Professor
+.LI
+Associate
+.LI
+Prof
+.LI
+Assoc
+.LI
+Sister
+.LI
+Reverend
+.LI
+The
+.LI
+Honorable
+.LI
+Most
+.LE
+.P
+With all of these (except Sir and The), the 'Dear' line is the title
+followed by the surname.
+.tr ~~
+If the surname ends in a tilde (~) followed by a sequence of (only) capital letters,
+.tr ~ 
+the sequence of capital letters is considered to be a postfix and will
+not appear in the 'Dear' line.
+.P
+The complete output consists of a sequence of these items followed
+by a line containing ".ex",
+which makes it digestable to "nroff".
+.P
+To produce the letters you must have a file which contains
+(assume the filename is 'adrmk') :-
+.DS
+	{ information to be placed at header of letter }
+	.rd
+	{ information to be placed after address of person has been printed }
+	.rd
+	{ the letter to be sent to the person }
+	.nx adrmk
+.DE
+Then, for example,  to produce the letters on the Qume you type
+.DS
+	nroff -Tqu12 adrmk < tempA   (or fileA if you used -o option)
+.DE
+.H 2 "Labels"
+To produce the labels you simply type
+.DS
+	cat tempL      (or fileL if you used -o option)
+.DE
+.P
+The labels produced will have several lines (2 on Qume, 10 on line printers)
+of "dummy labels" which are included so that the labels can be
+properly alligned.
+These "dummy labels" consist of rows and columns of stars,
+which will outline the labels when they are properly aligned.
+These are followed by your labels.
+Each of these labels consists of the fields in the input centered and
+left justified in the label.
+This means that if you consider the fields left justified as a block,
+this block will be centered within the label.
+If a line is too long to fit within the label, it will be folded
+(that is, split onto several lines at appropriate places).
+.H 2 "Envelopes"
+To produce envelopes you type
+.DS
+	nroff tempE       (or fileE if you used -o option)
+.DE
+and the envelopes will be produced properly addressed.
+.H 1 Errors
+All errors will be printed in the following format:-
+.DS
+	file: nn: message
+.DE
+\&'file' is the file in which the error occured
+(if standard input is used then this is ommited),
+\&'nn' is the line number on which the error occured,
+and 'message' is an explanitory message indicating
+the possible fix for the file.
+As many errors will be flagged as possible, but only the
+first error within any address will be flagged.
+.P
+If any errors occur in the text, all output,
+except that from the "-pr" option,
+will be surpressed and only a syntax check will
+be performed on the rest of the text.
+No files will be produced.

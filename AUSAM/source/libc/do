@@ -1,0 +1,12 @@
+while $1
+	if -r $1.c then
+		cc -O -c $1.c
+		ld -rx $1.o
+		mv a.out $1.o
+	else
+		as $1.s
+		ld -rxo $1.o a.out
+	endif
+	shift
+end
+rm -f a.out

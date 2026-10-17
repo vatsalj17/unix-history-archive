@@ -1,0 +1,95 @@
+.nh
+.pl 12i
+.th GCAT I " July 4th 1978 "
+.sh NAME
+ gcat  - concatenate and graph.
+.br
+.sh SYNOPSIS
+gcat [-][-b][-p][-sn][-cn] file.....
+.br
+.sh DESCRIPTION
+ GCAT  reads the named files and writes them on to standard
+output. If the files are "graphics files" (eg. generated
+by a "program.out>plot.g" or "program.out^tee plot.g")
+then the results are properly plotted.
+.br
+.ti +5
+GCAT operates exactly like "cat" ,
+and pipes to GCAT are possible, also if the file 
+argument is non-graphics, it is printed normally.
+.br
+.sp
+There are presently five options available;
+.sp
+.lp +6 5
+-    Will map all occurances of "newpage" into a "control bell".
+This is handy if many plots have to be viewed on top of
+each other,but is only needed for the tektronics terminals.
+.sp
+.ti -5
+-b   will execute the minus option and will stop plotting
+when any "control bell" is encountered (thus the translated
+"newpages" are included). This is mainly useful for inserting
+breakpoints into a program so that pen changes etc can take
+place. (In fortran it is a simple matter to insert possible 
+breakpoint ; a "call bell" or "newpage" will suffice.)
+A "BREAK ?" will be sent to the terminal that called
+GCAT, and the plot will not resume until the
+"call" button on the plotter is pressed. If the "-p"
+option is not used, then a "return" from the terminal
+will restart plotting.
+Note also that the page size on the plotter can be altered at
+will during breaks.
+.sp
+.ti -5
+-p   Automaticaly directs
+output to "/dev/plotter".
+.sp
+.ti -5
+-sn  Skips 'n' control bells (hence newpages) before plotting
+begins. Only the minus option is invoked with it.
+.sp
+.ti -5
+-cn  Resets the character size to a scale of 'n' when compared
+to the default value. This can ONLY be used on the hard copy plotter
+and does not work on the Tektronics. 'n' can be any real value.
+.sp
+.i0
+.sp 2
+.ti +5
+If one wanted all files starting with "p" to be graphed on the
+plotter with breaks, then
+.br
+.ce
+gcat -p -b p*
+.br
+.sp
+would suffice.
+.sp
+To skip past preliminary alpha output and start plotting
+at the first newpage, then
+.sp
+.ce
+gcat -s1 plot.g
+.bp
+Which may be used in conjunction with breaks;
+.sp
+.ce
+gcat -s1 -b plot.g
+.sp
+Or pipe a program directly to the plotter with breaks,
+.sp
+.ce
+prog.out^gcat -b -p
+.sp
+.sh DIAGNOSTICS
+If the file cannot be found it will tell you so.
+If standard ouput is not a device it will warn
+you but write on to it anyway.
+If the program
+swears at you , it has developed a bug and the author
+should be contacted.
+.sh BUGS
+.br
+.sh AUTHOR
+Richard Grevis

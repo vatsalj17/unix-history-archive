@@ -1,0 +1,20 @@
+echoall
+:    make a hp0 system
+cp c.hp0 c.c
+cc -c c.c
+as -o l.o l40.s
+as -o m40.o m40.s
+ld -o unix.new0 -x l.o m40.o c.o ../lib1 ../lib2
+nm -ug unix.new0
+size unix.new0
+:    turn a hp0 system into a hp3 system
+rm -f unix.new3;cp unix.new0 unix.new3
+db unix.new3
+_rootdev/
+3!
+_rootdev/
+%
+:    protect
+chmod  0  unix.new[03]
+chown bin unix.new[03]
+rm -f *.o a.out c.c >/dev/null

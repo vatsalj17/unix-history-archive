@@ -1,0 +1,64 @@
+.th LKED I "March 1979"
+.sh NAME
+lked \*- produce shared read/write text a.out's
+.sh SYNOPSIS
+.bd lked
+id file1 [args] [files] [libraries]
+.sh DESCRIPTION
+.it Lked
+produces shared-data a.outs. The shared region is the text segment
+of
+.it file1.
+All other segments in
+.it files
+and in modules extracted from
+.it libraries
+are placed in the non-shared segment. All segments are Read/Write.
+.sh FILES
+.it Id
+is an unique character which will identify the shared region when it
+is in core. Thus different programs intending to use the shared region
+must have the same
+.it id.
+.it Args
+can be any valid flags for ld(I) except
+.it -s,
+as all arguments to lked from
+.it args
+onwards are passed to an invocation of ld.
+Similarly,
+.it libraries
+can be ld specifications, such as
+.it -lc.
+The output of
+.it lked
+is always in the file
+.bd a.out.
+.sh "SEE ALSO"
+LD(I), PP(II), VV(II)
+.sh DIAGNOSTICS
+Different.
+.sh BUGS
+Programs intending to use shared regions, should ensure that the
+regions in the several files define a region which is equivalent
+to all the other files. No protection against this kind of error
+is provided by the system, and the system will happily install the
+first invocation of the id. As execution of the process begins at
+address 0 (in the shared region), the first instructions of
+the source for
+.it file1
+should be
+.in +5
+.nf
+.s3
+.ta +8 +8
+	jmp	start
+\&.data
+start:	jsr	pc,_main
+	...
+\&.text
+	...	/shared region continues
+.in -5
+.fi
+.s3
+to ensure that execution begins as planned.

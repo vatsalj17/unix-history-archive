@@ -1,0 +1,140 @@
+.th COPY I 2/13/76
+.sh NAME
+copy \*- copy contents of a directory tree
+.sh SYNOPSIS
+.bd copy
+[ \fB-a\fR ]
+[ \fB-l\fR ]
+[ \fB-m\fR ]
+[ \fB-n\fR ]
+[ \fB-o\fR ]
+[ \fB-r\fR ]
+[ \fB-s\fR ]
+[ \fB-ad\fR ]
+[ \fB-v\fR ]
+sources destination
+.sh DESCRIPTION
+The purpose of the copy command is to enable a UNIX user to copy
+contents of directories to another directory.
+It is possible to
+copy whole file systems since directories are made when needed.
+.s3
+The contents of the source directories are copied to the
+destination directory.
+If files, directories, or special files
+do not exist at the destination, then they are created with the
+same mode or flags of the source.
+Also the super user may set their
+owner and group.
+The owner and mode will not be changed if the
+destination file exists.
+Note that there may be more than one
+source directory.
+If so, then the effect is the same as if the
+command had been issued each with only one source.
+.s3
+All of the flags in the above synopsis are optional, and those
+that are used may appear in any order even after the other arguments.
+The arguments are:
+.s3
+.ft I
+.lp +6 5
+key	meaning
+.ft R
+.s3
+.lp +6 5
+\fB-a\fR	Asks the user before attempting a copy.
+If the
+response does not begin with a 'y', then a copy will
+not be done.
+This option also sets the "\fB-ad\fR" flag.
+.s3
+.lp +6 5
+\fB-l\fR	Uses links instead whenever they can be used.
+Otherwise
+a copy is done.
+Note that links are never done for
+special files or directories.
+.s3
+.lp +6 5
+\fB-m\fR	Files are 'moved', that is, unlinked after copying.
+The '-l' flag is assumed for this.
+.s3
+.lp +6 5
+\fB-n\fR	Requires the destination file to be new.
+If not, then
+the copy command will not change the destination file.
+Of course the "\fB-n\fR" flag is meaningless for directories.
+For special files a "-n" flag is assumed
+(i.e. the
+destination of a special file must not exist).
+.s3
+.lp +6 5
+\fB-o\fR	Only the super user may set this option.
+If set then
+every file copied will have its owner and group set to
+those of the source.
+If not set, then the owner will be
+that of the user who invoked the program.
+.s3
+.lp +6 5
+\fB-s\fR	Only the super user may set this option.
+If set then
+every file copied will have its modification date set to
+that of the source.
+.s3
+.lp +6 5
+\fB-r\fR	If set, then every directory is recursively examined as
+it is encountered.
+If not set then any directories
+that are found will be ignored.
+.s3
+.lp +6 5
+\fB-ad\fR	Asks the user whether a "\fB-r\fR" flag applies when a
+directory is discovered.
+If the answer does not begin
+with a 'y', then the directory will be ignored.
+.s3
+.lp +6 5
+\fB-v\fR	If the verbose option is set, then all kinds of messages
+will be printed that reveal what the program is doing.
+.s3
+.lp +6 5
+\fB-s\fR	If the "set-modify-date" option is set then files are
+copied leaving the modified dates as they were prior to the copy.
+.s3
+.lp +6 5
+\fB-m\fR	If the "move" option is selected source files and directories
+are deleted as appropriate.
+.s3
+.lp +6 5
+source
+.br
+This may be a file, directory or special file..
+It must
+exist.
+If it is not a directory, then the results of
+the command will be the same as for the cp command.
+.s3
+.lp +6 5
+destination
+.br
+The destination must be either a file or directory
+different from the source.
+If the source and destination
+are anything but directories, then copy will act just
+like a cp command.
+If both are directories, then copy
+will copy each file into the destination directory
+according to the flags that have been set.
+The default
+(without flags) is to silently copy as stated above.
+.i0
+.dt
+.sh "SEE ALSO"
+cp (I), cpall (I), mv (I), mvall (I), ln (I)
+.sh DIAGNOSTICS
+Should be self-explanatory
+.sh AUTHOR
+Keith H Davis
+.sh BUGS

@@ -1,0 +1,201 @@
+.th TB I 4/5/79
+.sh NAME
+tb  \*-  terminal booking system
+.sh SYNOPSIS
+.bd tb
+.sh DESCRIPTION
+The terminal booking system,
+.it tb,
+enables any user to book a terminal up to several days in advance.
+.it Tb
+bookings are also "system enforceable", that is you need not
+resort to clubs or other means of persuasion to obtain the terminal
+you have booked.
+The system, when requested, will enforce bookings on threat of total
+removal from the computer.
+.s3
+.it Tb
+is called by typing
+.it "'tb'"
+and will respond with a ':' prompt when ready.
+After you
+have used the terminal booking system simply type 'ctrl/d', that is
+hold the 'control' key down and type the letter 'd', to return to
+the normal UNIX command interpreter.
+.s3
+A
+.it tb
+command line is usually of the form
+
+	command [day] [time] [where modifier] [other modifier]
+
+where '[..]' fields may be omitted to obtain default values.
+The various fields may be used as follows.
+.s3
+.lp +12 10
+command	Useful commands are
+
+.nf
+  book - make a booking
+  refund - cancel a booking
+  who - list bookings with login name
+  print - graph all terminal bookings
+  display - find out costs of time periods in a day
+  account - alias to another users name
+  evict - evict someone from a booked terminal
+.fi
+
+.s3
+.lp +12 10
+day	tb understands the following forms
+
+.nf
+  mon - monday
+  tue - tuesday
+  wed - wednesday
+  thu - thursday
+  fri - friday
+  sat - saturday
+  sun - sunday
+  today - obvious
+  tomorrow - obvious
+.fi
+
+The day referred to is the next 'day'. The construct 'day week' means
+the day one week after 'day'. For example, 'mon' means the
+coming monday, whereas 'mon week' means one week after that!
+Presently bookings are accepted up to ten days in advance.
+.s3
+.lp +12 10
+time	Times may be given in normal 'am' or 'pm' or in '24 hour' time.
+Time ranges may also be specified.
+For example all of the following are valid.
+
+.nf
+  9am                3pm
+  09:00              15:00
+  7:30am..5:30pm     07:30 to 17:30
+.fi
+
+The default time is 'now', that is the present terminal session.
+.s3
+.lp +12 10
+where	This field may be used to apply physical direction to a command.
+Possible options are
+
+.nf
+  term number[..number] - to select a terminal set
+  room number - to select either room 318a or 318c
+  video - to select a video terminal
+  here - to select the terminal you are using
+.fi
+
+The 'term' modifier may be used to select a particular terminal
+(eg "term 24") or a set of terminals (eg "term 7..10").
+If no terminal is specified, the default is all terminals.
+The 'room' specification provides for selection
+of all terminals in a room (eg "room 318c").
+Finally 'video' selects the set of all video terminals.
+.s3
+.lp +12 10
+other	The 'other' field allows control of such things as
+multiple bookings, output control etc.
+Some possible values are
+
+.nf
+  count number - controls number of bookings possible
+  offecho - makes 'tb' perform silently
+  onecho - makes 'tb' noisy again
+.fi
+
+If only two bookings were needed, but a large time range was given,
+then 'count 2' could be specified to force only two bookings to be made
+(eg "book mon 12:00 to 15:00 count 2").
+The default 'count' is one.
+.i0
+.dt
+.s3
+When attempting to book a terminal,
+a total charge, in booking units, is calculated from
+the 'cost' (see display command) for the time of day requested,
+and a 'rate' specific to each user.
+Using the UNIX 'pp' command will help
+you to find out your rate and also your 'maximum booking units'.
+If the result of the
+multiplication of 'cost' and 'rate' exceeds your 'maximum booking units'
+('mbu') no booking is made.
+If not, a booking is made in your name,
+and the total charge is deducted from your 'mbu'.
+Your 'mbu' figure regenerates at a rate of twice the number of
+bookable terminal sessions per day.
+At present this is about 80 units per day.
+.s3
+Finally three examples of 'tb' usage follow.
+They are probably the most frequently used commands.
+This manual entry does not try to explain all that is possible using the
+terminal booking system, and those interested in further exploration
+should read the "Termbook User Manual".
+.s3
+To book two video terminal sessions on tuesday,
+between the hours of 9am and 3pm, in room
+318a,
+one could type
+
+	book tue 9am to 15:00 video room 318a count 2
+
+.s3
+To cancel a booking, for instance on terminal 23 at 11.30am today,
+one could type
+
+	refund today 11:30am term 23
+
+.s3
+The third example is to do with eviction.
+Consider that you have booked a terminal and you come along to use
+it and there is this big hairy, mean looking engineer sitting at it.
+You ask him politely to leave. He threatens to thump your face in.
+What do you do?
+.s3
+You walk next door, find someone meek and mild, and politely ask
+if you can use his or her terminal to evict the mean ugly brute next door.
+They say "certainly".
+.s3
+You call 'tb' and type
+
+	account logname
+
+where 'logname' is your login name (probably your student number).
+Termbook replies
+
+	logname password:
+
+and you enter your password.
+When 'tb' again prompts with ':', like an avenging angel you type
+
+	evict
+
+and 'tb' says "Eviction notice served".
+The ugly thing next door has about one minute to log off,
+or he will be summarily executed.
+.s3
+Other commands worth exploring are 'who', 'dump' and 'print'.
+.sh FILES
+/etc/whenwherewho			main data file
+.br
+/etc/whenwherewho2			temporary copy
+.br
+/etc/wwwlock				lock file
+.br
+/etc/utmp
+.br
+/etc/ttys
+.br
+/usr/lib/daily-bookings/???		for days of the week
+.br
+/usr/bin/tb
+.sh "SEE ALSO"
+tbcreat	(VIII)	evict (I)	"TERMBOOK USER MANUAL"
+.sh AUTHOR
+Graham R. Smith	U.N.S.W.
+.br
+Peter Ivanov U.N.S.W. (this manual entry)

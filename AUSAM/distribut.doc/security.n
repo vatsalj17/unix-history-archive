@@ -1,0 +1,225 @@
+.HE "EECF" "UNIX in a Hostile Environment" "UNSW"
+.FO "Peter Ivanov"
+.ce 4
+
+or
+
+Mouse Watching by a Cat
+
+by
+
+Peter Ivanov
+
+.PA
+As supervisor of the largest UNIX system in Australia, I read
+with some amusement the section on UNIX security in the July UK Newsletter
+and decided to share with you some reminiscences about "UNIX cracking"
+from my colleagues and myself.
+The incidents described in this account are NOT fictitious, although some may
+seem so.
+.PA
+Firstly, however, I must say that Ian and Mike from UKC really only touched
+the surface of the problem and unfortunately showed admirable restraint
+in NOT resorting to "inelegant expedients" which in my experience can make
+a system about as stable as a teacup in a typhoon.
+.PA
+Our system in Computer Science at UNSW (see equipment summary) currently
+supports more than 550 student users, a small proportion of whom would
+very inelegantly stab the system in the back given half a chance.
+Whether through malice, incompetance or chance all users are dangerous to
+varying extents and a system cannot be called "secure" unless it at
+least resists (if not defeats) all attempts to bring it undone!
+Thus security, in my book, encompasses a number of aspects, some of which are
+.BP 7 4
+a)	Protection against depletion of system resources (such as disc space,
+proc slots etc),
+.NP
+b)	Protection of individual users information (files) from corruption
+or observation by other users, and
+.NP
+c)	Protection of priviledged or proprietary software from those
+users not granted access.
+.EP
+.PA
+Obviously when a system is cracked in such a way as to give the
+"cracker" super-user status that is the end of all security but if any aspect
+mentioned above is cracked, the results could be just as serious.
+.PA
+Now to some story telling.
+.PA
+We obtained our first UNIX system (level V) in 1975 and the first few tales
+date from this period.
+From the very first days "pseudo login" programs appeared, NOT
+in order to steal names and passwords for our little 11/40 system
+I hasten to add, but to crack the Cyber-Kronos system with which we shared
+the terminals.
+Soon it was quicker to see a second year student to get more money
+put in your Cyber account
+than to see the computing centre.
+It is obviously very difficult to defeat a well written "login" program
+and about all one can do
+is try and break its grip on the terminal.
+.PA
+Soon the "computniks"
+tired of "Cyber cracking" and turned their attention
+to UNIX.
+A super-user accidentally left the source mounted "readable by others" for
+about 30 minutes.
+In this time user file space soared (copies of source in various disguises)
+and a bug was discovered in "login" where password length was not checked
+properly and enabled a password of specific length to be entered followed
+by its known encryption.
+It took two days to clean up all the set-uid-root shells and spare source
+AND ALL IN 30 MINUTES!!!!!
+.PA
+Another old favourite usable with shells which search in the order
+"x, /bin/x, /usr/bin/x" was to leave a dummy command (eg "ls") in any
+writeable directory (even your own) and wait for a super-user
+to blunder past.
+A simple "chmod, chown, unlink, exec" sequence worked wonders.
+As with fishing most of the fun was in selecting the correct bait and tackle.
+.PA
+A variation of the above method works well on sloppily maintained systems
+where "writeable-by-others" commands are some times available for even the
+shortest periods of time.
+By over-writing the command
+with one which does "that little extra" you once more wait for a super-user
+to execute it for you.
+The shell problem is easily fixed by changing
+the search order for uid zero, but its variant is more difficult
+and will be discussed later.
+.PA
+Inevitably, holes in existing code are always popping up.
+Our local classic was the "lpr-lpd" combination.
+Our "/dev" directory used to be fairly rigidly protected and in order
+for lpr and lpd to access user files and "/dev" they were set-uid-root.
+All was well until people discovered the remove (-r) after printing flag on
+lpr.
+I leave you to contemplate what could happen and assure you that it did.
+.PA
+Looking over a super-users shoulder can give exhaustive encryption programs
+a very good head start.
+Early on we discovered that passwords
+should be at least 10 characters long and, if possible, totally meaningless.
+Fortunately, Australia abounds in 10-30 character aboriginal place names
+that few would dare to pronounce.
+.PA
+In late 1977 our prayers for a larger PDP for teaching purposes were answered
+and I was given the rare opportunity of supervising building modifications,
+cabling, installation, maintenance, software development and making the
+afternoon tea for the workers,
+all of which, believe it or not, affect security.
+.PA
+The reason why building modifications and installation are important
+was summed up
+beautifully by a salesman of "secure systems" who said
+.IN
+"This system is guaranteed secure as long as it is
+	not removed from the concrete box....."
+.OT
+Several people I know could, given access to the front panel, crack any
+machine on campus in less than 30 seconds.
+To lay hands on our 11/70 one must pass through four lockable doors, the
+last of which has a unique key and is always locked.
+.PA
+Terminal laboratories should be located nearby and be laid out in a systematic
+manner so that during brief, irregular and frequent visits, particularly
+out of normal hours, budding computniks may be identified by sight and
+login name.
+They may then be watched and, when they have progressed sufficiently,
+asked around for a cup of tea and given something useful to do in return
+for "certain favours".
+This way they get to further their skills and we get cheap programmers.
+.PA
+Local software developments have resulted in a system as secure as humanly
+possible.
+AUSAM, described elsewhere,
+has implemented resource limits (procs, disc space, page limits etc) so
+well that I can recall
+only once running out of disc space, caused by a bug in a super-user
+program.
+.PA
+Other software changes are:
+.BP 7 4
+a)	"Bug" programs to watch computniks and warn of their presence.
+.NP
+b)	Programs to scan file systems setting modes and owners, and reporting
+on "funny" files (those with names containing unprintable characters
+or starting with '.', or
+having set-uid-root modes).
+.NP
+c)	Alteration of "init" to fork a "login" instead of a super-user
+shell in single user mode.
+.NP
+d)	Alteration of "login" to cope with the "no password file" situation.
+.NP
+e)	Changes to a vast array of programs (work still in hand) to create
+files mode 600 or 700 so that users are protected by default.
+This is a partial solution to the shell variant mentioned earlier
+but unfortunately one must still depend on super-users never being clumsy.
+.NP
+f)	Fixing "sgtty" to disallow calls setting modes on a tty not owned
+by the user.
+This practice was being used to acquire terminals and
+access to other users accounts by setting incorrect baud rates
+or parity and forcing
+the unsuspecting victim to leave because he thought the terminal had stopped
+working.
+.NP
+g)	Modifying "passwd" so it asks for the new password without echo
+so that users passwords are not visible on a "ps".
+.EP
+.PA
+Finally some random points:
+.BP 7 5
+a)	We only have one super-user, root, and refrain from
+using this login name
+on any terminals except those over which
+we have absolute control, in or near the 11/70 room.
+.NP
+b)	Our shell searches in the order "/etc/x, /bin/x, /usr/bin/x, x" for
+uid zero and placing all super-user needed commands in "/etc" actually
+makes ones life easier.
+Also placing "su" in "/etc" completely removes any worries about
+"using
+the wrong one"
+when super-user status is required since "/etc/su" must be used.
+.NP
+c)	Periodically I run off a complete "ls -ali" of the mounted system
+and take it home for some sunday morning reading, along with lists of all
+set-uid files and copies of "my computniks" latest creations.
+.NP
+d)	To combat "login" programs a "grep login" of the whole system
+will usually obtain the desired results unless unusual measures have been
+taken to disguise the programs presence.
+.NP
+e)	When confronted with a user who has obviously been acting the fool
+(eg sending billions of nulls to some poor buggers terminal or stealing
+other users login names) he should be immediately "excommunicated".
+That is all his files should be made inaccessible and his initial shell
+should be changed to give a curt message to "see the system supervisor"
+before exiting.
+Nothing hurts a computnik like no computing.
+When he comes grovelling simply tell him what he did wrong (not what
+he is accused of doing wrong, note), promise that if it happens again
+the removal will be final, and give him back his fun.
+Naturally watch him very closely for the next few months.
+.EP
+.PA
+At this point I was going to say something trite about our system never
+having been cracked but alas I cannot.
+During a normal "ps -agl" last week, the first year computniks were
+discovered running a setuid shell made up to look like a "getty".
+They were sprung in the act and under the threat of excommunication revealed
+that we too are sloppy.
+They had found a writeable command thanks to a poorly written run file, had
+compiled a special version of the command
+and had waited for a super-user to execute it.
+They were rather peeved that they only had about 30 minutes to explore
+before being caught but swore that they
+had done nothing nasty in that time.
+.PA
+I suppose the only thing I can say in defence is that these gentlemen
+have recently
+cracked several other machines on campus, but we asked them
+around for that cup of tea months ago.

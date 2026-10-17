@@ -1,0 +1,71 @@
+.th LIBR  I 6/24/77
+.sh NAME
+Libr \*- Librarian for F4P, Macro-11 and Linker
+.sh SYNOPSIS
+.bd libr
+libfile -s1 arg11 ... arg1n -s2 ... -sn .... argnn
+.br
+.bd libr
+@cclfile
+.sh DESCRIPTION
+.it Libr
+is  the  counterpart of ar and nar, but for Fortran,  Macro-11,
+and Linker.  It is used to build and  maintain  libraries  to  be
+used  with  Linker.  An object module in a library is included in
+the .out file if and only if it satisfies and  undefined  reference  at  the
+time  it  is encountered.  Note that the order of the switches is
+important, and that all switches may be abbreviated.
+.s3
+All commands except append require that the file designated
+"libfile" already exist. The append command will create the
+library file if necessary. The action of
+.it libr
+is governed by  the
+switches,  which  are  interpreted in left-to-right order. If the
+second form of the command is used,  the  contents  of  the  file
+specified  is taken to be the action control line. The libfile is
+overwritten only after the entire command string is executed.
+.s3
+In a library,  all  modules  are  identified  by  their
+module  name.   Assembly  language programs get their module name
+from a ".title" directive.  In a  Fortran  subprogram,  the  module
+name is the name of the subroutine or function it defines.
+.s3
+The  default  extention is ".obj"; if a file name is supplied with
+no extention (this means that between the  final  "/"
+of the filename [or the beginning of the filename if there are no
+"/"s] and the end of the file name, there  exist  no  "."s),  the
+file  "file.obj" is assumed; if this file doesn't exist, the original
+name itself is then used.
+.s3
+The switches are:
+.lp +20 20
+-list	list the contents of the library as it currently stands.
+.lp +20 20
+-append files	Append  the  modules  in  the  named
+files to the  library.  Create  the library if it does not exist.
+.lp +20 20
+-replace files	Replace  the  modules in the library
+that are also in  the  named  files with those modules in the files.
+.lp +20 20
+-delete mods	Delete the  named  modules  from  the library.
+.ne 5
+.lp +20 20
+-insert mod files	Insert  the  modules  in  the  files
+before the named module.
+.lp +20 20
+-compactify	Reclaim unused space in the  library
+that   was  freed  by  replace  and
+deletes. There is no need  to  execute  this  command, as the "wasted
+space" in a library has no relation to the speed of linking.
+.lp +20 20
+-strip	remove all symbolic information from
+the library modules.  Used for  faster  linking  speed in a production
+version of a library.  This command does a
+.it -compactify
+as a side effect.
+.lp +20 20
+-identity	Supress the printing of the Libr proprietary note.
+.s3
+.i0
+.dt

@@ -1,0 +1,189 @@
+.th CHK VIII 8/15/78
+.sh NAME
+chk \*- file system storage consistency check
+.sh SYNOPSIS
+.bd chk
+[\c
+.bd \*-a\c
+][\c
+.bd \*-b\c
+list][\c
+.bd \*-i\c
+list][\c
+.bd \*-q\c
+][\c
+.bd \*-s\c
+][\c
+.bd \*-v\c
+][\c
+.bd \*-x\c
+][filesystems]
+.sh DESCRIPTION
+.it Chk
+examines the given filesystems, making various consistency checks.
+It replaces, and is considerably faster than, the older
+.it dcheck,
+.it icheck,
+and
+.it ncheck.
+.s3
+.it Chk
+builds three bitmaps of the filesystem being checked.
+One simply records used blocks, and is used to check for
+.it dups
+(blocks that appear in more than one file,
+and/or in the free\-list), and
+.it missings
+(blocks not accounted for
+elsewhere).
+Another bitmap records indirect blocks, so that these may be
+read in order (disk heads move in one direction).
+The third bitmap records directory blocks, so that these
+may be similarly read in order
+to find how many references there are
+to every file.
+This is compared with the inode link\-count for each file,
+and any discrepancies are reported.
+A check is also made that every part of the directory tree can
+be reached from the root directory (no
+.it orphans).
+.s3
+The options, which may appear in any order (but before the filesystems),
+are:
+.s3
+.lp +10 8
+\fI-a\fB	This option modifies the output of the \fI-i\fB option
+(below), to print out even `.' and `..' names.
+.s3
+.lp +10 8
+\fI-b\fB list	The filesystem is searched for the blocks in the list.
+The i\-numbers of files containing those blocks are printed out.
+.s3
+.lp +10 8
+\fI-i\fB list	The filesystem is searched for the i\-numbers in the list.
+The path\-names of files matching those i\-numbers are printed out.
+Names `.' and `..' are suppressed (see \fI-a\fB options above).
+.s3
+.lp +10 8
+\fI-q\fB	Quiet option. Only the filesystem name is printed out
+(if there are no errors).
+.s3
+.lp +10 8
+\fI-s\fB	Salvage option. This causes
+.it chk
+to ignore the actual free list and reconstruct a new one by rewriting
+the super\-block of the filesystem.
+It is used to recover
+.it missings,
+and to correct
+.it dups
+in the free\-list.
+.s3
+.lp +10 8
+\fI-v\fB	Verbose option.
+.it Chk
+normally prints out only the number of free inodes and blocks.
+This option generates a report of
+.s3
+.in +10
+.ti -5
+the actual
+.it fsize
+and
+.it isize
+(from the superblock);
+.ti -5
+the number of used blocks;
+.ti -5
+the number of special files (block and char);
+.ti -5
+the number of ordinary files;
+.ti -5
+the number of large files (including large directories and huge files);
+and the number of huge files;
+.ti -5
+the number of directories;
+.ti -5
+the number of indirect blocks; and the number of double indirect blocks
+of huge files;
+.ti -5
+the high-water mark block number;
+.ti -5
+the number of free inodes; and
+.ti -5
+the number of free blocks.
+.s3
+.lp +10 8
+\fI-x\fB	This option causes
+.it chk
+to print out the i\-numbers of all special\-files on the filesystem.
+.s3
+.i0
+.dt
+Because of the way
+.it chk
+stores indirect block numbers in a bitmap, the inodes of
+files containing
+.it bad
+(i.e. out of range) or
+.it dup
+blocks are not always known.
+An extra pass is made at the end to find these i\-numbers,
+which are added to the list of i\-numbers to be matched
+with path\-names.
+.s3
+If the \fI-s\fB option (above) is used, the filesystem should
+be dismounted. If this is not possible (because it is the root
+filesystem) the system must be quiescent, and must be rebooted
+immediately afterwards so that the old, bad in\-core copy
+of the super\-block will not continue to be used.
+.s3
+If the file system is not specified,
+a set of default file systems
+is checked.
+The exit status from
+.it chk
+has the 0200 bit set if it considers the filesystem not fit
+to run on.
+The 01 bit is set for core\-errors (lack of); 02 for open\-errors;
+and 04 for non\-fatal disk errors.
+.s3
+.it Chk
+is faster if the raw version of the special file is used,
+since it reads the i-list many blocks at a time.
+.sh "SEE ALSO"
+fs (V), clri (VIII), ipatch (VIII)
+.sh DIAGNOSTICS
+If a read error is encountered, the block number is printed out and
+.it chk
+exits.
+For duplicate and bad blocks, the block number, reason, and type
+are printed out. If the i\-number is known, it is also printed out,
+otherwise an extra pass is made at the end to find it.
+Illegal values for
+.it nfree
+in the super\-block generate an appropriate message.
+If a file turns up for which the link\-count and the number
+of directory entries disagree, the relevant facts are reported.
+Allocated files which have zero link-count and no entries are also
+listed (possibly pipes if on the root filesystem).
+.sh AUTHOR
+Original from Vrije Universiteit, Amsterdam.
+Modified by Kevin Hill (University of NSW).
+.sh BUGS
+Since
+.it chk
+makes numerous passes of the filesystem,
+extraneous diagnostics
+may be produced if applied to mounted file systems.
+.br
+It believes even preposterous values for
+.it fsize
+and
+.it isize
+(in the super-block), and
+consequently can get core images.
+As a result of the algorithm used,
+.it chk
+can not differentiate between data blocks
+for large and huge files in its diagnostic output.

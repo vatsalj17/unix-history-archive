@@ -1,0 +1,158 @@
+.th SYSLD VIII 07/06/77
+.sh NAME
+	sysld \*- system loader for pdp-11/40
+.sh SYNOPSIS
+	sysld proto
+.sh DESCRIPTION
+.it sysld
+is a special loader for unix systems on pdp-11/40's that allows
+more efficient use of the limited addressing space available for the
+system resident code.  Certain code and data may be specified to be
+permanently addressible; other data and code is addressible only
+when needed. One of the kernal segmentation registers - KISA5 -
+is reserved for addressing these items.
+.s3
+sysld requires the division of the unix system into
+.it segments
+-- logically related units of text and data which must be simultaneously
+addressible. One segment is permanently addressible -- the root
+segment -- and is limited to a 20Kw total size.  The other segments
+are each limited to 4Kw.
+.s3
+The
+.it proto
+describes the division of the system.
+It has the format of a shell command file, except that
+newlines are not escaped.
+.s3
+When a transfer is made to an \fIautoload\fR point in one of the
+non-root segments, control is actually passed to a
+transfer vector in the root segment.  This transfer vector
+saves the current value of the page 5 address register on the stack, and loads the
+address register with the value appropriate to the called function.  It adjusts
+the stack so that the arguments to the function appear correct,
+and then calls the function. When the function returns, the
+transfer vector restores the page 5 address register to its saved value, and
+then returns to the caller.
+.s3
+The page 5 register is also saved in a special word in the u-table
+on calls to savu,  and restored on calls to retu.  This allows
+device drivers and other routines that must call \fIsleep\fR
+to reside in non-root segments.
+.s3
+The overhead of calling a non-resident function is directly related
+to the number of arguments which the function receives.  It is
+small in all cases though -- probably equivalent in time to
+a call to \fIcsv\fR.
+.s3
+It may be seen that certain non-stack disciplines in function
+invocation, such as are provided in UNIX via \fIaretu\fR could
+be incompatible with the above scheme.  However, these calls
+may be analyzed on a case-by-case basis as follows:
+.br
+1) Each aretu is proceeded by a retu, so that the page 5
+register is always restored from the time of the last
+call to savu.
+.br
+2) \fItrap\fR and \fIclock\fR, since their arguments are
+not really called by value, cannot be placed in non-root
+segments. Hence the jump in swtch to \fIqsav\fR (trap) is
+proper.
+(No other functions in the
+standard UNIX distribution or in the systems I have seen modified
+at N.S.W. use this 'call by value/result' trick.
+However, some systems have changed certain device drivers, like the
+terminal handlers, so that signals, when received, are immediately passed
+to the running process if appropriate.  This is senseless. However,
+it means that the interrupt routines that take these arguments on the
+stack cannot be in non-root segments.)
+.br
+3) The return from \fInewproc\fR is made in the child through
+the \fIssav\fR save area.
+However, newproc calls swtch directly after setting up the ssav return,
+and swtch saves the page 5 address register and restores it before the
+return. Hence there is no problem.
+.br
+4) Certain swap routines make inessential use of the SSWAP flag.
+They can either be made resident, or recoded to avoid this use.
+.s3
+For those unwilling to go through the above logic, it can be noted that
+all of the routines in sys1.c through sys4.c, and all of the
+device drivers, meet all of the criteria for non-root
+segments.
+.s3
+The calling conventions may be seen to allow functions in one non-root segment
+to freely call functions in other non-root segments.
+Function calls withing a segment generally do not pass through the
+transfer vector to save time.  However, addresses of functions used
+within a segment (such as arguments to timeout) do refer to the transfer vector.
+.s3
+Sometimes device drivers or other
+routines which can be made non-root segments contain common segments
+which must always be addressible.
+(For example, \fItty\fR structures in a particular tty driver which must
+be available to the restart routine in tty.c on a timeout.)
+Sysld will place all common segments referenced in more than one segment
+in the root; provisions exist for forcing a common segment referenced
+in only one segment into the root as well. (-C below)
+.s3
+Sysld also has provisions for providing 'once-only' code facilities
+for the system start-up.  All code designated as once-only is
+made into a segment which is placed 2*USIZE+2 memory blocks after
+the end of the system at run-time. This provides space for the
+u table for the scheduler, and the u table and initial core allocation
+for the initialization process. Once-only code is therefore defined as
+code which may be destroyed once the initialization process starts executing.
+.s3
+Sysld takes the standard linker flags for restricting symbol
+table information, signalling libraries, etc. (-o, -u -e, -l, -x,
+-X, -s, -S). Its special flags are as follows:
+.br
+.lp +10 5
+-L	Provide a load map for the segmented system.
+.lp +10 5
+-c	List the segment in which all common segments appear, and their size.
+.lp +10 5
+-N	All segments following this are once-only.
+.lp +10 5
+-O	A non-root segment is given by the following files up to the next
+segment description.
+.lp +10 5
+-R	The root segment follows.
+.lp +10 5
+-A	A list of autoload points follows. Each symbol
+must have the number of arguments to it specified in the form symbol:n. If the ':n' is
+omitted, 0 is assumed.
+.lp +10 5
+-C	A list a common segments that are to forced into the root follows.
+.lp +10 5
+-V	Symbol are placed in the symbol table for all of the autoload
+entry points.
+These symbols consist of the appropriate C symbol with the underscore
+replaced with a dot.
+.in 0
+.s3
+Sysld defines the following symbols analogous to '_end':
+.lp +12 6
+_eover	address at which the non-root segment text ends.
+.lp +12 6
+_etoa	virtual address to which the non-root segment text is to be moved.
+.lp +12 6
+_eto	block number to which non-root segment text is to be moved.
+.lp +12 6
+_eres	address at which non-once-only segment text ends.
+.lp +12 6
+_eu	block number of scheduler u-table
+.in 0
+.s1
+m40.s has been changed to accomplish the required initial-core setup.
+The calls to clearseg in main have also been eliminated. (They were
+unnecessary, and would have eliminated the once-only code).
+.s3
+.br
+Relatively few changes would be necessary to allow sysld to run on
+pdp-11/45-style systems.  The vectors would have to be placed in the
+data rather than text segment, in order to be addressible as both
+data and instruction.  A pair of I/D segmentation registers would have
+to be used in place of KISA5.  Sysld would also have to perform the
+functions of sysfix.

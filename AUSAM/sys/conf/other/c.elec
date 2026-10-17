@@ -1,0 +1,71 @@
+#include	"../defines.h"
+#include	"../param.h"
+#include	"../user.h"
+/*
+ */
+
+int	(*bdevsw[])()
+{
+	&msopen,	&nulldev,	&msstrategy,	&mstab,	/* ms - 0 */
+	&htopen,	&htclose,	&htstrategy,	&httab,	/* ht - 1 */
+	0
+};
+
+int	(*cdevsw[])()
+{
+#ifndef	TTY_CONNECT
+	&klopen,   &klclose,  &klread,  &klwrite,  &klsgtty,	/* kl - 0 */
+#ifdef	ERROR_LOG
+	&elopen,   &elclose,  &elread,  &nodev,    &nulldev,	/* el - 1 */
+#endif
+#ifndef	ERROR_LOG
+	&nodev,    &nodev,    &nodev,   &nodev,    &nodev,	/*    - 1 */
+#endif
+	&lpopen,   &lpclose,  &nodev,   &lpwrite,  &lpsgtty,	/* lp - 2 */
+	&msopen,   &nulldev,  &msread,  &mswrite,  &nodev,	/* ms - 3 */
+	&nulldev,  &nulldev,  &mmread,  &mmwrite,  &nodev,	/* mem- 4 */
+	&nodev,    &nodev,    &nodev,   &nodev,    &nodev,	/* rk - 5 */
+	&htopen,   &htclose,  &htread,  &htwrite,  &nodev,	/* ht - 6 */
+	&nodev,    &nodev,    &nodev,   &nodev,    &nodev,	/* dj - 7 */
+	&craopen,  &crclose,  &crread,  &nodev,    &nodev,	/* cr - 8 */
+	&crbopen,  &crclose,  &crread,  &nodev,    &nodev,	/* crb- 9 */
+	&syopen,   &nulldev,  &syread,  &sywrite,  &sysgtty,	/* sys- 10 */
+	&ycopen,   &ycclose,  &ycread,  &nodev,    &nodev,	/* ccd- 11 */
+	&ycopen,   &ycclose,  &nodev,   &ycwrite,  &nodev,	/* ccu- 12 */
+	&yjopen,   &yjclose,  &yjread,  &nodev,    &nodev,	/* cjd- 13 */
+	&yjopen,   &yjclose,  &nodev,   &yjwrite,  &nodev,	/* cju- 14 */
+	&dzopen,   &dzclose,  &dzread,  &dzwrite,  &dzsgtty,	/* dz - 15 */
+#endif	TTY_CONNECT
+#ifdef	TTY_CONNECT
+	&klopen,   &klclose,  &klread,  &klwrite,  &klsgtty, &kl11,	/* kl - 0 */
+#ifdef	ERROR_LOG
+	&elopen,   &elclose,  &elread,  &nodev,    &nulldev,     0,	/* el - 1 */
+#endif
+#ifndef	ERROR_LOG
+	&nodev,    &nodev,    &nodev,   &nodev,    &nodev,       0,	/*    - 1 */
+#endif
+	&lpopen,   &lpclose,  &nodev,   &lpwrite,  &lpsgtty,     0,	/* lp - 2 */
+	&msopen,   &nulldev,  &msread,  &mswrite,  &nodev,       0,	/* ms - 3 */
+	&nulldev,  &nulldev,  &mmread,  &mmwrite,  &nodev,       0,	/* mem- 4 */
+	&nodev,    &nodev,    &nodev,   &nodev,    &nodev,       0,	/* rk - 5 */
+	&htopen,   &htclose,  &htread,  &htwrite,  &nodev,       0,	/* ht - 6 */
+	&nodev,    &nodev,    &nodev,   &nodev,    &nodev,       0,	/* dj - 7 */
+	&craopen,  &crclose,  &crread,  &nodev,    &nodev,       0,	/* cr - 8 */
+	&crbopen,  &crclose,  &crread,  &nodev,    &nodev,       0,	/* crb- 9 */
+	&syopen,   &nulldev,  &syread,  &sywrite,  &sysgtty,     0,	/* sys- 10 */
+	&ycopen,   &ycclose,  &ycread,  &nodev,    &nodev,       0,	/* ccd- 11 */
+	&ycopen,   &ycclose,  &nodev,   &ycwrite,  &nodev,       0,	/* ccu- 12 */
+	&yjopen,   &yjclose,  &yjread,  &nodev,    &nodev,       0,	/* cjd- 13 */
+	&yjopen,   &yjclose,  &nodev,   &yjwrite,  &nodev,       0,	/* cju- 14 */
+	&dzopen,   &dzclose,  &dzread,  &dzwrite,  &dzsgtty, &dz11,	/* dz - 15 */
+#endif	TTY_CONNECT
+	0
+};
+
+int	rootdev	 { (000<<8) | 002 } ;	/* AMPEX drive 0 file system 2 */
+int	swapdev	 { (000<<8) | 001 } ;	/* AMPEX drive 0 file system 1 */
+int	swplo	15960;			/* must not be zero */
+int	nswap	 3990;
+
+char	*uufsav	&u.u_fsav;
+char	*uufec	&u.u_fec;

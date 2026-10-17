@@ -1,0 +1,41 @@
+.th MSBOOT VIII 3/13/78
+.sh NAME
+msboot \*- boot from msc 1100 controller
+.sh FUNCTION
+The \fImsboot\fR bootstrap program is  used for booting
+UNIX systems from Ampex DM9100 drives with a
+Microcomputer Systems controller. It will boot the
+file `/unix' from a file system at a selectable cylinder
+offset.
+.sh OPERATION
+Start the DEC M9301-YC hardware bootstrap by
+.br
+.in +7
+.nf
+.ul
+SW CONTENTS	OPERATION
+ 165000		Load address
+ 000040		Start
+.sp
+.fi
+.in -7
+The bootstrap program will be loaded and will commence running.
+It will wait until the value in the switch register is changed
+before continuing.
+If the value is increased, for example to 52 or 173030, then a
+default file system, currently at cylinder 0326, will be searched
+for the file 'unix' and it will be loaded and executed.
+.s3
+A decreased value, for example 0, will cause a `?' to be typed on
+the console terminal, which can then be used to type in an alternative
+program for booting. The name should be given as a pathname
+starting from the root directory of the file system being booted.
+Before typing return put the cylinder number of the file system in
+the switch register. Now place a suitable value in the switch register
+(52 or 173030) and hit return again. A further `?' indicates that
+the name could not be found and the procedure should be repeated.
+.sh FILES
+/usr/source/mdec/msboot.s	bootstrap program
+/usr/mdec/msboot		likewise but assembled
+.sh BUGS
+none

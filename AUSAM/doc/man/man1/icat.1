@@ -1,0 +1,44 @@
+.th ICAT I 30/4/79
+.sh NAME
+icat \*- concatenate and print expanding includes along the way
+.sh SYNOPSIS
+.bd icat
+file ...
+.sh DESCRIPTION
+.it Icat
+reads each file in sequence
+and writes it on the standard output.
+Lines containing the sequence `#include' followed by a file name,
+enclosed in either double quotes or angle brackets are replaced by
+the contents of the appropriate file.
+Names enclosed in angle brackets ("<...>") are looked up in the directory
+"/usr/include"; names in double quotes are searched for in the normal place.
+Thus
+.s3
+.bd "   icat file"
+.s3
+prints the file, and
+.s3
+.bd "   icat file1 file2 >file3"
+.s3
+concatenates the first two files and places the result on the third
+with "include" files interpolated.
+.s3
+If no input file is given,
+.it icat
+reads from the standard
+input file.
+.s3
+.sh "SEE ALSO"
+pr(I), cp(I), cat(I)
+.sh DIAGNOSTICS
+yes;
+if a file cannot be opened,
+or a syntax error in an include line.
+.sh BUGS
+.bd "icat\ x\ y\ >x"
+and
+.bd "icat\ x\ y\ >y"
+cause strange results.
+The syntax of the "#include" is not that of either C or Pascal
+(they are mutually exclusive).

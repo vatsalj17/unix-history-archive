@@ -1,0 +1,19 @@
+: run [ prog ]
+create $$$.o
+rm -f *.o
+if "$1x" = x then
+	echoall
+	cc -O -c *.c
+	ar rv ../lib1
+	rm -f *.o
+else
+	while "$1"
+		= a "$a $1.c"
+		= b "$b $1.o"
+		shift
+	end
+	echoall
+	cc -O -c $a
+	ar rv ../lib1 $b
+	rm -f $b
+endif

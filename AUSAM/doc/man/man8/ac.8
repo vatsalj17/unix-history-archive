@@ -1,0 +1,143 @@
+.th AC VIII 28/3/78
+.sh NAME
+ac \*- unix accounting
+.sh SYNOPSIS
+.bd ac
+[ [[-]f...] ... ] [ name ]
+.sh DESCRIPTION
+.it Ac
+produces statistics derived from the "wtmp" administrative file.
+The many options are invoked as above,
+where the minus,
+(\ and spaces between flags\ ),
+are not necessary,
+and 
+.bd f
+can be any of:-
+.s3
+.lp +18 10
+I	read
+.it wtmp
+from standard input
+.lp +18 10
+P	specify alternate password file
+.lp +18 10
+	(expects next argument to be file name)
+.lp +18 10
+d	details by day (\ default month\ )
+.lp +18 10
+e	give statistics averaged weekly
+.lp +18 10
+f	use form feeds
+.lp +18 10
+h	give statistics averaged over 24 hours
+.lp +18 10
+i	next arg is individual to be accounted
+.lp +18 10
+	(\ only one allowed\ )
+.lp +18 10
+l	next arg is number of working days lost
+.lp +18 10
+	(\ don't use with flag 'd'!\ )
+.lp +18 10
+n	suppress warnings
+.lp +18 10
+o	assume
+.it wtmp
+produced by
+.it cnvtwtmp
+.lp +18 10
+p	details of people
+.lp +18 10
+s	details of system
+.lp +18 10
+t	details of ttys
+.lp +18 10
+u	tty usage profile
+.lp +18 10
+w	specify alternate
+.it wtmp
+file
+.lp +18 10
+	(expects next argument to be file name)
+.lp +18 10
+Q	dont remember users names
+.i0
+.s3
+if the
+.bd p
+option is specified,
+there are also flags to select the sort order:-
+.lp +18 10
+C	sort by
+.it cpu
+time
+.lp +18 10
+L	sort by logged time
+.lp +18 10
+N	sort by login name (\ default\ )
+.lp +18 10
+S	sort by logons
+.lp +18 10
+U	sort by user
+.it id
+.i0
+.s1
+The default (for root) is
+.sp 1
+.bd "	ac nsP /etc/passwd w /usr/adm/wtmp"
+.sp 1
+which will produce a monthly system summary from the start of the
+.it wtmp
+file to the current time.
+Other users will get their individual account.
+But please note:
+elided flags requiring names are order dependant,
+i.e.
+.sp 1
+.bd "	ac wPi wtmp passwd john"
+.sp 1
+is the only legal order;
+and
+.bd I
+overrides
+.bd w.
+.s1
+The accounting file /usr/adm/wtmp is maintained by
+.it init
+and
+.it getty
+and other administrative programs.
+If it doesn't exist,
+no accounting will be done.
+To start accounting,
+it should be created with length 0.
+On the other hand,
+if the file is left undisturbed,
+it will grow without bound
+(\ approximately 32 bytes per login\ ),
+so periodically any information should be collected and the file truncated.
+.sh FILES
+/etc/passwd
+.br
+/usr/adm/wtmp
+.sh "SEE ALSO"
+who (I),
+.br
+wtmp (V),
+.br
+init (VIII), getty (VIII), cnvtwtmp (VIII), AUSAM (VIII)
+.sh DIAGNOSTICS
+Any irregularities in the
+flags will be noted on file 2.
+Any irregularities in the
+.it wtmp
+file will also be noted on file 2,
+unless the flag
+.bd n
+is used.
+.sh AUTHOR
+Piers Lauder (\ University of Sydney\ ).
+.sh BUGS
+Working days lost is a crudely implemented conception, warning - the value
+is applied for each month!

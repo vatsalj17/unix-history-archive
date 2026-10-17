@@ -1,0 +1,78 @@
+.th LPR I 7/17/74
+.sh NAME
+lpr \*- spool files ready for printing
+.sh SYNOPSIS
+.bd lpr
+[ -1 ] [ -flag ... ] file ...
+.sh DESCRIPTION
+.it Lpr
+spools the named files for printing on the local line printer.
+The '-1' (one) option indicates that output is to be spooled for
+printing on the DECPRINTER (an LA180) which has upper and lower
+case, rather than on the faster line printer.
+Lpr's action may be modified by the following flags.
+.s3
+.lp +11 10
+.ft I
+flag	meaning
+.ft R
+.s3
+.lp +11 10
+-\fBc\fR	make a copy of the file when spooling.
+Links are used where possible.
+.s3
+.lp +11 10
+-\fBi\fR\fIstring\fR	use the \fIstring\fR (max 20 characters)
+given as the banner page jobname.
+Default is login name.
+.s3
+.lp +11 10
+-\fBm\fR\fIstring\fR	Print the \fIstring\fR (max 20 characters)
+followed by ': lpd finished' when the job has finished printing
+(as opposed to spooling).
+.s3
+.lp +11 10
+-\fBn\fR\fIm\fR	print \fIm\fR copies of the file under the one banner page.
+.s3
+.lp +11 10
+-\fBp\fR	push the job out of printer if last to be printed.
+.s3
+.lp +11 10
+-\fBr\fR	remove file after spooling (if permissions allow).
+.s3
+.lp +11 10
+-\fBx\fR	do not print a banner page.
+.i0
+.dt
+.s3
+The number of pages that may be printed by a user is limited
+to three times the printer allocation in the case of the
+LA-180, and ten times the allocation for other line printers.
+If the printer allocation is zero, then no limits are enforced.
+.s2
+If no files are specified, the standard input is read and spooled.
+.s2
+The AGSM line printer is in room 410, next to the computer
+itself.
+.s2
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 14
+/tmp/lpd	spool area directory
+.br
+/tmp/lpd/1	printing order file
+.br
+/tmp/lpd/xxx	spooled files
+.br
+/etc/passwd	for login names and printer units
+.br
+/etc/lpd	print manager and de spooler
+.fi
+.sh "SEE ALSO"
+lpd (VIII), prstop (I), pp (I)
+.SH AUTHOR
+Any number of people have tinkered with
+.it lpr
+and
+\fIlpd\fR

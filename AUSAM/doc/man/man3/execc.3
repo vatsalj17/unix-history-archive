@@ -1,0 +1,50 @@
+.th EXECC III 19/11/77
+.sh NAME
+execc \*- call "execv" in default bin directory order
+.sh SYNOPSIS
+.ft B
+execc(name,argv)
+.br
+char *name;
+.br
+char *argv[];
+.ft R
+.sh DESCRIPTION
+.it Execc
+will attempt to execute the file given by
+.it name
+by prepending the default bin directory names
+in the order specified below.
+.s3
+The default order for super-users is:
+.s3
+	/etc/name
+.br
+	/bin/name
+.br
+	/usr/bin/name
+.br
+	name
+.s3
+otherwise:
+.s3
+	name
+.br
+	/bin/name
+.br
+	/usr/bin/name
+.s3
+where \fIname\fR is the string pointed to by the argument
+.it name.
+.sh "SEE ALSO"
+execv(II)
+.sh DIAGNOSTICS
+If all attempts fail
+.it execc
+will return with a value of -1.
+.sh AUTHOR
+Piers Lauder (\ University of Sydney\ )
+.sh BUGS
+As for
+.it execv.
+Should know about command files.

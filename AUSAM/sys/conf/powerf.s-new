@@ -1,0 +1,234 @@
+/******		AT LAST FOLKS AN ALL SINGING ALL DANCING
+/******		POWERFAIL RECOVERY ROUTINE.
+/******
+/******					ian johnstone
+/******					MAY 78
+
+/////////////////////////////////////////////////////////////////////////////////
+/	certain options are necessary !!
+
+.TTYCONNECT	= 1	/ set to one if tty connect mod is in the system
+.PDP70		= 1	/ set to one for 11/70
+.PDP45		= 0	/ set to one for 11/45
+.PDP40		= 0	/ set to one for 11/40
+			/ used by trap to print power fail recovery message
+.if	.PDP70
+.UNIBUSMAP	= 0	/ set to one if unibus map relevant
+.endif
+.SLR		= 1	/ set to one if stack limit exists
+.if  .UNIBUSMAP - 1
+.START		= 1	/ set to one if 134 bytes beyond 'start' (m70.s)
+			/ can be clobbered as a power fail save area
+			/ not the case if UNIBUSMAP defined ( 252. > 208. > 134. )
+.endif
+
+/	NON-UNIX instructions
+
+reset	=	5
+halt	=	0
+mfpd	=	106500 ^ tst
+mtpd	=	106600 ^ tst
+rti	=	2
+
+/	the move instructions that 'copiee' is to use
+
+save	=	12321		/ mov (r3)+,(r1)+
+rest	=	12123		/ mov (r1)+,(r3)+
+
+/	Defines to describe cdevsw & bdevsw
+
+.if	.TTYCONNECT
+cdlen	=	14.		/ length of character device entry
+cdpow	=	12.		/ offset in char device entry of powerfail routine
+.endif
+.if	.TTYCONNECT - 1
+cdlen	=	12.		/ length of character device entry
+cdpow	=	10.		/ offset in char device entry of powerfail routine
+.endif
+bdlen	=	10.		/ length of block device entry
+bdpow	=	8.		/ offset in block device entry of powerfail routine
+
+/	Some useful defines
+
+CPUERR	=	177766		/ Cpu error register
+PS	=	177776		/ Processor Status
+MEMERR	=	177744		/ Memory system error register
+.if	.SLR
+SLR	=	177774		/ stack limit register
+.endif
+MMR0	=	177572		/ Memory Management register 0
+
+/////////////////////////////////////////////////////////////////////////////////
+
+	.data	/ this code must reside in bottom 8Kb of memory
+		/ that is in lowest 8Kb of kernal i and kernal d space
+
+	.globl	powfail, powvect, _savfp, loadfp
+	.globl	_lks, _bdevsw, _cdevsw, csv
+	.globl	nofault, _trap, _powflag, _uuerror
+.if	.START
+	.globl	start
+.endif
+
+/////////////////////////////////////////////////////////////////////////////////
+/	power-down sequence
+/	===================
+
+powfail:				/ entry at priority level 7
+	mov	$powtimout,*$powvect	/ in the event that 2ms is not long
+					/ enough, halt on power-up
+	mov	$1,_powflag		/ indicate powerfail in progress
+					/ to other trap routines and printf.
+	mov	r0,-(sp)
+	mov	nofault,-(sp)		/ save nofault - want to process them
+	clr	nofault			/ skip error catching ..
+	mov	r1,-(sp)
+	mov	$30340,PS		/ prior was user - 'mfpd sp' to work
+	mfpd	sp			/ stack USER SP
+	jsr	r5,csv			/ save r5,r4,r3,r2 and allow traceback
+	jsr	pc,_savfp		/ save floating point registers
+	mov	$save,mover		/ select desired mov for copiee
+	jsr	pc,copiee		/ save volatile locations in core
+.if	.SLR
+	mov	*$SLR,-(sp)		/ save stack limit
+.endif
+	mov	sp,spsave		/ save Kernal SP
+	mov	$powup,*$powvect	/ when power is restored powerup
+					/ is the routine to use.
+
+/////////////////////////////////////////////////////////////////////////////////
+/	do nothing routine
+/	==================
+/
+/	either waiting for the final curtain or
+/	during last powerfail the powerwent before
+/	saving could complete.
+
+powtimout:
+	halt				/ the inevitable will come soon enough
+	br	powtimout		/ never ever want to continue.
+
+/////////////////////////////////////////////////////////////////////////////////
+/	power-up sequence
+/	=================
+
+powup:
+	reset
+	mov	$30340,PS		/ previous mode was user - want 'mtpd sp' to work
+.if	.PDP70
+	clr	*$CPUERR		/ it is not clear what initial value is
+	mov	$-1,*$MEMERR		/ it is not clear what initial value is
+.endif
+	mov	$tmpstck+2,sp		/ get a one word temp stack
+/
+	mov	$rest,mover		/ select desired mov for copiee
+	jsr	pc,copiee		/ restore volatile locattions
+/
+	mov	spsave,sp		/ use real stack
+.if	.SLR
+	mov	(sp)+,*$SLR		/ and protect it by restoring stack limit reg
+.endif
+	inc	*$MMR0			/ start mem mngmt
+	jsr	pc,loadfp		/ restore floating point registers
+/
+	mov	$115,*_lks		/ restart the clock
+/
+	movb	*_uuerror,r4		/ save u.u_error dont want it inadvertantly changed
+	mov	$1,(sp)			/ load a one to indicate "rootdev"
+	mov	$_bdevsw,r2		/ start with block device recovery
+0:	tst	(r2)			/ end of block table ??
+	beq	1f			/ --> yes
+	jsr	pc,*bdpow(r2)		/ call device power fail routine.
+	add	$bdlen,r2		/ step to next entry
+	clr	(sp)			/ no more root devices.
+	br	0b
+/
+1:	mov	$_cdevsw,r2		/ now for the character devices
+2:	tst	(r2)			/ end of cahracter table ??
+	beq	3f			/ --> yes
+	jsr	pc,*cdpow(r2)		/ call device power fail routine.
+	add	$cdlen,r2		/ step to next entry
+	br	2b
+/
+3:	tst	(sp)+			/ discard arg for device powerfail routines
+	movb	r4,*_uuerror		/ restore u.u_error - ignore possible errors !!
+					/ as left by csv
+/
+/
+	mov	(sp)+,r2		/ restore registers as save by csv
+	mov	(sp)+,r3		/ restore registers as save by csv
+	mov	(sp)+,r4		/ restore registers as save by csv
+	mov	(sp)+,r5		/ restore registers as save by csv
+/
+	mov	$16,-(sp)		/ power fail error code
+	jsr	pc,_trap		/ let trap do its thing
+	tst	(sp)+			/ pop error code
+/
+	mtpd	sp			/ restore USER SP
+	mov	(sp)+,r1
+	mov	(sp)+,nofault		/ well made it with out error !!
+	mov	(sp)+,r0
+	clr	_powflag		/ tell the world that power fail is over
+	mov	$powfail,*$powvect	/ restore powerfail vector
+	mov	$115,*_lks		/ restart the clock (i'm paranoid)
+	rti				/ let it rip baby
+
+/ temp stack area only used for restore
+/ placed here so if anything goes wrong
+/ code will be clobbered and no recover
+/ will occur ( well maybe ).
+
+tmpstck: . = . + 2
+
+/////////////////////////////////////////////////////////////////////////////////
+/	routine to save/load volatile locations described by 'tosave'
+
+copiee:
+.if	.START - 1
+	mov	$savearea,r1		/ save area to be used
+.endif
+.if	.START
+	mov	$start,r1		/ save area to be used
+.endif
+	mov	$tosave,r2		/ table of locations to save.
+1:	mov	(r2)+,r3		/ address of next location.
+	beq	3f			/ --> all done.
+	mov	(r2)+,r4		/ number of words this location.
+mover:	0				/ caller decides which mov.
+	sob	r4,mover		/ copy all the words this location
+	br	1b			/ go for more
+3:
+	rts	pc
+
+/////////////////////////////////////////////////////////////////////////////////
+/	the following table describes what is be be saved
+/	in addition general register set 0 and user SP are saved
+
+tosave:
+	777772;   1.	/ PIR
+	777744;   1.	/ Memory Control
+	777600;  32.	/ user i PDR, d PDR, i PAR, d PAR
+	772300;  32.	/ kernal i PDR, d PDR, i PAR, d PAR
+.if .UNIBUSMAP
+	770200;  59.	/ UNIBUSMAP
+.endif
+.if	.PDP40 - 1
+	772516;   1.	/ MMR3
+.endif
+	0
+
+.if	.START - 1
+savearea:
+	. = . + 4. + 64. + 64. + 2.
+.if .UNIBUSMAP
+	. = . + 118
+.endif
+
+.endif
+/	miscellaneous locations
+
+spsave:	.=.+2		/ save area for kernal sp.
+_powflag:.=.+2		/ if ==1 then power fail in progress
+			/ if ==2 then trap during powerfail
+			/ if ==0 then nothing dto do with power fail
+

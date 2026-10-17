@@ -1,0 +1,55 @@
+.HE "AUSAM" " " "Section 3"
+.bp
+.NS 0 "3."
+The "lnode" structure
+.PA
+These structures reside in kernel data space and contain data
+necessary for the continuous monitoring of users.
+The structure is of the form:
+.IN
+struct	lnode
+{
+	unsigned	l_uid;
+	unsigned	l_shares;
+	long		l_usage;
+	unsigned	l_cmask[CMASKSIZE];
+	unsigned	l_flags;
+	unsigned	l_dlimit;
+	unsigned	l_doverflw;
+	char		l_plimit;
+	char		l_climit;
+	unsigned	l_duse;
+	char		l_cusage;
+	char		l_refcount;
+}
+.OT
+.PA
+The incore structures are initialised, accessed and maintained by the
+"limits" system call which is of the form:
+.IN
+limits(addr, function)
+.OT
+.BP 17 10
+where
+.NP
+addr	is a pointer to one or more "lnode" structures and
+.NP
+function	is of type "int" and specifies one of the four possible
+actions that the limits call can produce. These are:
+.BP 7 4
+0	return users own limits structure
+.NP
+1	return limits structure associated with "l_uid"
+.NP
+2	return all "active" limits structures, and r0 contains the
+count of active structures
+.NP
+3	Initialise limits structure for "l_uid"; this is a super-user call.
+.EP
+.EP
+.PA
+Typically a users limits structure is initialised by "getty" on login and
+is used by all his processes until "init" collects his final
+process (l_refcount == 0) at which time the necessary data
+is written to the "passwd" file.
+.ES "3."

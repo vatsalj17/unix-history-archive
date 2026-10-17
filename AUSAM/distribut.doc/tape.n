@@ -1,0 +1,129 @@
+.tr ~ 
+.nh
+.ll 85
+.lt 85
+.de HD
+.sp 2
+.tl 'UNSW Distribution tape''\\*t'
+.sp 2
+.ns
+..
+.de FO
+.bp
+..
+.pl 12i
+.ds t Format
+.wh 0 HD
+.wh -4 FO
+.sp 2
+.cu
+.ce
+FORMAT OF THIS DISTRIBUTION TAPE
+.sp 2
+.ti +3
+The distribution tape was created with 'dtp' a home grown
+supa\-dupa 'tp' at 800 bpi.
+Our reasons for the departure from standard Unix programs are twofold.
+First, this tape contains all of our collected source, with many more
+files than 'tp' can write, and with many more blocks than can be
+comfortably written with 512 byte records. Second, we felt that a stand alone tape,
+a la the Unix distribution was too inconvenient.
+.sp 1
+.ti +3
+Dtp solves these problems well. It writes blocks of 16K bytes and allows
+for (almost) infinite numbers of files. These files can be extracted on
+a directory or individual basis, to help our colleagues with small disks.
+Dtp also has a create directory mode, for extracting arbitrary chunks of
+a file system.
+.sp 1
+.ti +3
+A listing produced by dtp of the distribution tape has been included
+in the package. You can scan it to isolate just what you are interested
+in from the distribution.
+.sp 1
+.ti +3
+The format of this distribution tape is as follows.
+.sp 1
+.nf
+.in +7
+BOT
+Rec      1   16k bytes   Start of dtp directory.
+Rec   2- m   16k bytes   Remainder of directory.
+Rec m+1- n   16k bytes   Dtp dump information.
+TAPE MARK
+Rec   1-14   512 bytes   Straight copy of dtp program.
+TAPE MARK
+Rec   1-54   512 bytes   Straight copy of dtp source.
+TAPE MARK
+TAPE MARK
+.in -7
+.fi
+.sp 1
+.ti +3
+The number 'm' above can be obtained from the listing included with the tape.
+It is the number of directory records on the tape.
+.sp 1
+.ti +3
+The record 'm+1' also contains a copy of the dtp program ('dtp' is the first
+thing in the dump, so it is the first thing after the directory). This dtp
+is the one we are currently using, and it uses a few extra system calls etc.
+It should however extract the tape on a standard Unix system.
+.sp 1
+.ti +3
+The 'dtp' in the second tape file is the one this tape was created with. It
+will run on the standard version 6 Unix system.
+.sp 1
+.ti +3
+The source of dtp is in the third tape file in case your system has changed
+in some dramatic way from standard Unix, such that this version of dtp will
+not run. The source for our version of dtp can be found somewhere in the dump.
+Dtp will extract it, but you can do it by hand if you must. See the copy
+of dtp(V) and dtp(VIII) enclosed.
+.ds t Contents
+.bp
+.ce
+.cu
+CONTENTS OF TAPE
+.sp 1
+.ti +3
+The dtp part of the tape was created with the command 'dtp nm0 usr'.
+Thus it can be extracted partially or in full into any directory
+on your system called 'usr'. If you posess a spare 'large' file system,
+to extract this tape into it, mount tape on unit rmt0,
+mount spare filesystem on device /dev/name and use the following commands.
+.nf
+.in +7
+.sp 1
+mkfs /dev/name count
+mount /dev/name /tmp/usr
+chdir /tmp
+dtp xcm0
+.sp 1
+.in -7
+.fi
+The contents of the tape will be extracted. If there is a tape error (urk)
+you may use the 'i' option of dtp. The error will be ignored but...
+.sp 1
+.ti +3
+The directory 'usr' contains seven subdirectories, which you should be able
+to extract on smaller devices separately. Their names are: docmention,
+distribut.doc, source and sys. To extract only 'sys' for example
+mount tape and disk as above and use
+.nf
+.in +7
+.sp 1
+mkfs /dev/name count
+mkdir /tmp/usr /tmp/usr/sys
+mount /dev/name /tmp/usr/sys
+chdir /tmp
+dtp xcm0 usr/sys
+.fi
+.in -7
+.sp 1
+.ti +3
+If it still doesn't all fit then a similar procedure can be used for
+subdirectories of these. You can find their names from the listing or
+with the command
+.sp 1
+.ti +7
+dtp lm0

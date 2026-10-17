@@ -1,0 +1,46 @@
+: usage:
+:	install [-] newfile owner mode files
+:
+:	used by Makefile to add [typically] an a.out to
+:	the /etc or /bin.  newfile is installed as 'files'
+:	with 'owner' and 'mode' as specified.  the optional
+:	'-' arg indicates a sticky bitted or shared text
+:	a.out and special measures are taken to install same
+:
+echoall
+	if $4x = /bin/cpx -o $4x = /bin/mvx goto cpmv
+	if $1x != -x goto normal0
+	shift
+	ln $4 $4$$$old
+	chmod 0 $4$$$old
+: normal0
+	rm -f $4
+	mv $1 $4
+	chown $2 $4
+	chmod $3 $4
+: loop0
+	if $5x = x exit
+	rm -f $5
+	ln $4 $5
+	shift
+	goto loop0
+:
+:	for mv and cp be a little tricky !!
+:
+: cpmv
+	if $1x != -x goto normal1
+	shift
+	ln $4 $4$$$old
+	chmod 0 $4$$$old
+: normal1
+	rm -f $4
+	cat $1 > $4
+	rm $1
+	chown $2 $4
+	chmod $3 $4
+: loop1
+	if $5x = x exit
+	rm -f $5
+	ln $4 $5
+	shift
+	goto loop1

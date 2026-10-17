@@ -1,0 +1,33 @@
+.th NEWSTAT III 12/4/78
+.sh NAME
+newstat \*- get file status (with 16-bit uid)
+.sh SYNOPSIS
+.bd "newstat( name, statb )"
+.br
+.bd "char *name;"
+.br
+.bd "struct statbuf *statb;"
+.sh DESCRIPTION
+.it Newstat
+sets up status information in
+.it statb
+for the file whose null-terminated name is pointed to by
+.it name.
+.it Statbuf
+is defined as a C-structure in 
+.it /usr/include/stat16.h.
+.s3
+This routine uses the system call
+.it stat
+(II)
+to set up
+.it statb
+and then fixes up the 
+.it uid
+in a contiguous word-bounded 16 bits.
+.sh FILES
+/usr/include/stat16.h	(\ for declaration of statbuf\ )
+.sh "SEE ALSO"
+stat (II), newfstat (III)
+.sh DIAGNOSTICS
+-1 indicates an error, 0 success.

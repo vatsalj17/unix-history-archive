@@ -1,0 +1,112 @@
+.th WHILE I 5/31/77
+.sh NAME
+while \*- shell iteration command
+.sh SYNOPSIS
+.bd while
+expr
+.br
+	commands... (may include
+.it break
+or
+.it continue\c
+)
+.br
+.bd end
+.sh DESCRIPTION
+.it While
+evaluates the expression
+.it expr,
+which is similar to (and a superset of) the expression described in
+.it "if(I)."
+If the expression is true,
+.it while
+does nothing, permitting the command(s) on following lines to be
+read and executed by the Shell.
+If the expression is false, the input file is effectively searched
+for the matching
+.it end
+command, and the Shell resumes execution of the command(s) on the line
+following the
+.it end.
+The
+.it while-end
+grouping may be nested up to three levels deep.
+.s3
+In addition to the type of expression permitted by
+.it if,
+.it while
+treats a single, nonnull argument as a true expression,
+and treats a single null argument or lack of arguments as a false
+expression.
+.s3
+The
+.it break
+command terminates the nearest enclosing
+.it while-end
+group, causing execution to resume after the nearest succeeding
+unmatched
+.it end.
+Exit from
+.it n
+levels is obtained by writing
+.it n
+.it break
+commands on the same line.
+.s3
+The
+.it continue
+command causes execution to resume at a preceding
+.it while,
+i.e., the
+.it while
+that begins the smallest loop
+containing the
+.it continue.
+.s3
+A common loop is that of processing arguments one at a time: see
+.it "shift(I)."
+.s3
+The following is a shell procedure that is also a filter.
+It reads a line at a time from the standard input
+that existed when the procedure was invoked, exiting on end-of-file.
+.s3
+.nf
+while 1
+	= a <\-\- \*v\*v exit
+	commands using $a ...
+end
+.fi
+.sh "SEE ALSO"
+goto(I), if(I), onintr(I), sh(I), shift(I), switch(I)
+.sh DIAGNOSTICS
+.nf
+while: missing end
+while: >3 levels
+while: syntax errors like those of if.
+break: missing end
+break: used outside loop
+continue: used outside loop
+end: used outside loop
+.fi
+.sh BUGS
+A
+.it goto
+may be used to terminate one or more
+.it while-end
+groupings.
+Those who use it to branch into a loop will
+receive appropriately peculiar results.
+When an interrupt is caught and transfer to a label caused by use of
+.it "onintr(I),"
+all currently effective
+.it while-end
+loops are cancelled, i.e., the
+.it onintr
+performs a
+.it goto
+that breaks all loops.
+Neither
+.it while
+nor
+.it end
+may be hidden behind \%semicolons or used within other commands.

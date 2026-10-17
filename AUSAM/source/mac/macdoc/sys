@@ -1,0 +1,617 @@
+
+
+
+
+
+
+	M A C   S Y S T E M    D E S C R I P T I O N.
+	- - -   - - - - - -    - - - - - - - - - - - 
+
+
+		Author  :  Ross Nealon
+
+		Date    :  1/11/78
+
+		Site    :  University of Wollongong.
+
+
+
+	This document comprises the system description of the
+	MAC cross-assembler as it is running at the University
+	of Wollongong on an Interdata 7/32 computer.
+
+	This document forms the third and last part of the
+	description of the MAC cross-assembler.  The first
+	part describes MAC itself, the second describes the
+	table formatter, and this part describes the system
+	from the implementor's point of view.
+
+
+FILE  mac.h
+----  -----
+
+   This file contains standard definitions of structures and
+special constants.  The only really tuneable constants are
+described under the heading 'misc. descriptors.'  It would be
+safer to leave the others alone.
+
+   Struct st is the definition of one symbol table entry.
+It contains the symbol's name (8 chars), its value, mode flags
+(for relocatable/absolute value, global, etc), and a link pointer.
+The symbol table is organised as a linked list structure, with
+the appropriate list being chosen by a hashing algorithm.  The
+hashing algorithm is at present the first character of the
+symbol.  Access is by a monitor routine 'lscan'.
+
+   Struct it forms the heart of the linkage between the first
+pass and the second pass of MAC.  These 'records' exist, one
+per line of source code, and are essentially a coded form of
+the source.  These 'intercode' records are generated to allow
+fast processing in the second pass.
+
+   The flags field describes the nature of the intercode record.
+It can be a null line, a line with a pseudo opcode, or with a
+machine defined opcode.  The label field indicates the presence
+(-1 implies absence) of a label tag on the source line.  Its
+value is the index into the symbol table for that label.
+Op indicates which opcode/pseudo-opcode exists on the line.
+Loc indicates the current location counter, Selc the selection
+actions to take when assembling code, and Opr the arguments to
+the instruction.
+
+   Struct lt is the table of location counters.  They have a
+current value, start address for the code segment, end address
+for the segment, and two pointers.  Next points to the next
+free address in memory to put assembled code (during pass 2).
+Rel_f is the address of the start of the segment in memory
+during pass 2 assembly.  This is so an 'org' instruction
+can set the next pointer correctly.
+
+   Struct bt is a standard UNIX buffer declaration.
+
+   Struct ht describes the header record at the start of each r-file.
+This record describes the number of literal labels, the number of
+pre-defined labels, format descriptors, opcodes, the actual format
+descriptors, program counter pre/post increment flag (for relative
+addressing), lengths of a byte in bits, word in bytes, opcode table
+length, parser table length, parser start address, page length (for
+listings), an illegal instruction value, and a string to write at
+the top of each page of output generated.
+
+   Struct od describes the opcodes.  It has it's name, format,
+and a list of values it can have.  If the selected ii value is
+assembled, MAC will report that an illegal form of that instruction
+is being assembled.
+
+   Struct fd describes the format descriptors - by length of 
+instruction, details of instruction, and number of args to the instruction.
+
+   Struct tbl is the parser table entry.  Sym is one of <n> legal symbols
+that can appear next in the parse of the source line.  Mem further
+describes the symbol.  Next is the next parser table entry to use
+if the parser Sym matches the input Sym.  Act is an action to perform
+on a match, and Arg is it's argument (if any).
+
+
+FILE mac00.c
+---- -------
+
+main():
+   The main program decodes the argument list, sets options into
+the variable msflag, and stacks each non-option (as filenames).
+Files are opened, tables are read in, pass 1 is started.  If any
+errors exist, assembly is halted.  Location counters and files
+are adjusted, and pass 2 started.  Code output routines are then
+called and MAC exits.
+
+tbl():
+   Reads from the named fd a set of binary tables describing
+the target machine.
+
+adjust():
+   Counts up memory needed for assembly, sbrk's for the core,
+and sets up the pointers appropriatly.
+   All location counter values are checked against their
+current limits, and the maximum taken as the size of the
+code segment to generate.  The size of the segment (end
+address minus start address) is added into a running sum,
+and the location counter reset to zero.  MAC then brk's
+for the memory required to do the code assembly, then
+sets a pointer to the start of the segment into the
+structure member l_rel_f.  This is so an Org instruction
+can reset the pointer for code generation correctly.
+
+
+
+FILE mac10.c
+---- -------
+
+pass1():
+   Pass1 is a finite state automaton designed to parse input source
+and create intercode records.  An initial symbol is fetched, and
+the automaton starts.  Each time end-of-line is recognised, the
+parser fetches a new line and new input symbol, and restarts itself.
+Parser symbols are scanned linearly until a match occurs.  The
+appropriate action is then performed.  If no legal symbol is seen,
+the parser will encounter special symbol MCH, and simulate a symbol
+match.  This is to allow the error action to be performed.
+
+newline():
+   General initialisation subroutine, called to get the next line
+of source and fetch the first token.
+
+
+
+FILE mac11.c
+---- -------
+
+   This file contains the handlers for the pseudo opcodes.  Most of the
+opcodes change the program counter or set up special information.
+Adding a new pseudo-opcode means changing three tables in mac40.c,
+and adding new handlers here.  All of these routines start with 'pr'.
+
+
+
+FILE mac20.c
+---- -------
+
+pass2():
+   This is the second pass of the assembler.  It re-reads intercode
+records, and switches to the appropriate code generator, gpcode for
+pseudo opcodes, or gocode for opcodes.  This routine also invokes
+the listing subroutines - listings are made dynamically as code is
+generated, but code dumps and a.out's are made after the assembly.
+
+
+
+FILE mac21.c
+---- -------
+
+gocode():
+   Stacks the values of the argument expressions, selects the
+appropriate format descriptor to use, and calls the formatter.
+
+gpcode():
+   Switches to the appropriate 'pe' pseudo-opcode routine.
+
+
+
+FILE mac22.c
+---- -------
+
+   All routines here are analogous to those in mac11.c.
+
+
+
+FILE mac23.c
+---- -------
+
+plist():
+   Listing generator for pseudo opcodes.  Look at a listing
+and the way the code works will be obvious.
+
+olist():
+   The same as plist(), but for opcodes.
+
+tlist():
+   The same as olist(), plist(), but for comment or other lines.
+
+
+
+FILE mac24.c
+---- -------
+
+sdump():
+   Symbol table checker, and output routine.  Dumps the symbol
+table to the std. output, and to the a.out file (if any).
+
+cdump():
+   Dump code to the std. output, in complete segments.  Generate
+a.out's as well (if any).
+
+header():
+   Put title and header info on listings.
+
+newpage():
+   Call header only if instruction is not eject or title - they
+call header as well.
+
+source():
+   Print the current source line for listings.  The input source
+is re-read in the second pass for listings only.  It is not
+rescanned, just printed.
+
+
+
+FILE mac30.c
+---- -------
+
+expr():
+   General expression evaluator, allowing unary ops.
+
+lvalue():
+   Get one term (it's value) for expr.
+
+
+
+FILE mac31.c
+---- -------
+
+This file contains a string comparison subroutine, symbol table
+management routines, a string search routine, and a binary to
+decimal character conversion routine.
+
+
+
+FILE mac32.c
+---- -------
+
+This contains a character to binary conversion routine that works
+on general C-type numeric constants, a binary search compare routine,
+a print routine, like prf1, but with leading zeros.
+
+
+
+FILE mac33.c
+---- -------
+
+assemble():
+   This routine takes the constant 'value' and assembles that into
+the next free 'width' bits of memory in the assembly space.
+If you are porting MAC to another machine (not an interdata 32 bit)
+this routine is probably the one that you will have to change a lot.
+Fundamental nasties are:-  the constant WORDSIZ - size of an int in
+bits, the macro BITMASK, for generating masks, and the method of
+setting up an int of all one bits. (-1).
+
+format():
+   Called once per instruction, formats the correct information
+as per the format descriptor, for the current instruction.
+
+
+
+FILE mac34.c
+---- -------
+
+pscan():
+   Linear search for a pseudo opcode.
+
+lscan():
+   Hashed list search, and insertion routine.  This is the only
+routine that can access labels in the symbol table for pass one.
+Option LKP looks up a label in symtab.  If it does not exist, an
+error is generated. Option DEF defines a label.  Pre-existence
+and pre-definition (error) are checked.  Both options return the
+index in the struct array for the label.
+
+oscan():
+   Binary search of the opcode table (if pscan fails).
+
+
+
+FILE mac40.c
+---- -------
+
+This is all of the storage declaration for MAC.  A companion file
+mac.x contains extern declartions of all of the vars. here.
+
+
+
+FILE mac41.c
+---- -------
+
+getlin():
+   Get one line of source from the input file.
+
+getch():
+   Do backslash character mapping.
+
+
+
+FILE mac42.c
+---- -------
+
+getsym():
+   Get next input symbol from source line. (Lexical scanner).
+
+
+
+FILE mac43.c
+---- -------
+
+   This contains error routines.
+   All of these should be self-explanatory.
+
+	M A C T A B   T A B L E  F O R M A T T E R.
+	- - - - - -   - - - - -  - - - - - - - - -
+
+
+
+
+
+
+   MACTAB is the major companion routine to the MAC cross-assembler.
+
+   It accepts a symbolic description of the target machine, and
+produces a formatted binary r-file, suitable for loading by the
+cross-assembler.
+
+
+FILE mactab.h
+---- ---------
+
+   This contains a few definitions, and a structure declaration.
+The constants NE1, NS1, NS3 describe the sizes of three structures
+of information used in generating the parser for MAC.  The implementor
+must alter these constants if he/she alters the parser structures.
+
+   The constants NLIT, NSYM, NFMT describe the maximum possible of
+literal labels, pre-defined labels and format descriptors respectivly.
+
+
+
+FILE mactab0.c
+---- ---------
+
+   This is mainly storage declarations and a few initialisations.
+This file contains the three pre-defined sections of the parser table.
+For a further description - see the last page of these notes.
+
+
+
+FILE mactab1.c
+---- ---------
+
+   Main program - opens and creates the input/output files, and
+loops getting source lines.  It looks for a label and uses that
+label as the name of a section that follows.  The address of the
+section routine is loaded, and that routine called.
+   A somewhat special case is made of end-of-file, and the main
+routine returns upon encountering it.
+
+
+
+FILE mactab2.c
+---- ---------
+
+   Header record description - the same idea as the main routine,
+recognising a label, and performing the action associated with it.
+Successive if statements are used, as the number of these labels is
+small, and each handler is small, ensuring fast operation.
+The code is self-explanatory.
+
+
+
+FILE mactab3.c
+---- ---------
+
+   End section handler - checks for errors, if any - no r-file is
+built.  Otherwize, the tables are written in a pre-designated order
+to the r-file.
+
+
+
+FILE mactab4.c
+---- ---------
+
+   Literal section - accepts one label and adds it to the table
+of literals thus far defined.  No check is made for a literal
+defined more than once.  It will not affect MAC, but it is added
+overhead in the scans of this table.
+
+
+
+FILE mactab5.c
+---- ---------
+
+   Pre-defined labels section - same as literals, but gets a value
+for the label, and copies it into a symbol table.  At MAC start time,
+these labels are defined in the symbol table for use by the programmer.
+Again - no check is made for multiple label definition, but MAC will
+pick this up as an error at line zero.  The label is set to GLOBAL,
+with a non-relocatable value (ABS).
+
+
+
+FILE mactab6.c
+---- ---------
+
+   Opcode section - gets symbolic labels, and lists of values to
+be associated with that symbolic, and a format descriptor, to be
+used when none-other is selected.
+   The code is self-explanatory.
+
+
+
+FILE mactab7.c
+---- ---------
+
+   Format descriptor section - decodes and checks format descriptors
+for validity.  Refer to the MACTAB manual for a description of the
+format descriptor mechanism.
+
+
+
+FILE mactab8.c
+---- ---------
+
+   Argument section - this section decodes argument picture declarations,
+and generates a finite-state parser table, for use by the pass1 MAC
+automaton.  Refer to the last page for a description of the parser makeup.
+
+   Treeinit() generates a dummy node in the tree which is equivalent
+to the root node.  While source lines exist - do gentree().  This routine
+makes one branch (actually a whole path down the tree) from the source
+line description.  The tree is then converted to a linear state table
+by the recursive descent routine ptable(), and then the table patched.
+These patches are necessary here - they could not be generated by ptable()
+without large ammounts of nasty code.  The four sections of code are then
+relocated and combined into a parser table.  The four sections are -
+
+	1)  expression parser (a subroutine)
+	2)  S1: source line before the arguments.
+	3)  s2: parser for arguments (as generated)
+	4)  S3: source line after the arguments.
+
+   The remainder of the file consists of the service routines described.
+
+
+
+FILE mactab9.c
+---- ---------
+
+   General service routines - getlin(): gets one source line from the
+input file, getsym(): a lexical scanner, and routines essentially taken
+from MAC.
+
+THE MAC PARSER.
+--- --- ------
+
+   A description of the way in which the MAC automaton works is
+essential in understanding the way in which the parser table is
+made.  The user or implementor is urgently requested to read the
+outline given, and to have a copy of the code by his/her side when
+reading this.
+
+   Take as example the argument pictures:-
+
+		expr
+		expr , expr
+		# expr
+
+
+   The parser reads the first picture, and generates the tree
+
+			root
+			 /
+			/
+		       /
+		     exp
+		     /
+		    /
+		   /
+		 eol
+
+
+
+
+   The tree is built using nodes of structure:
+
+	struct	node	{
+		int	n_sym;
+		int	n_mem;
+		struct	node	*n_alt;
+		struct	node	*n_next;
+		};
+
+   in such a way that the n_alt pointer points to the
+next adjacent descendant of that node, and the n_next
+pointer points down the tree (simulating a branch).
+
+   The second line is read, and gentree - realising that the symbol
+exp appears on the next lowest level, descends the level and starts
+to create alternates as follows:-
+
+			root
+			 /
+			/
+		       /
+		     exp
+		     / \
+		    /   \
+		   /     \
+		 eol     ','
+			   \
+			    \
+			     \
+			     exp
+			       \
+				\
+				 \
+				 eol
+
+
+   The third line generates:-
+
+			root
+			 / \
+			/   \
+		       /     \
+		     exp     '#'
+		     / \       \
+		    /   \       \
+                   /     \       \
+                 eol     ','     exp
+                           \       \
+			    \       \
+			     \       \
+			     exp     eol
+			       \
+			        \
+				 \
+				 eol
+
+
+   Effectivly - when source lines are parsed by MAC, this tree
+structure is descended one level for each input symbol.  If the 
+symbol does not exist on the current tree level, a syntax error
+is reported.  The eol symbol is a nasty special case.  The tree
+is generated so that it's leaves are always eol symbols.  These
+do not mean an eol symbol must be seen, rather they are patched
+later to 'jump' to the section of the parser (pre-defined S3)
+that handles the source line after the arguments.
+
+   Ptable would convert this tree into the following table:-
+
+	index		symbol		next
+	-----		------		----
+
+	0		exp		3
+	1		'#'		10
+	2		err
+
+	3		','		6
+	4		eol		?	(don't know where to go yet)
+	5		err
+
+	6		exp		8
+	7		err
+
+	8		eol		?
+	9		err
+
+	10		exp		12
+	11		err
+
+	12		eol		?
+	13		err
+
+   Following the table through you can convince yourself that
+it is the same as the tree.  The table is then patched to look like:-
+
+	index		symbol		next		action
+	-----		------		----		------
+
+	0		mch		3		call expr
+	1		'#'		10		output ','
+	2		mch				syntax error
+
+	3		','		6		output ','
+	4		mch		14		no op
+							(really 'goto S3')
+	5		mch				syntax error
+
+	6		mch		8		call expr
+	7		mch				syntax error
+
+	8		mch		14		no op
+	9		mch				syntax error
+
+	10		mch		12		call expr
+	11		mch				syntax error
+
+	12		mch		14		no op
+	13		mch				syntax error
+
+   The parser table thus generated is combined with the other three
+parts (with the 'n_next' indexes being relocated) and the routine returns.

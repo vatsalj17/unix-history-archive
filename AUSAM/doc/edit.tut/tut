@@ -1,0 +1,1716 @@
+.ds T you should define your own title (T)
+.po 11
+.ta 8 +8 +8 +8 +8 +8 +8 +8 +8 +8 +8 +8 +8 +8 +8 +8 +8 +8 +8 +8
+.ll 77
+.lt 77
+.pl 12i\" for qume
+.nr s 0 1\" section number register
+.nh\" no hyphenation
+.de UL
+.ul
+\\$1 \\$2 \\$3 \\$4 \\$5 \\$6
+..
+.de HD\" page header
+'sp 3
+.if e 'tl '\\*T''\\*t'
+.if o 'tl '\\*t''\\*T'
+'sp 2 
+'ns
+..
+.de FT\" page footer
+'sp 3
+'tl ''-%-''
+'sp 10\" for the qume
+..
+.de SH\" section heading
+.ds t \\$1\" save section heading
+.bp
+.if \\n+(NP>1 .ne 2.5i
+\\n+s.
+.cu
+\\*t
+.sp
+.nr e 0 1\" set up the exercise number for this section
+.nr ss 0 1\" sub-section numbers
+.am CT
+.br
+.ta 60R
+\\ns. \\*t\a\\n%
+\\..
+.np
+..
+.nr NP 0 1
+.de SS\" sub-section heading
+.in 0
+.ds st \\$1\" save sub-section heading
+.sp
+.ne 5
+\\ns.\\n+(ss\ 
+.cu
+\\*(st
+.sp
+.am CT
+.br
+.in +4
+.ta 56R
+\\ns.\\n(ss \\*(st\a\\n%
+.in -4
+\\..
+.np
+..
+.de CT\" contents saver
+.in 5
+.ce
+.ul
+Table of Contents
+.sp
+.in +4
+..
+.de H\" half-line space
+.sp 20u\" qume only
+..
+.wh 0 HD\" headings go at top of page
+.wh -8 FT\" footers go at bottom of page (for qume 12)
+.de np\" new paragraph
+.ne 2
+.H
+.ti +5
+..
+.de ps	\" start points
+.in +10
+..
+.de pe	\" end points
+.in -10
+..
+.de pt
+.H
+.ti -5
+\\$1)~~
+..
+.de PT
+.ti -5
+\\$1)~~
+..
+.de CO \" contents page
+.ds t Table of Contents
+.bp
+.af % i
+.nr % 1
+.nf
+.sp 2i
+.CT
+.fi
+..
+.de IL
+.ne \\$1
+.rs
+.sp \\$1
+..
+.tr ~ 
+.de CC
+.sp
+.nr ## 16m-\w'\\$1'
+.ti -15
+\\$1\l'\\n(##u~'
+..
+.ds T Edit: A Tutorial
+.de E1
+.ie !\\n(.$-2 .nr [] 3 1
+.el .nr [] \\$3 1
+.]2 \\$1 \\$2
+.as \\$1 \\$2
+..
+.de ]2
+.as \\$1 \\$2\h'-\w'\\$2'u'
+.if \\n-([] .]2 \\$1 \\$2
+..
+.E1 em em 2
+.E1 Em Em 2
+.ds t Introduction
+.tr |"\" inside "'s
+.ce
+.cu
+EDIT:  A TUTORIAL
+.sp 1i
+.np
+Text editing using a terminal connected to a computer allows a user to
+create, modify, and print text easily.  
+Creating text is as easy as typing it much as one would on an electric
+typewriter.  Modifying text involves telling the text editor what
+to add, change, or delete.  Text is printed by giving the proper command
+to print the file contents, with or without special instructions
+as to the format of the desired output.
+.np
+These lessons assume no prior familiarity with computers or with text editing.
+They consist of a series of text editing sessions which will lead you through
+the fundamental steps of creating and revising a file of text.
+After scanning each lesson and before beginning the next, you should
+follow the examples at a terminal to get a feeling for the actual process of
+text editing.
+Set aside some time for experimentation, and you will soon become familiar
+with using the computer to write and modify text.
+In addition to the actual use of the text editor, other features
+of UNIX will be very important to your work.
+You can begin to learn about these other
+features by reading
+"A Guide to Using UNIX".
+You will be ready to proceed with the lesson as soon as you are
+familiar with your terminal and its special keys, the login
+procedure, and the ways of correcting typing errors.
+Let's first define some terms:
+.np
+.in +10
+.CC program
+A set of instructions given to the computer, describing the sequence of
+steps which the computer  performs in order to accomplish a specific task.
+As an example,
+a series of steps to balance your chequebook is a program.
+.CC UNIX
+UNIX is a special type of program, called an operating system, that
+supervises the machinery and all other programs comprising the total
+computer system.
+.CC \*(em
+\*(em is the name of the UNIX text editor which you will be learning
+to use, a program that aids you in writing or revising text.
+This document was designed for beginning users.
+.CC file
+Each user of UNIX is allotted space
+for the permanent storage of information,
+such as programs, data  or text.
+A file is a logical unit of data, for example, an essay, a program, or a chapter
+from a book, which is stored on a computer system.  Once you create a file, it is
+kept until you instruct the system to remove it.
+You may create a file during one UNIX session, log out, and return to use it at a later
+time.
+Files contain anything you choose to write and store in them.
+The sizes of files vary to suit your needs;
+one file might hold  only a single number while another might
+contain a very long document or program.
+The only way to save information from one session to the next
+is to store it in a file.
+.CC filename
+Filenames are used to distinguish one file from another,
+serving the same purpose as the labels of manila folders in a file cabinet.
+In order to write or access information in a file, you use the name
+of that file in a UNIX command, and the system will automatically locate
+the file.
+.CC disk
+Files are stored on an input/output device called a disk, which looks
+something like a stack of phonograph records.  
+Each surface is coated with a material similar to the coating on a magnetic
+recording tape, on which information is recorded.
+.CC buffer
+A temporary work space, made available to the user for the duration
+of session of text editing and used for building  and modifying the text file.
+The buffer can be imagined as a blackboard
+that is erased after each 
+session with the editor.
+.in -10
+.SH "Session 1:  Creating a File of Text"
+To use the editor you must first make
+contact with the system by logging in
+to UNIX.
+The login procedure is described in
+"A Guide to UNIX",
+which you should read if you are not
+familiar with the ins and outs of using UNIX.
+.SS "Asking for em"
+You are ready to tell UNIX that you want to work with \*(em, the text editor.
+Now is a convenient time to choose a name for the file of text
+which you are about to create.
+To begin your editing session type \*(em followed by a space and then the
+filename which you have selected, for example "text".
+When you have completed the command, press carriage return and wait for
+\*(em's response:
+.nf
+
+	% \*(em text
+	EDITOR
+	Open: No such file or directory
+	>
+
+.fi
+If you typed the command correctly,
+you will now be in communication with
+the editor.
+The editor has set aside a buffer
+for use as a temporary working space during
+your current editing session.
+It also checked to see if the file you named, "text",
+already existed.
+As expected,
+it was unable to find such a file since "text" is the name
+of the new file that you want to create.
+\*(Em confirms this with the line:
+.nf
+
+	Open: No such file or directory
+
+.fi
+.np
+On the next line appears \*(em's prompt ">",
+announcing that \*(em expects
+a command from you.
+.np
+You may now begin to create the new file.
+.SS "The |not found| message"
+If you misspelt \*(em by typing,
+say,
+"emm",
+your request would be
+handled as follows:
+.nf
+
+	% emm text
+	emm:  not found
+	%
+
+.fi
+.np
+Your mistake in calling \*(em "emm" was treated
+by UNIX as a request for a program named
+"emm".
+Since there is no program named "emm", UNIX reported that the
+program was "not found".  
+A new % indicated that UNIX is ready
+for another command,
+so you may enter
+the correct command.
+.SS "Messages from em"
+If you make a mistake in entering a command and type something that
+\*(em does not recognize,
+\*(em will respond with
+.nf
+
+	Syntax ?
+	>
+
+.fi
+.np
+When you receive a diagnostic, check what you typed in order
+to determine what part of your command confused \*(em.
+.SS "Entering text"
+You may now begin to enter text into the buffer.
+This is done by appending text to whatever is currently
+in the buffer.
+Since there is nothing in the buffer
+at the moment,
+you are creating text.
+.np
+All \*(em commands consist of a single letter.
+.np
+The command input text is to "append" which is abbreviated to "a".
+Type "a" and press carriage return.
+.nf
+
+	>a
+
+.fi
+.np
+By giving the command "a"
+you enter append mode.
+When you enter append mode,
+\*(em responds by doing nothing.
+You will receive no prompts while
+in append mode.
+Each line you type in is entered into the buffer
+and held there during the editing session.
+You may append as much text as you want,
+and when you wish to stop entering text lines you should
+type a period "." as the only character on the line and press carriage return.
+When you give this signal that you want to stop appending text,
+you will exit from append mode and
+re-enter command mode.
+\*(Em will again prompt you for a command by printing ">".
+.np
+Leaving append mode does not destroy the text in the buffer.
+You have to leave append mode to do any of the other kinds of editing, such as
+changing, adding, or printing text.
+If you type a period as the first character
+and  type any other character on the same line,
+\*(em will
+remain in append mode and will not let you out.
+As this can be very frustrating, be sure to type only the period and carriage
+return.
+.np
+This is as good a place as any to learn an important lesson about computers
+and text:
+a blank space is a character as far as a computer is concerned.
+If you so much as type a period followed by a blank
+(that is, type a period and then the space bar on the keyboard),
+you will remain in append mode.
+.np
+Let's suppose that you typed in the following
+.nf
+
+	>a
+	This is some sample text.
+	And thiss is some more text.
+	Text editing is strange, but nice.
+	.
+	>
+
+.fi
+.np
+The last line is the period followed by
+a carriage return that gets you out of
+append mode.
+If while typing the line you hit an incorrect key,
+recall that you may
+delete the incorrect character or cancel the entire line of input
+by erasing in the usual way.
+Erasing a character or cancelling a line must be done before
+the line has been completed by a <return>.
+We will discuss changes in lines already typed in session 2.
+.SS "Writing text to disk"
+Writing the buffer to the disk
+is the only way to save information from one session to the next,
+since the editor's buffer is temporary and will last only until
+the end of the editing session.
+Thus, learning how to write a file to disk is second in importance only to
+entering the text.
+To write the contents of the buffer to a disk file, use the command
+"w".
+.nf
+
+	>w
+
+.fi
+.np
+\*(Em will copy the buffer to a disk file,
+automatically creating the file if it
+does not yet exist.
+The newly created file will be given
+the name specified when you entered the
+editor, in this case "text".
+To confirm that the disk file has been successfully written,
+\*(em will give the total number of characters in the file.
+The buffer remains unchanged by the "write" command.
+All of the lines which were written to disk will still be in the buffer,
+should you want to modify or add to them.
+.np
+\*(Em must have a filename to use before it can write a file.
+If you forgot to indicate the name of the file when you began the
+editing session, \*(em will print:
+.nf
+
+	File ?
+	>
+
+.fi
+.np
+in response to your command.
+If this happens,
+you can specify the filename in a new write command:
+.nf
+
+	>w text
+
+.fi
+.np
+After the "w" type a space and then the name of the file.
+When you type in the "w" command
+\*(em will respond with the number of characters
+written to the disk file,
+ie.
+.nf
+
+	>w
+	90
+	>
+
+.fi
+.np
+If there are no characters in the
+buffer,
+and you type in "w",
+\*(em will print the following message
+.nf
+
+	Buffer empty ?
+	>
+
+.fi
+.np
+It is important to realise that the disk file
+is not affected in any way until you type
+a "w" command,
+and there is no automatic "w" when you
+finish editing.
+If you wish to save your file,
+you must enter a "w" command.
+On the other hand,
+if you find you have made a mess
+of your file,
+you may quit the editor without entering a "w"
+command,
+and the disk file will be as it was before editing.
+.SS "Signing off"
+We have done enough for this first session on using the UNIX
+text editor, and are ready to quit the session with \*(em.
+To do this we type "q"
+.nf
+
+	>q
+	%
+
+.fi
+.np
+The % is from the shell to tell you
+that your session with \*(em is over and you may
+command UNIX further.
+Since we want to end the entire session at the terminal
+we also need to exit from UNIX.
+In response to the UNIX prompt of "%" type a "[control]d".
+This is done by holding down the control key (usually labelled "CTRL")
+and pressing the 'd' key.
+This will end your session with UNIX and will ready the terminal for the
+next user.
+It is always important to type a "[control]d" at the end of a session
+to make absolutely sure no one could accidentally stumble into
+your abandoned session and thus gain access to your files,
+tempting even the most honest of souls.
+.np
+This is the end of the first session on UNIX text editing.
+.SH "Session 2"
+Login with UNIX as in the first session.
+.np
+This time when you say that you want to edit,
+you can specify the name of the file
+you worked on last time.
+This will start \*(em working and it will fetch the contents
+of the file into the buffer,
+so that you can resume editing the same file.
+When \*(em has copied the file into the buffer,
+it will
+tell you the number of characters the file contains.
+Thus,
+.nf
+
+	% \*(em text
+	EDITOR
+	90
+	>
+
+.fi
+means you asked \*(em to fetch
+the file named "text" for editing,
+causing it to
+copy the 90 characters of text into the buffer.
+\*(Em awaits your further instructions.
+In this session,
+we will append more text to our file,
+print the contents of the
+buffer,
+and learn to change the text of a line.
+.SS "Adding more text to the file"
+If you want to add more to the end of your text you may do so by using
+the append command to enter append mode.
+.nf
+
+	>a
+	This is text added in Session 2.
+	It doesn't mean much here, but
+	it does illustrate the editor.
+	.
+	>
+
+.fi
+.SS "Interrupt"
+Should you press the RUBOUT key
+(sometimes labelled DEL)
+while
+working with \*(em,
+it will send this message to you:
+.nf
+
+	Interrupt ?
+	>
+
+.fi
+.np
+Any command that \*(em might be executing is terminated by rubout or delete,
+causing \*(em to prompt you for a new command.
+If you are appending text at the time,
+you will exit from append mode
+and be expected to give another command.
+The line of text that you were typing when the append command was
+interrupted will not be entered into the buffer.
+.SS "Making corrections"
+If you have read "A Guide to Using UNIX"
+you will recall that it is
+possible to erase individual characters that you have typed.
+This is done by typing the designated erase character,
+usually the
+number sign (#)
+or backspace,
+as many times as there are characters you want to erase.
+When you type the at-sign (@),
+you erase the entire
+line typed so far.
+You may immediately begin to retype the line.
+This, unfortunately, does not help after you type the line and press
+carriage return.
+To make corrections in lines which have been completed,
+it is necessary to use the editing commands covered in this session and
+those that follow.
+.SS "Listing what's in the buffer"
+Having appended text to what you wrote in session 1,
+you might be curious
+to see what is in the buffer.
+To print the contents of the buffer,
+type the command:
+.nf
+
+	>1,$p
+
+.fi
+.np
+The "1" stands for line 1 of the buffer,
+the "$" is a special symbol
+designating the last line of the buffer,
+and "p" (or print) is the command
+to print a line.
+Thus, "1,$p" gives you:
+.nf
+
+	This is some sample text.
+	And thiss is some more text.
+	Text editing is strange, but nice.
+	This is text added in Session 2.
+	It doesn't mean much here, but
+	it does illustrate the editor.
+	>
+
+.fi
+.np
+In looking over the text we see that
+"this" is typed as "thiss" in the second
+line.
+Let's correct the spelling.
+.SS "Finding things in the buffer"
+In order to change something in
+the buffer we first need to find it.
+We can find "thiss" in the text we
+have entered by looking at a listing of the
+lines.
+Physically speaking,
+we search the lines of text looking for "thiss"
+and stop searching when we have found it.
+The way to tell \*(em to search for something
+is to type it inside slash marks:
+.nf
+
+	>/thiss/
+
+.fi
+.np
+By typing /thiss/
+\*(em is instructed to
+search for "thiss".
+If we asked \*(em to look for a pattern
+of characters which it could not
+find in the buffer,
+\*(em would respond:
+.nf
+
+	No match ?
+	>
+
+.fi
+When \*(em finds the characters "thiss",
+it will print the line of text for your
+inspection:
+.ne 5
+.nf
+
+	And thiss is some more text.
+	>
+
+.fi
+.np
+\*(Em is now positioned in the buffer
+at the line which is just printed,
+ready to make a change in the line.
+Note that it  was not necessary
+to type in the whole line,
+just some unique string on the line required
+is sufficient.
+.SS "The current line"
+At all times during an editing session,
+\*(em keeps track of the line in the
+buffer where it is positioned.
+In general,
+the line which has been most recently printed,
+entered,
+or changed is considered to be the current position in the buffer.
+You can refer to your current
+position in the buffer by the symbol period (.)
+usually known by the name "dot".
+If you type "." you will be instructing \*(em to print
+the current line:
+.nf
+
+	>.
+	And thiss is some more text.
+	>
+
+.fi
+Note that in this context,
+"." is a command to print the current line.
+This is different to the way you used it before,
+to finish off the "a" command.
+If you want to know the line number of the current line,
+you can type ".="
+and \*(em will respond with the line number:
+.nf
+
+	>.=
+	2
+	>
+
+.fi
+If you type the number of any line,
+\*(em will position you
+at that line and print its contents:
+.nf
+
+	>2
+	And thiss is some more text.
+	>
+
+.fi
+.np
+You should experiment with these commands
+to assure yourself that you understand
+what they do.
+.SS "Substitute command (s)"
+Now that we have found our misspelt word it is time to change it from
+"thiss"
+to "this".
+As far as \*(em is concerned,
+changing things is a matter of substituting one thing for another.
+As "a" stood for append,
+so "s" stands for substitute
+(or swap).
+This command will instruct \*(em to make the change:
+.nf
+
+	>2s/thiss/this/p
+
+.fi
+.np
+We first indicate the line to be changed,
+line 2,
+and then type an "s" to indicate we
+want substitution.
+Inside the first set of slashes are the characters that we want to change,
+followed by the characters to replace them and then a closing slash mark.
+A "p" then follows to print the line after the
+substitution is performed.
+To summarize:
+.nf
+
+	>2s/what is to be changed/what to change to/p
+
+.fi
+.np
+If \*(em finds an exact match of the characters to be changed
+it will make the change only
+in the first occurrence of the characters.
+If it does not find the characters to be changed it will respond:
+.nf
+
+	No match ?
+	>
+
+.fi
+indicating your instructions could not be carried out.
+When \*(em does find the characters which you want to change,
+it will make the
+substitution and automatically print the changed line,
+so that you can check that the correct substitution was made.
+In the example,
+.nf
+
+	>2s/thiss/this/p
+	And this is some more text.
+	>
+
+.fi
+line 2
+(and line 2 only)
+will be searched for the characters
+"thiss".
+Strictly speaking,
+it was not necessary to
+specify the line number to be changed.
+In
+.nf
+
+	>s/thiss/this/p
+
+.fi
+\*(em will assume that we mean
+to change the line where we are currently
+positioned (".").
+In this case,
+the command without a line number would have produced the
+same result because we were already positioned at the line we wished to change.
+For another illustration of substitution we may choose the line:
+.nf
+
+	Text editing is strange, but nice.
+
+.fi
+.np
+We might like to be a bit more positive.
+Thus, we could take out the characters "strange,~but" so the line would read:
+.nf
+
+	Text editing is nice.
+
+.fi
+.np
+A command which will first position \*(em at that line and then
+make the substitution is:
+.nf
+
+	>/strange/s/strange, but //p
+
+.fi
+.np
+What we have done here is combine our search with our substitution.
+Such combinations are perfectly legal.
+This illustrates that we do not necessarily have to use line
+numbers to identify a line to \*(em.
+Instead, we may identify the line we want to change by asking
+\*(em to search for a specified pattern of
+characters which occur in that line.
+The parts of the above command are:
+.nf
+
+	/strange/~~~~~~~~tells \*(em to find the characters "strange" in the text
+	s~~~~~~~~~~~~~~~~tells \*(em we want to make a substitution
+	/strange, but //~substitutes nothing at all for the characters
+	~~~~~~~~~~~~~~~~~"strange, but "
+	p~~~~~~~~~~~~~~~~print the line after the substitution has been done
+
+.fi
+.np
+You should note the space after "but" in "/strange, but /".
+If you do not indicate the space is to be taken out,
+your line will be:
+.nf
+
+	Text editing is~~nice.
+
+.fi
+which looks a little funny because of the extra space between "is"
+and "nice".
+Again, we realize from this that a blank space is a real character to a
+computer, and in editing text we need to be aware of spaces within a line just
+as we would be aware of an "a" or a "4".
+.SS "Another way to list what's in the buffer (|)."
+Although the print command is useful for
+looking at specific lines in the
+buffer,
+other commands can be more convenient for viewing large sections of
+text.
+You can ask to see a screen full of text at a time by using the command ".
+If you type
+.nf
+
+	>0"			( <zero> the numeral )
+
+.fi
+\*(em will start with line 1 and continue
+printing lines,
+stopping either when the screen of your terminal
+is full or when the last line in the buffer has been printed.
+If you want to read the next segment of text,
+give the command
+.nf
+
+	>"
+
+.fi
+.np
+If no starting line number is given for the " command,
+printing will start at the "current" line~+~1,
+in this case the last line printed.
+Viewing lines in the buffer one screen full at a time is
+known as paging.
+Paging can also be used to print a section of text on a hard-copy terminal.
+.SS "Saving the modified text"
+This seems to be a good place to pause on our work,
+and so we should end the second session.
+Remember that,
+if you (in haste) type "q" to quit the session,
+you will lose the work you have done during the editing
+session since the latest write command.
+Since in this lesson we have not written to disk at all,
+everything we have
+done would be lost.
+It would be as if we had not done Session 2!
+However,
+since we want to preserve what we have edited,
+we need to say:
+.nf
+
+	>w
+
+.fi
+and then,
+.nf
+
+	>q
+	% [control]d
+
+.fi
+and turn the terminal off when UNIX asks for a login.
+This is the end of the second session on UNIX text editing.
+.SH "Session 3"
+Login to UNIX and make contact with \*(em.
+.SS "Bringing text into the buffer (e)"
+Did you remember to give the name of the file you wanted to \*(em?
+That is, did you say
+.nf
+
+	% \*(em text
+
+.fi
+or simply
+.nf
+
+	% \*(em
+
+.fi
+.np
+Both ways get you in contact with \*(em,
+but the first way will bring a copy of the
+file named "text" into the buffer.
+If you did forget to tell \*(em the name of your file,
+you can get
+it into the buffer by saying:
+.nf
+
+	>e text
+	171
+
+.fi
+.np
+The command e,
+tells the editor that you want to erase anything that might
+already be in the buffer and bring a copy of the file "text" into the
+buffer for editing.
+You may also use the edit (e) command to change files in the middle of an
+editing session or to give \*(em the name of a new file that you want to create.
+Because the "e" command clears the buffer,
+you should write the contents of the buffer
+to disk before editing the next file.
+.SS "Moving text in the buffer (m)"
+\*(Em allows you to move lines of text from one location in the
+buffer to another by means of the move (m) command:
+.nf
+
+	>2,4m$
+
+.fi
+.np
+This command directs \*(em to move lines 2, 3 and 4 to the end of the buffer ($).
+The format for the move command is
+that you specify the first line to be moved,
+the last line to be moved,
+the move command "m", and the line after which
+the moved text is to be placed.
+Thus,
+.nf
+
+	>1,6m20
+
+.fi
+would instruct \*(em to move lines 1 through 6 (inclusive) to a position
+after line 20 in the buffer.
+To move only one line, say,
+line 4, to a position in the buffer
+after line 6,
+the command would be "4m6".
+.np
+Let's move some text using the command:
+.ne 10
+.nf
+
+	>5,$m2
+	>1,$p
+	This is some sample text.
+	And this is some more text.
+	It doesn't mean much here, but
+	it does illustrate the editor.
+	Text editing is nice.
+	This is text added in Session 2.
+	>
+
+.fi
+We can restore the original order by typing:
+.nf
+
+	>5,$m2
+
+.fi
+or, combining context searching and the move command:
+.nf
+
+	>/And this is some/,/This is text/m/This is some sample/
+
+.fi
+The problem with combining context searching with the move command
+is that the chance of making a typing error in such a long
+command is greater than if one types line numbers.
+.SS "Copying lines (t)"
+The t command is used to make a second copy of specified lines,
+leaving the original lines where they were.
+The copy command has the same format as the move command,
+for example:
+.nf
+
+	>12,15t$
+
+.fi
+makes a copy of lines 12 through 15,
+placing the copied lines after the buffer's end ($).
+Experiment with the copy command so
+that you can become familiar with how it works.
+.SS "Deleting lines (d)"
+Suppose you want to delete the line
+.nf
+
+	This is the text added in Session 2.
+
+.fi
+from the buffer.
+If you know the number of the line to be deleted,
+you can type
+that number followed by "d".
+The following example deletes line 4:
+.nf
+
+	>4d
+
+.fi
+Here "4" is the number of the line to be deleted and "d"
+is the command to delete the line.
+.np
+If you do not happen to know the line number you can search for the line
+and then delete it using this sequence of commands:
+.nf
+
+	>/added in Session 2./
+	This is the text added in Session 2.
+	>d
+
+.fi
+The "/added in Session 2./" asks \*(em to locate and print the next line which
+contains the indicated text.
+Once you are sure that you have correctly
+specified the line that you want to delete, you can enter
+the delete (d) command.
+In this case it is not necessary to specify a line number before
+the "d".
+If no line number is given,
+\*(em deletes the current line ("."),
+that is,
+the line found by our search.
+After the deletion,
+the buffer should contain:
+.ne 7
+.nf
+
+	>1,$p
+	This is some sample text.
+	And this is some more text.
+	Text editing is nice.
+	It doesn't mean much here, but
+	it does illustrate the editor.
+	>
+
+.fi
+To delete both lines 2 and 3:
+.nf
+
+	And this is some more text.
+	Text editing is nice.
+
+.fi
+you type
+.nf
+
+	>2,3d
+
+.fi
+which specifies the range of lines from 2 to 3,
+and the operation on those lines - "d" for
+delete.
+.np
+Again,
+this presumes that you know the line numbers for the lines to be
+deleted.
+If you do not you might combine
+the search command with the delete command as so:
+.nf
+
+	>/And this is some/,/Text editing is nice./d
+
+.fi
+Note that now these lines have
+been deleted,
+all of the lines following those
+deleted will have their line number
+changed.
+.SS "A word or two of caution"
+In using the search function to locate lines to be deleted you should be
+absolutely sure the characters you give as the basis for the search
+will take \*(em to the line you want deleted.
+\*(Em will search for the first occurrence of the characters
+starting from where you last edited - that is,
+from the line you see
+printed if you type dot (.).
+.np
+A search based on too few characters may result in the wrong lines being
+deleted,
+which \*(em will do as easily as if you had meant it.
+For this reason,
+it is usually safer to specify the search and then
+delete
+'cu
+in two separate steps,
+at least until you become familiar enough
+with using the editor that you understand
+how best to specify searches.
+For a beginner it is not a bad idea to double-check each command
+before pressing carriage return to send the command on its way.
+.SS "More about dot (.) and buffer end ($)"
+We know that dot has at least two functions.
+.in +5
+.ti -5
+1.~~~to exit from append mode we type dot (and only a dot) on a line and
+press carriage return;
+.ti -5
+2.~~~to refer to the line we are at in the buffer.
+.in -5
+.np
+Dot can also be combined with the
+equal sign to get the number of the line
+currently being edited:
+.nf
+
+	>.=
+
+.fi
+.np
+Thus if we type ".=" we are asking for the number of the line
+and if we type "." we are asking for the text
+of the line.
+.np
+In this editing session and the last,
+we used the dollar sign to indicate the
+end of the buffer in commands such as print,
+copy, and move.
+The dollar sign as a command asks \*(em to print the last line in the
+buffer.
+If the dollar sign is combined with the equal sign ($=)
+\*(em will print the line number corresponding
+to the last line in the buffer.
+.np
+"." and "$" therefore represent line numbers.
+Whenever appropriate,
+these symbols can be used
+in place of line numbers in commands.
+For example
+.nf
+
+	>.,$d
+
+.fi
+instructs \*(em to delete all lines from the current line (.) to the end
+of the buffer.
+.SS "Moving around in the buffer (+ and -)"
+It is frequently convenient during an
+editing session to go back and re-read
+a previous line.
+We could specify a context search for a line we want to read
+if we remember some of its text,
+but if we simply want to see
+what was written a few
+lines ago, say 3, we can type
+.nf
+
+	>-3p
+
+.fi
+.np
+This tells \*(em to move back to a position 3 lines before the current
+line (.) and print that line.
+We can move forward in the buffer similarly:
+.nf
+
+	>+2p
+
+.fi
+instructs \*(em to print the line which is 2 ahead of our current position.
+.np
+You may use "+" and "-" in any command where \*(em accepts line numbers.
+Line numbers specified with
+"+" or "-" can be combined to print a range of lines.
+The command
+.nf
+
+	>-1,+2t$
+
+.fi
+makes a copy of 4 lines:
+the line before the current line,
+the current line,
+and the two after
+it.
+The copied lines will be placed after the last line in the buffer ($).
+.np
+Try typing only "-"; you will move back one line
+just as if you had typed "-p".
+Typing the command "+" works similarly.
+You might also try typing a few plus or minus signs in a row (such as "+++")
+to see \*(em's response.
+Typing a carriage return alone on
+a line is the equivalent of typing "+p";
+it will move you one line ahead in the buffer and print that line.
+.np
+If you are at the last line of the buffer and try to move further ahead,
+perhaps by typing a "+" or a carriage return alone on the line,
+\*(em will remind you that you are at the end of the buffer.
+Similarly, if you try to move to a position before the first line,
+\*(em will print:
+.nf
+
+	Address ?
+	>
+
+.fi
+.np
+The number associated with a buffer line is the line's
+"address", in that it can be used to locate the line.
+.SS "Changing lines (c)"
+There may be occasions when you want
+to delete certain lines and insert new
+text in their place.
+This can be accomplished easily with the "c" (change) command.
+The change command instructs
+\*(em to delete specified lines and then switch to
+text input mode in order to accept the text which will replace them.
+Let's say we want to change the first two lines in the buffer:
+.nf
+
+	This is some sample text.
+	And this is some more text.
+
+.fi
+to read
+.nf
+
+	This text was created with the UNIX text editor.
+
+.fi
+To do so, you can type:
+.nf
+
+	>1,2c
+	This text was created with the UNIX text editor.
+	.
+	>
+
+.fi
+.np
+In the command 1,2c we specify that we
+want to change the range of lines beginning
+with 1 and ending with 2 by giving line
+numbers as with the print command.
+These lines are deleted
+and the editor
+places you in text input mode.
+Any text typed on the following lines will be inserted
+into the position where lines were deleted by the change command.
+You will remain in text input mode until you exit in the usual way,
+by typing a period alone on a line.
+Note that the number of lines added to the buffer need not be
+the same as the number of lines deleted.
+.np
+This is the end of the third session on
+text editing with UNIX.
+.SH "Session 4"
+This lesson covers several topics,
+starting with commands which apply
+throughout the buffer,
+characters with special meanings,
+and how to
+issue UNIX commands while in the editor.
+The next topics deal with files:
+more on reading and writing.
+The final section suggests sources of further information.
+.SS "Making commands global (g)"
+One disadvantage to the commands
+we have used for searching or substituting
+is that if you have a number of
+instances of a word to change it appears that
+you have to type the command repeatedly,
+once for each time the change needs to
+be made.
+\*(Em, however,
+provides a way to make commands apply to the entire contents
+of the buffer - the global (g) command.
+.np
+To print all lines containing a certain
+sequence of characters (say, "text")
+the command is:
+.nf
+
+	>g/text/p
+
+.fi
+.np
+The "g" instructs \*(em to make a
+global search for all lines in the buffer
+containing the characters "text".
+The "p" prints the lines found.
+.np
+To issue a global command,
+start by typing a "g" and then a search pattern
+identifying the lines to be affected.
+Then, on the same line, type the command to
+be executed on the identified lines.
+Global substitutions are frequently useful.
+For example, to change all instances of the word "text"
+to the word "material" the command
+would be a combination of the global search
+and the substitute command:
+.nf
+
+	>g/text/s/text/material/gp
+
+.fi
+.np
+Note the "g" at the end of the global
+command which instructs \*(em to change
+each and every instance of "text" to "material".
+If you do not type the "g" at the end
+of the command only the first instance of
+"text" in each line will be changed
+(the normal result of the substitute command).
+The "g" at the end of the command is independent of the "g"
+at the beginning.
+You may give a command such as:
+.nf
+
+	>14s/text/material/gp
+
+.fi
+to change every instance of "text" in line 14.
+Further,
+neither command will change "Text" to "material" because "Text"
+begins with a capital rather than a lower-case t.
+.np
+The usual qualification should be made
+about using the global command in combination
+with any other - in essence,
+be sure of what you are telling \*(em to do to the
+entire buffer.
+For example:
+.nf
+
+	>g/ /d
+
+.fi
+will delete every line containing a blank anywhere in it.
+This could adversely affect your document,
+since most lines have spaces
+between words and thus would be deleted.
+You should experiment with the
+global command on a small buffer of
+text to see what it can do for you.
+.SS "More about searching and substituting"
+In using slashes to identify a
+character string that we want to search for or
+change,
+we have always specified the exact characters.
+There is less tedious way to repeat the same string of characters.
+To change "noun" to "nouns" we may type either
+.nf
+
+	>/noun/s/noun/nouns/p
+
+.fi
+as we have done in the past,
+or a somewhat abbreviated command:
+.nf
+
+	>/noun/s//nouns/p
+
+.fi
+.np
+In this example,
+the characters to be changed are not specified - there are no
+characters,
+not even a space,
+between the two slash marks which
+indicate what is to be changed.
+This lack of characters between
+the slashes is taken by the editor to
+mean "use the characters we last
+searched for as the characters to be changed."
+.np
+Similarly,
+the last context search may be
+repeated by typing a pair of slashes
+with nothing between them:
+.nf
+
+	>/does/
+	It doesn't mean much here, but
+	>//
+	it does illustrate the editor.
+
+.fi
+.np
+Because no characters are specified for the second search,
+the editor scans
+the buffer for the next occurrence of the characters "does".
+.np
+\*(Em normally searches forward through the buffer,
+wrapping around from the
+end of the buffer to the beginning,
+until the specified character
+string is found.
+If you want to search in the reverse direction,
+use question marks (?)
+instead of slashes to surround the character string.
+.SS "Special characters"
+Two characters have special meanings
+when used in specifying searches:
+"$" and "^".
+"$" is taken by the editor to mean
+"end of the line" and is used to identify
+strings which occur at the end of a line.
+.nf
+
+	>g/ing$/s//ed/p
+
+.fi
+tells the editor to search for all lines ending in "ing"
+(and nothing else, not even a blank space),
+to change each final "ing" to "ed" and print the changed lines.
+.np
+The symbol "^" indicates the beginning of a line.
+Thus,
+.nf
+
+	>s/^/1. /p
+
+.fi
+instructs the editor to insert
+"1." and a space at the beginning of the
+current line.
+.np
+The characters "$" and "^" have
+special meanings only in the context of
+searching.
+At other times,
+they are ordinary characters.
+If you ever need to search for a
+character that has a special meaning,
+you must indicate that the character
+is to temporarily lose its
+special significance by typing another special character,
+the backslash (\\), before it.
+.nf
+
+	>s/\\$/dollar/p
+
+.fi
+looks for the character
+"$" in the current line and replaces it by the word
+"dollar".
+Were it not for the backslash,
+the "$" would have represented "the end of the
+line" in your search,
+not necessarily the character "$".
+.np
+As well as "^" and "$",
+there are several other characters which
+have special meaning within search strings.
+Two of these will be explained here.
+.SS "|.| in a search string"
+Whenever "." is used inside a search string
+it matches any character.
+Thus
+.nf
+
+	>s/^./T/p
+
+.fi
+will swap the first character on the
+current line (what ever it is)
+with "T".
+Also
+.nf
+
+	>s/..$//p
+
+.fi
+will delete the last two characters
+from the current line.
+\&"." can be useful if,
+for instance,
+you wish to delete four words from a
+line,
+but you don't want to type all
+the words in.
+So you could use
+.nf
+
+	>s/th...........nd//p
+
+.fi
+to delete "this is the end" from the 
+current line.
+This is all very well,
+but a little caution is needed
+in case you have not specified
+enough of the string to be matched.
+.SS "|*| in a search string"
+When "*" is used in a search string
+it matches the first, longest possible
+string of zero or more of the character
+before the "*".
+As an example assume that the current line
+contained
+.nf
+
+	AAAA bbbb     HHHHHHHHiHHH
+
+.fi
+and you wished the change "HHHHHHHHiHHH"
+into "abcd".
+You could type in
+.nf
+
+	>s/HHHHHHHHiHHH/abcd/p
+
+.fi
+but this is rather tedious as you must
+first count the number of H's.
+By using "*" you only need to type
+.nf
+
+	>s/H*iHHH/abcd/p
+
+.fi
+to achieve the required change.
+Again caution must be taken as
+the above example will
+change the first occurence of
+zero or more H's followed by "iHHH".
+.SS "The |.*| combination"
+Consider the problem of changing
+the text inside parentheses.
+For example
+consider the line of text:
+.nf
+
+	by Mr Smith (the leader was on vacation), but
+
+.fi
+You wish to change the comment within the
+parentheses to
+"the president was overseas at the time".
+What you must do is match all the
+characters,
+what ever they are.
+This suggests that you must use "." somewhere.
+You also wish to match all of the characters,
+every one of them,
+no matter how many there are.
+This suggests that you must use "*" also.
+.np
+A moments concentration on the problem
+gives you the required answer as
+.nf
+
+	>s/(.*)/(the president was overseas at the time)/p
+
+.fi
+As you can see "(.*)" will match any
+number of characters enclosed in parentheses.
+.SS "Other characters with special meaning"
+The following characters all have special
+meaning within search strings
+and hence must be escaped
+(have their meaning taken away)
+by the use of "\\" (slosh).
+.nf
+
+	^  $  .  *  [  ]
+
+.fi
+.np
+The following characters have special meaning
+in both the search string and the swap string
+.nf
+
+	&  %
+
+.fi
+Again these characters must be escaped
+using "\\".
+If you wish to use "\\" in either of the
+two strings then you must use "\\\\".
+.np
+To find the meaning of the other special
+characters you should read the
+section on \*(em in the
+"AGSM System Guide" or in the
+"UNIX programmers manual (Sixth Edition)".
+.SS "Issuing UNIX commands from the editor"
+After creating several files with the editor,
+you may want to
+delete files no longer useful to you,
+or ask for a list of your files.
+Removing and listing files are not functions of the editor,
+and so they require the use of UNIX system commands (also referred to
+as "shell" commands, as "shell" is the name of the program that
+processes UNIX commands).
+You do not need to quit the editor to
+execute a UNIX command as long as
+you indicate that it is to be sent
+to the shell
+for execution.
+To use the UNIX command rm to remove the file named "junk" type:
+.nf
+
+	>!rm junk
+	!
+	>
+
+.fi
+The exclamation mark (!) indicates that
+the rest of the line is to be processed
+as a UNIX command.
+The editor prints a "!" when the command is completed.
+.SS "Filenames and file manipulation"
+Throughout each editing session,
+\*(em keeps track of the name of the
+file being edited as the current filename.
+\*(Em remembers as the current filename the name
+given when you entered the editor.
+The current filename changes whenever
+the edit (e) command is used
+to specify a new file.
+Once \*(em has recorded a current filename,
+it inserts that name into any command
+where a filename has been omitted.
+If a write command does not specify a file,
+\*(em, as we have seen,
+supplies the
+current filename.
+You can have the editor write onto
+a different file by including its
+name in the write command:
+.nf
+
+	>w chapter3
+	8798
+	>
+
+.fi
+The current filename remembered by
+the editor will not be changed as a result of
+the write command unless it is the first filename
+given in the editing session.
+Thus,
+in the next command which does not specify a name,
+\*(em will write onto the current
+file and not onto the file "chapter3".
+.SS "The file (f) command"
+To ask for the current filename,
+type "f".
+In response,
+the editor provides the current filename:
+.nf
+
+	>f
+	text
+	>
+
+.fi
+If you wish to change the name of the
+remembered file without changing the
+buffer,
+you can type
+.nf
+
+	>f junk
+
+.fi
+and the remembered filename will
+be changed to "junk".
+.SS "Reading additional files (r)"
+The read (r) command allows you
+to add the contents of a file to the buffer
+without destroying the text already there.
+To use it,
+specify the line after which the new text will be placed,
+the command r,
+and then the name of the file.
+.nf
+
+	>$r bibliography
+	473
+	>
+
+.fi
+This command reads in the file
+bibliography and adds it to the buffer after the
+last line.
+The current filename is not changed by the read command unless
+it is the first filename given in the editing session.
+.SS "Writing parts of the buffer"
+The write (w) command can write
+all or part of the buffer to a file you
+specify.
+We are already familiar with writing
+the entire contents of the buffer
+to a disk file.
+To write only part of the buffer onto
+a file, indicate the
+beginning and ending lines before
+the write command, for example:
+.nf
+
+	>45,$w ending
+	54
+	>
+
+.fi
+Here all lines from 45 through to
+the end of the buffer are written onto the
+file named "ending".
+The lines remain in the buffer as
+part of the document you are editing,
+and you may continue to edit the entire buffer.
+.SS "Help (h)"
+The "h" command displays a summary of the editor commands available.
+As you will see there are many
+features of the editor that were not
+described here.
+These additional features are described
+in the "Introduction to AGSM's UNIX system".
+.vs 60u
+.CO
+.vs 40u

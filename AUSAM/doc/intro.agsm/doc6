@@ -1,0 +1,242 @@
+.SH "Common Commands"
+.P
+Commands consist of a program name, possibly
+followed by a sequence of arguments.
+Arguments are sequences of characters
+separated by blanks or tabs,
+and are generally file names or options.
+The way in which commands react
+to different arguments
+is set out in detail later in this manual ("AGSM System Guide"),
+"UNIX Users Guide"
+or the green
+UNIX Programmers Manual.
+.P
+The following is a list of the most
+common commands used
+on the system.
+.LB 10 0 0 0
+.LI ls
+\&'ls' lists all of your files.
+This command is often used
+to find the size of the files.
+If you use 'ls -l' you may get the following
+(-l is an option which means to give a long or full listing)
+.DS
+
+	% ls -l
+	total 2
+	-rw-------  1 joe		48 Nov 24:13:05 fred
+	-rw-------  1 joe		72 Nov 24:13:16 junk
+	%
+
+.DE
+This tells you,
+among other things,
+who owns the file (ie 'joe')
+how many characters are in the file
+(48 in "fred", 72 in "junk"),
+and the date of last modification of the
+file.
+.LI "who"
+\&'who' gives the
+names of all the users using
+the system at the moment.
+.DS
+	
+	% who
+	johno  		tty6 Dec 04 12:01
+	root    	tty8 Dec 04 12:06
+	joe     	ttyi Dec 04 11:48
+	plip    	ttyn Dec 04 13:34
+	jack  		ttyo Dec 04 12:46
+	larry		ttyp Dec 04 12:12
+	%
+
+.DE
+This indicates who is logged on,
+which terminal they are using,
+and when they logged on.
+This command is also useful
+for determining whether a user you
+wish to write to is logged on.
+.LI "date"
+This command is used to find the time
+and date.
+.DS
+
+	% date
+	Mon Dec 04 13:49:40 Sydney Time 1978
+	%
+
+.DE
+.SK
+.LI "pp"
+This command gives
+general
+information about your account.
+.DS
+
+% pp
+Password and Lnode structures for UID:   1234		<-- 1
+
+LIMITS:
+Process Limit:       5         <-- 2      Core Limit:     64 Kbytes
+Processes:           2         <-- 3
+Line Printer:       20 Printer units	<-- 4
+Disk Allocation:   100 units   <-- 5      Disk Overshoot: 100 units
+Disk Usage:          5 units   <-- 6
+
+GENERAL:
+Encrypted Password: "do884r9e"         Warnings:    0
+Total Connect Time: 1d13h              Total CPU Time: 0h30m
+Account last used at: Mon Dec 04 08:20:46 1978
+Valid terminal groups: a
+
+STRINGS:
+Login name: joe
+Initial directory: /user3/stewed.ants/joe
+Initial shell: /bin/sh
+Names: Joe Cool
+
+.DE
+.P
+Message #1 indicates the number
+by which you are known
+to the system and corresponds to each user name.
+.P
+Message #2 tells you how many
+processes you can have going at any one time.
+A process is something which uses
+the machine,
+ie. any command you type in
+is a process.
+Because you are logged on you
+have the shell program going interpreting
+your commands.
+This is also a process.
+.P
+Message #3 tells you how many
+processes you had going when
+"pp" was typed in.
+.P
+Message #4 indicates the number of line printer
+pages you can print at any one time.
+.P
+Messages #5 and #6 tell you,
+how many "disk units" you are
+allocated
+(maximum space for your files),
+and how many "disk units"
+you are currently using.
+A "disk unit" is related to
+the number of files you have,
+and to their size.
+.LI "passwd"
+This command is used to change your
+password.
+You should change your password
+regularly
+(every month or so),
+using words of at least eight characters.
+The use of several words is also highly recommended.
+Typing in 'passwd' will
+produce the following
+.DS
+
+	Old password:
+	New password: 
+	Check:
+
+	%
+
+.DE
+You will have to specify the
+old password,
+(this is again a security measure)
+and a new password.
+When 'Check:' is printed you must enter
+the new password again,
+just in case you have misspelt it the first time.
+No characters are printed
+when you type the passwords in.
+.LE
+pack, unpack
+.LB 10 0 0 0 "" 0
+.LI pcat
+These three commands are used
+to save space.
+The first of these commands (pack)
+will attempt to
+compress the file
+into a smaller space
+without losing any information.
+This is very useful when
+you are reaching your disk limit.
+If packing a file will not
+save space the system will not pack it.
+Packing files works best on
+large files,
+as these save larger amounts of
+space than when smaller files
+are packed.
+The second command (unpack)
+is the reverse operation of "pack".
+When a file is packed,
+a suffix of ".z" will be
+appended to the file name.
+This is to indicate that the file
+has been packed.
+If you try to cat a packed file,
+you will only get garbage coming up as it is a binary file (see sect X.X).
+You must not edit or lpr a packed file.
+This is why the command "unpack"
+is used.
+An example of the use of "pack" and "unpack"
+is given below
+.DS
+
+	% ls
+	fred
+	junk.z			(this is a packed file)
+	% pack fred		(will now "pack" fred)
+	fred: 35% compression	(indicates space saved)
+	% ls
+	fred.z
+	junk.z
+	% unpack junk		(will now unpack "junk")
+	% ls
+	fred.z
+	junk
+	%
+
+.DE
+A word of warning!
+'cu
+Do not
+edit any packed file.
+You run the risk of destroying
+the file if you do
+(it has happened before).
+Before you do anything with
+any packed file you must unpack it.
+The only exception is pcat.
+.sp
+Pcat is used to view packed files when
+it is not required to unpack the file.
+If you typed
+.DS
+
+	% pcat fred.z
+
+.DE
+the contents of "fred" will be printed
+on the terminal.
+This command in no way changes any
+files,
+it only prints the contents of the
+specified packed files.
+It can be given any number of
+file names,
+just as in 'cat'.
+.LE

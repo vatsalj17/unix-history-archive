@@ -1,0 +1,214 @@
+/*
+ * tunable variables
+ */
+
+#define	NBUF	13		/* size of buffer cache */
+#define	NINODE	60		/* number of in core inodes */
+#define	NFILE	40		/* number of in core file structures */
+#define	NMOUNT	4		/* number of mountable file systems */
+#define	NEXEC	1		/* number of simultaneous exec's */
+#define	MAXMEM	(64*32)		/* max core per process - first # is Kw */
+#define	SSIZE	20		/* initial stack size (*64 bytes) */
+#define	SINCR	20		/* increment of stack (*64 bytes) */
+#define	NOFILE	15		/* max open files per process */
+#define	CANBSIZ	256		/* max size of typewriter line */
+#define	CMAPSIZ	100		/* size of core allocation area */
+#define	SMAPSIZ	200		/* size of swap allocation area */
+#ifdef	MALLOC_UMAP
+#define	UMAPSIZ	32		/* size of UNIBUS-MAP allocation area */
+#endif	MALLOC_UMAP
+#ifndef NEW_SLEEP
+#define	NCALL	10		/* max simultaneous time callouts */
+#else
+#define	NCALL	10		/* max simultaneous time callouts */
+#endif	NEW_SLEEP
+#define	NPROC	80		/* max number of processes */
+#define	NTEXT	20		/* max number of pure texts */
+#ifndef	CBLOCK_16
+#define	NCLIST	50		/* max total clist size */
+				/* 300* 6 = 1800 chars available */
+#else
+#define	NCLIST	35		/* max total clist size */
+				/* 150*14 = 2100 chars available */
+#endif	CBLOCK_16
+#define	HZ	50		/**** Ticks/second of the clock ****/
+#ifdef	NEW_TIMEOUT
+#define NTFREE	2		/* no. of spare blocks in timeout freelist */
+#endif
+#ifdef	RAW_BUFFER_POOL
+#define	NRAWBUFS	5
+#endif	RAW_BUFFER_POOL
+#ifdef	AUSAML
+#define	CMASKSIZE	2	/* number of ints in class mask */
+#endif	AUSAML
+#ifdef	MANY_USERS
+#define	SCHMAG	 5
+#define	PRIORATE 8
+#else
+#define	SCHMAG	 10
+#define	PRIORATE 16
+#endif	MANY_USERS
+#ifdef	TTY_SUSER
+#define	TTY_MAXSPD	11	/* 2400 baud */
+#endif	TTY_SUSER
+
+/*
+ * priorities
+ * probably should not be
+ * altered too much
+ */
+
+#define	PSWP	-100
+#define	PINOD	-90
+#define	PRIBIO	-50
+#ifdef	DELAY
+#ifdef	TTY_CONNECT
+#define	PRIREDIRECT	-1
+#endif	TTY_CONNECT
+#define	PDELAY	-1
+#endif
+#define	PPIPE	1
+
+#ifdef	MORE_USER_PROIRITIES
+#define	PWAIT	30
+#ifdef	SHARED_DATA
+#define	PPV	30		/* pp & vv sleep priority */
+#endif
+#ifdef	LOCKING
+#define	PLOCK	40		/* priority for locking of a file */
+#endif
+#define	PSLEP	50
+#define	PUSER	64
+#else
+#define	PWAIT	40
+#ifdef	SHARED_DATA
+#define	PPV	40		/* pp & vv sleep priority */
+#endif
+#ifdef	LOCKING
+#define	PLOCK	50		/* priority for locking of a file */
+#endif
+#define	PSLEP	90
+#define	PUSER	100
+#endif	MORE_USER_PRIORITIES
+
+/*
+ * signals
+ * dont change
+ */
+
+#define	NSIG	20
+#define		SIGHUP		1	/* hangup */
+#define		SIGINT		2	/* interrupt (rubout) */
+#define		SIGQIT		3	/* quit (FS) */
+#define		SIGINS		4	/* illegal instruction */
+#define		SIGTRC		5	/* trace or breakpoint */
+#define		SIGIOT		6	/* iot */
+#define		SIGEMT		7	/* emt */
+#define		SIGFPT		8	/* floating exception */
+#define		SIGKIL		9	/* kill */
+#define		SIGBUS		10	/* bus error */
+#define		SIGSEG		11	/* segmentation violation */
+#define		SIGSYS		12	/* sys */
+#define		SIGPIPE		13	/* end of pipe */
+#define		SIGTERMINATE	14	/* terminate - send this signal when system about to close down  */
+#ifdef	TIME_LIMITS
+#define		SIGTIMEOUT	15	/* real time limit  */
+#define		SIGCPUTL	16	/* cpu time limit  */
+#endif
+#ifdef	MEM_PAR_INTR
+#define		SIGMEMPAR	17	/* memory parity */
+#endif	MEM_PAR_INTR
+
+/*
+ * fundamental constants
+ * cannot be changed
+ */
+
+#define	USIZE	16		/* size of user block (*64) */
+#define	NULL	0
+#define	NODEV	(-1)
+#define	ROOTINO	1		/* i number of all roots */
+#define	DIRSIZ	14		/* max characters per directory */
+
+/*
+ * structure to access an
+ * integer in bytes
+ */
+struct
+{
+	char	lobyte;
+	char	hibyte;
+};
+
+/*
+ * structure to access an integer
+ */
+struct
+{
+	int	integ;
+};
+/*
+ * structure to access anything as bytes
+ */
+struct
+{
+	char	byt[];
+};
+/*
+ * structure to access an unsigned integer
+ */
+struct
+{
+	unsigned unsignd;
+};
+/*
+ * structure to access a long
+ */
+struct
+{
+	int	hiint;
+	int	loint;
+};
+
+/*
+ *Structure to access anything as integers
+ */
+struct
+{
+	int	intarray[];
+};
+
+/*
+ * Certain processor registers
+ */
+#define PS	0177776
+#define KL	0177560
+#define SW	0177570
+#ifdef	STACK_LIMIT
+#define	SLR	0177774		/* stack limit register */
+#endif	STACK_LIMIT
+#ifdef	MEM_PAR_INTR & _1140
+#define	PARMEMCSR	0172100	/* first status register for parity control */
+#endif	MEM_PAR_INTR & _1140
+#ifdef	MAPPED_BUFFERS
+#ifndef	_1140
+#define	KA5	0172372
+#else	_1140
+#define	KA5	0172352
+#endif	_1140
+#define	ka5	KA5->integ
+#endif	MAPPED_BUFFERS
+
+
+#ifdef	AUSAM16
+	/*
+	 * macro to extract 16 bit uid from inode
+	 */
+
+#define	guid(ip)	((ip->i_uidh << 8) | (ip->i_uidl & 0377))
+
+#endif	AUSAM16
+
+#ifdef	AUSAML
+#define MAXUSERS	5		/* max no simultaneous users */
+#endif	AUSAML

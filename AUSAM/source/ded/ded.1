@@ -1,0 +1,799 @@
+.pl 66
+.th DED I 78/04/07
+.sh NAME
+.s3
+ded \*- display editor
+.s3
+.sh SYNOPSIS
+.s3
+.bd ded
+[ -b ] [ -d ] [-m<character> ] [ -s ] [ -t ] [ -u ]
+filename
+.s3
+.lp +6 6
+Options may precede or follow the filename, as you wish.
+.s3
+.lp +6 6
+option b : ('b' for 'break') select 'auto-break' mode, in which a line-break is
+forced whenever text is typed after the right margin (currently
+fixed at column 64 or thereabouts).
+The 'auto-break' mode is set automatically on files which aren't
+obviously program source files - i.e. those which get
+auto-tabbing (see the -t option below) and .out files. The
+option can be set by the b+ and b- commands. The opposite of the
+-b option is the -u option.
+.s3
+.lp +6 6
+option d : ('d' for 'dlog') replay the '.dlog' file which
+.bd ded
+creates during editing. The .dlog file contains all the terminal input
+since the start of editing or since the last 'w' command.
+.bd ded
+will find the .dlog file: you type
+.sp 1
+        ded foo -d
+.sp 1
+and
+.bd ded
+will edit the file 'foo' under control of the file 'foo.dlog'.
+.s3
+.lp +6 6
+option m : ('m' for 'modifier') use the character which follows
+the 'm' as the modifier (or escape) character, to make up
+composite characters such as '{' on an ITT terminal. For example,
+.sp 1
+                ded foo -m%
+.sp 1
+will edit foo, displaying curly brackets as '%('. The default
+escape character is @,
+.ul
+not backslash,
+because backslash is a much overworked
+character, being
+both a modifier character in typed input and a data character in many
+programs. Using a character other than 'backslash' in the 'm'
+option makes your file more readable. On ITT terminals, lots of
+characters are 'escaped', on Hazeltines only the 'tilde'
+character (and that only until we rewrite the terminal firmware).
+(Joke: try '-ma' to turn the vdu into a sheep.)
+.s3
+.lp +6 6
+option s: ('s' for 'silence') don't
+ring the bell, ever. (This option was specially
+requested by tender-eared users, self-styled paranoiacs.)
+.s3
+.lp +6 6
+option t : ('t' for 'tabs') select 'auto-tab' mode, in which leading spaces on
+a line are replaced by equivalent combinations of tabs and
+spaces. The 'auto-tab' mode is set by default on files with
+names ending with .c, .m, .m11 or .s. It can be set by the 't+'
+command and unset by the 't-' command.
+.s3
+.lp +6 6
+option u: don't use auto breaks (opposite of -b option).
+.i0
+.sh DESCRIPTION
+.s3
+.bd ded
+is an editor for those who like to see their editing context
+at the time they are typing in or editing or whatever. It
+maintains a screenful of text, taking some care to make changes
+by sending the minimum of characters to the terminal. Editing is
+via control keys and via commands built up on the (special)
+bottom line of the screen. The bottom-line
+commands are taken from
+.bd em(I)
+in most cases, so you have to learn the minimum of new commands
+to change over to a super new editing experience.
+.s3
+You can move around the picture with the normal
+cursor-control keys (UP, DOWN, RIGHT, LEFT, wordRIGHT, wordLEFT).
+The SEND key introduces a 'special' interpretation of
+the next key depression. RETURN is used to insert
+newlines into the picture. Other cursor-control keys are used as
+detailed below.
+.s3
+.ul 1
+CURSOR-CONTROL KEYS
+.s3
+.lp +3 3
+UP - move up a single line (if at top of screen, scroll
+downwards a bit, but if already at top of file ring bell and
+don't scroll picture).
+.s3
+.lp+3 3
+DOWN - move down a single line (if at bottom of screen, scroll
+upwards a bit, but if at end of file ring bell and don't scroll
+picture).
+.s3
+.lp+3 3
+LEFT - move left a single character (if at left of screen, ring
+bell and don't move).
+.s3
+.lp +3 3
+RIGHT - move right a single character (if at right of screen,
+ring bell and don't move).
+.s3
+.lp +3 3
+wordLEFT - move to the beginning of the current 'word' or to the
+beginning of the first 'word' to the left of the
+cursor.
+.s3
+.lp+3 3
+wordRIGHT - move to the beginning of the first 'word' to the right of the
+cursor.
+.s3
+.lp +3 3
+SEND - interpret the next key depression specially, viz :-
+.s3
+.lp +6 3
+SEND, SEND - execute command shown in edit line.
+.lp +6 3
+SEND, UP - move to top edge of screen.
+.lp +6 3
+SEND, DOWN - move to bottom edge of screen.
+.lp +6 3
+SEND, LEFT - move to left edge of screen.
+.lp +6 3
+SEND, RIGHT - move to right edge of screen.
+.lp +6 3
+SEND, wordLEFT - move to the beginning of the current line -
+i.e. to the first character in the line.
+.lp +6 3
+SEND, wordRIGHT - move to the end of the current line - i.e. to
+the position after the last character in the line.
+.s3
+.lp +3 3
+DIAGONAL - if in position anywhere in the picture, change to
+position in the special 'edit line' at the bottom of the
+screen; if in position in the edit line, go back to position in
+the picture. (Note - the characters on the edit line are
+susceptible to insertion, RUBOUT etc. etc., just like any other
+line of the picture.)
+.s3
+.lp +3 3
+LINEFEED - move to the left of the screen on the next line down
+(if at the bottom of screen, scroll upwards but at the end of
+the file just ring the bell and don't scroll).
+.s3
+.lp +3 3
+RETURN - insert a newline in the current line at the current
+position (\c
+.bd ded
+tries hard to use the minimum number of characters to perform
+the line insertion and tries even harder to
+make the picture move because of the insertion so that you can
+tell that it has been performed.
+Whether the top lines move up to make space for the insertion
+or the bottom lines move down is therefore hard to predict).
+.s3
+.lp +3 3
+ESCAPE/ACCEPT - if in position anywhere in the
+picture, wipe the special edit line
+at the bottom of the screen, and prepare to accept an editing
+command; if in position in the edit line, execute the command
+and go back to position in the picture.
+.s3
+.lp +3 3
+RUBOUT - normally, rub out the character to the left of the
+cursor (^R rubs out the character under the cursor) and pull the
+tail of the line left one position (i.e. just like
+open mode in
+.bd em(I)
+but right before your eyes). If the cursor is at
+the left of the screen, however,
+.bd ded
+tries to stick the current line
+onto the end of the previous line (i.e. it tries to rubout the newline) - if
+there isn't room to do this it rings the bell.
+.i0
+.s3
+.ul 1
+CONTROL-LETTER KEYS
+.s3
+Apart from the codes used by the cursor-control keys (e.g. the UP
+key is equivalent to <control>-S)
+the following <control>-<letter> combinations are
+recognised.
+.s3
+.lp +3 3
+<control>-F - rub out the line from the current cursor position.
+.s3
+.lp +3 3
+<control>-G - erase current word. Delete from the current cursor position
+up to the beginning of the next word.
+.s3
+.lp +3 3
+<control>-I (tab) - move to the next tab stop (currently immovably set at
+multiples of 8 columns), pushing the tail of the line right if
+necessary (try it, I can't tell you how ergonomic it is!).
+.s3
+.lp +3 3
+<control>-R - rub out the character under the cursor and pull the tail of
+the line left one position - if the cursor is to the right of
+the last visible character, ring the bell.
+.s3
+.lp +3 3
+<control>-W - rub out a 'word' - delete from the beginning of the current
+word to the cursor position. If the cursor is at the beginning
+of a word, delete from the beginning of the previous word to the
+cursor position. See also <control>-G above.
+.s3
+.lp +3 3
+<control>-X - rub out the portion of the line to the left of the cursor
+- ring the bell if the cursor is at the left of the screen.
+.i0
+.s3
+.ul 1
+COMMANDS
+.s3
+When
+.bd ded
+starts to process a command, it puts a white blob on the bottom
+line, which it removes when the command is completed. This helps
+when you aren't sure whether you actually hit the <ESCAPE> or
+<SEND> key or not. If the command is incorrectly typed or can't
+be executed,
+.bd ded
+puts a diagnostic message on the bottom line after the command.
+.s3
+Most commands are single characters. In cases where the command
+includes a string argument ('/', ';', 'x' and '!' commands)
+.bd ded
+remembers the string for use in a future command of the same
+kind. Thus a '/' character without a following string causes
+.bd ded
+to display and use the last string typed as an argument to a '/'
+or ';' command.
+.s3
+All commands that involve a search of the file ('/', ';' and 'x'
+commands) 'wrap-around' the top and bottom of the file. You can
+be sure, therefore, that if the search fails in the forward
+direction it will also fail in the reverse direction.
+.s3
+1.
+.ul 1
+Screen shifting commands
+.s3
+.lp +6 3
+tof - move to top of file
+.lp +6 3
+eof - move to bottom of file
+.lp +6 3
+" - move to next screenful of text
+.lp +6 3
+& - move to previous screenful of text
+.lp +6 3
+% - put current line in middle of picture
+.i0
+.s3
+2.
+.ul 1
+Line deletion
+.s3
+.lp +6 3
+d - delete current line
+.i0
+.s3
+3.
+.ul 1
+Searching
+.s3
+.lp +6 3
+/<regular expression> - search for <regular expression> in the
+file after the current cursor position.
+The regular expression may be terminated by a '/'
+character if you wish, but it isn't necessary unless the
+expression ends with a space character. See below for a
+description of
+.bd ded
+regular expressions -
+.bd ded
+uses a syntax somewhat different to that of the average
+bear. Note also that, alone amongst QMC UNIX editors,
+.bd ded
+can perform multi-line matches!
+.s3
+.lp +6 3
+;<regular expression> - search for <regular expression>
+in the file before the current cursor position.
+The regular expression may be terminated with a ';' character,
+but, once again, it isn't usually necessary.
+.i0
+.s3
+4.
+.ul 1
+String substitution
+.s3
+.lp +6 3
+x/<regular expression>/<string> - replace the next occurrence of
+<regular expression> by <string>.
+.s3
+.lp +6 3
+x;<regular expression>;<string> - replace the previous occurrence
+of <regular expression> with <string>.
+.s3
+In either version of the 'x' command, the <string> may end with a '/' or ';'
+as appropriate,
+but once again it isn't usually necessary. In the future,
+<string> will be able to contain special characters to specify
+particular replacements - for the moment it can contain '$
+(prime, dollar) to
+specify newline insertion but otherwise
+is interpreted as a
+simple sequence of characters.
+.s3
+After the substitution,
+.bd ded
+prompts you with 'ok?' on the bottom line. You reply with a
+single character - 'y' means accept the substitution, 'n' means
+reject it and restore the status quo ante, '<ESCAPE>' means
+accept the substitution and repeat (i.e. look for <string>
+again), <RUBOUT> means reject the substitution and repeat.
+.i0
+.s3
+5.
+.ul 1
+Writing new file
+.s3
+.lp +6 3
+w - write the edited file (the first 'w' or 'ok' will also write
+the .old file).
+.lp +6 3
+reallywrite - write out the edited file, even though it hasn't
+changed since the last 'w' command.
+.i0
+.s3
+6.
+.ul 1
+Chickening out and buggering off
+(this phrase copyright M. Python)
+.s3
+.lp +6 3
+ok - rewrite the edited file (see 'w' above) and exit.
+.lp +6 3
+q - just exit, don't change the edited file at all. If you have
+changed the file in any way
+you must type 'reallyquit' to quit without changing
+the file.
+.lp +6 3
+reallyquit - quit even though the file has been changed.
+.i0
+.s3
+7.
+.ul 1
+Option Changing
+.s3
+.lp +6 3
+b+ - change to 'auto-break' mode, with automatic line-breaks
+inserted when you go past the right margin.
+.lp +6 3
+b- - change to 'normal' mode, with no automatic newlines.
+.s3
+.lp +6 3
+t+ - change to 'auto-tab' mode, in which leading spaces on a
+line in the output file are compressed into tabs where possible.
+.lp +6 3
+t- - change to 'normal output' mode, where the output file is a
+faithful copy of the screen picture.
+.i0
+.s3
+8.
+.ul 1
+Executing UNIX commands
+.s3
+.lp +6 3
+!<string> - execute the UNIX command '<string>'. A '%' character
+anywhere in the string is replaced by the name of the file being
+edited. After the command is executed,
+.bd ded
+waits for you to type a character before it redraws the screen,
+so that it doesn't obliterate the command's output before you have read it.
+.s3
+.lp +6 3
+@ - start a
+.bd newsh(I)
+command (i.e. 'shell out' into newsh). When you exit from the
+.bd newsh
+command,
+.bd ded
+redraws the screen immediately.
+.i0
+.s3
+9.
+.ul 1
+Ranges of lines
+.s3
+.lp +16 13
+\&.<letter> - the range <letter> consists of the current line.
+.s3
+.lp +16 13
+f <letter> -
+.br
+.lp +16 13
+first <letter> - the current line is the first in the range
+<letter>.
+.s3
+.lp +16 13
+l <letter> -
+.br
+.lp +16 13
+last <letter> - the current line is the last in the range <letter>.
+.s3
+.lp +16 13
+\&'<letter> -
+.br
+\&'<letter>- - move to the line which is first in the range
+<letter>.
+.s3
+.lp +16 13
+\&'<letter>+ - move to the line which is last in the range
+<letter>.
+.s3
+.lp +6 3
+A number typed as a command will cause
+.bd ded
+to move to the line with that number in the file (the first line
+in the file is always number 1). Note that if you delete or
+insert lines the line-numbering will change. Line numbers are
+only provided because of the deplorable diagnostics produced by
+.bd cc(I),
+which gives line numbers rather than sections of text.
+.i0
+.s3
+10.
+.ul 1
+Text moving
+.s3
+.lp +6 3
+m <letter> <position> -
+.lp +6 3
+move <letter> <position> - move the text in the range identified
+by <letter> to <position>. The <position> may be a dot, meaning
+the current line, or a <letter> identifying a range, and the
+text will be moved to the position after the current line or to
+the position after the last line of the range.
+If the dot or <letter> is followed
+by a minus, the text will be moved to the postion before the current line, or
+to the positon before the first line of the range.
+.s3
+.lp +6 3
+c <letter> <position> -
+.lp +6 3
+copy <letter> <position> - put a copy of the text from the range
+<letter> at <position>. The conventions for the specification of
+<position> are as for the 'm' command above.
+.i0
+.s3
+11.
+.ul 1
+Miscellaneous
+.s3
+.lp +6 3
+p - redraw the screen (useful if you hit 'CLEAR' instead of 'U/C
+LOCK', or if your screen is mangled by some irrelevant broadcast
+message about system shutdown).
+.i0
+.s3
+.ul 1
+REGULAR EXPRESSIONS
+.s3
+The treatment of regular expressions in
+.bd ded
+is intended to make the obvious easy and the obscure possible.
+All 'special' characters must therefore be prefixed by a single
+prime character - e.g. '^ (prime, uparrow) for start-of-line, '$
+(prime, dollar) for end-of-line.
+.s3
+.lp +6 3
+1. A regular expression is a sequence of one or more match
+expressions.
+.s3
+.lp +6 3
+2. A single character is a match expression which matches an
+occurrence of that character.
+.s3
+.lp +6 3
+3. '' (prime, prime) is a match expression which matches an
+occurrence of the prime character. Likewise '/ (prime, slash)
+matches the slash character and '; (prime, semicolon) matches a
+semicolon. To protect you against yourself you are only allowed
+to use the prime character in meaningful ways - i.e. those
+mentioned in this documentation.
+.s3
+.lp +6 3
+4. '^ (prime, up-arrow) is a match expression
+which matches the start of a line.
+.s3
+.lp +6 3
+5. '$ (prime, dollar) is a match expression which
+matches the end of a line.
+.s3
+.lp +6 3
+6. '. (prime, dot) is a match expression which
+matches any character.
+.s3
+.lp +6 3
+7. '  (prime, space) is a match expression which matches any
+sequence of spaces and/or newlines. It is useful for finding
+spaces between words in text files when you only have
+the formatted and justified output.
+.s3
+.lp +6 3
+8. '[<sequence of items>'] (prime, left square, sequence of
+items, prime, right square -
+where <sequence of items> doesn't
+start with a dash)
+is a match expression which matches any character which
+matches any one of the items in the sequence. An item is
+.s3
+.lp +12 3
+a character (which matches the character),
+.lp +12 3
+\&'' (which matches a prime)
+.lp +12 3
+\&'/ (which matches a slash)
+.lp +12 3
+\&'; (which matches a semicolon)
+.lp +12 3
+\&'^ (which matches start of line),
+.lp +12 3
+\&'$ (which matches end of line)
+.lp +12 3
+or is a character followed by a dash
+followed by a character (e.g. a-z), which matches the characters
+in the range described (e.g. a-z matches any lower case letter).
+.i0
+.s3
+.lp +6 3
+9. '[-<sequence of items>'] is a match expression which matches
+any character
+.it except
+those which match any one of the items.
+.s3
+.lp +6 3
+10. '(<regular expression>') (prime, left bracket, regular
+expression, prime, right bracket) is a match expression which
+matches anything that the unbracketed expression would match
+(it's useful for repetition etc.).
+.s3
+.lp +6 3
+11. <match expression>'* (match expression, prime, star)
+matches zero or more occurences of <match expression>. It
+matches the
+.it longest
+sequence it can find, subject to the
+rest of the regular  expression matching successfully.
+.s3
+.lp +6 3
+12. <match expression>'** (match expression, prime, star,
+star)
+matches zero or more occurences of <match expression>,
+but matches the
+.it shortest
+sequence it can find, subject to the
+rest of the expression matching successfully.
+('** repetition exists so that multi-line matches
+can be specified efficiently.)
+.s3
+.lp +6 3
+13. <match expression>'+ (match expression, prime, plus)
+matches one or more occurences of <match expression>. It
+matches the
+.it longest
+such sequence it can find, subject to the rest of the regular expression
+matching successfully.
+.s3
+.lp +6 3
+14. <match expression>'++ (match expression, prime, plus, plus)
+matches one or more occurences of
+<match expression>. It matches the
+.it shortest
+such sequence it can find, subject to the rest of the regular
+expression matching successfully (once again, '++ is
+provided to help with multi-line matches).
+.s3
+.lp +6 3
+15. An expression containing '^ or '$ characters may match a
+multi-line section of the input - however
+.bd ded
+will not attempt to find sections which are too long to fit on
+the screen. That is, no more than seventeen lines at the moment.
+.i0
+.s3
+.ul 1
+TYPING CHARACTERS
+.s3
+Normally, when a visible character or
+a space is typed it is placed in the line at the current
+cursor position, the tail of the line is pushed one position to
+the right and the cursor moved one position to the right - i.e.
+the character is inserted into the line at the current cursor
+position.
+If the insertion will move the tail of the line to the right of the
+elusive 'bell margin'
+.bd ded
+rings the bell and performs the insertion; if, however, the line
+is already full
+.bd ded
+rings the bell and refuses to insert the character. In 'auto-break'
+mode a space or visible character typed to the right of
+the 'bell margin', or an attempt to insert a character in a line
+which is already full,
+causes the automatic insertion of a line-break,
+copying the current line from the start of the last word before
+the bell margin (try it, it's lovely!).
+.s3
+This treatment of type-in makes
+.bd ded
+very nice as a type-in medium for letters,
+.bd roff(I)
+or
+.bd nroff(I)
+text, etc. - using RUBOUT is natural as well.
+.s3
+.ul 1
+TREATMENT OF ESCAPE CHARACTERS
+.s3
+The ITT terminals at QMC don't have a proper ASCII character
+set, so you are normally forced to type <backslash>, <left\ bracket>
+instead of a left curly bracket. In all
+editors, but especially in screen editors like
+.bd ded,
+this causes much confusion. The Gordian knot is cut by
+.bd ded
+as follows - 'backslash' on the screen
+is just a character like any other. When reading the input file
+it translates each unprintable character (such as a curly bracket) into
+the correct <escape>, <character> sequence,
+and when rewriting the edited file, it translates
+<escape>, <character> sequences into the appropriate ASCII
+value. The default escape character is @, not backslash - this
+is confusing at first but you soon get used to it and it makes
+the ubiquitous backslash character easier to handle (easier for
+you -
+.bd ded
+has no difficulties!). When inserting an escape character into a
+file you type it twice - @@ rather than @, say. It is the fact
+that other programs
+.bd (nroff(I),
+for example) demand two backslashes in data to represent one
+backslash character that lead to the adoption of a different
+escape character in
+.bd ded.
+.s3
+Using the
+.bd ded
+convention you can see
+the difference between \\^ and ~ (which you can't in
+.bd em(I)
+and such like programs).
+If you make a mistake and, for example, type @n rather than @@n,
+.bd ded
+is kind and tries to understand what you meant.
+By using the '-m<character>' option you can change the modifier
+character from @ to any other single-stroke visible
+character (i.e. not composites like { or invisibles like space
+or newline). You can even change it to backslash if you are
+clever enough to be able to persuade the teletype driver to let
+you type a backslash.
+.s3
+.ul 1
+TREATMENT OF TAB
+.s3
+.bd ded
+assumes that you are editing a
+.it picture,
+rather than some sequence of characters. Thus format control
+characters like <tab> don't appear in the picture, and
+<tab><RUBOUT> will insert (about) seven spaces - the <tab> will
+.it not
+be rubbed out as if it was a visible character. You can use the '-t'
+option or the 't+' command to make
+.bd ded
+compress leading spaces to tabs in your output lines - no other
+tab conversion is attempted on output.
+.s3
+.ul 1
+TREATMENT OF CONTROL CHARACTERS
+If
+.bd ded
+finds a control character other than tab or newline in the file,
+it displays it as two characters <control><something> on
+the screen On the ITT the <control> character
+is a backwards question mark, on the Hazeltine a
+bold-face up-arrow. The second character is a letter or whatever
+- control-C is shown as ^C, for example. RUBOUT is shown as ^?.
+Null characters are ignored on input.
+.s3
+To insert a <control> character into the text, press <CTRL>-<Z>.
+If you make up wrong ones (like <control>-<(>, say)
+.bd ded
+does its best to ignore them.
+.s3
+.ul 1
+LONG LINES
+.s3
+When
+.bd ded
+reads in the file, it writes it into a buffer, with lines which
+are too long for the screen split into manageable chunks. A line
+will be split at the last space before the right edge of the
+screen - if there isn't a space in the line it will be split at
+the right hand edge of the screen. When a line is broken, the
+last character is displayed as a <control> character (see above)
+and
+.bd ded
+will remake the long line on output. Therefore to make
+.bd ded
+join two lines on output, type a <control> character at the end of
+the first line.
+.s3
+.ul 1
+BACKUP FILE
+.s3
+For your further peace of mind (and to
+protect you from editor bugs)
+.bd ded
+writes a backup file called '<filename>.old', which contains the
+stuff you had in the file before
+.bd ded
+kindly changed it for you.
+.s3
+.ul 1
+\&.DLOG FILE
+.s3
+Every character you type is stored in a file whose name ends with '.dlog'.
+.bd ded
+invents the name of this file, creates it when you start
+editing and finally deletes it when
+you have finished editing. If
+.bd ded
+crashes, or UNIX crashes during an edit, the .dlog file is preserved.
+As soon as
+.bd ded
+is fixed, or UNIX is revived, it is possible to replay the characters in
+the .dlog file by using the '-d' option (see above). So, for
+example, the command
+.sp 1
+        ded fred.c -d
+.sp 1
+will read in all the information held in the file 'fred.c.dlog'
+and use it to edit the file 'fred.c'. When
+.bd ded
+exhausts the .dlog file it displays a message and automatically
+switches to terminal input.
+.s3
+.sh DIAGNOSTICS
+.s3
+When
+.bd ded
+thinks you have made a mistake, it writes a message on the
+bottom line and it rings the bell. The messages have to be short
+(lack of room) but they are in English, sort of. Mostly they
+relate
+.bd ded's
+opinion of the syntax of your editing commands.
+.s3
+.bd ded
+tries to catch as many of its own errors as possible. When it
+sees a crash coming, it writes a message on the bottom line and
+exits as gracefully as possible. The .dlog file is preserved in
+the hope that it will be useful after the
+.bd ded
+bug has been fixed.
+.s3
+.sh "SEE ALSO"
+.s3
+.bd em(I)
+.s3
+.sh BUGS
+.s3
+It is possible to specify a regular expression which causes the
+string matching section of
+.bd ded
+to get into an infinitely recursive loop, leading eventually to
+a bus error.
+.s3
+There are lots of essential features missing from
+.bd ded.

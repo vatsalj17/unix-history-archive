@@ -1,0 +1,47 @@
+.th EVICT VIII 20/2/79
+.sh NAME
+evict \*- evict users at terminals
+.sh SYNOPSIS
+evict ttys [ wait [ lname ] ]
+.sh DESCRIPTION
+"ttys" is a string of tty identifying letters (from /dev/tty? entries).
+.br
+"lname" is the account name which is to be allowed to remain
+logged on to any of
+the target terminals.  This could be a class account in which case class members are
+not disturbed.  The default account is nobody.
+.br
+"wait" is an optional wait time in seconds.  If
+specified a warning message is sent to the target terminals and the
+eviction suspended for the appropriate number of seconds.
+
+If a person other than allowed by lname is logged on at the target terminal
+all his processes receive a signal 'TERMINATE' hotly pursued by a
+signal 'KILL'.
+Additionally, the password entry corresponding to the owner of these
+late processes has its terminal group mask cleared, initial directory
+made un-accessable, and 'EVICTED' classmask bit set.
+This program has no effect against accounts which have the 'NOEVICT'
+flag set.
+.br
+Account 'root' cannot be evicted.
+.br
+This program is exec'ed by the 'TERMBOOK' program 'tb'.
+.br
+'Evict' may only be used by root.
+.sh FILES
+/dev/tty?
+.br
+/etc/passwd
+.br
+/etc/utmp
+.br
+/dev/kmem
+.br
+/etc/bin/evict
+.sh "SEE ALSO"
+passwd	(V)	tb (1)
+.sh DIAGNOSTICS
+Yes, explicit.
+.sh AUTHOR
+Graham R. Smith	U.N.S.W.

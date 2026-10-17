@@ -1,0 +1,69 @@
+.HE "AUSAM" " " "Section 7"
+.bp
+.NS 0 "7."
+The PWEDIT Program
+.PA
+"Pwedit" is an interactive program
+used to edit the "/etc/passwd" file in the AUSAM system.
+.PA
+A usual sequence of events in using the program might be:
+.BP 6 3
+*	call program without arguments or options
+.NP
+*	give a keyword, any one of "add", "delete", "change" or "update".
+Any of "delete", "change" or "update" cause the program to ask
+for two items of data
+.BP 10 9
+"uid="	after which you type the decimal user id number,
+between zero and PWTABSIZE inclusive, of the required user.
+.NP
+"lname="	after which
+you type the login name of the required user.
+.EP
+.PA
+In the case of
+.BP 10 7
+add	login name and uid are not requested
+.NP
+delete	both login name and uid must be given.
+.NP
+change	either the login name or uid must be given.
+The entry for the required user is entered into the temporary
+file for the next phase of the
+program.
+.NP
+update	either the login name or uid must be given.
+The entry for the required user is entered into the temporary file
+for the next phase of the
+program.
+.EP
+.NP
+*	for a "delete" command, if the user exists, this entry
+is deleted.
+If no such user exists, a message informs you of the fact.
+The program is now ready to accept another command.
+.NP
+*	for "add", "change" and "update" commands,
+the program creates a temporary file
+containing
+either the entry
+to be changed or updated, or a template for a new entry optionally
+containing the uid and/or login name given.
+.NP
+*	the program forks and execs an "elphic" mode editor with the temporary
+file as its work file.
+All changes may be made to this file using normal editor commands.
+The first line of the file contains the name of the
+pwedit command.
+.NP
+*	when the edit is complete (a q has been given) the editor
+writes the modified temporary file and exits.
+Pwedit, which has been waiting for its child to exit now reads
+and validates the contents of the temporary file.
+If all is well the alteration or addition is done, and if not an error message
+is given.
+The program is now ready to accept new commands.
+.EP
+.PA
+For a more complete description of "pwedit" refer to the manual entry.
+.ES "7."

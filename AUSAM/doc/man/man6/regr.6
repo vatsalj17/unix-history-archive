@@ -1,0 +1,92 @@
+.th REGR VI 19/10/77
+.sh NAME
+regr \*- multiple linear regresion program
+.sh SYNOPSIS
+.bd regr
+input file
+.sh DESCRIPTION
+.it Regr
+is a multiple linear regression program written in fortran for
+the A.G.S.M. at U.N.S.W.. It has extremely rigid input requirements
+with respect to the format of the data in 'input file'.It is necessary
+to have the data set out thus:
+.s3
+.nf
+.in 8
+x1,x2,x3,x4,x5
+.br
+x6,x7,x8,x9,x10
+.br
+x11,......
+.fi
+.in
+.s3
+It is imperative that there be 
+.it at
+.it most
+five data values per line.If the number of data values per observation
+is not a multiple of five,then the residual data values should
+be placed on the following line.
+.lp +6 5
+
+E.g.
+
+If a particular regression has thirteen variables per observation
+,then the data for observation n would look like this:
+.s3
+.nf
+.in 12
+x1,x2,x3,x4,x5
+.br
+x6,x7,x8,x9,x10
+.br
+x11,x12,x13
+.fi
+.in
+.s3
+.i0
+.dt
+(
+For those interested the format is 5f14.5)
+.s3
+.bd Note
+that there are no commas after the last data value on each
+line of the input file.
+
+.bd Note
+also that each observation should start on a new line .I.e. do 
+.bd not
+begin observation n+1 on the last line of observation n. (This
+will cause the irrecoverable loss of parts of your data and generally
+kludge the results.)
+.s3
+The major limitations of the program are as follows:
+.br
+	1) Maximum no. of observations per regression :
+32767
+.br
+	2) Maximum no. of variables (dependent included)
+: 40
+.br
+(This limitation can be changed if it is deemed absolutely necessary.)
+.br
+	3) Maximum no. of regressions on any one data base
+: 32767.
+.s3
+.sh FILES
+Fort13	temporary file for residual analysis(removed at
+end of run)
+Residuals	
+.sh "SEE ALSO"
+\'\'Fortran Guide\'\' For runtime diagnostics
+.sh DIAGNOSTICS
+\'end of data\' self explanatory.
+Any other errors will generally be unrecoverable fortran runtime
+errors,caused by such things as input conversion (a character
+was typed where a digit was expected).
+.sh BUGS
+Being written in fortran is this program's greatest failing! However
+all the necessary subroutines had already been written and it
+seemed pointless and effortful to reconstruct them in a decent
+language.
+

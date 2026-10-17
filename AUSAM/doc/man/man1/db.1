@@ -1,0 +1,303 @@
+.th DB I 8/20/73
+.sh NAME
+db \*- debug
+.sh SYNOPSIS
+.bd db
+[ core [ namelist ] ] [
+.bd \*-
+]
+.sh DESCRIPTION
+Unlike
+many debugging packages (including DEC's ODT, on
+which
+.it db
+is loosely based),
+.it db
+is not loaded as part of the
+core image which it is used to examine; instead it examines files.
+Typically, the file will be either a core image produced
+after a fault or the binary output of
+the assembler.
+.it Core
+is the file being debugged; if omitted \fBcore\fR is assumed.
+.it Namelist
+is a file containing a symbol table.
+If it is omitted,
+the symbol table is obtained from the
+file being debugged,
+or if not there from
+.bd a.out.
+If no appropriate name list file
+can be found,
+.it db
+can still be used but some of its symbolic
+facilities become unavailable.
+.s3
+For the meaning of the optional third argument, see
+the last paragraph below.
+.s3
+The format for most
+.it db
+requests is an address followed
+by a one character command.
+Addresses are expressions built up as follows:
+.s3
+.lp +4 3
+1.	A name has the value assigned to it
+when the input file was assembled.
+The type of the name (text or data) is remembered for separate instruction
+and data cores and a.outs.
+A name that is declared in the text segment will cause the instruction
+space to be used. Other names will access the data space.
+.s3
+.lp +4 3
+2.	An octal number is an absolute quantity with the appropriate
+value.
+.s3
+.lp +4 3
+3.	A decimal number immediately followed by `\fB.\fR' is
+an absolute quantity with the appropriate value.
+.s3
+.lp +4 3
+4.	An octal or decimal number can be optionally followed by
+an ``\fBi\fR'' or a ``\fBd\fR''. This specifies which address
+space the address generated refers to (separate i/d only).
+If none is supplied then the address space will not be changed.
+.s3
+.lp +4 3
+5.	A single ACSII character may be specified by a \fB'\fR
+followed by the character. The value used is the standard ASCII
+representation of the character. Two characters (one PDP11 word)
+may be entered with a \fB"\fR followed by the two characters.
+The first character will be placed in the low byte and the second
+in the high byte of the resulting value.
+.s3
+.lp +4 3
+6.	The symbol \fB.\fR indicates the current pointer
+of \fIdb\fR.
+The current pointer is set by many
+\fIdb\fR
+requests.
+.s3
+.lp +4 3
+7.	A \fB*\fR before
+an expression forms an expression whose value is the
+number in the word addressed by the first expression.
+A \fB*\fR alone is equivalent to `\fB*.\fR'.
+The address will be used in the data space.
+.s3
+.lp +4 3
+8.	Expressions separated by \fB+\fR or blank are expressions
+with value equal to the sum of the components.
+.s3
+.lp +4 3
+9.	Expressions separated by \fB\*-\fR form an expression
+with value equal to the difference to the components.
+.s3
+.lp +4 3
+10.	Expressions are evaluated left to right.
+Thus for separate i/d space programs, the space used
+will depend on the last specification of it. If the expression
+does not define a space, then it will not be changed.
+.s3
+.i0
+.dt
+If no address is given for a command, the current address
+(also specified by ``\fB.\fR'') is assumed.  In general, ``\fB.\fR''
+points to the last word or byte printed by
+.it db.
+.s3
+There are
+.it db
+commands for examining locations
+interpreted as numbers, machine instructions,
+ASCII characters, and addresses.
+For numbers and characters, either bytes
+or words may be examined.
+The following commands are used to examine the specified file.
+.s3
+.lp +4 3
+/	The addressed word is printed in octal.
+.s3
+.lp +4 3
+\\	The addressed byte is printed in octal.
+.s3
+.lp +4 3
+"	The addressed word is printed as two ASCII characters.
+.s3
+.lp +4 3
+.tr |\*a
+|	The addressed byte is printed as an ASCII character.
+.s3
+.tr ||
+.lp +4 3
+\*g	The addressed word is printed in decimal.
+.s3
+.lp +4 3
+?	The addressed word is interpreted as a machine
+instruction and a symbolic form of the instruction,
+including symbolic addresses, is printed.
+Often, the result will appear exactly as it was written
+in the source program.
+.s3
+.lp +4 3
+&	The addressed word is interpreted as a symbolic address
+and is printed as the name of the symbol whose value is closest
+to the addressed word, possibly followed by a signed offset.
+.s3
+.lp +4 3
+<nl>	(i. e., the character ``new line'')  This command advances
+the current location counter ``\fB.\fR'' and prints the resulting
+location in the mode last specified by
+one of the above requests.
+.s3
+.lp +4 3
+^	This character decrements ``\fB.\fR'' and prints the
+resulting location in the mode last selected
+one of the above requests.  It is a converse to <nl>.
+A string of ``\fB^\fR''s will cause multiple decrements.
+.s3
+.lp +4 3
+%	Exit.
+.s3
+.i0
+.dt
+If the current location counter ``\fB.\fR'' corresponds
+to a labeled location,
+the label is printed as well as the contents.
+.s3
+Odd addresses to word-oriented commands are rounded
+down.
+The incrementing and decrementing
+of ``\fB.\fR'' done by the
+.bd <nl>
+and
+.bd ^
+requests is by one or
+two depending on whether the last command
+was word or byte oriented.
+.s3
+The address portion of any of the above commands
+may be followed by a comma and then by an
+expression.  In this case that number of sequential
+words or bytes specified by the expression is printed.
+``\fB.\fR'' is advanced so that it points at the
+last thing printed.
+.s3
+There are two commands to interpret the value
+of expressions.
+.s3
+.lp +4 3
+=	When preceded by an expression, the value of the expression
+is typed in octal.
+When not preceded by an expression, the value of ``\fB.\fR'' is
+indicated.
+This command does not change the value of ``\fB.\fR''.
+.s3
+.lp +4 3
+:	An attempt is made to print the given expression
+as a symbolic address.
+The symbol is found whose value is nearest
+that of the expression, and the symbol is typed, followed by
+a sign and the appropriate offset.
+.s3
+.i0
+.dt
+The following command may be used to patch the file being debugged.
+.s3
+.lp +4 3
+!	This command must be preceded by an expression.
+The expression may be an octal or decimal (followed by `.') number,
+or of the form ``\fB"\fR'' or ``\fB'\fR'' followed
+by two characters or one character
+respectively.
+The value of the expression is stored at the location
+addressed by the current value of ``\fB.\fR''.
+The opcodes do not appear in the symbol
+table, so the user must assemble them by hand.
+.s3
+.i0
+.dt
+The following command is used after a fault has caused
+a core image file to be produced.
+.s3
+.lp +4 3
+$	causes the fault type and
+the contents of the general registers and
+several other registers to be printed both in octal and symbolic
+format.
+The values are as they were at the time of the fault.
+.s3
+.i0
+.dt
+For some purposes, it is important to know how addresses
+typed by the user correspond with
+locations in the file being debugged.
+The mapping algorithm employed by
+.it db
+is non-trivial
+for two reasons:
+First, in an
+.bd a.out
+file, there is a 20(8) byte header
+which will not appear when the file is loaded into
+core for execution.
+Therefore, apparent location 0 should correspond
+with actual file offset 20.
+Second, addresses
+in core images do not correspond with the
+addresses used by the program because in a core image
+there is a header containing the
+system's per-process
+data for the dumped process, and also because the
+stack is stored contiguously with the text and data
+part of the core image rather than at the highest possible
+locations.
+.it Db
+obeys the following rules:
+.s3
+If exactly one argument is given, and if it appears
+to be an
+.bd a.out
+file, the 20-byte header is skipped
+during addressing, i.e., 20 is added to all addresses typed.
+As a consequence, the header can be examined
+beginning at location \*-20.
+.s3
+If exactly one argument is given and if the file does
+not appear to be an
+.bd a.out
+file, no mapping is done.
+.s3
+If zero or two arguments are given,
+the mapping appropriate to a core image file is employed.
+This means that locations above the program break
+and below the stack
+effectively do not exist (and are not, in fact, recorded
+in the core file).
+Locations above the user's stack pointer are mapped,
+in looking at the core file, to
+the place where they are really stored.
+The per-process data kept by the
+system, which is stored in the first part
+of the core file,
+cannot currently be examined (except by \fB$\fR).
+.s3
+If one wants to examine
+a file which has an associated name list,
+but is not a core image file, the last argument ``\fB\*-\fR''
+can be used (actually the only purpose of the
+last argument is to make the number of
+arguments not equal to two).
+This feature is used most frequently in
+examining the memory file /dev/mem.
+.sh "SEE ALSO"
+as (I), cdb (I), coreit (I), ddt (I), core (V), a.out (V), od (I)
+.sh DIAGNOSTICS
+``File not found'' if the first argument
+cannot be read; otherwise ``\fB?\fR''.
+.sh BUGS
+There should be some way to examine the registers
+and other per-process data in a core image;
+also there should be some way of specifying
+long addresses.

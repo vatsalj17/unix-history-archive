@@ -1,0 +1,143 @@
+.SH "Reference Manual"
+This manual describes the "cplot" graphics library which was designed with
+Tektronics terminals and the C language in mind.
+It is now firmly based on the standard i/o library and uses it internally.
+.SS "Co-ordinate Systems"
+.np
+Locations on the screen can be addressed absolutely or
+relatively in one of two co-ordinate systems; screen and
+user.
+.np
+Screen co-ordinates are those required by the Tektronix
+terminals themselves. i.e.
+.sp
+.nf
+	    0 <= x <= 1023,
+	    0 <= y <= 780,
+ 	    x and y integers.
+.fi
+.sp
+.np
+User co-ordinates are chosen by the user's program itself, by calling
+UWINDOW.
+UWINDOW, requires the upper and lower bounds of x and y, as floating
+variables.
+Most calls consist of their base name prefixed by a 'u' or an 's'
+(which indicate which co-ordinate frame is to be used) and a suffix of an 'a'
+or an 'r' to indicate absolute or relative plotting mode respectively.
+Arguments are float's for calls to user co-ordinate routines and int's
+for calls to screen routines.
+.SS "Basic calls"
+.in 0
+INIT( OUTFILE ) required as first call to CPLOT to initialize terminal for graphics.
+OUTFILE is a standard i/o file pointer where the plotting output is to be put.
+Normally it would be "stdout".
+The screen is not erased.
+.sp
+FINISH() required as last call to CPLOT to set terminal for normal use.
+.sp
+ERASE()  clears terminal screen.
+.br
+HOME()   puts the graphics cursor at top left of screen.
+.sp
+.SS "Defining the windows"
+.in 0
+SWINDOW( XLO, XHI, YLO, YHI )  defines the area of the screen to be used for
+graphics.
+.sp
+     0 <= XLO < XHI <= 1023,
+     0 <= YLO < YHI <=  780,
+     XLO, XHI, YLO, YHI  integers.
+.br
+\&-1 is returned on error and 0 if the window is valid.
+.sp
+.br
+UWINDOW( XLO, XHI, YLO, YHI )  defines user co-ordinate system,
+which is a window mapped onto the screen window.
+.sp
+     XLO != XHI,
+     YLO != YHI,
+     XLO, XHI, YLO, YHI  floating.
+.sp
+\&-1 is returned if these conditions are not met, 0 if they are.
+.SS "Graphics calls"
+.in 0
+[US]MOVE[AR]( X, Y ) moves cursor to X, Y.
+.sp
+[US]DRAW[AR]( X, Y ) draws a vector from current cursor position to X, Y,
+leaving cursor at X, Y.
+.br
+.sp
+[US]DASH[AR]( X, Y, TYPE ) draws a dashed vector of the required type.
+.sp
+[US]POINT[AR]( X, Y ) puts a point at X, Y, leaving cursor at X, Y
+.SS "Cursor Position"
+.np
+The following calls find the position of the virtual cursor in either
+screen or user space.  This is not necessarily the cursor's physical
+position on the screen, as the last vector may have been off the screen.
+.sp
+[US]WHERE( &X, &Y ) puts the user cursor position in float's whose addresses
+are given.
+.SS "Cross-hair Cursors"
+The following calls are available for use on terminals with cross-hair cursors.
+.sp 2
+[US]CURSOR( &X, &Y ) puts cross-hair cursors on screen and returns
+its co-ordinates, when a character is recieved.
+.br
+The value of the function is the character that was typed.
+CURSOR() puts the cross-hair cursors on the terminal screen,
+but does not perform any read.
+.SS "Status Enquiry"
+.np
+The following calls continuously
+return terminal status and current cursor position
+without waiting for a user response.
+.sp
+[US]ENQ( &X, &Y )  enquiry. 
+Returns the current cursor position 
+and the terminal status
+if the terminal supports the option.
+.sp
+.SS "Alpha-numerics"
+.np
+The following calls can be used to conveniently intermix alphanumerics
+and graphics.
+.sp
+.br
+ALPHA()  puts terminal in alphanumeric mode. Only required if non-CPLOT
+alphanumerics is wanted.
+.sp
+[US]XPUTS[AR]( X, Y, &STRING ) prints STRING horizontally, starting at the
+point X, Y.  The graphics cursor is unchanged.
+[US]YPUTS[AR]( X, Y, &STRING ) prints STRING vertically downwards from X, Y.
+.SS "Linking to the Library"
+.np
+CPLOT consists of a set of user calls for the functions
+described above, which themselves call routines to do the 
+basic terminal manipulation.
+Although these support routines are available, it is strongly
+recommended that they not be used.
+.np
+Programs using the library must include the file "cplot.h" as some
+routines are implemented as macros.
+This file also includes the standard i/o  library include file
+\&"stdio.h".
+.np
+CPLOT is available as an object code library
+(the linker knows it as~-lt), which is linked to 
+the users program in the usual way.
+.br
+.nf
+		e.g  cc prog.c -lt -lS 
+.fi
+.SS "Library Modifications"
+.np
+This document and a source code listing of the library are available,
+but the authors of the library would like to be advised of any 
+modifications and improvements that individual users might make,
+so that it can be continually improved, for the benefit of all
+users.
+.np
+A separate library of additional functions is being maintained, which
+initially contains routines to draw circles, rectangles, triangles and arcs.

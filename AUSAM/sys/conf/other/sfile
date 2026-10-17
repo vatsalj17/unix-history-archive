@@ -1,0 +1,122 @@
+sysld -L -c -x
+	-O ../dmr/kl.o
+	   ../dmr/dj.o
+	   ../dmr/dz.o
+	   ../dmr/sys.o
+	   ../dmr/tty.o
+		-C	_kl11
+		-A	_klxint:1
+			_klrint:1
+			_klread:1
+			_klwrite:1
+			_klsgtty:2
+			_klopen:2
+			_klclose:1
+			_klcheck:1
+		-C	_dj11
+			_djoverrun
+		-A	_djopen:2
+			_djclose:1
+			_djstart:1
+			_djread:1
+			_djwrite:1
+			_djsgtty:2
+			_djrint:1
+			_djxint:0
+		-C	_dz11
+		-A	_dzopen:2
+			_dzclose:1
+			_dzread:1
+			_dzwrite:1
+			_dzsgtty:2
+			_dzstart:1
+			_dzxint:0
+			_dzrint:0
+			_dzscan:0
+		-A	_syopen:2
+			_syread:1
+			_sywrite:1
+			_sysgtty:2
+		-A	_gtty
+			_stty
+			_ttrstrt:1
+	-O ../dmr/hp.o
+		-C	_hptab
+		-A	_hpread:1
+			_hpwrite:1
+			_hpstrategy:1
+			_hpintr:0
+			_hpopen:0
+	-O ../dmr/mem.o
+		-A	_mmread:1
+			_mmwrite:1
+	-O ../dmr/cr.o
+		-A	_craopen:2
+			_crbopen:2
+			_crclose:1
+			_crread:1
+			_crint:1
+	-O ../dmr/ht.o
+		-C	_httab
+			_rhtbuf
+			_chtbuf
+		-A	_htopen:2
+			_htclose:2
+			_htstrategy:1
+			_htintr:0
+			_htread:1
+			_htwrite:1
+	-O ../ken/sys1.o
+	-O ../ken/sys2.o
+	-O ../ken/sys3.o
+	-O ../ken/sys4.o
+		-A	_exec
+			_rexit
+			_exit
+			_wait
+			_fork
+			_sbreak
+			_gprocs
+			_read
+			_write
+			_open
+			_creat
+			_close
+			_seek
+			_link
+			_mknod
+			_sslep
+			_fstat
+			_stat
+			_dup
+			_smount
+			_sumount
+			_getswit
+			_gtime
+			_stime
+			_setuid
+			_getuid
+			_setgid
+			_getgid
+			_getpid
+			_sync
+			_nice
+			_unlink
+			_chdir
+			_chmod
+			_chown
+			_smdate
+			_ssig
+			_kill
+			_times
+			_profil
+			_enqueue
+			_dequeue
+			_tlimit
+			_clktim
+	-N	-O	../ken/once.o
+		-C
+			_cfree
+			_cfreelist
+		-A	_main
+	-R l.o m40.o c.o ../lib1 ../lib2

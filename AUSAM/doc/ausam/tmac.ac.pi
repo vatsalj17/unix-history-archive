@@ -1,0 +1,96 @@
+.pl 12i
+.nh
+.po 12
+.ll 6.8i
+.lt \n(.lu
+.nr xi 0\" in-out value
+.nr l 0 1\" level of indent
+.nr i\nl 0\" level zero indent
+.nr o\nl 0\" level zero outdent
+.de BP\" $1 - .in +$1, $2 - .ti -$2
+.br
+.ne 7
+.nr zi \\n(i\\nl
+.nr l \\n+l
+.nr t\\nl \\$2
+.nr i\\nl \\n(zi+\\$1
+.nr o\\nl \\n(zi+\\$1-\\$2
+.if \\n(.n .sp 1
+.ta \\n(t\\nl
+.in \\n(i\\nl
+.ti \\n(o\\nl
+..
+.de NP\" reset indent, tab, and temp indent
+.br
+.ne 7
+.if \\n(.n .sp 1
+.ta \\n(t\\nl
+.in \\n(i\\nl
+.ti \\n(o\\nl
+..
+.de EP\" pop indent level
+.br
+.ne 7
+.if \\nl .in \\n(i\\n-l
+.if !\\nl .ta 0 8 16 24 32 40 48 56 64 72 80 88 96
+..
+.de IN\" $1 - the increment if given
+.br
+.ne 7
+.nr xi 7m
+.if \\$1 .nr xi \\$1m
+.if \\n(.n .sp 1
+.in \\n(.iu+\\n(xiu
+.ta 8 16 24 32 40 48 56 64 72 80 88 96
+.nf
+..
+.de OT\" restore to previous indent
+.br
+.in \\n(.iu-\\n(xiu
+.fi
+.if \\n(.n .sp 1
+..
+.de PA
+.br
+.ne 7
+.ne 7
+.if \\n(.n .sp 1
+..
+.de NS
+.br
+.ne 7
+.if \\n(.n .sp 1
+.fl
+.cu 1
+..
+.de UL\" lynnies choice
+.ul 1
+..
+.de FO\" foot title macro
+.de x1
+'sp 2
+'tl '\\$1'- % -'\\n(yr/\\n(mo/\\n(dy'
+'bp
+\\..
+.wh -5 x1
+..
+.de HE\" header title macro
+.de x2
+'sp 2
+'tl '\\$1'\\$2'\\$3'
+'sp 2
+\\..
+.wh 0 x2
+..
+.de AR\" make page nos arabic - no leading zeros
+.nr % 1
+.af % 1
+..
+.de BR\" make page nos big roman eg I, IV, XLM
+.nr % 1
+.af % I
+..
+.de LR\" make page nos little roman eg i, iv, xlm
+.nr % 1
+.af % i
+..

@@ -1,0 +1,78 @@
+.th TM IV 25/1/78
+.sh NAME
+tm \*- TM11/TS03 800bpi magnetic tape interface
+.sh DESCRIPTION
+The file
+.it mt0
+refers to the TS03 tape drive.
+When opened for reading or writing, the tape is rewound.
+If the last operation was a write, two tape marks (\ EOI\ )
+are written when the file is closed.
+The file
+.it mt8
+is not rewound on open,
+but, if an EOI has just been written,
+the tape is moved back one tape mark.
+The file
+.it mt1
+is a link to
+.it mt8.
+
+A standard tape consists of consecutive 512 byte
+records terminated by 2 tape marks,
+however,
+in multi-file tapes,
+the files are seperated by one tape mark (\ EOF\ ).
+To the extent possible, the system makes it possible,
+if inefficient, to treat the tape like any other 
+file.
+Seeks have their usual meaning and it is possible to read
+or write a byte at a time.
+
+The file
+.it rmt0
+opens the tape drive as a raw special file
+and rewinds the tape.
+Each read or write deals with the next record on the tape.
+In the write case the record has the same length as the buffer given.
+During a read the record size is passed back as the number of bytes
+read, provided it is no greater than the buffer size;
+if the record is long, an error is indicated.
+In raw tape i/o, the buffer must begin on a word boundary
+and the count must be even.
+Seeks are ignored.
+Tape marks will read as EOF (\ zero bytes read\ ),
+but another read will fetch the next record on the tape.
+The file
+.it rmt8
+is not rewound on open, but is otherwise the same.
+
+Stty calls may be directed to the raw special files.
+Only the first two integer arguments are significant: the
+first one selecting the action, and the second one a count.
+.s3
+.lp +21 10
+0:	Skip forward file
+.lp +21 10
+1:	Skip reverse file
+.lp +21 10
+2:	Unused
+.lp +21 10
+3:	Write tape mark
+.lp +21 10
+4:	Skip forward block
+.lp +21 10
+5:	Skip reverse block
+.lp +21 10
+6:	Drive off line
+.lp +21 10
+7:	Rewind
+.i0
+.dt
+.sh FILES
+/dev/mt?, /dev/rmt?
+.sh "SEE ALSO"
+tp(I), itp(I), stp(I), stty(II)
+.sh BUGS
+If any non-data error is encountered,
+it refuses to do anything until closed.

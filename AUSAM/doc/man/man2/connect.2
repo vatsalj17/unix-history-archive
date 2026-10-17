@@ -1,0 +1,92 @@
+.th CONNECT II APR/79
+.sh NAME
+connect \*- connect tty ports together
+.sh SYNOPSIS
+(connect = 59.; not in assembler)
+.br
+(master-fd in r0)
+.br
+(slave-fd  in r1)
+.br
+.ft B
+sys connect; type; cntrl-char
+.s3
+connect(m-fd, s-fd, cchar)
+.br
+ttyview(m-fd, s-fd, cchar)
+.br
+ttygrab(m-fd, s-fd, cchar)
+.br
+disconnect(fd)
+.ft R
+.sh DESCRIPTION
+This call is restricted to the super user.
+The two ttys referred to by
+.it master-fd
+and
+.it slave-fd
+(file descriptors returned by open) are connected.
+The type of connection (or disconnection) is determined by
+.it type
+above. The meanings for
+.it type
+are as follows
+.s3
+.lp +10 5
+\fB0\fR	Disconnect.
+.it M-fd
+and
+.it s-fd
+must refer to the same tty and it must be currently connected
+(it may be either master or slave). The connected terminal and
+.it tty
+are disconnected.
+.s3
+.lp +10 5
+\fB1\fR	Ordinary connect (log). The two ttys referred to by
+.it m-fd
+and
+.it s-fd
+are connected such that any input to either is directed to the
+output of the other. Thus a character typed at one of the ttys
+will be output at the other. This is primarily for inter-system
+communication, as this interchange is performed at interrupt time.
+.s3
+.lp +10 5
+\fB2\fR	View. The master terminal (\fIm-fd\fR) receives a copy of
+all output directed to the slave terminal (\fIs-fd\fR). Input typed
+at the slave whilst it is in non-ECHO mode is also copied at the master.
+Characters typed at the master terminal behave as if they were typed at the
+slave. This includes all special characters (such as DEL).
+.s3
+.lp +10 5
+\fB3\fR	Grab. The slave terminal is disconnected from the system and the
+master assumes its place. All input from the master appears to come from
+the slave, and all output directed to the slave is redirected to the master.
+.s3
+.i0
+For the cases connect, view and grab above,
+.it m-fd
+and
+.it s-fd
+must refer to separate ttys, and neither of these may be already connected.
+.s3
+.it Cchar
+is the master control character. When this character is typed at the master
+terminal then redirection of that master-slave pair is terminated, and
+the connect call returns. A \fIdisconnect\fR call made elsewhere will also
+have this effect.
+.sh "SEE ALSO"
+log(I), open(II)
+.sh DIAGNOSTICS
+The c bit is set if an error occurred, a \*-1 value is returned for C.
+.it Errno
+(or R0) may have the following values.
+ENOREDIRECT means that
+one of the file descriptors passed referred to a tty not capable of 
+redirection.
+If either is already redirected (or not redirected for disconnect)
+then EREDIRECT is returned.
+.sh BUGS
+Because the system call cannot be interrupted by signals, disconnect
+is the only way to remove an unwanted connection.

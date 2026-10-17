@@ -1,0 +1,62 @@
+.th DTP V 30/6/78
+.sh NAME
+dtp \*- magtape format
+.sh DESCRIPTION
+The command
+.bd dtp
+dumps files to and extracts files from magtape at 800 or 1600 bpi.
+The tape consists of a series of 16384 byte records (32 disk blocks)
+followed by a tape mark. This is the largest record which is a power of two
+that can be written by DEC tape units at 800 bpi. Records of 32768 are possible
+at 1600 bpi. The first record, and possibly subsequent records contain the tape
+directory. Its format is as follows.
+.s3
+.in +5
+.ta +6 +6 +18
+.nf
+struct dir_ent
+{
+	char	name[114];	/* file name */
+	int	mode;		/* access modes */
+	int	uid;	/* file owner */
+	long	size;	/* size of the file in bytes */
+	long	modtime;	/* last modification time */
+	int	tapea;	/* tape address */
+}
+	dir_rec[128];
+.fi
+.in -5
+.s3
+.bd Name
+is the pathname where the file was found,
+.bd mode
+are the permission modes of the file etc.
+.bd Tapea
+is the tape address of the file. It is a 512 byte block number which
+is independent of the tape blocking. The first entry in the first tape block is
+special. It contains information about the rest of the tape. Its format is
+.s3
+.in +5
+.nf
+struct tape_header
+{
+	int	nfiles;	/* number of files */
+	long	dumptime;	/* tape creation time */
+	int	ndirblks;	/* number of directory records */
+	char	pad[120];	/* unused */
+}
+.in -5
+.fi
+.s3
+There is always at least one record in the directory. The actual number can be
+determined by reading the first one. After the directory there are sufficient
+records to contain all the files that have been dumped. Files start on any
+512 byte boundary in the record, and extend for (size+511)/512 continuous
+blocks, which may extend over several tape records. Files are dumped in the
+same order as they are in the directory. Thus the first file starts at the 
+first data block. This allows tapes created by
+.it dtp
+to be distributed, as the dtp program can be the first file, which is easily
+extracted by other means (eg. DD(I)).
+.sh "SEE ALSO"
+dtp(I), file system(V), ht(IV)

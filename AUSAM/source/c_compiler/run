@@ -1,0 +1,18 @@
+echoall
+cc -o c0 -n -s -O c0*.c
+cc -o cvopt cvopt.c
+cvopt table.s table.i
+as -o table.o table.i
+cc -c -O c1*.c
+: cc -o c1 -n -s -f c1*.o table.o
+cc -o c1 -n -s c1*.o table.o
+cc -o c2 -i -s -O c2*.c
+chmod 111 /lib/c0 ; /lib/c0 >/null ; rm -f /lib/c0 /lib/fc0
+cp c0 /lib/c0 ; chmod 1711 /lib/c0
+ln /lib/c0 /lib/fc0
+chmod 111 /lib/c1 ; /lib/c1 >/null ; rm -f /lib/c1 /lib/fc1
+cp c1 /lib/c1 ; chmod 1711 /lib/c1
+ln /lib/c1 /lib/fc1
+chmod 111 /lib/c2 ; /lib/c2 >/null </null ; rm -f /lib/c2
+cp c2 /lib/c2 ; chmod 1711 /lib/c2
+rm c0 c1 c2 cvopt *.o

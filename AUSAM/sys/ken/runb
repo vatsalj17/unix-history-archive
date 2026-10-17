@@ -1,0 +1,16 @@
+: run [ prog ]
+if $1x = x  goto all
+: loop
+echoall
+cc -c -O $1.c
+shift
+if $1x != x goto loop
+ar rv ../lib1 | mc
+exit
+: all
+echoall
+cc -c -O *.c
+ar rv ../lib1 \
+once.o trap.o sysent.o sys1.o sys2.o sys3.o sys4.o iget.o prf.o rdwri.o \
+slp.o subr.o text.o sig.o clock.o fio.o malloc.o nami.o pipe.o alloc.o ^ mc
+exit

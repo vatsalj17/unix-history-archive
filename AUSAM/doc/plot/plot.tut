@@ -1,0 +1,965 @@
+.po 11
+.ll 77
+.lt 77
+.pl 12i
+.hy 0
+.nr in 0
+.de i0
+.in \n(in
+..
+.de lp
+.i0
+.ta \\$2
+.in \\$1
+.ti -\\$2
+..
+.de s1
+.sp 1
+.ne 4
+..
+.de s2
+.sp 1
+..
+.de s3
+.sp 1
+..
+.de fo
+'sp 3
+'tl ''-%-''
+'bp
+..
+.de th
+.de x1
+'sp 3
+'if o 'tl '\\$1''\\*(HS'
+'if e 'tl '\\*(HS''\\$1'
+'sp 2
+\\..
+.wh -8  fo
+.wh 0 x1
+.in \n(in
+..
+.de sh
+.s1
+.ne 5
+.ti 0
+.cu
+\\$1
+.sp 2
+..
+.de bd
+.tr __
+.ul
+\\$1
+..
+.de bn
+.tr __
+.ul
+\\$1\\t
+..
+.de it
+.tr __
+.ul
+.li
+\\$1
+..
+.de dt
+.ta 8 16 24 32 40 48 56 64
+..
+.de un
+.mc |
+..
+.de uf
+.mc
+..
+.ds b B
+.ds G G
+.ds a '
+.ds - -
+.ds _ _
+.ds v |
+.ds p J
+.ds r
+.ds g `
+.ds X X
+.ds u u
+.ds > ->
+.ds | 
+.de EG
+.sp
+.ne \\$2+1
+.nf
+.in \\$1
+..
+.de GE
+.in \\$1
+.fi
+.sp
+..
+.de BD
+\kx\\$1\h'|\nxu+1u'\\$1\h'|\nxu+1u'\\$1
+..
+.de np
+.sp 20u
+.ti +4
+..
+.de dh
+.sp
+.ul
+\\$1\\$2\\$3\\$4\\$5\\$6\\$7:
+.br
+.in +5
+..
+.de hd
+.in -5
+.sp
+..
+.ds l _\h'-1'<
+.tr ~
+.th "PLOT"
+.ds HS Description
+.sh DESCRIPTION
+.np
+.BD Plot
+reads a file of x and y values (the data)
+and graphs them on a tektronix terminal or hard copy
+plotter.
+Plot will select scaling for each axis in order to produce
+a reasonable looking graph.
+.np
+Plot can also accept intructions on how it should draw the graph.
+
+Using these specifications it is possible to:
+.EG +10 10
+put out a heading on the graph,
+label each axis,
+plot many lines or sets of data on one graph,
+perform a linear regression on the data then show it graphically,
+draw different sets of data in different dashed lines and
+have each individually labelled,
+view any portion of the graph full size.
+.GE -10
+.sp 1
+.np
+An example of a graph drawn by
+plot
+appears below:
+.bp
+.np
+The graph was produced from the following information:
+.EG +10 16
+legend "COMMUNITY TAX INFORMATION"
+comment THESE ARE THE 1977 RESULTS
+xaxis  "INCOME"
+yaxis  "RATE OF TAX"
+plot x=1 y=2
+comment the data came from TEQUS journal
+data
+1000  0.0
+2000  0.0
+3000  0.0
+4000  5.0
+5000 10.0
+6000 12.0
+7000 15.0
+8000 22.1
+9000 33.6
+.GE -10
+The above was entered into a file called "example", then
+.EG +10 1
+plot example
+.GE -10
+was typed in as a command to produce the graph shown.
+.np
+The above example only used some of the available features
+of
+plot,
+but they are
+sufficient to produce a neat graph easily.
+The features that will produce a tidy
+graph are explained below.
+.sp 4
+.lp +6 5
+.BD comment
+.li 1
+... anything ...
+.np
+The entire line after the word
+comment
+is ignored by the program.
+It is used to comment about the contents of the
+data or about what the
+plot
+specifications
+hope to achieve.
+For example:
+.EG +10 4
+comment this is sundays output
+legend "CRIME RATE"
+comment IT STARTS AT MIDNIGHT
+xaxis "hours"
+.GE -10
+.lp +6 5
+.BD legend
+"string"
+.np
+The string (enclosed in double-quotes ("))
+becomes the heading or
+legend
+of the graph.
+It is centred and placed at the top of the
+plotting page.
+If for example productivity was being plotted
+against time,
+a heading might be specified by:
+.EG +10 1
+legend "BUSINESS PRODUCTIVITY"
+.GE -10
+.lp +6 5
+.BD xaxis
+"string"
+.lp +6 5
+.BD yaxis
+"string"
+.np
+These place the strings below the xaxis
+and next to the yaxis respectively.
+They are used in the same way that
+legend
+is, and enable the user to explain a feature of 
+each axis.
+As a continuation of the above example,
+their usage could be:
+.EG +10 2
+xaxis "days"
+yaxis "Profit ratio"
+.GE -10
+.lp +6 5
+.BD plot
+.BD x=
+column-n
+.BD  y=
+column-m
+.np
+The data file may contain many columns of information,
+this specification tells the program to use
+"column-n" for the x values,
+and "column-m" for the y values.
+.EG +10 1
+plot x=7 y=2
+.GE -10
+will graph column 7 against column 2.
+.np
+However, what does the program consider to be a
+column of data~?
+For example:
+.EG +10 7
+0  0
+1  3
+2  5
+3  7
+4  6
+.GE -10
+is exactly two columns of information.
+In this example, the columns were separated by
+spaces, but it is just as legal to separate them by
+tabs or commas. Hence:
+.EG +10 6
+ 0,	0
+ 1	2
+ 2	,6
+ 3	5
+.GE -10
+is still legally two columns, even though there are both commas, tabs
+and spaces present.
+Plot
+does not even require that the columns line up vertically,
+thus:
+.EG +10 7
+0,1,2
+3   4    5
+    6,7     8
+9 10 11
+30,40     50
+.GE -10
+is exactly three columns, even though it is messy.
+.np
+Plot is able to plot out any two columns of data,
+and it does not check to see if the other columns are data
+at all.
+Thus the first and third columns of the following data
+can be graphed out legally:
+.EG +10 6
+1 LINDA   1959
+2 RICHARD 1959
+3 IAN     1944
+4 ADRIAN  1962
+.GE -10
+by specifying:
+.EG +10 1
+plot x=1 y=3
+.GE
+.sp
+.lp +6 5
+.BD data
+.np
+This is the final
+plot specification.
+It states that the instructions to the program
+have finished and the data itself begins.
+.sp 2
+It is now possible to produce
+a complete,
+labelled graph.
+A typical example follows:
+.EG +10 11
+legend "BUSINESS PRODUCTIVITY"
+xaxis "Days"
+comment THE UNADJUSTED RATES
+yaxis "Profit ratio"
+plot x=1 y=3
+data
+0    30   273.16
+1   -10   280.5
+2    30   310.99
+3    92   323.00
+.GE -10
+.br
+.ne 30
+The next example should be entered
+and run
+if there are any doubts about the above
+plot specifications
+and their use.
+Call the file "example",
+and in it place:
+.EG +10 16
+legend "example plot"
+xaxis "TIME"
+yaxis "STOCK MARKET ACTIVITY"
+plot x=1 y=2
+data
+1968  0.5
+1969  0.6
+1970  0.45
+1971  0.47
+1972  0.56
+1973  0.76
+1974  0.97
+1975  1.1
+1976  0.91
+1977  0.89
+1978  0.68
+.GE -10
+To graph out the above after it has been entered,
+type:
+.EG +10 1
+plot example
+.GE -10
+and the program will do the rest.
+.ds HS Complete Plot Specifications
+.bp
+.sh "COMPLETE PLOT SPECIFICATIONS"
+.np
+The advanced user will find that the basic
+plot
+specifications
+are often insufficient to produce a graph
+tailored to his own particular needs,
+but the complete specifications
+which are given below will give him
+full control of all facets of the
+graph's appearance.
+.np
+To make the syntax definitions concise,
+abbreviations are used.
+The construction "...." literally means
+a string in double qoutes. Thus:
+.EG +10 2
+"THE QUICK BROWN FOX"
+"this is how to put "" (double quotes) in"
+.GE -10
+are correct, but:
+.EG +10 2
+"under the counter
+" GOOD EVENING ""
+.GE -10
+are not. As shown, a double quote may be
+placed in a string by typing in
+2 quotes next to each other ("").
+An argument placed in square brackets
+( [] ) means that it is optional.
+.EG +10 1
+yaxis ["...."]
+.GE -10
+states that a string may optionally appear after
+the word
+yaxis.
+.EG +10 1
+legend "...." ["...."] [ key at [end][xpos,ypos][quadrant]]
+.GE -10
+says that one or more strings may appear,
+and
+key
+is optional. Note that
+end
+and
+quadrant
+etc, may only be included with key, not by
+themselves.
+.np
+The
+plot
+specifications
+may be entered in free format, but it is suggested
+that they be entered in the order shown in this
+manual.
+Legend, xaxis, yaxis, and date
+may only be used once in a graph and hence should
+occur first. Strings ("....") may not extend over more than one
+line:
+.EG +10 2
+"THIS IS A LINE OF TEXT ...........
+THAT CONTINUES OVER TWO LINES "
+.GE -10
+is an error.
+All reserved words such as
+legend,
+key,
+data,
+and
+plot
+etc are emboldened to show that they
+are to be used literally.
+.sp 4
+.lp +6 5
+.BD legend
+["...."]["...."][
+.BD key
+.BD at
+[
+.BD end
+][ xpos,ypos ][ quadrant ]]
+.np
+Each string (given by "....") becomes a single line of heading
+for the graph.
+The strings are individually centred,
+then placed on their own lines.
+.EG +10 1
+legend " this is the first line " "this is under"
+.GE -10
+will produce two lines of heading for the graph.
+.np
+If three or four sets
+of data are to be plotted on the one graph,
+then some way of labelling each
+line is desirable.
+The
+key
+specification allows this to be done.
+Each line has a short description associated
+with it called a
+.BD keyword.
+They identify each set of data. (A
+keyword
+can be associated with a set of data
+by using the
+specification
+"plot"
+(see below)).
+.np
+When
+key
+at [ xpos,ypos ][ quadrant ]
+is specified, a small box is drawn and the
+keywords
+are neatly place in it.
+They effectively index the lines on the graph.
+The position of this box is given by
+either an x and y position (0 \*l x \*l 10,
+0 \*l y \*l 8 and 0,0 is the bottom left corner), or a
+quadrant,
+where the
+quadrant
+is 1, 2, 3, or 4.
+Their positions are:
+.EG +10 4
+1 the top    right corner
+2 the top    left  corner
+3 the bottom left  corner
+4 the bottom right corner
+.GE -10
+Key at end may also be specified.
+In this case no box is drawn,
+and the
+keywords
+are placed directly next to where their respective lines end.
+For example:
+.EG +10 1
+legend "HULLO" key at end
+.GE -10
+will place all
+keywords
+(whatever they are) at the physical end of the lines.
+.dh Defaults
+If
+.BD key
+.BD at
+is not specified, then no key-box is
+drawn, and the keywords are not used.
+.br
+If the quadrant or x y position is outside the legal
+range then the first quadrant will be used.
+.hd
+.sp 2
+.lp +6 5
+.BD xaxis
+["...."][
+.BD from
+min
+.BD to
+max ][
+.BD by
+delta ][
+.BD at
+ypos]
+.lp +6 5
+.BD yaxis
+["...."][
+.BD from
+min
+.BD to
+max ][
+.BD by
+delta ][
+.BD at
+xpos]
+.np
+The string is centred and placed next to the
+appropriate axis.
+The program's automatic
+ranging may be overridden, and the distance between the ticks
+on each axis may be changed. (Ticks are the small marks on the axes of
+a graph to mark its scale).
+Normally the program chooses what it considers to be
+the best minimum and maximum values for a neat graph.
+If the specification:
+.EG +10 1
+xaxis from 10 to 60 by 5
+.GE -10
+is used, then the new minimum for the x axis becomes 10,
+and the new maximum becomes 60.
+The distance between each tick mark becomes 5.
+All four parameters may be any real value,
+but the best looking graphs are achieved when
+the "tick distance" is a well rounded number
+such as 1 or 0.5 etc.
+The axes are normally drawn at the edge of the graph
+so they do not interfere with the data that is being plotted.
+The axes (including the numbers on the axes) may be moved
+to any position by stating "at" then the 
+x or y position they are to go to.
+.br
+.ne 2
+For example:
+.EG +10 2
+xaxis "TIME" at 0
+yaxis "RESIDUALS" at 0
+.GE -10
+will make each axis pass through (0,0)
+relative to the data.
+.np
+Any data points that lie outside the specified
+range will not be plotted, and thus any subset
+of the data may be viewed.
+The specification for the y axis is identical,
+except that it operates on the y axis.
+Examples of typical usage are:
+.EG +10 4
+xaxis "time (days)" from 0 to 50
+yaxis "DEGREES OF FREEDOM"
+.sp
+xaxis "ANGLE" by 0.2
+yaxis
+from -6 to 6 by 1
+.GE -10
+.ul
+.dh Defaults
+If
+.BD
+from
+min
+.BD to
+max is omitted, or
+delta is not given then the program selects
+a suitable value in each case.
+.br
+If the positions of the axes are not given
+then the x and y axes are placed at the bottom
+and the left edges of the graph respectively.
+.hd
+.lp +6 5
+.BD date
+["...."]
+.np
+The current date is normally placed at the top right hand corner
+of the graph. This call will use the given string instead of the
+date. Thus:
+.EG +10 1
+date
+.GE -10
+will suppress the date being printed.
+Other examples are:
+.EG +10 3
+date "SUNDAY"
+date "1959/08/24 9:26"
+.GE -10
+.sp
+.lp +6 5
+.BD comment
+.li 1
+...anything...
+.np
+A comment may be inserted into the
+plot specifications,
+and all information on the same line
+will be totally ignored.
+For example:
+.EG +10 10
+comment This is the stat printout 24/8/1978
+legend "PB MARKET RETURNS"
+comment anything outside the range given below
+comment should not be plotted
+xaxis "weeks" from 20 to 70 by 10
+yaxis "returns" from -0.5 to 0.5 by 0.1
+comment the data came from "SPSS"
+data
+.li 2
+... ...
+... ...
+.GE -10
+.sp
+.ne 5
+.lp +6 5
+.BD plot
+[ "...." ][
+.BD point=
+type ][
+.BD line=
+type ]
+.lp +6 0
+[
+.BD regression
+[ x,y ][ quadrant ]]
+.lp +6 0
+.BD x=
+[ column-n [
+.BD *
+m ]][ a
+.BD to
+b ]
+.lp +6 0
+.BD y=
+[ column-n [
+.BD *
+m ]][ a
+.BD to
+b ]
+.np
+The constructions point=type and line=type
+tell the program which type of symbol it should
+use to plot the data with.
+That is, if "line= short" is stated,
+then the program will join up the
+data points with a short dashed line.
+If "point=" is given
+instead of "line=", then the data will be plotted
+as points (such as crosses), and no line will join them.
+If both are stated then the data will be marked as points
+and also have a line joining them.
+.ti +4
+If "regression"
+is used then the data will be plotted as points
+(crosses are default) and the line of best fit will be drawn in.
+The statistics of the line of best fit
+may be included with the graph by stating
+where they should go, either by x and y position
+( 0\*l x \*l10, 0\*l y \*l 8) or
+quadrant.
+The statistics are :
+.EG +10 3
+The slope of the line.
+The Y intercept.
+The goodness of fit or regression co-efficient.
+.GE -10
+The various options for the of lines and points are:
+.EG +7 7
+.ul
+ POINT-TYPE          LINE-TYPE
+
+  cross               solid
+  dot                 short
+  circle              short-long
+  star                long
+  nothing             nothing
+.GE -7
+The type of symbol that is drawn in each case should be obvious,
+and if the word "nothing" is stated literally
+then no symbol or line is drawn at all.
+The user also specifies the column
+that contains the x values,
+and the column that contains the y's.
+For example a simple usage of the column specifier is
+.EG +10 1
+x= 1
+.GE -10
+which causes the program to use column
+one
+for the x values .
+Sometimes however, the x values are not properly
+scaled, then:
+.EG +10 1
+x= 1 * 5
+.GE -10
+would immediately multiply the
+first
+column by five.
+This scaling is the first thing done to the data,
+hence all other "plot specifications" operate
+after the scaling has been done.
+Its most common usage would be to convert a column
+of data in one unit of measurement to another.
+If a file contained
+metres
+versus
+days,
+then:
+.EG +10 1
+plot x= 1 * 0.001 y= 2 * 24
+.GE -10
+would convert the graph to
+kilometres
+versus
+hours.
+.np
+Sometimes one column of data is not present at all,
+(perhaps because it was not relevant to program that
+generated the data).
+.br
+.ne 3
+So if
+.EG +10 2
+x= min to max             or
+y= min to max
+.GE -10
+is given instead of a number for the column, the program will
+generate the data internally between the
+minimum and maximum given.
+Plot will actually generate a column of data itself
+between the specified bounds.
+For example:
+.EG +10 1
+plot x= 1 to 50 y= 1
+.GE -10
+would be used if the user only had the y values
+and wished to generate some x values (between
+1 and 50) for it.
+.np
+The string (in this case a keyword)
+is the word or words that become associated with the data.
+It tags or identifies the data, so that if a key is wanted
+(see
+.BD legend),
+the program uses the string as an identifying label for that line.
+For example:
+.EG +10 2
+plot "AFTER" x= 1 y= 2
+plot "BEFORE" x= 1 y= 3
+.GE -10
+Other more complete examples are:
+.GE +10
+plot "line one" line=short point=circle regression 4
+x= 1 y= 5
+.sp
+plot line=short-long  x= 1 to 35  y= 4 *10
+.sp
+.nf
+plot "hullo"
+line=solid
+regression
+x= 10*0.01
+y= 3*3.5
+
+.fi
+plot x= 1 y= 2
+.GE -10
+.dh Defaults
+If a point or line type is omitted then
+crosses and solid lines are assumed.
+.br
+If both the x column and y column is
+not given then column one as x values
+and column two as y values will be used.
+.br
+The default scaling factor is one,
+ie no scaling.
+.br
+If no position is given after regression
+then the regression statistics are omitted.
+.hd
+.sp
+.lp +6 5
+.BD data
+[ filename ]
+.np
+This instruction tells the program where to look for the data points.
+If a
+filename is given, then the program opens that file and plots the data
+points contained in it.
+If no name is given, then the data immediately follows.
+.br
+.ne 3
+Valid constructions are:
+.EG +10 9
+data fred
+.sp
+data
+1.0 1.3
+2.0 1.5
+3.0 1.6
+4.0 2.2
+.li 2
+... ...
+... ...
+.GE -10
+If
+data with no arguments is given, then actual data must follow;
+otherwise an error will result.
+If the file could not be found or read then the
+program will terminate with the appropriate error
+message.
+.sp 2
+.lp +6 5
+.BD mark
+[[
+.BD x=
+n ][
+.BD y=
+m ][
+.BD line=
+type ]
+.np
+By using
+mark,
+the occurance of some event may be marked
+on the graph with a horizontal or vertical line.
+The vertical line will be placed at position x= n and
+a horizontal line placed at position y = m.
+These are normally solid lines, but if line=
+(then a type)
+is given then they are drawn in the appropriate
+dashed line. Some possibilities are:
+.EG +10 2
+mark x= 0.5  y= 0.0  line=solid
+mark  y= 1000 line=short
+.GE -10
+.dh Defaults
+If the line type is not given then a solid line
+is used.
+.hd
+.ds HS Errors
+.sh ERRORS
+.np
+The main causes of errors are
+incorrect plot specifications or garbage
+intermingled with the data.
+.np
+If a construction is not recognised in the plot
+specifications (such as misspelt words) then the program
+will terminate, giving the line number and probable cause
+of the error.
+For example:
+.EG +10 1
+Error in file EX5 at line 7 - legend occurs twice
+.GE -10
+states that there was a second occurance of legend
+on line 7. ("Legend" can only occur once).
+.np
+If the data has garbage or unrecognisable information
+imbedded in it then plot skips over the garbage,
+and gives a warning message at the conclusion
+of the plotting of the graph.
+The output might be:
+.EG +10 2
+warning in file data1 at line 200 - garbage data
+warning in file test at line 101 - missing column
+.GE -10
+.ds HS Sample Plots
+.bp
+.sh "EXAMPLE ONE"
+.np
+It is now possible to completely specify the
+format of the graph, and examples of complete
+plot specifications appear below:
+.EG +10 11
+legend "EXAMPLE GRAPH"
+xaxis  "INCOME"
+yaxis  "RATE OF TAX EVASION"
+comment we plot col 1 versus col 2
+plot x= 1 y= 2
+data
+0   0
+100 1
+150 2
+200 5
+250 13.5
+300 19.9
+350 16.5
+400 17.8
+450 22.1
+500 25
+800 30
+1000 33.3
+.GE -10
+and this would produce the graph shown below:
+.bp
+.sh "EXAMPLE TWO"
+A further example is given below to ensure the operation
+of plot is clear:
+.EG +10 10
+legend "example two" key at end
+xaxis from 0 to 20 by 2
+yaxis from -10 to 10
+plot "DATA SET 1" x= 1 y= 2
+data fileone
+plot "DATA SET 2" x= 1 y= 3
+data filetwo
+.GE -10
+Note that "fileone" and "filetwo" are
+just files that contain columns af data.
+.rm x1
+.bp
+.rm fo
+.rs
+.sp 3i
+.cu 2
+.ce 2
+PLOT
+.sp
+A USER'S GUIDE
+.sp 6
+.ti +5
+.fi
+.ad
+.ll -10
+.in +10
+This document introduces and describes an automated
+plotting program available under UNIX
+for producing high quality graphs on
+Tektronix terminals and plotters.
+.br
+.ll +10
+.in -10
+.sp 8
+.tl '''Richard Grevis'
+.tl '''January 1979'

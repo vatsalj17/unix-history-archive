@@ -1,0 +1,79 @@
+.th WHO I 3/4/78
+.sh NAME
+who  \*-  who is on the system
+.sh SYNOPSIS
+.bd who
+[[[-]f...] ... ]
+[ who-file ] [
+.bd "am I"
+]
+.sh DESCRIPTION
+.it Who,
+without an argument,
+lists the name, typewriter channel, and login time
+for each current UNIX user.
+.s3
+There are various flags which list appropriate fields
+from the AUSAM password entries:
+.lp +20 8
+f	first name
+.lp +20 8
+l	last name
+.lp +20 8
+o	other ( may be many lines! )
+.lp +20 8
+d	initial directory
+.lp +20 8
+s	initial shell
+.lp +20 8
+C	class mask (translated)
+.i0
+.dt
+.s3
+There is also a flag for using
+.it who
+on fast screens :-
+.bd c,
+which outputs 20 lines and then waits for a
+.it CR
+to be typed.
+.fl
+.s3
+Without an argument,
+.it who
+examines the /etc/utmp
+file to obtain its information.
+If a file is given, that file is examined.
+Typically the given file will be /usr/adm/wtmp,
+which contains a record of all the logins since it
+was created.
+Then
+.it who
+lists
+logins, logouts, and crashes since the creation of
+the wtmp file.
+Each login is listed with user name,
+typewriter name (with `/dev/'
+suppressed),
+and date and time.
+Also,
+non-login entries produce suitably descriptive comments.
+.fl
+.s3
+With two arguments,
+.it who
+behaves as if it had no arguments except for restricting
+the printout to the line for the current typewriter.
+Thus `who am I' (and also `who are you')
+tells you who you are logged in as.
+.sh FILES
+/etc/utmp
+.br
+/etc/passwd
+.sh "SEE ALSO"
+utmp(V), wtmp(V),
+.br
+su(VIII), getty(VIII), init(VIII), AUSAM(VIII).
+.sh DIAGNOSTICS
+"bad wtmp" \*- bad entry in [uw]tmp file.
+.sh BUGS

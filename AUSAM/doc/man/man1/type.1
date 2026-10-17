@@ -1,0 +1,102 @@
+.th TYPE I "12 Jan 79"
+.sh NAME
+type  \*-  enter-text program for typists
+.sh SYNOPSIS
+.bd type
+[
+.bd \*-a
+][
+.bd \*-b
+][
+.bd \*-c
+][
+.bd \*-l
+line\-size ][
+.bd \*-m
+auto\-adjust size ] file
+.sh DESCRIPTION
+.it Type
+is designed to assist typists enter documents
+into the file system (possibly for later \fInroff\fBing).
+If the named file is already present, text is added to the end
+of it, otherwise the file is created.
+.it Type
+automatically splits the input text lines
+on the first blank or tab beyond the line size
+(default 40 characters). Thus the typist need not worry about
+typing the carriage\*-returns.
+The line is also broken after the punctuation characters `.', `:',
+`;', `!' and `?'.
+If no blanks or tabs (or returns!)
+are entered by column
+position "line-size + auto-adjust size", the word being typed is
+moved to the start of the next line.
+Trailing blanks and tabs are removed from the lines.
+.s3
+The options, which may appear in any order, are:
+.s3
+.lp +24 22
+\fI-a\fB	Suppress the auto-adjust facility.
+.s3
+.lp +24 22
+\fI-b\fB	Rings the bell for every character typed beyond
+character position "line-size".
+.s3
+.lp +24 22
+\fI-c\fB	Allows entry of control-characters, which normally
+ring the bell and are ignored.
+.s3
+.lp +24 22
+\fI-l\fB line-size	Changes the line-size from the default (40)
+to line-size (30\ <=\ size\ <=\ 140).
+.s3
+.lp +24 22
+\fI-m\fB auto-adjust size	Changes the number of characters allowed
+after column "line-size" before the auto-adjust occurs
+(1\ <=\ adjust\ <=\ 20).
+The default is 8.
+.s3
+.i0
+.dt
+The program uses backspace and `@' as its erase and kill characters,
+respectively. When `@' is typed, the current line is cleared. When
+the backspace is typed, the immediately preceding character is deleted.
+If this character was a tab,
+the cursor is adjusted to appear in the correct position.
+The `@' may be erased, causing the line-portion that was cleared
+to reappear. If the `@' must be entered, it may be escaped
+by a `\\'. The `@' will overwrite the `\\'.
+Similarly, if `\\' must be entered, it may be escaped
+by a `\\', and will overwrite it.
+.s3
+When
+.it type
+is invoked, and ready to accept input text, it signals "Go ahead".
+This is necessary, as the terminal is put into raw-mode for input.
+.it Type
+therefore works best on a lightly loaded machine.
+The following three control\*-characters are understood by
+.it type,
+and may appear anywhere on the line being entered.
+.s3
+.lp +16 12
+\fI^e\fB	Invokes the editor \fIem\fB in `elfic' mode,
+to allow editing of the file being typed.  Upon quitting
+the editor, the message "Go ahead" indicates that you may continue
+adding text to the end of the file.
+.s3
+.lp +16 12
+\fI^l\fB	Indicates that the current line is not to be
+broken if it exceeds the line\*-length, or at punctuation marks.
+This is useful for entering long\*-lines.  The line is terminated
+by a carriage\*-return.
+Lines with trailing blanks or tabs may also be entered in this manner.
+.s3
+.lp +16 12
+\fI^d\fB	Exits from
+.it type.
+.s3
+.i0
+.dt
+.sh "SEE ALSO"
+em (I)	(`o' and `b' commands)

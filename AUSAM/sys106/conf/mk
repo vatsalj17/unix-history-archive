@@ -1,0 +1,14 @@
+echoall
+cc -c c.c
+as -o m70.o m70.s
+as -o l70.o l70.s
+ld -x -r -d l70.o m70.o c.o ../lib1 ../lib2
+nm -ug
+./sysfix a.out unix2
+rm -f *.o a.out
+cp unix2 unix1
+db unix1
+_swapdev
+1!
+%
+chmod 0 unix? ; chown bin unix?

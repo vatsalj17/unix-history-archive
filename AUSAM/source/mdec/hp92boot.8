@@ -1,0 +1,62 @@
+.nh
+.th HP92BOOT VIII 5/27/78
+.sh FUNCTION
+The \fBhp92boot\fR bootstrap program is  used for booting
+UNIX systems from DEC RP04 drives on an RH70 controller.
+It will boot the
+file '/unix' from a file system at a selectable cylinder offset.
+Files of up to \fB92Kw\fR are capable of being loaded.
+.sh "DEFAULT 'UNIX'
+Start the DEC M9301-YC hardware bootstrap by
+.br
+.in +7
+.nf
+.ul
+SW CONTENTS	OPERATION
+ 165000		Load address
+ 000000		Start
+.sp
+.fi
+.in -7
+The bootstrap program will be loaded and will commence running.
+Once \fB18-bit\fR is attained it
+will wait until the value in the switch register is changed
+before continuing.
+Set the switch register to 173030 for single user or 52 for rotating pattern,
+then default file system, currently at cylinder 220, will be searched
+for the file 'unix' and it will be loaded and executed.
+.sh "SELECTED 'UNIX'
+Start the DEC M9301-YC hardware bootstrap by
+.br
+.in +7
+.nf
+.ul
+SW CONTENTS	OPERATION
+ 165000		Load address
+ 000070		Start
+.sp
+.fi
+.in -7
+The bootstrap program will be loaded and will commence running.
+Once \fB18-bit\fR is attained it
+will wait until the value in the switch register is changed
+before continuing.
+If the value is increased, for example to 52 or 173030, then a
+default file system, currently at cylinder 220, will be searched
+for the file 'unix' and it will be loaded and executed.
+.s3
+A decreased value will cause a '?' to be typed on
+the console terminal, which can then be used to type in an alternative
+program for booting. The name should be given as a pathname
+starting from the root directory of the file system being booted.
+Before typing return put the cylinder number of the file system in
+the switch register. Now place a suitable value in the switch register
+(52 or 173030) and hit return again. A further '?' indicates that
+the name could not be found and the procedure should be repeated.
+.sh FILES
+.nf
+/usr/source/mdec/hp92boot.s	bootstrap program
+/usr/mdec/hp92boot		likewise but assembled
+.fi
+.sh BUGS
+none

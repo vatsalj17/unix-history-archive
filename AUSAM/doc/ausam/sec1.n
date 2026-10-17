@@ -1,0 +1,323 @@
+.HE "AUSAM" " " "Section 1"
+.bp
+.NS 0 "1."
+The Tangled Web We Weave
+.BP 5 0
+"What is a `user' ??"
+.PA
+"Oh", you say, "They are those strange twitching, pallid, drawn and
+nervous creatures you see running round and around in circles, muttering
+obscenities, in the corridors of computer centres !!"
+.PA
+"Yes, right first try! Now what is a `computnik' ??"
+.PA
+"A new type of terrorist ?"
+.PA
+"Close, but not quite right. They are the ones, with smiles on
+their faces, watching the `users' running round and around in
+circles, muttering obscenities, in the corridors of computer centres!"
+.PA
+"Oh......."
+.EP
+.PA
+The reason why "users" tend to develop mental disorders is that they
+cannot endure the incredible frustrations, both bureucratic and computational,
+that are part and parcel of using a computer.
+.PA
+The reason why "computniks" smile may be because of
+well pampered masochistic tendencies, but is usually because they have found
+the key to manipulating the computer system to make their lives easier.
+.PA
+The AUSAM system tries to lessen the "users" frustrations, mostly the
+bureucratic kind, while wiping the smile off the face of the "computnik".
+.NS 5 "1.1"
+Come into my parlour
+.PA
+As with any UNIX system, a new user must first petition a guru of sufficiently
+high standing to obtain a "login name", "password" and "working directory".
+This is still the case under AUSAM but from here on things start to differ.
+.PA
+As all gurus know, the new user must be assigned an entry in the
+"/etc/passwd" file.
+Under AUSAM this file is NOT in editable ASCII form.
+It is a hashed binary file and the "pwedit" command (see section 7 of this document)
+must be used to enter a new user.
+.PA
+Slightly more information is required from the initiate, including:
+.BP 15 5
+First name
+.br
+for the "first name" field of the password file entry
+.NP
+Last name
+.br
+for the "last name" field of the password file entry
+.NP
+Staff or student number
+.br
+which is useful on larger systems for a unique, easily associated,
+"login name"
+.NP
+Other relevant data such as course number, year etc
+.br
+to help determine a "limits profile" to provide adequate service.
+.EP
+The guru, using certain instinctive knowledge possessed by such people
+and data supplied by the initiate, will then determine
+.BP 15 5
+The new user's "login name"
+.NP
+The "initial working directory"
+.NP
+The "login shell"
+.NP
+The "limits profile"
+.br
+This profile may be tailored to any particular users needs, but is
+usually set to one of a number of default values.
+The profile includes
+.BP 10 5
+Share allocation
+.NP
+Disc limit
+.NP
+Core limit
+.NP
+Process count limit
+.NP
+Printer page limit
+.NP
+Certain flag values
+.EP
+.PA
+The effects of the "limits profile" will become clear as you read on.
+.EP
+.PA
+The initiate is then free to embark on his life of computer crime,
+for in AUSAM's eyes everyone is a criminal.
+.ES
+.NS 5 "1.2"
+Logging in
+.PA
+When a user enters a "login name" the "/etc/passwd" file is searched for
+an entry corresponding to that name.
+If a password is found necessary
+to complete validation, the user is queried for this further information.
+.PA
+After validation the login program recursively searches the users home
+directory and sub-directories
+preparing a "total disc usage" (TDU) figure.
+The TDU is made up as follows:
+.BP 15 5
+a)	Each block of
+disc storage used is counted as one unit.
+.NP
+b)	Each inode (file) used is counted as "IWEIGHT" units (around 2).
+.EP
+.PA
+Thus the TDU is a composite giving a measure of both disc and inode
+usage.
+.PA
+If the TDU is greater than the password entry disc limit allows, login
+prints a warning message and increments the password entry warning count.
+If the incremented count is greater than "NDLIMWARN", or the TDU figure is
+greater than the sum of the disc limit plus the overflow disc limit,
+then the password entry
+"DLIMIT" flag is set and a second message is issued informing the user that no
+further disc output requests will be allowed until the TDU drops below the
+allowable disc limit.
+.PA
+Login then uses the "limits" system call to ask that an incore
+"lnode"
+structure entry be created for this user.
+If such a structure already exists (the user is logged in elsewhere or has
+at least one asynchronous process running) then the "user-per-process"
+limits pointer is directed at this structure.
+If no structure already exists,
+a new one is created and the pointer set accordingly.
+.PA
+Limits structures are held in system data space, and are
+periodically written to a file "/etc/lnodes.chkpt" in case of
+system failure.
+.PA
+Login now "exec"s a shell for the user.
+The shell and all future children will
+carry a pointer to their common limits structure.
+.ES
+.NS 5 "1.3"
+The terminal session
+.PA
+All things appear normal as the user starts to execute commands.
+However subtle checks and adjustments are continuously being made.
+.NS 5 "1.3.1"
+Shares and usage (under development)
+.PA
+Probably the most important adjustment being made is execution priority
+with respect to other people using the machine.
+.PA
+As mentioned earlier a user is allotted a number of shares as part of his
+"limits profile".
+If the user's "usage" has been normal then his priority is such
+that he is able to use "p" percent of the machine's power.
+.IN
+		shares of this user
+   p    ------------------------------------
+	total shares for all users logged in
+.OT
+.PA
+You will have noted that the above is true
+if "usage" has been normal.
+"Usage" is a measure of how much machine work has been done by
+the user in the recent
+past.
+A high usage figure means that a lot of work has been done and
+a low usage figure indicates little recent work.
+.PA
+In order to encourage even work rates (and hence a predictable load) the "p"
+figure above is modified to yield a true priority.
+.IN
+		  1
+priority    p *	-----
+		usage
+.OT
+.PA
+A more complete definition of the scheduling system may be found in
+"The Proposed UNIX Scheduler" by Andrew Hume.
+.ES
+.NS 5 "1.3.2"
+All those lovely limits
+.PA
+Sooner or later,
+whether through malice, stupidity or the natural course of expansion,
+a user runs into one or more of the limits in his "limits profile".
+Though
+most limits have a definite and final action when reached, care has been
+taken to protect the user from "brick walls" which prevent any further work
+or remedial action.
+Unfortunately it is impossible to stop those users with suicidal tendencies.
+.NS 5 ""
+The disc limit
+.PA
+Probably the most often encountered limit
+is on disc usage.
+As mentioned earlier, at login time a TDU figure is calculated.
+This value is stored in the "lnode" structure.
+System routines "alloc", "ialloc", "free" and "ifree" have been modified
+to keep the stored TDU figure up to date (under development).
+.PA
+In general a normal user may only create files in his home directory or
+the "/tmp" directory.
+All such files are counted in the TDU.
+.PA
+If a user outputs data or creates a file which causes the TDU figure to exceed
+his disc limit, he is given a warning message.
+The user may choose to ignore the warning for no real punitive action will be
+taken until he has ignored a number of warnings (given each login) or has
+caused the TDU figure to exceed the sum of his disc limit plus
+his allowable disc overflow.
+.PA
+Eventually, if he persists in his wayward actions, a message will inform
+him that no further disc output will be allowed until he has reduced his
+TDU to less than his limit.
+Requests for further disc blocks or i-nodes will not be honoured.
+.PA
+The issuance of this final message should cause the user to reduce his TDU
+or approach a guru to have his limit increased.
+.PA
+As mentioned earlier, disc output in the "/tmp" directory is counted towards the TDU as a terminal session continues.
+You will also recall that login searches only from the home directory
+to compile the initial TDU.
+The implication is that all files owned by the user in "/tmp" space are
+removed when the last process owned by him exits.
+This would seem not an unreasonable action.
+.ES
+.NS 5 ""
+The core limit
+.PA
+This limit has not been implemented as yet and always defaults to zero.
+.ES
+.NS 5 ""
+The process count limit
+.PA
+One of the beauties of UNIX is ability to
+start dozens of asynchronous and nested processes.
+This limit is designed to protect against the possibility of filling the "proc"
+table.
+.PA
+Should a user try to exceed his process limit a warning message will be given
+and the "fork" will fail.
+.PA
+The default limit is about six processes.
+.ES
+.NS 5 ""
+The printer page limit
+.PA
+Every computer user has encountered that most tedious and (in these days of
+high paper costs) costly item, "the garbage output".
+Whether it be "irish jokes", an infinite loop or "wall paper", it
+is not necessary and should be curtailed.
+.PA
+This limit is set at a value that most normal users never approach.
+Should this value be exceeded, the spooling or output programs
+will not print the output
+and a warning
+message asks that arrangements be made with a guru to print during off-peak
+times.
+.ES
+.ES "1.3.2"
+.NS 5 "1.3.3"
+The flags
+.PA
+Sixteen flags are contained in a flag word in the limits structure.
+At present, only three are used.
+Their uses are:
+.BP 12 5
+01	DAWARN, used to signify that one disc space warning has been given
+during a terminal session as distinct from those given at login time.
+.NP
+02	DLIMIT, used to signify that no further "alloc" or "ialloc" calls
+are to be honoured.
+.NP
+04	ASYNCKILL, when set causes all asynchronous processes
+to be killed at log out time.
+.NP
+010	ASYNCNICE, when set causes all asynchronous processes to background
+priority.
+.EP
+.ES "1.3.3"
+.NS 5 "1.3.4"
+Class mask
+.PA
+This mask consists of "CMASKSIZE" integers.
+Particular bits in each word correspond to particular classes,
+defined in the "class priority" program.
+If a bit in the class mask matches a bit in a global mask, set periodically
+by the "class priority" program,
+.ES "1.3"
+.NS 5 "1.4"
+Logging out
+.PA
+When "init" sees that the highest level shell has exited
+a users limits structure
+flags word is examined
+to see whether any asynchronous processes are allowed to remain
+after logging out.
+If the "ASYNCKILL" flag is set all processes owned by the user, initiated
+at this terminal, are killed (sig 9).
+.PA
+As all processes on a UNIX system must be "wait"ed for by a parent,
+and as the ultimate parent is "init",
+this process is where final accounting is done.
+.PA
+As a user executes various commands the "lnode" structure reference
+count reflects the total number of active processes "chargeable" to
+a particular
+user.
+This count is maintained by "fork" and "exit".
+.PA
+The "init" process must inherit the final child of a particular limits
+structure (reference count == 0) via a "wait" system call and so
+may update the "/etc/passwd" file with final "usage" values
+and remove "/tmp" files etc.
+.ES
+.ES
