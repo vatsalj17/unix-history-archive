@@ -1,0 +1,226 @@
+head     1.3;
+access   ;
+symbols  ;
+locks    ; strict;
+comment  @# @;
+
+
+1.3
+date     88.04.14.00.19.51;  author lepreau;  state Exp;
+branches ;
+next     1.2;
+
+1.2
+date     88.04.11.21.50.07;  author donn;  state Exp;
+branches ;
+next     1.1;
+
+1.1
+date     88.04.08.16.53.49;  author donn;  state Rel;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     88.11.19.20.14.41;  author lepreau;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@Makefile for gprof, 4.3a BSD.
+@
+
+
+1.3
+log
+@We don't have a group "bin" yet
+@
+text
+@#
+# Copyright (c) 1987 Regents of the University of California.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms are permitted
+# provided that this notice is preserved and that due credit is given
+# to the University of California at Berkeley. The name of the University
+# may not be used to endorse or promote products derived from this
+# software without specific written prior permission. This software
+# is provided ``as is'' without express or implied warranty.
+#
+#	@@(#)Makefile	5.10 (Berkeley) 1/2/88
+#
+CFLAGS=	-O
+LIBC=	/lib/libc.a
+HDRS=	gprof.h ${MACHINE}.h
+SRCS=	gprof.c arcs.c dfn.c lookup.c ${MACHINE}.c hertz.c \
+	printgprof.c printlist.c
+OBJS=	gprof.o arcs.o dfn.o lookup.o ${MACHINE}.o hertz.o \
+	printgprof.o printlist.o
+LIBDIR=	../../lib
+
+all: gprof
+
+gprof: ${OBJS} ${LIBC}
+	${CC} -o $@@ ${CFLAGS} ${OBJS}
+
+gcrt0.h: FRC
+	-if [ -r gcrt0.h ] && \
+		cmp -s gcrt0.h ${LIBDIR}/libc/${MACHINE}/csu/gmon.h; then \
+		:; \
+	else \
+		rm -f gcrt0.h; \
+		cp ${LIBDIR}/libc/${MACHINE}/csu/gmon.h gcrt0.h; \
+	fi
+
+clean: FRC
+	rm -f ${OBJS} core gprof
+
+depend: FRC
+	mkdep ${CFLAGS} ${SRCS}
+
+install: FRC
+	install -s -m 755 gprof ${DESTDIR}/usr/ucb/gprof
+	install -c -m 644 gprof.flat ${DESTDIR}/usr/lib
+	install -c -m 644 gprof.callg ${DESTDIR}/usr/lib
+
+lint: FRC
+	lint ${CFLAGS} ${SRCS}
+
+tags: FRC
+	ctags ${SRCS}
+
+FRC:
+
+# DO NOT DELETE THIS LINE -- mkdep uses it.
+# DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.
+
+gprof.o: gprof.c gprof.h /usr/include/stdio.h /usr/include/sys/types.h
+gprof.o: /usr/include/sys/stat.h /usr/include/a.out.h /usr/include/sys/exec.h
+gprof.o: gcrt0.h tahoe.h
+arcs.o: arcs.c gprof.h /usr/include/stdio.h /usr/include/sys/types.h
+arcs.o: /usr/include/sys/stat.h /usr/include/a.out.h /usr/include/sys/exec.h
+arcs.o: gcrt0.h tahoe.h
+dfn.o: dfn.c /usr/include/stdio.h gprof.h /usr/include/stdio.h
+dfn.o: /usr/include/sys/types.h /usr/include/sys/stat.h /usr/include/a.out.h
+dfn.o: /usr/include/sys/exec.h gcrt0.h tahoe.h
+lookup.o: lookup.c gprof.h /usr/include/stdio.h /usr/include/sys/types.h
+lookup.o: /usr/include/sys/stat.h /usr/include/a.out.h /usr/include/sys/exec.h
+lookup.o: gcrt0.h tahoe.h
+tahoe.o: tahoe.c gprof.h /usr/include/stdio.h /usr/include/sys/types.h
+tahoe.o: /usr/include/sys/stat.h /usr/include/a.out.h /usr/include/sys/exec.h
+tahoe.o: gcrt0.h tahoe.h
+hertz.o: hertz.c /usr/include/sys/time.h /usr/include/time.h
+printgprof.o: printgprof.c gprof.h /usr/include/stdio.h
+printgprof.o: /usr/include/sys/types.h /usr/include/sys/stat.h
+printgprof.o: /usr/include/a.out.h /usr/include/sys/exec.h gcrt0.h tahoe.h
+printlist.o: printlist.c gprof.h /usr/include/stdio.h /usr/include/sys/types.h
+printlist.o: /usr/include/sys/stat.h /usr/include/a.out.h
+printlist.o: /usr/include/sys/exec.h gcrt0.h tahoe.h
+
+# IF YOU PUT ANYTHING HERE IT WILL GO AWAY
+@
+
+
+1.2
+log
+@Make it possible to build gprof outside /usr/src.
+@
+text
+@d44 3
+a46 3
+	install -s -o bin -g bin -m 755 gprof ${DESTDIR}/usr/ucb/gprof
+	install -c -o bin -g bin -m 644 gprof.flat ${DESTDIR}/usr/lib
+	install -c -o bin -g bin -m 644 gprof.callg ${DESTDIR}/usr/lib
+@
+
+
+1.1
+log
+@ucb sid 5.10, 1/2/88.
+@
+text
+@d21 1
+d30 1
+a30 1
+		cmp -s gcrt0.h ../../lib/libc/${MACHINE}/csu/gmon.h; then \
+d34 1
+a34 1
+		cp ../../lib/libc/${MACHINE}/csu/gmon.h gcrt0.h; \
+@
+
+
+1.1.1.1
+log
+@4.3 release, sid 5.2, 6/18/85.
+The odd placement of this rev is because it got left out earlier.
+@
+text
+@d2 2
+a3 3
+# Copyright (c) 1983 Regents of the University of California.
+# All rights reserved.  The Berkeley software License Agreement
+# specifies the terms and conditions for redistribution.
+d5 6
+a10 1
+#	@@(#)Makefile	5.2 (Berkeley) 6/18/85
+d12 9
+a20 1
+SCCSID = @@(#)Makefile	5.2 (Berkeley) 6/18/85
+d22 1
+a22 3
+DFLAGS = 
+CFLAGS = -O ${DFLAGS}
+LINTFLAGS = -x -a -n ${DFLAGS}
+d24 2
+a25 3
+RM=	/bin/rm -f
+INSTALL=install
+PR=pr
+d27 8
+a34 5
+GPROFHDRS =	gprof.h vax.h
+GPROFSRCS =	gprof.c arcs.c dfn.c lookup.c calls.c hertz.c \
+		printgprof.c printlist.c
+GPROFOBJS =	gprof.o arcs.o dfn.o lookup.o calls.o hertz.o \
+		printgprof.o printlist.o
+d36 2
+a37 2
+gprof: ${GPROFOBJS}
+	cc -o gprof ${CFLAGS} ${GPROFOBJS}
+d39 2
+a40 4
+install: gprof gprof.flat gprof.callg
+	install -s -g kmem -m 2755 gprof ${DESTDIR}/usr/ucb/gprof
+	install -c -m 644 gprof.flat ${DESTDIR}/usr/lib
+	install -c -m 644 gprof.callg ${DESTDIR}/usr/lib
+d42 4
+a45 2
+clean:
+	${RM} ${GPROFOBJS} errs gprof
+d47 2
+a48 2
+gcrt0.h:
+	cp /usr/src/libc/csu/gcrt0.h gcrt0.h
+d50 2
+a51 6
+print:
+	@@ ls -l | ${PR}
+	@@ ${PR} makefile
+	@@ ${PR} gcrt0.h
+	@@ ${PR} ${GPROFHDRS} ${GPROFSRCS}
+	@@ ${PR} gprof.flat gprof.callg
+d53 1
+a53 2
+lint:
+	lint ${LINTFLAGS} ${DFLAGS} ${GPROFSRCS}
+d55 27
+a81 8
+gprof.o: gprof.c gprof.h vax.h gcrt0.h
+arcs.o: arcs.c gprof.h vax.h gcrt0.h
+lookup.o: lookup.c gprof.h vax.h gcrt0.h
+dfn.o: dfn.c gprof.h vax.h gcrt0.h
+calls.o: calls.c gprof.h vax.h gcrt0.h
+hertz.o: gprof.h vax.h hertz.c
+printgprof.o: printgprof.c gprof.h vax.h gcrt0.h
+printlist.o: printlist.c gprof.h vax.h gcrt0.h
+@
