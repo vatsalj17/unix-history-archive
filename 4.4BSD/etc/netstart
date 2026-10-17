@@ -1,0 +1,26 @@
+#! /bin/sh -
+#
+routedflags=NO
+
+# CONNECTION THROUGH NETBLAZER
+hostname=python.bostic.com
+hostaddr=198.3.132.1
+gateway=137.39.16.3
+link=link0
+
+# CONNECTION THROUGH HARVARD
+#hostname=python.harvard.edu
+#hostaddr=128.103.51.5
+#gateway=128.103.51.6
+#link=-link0
+
+ifconfig sl0 inet $hostaddr $gateway netmask 0xffffff00 $link
+route add default $gateway
+ifconfig le0 inet $hostaddr netmask 0xffffff00
+
+hostname $hostname
+
+ifconfig lo0 inet 127.0.0.1
+route add $hostaddr 127.0.0.1
+
+rwhod=NO

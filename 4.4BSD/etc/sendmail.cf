@@ -1,0 +1,488 @@
+#
+# Copyright (c) 1983 Eric P. Allman
+# Copyright (c) 1988 The Regents of the University of California.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. All advertising materials mentioning features or use of this software
+#    must display the following acknowledgement:
+#	This product includes software developed by the University of
+#	California, Berkeley and its contributors.
+# 4. Neither the name of the University nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+#	@(#)cf.m4	2.14 (Berkeley) 12/17/91
+#
+
+
+######################################################################
+######################################################################
+#####
+#####		SENDMAIL CONFIGURATION FILE
+#####
+##### built by eric on Mon Mar 9 11:06:15 PST 1992
+##### in /a/guest/eric/cf/cf on vangogh.CS.Berkeley.EDU
+#####
+######################################################################
+######################################################################
+
+
+#####  @(#)chez.mc	2.4 (Berkeley) 3/9/92  #####
+
+
+#####  @(#)cs.exposed.m4	2.12 (Berkeley) 12/20/91  #####
+
+#####  @(#)Berkeley.m4	2.3 (Berkeley) 12/17/91  #####
+
+
+
+#####  @(#)cssubdomain.m4	2.3 (Berkeley) 10/3/91  #####
+
+
+Fw/etc/sendmail.cw
+
+
+#####  @(#)proto.m4	2.24 (Berkeley) 2/24/92  #####
+
+
+# level 3 config file format
+V3
+
+##################
+#   local info   #
+##################
+
+Cwlocalhost
+
+# UUCP relay host
+DYucbvax.Berkeley.EDU
+#  BITNET relay host
+DBjade.Berkeley.EDU
+# CSNET relay host
+DCRelay.Prime.COM
+# my official hostname ($w or $w.$D)
+Dj$w
+
+# who I masquerade as (can be $j)
+DMCS.Berkeley.EDU
+
+# who I send unqualified names to (null means deliver locally)
+DRvangogh.CS.Berkeley.EDU
+
+# names that should be delivered locally, even if we have a relay
+CLroot
+
+
+# operators that cannot be in local usernames (i.e., network indicators)
+CO @ % !
+
+# a class with just dot (for identifying canonical names)
+C..
+
+# list of locations of user database file (null means no lookup)
+OU/usr/sww/share/lib/users.cs.db
+
+# set if we can guarantee no wildcard MX records matching our domain
+OwTrue
+
+
+######################
+#   Version Number   #
+######################
+
+DZ2.6
+
+
+
+######################################################################
+######################################################################
+#####
+#####			CONFIGURATION BOILERPLATE
+#####
+######################################################################
+######################################################################
+
+#####  @(#)boilerplate.m4	2.7 (Berkeley) 1/5/92  #####
+
+######################
+#   Special macros   #
+######################
+
+# my name
+DnMAILER-DAEMON
+# UNIX header format
+DlFrom $?<$<$|$g$.  $d
+# delimiter (operator) characters
+Do.:%@!^=/[]
+# format of a total name
+Dq$g$?x ($x)$.
+# SMTP login message
+De$j Sendmail $v/$Z ready at $b
+
+###############
+#   Options   #
+###############
+
+# (don't) preserve 8 bits on message body on input
+O8False
+
+# wait up to ten minutes for alias file rebuild
+Oa10
+
+# location of alias file
+OA/etc/aliases
+
+# substitution for space (blank) characters
+OB.
+
+# (don't) connect to "expensive" mailers
+OcFalse
+
+# checkpoint queue runs after every 10 successful deliveries
+OC10
+
+# default delivery mode (deliver in background)
+Odbackground
+
+# (don't) automatically rebuild the alias database
+ODFalse
+
+# discard Unix-style "From_" lines at top of header
+OfFalse
+
+# temporary file mode
+OF0600
+
+# default GID
+Og1
+
+# maximum hop count
+Oh17
+
+# location of help file
+OH/usr/share/misc/sendmail.hf
+
+# (don't) ignore dots as terminators in incoming messages
+OiFalse
+
+# Insist that the BIND name server be running to resolve names
+OITrue
+
+# log level
+OL9
+
+# (don't) send to me too, even in an alias expansion
+OmFalse
+
+# default messages to old style
+OoTrue
+
+# queue directory
+OQ/var/spool/mqueue
+
+# read timeout -- violates protocols
+Or2h
+
+# queue up everything before starting transmission
+OsTrue
+
+# status file
+OS/var/log/sendmail.st
+
+# default timeout interval
+OT3d
+
+# time zone names (System V only)
+OtPST8PDT
+
+# default UID
+Ou1
+
+# load average at which we just queue messages
+Ox8
+
+# load average at which we refuse connections
+OX12
+
+# (don't) deliver each queued job in a separate process
+OYFalse
+
+###########################
+#   Message precedences   #
+###########################
+
+Pfirst-class=0
+Pspecial-delivery=100
+Pbulk=-60
+Pjunk=-100
+
+#####################
+#   Trusted users   #
+#####################
+
+Troot
+Tdaemon
+Tuucp
+
+#########################
+#   Format of headers   #
+#########################
+
+H?P?Return-Path: <$?<$<$|$g$.>
+HReceived: $?sfrom $s $.by $j ($v/$Z)
+	id $i; $b
+H?D?Resent-Date: $a
+H?D?Date: $a
+H?F?Resent-From: $q
+H?F?From: $q
+H?x?Full-Name: $x
+HSubject:
+# HPosted-Date: $a
+# H?l?Received-Date: $b
+H?M?Resent-Message-Id: <$t.$i@$j>
+H?M?Message-Id: <$t.$i@$j>
+
+#
+######################################################################
+######################################################################
+#####
+#####			REWRITING RULES
+#####
+######################################################################
+######################################################################
+
+
+###########################################
+###  Rulset 3 -- Name Canonicalization  ###
+###########################################
+S3
+
+# handle "from:<>" special case
+R$*<>$*			$@@				turn into magic token
+
+# basic textual canonicalization -- note RFC733 heuristic here
+R$*<$*<$*<$+>$*>$*>$*	$4				3-level <> nesting
+R$*<$*<$+>$*>$*		$3				2-level <> nesting
+R$*<$+>$*		$2				basic RFC821/822 parsing
+
+# make sure <@a,@b,@c:user@d> syntax is easy to parse -- undone later
+R@$+,$+			@$1:$2				change all "," to ":"
+
+# localize and dispose of route-based addresses
+R@$+:$+			$@$>6<@$1>:$2			handle <route-addr>
+
+# find focus for list syntax
+R$+:$*;@$+		$@$>6$1:$2;<@$3>		list syntax
+R$+:$*;			$@$1:$2;			list syntax
+
+# find focus for @ syntax addresses
+R$+@$+			$:$1<@$2>			focus on domain
+R$+<$+@$+>		$1$2<@$3>			move gaze right
+R$+<@$+>		$@$>6$1<@$2>			already canonical
+
+# convert old-style addresses to a domain-based address
+R$-!$+			$@$>6$2<@$1.UUCP>		resolve uucp names
+R$+.$-!$+		$@$>6$3<@$1.$2>			domain uucps
+R$+!$+			$@$>6$2<@$1.UUCP>		uucp subdomains
+
+# if we have % signs, take the rightmost one
+R$*%$*			$1@$2				First make them all @s.
+R$*@$*@$*		$1%$2@$3			Undo all but the last.
+R$*@$*			$@$>6$1<@$2>			Insert < > and finish
+
+# else we must be a local name
+
+
+###############################################
+###  Ruleset 6 -- bottom half of ruleset 3  ###
+###############################################
+
+#  At this point, everything should be in a local_part@domain format.
+
+S6
+
+# handle special cases for local names
+R$* < @ $=w > $*		$: $1 < @ $j . > $3		no domain at all
+R$* < @ $=w .UUCP> $*		$: $1 < @ $j . > $3		.UUCP domain
+
+# find possible (old & new) versions of our name via short circuit hack
+# (this code should exist ONLY during the transition from .Berkeley.EDU
+#  names to .CS.Berkeley.EDU names -- probably not more than a few months)
+R$* < @ $=w .CS.Berkeley.EDU > $*	$: $1 < @ $j > $3
+R$* < @ $=w .Berkeley.EDU> $*		$: $1 < @ $j > $3
+
+# pass UUCP addresses straight through
+R$* < @ $+ . UUCP > $*		$@ $1 < @ $2 .UUCP > $3
+
+# pass to name server to make hostname canonical
+R$* < @ $* $~. > $*		$: $1 < @ $[ $2 $3 $] > $4
+
+# handle possible alternate names
+R$* < @ $=w . $m . > $*		$: $1 < @ $j . > $3
+R$* < @ $=w . $m > $*		$: $1 < @ $j . > $3
+
+# if this is the local hostname, make sure we treat is as canonical
+R$* < @ $j > $*			$: $1 < @ $j . > $2
+
+
+##################################################
+###  Ruleset 4 -- Final Output Post-rewriting  ###
+##################################################
+S4
+
+R@			$@				handle <> error addr
+
+# resolve numeric addresses to name if possible
+R$* < @ [ $+ ] > $*	$: $1 < @ $[ [$2] $] > $3	lookup numeric internet addr
+
+# strip trailing dot off possibly canonical name
+R$* < @ $+ . > $*	$1 < @ $2 > $3
+
+# externalize local domain info
+R$* < $+ > $*		$1 $2 $3			defocus
+R@ $+ : @ $+ : $+	@ $1 , @ $2 : $3		<route-addr> canonical
+R@ $*			$@ @ $1				... and exit
+
+# UUCP must always be presented in old form
+R$+ @ $- . UUCP		$2!$1				u@h.UUCP => h!u
+
+# delete duplicate local names
+R$+ % $=w @ $=w		$1 @ $j				u%host@host => u@host
+
+
+
+#############################################################
+###   Ruleset 7 -- recanonicalize and call ruleset zero   ###
+###		   (used for recursive calls)		  ###
+#############################################################
+
+S7
+R$*			$: $>3 $1
+R$*			$@ $>0 $1
+
+
+######################################
+###   Ruleset 0 -- Parse Address   ###
+######################################
+
+S0
+
+# handle numeric address spec
+R$* < @ [ $+ ] > $*	$: $1 < @ $[ [$2] $] > $3	numeric internet addr
+R$* < @ [ $+ ] > $*	$#smtp $@ [$2] $: $1 @ [$2] $3	numeric internet spec
+
+#R@			$#error$:Invalid address	handle <> form
+
+# now delete the local info -- note $=O to find characters that cause forwarding
+R< @ $j . > : $*	$@ $>7 $1			@here:... -> ...
+R$* $=O $* < @ $j . >	$@ $>7 $1 $2 $3			...@here -> ...
+
+# short circuit local delivery so forwarded email works
+R$+ < @ $j . >		$#local $: @ $1			local address
+
+# resolve remotely connected UUCP links
+
+# resolve fake top level domains by forwarding to other hosts
+R$*<@$+.BITNET>$*	$#smtp $@ $B $: $1 <@$2.BITNET> $3	user@host.BITNET
+R$*<@$+.CSNET>$*	$#smtp $@ $C $: $1 <@$2.CSNET> $3	user@host.CSNET
+
+# forward non-local UUCP traffic to our UUCP relay
+R$*<@$*.UUCP>$*		$#smtp $@ $Y $: <@ $Y> : $1 @ $2.UUCP $3	uucp mail
+
+# deal with other remote names
+R$* < @ $* > $*		$#smtp $@ $2 $: $1 < @ $2 > $3		user@host.domain
+
+# handle locally delivered names
+R$=L			$#local $: @ $1			special local names
+R$+			$#local $: $1			regular local names
+
+#
+# special rewriting after aliases have been expanded
+#
+
+S5
+
+R$+			$: $1 < @ $R >
+R$+ < @ $+ >		$#smtp $@ $2 $: $1 < @ $2 >	send to relay
+#
+######################################################################
+######################################################################
+#####
+#####			MAILER DEFINITIONS
+#####
+######################################################################
+######################################################################
+
+
+##################################################
+###   Local and Program Mailer specification   ###
+##################################################
+
+#####  @(#)local.m4	2.3 (Berkeley) 12/12/91  #####
+
+Mlocal,	P=/usr/libexec/mail.local, F=lsDFMmrn, S=10, R=20, A=mail -d $u
+Mprog,	P=/bin/sh,   F=lsDFMe,   S=10, R=20, A=sh -c $u
+
+S10
+R@			$n			errors to mailer-daemon
+
+#####################################
+###   SMTP Mailer specification   ###
+#####################################
+
+#####  @(#)smtp.m4	2.5 (Berkeley) 11/19/91  #####
+
+Msmtp,	P=[IPC], F=mDFMueXLC, S=11, R=21, A=IPC $h, E=\r\n
+
+S11
+
+# do sender/recipient common rewriting
+R$+			$: $>19 $1
+
+# if already @ qualified, we are done
+R$* < @ $+ > $*		$@ $1 < @ $2 > $3		already qualified
+
+# unqualified names (e.g., "eric") "come from" $M
+R$+			$: $1 < @ $M >			user w/o host
+R$+ < @ >		$: $1 < @ $j >			in case $M undefined
+
+S21
+
+# do sender/recipient common rewriting
+R$+			$: $>19 $1
+
+# if already @ qualified, we are done
+R$* < @ $+ > $*		$@ $1 < @ $2 > $3		already qualified
+
+# unqualified names (e.g., "eric") are qualified by local host
+R$+			$: $1 < @ $j >
+
+S19
+
+# pass <route-addr>s through
+R< @ $+ > $*		$@ < @ $1 > $2			resolve <route-addr>
+
+# output fake domains as user%fake@relay
+R$+ <@ $+ . BITNET >	$: $1 % $2 .BITNET < @ $B >	user@host.BITNET
+R$+ <@ $+ . CSNET >	$: $1 % $2 .CSNET < @ $C >	user@host.CSNET
+R$+ <@ $+ . UUCP >	$: $2 ! $1 < @ $j >		user@host.UUCP

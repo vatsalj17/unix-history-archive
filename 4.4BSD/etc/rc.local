@@ -1,0 +1,24 @@
+#
+# site-specific startup actions, daemons
+#
+#	@(#)rc.local	5.2 (Berkeley) 5/10/90
+#
+
+strings /vmunix | egrep UNIX >/tmp/t1
+tail +2 /etc/motd >>/tmp/t1
+mv /tmp/t1 /etc/motd
+chmod 666 /etc/motd
+
+echo -n			starting local daemons:			>/dev/console
+#if [ -f /usr/sbin/timed ]; then
+#	timed -M &			echo -n ' timed'	>/dev/console
+#fi
+#if [ -f /usr/sbin/sendmail ]; then
+#	(cd /var/spool/mqueue; rm -f lf*)
+#	/usr/sbin/sendmail -bd -q30m; echo -n ' sendmail'	>/dev/console
+#fi
+				echo '.'			>/dev/console
+
+dev_mkdb
+
+sysctl -w net.inet.ip.forwarding=1

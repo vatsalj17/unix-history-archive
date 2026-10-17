@@ -1,0 +1,21 @@
+;
+;  @(#)named.boot.slave	1.15	(Berkeley)  89/06/14
+;
+;  boot file for secondary name server
+; Note that there should be one primary entry for each SOA record.
+;
+;
+sortlist 128.45.0.0 128.3.0.0 36.0.0.0 128.102.0.0 128.115.0.0 10.0.0.0 
+
+directory	/etc/namedb
+
+; type    domain		source host/file		backup file
+
+;secondary Berkeley.EDU		128.32.130.11 128.32.133.1	ucbhosts.bak
+cache     .							root.cache
+;secondary 32.128.IN-ADDR.ARPA	128.32.130.11 128.32.133.1	ucbhosts.rev.bak
+primary   0.0.127.IN-ADDR.ARPA	localhost.rev
+
+; vangogh.cs.berkeley.edu
+forwarders 128.32.130.2
+slave

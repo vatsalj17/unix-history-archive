@@ -1,0 +1,65 @@
+#
+# name	getty			type	status		comments
+#
+# /dev/console is a pseudo-device attached to a hardware at boot time.
+# Even though the console is usually an ITE (300h) we set the gettytab
+# type to "HPConsole" instead of "300h" since the former makes a minimum
+# number of assumptions about the underlying hardware (9600 baud, no HW tabs)
+#
+# If you know what your console is always going to be, change the "getty"
+# and "type" fields to either:
+#	"/usr/libexec/getty 300h"	300h
+# for Topcat, Catseye, Gatorbox, Renaissance or DaVinci displays, or:
+#	"/usr/libexec/getty std.9600"	<type>
+# for builtin serial interface, where <type> is the appropriate terminal
+# type from termcap.  If you want to have your console always running X
+# (ala microvaxen), turn the "console" entry "off" and turn the appropriate
+# (for X10 or X11) "ttyv0" entry "on".
+#
+console	"/usr/libexec/getty HPConsole"	dumb	off	secure
+tty0    "/usr/libexec/getty std.9600"	unknown	off	secure	builtin serial
+ttye0	"/usr/libexec/getty 300h"	300h	on	secure	Topcat ITE
+ttyv0	"/usr/new/X10/xterm -rv -L =+180+180 unix:0"					xterms	off  secure	window="/usr/new/XTopcat 0"
+ttyv0	"/usr/new/X11/xterm -rv -L -geom 80x24+265+310 -fn 9x15 -display unix:0"	xterms	off  secure	window="/usr/new/X11/Xhp300 :0"
+#
+# Sample dcm ports
+#
+tty00	"/usr/libexec/getty std.9600"	dialup 	off
+tty01	"/usr/libexec/getty std.9600"	printer	off		#printer
+tty02	"/usr/libexec/getty std.9600"	t10	off	secure
+tty03	"/usr/libexec/getty std.9600"	t10	off	secure
+#
+# NOTE: all pty entries are required by ttyslot(), and therefore getlogin(),
+# /bin/login and others.
+#
+ttyp0	none			network	off	pty slave 
+ttyp1	none			network	off	pty slave 
+ttyp2	none			network	off	pty slave 
+ttyp3	none			network	off	pty slave 
+ttyp4	none			network	off	pty slave 
+ttyp5	none			network	off	pty slave 
+ttyp6	none			network	off	pty slave 
+ttyp7	none			network	off	pty slave 
+ttyp8	none			network	off	pty slave 
+ttyp9	none			network	off	pty slave 
+ttypa	none			network	off	pty slave 
+ttypb	none			network	off	pty slave 
+ttypc	none			network	off	pty slave 
+ttypd	none			network	off	pty slave 
+ttype	none			network	off	pty slave 
+ttypf	none			network	off	pty slave 
+ttyq0	none			network	off	pty slave 
+ttyq1	none			network	off	pty slave 
+ttyq2	none			network	off	pty slave 
+ttyq3	none			network	off	pty slave 
+ttyq4	none			network	off	pty slave 
+ttyq5	none			network	off	pty slave 
+ttyq6	none			network	off	pty slave 
+ttyq7	none			network	off	pty slave 
+ttyq8	none			network	off	pty slave 
+ttyq9	none			network	off	pty slave 
+ttyqa	none			network	off	pty slave 
+ttyqb	none			network	off	pty slave 
+ttyqc	none			network	off	pty slave 
+ttyqd	none			network	off	pty slave 
+ttyqe	none			network	off	pty slave 
