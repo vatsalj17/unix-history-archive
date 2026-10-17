@@ -1,0 +1,23 @@
+#!/bin/sh
+#	tras - translate assembler source from Apple to local
+#
+#	tras mumble.s		# output left on tmumble.s
+#
+trap "rm -f /tmp/sed$$" 0 1 2 15
+cat <<EOT >/tmp/sed$$
+s/;/|/
+/ *\.macro */{
+s///
+s/ *|.*//
+s/.*/& = /
+N
+s/ *|.*//
+N
+s/ *|.*//
+N
+s/ *|.*//
+s/\n//g
+s/ *move.w *#\(.*\),.*$/ \1/
+}
+EOT
+tr "[A-Z]" "[a-z]" <$1 | sed -f /tmp/sed$$ >t$1

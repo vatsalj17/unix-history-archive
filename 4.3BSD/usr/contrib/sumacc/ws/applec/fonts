@@ -1,0 +1,108 @@
+
+FONTS                            C Interface                              FONTS
+
+NAME
+      fonts -- font manager
+
+SYNOPSIS
+      #include "c/include/types.h"
+      #include "c/include/quickdraw.h"
+      #include "c/include/fonts.h"
+
+      #define  systemFont  0
+      #define  applFont    1
+      #define  newYork     2
+      #define  geneva      3
+      #define  monaco      4
+      #define  venice      5
+      #define  london      6
+      #define  athens      7
+      #define  sanFran     8
+      #define  toronto     9
+      
+      #define  propFont    0x9000
+      #define  fixedFont   0xB000
+      #define  fontWid     0xACB0
+
+
+      typedef struct {
+         short         family;         /* e.g. Century  */
+         short         size;           /* e.g. 12 Point */
+         Style         face;           /* e.g. bold | underline   */
+         Boolean       needBits;       /* bits or just measurement */
+         short         device;         /* always 0 for display */
+         Point         numer;          /* current drawing scale */
+         Point         denom;          /* current drawing scale */
+         } FMInput;
+      
+      typedef struct {
+         short         errNum;         /* not used */
+         Handle        fontHandle;     /* Handle to font */
+         unsigned char boldPixels;     /* pixels of horizontal smear */
+         unsigned char italicPixels;   /* pixels of horizontal shear */
+         unsigned char ulOffset;       /* pixels below baseline */
+         unsigned char ulShadow;       /* pixels in halo */
+         unsigned char ulThick;        /* thickness of underline */
+         unsigned char shadowPixels;   /* pixels to shadow (0 .. 3) */
+         char          extra;          /* extra white pixels/char */
+         unsigned char ascent;         /* ascent */
+         unsigned char descent;        /* descent */
+         unsigned char widMax;         /* maximum character width */
+         char          leading;        /* leading between lines */
+         char          unused;         /* not used */
+         Point         numer;          /* current drawing scale */
+         Point         denom;          /* current drawing scale */
+         } FMOutput, *FMOutPtr;
+
+      typedef struct {
+         short         fontType;       /* font type */
+         short         firstChar;      /* ASCII code of first character */
+         short         lastChar;       /* ASCII code of last character */
+         short         widMax;         /* maximum character width */
+         short         kernMax;        /* maximum character kern */
+         short         nDescent;       /* negative of descent */
+         short         fRectMax;       /* width of font rectangle */
+         short         chHeight;       /* character height */
+         short         owTLoc;         /* offset to offset/width table */
+         short         ascent;         /* ascent */
+         short         descent;        /* descent */
+         short         leading;        /* leading */
+         short         rowWords;       /* row width of bit image / 2 */
+         /*
+         short         bitImage[(rowWords-1)+1][(chHeight-1)+1];
+         short         locTable[(lastChar+2-firstChar)+1];
+         short         owTable[(lastChar+2-firstChar)+1];
+         */
+         } FontRec;
+      
+
+      pascal void InitFonts()
+      GetFontName(fontNum,theName)
+         short fontNum;
+         char *theName;
+      GetFNum(fontName,theNum)
+         char *fontName;
+         short *theNum;
+      pascal Boolean RealFont(fontNum,size)
+         short fontNum;
+         short size;
+      pascal void SetFontLock(lockFlag)
+         Boolean lockFlag;
+      pascal FMOutPtr SwapFont(inRec)
+         FMInput *inRec;
+
+
+
+DESCRIPTION
+      The font manager supports the use of the character fonts used to draw
+      text with QuickDraw.
+
+      For more detailed information see the "Font Manager" section of the
+      "Inside Macintosh" documentation.
+
+AUTHOR
+      C Interface by Rick Meyers
+      Copyright 1984 Apple Computer Inc.
+
+BUGS
+      Check on multidimensional arrays in C and Pascal.

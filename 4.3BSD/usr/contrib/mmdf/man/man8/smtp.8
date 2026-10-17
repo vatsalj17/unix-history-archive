@@ -1,0 +1,23 @@
+.TH "SMTP" 8 "28 December 85"
+.SH NAME
+smtp \- SMTP outbound channel for MMDF
+.SH SYNOPSIS
+smtp (called by deliver)
+.SH DESCRIPTION
+The SMTP outbound channel is part of the MMDF mail system.
+\fISmtp\fR is called directly by \fIdeliver\fR.
+It follows the standard deliver/channel protocol and handles outbound
+SMTP traffic.
+\fISmtp\fR uses the channel configuration
+string to specify what it should place in the HELO string of the
+SMTP transaction.  This will override the use of \fIlocname\fR
+for this function.
+The following is a typical SMTP channel description from
+the \fImmdftailor\fR file:
+.sp
+.ta 1.5i
+MCHN	smtp, show=``SMTP/TCP'', que=smtp, tbl=smtp,
+.br
+	pgm=smtp, mod=reg, ap=822, confstr=``SERING.UUCP''
+.SH "SEE ALSO"
+deliver(8), submit(8), smtpd(8), RFC821

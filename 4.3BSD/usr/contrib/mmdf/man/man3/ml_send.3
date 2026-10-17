@@ -1,0 +1,106 @@
+.TH ML_SEND 3
+'ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.SH NAME
+Simple Mail Submission (ml_)
+.SH SYNOPSIS
+
+.nf
+#include "util.h"
+#include <stdio.h>
+
+ml_init (return, sender, from, subject)
+    int return,
+        sender;
+    char *from,
+         *subject;
+ml_to ();
+ml_cc ();
+ml_adr (address)
+    char *address;
+ml_aend ();
+ml_tinit ();
+ml_txt (text);
+    char *text;
+ml_file (fil-text);
+    FILE *file-text;
+ml_end (end-stat)
+    int  end-stat;
+ml_1adr (return, sender, from, subject, address);
+.fi
+.RE
+.SH DESCRIPTION
+.PP
+These procedures may be used for simple mail submission, providing
+a subroutine interface with the \fIv6mail\fR command.
+The basic sequence is:
+
+.RS
+.nf
+# include "util.h"
+
+ml_init (YES, NO, "My Name", "The Subject");
+ml_adr ("destination address 1");
+ml_adr ("destination address 2");
+...
+ml_aend ();
+ml_tinit ();
+ml_txt ("Some opening text");
+ml_txt ("maybe some more text");
+ml_file (stdio-file-stream-pointer);
+if (ml_end (OK)) != OK)
+{   error-handling code }
+
+.fi
+Arguments that are to be defaulted should be zero.  All routines
+return a status value of OK or NOTOK;
+.RE
+.PP
+ml_init()'s arguments specify:
+.IP "a)"
+whether return-mail (to the sender) should be allowed,
+.IP "b)"
+whether a Sender field should be used to specify the
+correct sender (contingent on next argument),
+.IP "c)"
+text for the From field, and
+.IP "d)"
+text for the Subject field.
+.PP
+If (b) is NO, then (c)'s text must contain the
+correct sender information, or else just contain the "name" portion
+of the address.  
+.PP
+Ml_to() and ml_cc() are used to switch between "To:" and "cc:"
+addresses.  Normally, only "To:" addresses are used and, for this,
+no ml_to() call is needed.
+.PP
+Ml_adr() specifies the text of one address.
+An "address" is whatever is valid for your system, as if you
+were typing it to the \fIv6mail\fR command.  Ml_aend() signals the end
+of address specification, and ml_tinit() signals the start of
+message text submission.
+.PP
+Ml_txt() directly enters raw text.  Ml_file() passes a stdio
+file pointer, to be used for file text submission; all of the
+(remaining) contents of the file are submitted.
+Any number of ml_txt() and ml_file() calls may be made and they
+may be freely mixed. They just
+append text to the message.  The text must contain its own
+newlines.
+.PP
+Ml_1adr() is provided as a convenient way to initiate mail
+when there is only one addressee.  Its arguments are the same
+as for ml_init(), except there is an extra argument for
+the address string.
+It may be used, with the earlier example,
+to replace the ml_init(), ml_addr(), ml_aend(), and ml_tinit()
+calls.
+.PP
+A special version of the \fIv6mail\fR command, supplied with MMDF, 
+is required by the ml_send library.
+.SH FILES
+.IP "lib/libmmdf.a" 25
+contains the ml_send library.
+.SH AUTHOR
+.IP "Dave Crocker" 20
+Dept. of E.E., Univ. of Delaware

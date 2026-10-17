@@ -1,0 +1,33 @@
+MLNAME	vu44
+MLDOMAIN UUCP
+MLOCMACHINE laser
+MLCKDIR	"/usr/mmdf/tmp"
+
+; Table entries
+MTBL	alias,		file="aliases",		show="Local Name Aliases"
+MTBL	local,		file="local",		show="Local Host Aliases"
+MTBL	uucpchn,	file="uucpchn",		show="UUCP Routes"
+MTBL	uucpdom,	file="uucpdom",		show="UUCP Domains"
+
+ALIAS	table=alias, trusted, nobypass
+
+; Channel entries
+MCHN	local, show="Local Delivery", que=local, tbl=local,
+	pgm=local, mod=imm
+MCHN	uucp, show="UUCP", que=uucp, tbl=uucpchn,
+	pgm=uucp, mod=reg, ap=822
+MCHN	list, show="List Processing", que=list, tbl=local,
+	pgm=list, mod=reg
+MCHN	badhosts, show="Bad Host Forwarding", que=badhosts, tbl=uucpchn
+	pgm=uucp, mod=reg, ap=822, host="mcvax.uucp"
+MCHN	badusers, show="Bad User Forwarding", que=badusers, tbl=uucpchn
+	pgm=uucp, mod=reg, ap=822, host="vu44.uucp"
+
+; Domain tables
+MDMN	"UUCP", show="UUCP Domain", table=uucpdom
+
+; Logging levels
+MMSGLOG     level=FST,size=20
+MCHANLOG    level=FST,size=20
+
+

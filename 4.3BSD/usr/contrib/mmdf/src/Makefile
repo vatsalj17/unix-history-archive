@@ -1,0 +1,47 @@
+#	MMDF Program Source Subtree Makefile
+#
+
+#
+# Programs that live in subdirectories, and have makefiles of their own.
+#
+SUBDIR=	tools submit deliver local list delay smtp phone pobox \
+	uucp prog bboards pop
+
+#
+#  This should list all the subdirectories that make clean works in.
+#  This probably should not be altered unless you add/delete a channel.
+#
+ALLSUBDIRS=	tools submit deliver local list delay smtp phone pobox \
+		uucp niftp bboards ean prog pop
+
+all:
+	for dir in ${SUBDIR}; do \
+		(cd $${dir}; gen ${MFLAGS} -${MAKEFLAGS}); done
+
+install:
+	for dir in ${SUBDIR}; do \
+		(cd $${dir}; gen ${MFLAGS} -${MAKEFLAGS} install); done
+
+dist:
+	-touch `ls */x*|grep -v '\.'`
+	echo echo MMDF Distribution made `date` > install.sh
+	for dir in ${SUBDIR}; do \
+		echo cd $${dir} >> install.sh; \
+		( cd $${dir}; \
+		  gen -n ${MFLAGS} -${MAKEFLAGS} install) >> install.sh; \
+		echo cd .. >> install.sh; \
+	done
+	tar cvf mmdfdist.tar install.sh */x*
+
+depend:
+	for dir in ${SUBDIR}; do \
+		(cd $${dir}; gen ${MFLAGS} -${MAKEFLAGS} depend); done
+
+lint:
+	for dir in ${SUBDIR}; do \
+		(cd $${dir}; gen ${MFLAGS} -${MAKEFLAGS} lint); done
+
+clean:
+	-rm -f make.out core
+	for dir in ${ALLSUBDIRS}; do \
+		(cd $${dir}; make -f Makefile.real clean); done

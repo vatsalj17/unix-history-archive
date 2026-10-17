@@ -1,0 +1,14 @@
+0,10,20,30,40,50 * * * * /etc/dmesg - >>/usr/adm/messages
+0,30 * * * * (echo "                `date` `/usr/ucb/uptime`" ) >/dev/console
+
+1 4 * * * sh /usr/adm/newsyslog
+30 4 * * * /etc/sa -s > /dev/null
+15 4 * * * find /usr/preserve -mtime +7 -a -exec rm -f {} \;
+
+1 6 * * * /etc/quotacheck -a
+
+10 4,12,20 * * * /usr/brl/sbin/alias mmdf /usr/mmdf/cleanque
+0 7,19 * * * /usr/brl/sbin/checkque -s | mail dpk -s "`hostname` Mail Status"
+
+42 2,7 * * * /etc/fsck -n /dev/rhp9c > /dev/null
+5 0,6,12,18 * * * /usr/brl/sbin/alias mmdf /usr/mmdf/lock/home/prune

@@ -1,0 +1,15 @@
+set mc=`mc`
+( date; \
+mc; \
+echo "NIFTP temp dir - should be empty"; \
+ls -l /usr/spool/nitemp; \
+echo; \
+echo "NIFTP spool dir - no old files"; \
+ls -lt /usr/spool/jntmail; \
+echo; \
+echo; \
+echo "Deadletter file - should not exist"; \
+ls -l /usr/spool/mmdflock/que/DeadLetters; \
+echo; \
+echo; \
+/lib/mmdf/checkque ) | mail mail-check -s "$mc status"

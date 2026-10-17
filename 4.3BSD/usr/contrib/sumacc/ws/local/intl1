@@ -1,0 +1,176 @@
+3. "6F^5D!$^H	#	#;   INTL,1 Source for International Date and time formats.
+;
+;   Prepared by Kent Edquist and the GEA Marketing team.
+;
+;   The strings for the day and month names can be up to 15 characters.
+;   They take all 16 bytes room. 1 byte for length declaration followed by
+;   the string. Strings will be filled up with zero bytes to create
+;   a total of 16 bytes.
+;
+                    .PROC     INTL,0
+
+IntlSunday
+                    .BYTE     6
+                    .ASCII    'Sunday'            ;string for Sunday
+                    .ALIGN    16
+IntlMonday
+                    .BYTE     6
+                    .ASCII    'Monday'            ;string for Monday
+                    .ALIGN    16
+IntlTuesday
+                    .BYTE     7
+                    .ASCII    'Tuesday'           ;string for Tuesday
+                    .ALIGN    16
+IntlWednesday
+                    .BYTE     9
+                    .ASCII    'Wednesday'         ;string for Wednesday
+                    .ALIGN    16
+IntlThursday
+                    .BYTE     8
+                    .ASCII    'Thursday'          ;string for Thursday
+                    .ALIGN    16
+IntlFriday
+                    .BYTE     6
+                    .ASCII    'Friday'            ;string for Friday
+                    .ALIGN    16
+IntlSaturday
+                    .BYTE     8
+                    .ASCII    'Saturday'          ;string for Saturday
+                    .ALIGN    16
+
+IntlJanuary
+                    .BYTE     7
+                    .ASCII    'January'           ;string for January
+                    .ALIGN    16
+IntlFebruary
+                    .BYTE     8
+                    .ASCII    'February'          ;string for February
+                    .ALIGN    16
+IntlMarch
+                    .BYTE     5
+                    .ASCII    'March'             ;string for March
+                    .ALIGN    16
+IntlApril
+                    .BYTE     5
+                    .ASCII    'April'             ;string for April
+                    .ALIGN    16
+IntlMay
+                    .BYTE     3
+                    .ASCII    'May'               ;string for May
+                    .ALIGN    16
+IntlJune
+                    .BYTE     4
+                    .ASCII    'June'              ;string for June
+                    .ALIGN    16
+IntlJuly
+                    .BYTE     4
+                    .ASCII    'July'              ;string for July
+                    .ALIGN    16
+IntlAugust
+                    .BYTE     6
+                    .ASCII    'August'            ;string for August
+                    .ALIGN    16
+IntlSeptember
+                    .BYTE     9
+                    .ASCII    'September'         ;string for September
+                    .ALIGN    16
+IntlOctober
+                    .BYTE     7
+                    .ASCII    'October'           ;string for October
+                    .ALIGN    16
+IntlNovember
+                    .BYTE     8
+                    .ASCII    'November'          ;string for November
+                    .ALIGN    16
+IntlDecember
+                    .BYTE     8
+                    .ASCII    'December'          ;string for December
+                    .ALIGN    16
+
+IntlDaySupress
+;
+;   Flag to have dayname string in the long date format.
+;   Set it to 0 (zero) to show dayname in longdate.
+;   Set it to 255 or $FF to supress dayname in longdate.
+;
+                    .BYTE     0         ;boolean for supressing day of week
+IntlLongOrder
+;
+;   Flag for longdate format.
+;   Set it to 0 (zero) for <dayname day# month year>
+;   Set it to 255 or $FF for <dayname month day# year>
+;   NOTE : These formats will still be affected by seperators and leading
+;          zero supressing.
+;
+                    .BYTE     0         ;boolean for selecting order
+IntlLDayLZFlag
+;
+;   Flag to supress leading zero in day number (day#) in longdate format.
+;   Set it to 0 (zero) to remove a leading zero in day#.
+;   Set it to 255 or $FF to have leading zero in day#.
+;
+                    .BYTE     0         ;boolean for day# leading zeros
+IntlMonLen
+;
+;   String truncation of dayname and monthname in medium date format.
+;   Used when files are shown by date, size, kind or name in a window.
+;
+                    .BYTE     3         ;string length for medium date
+
+IntlStr1
+;
+;   Prefix string of maximal 4 bytes to put before a longdate format.
+;   Fill up with zero bytes till the length of 4 is reached.
+;
+                    .BYTE     0,0       ;long date prefix string
+                    .BYTE     0,0
+;
+;   First extension string of maximal 4 bytes in longdate.
+;   Is inserted after the first string in longdate format.
+;   Fill up with zero bytes till the length of 4 is reached.
+;
+IntlStr2
+                    .ASCII    ' '      ;first extension string in longdate
+                    .BYTE     0,0,0
+;
+;   Second extension string of maximal 4 bytes in longdate.
+;   Is inserted after the second string in longdate format.
+;   Fill up with zero bytes till the length of 4 is reached.
+;
+IntlStr3
+                    .ASCII    ' '       ;second extension string in longdate
+                    .BYTE     0,0,0
+;
+;   Third extension string of maximal 4 bytes in longdate.
+;   Is inserted after the third string in longdate format.
+;   Fill up with zero bytes till the length of 4 is reached.
+;
+IntlStr4
+                    .ASCII    ' '       ;third extension string in longdate
+                    .BYTE     0,0,0
+IntlStr5
+;
+;   Fourth extension string of maximal 4 bytes in longdate.
+;   Is inserted after the fourth string in longdate format.
+;   Fill up with zero bytes till the length of 4 is reached.
+;
+                    .ASCII    ' '       ;fourth extension string in longdate
+                    .BYTE     0,0,0
+
+Intl1Version
+;
+;   Do not change the following version word.
+;   Restricted to be used by APPLE only.
+;
+                    .WORD     1         ;version word
+
+IntlMagTable
+;
+;   Subroutine to setup magnitude for sorting routine.
+;
+;   Do not change the following instruction.
+;
+                     RTS                ;string magnitude compare tables
+
+                    .END
+

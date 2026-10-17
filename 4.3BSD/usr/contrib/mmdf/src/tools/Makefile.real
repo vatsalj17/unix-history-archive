@@ -1,0 +1,350 @@
+#
+#	Makefile for MMDF maintenance programs
+#
+MODULES = 	amp checkup checkque cleanque checkaddr nictable \
+		dbmbuild dbmedit dbmlist setup mailid rem_chans fixtai
+
+real-default:	amp checkup cleanque checkque checkaddr \
+		nictable dbmbuild dbmedit dbmlist setup mailid \
+		rem_chans fixtai
+
+install:	inst-checkup inst-checkque inst-dbmbuild inst-dbmedit \
+		inst-dbmlist inst-nictable inst-cleanque inst-setup \
+		inst-mailid inst-checkaddr inst-rem_chans inst-fixtai \
+		inst-amp
+
+lint:	l-amp l-checkup l-cleanque l-checkque l-dbmbuild l-dbmedit l-dbmlist \
+	l-nictable l-setup l-mailid l-checkaddr l-rem_chans l-fixtai
+
+#
+#   amp:       test address-mapping code (coerce to RFC733 or RFC822)
+#
+inst-amp:	$(LIBDIR)/$(MMPREF)amp
+
+$(LIBDIR)/$(MMPREF)amp  :  xamp
+	cp xamp $(LIBDIR)/$(MMPREF)amp
+	-$(CHOWN) $(MMDFLOGIN) $(LIBDIR)/$(MMPREF)amp
+	-chmod 0$(PGMPROT) $(LIBDIR)/$(MMPREF)amp
+	-@ls -ls $(LIBDIR)/$(MMPREF)amp
+	-@echo "amp installed normally"; echo ""
+
+amp:	xamp
+xamp:	amp.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ amp.o $(MMDFLIBS) $(SYSLIBS)
+
+l-amp:
+	$(LINT) $(LFLAGS) amp.c $(LLIBS)
+
+#
+#   checkup:     verify mmdf directory and file setup
+#
+inst-checkup  :   $(LIBDIR)/$(MMPREF)checkup
+
+$(LIBDIR)/$(MMPREF)checkup  :   xcheckup
+	cp xcheckup $(LIBDIR)/$(MMPREF)checkup
+	-$(CHOWN) $(MMDFLOGIN) $(LIBDIR)/$(MMPREF)checkup
+	-chmod 0$(PGMPROT) $(LIBDIR)/$(MMPREF)checkup
+	-@ls -ls $(LIBDIR)/$(MMPREF)checkup
+	-@echo "checkup installed normally"; echo ""
+
+checkup:	xcheckup
+xcheckup:	checkup.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ checkup.o $(MMDFLIBS) $(SYSLIBS)
+
+l-checkup:
+	$(LINT) $(LFLAGS) checkup.c $(LLIBS)
+
+#
+#   checkque:     summarize status of mail queue
+#
+inst-checkque:	$(LIBDIR)/$(MMPREF)checkque
+
+$(LIBDIR)/$(MMPREF)checkque:	xcheckque
+	cp xcheckque $(LIBDIR)/$(MMPREF)checkque
+	-$(CHOWN) $(MMDFLOGIN) $(LIBDIR)/$(MMPREF)checkque
+	-chmod 04$(PGMPROT) $(LIBDIR)/$(MMPREF)checkque
+	-@ls -ls $(LIBDIR)/$(MMPREF)checkque
+	-@echo "checkque installed normally"; echo ""
+
+checkque:	xcheckque
+xcheckque:	checkque.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ checkque.o $(MMDFLIBS) $(SYSLIBS)
+
+l-checkque:
+	$(LINT) $(LFLAGS) checkque.c $(LLIBS)
+
+#
+#   dbmbuild:     build the MMDF dbm database
+#
+inst-dbmbuild  :   $(TBLDIR)/$(MMPREF)dbmbuild
+
+$(TBLDIR)/$(MMPREF)dbmbuild  :   xdbmbuild
+	cp xdbmbuild $(TBLDIR)/$(MMPREF)dbmbuild
+	-$(CHOWN) $(MMDFLOGIN) $(TBLDIR)/$(MMPREF)dbmbuild
+	-chmod 0$(PGMPROT) $(TBLDIR)/$(MMPREF)dbmbuild
+	-@ls -ls $(TBLDIR)/$(MMPREF)dbmbuild
+	-@echo "dbmbuild installed normally"; echo ""
+
+dbmbuild:	xdbmbuild
+xdbmbuild:	dbmbuild.o $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ dbmbuild.o $(MMDFLIBS) $(SYSLIBS)
+
+l-dbmbuild:
+	$(LINT) $(LFLAGS) dbmbuild.c $(LLIBS)
+
+#
+#   dbmedit:     incrementally change contents of MMDF database
+#
+inst-dbmedit  :   $(TBLDIR)/$(MMPREF)dbmedit
+
+$(TBLDIR)/$(MMPREF)dbmedit  :   xdbmedit
+	cp xdbmedit $(TBLDIR)/$(MMPREF)dbmedit
+	-$(CHOWN) $(MMDFLOGIN) $(TBLDIR)/$(MMPREF)dbmedit
+	-chmod 0$(PGMPROT) $(TBLDIR)/$(MMPREF)dbmedit
+	-@ls -ls $(TBLDIR)/$(MMPREF)dbmedit
+	-@echo "dbmedit installed normally"; echo ""
+
+dbmedit:	xdbmedit
+xdbmedit:	dbmedit.o $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ dbmedit.o $(MMDFLIBS) $(SYSLIBS)
+
+l-dbmedit:
+	$(LINT) $(LFLAGS) dbmedit.c $(LLIBS)
+
+#
+#   dbmlist:     dump the contents of the DBM based mail database
+#
+inst-dbmlist:	$(TBLDIR)/$(MMPREF)dbmlist
+
+$(TBLDIR)/$(MMPREF)dbmlist:	xdbmlist
+	cp xdbmlist $(TBLDIR)/$(MMPREF)dbmlist
+	-$(CHOWN) $(MMDFLOGIN) $(TBLDIR)/$(MMPREF)dbmlist
+	-chmod 0$(PGMPROT) $(TBLDIR)/$(MMPREF)dbmlist
+	-@ls -ls $(TBLDIR)/$(MMPREF)dbmlist
+	-@echo "dbmlist installed normally"; echo ""
+
+dbmlist:	xdbmlist
+xdbmlist:	dbmlist.o $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ dbmlist.o $(MMDFLIBS) $(SYSLIBS)
+
+l-dbmlist:
+	$(LINT) $(LFLAGS) dbmlist.c $(LLIBS)
+
+#
+#   nictable:     summarize status of mail queue
+#
+inst-nictable  :   $(TBLDIR)/$(MMPREF)nictable
+
+$(TBLDIR)/$(MMPREF)nictable  :   xnictable
+	cp xnictable $(TBLDIR)/$(MMPREF)nictable
+	-$(CHOWN) $(MMDFLOGIN) $(TBLDIR)/$(MMPREF)nictable
+	-chmod 0$(PGMPROT) $(TBLDIR)/$(MMPREF)nictable
+	-@ls -ls $(TBLDIR)/$(MMPREF)nictable
+	-@echo "nictable installed normally"; echo ""
+
+nictable:	xnictable
+xnictable:	nictable.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ nictable.o $(MMDFLIBS) $(SYSLIBS)
+
+l-nictable:
+	$(LINT) $(LFLAGS) nictable.c $(LLIBS)
+
+#
+#   checkaddr:	Check addresses from lists or as arguments
+#
+inst-checkaddr:	$(LIBDIR)/$(MMPREF)checkaddr
+
+$(LIBDIR)/$(MMPREF)checkaddr  :   xcheckaddr
+	cp xcheckaddr $(LIBDIR)/$(MMPREF)checkaddr
+	-$(CHOWN) $(MMDFLOGIN) $(LIBDIR)/$(MMPREF)checkaddr
+	-chmod 0$(PGMPROT) $(LIBDIR)/$(MMPREF)checkaddr
+	-@ls -ls $(LIBDIR)/$(MMPREF)checkaddr
+	-@echo "checkaddr installed normally"; echo ""
+
+checkaddr:	xcheckaddr
+xcheckaddr:	checkaddr.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ checkaddr.o $(MMDFLIBS) $(SYSLIBS)
+
+l-checkaddr:
+	$(LINT) $(LFLAGS) checkaddr.c $(LLIBS)
+
+#
+#   mailid:	Program to return mailid of invoker or specified userid
+#
+inst-mailid:	$(LIBDIR)/$(MMPREF)mailid
+
+$(LIBDIR)/$(MMPREF)mailid  :   xmailid
+	cp xmailid $(LIBDIR)/$(MMPREF)mailid
+	-$(CHOWN) $(MMDFLOGIN) $(LIBDIR)/$(MMPREF)mailid
+	-chmod 0$(PGMPROT) $(LIBDIR)/$(MMPREF)mailid
+	-@ls -ls $(LIBDIR)/$(MMPREF)mailid
+	-@echo "mailid installed normally"; echo ""
+
+mailid:	xmailid
+xmailid:	mailid.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ mailid.o $(MMDFLIBS) $(SYSLIBS)
+
+l-mailid:
+	$(LINT) $(LFLAGS) mailid.c $(LLIBS)
+
+#
+#   cleanque:   Remove old/dangling files from message queue directories
+#
+inst-cleanque    :   $(LIBDIR)/$(MMPREF)cleanque
+
+$(LIBDIR)/$(MMPREF)cleanque  :   xcleanque
+	cp xcleanque $(LIBDIR)/$(MMPREF)cleanque
+	-$(CHOWN) root $(LIBDIR)/$(MMPREF)cleanque
+	-chmod 04$(PGMPROT) $(LIBDIR)/$(MMPREF)cleanque
+	-@echo "***  make sure /etc/rc & overnight cron run this program"
+	-@ls -ls $(LIBDIR)/$(MMPREF)cleanque
+	-@echo "cleanque installed normally"; echo ""
+
+cleanque:	xcleanque
+xcleanque:	cleanque.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ cleanque.o $(MMDFLIBS) $(SYSLIBS)
+
+l-cleanque:
+	$(LINT) $(LFLAGS) cleanque.c $(LLIBS)
+
+#
+#   fixtai:   Extract the fixed part of an mmdf tailor file
+#
+
+inst-fixtai    :   $(LIBDIR)/$(MMPREF)fixtai
+
+$(LIBDIR)/$(MMPREF)fixtai  :   xfixtai
+	    cp xfixtai $(LIBDIR)/$(MMPREF)fixtai
+	    -$(CHOWN) $(MMDFLOGIN) $(LIBDIR)/$(MMPREF)fixtai
+	    -chmod 0$(PGMPROT) $(LIBDIR)/$(MMPREF)fixtai
+	    -@ls -ls $(LIBDIR)/$(MMPREF)fixtai
+	    -@echo "fixtai installed normally"; echo ""
+
+fixtai:   xfixtai
+xfixtai:  fixtai.o $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ fixtai.o $(MMDFLIBS) 
+
+l-fixtai:
+	$(LINT) $(LFLAGS) fixtai.c $(LLIBS)
+
+
+#
+#   rem_chans:   Comment out the channel defs from an mmdf tailor file
+#
+inst-rem_chans    :   $(LIBDIR)/$(MMPREF)rem_chans
+
+$(LIBDIR)/$(MMPREF)rem_chans  :   xrem_chans
+	    cp xrem_chans $(LIBDIR)/$(MMPREF)rem_chans
+	    -$(CHOWN) $(MMDFLOGIN) $(LIBDIR)/$(MMPREF)rem_chans
+	    -chmod 0$(PGMPROT) $(LIBDIR)/$(MMPREF)rem_chans
+	    -@ls -ls $(LIBDIR)/$(MMPREF)rem_chans
+	    -@echo "rem_chans installed normally"; echo ""
+
+rem_chans:   xrem_chans
+xrem_chans:  rem_chans.o $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ rem_chans.o $(MMDFLIBS)
+
+l-rem_chans:
+	$(LINT) $(LFLAGS) rem_chans.c $(LLIBS)
+
+#
+#   setup:     build mmdf directories
+#
+inst-setup  :   $(LIBDIR)/$(MMPREF)setup
+
+$(LIBDIR)/$(MMPREF)setup  :   xsetup
+	cp xsetup $(LIBDIR)/$(MMPREF)setup
+	-$(CHOWN) $(MMDFLOGIN) $(LIBDIR)/$(MMPREF)setup
+	-chmod 0$(PGMPROT) $(LIBDIR)/$(MMPREF)setup
+	-@ls -ls $(LIBDIR)/$(MMPREF)setup
+	-@echo "setup installed normally"; echo ""
+
+setup:	xsetup
+xsetup:	setup.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ setup.o $(MMDFLIBS) $(SYSLIBS)
+
+l-setup:
+	$(LINT) $(LFLAGS) setup.c $(LLIBS)
+
+
+clean:
+	-rm -f x* *.o makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+amp.o: amp.c
+amp.o: /usr/include/stdio.h
+amp.o: ../../h/util.h
+amp.o: ../../h/mmdf.h
+amp.o: ../../h/ch.h
+amp.o: ../../h/ap.h
+checkup.o: checkup.c
+checkup.o: ../../h/util.h
+checkup.o: ../../h/mmdf.h
+checkup.o: /usr/include/pwd.h
+checkup.o: /usr/include/sys/stat.h
+checkup.o: ../../h/ch.h
+checkup.o: ../../h/d_proto.h
+checkup.o: ../../h/d_structs.h
+checkup.o: ../../h/gettys.h
+checkup.o: ../../h/dm.h
+checkque.o: checkque.c
+checkque.o: ../../h/util.h
+checkque.o: ../../h/mmdf.h
+checkque.o: /usr/include/sys/stat.h
+checkque.o: /usr/include/utmp.h
+checkque.o: ../../h/ch.h
+checkque.o: ../../h/msg.h
+checkque.o: ../../h/adr_queue.h
+checkque.o: ../../h/phs.h
+cleanque.o: cleanque.c
+cleanque.o: ../../h/util.h
+cleanque.o: ../../h/mmdf.h
+cleanque.o: ../../h/msg.h
+cleanque.o: ../../h/adr_queue.h
+cleanque.o: ../../h/ch.h
+cleanque.o: /usr/include/sys/stat.h
+checkaddr.o: checkaddr.c
+checkaddr.o: ../../h/util.h
+checkaddr.o: ../../h/mmdf.h
+nictable.o: nictable.c
+nictable.o: ../../h/util.h
+nictable.o: ../../h/mmdf.h
+dbmbuild.o: dbmbuild.c
+dbmbuild.o: ../../h/util.h
+dbmbuild.o: ../../h/mmdf.h
+dbmbuild.o: ../../h/ch.h
+dbmbuild.o: ../../h/dm.h
+dbmbuild.o: ../../h/chdbm.h
+dbmedit.o: dbmedit.c
+dbmedit.o: ../../h/util.h
+dbmedit.o: ../../h/mmdf.h
+dbmedit.o: ../../h/chdbm.h
+dbmlist.o: dbmlist.c
+dbmlist.o: ../../h/util.h
+dbmlist.o: ../../h/mmdf.h
+dbmlist.o: ../../h/ch.h
+dbmlist.o: ../../h/chdbm.h
+setup.o: setup.c
+setup.o: ../../h/util.h
+setup.o: ../../h/mmdf.h
+setup.o: /usr/include/pwd.h
+setup.o: /usr/include/sys/stat.h
+setup.o: ../../h/ch.h
+mailid.o: mailid.c
+mailid.o: /usr/include/stdio.h
+mailid.o: /usr/include/pwd.h
+rem_chans.o: rem_chans.c
+rem_chans.o: ../../h/util.h
+rem_chans.o: ../../h/cmd.h
+fixtai.o: fixtai.c
+fixtai.o: ../../h/util.h
+fixtai.o: ../../h/cmd.h
+fixtai.o: ../../h/ch.h
+fixtai.o: /usr/include/sys/stat.h
+fixtai.o: ../../h/ap.h
+fixtai.o: ../../h/conf.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

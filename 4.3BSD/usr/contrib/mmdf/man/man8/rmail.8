@@ -1,0 +1,83 @@
+.TH RMAIL 8 "7 January 1986"
+.UC 4
+.SH NAME
+rmail \- submit remote mail received via UUCP
+.SH SYNOPSIS
+rmail user ...
+.SH DESCRIPTION
+.I Rmail
+interprets incoming mail received via
+.IR uucp (1C),
+passing the processed mail on to
+.IR submit (8)
+for processing by the MMDF mail system.
+.I Rmail
+is explicitly designed for use with
+.I UUCP
+and the MMDF
+.I submit
+program.
+It is not intended for use by regular users.
+.PP
+.I Rmail
+performs several conversions on the incoming mail before calling 
+.IR submit .
+The conversions change addresses from the UUCP routing
+style (lists of hosts separated by the character `!')
+to the domain style of address used within the MMDF mail system.
+The incoming message is dealt with in the following manner:
+.IP 1)
+The initial `From' (or `>From')
+line is processed to discover the originating site
+and the sender of the message.
+Some UUCP mailers do not supply this information as part of the message
+body.
+If the originating site cannot be found from this information, the
+program environment is inspected for the variable `ACCTSYS'; this is
+set to the originating system by some implementations of UUCP.
+The originating system is used as a table lookup value into the mmdf
+table `rmail.chans', the file contains site/channel pairs.
+If a match
+is found the resulting channel is used for the submit phase.
+The default UUCP channel is used if no match is found.
+The default channel name is specified in conf.c source and
+can be runtime tailored.  Typically it is `uucp'.
+The existence of this channel is MANDATORY to prevent dropping
+mail from unknown hosts.
+.IP 2)
+The body of the message is inspected looking for any header lines
+containing addresses; the lines are `From:', `To:', `Cc:', `Bcc:'
+and `Sender:'.
+By scanning the address chains, the
+addresses in these lines are converted into `user@known-site.domain' form
+using the MMDF tables to evaluate whether the mailer knows the site.
+For this to work properly, the unqualified name of all sites should exist
+in the appropriate domain tables.
+The scanning stops when an unknown site is discovered and a composite
+address will be created.
+The `From:' line is treated specially to preserve any comment information
+which may have been inserted by the originating mailer.
+.IP 3)
+The `Date:' line is also re-written into ARPA standard form.
+.PP
+Before 
+.I submit
+is called,
+the message is re-written into RFC822/733 form with all addresses
+obeying the appropriate convention.
+Any missing header lines are supplied.
+The destination address for the message is taken from the argument to
+.I rmail ,
+and so the header re-writing which is done does not affect the routing
+of the message.
+.SH "SEE ALSO"
+mail(1),
+uucp(1C),
+submit(8)
+.SH BUGS
+.I Rmail
+should not reside in /bin.
+.br
+It is virtually impossible to do a completely valid conversion job.
+.br
+Rmail should be replaced by something that resembles Batch-SMTP.

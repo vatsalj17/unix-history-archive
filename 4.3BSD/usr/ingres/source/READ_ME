@@ -1,0 +1,77 @@
+The source code for the INGRES system lives in this directory.
+
+RECOMPILATION
+
+To recompile the system, do:
+
+	su ingres
+	cd conf; make allclean allinstall
+
+This will clean out all objects from everywhere and then recompile
+and install the entire system.  This can be expected to take about
+1.5 hours. Note that all files and dirs should be owned by user
+"ingres" and group "ingres".
+
+ROAD MAP
+
+conf
+	Configuration files for the system.  This is the "main"
+	directory -- the Makefile in this directory applies to
+	the entire system, rather than just the particular module.
+ctlmod
+	The control module.  This module provides interprocess
+	communication and provides certain system functions.  It
+	might be considered the "kernel" of the system.
+dbu
+	Database utilities.  These are things like print, help,
+	copy, ksort, etc.
+decomp
+	Decomposition.  This module does query optimization.
+equel
+	The EQUEL preprocessor.
+gutil
+	General utilities.  These are not particular to INGRES,
+	although they were written for INGRES.
+h
+	Header files.
+iutil
+	INGRES utilities.  This includes the old "access" library.
+	This directory has the access methods and utility routines
+	that are used throughout INGRES, but have no meaning outside
+	of the INGRES context.
+libq
+	The EQUEL runtime support.
+monitor
+	The terminal monitor (front end).
+ovqp
+	One Variable Query Processor.  This is the "search engine"
+	(basically a big interpreter).
+parser
+	The parser.  Takes text and produces query trees.
+qrymod
+	Query Modification.  This module supports views, integrity,
+	and protection.
+support
+	All programs that are to be run from the shell are in this
+	directory.
+
+Note for SUN users:
+	This release will compile on the SUN workstation but it is
+untested and known to have problems with equel programs.  To compile
+for the SUN add 'CPUTYPE=SUN' to the make command or change
+conf/Makefile.
+
+Known bugs:
+	There is only one known bug with this version of INGRES on
+VAXs running 4.3 BSD UNIX.  The bug is as follows:
+The quel statement
+retrieve (a.foo) where count(a.bar by a.foo)=max(count(a.bar by a.foo))
+will work but
+retrieve (a.foo) where max(count(a.bar by a.foo))=count(a.bar by a.foo)
+will not.  In general the problem is in queries with clauses of the
+form simpleagg(aggfunc())=thesameaggfunc() as such a clause does not
+connect the 'by' clause of the aggfunc with the rest of the query.
+
+On the SUN many bugs are known but the system and the system is barely
+functional.  Serious use of this version of INGRES on the SUN is
+discouraged.

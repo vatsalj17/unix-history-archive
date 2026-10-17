@@ -1,0 +1,97 @@
+;  MMDF-II tailoring file for Oklahoma State University, CS Department
+;  (a "typical" CSNET Phonenet site + UUCP)
+
+MLNAME		"a"
+MLDOMAIN	"cs.okstate.edu"
+
+; Table entires
+; Authorization tables
+
+MTBL	auth,			file="authorization/auth",
+				show="User Authorization"
+
+MTBL	auth-csnet,		file="authorization/pobox",
+				show="POBOX Authorization"
+
+; Domain tables
+
+MTBL	dom-cs.okstate.edu,	file="domains/cs.okstate.edu"
+MTBL	dom-csnet,		file="domains/csnet"
+MTBL	dom-uucp,		file="domains/uucp"
+MTBL	dom-top,		file="domains/top"
+
+; Channel tables
+
+MTBL	ch-local,		file="channels/local"
+MTBL	ch-okscc1,		file="channels/okscc1"
+MTBL	ch-oksee1,		file="channels/oksee1"
+MTBL	ch-oksma1,		file="channels/oksma1"
+MTBL	ch-csnet,		file="channels/csnet"
+MTBL	ch-uucp,		file="channels/uucp"
+MTBL	ch-list,		file="channels/list"
+
+; Domain entries
+
+MDMN	"cs.okstate.edu", table="dom-cs.okstate.edu",
+	show="CS.OKSTATE.EDU Domain"
+
+MDMN	"okstate.edu", table="dom-okstate.edu",
+	show="OKSTATE.EDU Domain"
+
+MDMN	"csnet", table="dom-csnet", show="CSNET Domain"
+
+MDMN	"uucp", table="dom-uucp", show="UUCP Domain"
+
+MDMN    "Top-Level", table="dom-top", name="", dmn="",
+	show="Top Level Domain"
+
+; Channel entries
+
+MCHN	local, que=local, tbl="ch-local", ap=822, pgm="local", mod=imm,
+	mod=send, show="Local Channel"
+
+MCHN	xokscc1, que=okscc1, tbl="ch-okscc1", trn="trn.xokscc1", ap=822,
+	pgm="phone", mod=reg, mod=send, mod=pick, host=a.ucc.okstate.edu,
+	ttl=20, poll=4, scr="scripts/okscc1", show="UCC VAX 11/780"
+
+MCHN	xoksee1, que=oksee1, tbl="ch-oksee1", trn="trn.xoksee1", ap=822,
+	pgm="phone", mod=reg, mod=send, mod=pick, host=rvax.ecen.okstate.edu,
+	ttl=20, poll=12, scr="scripts/oksee1", show="ECEN VAX 11/750"
+
+MCHN	xoksma1, que=oksma1, tbl="ch-oksma1", trn="trn.xoksma1", ap=822,
+	pgm="phone", mod=imm, mod=send, mod=pick, host=nemo.math.okstate.edu,
+	ttl=20, poll=0, scr="scripts/oksma1", show="MATH & STAT VAX 11/750"
+
+MCHN	yoksma1, que=oksma1, tbl="ch-oksma1", trn="trn.yoksma1", ap=822,
+	pgm="pobox", mod=psv, mod=send, mod=pick, host=nemo.math.okstate.edu,
+	user=oksma1, show="MATH & STAT VAX 11/750"
+
+MCHN	xpobox, que=csnet, tbl="ch-csnet", trn="trn.xpobox", ap=822,
+	pgm="phone", mod=reg, mod=send, mod=pick, host=relay.cs.net, ttl=30
+	poll=0, scr="scripts/relay", show="CSNET Phone",
+	outsrc=auth-csnet, indest=auth-csnet, auth=inblock, auth=outblock
+
+MCHN	pobox, que=csnet, tbl="ch-csnet", trn="trn.pobox", ap=822,
+	pgm="pobox", mod=psv, mod=send, mod=pick, host=relay.cs.net,
+	user=okscsnet, show="CSNET Channel",
+	outsrc=auth-csnet, indest=auth-csnet, auth=inblock, auth=outblock
+
+MCHN	uucp, que=uucp, tbl="ch-uucp", ap=822, pgm="dmuucp", mod=reg,
+	lname=okstate, ldomain=uucp, show="UUCP Channel"
+
+MCHN	list, que=list, tbl="ch-list", ap=822, pgm=list, mod=reg,
+	show="List Expansion"
+
+; Definitions of available direct out lines
+
+D_LINE "modem-1200",	"/dev/tty2e", "/usr/spool/locks/LCK..tty2e", 1200
+D_LINE "net-1200",	"/dev/tty38", "/usr/spool/locks/LCK..tty38", 1200
+D_LINE "nemo",		"/dev/tty48", "/usr/spool/locks/LCK..tty48", 9600
+D_LINE "net-1200",	"/dev/tty4e", "/usr/spool/locks/LCK..tty4e", 1200
+
+;logging levels
+
+MMSGLOG		level=FST
+MCHANLOG	level=FAT
+PHLOG		level=FAT
+AUTHLOG		level=FST

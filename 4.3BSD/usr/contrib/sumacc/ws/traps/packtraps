@@ -1,0 +1,325 @@
+3. "6F^5D!$^
+*N .NOLIST
+;
+; File packTraps.text
+;
+; implementation for the interface to packages
+;
+
+; MATH PACKAGE
+
+                .NoList
+                .INCLUDE tlasm/SysEqu.Text
+                .INCLUDE tlasm/SysErr.Text
+                .INCLUDE tlasm/SysMacs.Text
+                .INCLUDE tlasm/GrafEqu.Text
+                .INCLUDE tlasm/ToolEqu.Text
+                .INCLUDE tlasm/ToolMacs.Text
+                .List
+
+;
+;macro for package invocation
+;
+;   first arg is routine selector, second is the trap
+
+        .MACRO  PackCall
+        MOVE.W    %1,-(SP)
+        %2
+        .ENDM
+
+;
+;PROCEDURE SFPutFile(where: Point; prompt: Str255; origName: Str255;
+;                    dlgHook: ProcPtr; VAR reply: SFReply);
+;
+
+                .PROC SFPutFile
+                .DEF    goPack
+
+                MOVEQ       #1,D2       ;stuff the opcode
+
+goPack          MOVE.L      (SP)+,A0    ;get user's rts
+                MOVE.W      D2,-(SP)    ;the routine selector
+                MOVE.L      A0,-(SP)    ;push the rts back on
+                .WORD       $ADEA       ;_Pack3 w/autoPop
+                ;never gets here
+
+;PROCEDURE SFPPutFile(where: Point; prompt: Str255; origName: Str255;
+;                     dlgHook: ProcPtr; VAR reply: SFReply; dlgID: INTEGER;
+;                     filterProc: ProcPtr);
+;
+
+                .PROC   SFPPutFile
+                .REF    goPack
+
+                MOVEQ       #3,D2
+                JMP         goPack
+;
+;PROCEDURE SFGetFile(where: Point; prompt: Str255; fileFilter: ProcPtr;
+;                    numTypes: INTEGER; typeList: SFListPtr; dlgHook: ProcPtr;
+;                    VAR reply: SFReply);
+;
+                .PROC   SFGetFile
+                .REF    goPack
+
+                MOVEQ       #2,D2
+                JMP         goPack
+;
+;PROCEDURE SFPGetFile(where: Point; prompt: Str255; fileFilter: ProcPtr;
+;                     numTypes: INTEGER; typeList: SFListPtr; dlgHook: ProcPtr;
+;                     VAR reply: SFReply; dlgID: INTEGER; filterProc: ProcPtr);
+;
+
+                .PROC   SFPGetFile
+                .REF    goPack
+
+                MOVEQ       #4,D2
+                JMP         goPack
+
+
+;
+;PROCEDURE DILoad;
+;
+
+                .PROC DILoad
+                .DEF    goDI
+
+                MOVEQ       #2,D2       ;stuff the opcode
+
+goDI            MOVE.L      (SP)+,A0    ;get user's rts
+                MOVE.W      D2,-(SP)    ;the routine selector
+                MOVE.L      A0,-(SP)    ;push the rts back on
+                .WORD       $ADE9       ;_Pack2 w/autoPop
+                ;never gets here
+
+
+;
+;PROCEDURE DIUnLoad;
+;
+                .PROC   DIUnLoad
+                .REF    goDI
+
+                MOVEQ       #4,D2
+                JMP         goDI
+
+;
+;FUNCTION DIBadMount(where: Point; evtMessage: LongInt): OsErr;
+;
+                .PROC   DIBadMount
+                .REF    goDI
+
+                MOVEQ       #0,D2
+                JMP         goDI
+
+
+;
+;FUNCTION DIFormat(drvNum: INTEGER): OsErr;
+;
+                .PROC   DIFormat
+                .REF    goDI
+
+                MOVEQ       #6,D2
+                JMP         goDI
+
+
+;
+;FUNCTION DIVerify(drvNum: INTEGER): OsErr;
+;
+                .PROC   DIVerify
+                .REF    goDI
+
+                MOVE.W      #8,D2
+                JMP         goDI
+
+
+;
+;FUNCTION DIZero(drvNum: INTEGER; volName: str255): OsErr;
+;
+                .PROC   DIZero
+                .REF    goDI
+
+                MOVE.W      #10,D2
+                JMP         goDI
+
+;
+;implementation of interface to International Utilities
+;
+;
+;FUNCTION IUGetIntl(theID: INTEGER): Handle;
+;
+
+                .PROC IUGetIntl
+                .DEF  goINTL
+
+                MOVEQ       #6,D2       ;stuff the opcode
+
+goINTL          MOVE.L      (SP)+,A0    ;get user's rts
+                MOVE.W      D2,-(SP)    ;the routine selector
+                MOVE.L      A0,-(SP)    ;push the rts back on
+                .WORD       $ADED       ;_Pack6 w/autoPop
+                ;never gets here
+
+;
+;PROCEDURE IUSetIntl(refNum: INTEGER; theID: INTEGER; intlParam: Handle);
+;
+
+                .PROC   IUSetIntl
+                .REF    goINTL
+
+                MOVEQ       #8,D2
+                JMP         goINTL
+
+
+;
+;PROCEDURE IUDateStr(dateTime: LongInt; longFlag: INTEGER; VAR result: Str255);
+;
+
+                .PROC   IUDateStr
+                .REF    goINTL
+
+                MOVEQ       #0,D2
+                JMP         goINTL
+
+
+;
+;PROCEDURE IUDatePStr(dateTime: LongInt; longFlag: INTEGER; VAR result: Str255;
+;                     intlParam: Handle);
+;
+
+                .PROC   IUDatePStr
+                .REF    goINTL
+
+                MOVEQ       #14,D2
+                JMP         goINTL
+
+
+;
+;PROCEDURE IUTimeStr(dateTime: LongInt; wantSeconds: BOOLEAN; VAR result: Str255);
+;
+
+                .PROC   IUTimeStr
+                .REF    goINTL
+
+                MOVEQ       #2,D2
+                JMP         goINTL
+
+
+;
+;PROCEDURE IUTimePStr(dateTime: LongInt; wantSeconds: BOOLEAN; VAR result: Str255;
+;                     intlParam: Handle);
+;
+
+                .PROC   IUTimePStr
+                .REF    goINTL
+
+                MOVEQ       #16,D2
+                JMP         goINTL
+
+
+;
+;FUNCTION IUMetric: BOOLEAN;
+;
+
+                .PROC   IUMetric
+                .REF    goINTL
+
+                MOVEQ       #4,D2
+                JMP         goINTL
+
+
+;
+;FUNCTION IUMagString(aPtr,bPtr: Ptr; aLen,bLen: INTEGER): INTEGER;
+;
+
+                .PROC   IUMagStr
+                .REF    goMag
+
+                MOVE.W  #10,D2          ;the routine selector
+                JMP     goMag
+
+;
+;FUNCTION IUMagIDStr(aPtr,bPtr: Ptr; aLen,bLen: INTEGER):INTEGER;
+;
+
+                .PROC   IUMagIDStr
+                .DEF    goMag
+
+                MOVE.W      #12,D2      ;the routine selector
+goMag           MOVE.L      (SP)+,A0    ;get user's rts
+                MOVE.W      D2,-(SP)    ;the routine selector
+                MOVE.L      A0,-(SP)    ;push the rts back on
+                .WORD       $ADED       ;_Pack6 w/autoPop
+                ;never gets here
+
+;
+;FUNCTION IUCompString(aStr,bStr: Str255): INTEGER;
+;
+                .PROC   IUCompString
+                .REF    goPMag
+
+                MOVE.W  #10,D2          ;the routine selector
+                JMP     goPMag
+
+;
+;FUNCTION IUEqualString(aStr,bStr: Str255): INTEGER;
+;
+                .PROC   IUEqualString
+                .DEF    goPMag
+
+                MOVE.W  #12,D2          ;the routine selector
+
+goPMag          ;first readjust the stack so that it follows Jerome's
+                ;string passing convention and not Pascals
+                ;Jerome expectes
+
+                MOVE.L      4(SP),A1    ;ptr to bStr
+                MOVE.L      8(SP),A0    ;ptr to aStr
+                CLR.W       D0
+                CLR.W       D1
+                MOVE.B      (A0)+,D0    ;aLen
+                MOVE.B      (A1)+,D1    ;bLen
+                MOVE.L      A0,8(SP)    ;first arg is ptr to aStr
+                MOVE.L      A1,4(SP)    ;second arg is ptr to bStr
+                MOVE.L      (SP)+,A0    ;the return addr
+                MOVE.W      D0,-(SP)    ;third arg is aLen
+                MOVE.W      D1,-(SP)    ;fourth arg is bLen
+                MOVE.W      D2,-(SP)    ;the routine selector
+                MOVE.L      A0,-(SP)    ;push the rts back on
+                .WORD       $ADED       ;_Pack6 w/autoPop
+                ;never gets here
+
+
+;
+; PROCEDURE StringToNum(theString: Str255; VAR theNum: LongInt);
+;
+;   convert a string into a number using Jerome's routine
+;
+                .PROC StringToNum
+                .REF    Exit8
+
+               MOVE.L       8(SP),A0
+               PackCall     #1,_Pack7      ;LDec2Bin
+               MOVE.L       4(SP),A0
+               MOVE.L       D0,(A0)
+               JMP          Exit8
+
+
+;
+; PROCEDURE NumToString(theNum: LongInt; VAR theString: Str255);
+;
+;   convert a number to a string using anonymous routine
+;
+                .PROC NumToString
+                .DEF    Exit8
+
+               MOVE.L    4(SP),A0
+               MOVE.L    8(SP),D0
+               PackCall     #0,_Pack7       ;LBin2Dec
+
+Exit8          MOVE.L    (SP)+,A0
+               ADDQ      #8,SP
+               JMP       (A0)
+
+
+
+              .END
+

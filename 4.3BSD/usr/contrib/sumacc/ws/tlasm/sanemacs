@@ -1,0 +1,946 @@
+A       7O^4PH r@^;-----------------------------------------------------------
+;
+;  These macros give assembly language access to the Mac
+;  floating-point arithmetic routines.  The arithmetic has
+;  just one entry point.  It is typically accessed through
+;  the tooltrap _FP68K, although a custom version of the
+;  package may be linked as an object file, in which case
+;  the entry point is the label %FP68K.
+;
+;  All calls to the arithmetic take the form:
+;       PEA     <source address>
+;       PEA     <destination address>
+;       MOVE.W  <opcode>,-(SP)
+;       _FP68K
+;
+;  All operands are passed by address.  The <opcode> word
+;  specifies the instruction analogously to a 68000 machine
+;  instruction.  Depending on the instruction, there may be
+;  from one to three operand addresses passed.
+;
+;  This definition file specifies details of the <opcode>
+;  word and the floating point state word, and defines
+;  some handy macros.
+;
+;  Modification history:
+;       29AUG82: WRITTEN BY JEROME COONEN
+;       13OCT82: FB___ CONSTRANTS ADDED (JTC)
+;       28DEC82: LOGB, SCALB ADDED, INF MODES OUT (JTC).
+;       29APR83: ABS, NEG, CPYSGN, CLASS ADDED (JTC).
+;       03MAY83: NEXT, SETXCP ADDED (JTC).
+;       28MAY83: ELEMENTARY FUNCTIONS ADDED (JTC).
+;       04JUL83: SHORT BRANCHES, TRIG AND RAND ADDED (JTC).
+;       01NOV83: PRECISION CONTROL MADE A MODE (JTC).
+;
+;-----------------------------------------------------------
+
+
+;-----------------------------------------------------------
+; This constant determines whether the floating point unit
+; is accessed via the system dispatcher after an A-line
+; trap, or through a direct subroutine call to a  custom
+; version of the package linked directly to the application.
+;-----------------------------------------------------------
+ATRAP           .EQU    1       ;0 for JSR and 1 for A-line
+BTRAP           .EQU    1       ;0 for JSR and 1 for A-line
+
+        .MACRO  JSRFP
+        .IF     ATRAP
+        _FP68K
+        .ELSE
+        .REF    FP68K
+        JSR     FP68K
+        .ENDC
+        .ENDM
+
+        .MACRO  JSRELEMS
+        .IF     BTRAP
+        _ELEMS68K
+        .ELSE
+        .REF    ELEMS68K
+        JSR     ELEMS68K
+        .ENDC
+        .ENDM
+
+
+;-----------------------------------------------------------
+; OPERATION MASKS: bits $001F of the operation word
+; determine the operation.  There are two rough classes of
+; operations:  even numbered opcodes are the usual
+; arithmetic operations and odd numbered opcodes are non-
+; arithmetic or utility operations.
+;-----------------------------------------------------------
+FOADD           .EQU    $0000
+FOSUB           .EQU    $0002
+FOMUL           .EQU    $0004
+FODIV           .EQU    $0006
+FOCMP           .EQU    $0008
+FOCPX           .EQU    $000A
+FOREM           .EQU    $000C
+FOZ2X           .EQU    $000E
+FOX2Z           .EQU    $0010
+FOSQRT          .EQU    $0012
+FORTI           .EQU    $0014
+FOTTI           .EQU    $0016
+FOSCALB         .EQU    $0018
+FOLOGB          .EQU    $001A
+FOCLASS         .EQU    $001C
+; UNDEFINED     .EQU    $001E
+
+FOSETENV        .EQU    $0001
+FOGETENV        .EQU    $0003
+FOSETTV         .EQU    $0005
+FOGETTV         .EQU    $0007
+FOD2B           .EQU    $0009
+FOB2D           .EQU    $000B
+FONEG           .EQU    $000D
+FOABS           .EQU    $000F
+FOCPYSGNX       .EQU    $0011
+FONEXT          .EQU    $0013
+FOSETXCP        .EQU    $0015
+FOPROCENTRY     .EQU    $0017
+FOPROCEXIT      .EQU    $0019
+FOTESTXCP       .EQU    $001B
+; UNDEFINED     .EQU    $001D
+; UNDEFINED     .EQU    $001F
+
+
+;-----------------------------------------------------------
+; OPERAND FORMAT MASKS: bits $3800 determine the format of
+; any non-extended operand.
+;-----------------------------------------------------------
+FFEXT           .EQU    $0000   ; extended -- 80-bit float
+FFDBL           .EQU    $0800   ; double   -- 64-bit float
+FFSGL           .EQU    $1000   ; single   -- 32-bit float
+FFINT           .EQU    $2000   ; integer  -- 16-bit integer
+FFLNG           .EQU    $2800   ; long int -- 32-bit integer
+FFCOMP          .EQU    $3000   ; accounting -- 64-bit int
+
+
+;-----------------------------------------------------------
+; Bit indexes for error and halt bits and rounding modes in
+; the state word.  The word is broken down as:
+;
+;       $8000 -- unused
+;
+;       $6000 -- rounding modes
+;                $0000 -- to nearest
+;                $2000 -- toward +infinity
+;                $4000 -- toward -infinity
+;                $6000 -- toward zero
+;
+;       $1F00 -- error flags
+;                $1000 -- inexact
+;                $0800 -- division by zero
+;                $0400 -- overflow
+;                $0200 -- underflow
+;                $0100 -- invalid operation
+;
+;       $0080 -- result of last rounding
+;                $0000 -- rounded down in magnitude
+;                $0080 -- rounded up in magnitude
+;
+;       $0060 -- precision control
+;                $0000 -- extended
+;                $0020 -- double
+;                $0040 -- single
+;                $0060 -- ILLEGAL
+;
+;       $001F -- halt enables, corresponding to error flags
+;
+; The bit indexes are based on the byte halves of the state
+; word.
+;-----------------------------------------------------------
+FBINVALID       .EQU    0       ; invalid operation
+FBUFLOW         .EQU    1       ; underflow
+FBOFLOW         .EQU    2       ; overflow
+FBDIVZER        .EQU    3       ; division by zero
+FBINEXACT       .EQU    4       ; inexact
+FBRNDLO         .EQU    5       ; low bit of rounding mode
+FBRNDHI         .EQU    6       ; high bit of rounding mode
+FBLSTRND        .EQU    7       ; last round result bit
+FBDBL           .EQU    5       ; double precision control
+FBSGL           .EQU    6       ; single precision control
+
+
+;-----------------------------------------------------------
+; FLOATING CONDITIONAL BRANCHES: floating point comparisons
+; set the CPU condition code register (the CCR) as follows:
+;       relation        X N Z V C
+;       -------------------------
+;         equal         0 0 1 0 0
+;       less than       1 1 0 0 1
+;       greater than    0 0 0 0 0
+;        unordered      0 0 0 1 0
+; The macros below define a set of so-called floating
+; branches to spare the programmer repeated refernces to the
+; the table above.
+;-----------------------------------------------------------
+        .MACRO  FBEQ
+        BEQ     %1
+        .ENDM
+
+        .MACRO  FBLT
+        BCS     %1
+        .ENDM
+
+        .MACRO  FBLE
+        BLS     %1
+        .ENDM
+
+        .MACRO  FBGT
+        BGT     %1
+        .ENDM
+
+        .MACRO  FBGE
+        BGE     %1
+        .ENDM
+
+        .MACRO  FBULT
+        BLT     %1
+        .ENDM
+
+        .MACRO  FBULE
+        BLE     %1
+        .ENDM
+
+        .MACRO  FBUGT
+        BHI     %1
+        .ENDM
+
+        .MACRO  FBUGE
+        BCC     %1
+        .ENDM
+
+        .MACRO  FBU
+        BVS     %1
+        .ENDM
+
+        .MACRO  FBO
+        BVC     %1
+        .ENDM
+
+        .MACRO  FBNE
+        BNE     %1
+        .ENDM
+
+        .MACRO  FBUE
+        BEQ     %1
+        BVS     %1
+        .ENDM
+
+        .MACRO  FBLG
+        BNE     %1
+        BVC     %1
+        .ENDM
+
+; Short branch versions.
+
+        .MACRO  FBEQS
+        BEQ.S   %1
+        .ENDM
+
+        .MACRO  FBLTS
+        BCS.S     %1
+        .ENDM
+
+        .MACRO  FBLES
+        BLS.S     %1
+        .ENDM
+
+        .MACRO  FBGTS
+        BGT.S     %1
+        .ENDM
+
+        .MACRO  FBGES
+        BGE.S     %1
+        .ENDM
+
+        .MACRO  FBULTS
+        BLT.S     %1
+        .ENDM
+
+        .MACRO  FBULES
+        BLE.S     %1
+        .ENDM
+
+        .MACRO  FBUGTS
+        BHI.S     %1
+        .ENDM
+
+        .MACRO  FBUGES
+        BCC.S     %1
+        .ENDM
+
+        .MACRO  FBUS
+        BVS.S     %1
+        .ENDM
+
+        .MACRO  FBOS
+        BVC.S     %1
+        .ENDM
+
+        .MACRO  FBNES
+        BNE.S     %1
+        .ENDM
+
+        .MACRO  FBUES
+        BEQ.S     %1
+        BVS.S     %1
+        .ENDM
+
+        .MACRO  FBLGS
+        BNE.S     %1
+        BVC.S     %1
+        .ENDM
+
+
+;-----------------------------------------------------------
+; OPERATION MACROS:
+;       THESE MACROS REQUIRE THAT THE OPERANDS' ADDRESSES
+;       FIRST BE PUSHED ON THE STACK.  THE MACROS CANNOT
+;       THEMSELVES PUSH THE ADDRESSES SINCE THE ADDRESSES
+;       MAY BE SP-RELATIVE, IN WHICH CASE THEY REQUIRE
+;       PROGRAMMER CARE.
+; OPERATION MACROS: operand addresses should already be on
+; the stack, with the destination address on top.  The
+; suffix X, D, S, or C determines the format of the source
+; operand -- extended, double, single, or computational
+; respectively; the destination operand is always extended.
+;-----------------------------------------------------------
+
+
+;-----------------------------------------------------------
+; Addition.
+;-----------------------------------------------------------
+        .MACRO  FADDX
+        MOVE.W  #FFEXT+FOADD,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FADDD
+        MOVE.W  #FFDBL+FOADD,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FADDS
+        MOVE.W  #FFSGL+FOADD,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FADDC
+        MOVE.W  #FFCOMP+FOADD,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Subtraction.
+;-----------------------------------------------------------
+        .MACRO  FSUBX
+        MOVE.W  #FFEXT+FOSUB,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FSUBD
+        MOVE.W  #FFDBL+FOSUB,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FSUBS
+        MOVE.W  #FFSGL+FOSUB,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FSUBC
+        MOVE.W  #FFCOMP+FOSUB,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Multiplication.
+;-----------------------------------------------------------
+        .MACRO  FMULX
+        MOVE.W  #FFEXT+FOMUL,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FMULD
+        MOVE.W  #FFDBL+FOMUL,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FMULS
+        MOVE.W  #FFSGL+FOMUL,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FMULC
+        MOVE.W  #FFCOMP+FOMUL,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Division.
+;-----------------------------------------------------------
+        .MACRO  FDIVX
+        MOVE.W  #FFEXT+FODIV,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FDIVD
+        MOVE.W  #FFDBL+FODIV,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FDIVS
+        MOVE.W  #FFSGL+FODIV,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FDIVC
+        MOVE.W  #FFCOMP+FODIV,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Compare, signaling no exceptions.
+;-----------------------------------------------------------
+        .MACRO  FCMPX
+        MOVE.W  #FFEXT+FOCMP,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FCMPD
+        MOVE.W  #FFDBL+FOCMP,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FCMPS
+        MOVE.W  #FFSGL+FOCMP,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FCMPC
+        MOVE.W  #FFCOMP+FOCMP,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Compare, signaling invalid operation if the two operands
+; are unordered.
+;-----------------------------------------------------------
+        .MACRO  FCPXX
+        MOVE.W  #FFEXT+FOCPX,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FCPXD
+        MOVE.W  #FFDBL+FOCPX,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FCPXS
+        MOVE.W  #FFSGL+FOCPX,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FCPXC
+        MOVE.W  #FFCOMP+FOCPX,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Remainder.  The remainder is placed in the destination,
+; and the low bits of the integer quotient are placed in
+; the low word of register D0.
+;-----------------------------------------------------------
+        .MACRO  FREMX
+        MOVE.W  #FFEXT+FOREM,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FREMD
+        MOVE.W  #FFDBL+FOREM,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FREMS
+        MOVE.W  #FFSGL+FOREM,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FREMC
+        MOVE.W  #FFCOMP+FOREM,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Compare the source operand to the extended format and
+; place in the destination.
+;-----------------------------------------------------------
+        .MACRO  FX2X
+        MOVE.W  #FFEXT+FOZ2X,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FD2X
+        MOVE.W  #FFDBL+FOZ2X,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FS2X
+        MOVE.W  #FFSGL+FOZ2X,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FI2X                    ; 16-bit integer
+        MOVE.W  #FFINT+FOZ2X,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FL2X                    ; 32-bit integer
+        MOVE.W  #FFLNG+FOZ2X,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FC2X
+        MOVE.W  #FFCOMP+FOZ2X,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Convert the extended source operand to the specified
+; format and place in the destination.
+;-----------------------------------------------------------
+        .MACRO  FX2D
+        MOVE.W  #FFDBL+FOX2Z,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FX2S
+        MOVE.W  #FFSGL+FOX2Z,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FX2I                    ; 16-bit integer
+        MOVE.W  #FFINT+FOX2Z,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FX2L                    ; 32-bit integer
+        MOVE.W  #FFLNG+FOX2Z,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FX2C
+        MOVE.W  #FFCOMP+FOX2Z,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Miscellaneous operations applying only to extended
+; operands.  The input operand is overwritten with the
+; computed result.
+;-----------------------------------------------------------
+
+; Square root.
+        .MACRO  FSQRTX
+        MOVE.W  #FOSQRT,-(SP)
+        JSRFP
+        .ENDM
+
+; Round to integer, according to the current rounding mode.
+        .MACRO  FRINTX
+        MOVE.W  #FORTI,-(SP)
+        JSRFP
+        .ENDM
+
+; Round to integer, forcing rounding toward zero.
+        .MACRO  FTINTX
+        MOVE.W  #FOTTI,-(SP)
+        JSRFP
+        .ENDM
+
+; Set the destination to the product:
+;  (destination) * 2^(source)
+; where the source operand is a 16-bit integer.
+        .MACRO  FSCALBX
+        MOVE.W  #FFINT+FOSCALB,-(SP)
+        JSRFP
+        .ENDM
+
+; Replace the destination with its exponent, converted to
+; the extended format.
+        .MACRO  FLOGBX
+        MOVE.W  #FOLOGB,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Non-arithmetic sign operations on extended operands.
+;-----------------------------------------------------------
+
+; Negate.
+        .MACRO  FNEGX
+        MOVE.W  #FONEG,-(SP)
+        JSRFP
+        .ENDM
+
+; Absolute value.
+        .MACRO  FABSX
+        MOVE.W  #FOABS,-(SP)
+        JSRFP
+        .ENDM
+
+; Copy the sign of the destination operand onto the sign of
+; the source operand.  Note that the source operand is
+; modified.
+        .MACRO  FCPYSGNX
+        MOVE.W  #FOCPYSGN,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; The nextafter operation replaces the source operand with
+; its nearest representable neighbor in the direction of the
+; destination operand.  Note that both operands are of the
+; the same format, as specified by the usual suffix.
+;-----------------------------------------------------------
+        .MACRO  FNEXTS
+        MOVE.W  #FFSGL+FONEXT,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FNEXTD
+        MOVE.W  #FFDBL+FONEXT,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FNEXTX
+        MOVE.W  #FFEXT+FONEXT,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; The classify operation places an integer in the
+; destination.  The sign of the integer is the sign of the
+; source.  The magnitude is determined by the value of the
+; source, as indicated by the equates.
+;-----------------------------------------------------------
+FCSNAN          .EQU    1       ; signaling NAN
+FCQNAN          .EQU    2       ; quiet NAN
+FCINF           .EQU    3       ; infinity
+FCZERO          .EQU    4       ; zero
+FCNORM          .EQU    5       ; normal number
+FCDENORM        .EQU    6       ; denormal number
+
+        .MACRO  FCLASSS
+        MOVE.W  #FFSGL+FOCLASS,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FCLASSD
+        MOVE.W  #FFDBL+FOCLASS,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FCLASSX
+        MOVE.W  #FFEXT+FOCLASS,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FCLASSC
+        MOVE.W  #FFCOMP+FOCLASS,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; These four operations give access to the floating point
+; state (or environment) word and the halt vector address.
+; The sole input operand is a pointer to the word or address
+; to be placed into the arithmetic state area or read from
+; it.
+;-----------------------------------------------------------
+        .MACRO  FGETENV
+        MOVE.W  #FOGETENV,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FSETENV
+        MOVE.W  #FOSETENV,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FGETTV
+        MOVE.W  #FOGETTV,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FSETTV
+        MOVE.W  #FOSETTV,-(SP)
+        JSRFP
+        .ENDM
+
+;-----------------------------------------------------------
+; Both FPROCENTRY and FPROCEXIT have one operand -- a
+; pointer to a word.  The entry procedure saves the current
+; floating point state in that word and resets the state
+; to 0, that is all modes to default, flags and halts to
+; OFF.  The exit procedure performs the sequence:
+;       1. Save current error flags in a temporary.
+;       2. Restore the state saved at the address given by
+;               the parameter.
+;       3. Signal the exceptions flagged in the temporary,
+;               halting if so specified by the newly
+;               restored state word.
+; These routines serve to handle the state word dynamically
+; across subroutine calls.
+;-----------------------------------------------------------
+        .MACRO  FPROCENTRY
+        MOVE.W  #FOPROCENTRY,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FPROCEXIT
+        MOVE.W  #FOPROCEXIT,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; FSETXCP is a null arithmetic operation which stimulates
+; the indicated exception.  It may be used by library
+; routines intended to behave like elementary operations.
+; The operand is a pointer to an integer taking any value
+; between FBINVALID and FBINEXACT.
+; FTESTXCP tests the flag indicated by the integer pointed
+; to by the input address.  The integer is replaced by a
+; Pascal boolean (word $0000=false, $0100=true)
+;-----------------------------------------------------------
+        .MACRO  FSETXCP
+        MOVE.W  #FOSETXCP,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FTESTXCP
+        MOVE.W  #FOTESTXCP,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; WARNING: PASCAL ENUMERATED TYPES, LIKE THOSE OF THE
+; DECIMAL RECORD, ARE STORED IN THE HIGH-ORDER BYTE OF THE
+; ALLOCATED WORD, IF POSSIBLE.  THUS THE SIGN HAS THE
+; INTEGER VALUE 0 FOR PLUS AND 256 (RATHER THAN 1)
+; FOR MINUS.
+; BINARY-DECIMAL CONVERSION:  The next routines convert
+; between a canonical decimal format and the binary format
+; specified.  The decimal format is defined in Pascal as
+;
+;   CONST
+;       SIGDIGLEN = 20;
+;
+;   TYPE
+;       SigDig  = string [SIGDIGLEN];
+;       Decimal = record
+;                     sgn : 0..1;
+;                     exp : integer;
+;                     sig : SigDig
+;                 end;
+;
+; Note that Lisa Pascal stores the sgn in the high-order
+; byte of the allotted word, so the two legal word values
+; of sgn are 0 and 256.
+;-----------------------------------------------------------
+
+
+;-----------------------------------------------------------
+; Decimal to binary conversion is governed by a format
+; record defined in Pascal as:
+;
+;   TYPE
+;       DecForm = record
+;                     style  : (FloatDecimal, FixedDecimal);
+;                     digits : integer
+;                 end;
+;
+; Note again that the style field is stored in the high-
+; order byte of the allotted word.
+;
+; These are the only operations with three operands.  The
+; pointer to the format record is deepest in the stack,
+; then the source pointer, and finally the destination
+; pointer.
+;-----------------------------------------------------------
+        .MACRO  FDEC2X
+        MOVE.W  #FFEXT+FOD2B,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FDEC2D
+        MOVE.W  #FFDBL+FOD2B,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FDEC2S
+        MOVE.W  #FFSGL+FOD2B,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FDEC2C
+        MOVE.W  #FFCOMP+FOD2B,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Binary to decimal conversion.
+;-----------------------------------------------------------
+        .MACRO  FX2DEC
+        MOVE.W  #FFEXT+FOB2D,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FD2DEC
+        MOVE.W  #FFDBL+FOB2D,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FS2DEC
+        MOVE.W  #FFSGL+FOB2D,-(SP)
+        JSRFP
+        .ENDM
+
+        .MACRO  FC2DEC
+        MOVE.W  #FFCOMP+FOB2D,-(SP)
+        JSRFP
+        .ENDM
+
+
+;-----------------------------------------------------------
+; Equates and macros for elementary functions.
+;-----------------------------------------------------------
+FOLNX           .EQU    $0000
+FOLOG2X         .EQU    $0002
+FOLN1X          .EQU    $0004
+FOLOG21X        .EQU    $0006
+
+FOEXPX          .EQU    $0008
+FOEXP2X         .EQU    $000A
+FOEXP1X         .EQU    $000C
+FOEXP21X        .EQU    $000E
+
+FOXPWRI         .EQU    $8010
+FOXPWRY         .EQU    $8012
+FOCOMPOUNDX     .EQU    $C014
+FOANNUITYX      .EQU    $C016
+
+FOSINX          .EQU    $0018
+FOCOSX          .EQU    $001A
+FOTANX          .EQU    $001C
+FOATANX         .EQU    $001E
+FORANDOMX       .EQU    $0020
+
+        .MACRO  FLNX
+        MOVE.W  #FOLNX,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FLOG2X
+        MOVE.W  #FOLOG2X,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FLN1X
+        MOVE.W  #FOLN1X,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FLOG21X
+        MOVE.W  #FOLOG21X,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FEXPX
+        MOVE.W  #FOEXPX,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FEXP2X
+        MOVE.W  #FOEXP2X,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FEXP1X
+        MOVE.W  #FOEXP1X,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FEXP21X
+        MOVE.W  #FOEXP21X,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FXPWRI
+        MOVE.W  #FOXPWRI,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FXPWRY
+        MOVE.W  #FOXPWRY,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FCOMPOUNDX
+        MOVE.W  #FOCOMPOUNDX,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FANNUITYX
+        MOVE.W  #FOANNUITYX,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FSINX
+        MOVE.W  #FOSINX,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FCOSX
+        MOVE.W  #FOCOSX,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FTANX
+        MOVE.W  #FOTANX,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FATANX
+        MOVE.W  #FOATANX,-(SP)
+        JSRELEMS
+        .ENDM
+
+        .MACRO  FRANDOMX
+        MOVE.W  #FORANDOMX,-(SP)
+        JSRELEMS
+        .ENDM
+;-----------------------------------------------------------
+;-----------------------------------------------------------
+;-----------------------------------------------------------
+;-----------------------------------------------------------
+

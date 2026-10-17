@@ -1,0 +1,103 @@
+MLDOMAIN "CS.NET"
+MLNAME SH
+MLOCMACHINE ""
+
+ALIAS table=aliases, trusted
+
+; ARPA
+MTBL    "ARPA", file="ARPA", show="ARPA Domain (NS)", flags=ns, flags=domain, 
+	flags=partial
+MDMN	"ARPA", show="ARPA Domain", table="ARPA"
+
+; EDU
+MTBL    "EDU", file="EDU", show="EDU Domain (NS)", flags=ns, flags=domain
+MDMN	"EDU", show="EDU Domain", table="EDU"
+
+; COM
+MTBL    "COM", file="COM", show="COM Domain (NS)", flags=ns, flags=domain
+MDMN	"COM", show="COM Domain", table="COM"
+
+; ORG
+MTBL    "ORG", file="ORG", show="ORG Domain (NS)", flags=ns, flags=domain
+MDMN	"ORG", show="ORG Domain", table="ORG"
+
+; GOV
+MTBL    "GOV", file="GOV", show="GOV Domain (NS)", flags=ns, flags=domain
+MDMN	"GOV", show="GOV Domain", table="GOV"
+
+; MIL
+MTBL    "MIL", file="MIL", show="MIL Domain (NS)", flags=ns, flags=domain
+MDMN	"MIL", show="MIL Domain", table="MIL"
+
+; UK
+MTBL    "UK", file="UK", show="UK Domain (NS)", flags=ns, flags=domain
+MDMN	"UK", show="UK Domain", table="UK"
+
+; IL
+MTBL    "IL", fILe="IL", show="IL Domain (NS)", flags=ns, flags=domain
+MDMN	"IL", show="IL Domain", table="IL"
+
+; NET
+MTBL    "NET", file="NET", show="NET Domain (NS)", flags=ns, flags=domain
+MDMN	"NET", show="NET Domain", table="NET"
+
+; US
+MTBL    "US", file="US", show="US Domain (NS)", flags=ns, flags=domain
+MDMN	"US", show="US Domain", table="US"
+
+; AU
+MTBL    "AU", file="AU", show="AU Domain (NS)", flags=ns, flags=domain
+MDMN	"AU", show="AU Domain", table="AU"
+
+; CS.NET
+MTBL	"CS.NET", file="CS.NET", show="CS.NET Domain", flags=ns, flags=domain,
+	flags=partial
+MDMN	"CS.NET", show="CS.NET Domain", table="CS.NET"
+
+; Top-Level
+MTBL    "Top-Level", file="top.base", show="Top Level Domain"
+MDMN    "Top-Level", show="Top Level Domain", table="Top-Level", 
+                     name="", dmn=""
+;BBOARDS
+MTBL    "BBOARDS", file="bboards", show="BBoard Psuedo-hosts"
+MDMN    "BBOARDS", show="BBoards Psuedo-domain", table="BBOARDS"
+
+; LIST
+MTBL    "LIST", file="list", show="LIST Psuedo-hosts"
+MDMN    "LIST", show="LIST Psuedo-domain", table="LIST"
+
+; CSNET
+MTBL    "CSNET", file="csnet", show="CSNET Domain"
+MDMN    "CSNET", show="CSNET Domain", table="CSNET"
+
+; Channel entries
+MCHN    local, show="Local Delivery", que=local, tbl=local,
+        pgm=local, ap=822, mod=send, mod=imm
+
+; SMTP 
+MTBL    "SMTP", file="smtp", show="SMTP Hosts", flags=ns, flags=channel
+MTBL    "SMTPKNOWN", file="smtpknown", show="SMTP Hosts", flags=ns, flags=root
+MTBL	"NS", file="ns", show="Entire NS database", flags=ns, flags=channel
+MCHN	smtp, que=smtp, tbl=smtp, pgm=smtp, mod=reg, ap=822,
+	known=smtpknown, mod=send
+
+MCHN    list, show="List Channel", que=list, tbl=list,
+	pgm=list, mod=reg, mod=send
+
+MCHN    bboards, show="BBoards Delivery", que=bboards, tbl=bboards,
+	pgm=bboards, mod=reg, ap=822
+
+; DELAY (table is irrelevant but required)
+MCHN	delay, show="Delayed Delivery", que=delay, tbl=smtp,
+	mod=reg, ap=822
+
+;logging levels
+MMSGLOG		level=FST
+MCHANLOG	level=FST
+PHLOG		level=FST
+
+; hours until warning/failure messages
+MWARNTIME       95
+MFAILTIME       143
+
+MSUPPORT "Postmaster@SH.CS.NET"

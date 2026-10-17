@@ -1,0 +1,258 @@
+5
+^;{$X-}
+PROGRAM Boxes;
+
+   USES {$U-}
+      {$U obj/Memtypes   } Memtypes,
+      {$U obj/QuickDraw  } QuickDraw,
+      {$U obj/OSIntf     } OSIntf,
+      {$U obj/ToolIntf   } ToolIntf,
+      {$U obj/Sane       } Sane,
+      {$U obj/Elems      } Elems,
+      {$U obj/Graf3D     } Graf3D;
+
+   CONST
+      boxCount = 15;
+
+   TYPE
+      Box3D = RECORD
+                 pt1: Point3D;
+                 pt2: Point3D;
+                 dist: extended;
+              END;
+
+   VAR
+      myPort: GrafPtr;
+      myPort3D: Port3DPtr;
+      boxArray: ARRAY [0..boxCount] OF Box3D;
+      nBoxes: INTEGER;
+      i: INTEGER;
+      etop,ebottom,eleft,eright,temp: extended;
+
+   PROCEDURE Distance(pt1,pt2: Point3D; VAR result: extended);
+
+      VAR
+         dx,dy,dz: extended;
+
+      BEGIN
+         dx := pt2.X; { dx:=pt2.X - pt1.X; }
+         SubX(pt1.X,dx);
+
+         dy := pt2.Y; { dy:=pt2.Y - pt1.Y; }
+         SubX(pt1.Y,dy);
+
+         dz := pt2.Z; { dz:=pt2.Z - pt1.Z; }
+         SubX(pt1.Z,dz);
+
+         MulX(dx,dx); { result:=SQRT(dx*dx + dy*dy + dz*dz); }
+         MulX(dy,dy);
+         MulX(dz,dz);
+         AddX(dx,dy);
+         AddX(dy,dz);
+         SqrtX(dz);
+         result := dz
+      END;
+
+   PROCEDURE DrawBrick(pt1,pt2: Point3D);
+   { draws a 3D brick with shaded faces. }
+   { only shades correctly in one direction }
+
+      VAR
+         tempRgn: RgnHandle;
+
+      BEGIN
+         tempRgn := NewRgn;
+         OpenRgn;
+         MoveTo3D(pt1.X,pt1.Y,pt1.Z); { front face, y=y1 }
+         LineTo3D(pt1.X,pt1.Y,pt2.Z);
+         LineTo3D(pt2.X,pt1.Y,pt2.Z);
+         LineTo3D(pt2.X,pt1.Y,pt1.Z);
+         LineTo3D(pt1.X,pt1.Y,pt1.Z);
+         CloseRgn(tempRgn);
+         FillRgn(tempRgn,white);
+
+         OpenRgn;
+         MoveTo3D(pt1.X,pt1.Y,pt2.Z); { top face, z=z2 }
+         LineTo3D(pt1.X,pt2.Y,pt2.Z);
+         LineTo3D(pt2.X,pt2.Y,pt2.Z);
+         LineTo3D(pt2.X,pt1.Y,pt2.Z);
+         LineTo3D(pt1.X,pt1.Y,pt2.Z);
+         CloseRgn(tempRgn);
+         FillRgn(tempRgn,gray);
+
+         OpenRgn;
+         MoveTo3D(pt2.X,pt1.Y,pt1.Z); { right face, x=x2 }
+         LineTo3D(pt2.X,pt1.Y,pt2.Z);
+         LineTo3D(pt2.X,pt2.Y,pt2.Z);
+         LineTo3D(pt2.X,pt2.Y,pt1.Z);
+         LineTo3D(pt2.X,pt1.Y,pt1.Z);
+         CloseRgn(tempRgn);
+         FillRgn(tempRgn,black);
+
+         PenPat(white);
+         MoveTo3D(pt2.X,pt2.Y,pt2.Z); { outline right }
+         LineTo3D(pt2.X,pt2.Y,pt1.Z);
+         LineTo3D(pt2.X,pt1.Y,pt1.Z);
+         PenNormal;
+
+         DisposeRgn(tempRgn);
+      END;
+
+   PROCEDURE MakeBox;
+
+      VAR
+         myBox: Box3D;
+         i,j,h,v: INTEGER;
+         p1,p2: Point3D;
+         myRect: Rect;
+         testRect: Rect;
+         temp: extended;
+
+      BEGIN
+         I2X(Random,p1.X); {p1.x:=Random mod 70 -15;}
+         I2X(140,temp);
+         RemX(temp,p1.X,i);
+         I2X(15,temp);
+         SubX(temp,p1.X);
+
+         I2X(Random,p1.Y); {p1.y:=Random mod 70 -10;}
+         I2X(140,temp);
+         RemX(temp,p1.Y,i);
+         I2X(10,temp);
+         SubX(temp,p1.Y);
+
+         I2X(0,p1.Z); {p1.z:=0.0;}
+
+         I2X(Random,p2.X); {p2.x:=p1.x + 10 + ABS(Random) MOD 30; }
+         I2X(60,temp);
+         RemX(temp,p2.X,i);
+         AbsX(p2.X);
+         I2X(10,temp);
+         AddX(temp,p2.X);
+         AddX(p1.X,p2.X);
+
+         I2X(Random,p2.Y); {p2.y:=p1.y + 10 + ABS(Random) MOD 45; }
+         I2X(90,temp);
+         RemX(temp,p2.Y,i);
+         AbsX(p2.Y);
+         I2X(10,temp);
+         AddX(temp,p2.Y);
+         AddX(p1.Y,p2.Y);
+
+         I2X(Random,p2.Z); {p2.z:=p1.z + 10 + ABS(Random) MOD 35; }
+         I2X(70,temp);
+         RemX(temp,p2.Z,i);
+         AbsX(p2.Z);
+         I2X(10,temp);
+         AddX(temp,p2.Z);
+         AddX(p1.Z,p2.Z);
+
+         { reject box if it intersects one already in list }
+         WITH myRect DO
+            BEGIN {
+                 SetRect(myRect,ROUND(p1.x),ROUND(p1.y),ROUND(p2.x),ROUND(p2.y));
+                   }
+            X2I(p1.X,left);
+            X2I(p1.Y,top);
+            X2I(p2.X,right);
+            X2I(p2.Y,bottom)
+            END;
+         FOR i := 0 TO nBoxes-1 DO
+            BEGIN
+            WITH boxArray[i],testRect DO
+               BEGIN { SetRect(myRect,ROUND(pt1.x),ROUND(pt1.y) }
+               X2I(pt1.X,left); { ,ROUND(pt2.x),ROUND(pt2.y)); }
+               X2I(pt1.Y,top);
+               X2I(pt2.X,right);
+               X2I(pt2.Y,bottom)
+               END;
+            IF SectRect(myRect,testRect,testRect) THEN EXIT(MakeBox)
+            END;
+
+         myBox.pt1 := p1;
+         myBox.pt2 := p2;
+
+         { calc midpoint of box and its distance from the eye }
+
+         AddX(p2.X,p1.X); { p1.x:=(p1.x + p2.x)/2.0; }
+         I2X(2,temp);
+         DivX(temp,p1.X);
+
+         AddX(p2.Y,p1.Y); { p1.y:=(p1.y + p2.y)/2.0; }
+         I2X(2,temp);
+         DivX(temp,p1.Y);
+
+         AddX(p2.Z,p1.Z); { p1.z:=(p1.z + p2.z)/2.0; }
+         I2X(2,temp);
+         DivX(temp,p1.Z);
+
+         Transform(p1,p2);
+         Distance(p2,myPort3D^.eye,myBox.dist); { distance to eye }
+
+         i := 0;
+
+         boxArray[nBoxes].dist := myBox.dist; { sentinel }
+
+         WHILE CmpX(myBox.dist,GT,boxArray[i].dist) { myBox.dist >
+                                                     boxArray[i].dist }
+               DO
+            i := i+1; { insert in order of dist }
+         FOR j := nBoxes DOWNTO i+1 DO boxArray[j] := boxArray[j-1];
+         boxArray[i] := myBox;
+         nBoxes := nBoxes+1;
+      END;
+
+   BEGIN { main program }
+
+      InitGraf(@thePort);
+
+      HideCursor;
+      NEW(myPort); OpenPort(myPort);
+      NEW(myPort3D); Open3DPort(myPort3D);
+
+      ViewPort(myPort^.portRect); { put the image in this rect }
+      I2X(-100,eleft);
+      I2X(75,etop);
+      I2X(100,eright);
+      I2X(-75,ebottom);
+      LookAt(eleft,etop,eright,ebottom); { aim the camera into 3D space }
+      I2X(30,temp);
+      ViewAngle(temp); { choose lens focal length }
+      Identity;
+      I2X(20,temp);
+      Roll(temp);
+      I2X(70,temp);
+      Pitch(temp); { roll and pitch the plane }
+
+      REPEAT
+
+         nBoxes := 0;
+         REPEAT
+            MakeBox
+         UNTIL nBoxes=boxCount;
+
+         PenPat(white);
+         BackPat(black);
+         EraseRect(myPort^.portRect);
+
+         FOR i := -10 TO 10 DO
+            BEGIN
+            I2X(i*10,eleft);
+            I2X(-100,etop);
+            I2X(0,temp);
+            MoveTo3D(eleft,etop,temp);
+            I2X(100,ebottom);
+            LineTo3D(eleft,ebottom,temp);
+            END;
+
+         FOR i := -10 TO 10 DO
+            BEGIN
+            I2X(i*10,eleft);
+            MoveTo3D(etop,eleft,temp);
+            LineTo3D(ebottom,eleft,temp);
+            END;
+
+         FOR i := nBoxes-1 DOWNTO 0 DO DrawBrick(boxArray[i].pt1,boxArray[i].pt2);
+
+      UNTIL button
+   END.

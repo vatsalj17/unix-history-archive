@@ -1,0 +1,15 @@
+static	long	randx = 1;
+
+srand(x)
+unsigned x;
+{
+	randx = x;
+}
+
+/*
+ * rand: generates a pseudo-random number in the range 0 to 2**31-1 
+ */
+rand()
+{
+	return(((randx = randx*1103515245 + 12345)>>16) & 0x7FFFFFFF);
+}

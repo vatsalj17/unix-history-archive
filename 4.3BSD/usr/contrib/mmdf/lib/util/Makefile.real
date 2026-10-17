@@ -1,0 +1,194 @@
+#
+#	Makefile for MMDF general utility routines
+#
+MODULES =	tty_io ll_err ll_log tai_packages cmdsrch \
+		cnvtdate creatdir getfpath getwho \
+		arg2str str2arg cstr2arg gpwlnam ggrlnam \
+		strindex equwrd equal endstr initstr lexrel \
+		prefix strequ lexequ chrcnv getutmp getgroup \
+		compress multcpy multcat strdup gcread gettys \
+		zero blt expand sstr2arg nexec \
+		tai_file tai_noop \
+		gwdir gwdir.4.2 \
+		getllog.v7 getllog.bsd getllog.fak
+
+STANDARD =	tty_io.o ll_err.o ll_log.o tai_packages.o cmdsrch.o \
+		cnvtdate.o creatdir.o getfpath.o getwho.o \
+		arg2str.o str2arg.o cstr2arg.o gpwlnam.o ggrlnam.o \
+		strindex.o equwrd.o equal.o endstr.o initstr.o lexrel.o \
+		prefix.o strequ.o lexequ.o chrcnv.o getutmp.o getgroup.o \
+		compress.o multcpy.o multcat.o strdup.o gcread.o gettys.o \
+		zero.o blt.o expand.o sstr2arg.o nexec.o
+
+STDSRCS =	tty_io.c ll_err.c ll_log.c tai_packages.c cmdsrch.c \
+		cnvtdate.c creatdir.c getfpath.c getwho.c \
+		arg2str.c str2arg.c cstr2arg.c gpwlnam.c ggrlnam.c \
+		strindex.c equwrd.c equal.c endstr.c initstr.c lexrel.c \
+		prefix.c strequ.c lexequ.c chrcnv.c getutmp.c getgroup.c \
+		compress.c multcpy.c multcat.c strdup.c gcread.c gettys.c \
+		zero.c blt.c expand.c sstr2arg.c nexec.c
+
+v7objs =	getllog.v7.o gwdir.o
+v7srcs =	getllog.v7.c gwdir.c
+
+5.2objs =	getllog.fak.o gwdir.o
+5.2srcs =	getllog.fak.c gwdir.c
+
+4.1objs = 	getllog.bsd.o gwdir.o
+4.1srcs = 	getllog.bsd.c gwdir.c
+
+4.2objs =	getllog.bsd.o gwdir.4.2.o
+4.2srcs =	getllog.bsd.c gwdir.4.2.c
+
+real-default: ../util-made
+../util-made:	${STANDARD} ${LOCALUTIL} ../${SYSTEM}-made
+	ar r ../libmmdf.a ${STANDARD} ${LOCALUTIL}
+	-touch ../util-made
+
+../v7-made:	${v7objs}
+	ar r ../libmmdf.a ${v7objs}
+	-touch ../v7-made
+
+../5.2-made:	${5.2objs}
+	ar r ../libmmdf.a ${5.2objs}
+	-touch ../5.2-made
+
+../4.1-made:	${4.1objs}
+	ar r ../libmmdf.a ${4.1objs}
+	-touch ../4.1-made
+
+../4.2-made:	${4.2objs}
+	ar r ../libmmdf.a ${4.2objs}
+	-touch ../4.2-made
+
+lint:	std-lint ${SYSTEM}-lint
+	cat llib-lutila* llib-lutilb* > llib-lutil.ln
+
+std-lint:
+	$(LINT) -Cutila $(LFLAGS) $(STDSRCS)
+
+v7-lint:
+	$(LINT) -Cutilb $(LFLAGS) $(v7srcs)
+
+5.2-lint:
+	$(LINT) -Cutilb $(LFLAGS) $(5.2srcs)
+
+4.1-lint:
+	$(LINT) -Cutilb $(LFLAGS) $(4.1srcs)
+
+4.2-lint:
+	$(LINT) -Cutilb $(LFLAGS) $(4.2srcs)
+
+clean:
+	-rm -f *.o x.c makedep eddep make.out errs core llib-lutil*
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+tty_io.o: tty_io.c
+tty_io.o: ../../h/util.h
+tty_io.o: /usr/include/pwd.h
+tty_io.o: /usr/include/sys/stat.h
+tty_io.o: /usr/include/utmp.h
+ll_err.o: ll_err.c
+ll_err.o: /usr/include/stdio.h
+ll_err.o: ../../h/ll_log.h
+ll_log.o: ll_log.c
+ll_log.o: ../../h/util.h
+ll_log.o: ../../h/conf.h
+ll_log.o: /usr/include/sys/stat.h
+ll_log.o: ../../h/ll_log.h
+tai_packages.o: tai_packages.c
+tai_packages.o: ../../h/util.h
+tai_packages.o: ../../h/ll_log.h
+tai_packages.o: ../../h/cmd.h
+cmdsrch.o: cmdsrch.c
+cmdsrch.o: ../../h/util.h
+cmdsrch.o: ../../h/cmd.h
+cnvtdate.o: cnvtdate.c
+cnvtdate.o: ../../h/util.h
+cnvtdate.o: ../../h/conf.h
+cnvtdate.o: ../../h/cnvtdate.h
+cnvtdate.o: /usr/include/sys/timeb.h
+creatdir.o: creatdir.c
+creatdir.o: ../../h/util.h
+creatdir.o: /usr/include/sys/stat.h
+getfpath.o: getfpath.c
+getfpath.o: ../../h/util.h
+getwho.o: getwho.c
+arg2str.o: arg2str.c
+arg2str.o: ../../h/util.h
+str2arg.o: str2arg.c
+str2arg.o: ../../h/util.h
+cstr2arg.o: cstr2arg.c
+cstr2arg.o: ../../h/util.h
+gpwlnam.o: gpwlnam.c
+gpwlnam.o: ../../h/util.h
+gpwlnam.o: /usr/include/pwd.h
+ggrlnam.o: ggrlnam.c
+ggrlnam.o: ../../h/util.h
+ggrlnam.o: /usr/include/grp.h
+strindex.o: strindex.c
+equwrd.o: equwrd.c
+equwrd.o: ../../h/util.h
+equal.o: equal.c
+endstr.o: endstr.c
+initstr.o: initstr.c
+lexrel.o: lexrel.c
+prefix.o: prefix.c
+prefix.o: ../../h/util.h
+strequ.o: strequ.c
+strequ.o: ../../h/util.h
+lexequ.o: lexequ.c
+lexequ.o: ../../h/util.h
+chrcnv.o: chrcnv.c
+getutmp.o: getutmp.c
+getutmp.o: ../../h/util.h
+getutmp.o: /usr/include/utmp.h
+getgroup.o: getgroup.c
+compress.o: compress.c
+compress.o: ../../h/util.h
+multcpy.o: multcpy.c
+multcat.o: multcat.c
+multcat.o: ../../h/util.h
+strdup.o: strdup.c
+strdup.o: ../../h/util.h
+gcread.o: gcread.c
+gcread.o: ../../h/util.h
+gettys.o: gettys.c
+gettys.o: /usr/include/stdio.h
+gettys.o: ../../h/gettys.h
+zero.o: zero.c
+blt.o: blt.c
+expand.o: expand.c
+expand.o: ../../h/util.h
+sstr2arg.o: sstr2arg.c
+sstr2arg.o: ../../h/util.h
+nexec.o: nexec.c
+nexec.o: ../../h/util.h
+nexec.o: ../../h/nexec.h
+nexec.o: /usr/include/signal.h
+nexec.o: /usr/include/fcntl.h
+tai_file.o: tai_file.c
+tai_file.o: ../../h/util.h
+tai_file.o: /usr/include/sys/stat.h
+tai_noop.o: tai_noop.c
+tai_noop.o: ../../h/util.h
+gwdir.o: gwdir.c
+gwdir.o: ../../h/conf.h
+gwdir.o: ../../h/util.h
+gwdir.o: /usr/include/sys/stat.h
+gwdir.4.2.o: gwdir.4.2.c
+gwdir.4.2.o: ../../h/util.h
+getllog.v7.o: getllog.v7.c
+getllog.v7.o: ../../h/util.h
+getllog.v7.o: /usr/include/utmp.h
+getllog.bsd.o: getllog.bsd.c
+getllog.bsd.o: ../../h/util.h
+getllog.bsd.o: /usr/include/pwd.h
+getllog.bsd.o: /usr/include/utmp.h
+getllog.bsd.o: /usr/include/lastlog.h
+getllog.fak.o: getllog.fak.c
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

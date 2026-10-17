@@ -1,0 +1,156 @@
+
+MEMORY                           C Interface                             MEMORY
+
+NAME
+      memory -- memory manager
+
+SYNOPSIS
+      #include "c/include/types.h"
+      #include "c/include/memory.h"
+
+      #define noErr            0   /* no error */
+      #define memFullErr   (-108)  /* not enough room in Zone */
+      #define nilHandleErr (-109)  /* nil master pointer */
+      #define memWZErr     (-111)  /* attempt to operate on a free block */
+      #define memPurErr    (-112)  /* attempt to purge a locked block */
+
+      #define maxSize   0x800000   /* max data block size is 512K bytes */
+
+      typedef struct {
+         Ptr      bkLim;
+         Ptr      purgePtr;
+         Ptr      hFstFree;
+         int      zCBFree;
+         int      (*gZProc)();
+         short    moreMast;
+         short    flags;
+         short    cntRel;
+         short    maxRel;
+         short    cntNRel;
+         short    maxNRel;
+         short    cntEmpty;
+         short    cntHandles;
+         int      minCBFree;
+         int      (*purgeProc)();
+         Ptr      sparePtr;
+         Ptr      allocPtr;
+         short    heapData;
+         } Zone,*THz;
+
+                        
+      /* Initialization */
+
+      InitApplZone()
+      SetApplBase(startPtr)
+         Ptr startPtr;
+      InitZone(growProc,MoreMasters,limitPtr,startPtr)
+         int (*growProc)();
+         short MoreMasters;
+         Ptr limitPtr,startPtr;
+      SetApplLimit(zoneLimit)
+         Ptr zoneLimit;
+      MaxApplZone();
+      MoreMasters();
+
+      /* Heap Zone Access */
+
+      THz GetZone()
+      SetZone(hz)
+         THz hz;
+      THz ApplicZone()
+      THz SystemZone()
+
+      /* Relocatable Blocks */
+      
+      Handle NewHandle(byteCount)
+         int byteCount; 
+      DisposHandle(h)
+         Handle h;
+      int GetHandleSize(h)
+         Handle h;
+      SetHandleSize(h,newSize)
+         Handle h;
+         int newSize;
+      THz HandleZone(h)
+         Handle h;
+      Handle RecoverHandle(p)
+         Ptr p;
+      ReallocHandle(h,byteCount)
+         Handle h;
+         int byteCount;
+      
+      /* Non-Relocatable Blocks */
+      
+      Ptr NewPtr(byteCount)
+         int byteCount;
+      DisposPtr(p)
+         Ptr p; 
+      int GetPtrSize(p)
+         Ptr p;
+      SetPtrSize(p,newSize)
+         Ptr p;
+         int newSize;
+      THz PtrZone(p)
+         Ptr p;
+      
+      /* Freeing Space */
+      
+      int FreeMem()
+      int MaxMem(grow)
+         int *grow;
+      int CompactMem(cbNeeded)
+         int cbNeeded;
+      ResrvMem(cbNeeded)
+         int cbNeeded;
+      PurgeMem(cbNeeded)
+         int cbNeeded;
+      EmptyHandle(h)
+         Handle h;
+      
+      /* Lock and Purge */
+       
+      HLock(h)
+         Handle h;
+      HUnLock(h)
+         Handle h;
+      HPurge(h)
+         Handle h;
+      HNoPurge(h)
+         Handle h;
+      
+      /* Grow Zone */
+      
+      SetGrowZone(growZone)
+         int (*growZone)(); 
+      Boolean GZCritical()
+      Handle CZSaveHnd()
+      
+      /* Heap Utilities */
+      
+      BlockMove(srcPtr,destPtr,byteCount)
+         Ptr srcPtr, destPtr;
+         int byteCount;
+      Ptr TopMem()
+      short MemError()
+
+
+DESCRIPTION
+      The memory manager provides dynamic allocation of both relocatable and
+      non-relocatable memory space within system and application heaps.
+
+      For more detailed information see the "Memory Manager" section of the
+      "Inside Macintosh" documentation.
+
+AUTHOR
+      C Interface by Rick Meyers and Dan Smith
+      Copyright 1984 Apple Computer Inc.
+
+BUGS
+      Untested:
+         InitApplZone    requires funky code since it deletes code in app heap
+         MoreMasters     not documented
+         SetApplBase     same problem as InitApplZone
+         SetApplLimit    on my 512K Mac applLimit is already at max?
+         MaxApplZone     not documented
+      
+       Added getApplLimit() function to determine SetApplLimit problem.

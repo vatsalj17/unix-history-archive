@@ -1,0 +1,355 @@
+3. "6F^5D!$^Y,,{$X-}
+{$R-}
+PROGRAM Scroll;
+{------------------------------------------------------------------------------------
+     This is a simple program to demonstrate how to use scroll bars.
+     You can scroll text or graphics or both.
+     You can scroll horizontally or vertically.
+     By Cary Clark, Macintosh Technical Support         Apple Computer Inc., 1984
+ ------------------------------------------------------------------------------------}
+
+USES
+      {$U-}
+      {$U Obj/MemTypes  } MemTypes,
+      {$U Obj/QuickDraw } QuickDraw,
+      {$U Obj/OSIntf    } OSIntf,
+      {$U Obj/ToolIntf  } ToolIntf;
+
+CONST
+      Horizontal = 1;    {These are the choices in the menu 'Scroll Bar'}
+      Vertical = 2;
+      TextItem = 4;
+      Graphics = 5;
+
+      FileMenu = 1;      {Resource numbers and position in the Menu bar}
+      ScrollMenu = 2;
+
+      NumOfRects = 30;   {quantity of rectangles and strings to scroll around}
+      NumOfStrings = 55;
+
+TYPE
+      MyRectData = Array [1..NumOfRects] of Rect; {Graphics structure;     }
+      MyRectPtr = ^MyRectData;                    {  an array of rectangles}
+      MyRectHdl = ^MyRectPtr;
+
+VAR
+      hTE:  TEHandle;                {TextEdit handle}
+      hScroll,                       {Horizontal scroll bar}
+      vScroll:  ControlHandle;       {Vertical scroll bar}
+      MyWindow: WindowPtr;           {Document window}
+      hdlScrollMenu: MenuHandle;     {Handle to the menu items}
+      MyRect: MyRectHdl;             {Handle to array of rectangles}
+      originalPart: INTEGER;         {1st part of the scroll bar hit}
+      PageCorner,                    {Location of the upper left hand page corner}
+      EventPoint: Point;             {Where an event took place}
+      MyViewRect: Rect;              {display rectangle containing scrollable data}
+      doneFlag,                      {Set TRUE when the user selects 'Quit'}
+      showText,                      {Set TRUE when text can be scrolled}
+      showGraphics : BOOLEAN;        {Set TRUE when graphics can be scrolled}
+
+{------------------------------------------------------------------------------------}
+PROCEDURE SetUpData;
+
+{This procedure initializes two data structures; a TextEdit record and an array of
+ rectangles.  Initially, only text and the vertical scrollbar will be displayed.}
+
+Var MyString : StringHandle; {Temporary container for a string in the resource fork}
+    counter : INTEGER;       {Counters must be local to the procedure}
+    destRect : rect;         {Rectangle containing the larger-than-the-screen page}
+BEGIN
+{The TextEdit record is initialized by reading in a string from the application's
+resource fork and then inserting it a number of times into the TextEdit record.}
+  MyString := GetString (256); {Get some text to play around with}
+
+{Set the view as the portrect less the vertical scrollbar area.  The TextEdit
+destRect will be set to the current window width plus an arbitrary value.}
+  MyViewRect := MyWindow^.portrect;
+  destRect := MyViewRect;
+  destRect.right := destRect.right + 300;
+  PageCorner.h := -destRect.left;
+  PageCorner.v := -destRect.top;
+  MyViewRect.right := MyViewRect.right - 16; {16 = width of scrollbar}
+  hTE := TENew (destRect, MyViewRect);
+
+  HLock (Pointer (MyString));  {Can't move if we are going to point to the text}
+  For counter := 1 to NumOfStrings DO {Create a TextEdit record full of the string}
+    TEInsert (Pointer(Ord4(MyString^)+1),{move past the string's length byte}
+              Length(MyString^^), hTE);
+  HUnLock (Pointer (MyString));{Free to move again}
+
+{Now, create a structure of rectangles.}
+  MyRect := Pointer( NewHandle (Sizeof (MyRectData))); {240 bytes }
+  For counter := 1 to NumOfRects DO
+    SetRect (MyRect^^[counter], counter*23, counter*20, counter*23+50, counter*20+50);
+
+  showtext := TRUE;
+  showgraphics := FALSE;
+  ShowWindow (MyWindow); {Display the window and the text it contains}
+
+  VScroll := GetNewControl (256, MyWindow); {vertical scrollbar}
+  HScroll := GetNewControl (257, MyWindow); {horizontal scrollbar, not shown}
+
+  CheckItem (hdlScrollMenu, vertical, TRUE);
+  CheckItem (hdlScrollMenu, textItem, TRUE)
+END; {of SetUpData}
+
+
+{------------------------------------------------------------------------------------}
+PROCEDURE GrafUpdate(whatpart : rect);
+{This is roughly the equivalent of what TEUpdate does with text.  The upper left hand
+corner of the page is moved up and to the left to simulate a view further down and
+to the right.  To more accurately resemble a Toolbox routine like TEUpdate, this
+procedure should also preserve the current clip region and origin.}
+var count : INTEGER;
+    dummyRect : rect;
+BEGIN
+  SetOrigin (PageCorner.h, PageCorner.v); {negative moves the origin left, up}
+  OffsetRect (whatpart, PageCorner.h, PageCorner.v); {also move the update rectangle}
+  ClipRect (whatpart); {only redraw the portion that the user requests}
+  FOR count := 1 to NumOfRects DO
+{Redraw the object if it intersects the update rectangle}
+    IF SectRect (MyRect^^[count], whatpart, dummyRect)
+    THEN FrameRect(MyRect^^[count]);
+  SetOrigin (0,0); {reset the origin back to the upper left hand corner}
+  ClipRect (MyWindow^.PortRect); {reset the clip region to the entire window}
+END; {of GrafUpdate}
+
+{------------------------------------------------------------------------------------}
+PROCEDURE ScrollBits;
+{This routine scrolls horizontally and vertically both graphics and text.  If you are
+ only scrolling text, only the TEScroll is required.  If you are only scrolling
+ graphics, then only the ScrollRect and GrafUpDate is needed.}
+
+VAR vChange, hChange, vScrollValue, hScrollValue: INTEGER;
+    AnUpdateRgn: RgnHandle;
+
+BEGIN
+  vScrollValue := GetCtlValue (vScroll); {these values will be used a lot so they are}
+  hScrollValue := GetCtlValue (hScroll); {read into local (temporary) variables}
+
+{find the vertical and horizontal change}
+  vChange := PageCorner.v - vScrollValue; {the vertical difference}
+  hChange := PageCorner.h - hScrollValue; {the horizontal difference}
+
+{record the values for next time}
+  PageCorner.v := vScrollValue;
+  PageCorner.h := hScrollValue;
+
+{for pure text, only a TEScroll is required}
+  IF showText AND NOT showGraphics THEN TEScroll (hChange, vChange, hTE);
+
+{For graphics, a ScrollRect will move the visible bits on the screen.  The
+ region returned by ScrollRect indicates what part of the window needs to
+ be updated.}
+  IF showGraphics THEN
+  BEGIN
+    AnUpdateRgn := NewRgn;
+    ScrollRect (MyViewRect, hChange, vChange, AnUpdateRgn);
+
+{This draws the new text.  The clipping is necessary because normally
+ TextEdit redraws the entire character height and perhaps only a partial
+ character scroll was done.  Since TextEdit erases before it draws, the text,
+ if any, is drawn before the graphics.}
+    IF showText THEN WITH hTE^^.destrect DO
+    BEGIN
+      left := -hScrollValue;
+      top := -vScrollValue;
+      ClipRect (AnUpdateRgn^^.rgnbbox);
+      TEUpdate (AnUpdateRgn^^.rgnbbox, hTE);
+      ClipRect (MyWindow^.portrect)
+    END; {of showText}
+
+    GrafUpdate (AnUpdateRgn^^.rgnbbox);  {This fills in the newly exposed region}
+    DisposeRgn (AnUpdateRgn)
+  END {of showGraphics}
+END; {of ScrollBits}
+
+{------------------------------------------------------------------------------------}
+PROCEDURE TrackScroll(theControl: ControlHandle; partCode: INTEGER);
+{This routine adjusts the value of the scrollbar.  A reasonable change would
+ be to adjust the minimum scroll amount to equal the text's lineheight.}
+Var amount, StartValue : INTEGER;
+    up : BOOLEAN;
+BEGIN
+  up := partcode IN [inUpButton, inPageUp]; {TRUE if scrolling page up}
+  StartValue := GetCtlValue (theControl);  {the initial control value}
+
+  IF {the scrollbar value is decreased, and it is not already at the minimum}
+     ((up AND (StartValue > GetCtlMin (theControl)))
+  OR {the scrollbar value is increased, and it is not already at the maximum}
+     ((NOT up) AND (StartValue < GetCtlMax (theControl))))
+  AND {to prevent tracking as the page up or down area disappears}
+     (originalPart = partCode)
+  THEN
+  BEGIN
+    IF up THEN amount := -1 ELSE amount := 1;  {set the direction}
+    IF partCode IN [inPageUp, inPageDown] THEN
+    BEGIN
+      {change the movement to a full page}
+      WITH MyViewRect DO
+      IF theControl = VScroll
+      THEN amount := amount * (bottom - top)
+      ELSE amount := amount * (right - left)
+    END; {of partCode}
+    SetCtlValue(theControl, StartValue+amount);
+    ScrollBits
+  END
+END; {of TrackScroll}
+
+{------------------------------------------------------------------------------------}
+PROCEDURE MyControls;  {respond to a mouse down event in one of the controls}
+Var dummy: INTEGER;
+    theControl: ControlHandle;
+BEGIN
+  originalPart := FindControl (EventPoint, MyWindow, theControl); {returns control and part}
+  IF originalPart = inThumb THEN
+  BEGIN
+    {Thumb is tracked until it is released; then the bits are scrolled}
+    dummy := TrackControl (theControl, EventPoint, NIL);
+    ScrollBits
+  END {of whichpart}
+  {for the arrows and the page changes, scroll while the mouse is held down}
+  ELSE dummy := TrackControl (theControl, EventPoint, @TrackScroll)
+END; {of Mycontrols}
+
+{------------------------------------------------------------------------------------}
+PROCEDURE MainEventLoop; {respond to menu selections, the scrollbars, and update events}
+VAR myEvent: EventRecord;                {All of the information about the event}
+    menuStuff: RECORD CASE INTEGER OF
+      1 : (menuResult : LONGINT);        {Information returned by MenuSelect}
+      2 : (theMenu,                      {Which menu was selected}
+           theItem : INTEGER)            {Which item within the menu}
+    END; {of menuStuff}
+    checked : BOOLEAN;                   {Is the menu item checked}
+    MarkChar : Char;                     {The checkmark character}
+    tempWindow: WindowPtr;
+    tempRect : Rect;
+
+BEGIN
+  REPEAT
+    checked := GetNextEvent(everyEvent,myEvent); {checked here is ignored}
+    CASE myEvent.what OF
+    mouseDown:
+      BEGIN {the user pressed or is holding the mouse button down}
+        CASE FindWindow(myEvent.where,tempWindow) OF
+
+          inMenuBar: WITH menuStuff DO
+          BEGIN {the mouseDown was in the menu bar}
+            menuResult := MenuSelect (myEvent.where);
+            CASE theMenu OF
+              FileMenu: doneFlag := TRUE;    { Quit }
+              ScrollMenu:
+              BEGIN
+{The items in the menu are used to keep track of the user has chosen thus far. These
+ lines toggle the checkmark in the menu and leave the result in the variable checked.}
+                GetItemMark (hdlScrollMenu, theItem, markChar);
+                checked := markChar <> Chr(checkmark);
+                CheckItem (hdlScrollMenu, theItem, checked);
+
+{Any selection will cause some part of the screen to be redrawn.  The selection that
+the user makes causes some part of the screen to become invalid.}
+                IF (theItem = textItem) OR (theItem = graphicsItem)
+                THEN InvalRect(MyViewRect);
+
+                CASE theItem OF
+
+                  horizontal:
+                  BEGIN
+                    InvalRect (HScroll^^.contrlrect);
+                    IF checked THEN
+                    BEGIN
+                      ShowControl(HScroll);
+                      MyViewRect.bottom := HScroll^^.contrlrect.top
+                    END {checked}
+                    ELSE
+                    BEGIN {not checked}
+                      HideControl(HScroll);
+                      MyViewRect.bottom := HScroll^^.contrlrect.bottom
+                    END {not checked}
+                  END; {horizontal}
+
+                  vertical:
+                  BEGIN
+                    InvalRect (VScroll^^.contrlrect);
+                    IF checked THEN
+                    BEGIN
+                      ShowControl(VScroll);
+                      MyViewRect.right := VScroll^^.contrlrect.left
+                    END {checked}
+                    ELSE
+                    BEGIN {not checked}
+                      HideControl(VScroll);
+                      MyViewRect.right := VScroll^^.contrlrect.right
+                    END {not checked}
+                  END; {vertical}
+
+                  textItem: WITH hTE^^.destrect DO
+{since we have dereferenced the destrect, no calls in the scope of this WITH should
+ cause a memory compaction}
+                  BEGIN
+                    showText := checked;
+                    IF checked then
+                    BEGIN
+                      top := -GetCtlValue(vScroll);
+                      left := -GetCtlValue(hScroll);
+                    END {of checked}
+                  END; {of textItem}
+
+                  GraphicsItem: showGraphics := checked;
+
+                END; {of CASE}
+              If showText THEN hTE^^.viewrect := MyViewRect
+              END {of inMenuBar}
+            END; {of FindWindow CASE}
+            HiliteMenu(0)
+          END; {of mouseDown}
+
+        inContent:
+{The rectangles making up the controls are the part of the window outside the 'view'}
+          BEGIN
+            EventPoint := MyEvent.where;
+            GlobalToLocal (EventPoint);
+            IF NOT PtInRect (EventPoint, MyViewrect) THEN MyControls
+          END {in Content}
+        END {of CASE}
+      END; {of mouseDown}
+
+    updateEvent:
+{In response to InvalRects, the appropriate text or graphics is erased and redrawn.
+ The BeginUpdate causes the VisRgn to be replaced by the intersection of the VisRgn
+ and the UpdateRgn.}
+      BEGIN
+        BeginUpdate (MyWindow);
+        EraseRect (MyViewRect); {start with a clean slate}
+        IF showText THEN TEUpdate (MyWindow^.VisRgn^^.Rgnbbox, hTE);
+{Call GrafUpdate with the intersection, if any, of the VisRgn and the view}
+        IF showGraphics AND SectRect (MyWindow^.VisRgn^^.Rgnbbox, MyViewRect,
+          tempRect) THEN GrafUpdate (tempRect);
+        EndUpdate (MyWindow)
+      END {of updateEvent}
+
+    END {of event CASE}
+  UNTIL doneflag
+END;
+
+{------------------------------------------------------------------------------------}
+BEGIN
+  InitGraf (@ThePort); {initialize QuickDraw}
+  InitWindows;         {initialize Window Manager; clear desktop and menubar}
+  InitFonts;           {initialize Font Manager}
+  FlushEvents (everyEvent, 0); {throw away any stray events}
+  TEInit;              {initialize TextEdit}
+  InitMenus;           {initialize Menu Manager}
+  hdlScrollMenu := GetMenu(FileMenu); {(hdlScrollMenu is ignored)}
+  InsertMenu (hdlScrollMenu,0);
+  hdlScrollMenu := GetMenu(ScrollMenu);
+  InsertMenu (hdlScrollMenu,0);
+  DrawMenuBar;
+  DoneFlag := FALSE;   {user 'Quit' flag}
+  MyWindow := GetNewWindow (256, NIL, Pointer (-1)); {get window to work within}
+  SetPort (MyWindow);  {point to window}
+  TextFont (applFont); {select default application font}
+  SetUpData;           {initialize user data and controls}
+  InitCursor;          {change the watch into an arrow}
+  MainEventLoop        {handle events until we are through}
+END.

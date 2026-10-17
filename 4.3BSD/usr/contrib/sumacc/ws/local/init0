@@ -1,0 +1,399 @@
+W^d5P:H r^B$$		;File KEYM1.TEXT
+;_______________________________________________________________________
+;
+; Mac Keyboard Mapping Proc
+;
+; Routine:      TranKey
+; Arguments:      D1 (byte input)  --  option, alpha, shift key map bits in 2,1,0
+;                 $17A (byte input)--  bit #7 1 iff feature key set
+;                 D2 (word input)  --  keycode (0-63)
+;                 D3 (word input)  --  minus iff keyup, plus iff keydown
+;                 D0 (byte output) --  ASCII code
+;                 Trashes A0, A1, D1 and possibly D2.
+;                 Uses A1 as pointer into DeadState throughout.
+;
+; Function:     TRANKEY is the default mapping procedure for turning raw
+;               keycodes from the normal keyboard into ASCII codes.
+;
+; Modification History:
+;   16 Feb 83  LAK  New today.
+;   06 Aug 83  AJH  Added support for dead keys
+;   08 Sep 83  AJH  Added DeadKey disable
+;   21 Sep 83  AJH  Configured serial port for screen dump
+;   02 Nov 83  AJH  Removed ScreenDump; generates driver event instead
+;   07 Nov 83  AJH  New way to post screenDumps
+;   10 Nov 83  JTC  finalize mapping; add command keys feature-{0..9};
+;                   map unused keys into codes $D9-$FB
+;   14 Nov 83  JTC  fix bug in check for tilde dead key (D1 s.b. D2)
+;   16 Nov 83  JTC  grave-A was gotten by tilde-A keystroke, fix command key
+;                   to trigger key-down.
+;   18 Nov 83  AJH  removed audio feedback
+;   03 Dec 83  AJH  added installation header
+;   27 Dec 83  AJH/JTC  dropped fkeys through to application
+;   28 Dec 83  AJH  only post fkeys if shift is down and option isn't
+;_______________________________________________________________________
+
+            .INCLUDE    Tlasm/SysEqu.Text
+            .INCLUDE    Tlasm/SysMacs.Text
+
+            .PROC   KeyM1,0
+
+            BRA     InstallIt           ; branch to install code
+
+; start of resident portion
+
+TranKey
+            BRA.S   Tran1               ; skip the dead key and header stuff
+;
+; Dead key state information is stored up front here so the Enable flag
+; can be hacked from outside without much knowledge of the structure of KeyM1.
+;
+DeadEnable  .EQU    0                   ; boolean to enable dead keys
+DeadKey     .EQU    10                  ; last dead key, zero if not dead
+DeadIndex   .EQU    11                  ; dead key index, 0-4 for ' ` ^ umlaut
+DeadMemories
+            .WORD   $FFFF               ; Init DeadEnable to true.
+
+            .ASCII  'KEYC'
+            .WORD   1                   ; resource ID
+            .WORD   1                   ; version #
+
+            .WORD   $0000               ; Init DeadKey and DeadIndex to NULL
+
+MapIt
+            LEA     OffsetTable,A0      ; offsets into ASCII table
+            MOVEQ   #$07,D0             ; mask for option/alpha/shift
+            AND.W   D1,D0               ; option, alpha, shift
+            ADD.W   D0,D0               ; double for byte offset
+            MOVE.W  0(A0,D0.W),D0       ; offset according to shift/option/alpha
+            ADD.W   D2,D0               ; offset + keycode
+            MOVE.B  0(A0,D0.W),D0       ; ASCII (byte) (bits 8-31 may be trash)
+            RTS
+
+Tran1
+;
+; For historical reasons, the 58 key-caps on the Mac keyboard (59 on international
+; keyboards) have a capricious ordering.  Keys 0-52 are the valid characters;
+; 53-58 are the shift/option/feature keys.  Info about the latter keys is input in
+; D1.  D2 contains the honest keycode.  Use this info to map a keycode into an
+; ASCII character, with special handling for the so-called dead keys.
+;
+            CMP.W   #52,D2              ; is it a valid key?
+            BHI.S   Return0             ; return 0 for keys above 52
+
+            BSR.S   MapIt
+;
+; If shift-Feature-{0..9} return $00 ASCII code, but prime the so-called screen-dump
+; bytes.
+;
+            TST.B   $17A                ; feature key down?
+            BPL.S   CheckDead           ; skip if no Feature key
+            BTST    #0,D1               ; shift key down?
+            BEQ.S   CheckDead           ; shift must be down
+            BTST    #2,D1               ; option key down?
+            BNE.S   CheckDead           ; if so, don't post fKey
+
+            BCLR    #0,D1               ; pretend the shift key was up
+            BSR.S   MapIt               ; re-map it
+
+            CMPI.B   #'0',D0            ; lower than '0'?
+            BCS.S   CheckDead
+            CMPI.B  #'9',D0
+            BHI.S   CheckDead
+
+            TST.B   D3                  ; only do for key downs
+            BMI.S   CheckDead           ; plus iff key down
+
+            TST.B   ScrDmpEnb           ; screen dump (and others) enabled?
+            BEQ.S   CheckDead           ; if not, skip
+
+            SUBI.B  #'0',D0             ; de-ASCII-fy digit
+            MOVE.B  D0,ScrDmpTyp        ; post it
+            ADDI.B  #'0',D0             ; re-ASCII-fy digit
+Return0
+            MOVEQ   #0,D0               ; don't generate anything
+
+;
+; At this point D0 has the mapped key.
+; Check for dead keys now (only on key downs).
+;
+CheckDead
+            LEA     DeadMemories,A1     ; prime A1 for future tests
+
+            TST.B   DeadEnable(A1)      ; dead keys enabled?
+            BEQ.S   DoneMap             ; if not, we're done
+
+            TST.B   D3                  ; key down or up?
+            BMI.S   DoneMap             ; no dead keys for key ups
+
+            TST.B   D0                  ; is it null?
+            BEQ.S   DoneMap             ; don't map nulls
+
+            MOVE.B  DeadKey(A1),D2      ; was the previous character dead?
+            BNE     DeadState           ; if so, skip
+;
+; Since grave $60, circumflex $5E, and tilde $7E are vanilla ASCII characters,
+; force Option key to be depressed in order to have a dead key.
+;
+            BTST    #2,D1               ; was option depressed?
+            BEQ.S   DoneMap             ; if not, cannot be a dead key
+;
+; The previous character was not a dead key, so check to see if this one is.
+; Trick: if dead, the index left in D1 is the modification to x-grave to get
+; relevant diacritical if x is a lower-case vowel.
+;
+
+            MOVEQ   #4,D1              ; there are 5 different diacriticals
+Dead1Loop
+            CMP.B   DeadTable(D1),D0   ; is it dead?
+            BEQ.S   GotDead            ; if so, branch
+            DBRA    D1,Dead1Loop       ; loop till done
+
+; the new character isn't dead so just pass it back
+
+DoneMap
+            RTS
+
+; we got a dead key so remember it but don't pass anything back
+
+GotDead
+            MOVE.B  D0,DeadKey(A1)      ; remember the dead key ASCII
+            MOVE.B  D1,DeadIndex(A1)    ; remember its index, too
+            MOVEQ   #0,D0               ; don't generate an event
+            RTS                         ; return to keyboard driver
+
+
+; the following table defines the five dead keys
+
+DeadTable
+            .BYTE   $AB                 ; acute (a cute program?)
+            .BYTE   $60                 ; grave
+            .BYTE   $5E                 ; circumflex
+            .BYTE   $AC                 ; umlaut
+            .BYTE   $7E                 ; tilde
+
+; the following table specifies the 5 lower case vowels (handled generally)
+
+VowelTable
+            .BYTE   $61                 ; lower case a
+            .BYTE   $65                 ; lower case e
+            .BYTE   $69                 ; lower case i
+            .BYTE   $6F                 ; lower case o
+            .BYTE   $75                 ; lower case u
+
+; we're in the dead key state so if the new character is blank or the dead key
+; itself, just generate the dead key
+
+DeadState
+            CMP.B   D2,D0               ; dead key twice?
+            BEQ.S   @1                  ; if so, handle as blank
+            CMP.B   #$20,D0             ; is it blank?
+            BNE.S   CheckVowel          ; if not, go check for lc vowel
+
+; we're in the <diacritical> <blank> or <diacritical> twice case so
+; just generate ASCII for the diacritical
+
+@1
+            MOVE    D2,D0               ; generate ASCII for the dead key
+DeadDone
+            CLR.B   DeadKey(A1)         ; get out of deadKey mode
+            RTS                         ; return to caller
+
+; at this point, the previous key was a dead key so check the current key (in D0)
+; to see what we should generate.  First check for lower case vowels since
+; they can be handled in a general way, saving table space.
+
+CheckVowel
+            CMP.B   #$7E,D2             ; was the dead key a tilde? (JTC was D1)
+            BEQ.S   CheckException      ; if so, don't check for vowels
+
+            MOVEQ   #4,D1               ; there are 5 vowels
+VowelLoop
+            CMP.B   VowelTable(D1),D0   ; is it a vowel?
+            BEQ.S   GotVowel            ; if so, skip
+            DBRA    D1,VowelLoop        ; loop till counter runs out
+
+; it wasn't a vowel, so check the specific exception table
+
+CheckException
+            MOVEQ   #11,D1              ; exception tables have 12 entries
+            MOVEQ   #-1,D2              ; make high part all ones
+            MOVE.B  DeadKey(A1),D2      ; get last deadKey in a register
+ExpLoop
+            CMP.B   ExpTChar(D1),D0     ; does the character match?
+            BNE.S   NextExp             ; if not, go examine next one
+            CMP.B   ExpTDead(D1),D2     ; does the dead key match?
+            BEQ.S   GotExp              ; if so, we found one
+NextExp
+            DBRA    D1,ExpLoop          ; loop till done
+
+; well, no valid mappable character followed the dead key so generate an
+; event for the dead key and let the keyboard driver generate one for the
+; new character
+
+            MOVE    D0,-(SP)
+            MOVE.W  #KeyDwnEvt,A0       ; say it's a keyDown
+            MOVE.L  D2,D0
+            _PostEvent
+            MOVE    (SP)+,D0            ; recall D0
+GoDeadDone
+            BRA     DeadDone            ; let keyboard driver take over
+
+; we found an exception in the table so generate ASCII for it.  D1 has the index
+
+GotExp
+            MOVE.B  ExpTMap(D1),D0      ; get the ASCII
+            BRA.S   GoDeadDone          ; let keyboard driver do the rest
+
+; we got a vowel, so map it in a general way
+
+GotVowel
+            MOVE.B  VBaseMap(D1),D0     ; get ASCII base for the vowel
+            ADD.B   DeadIndex(A1),D0    ; add in the diacritical index
+            BRA.S   GoDeadDone          ; all done!
+
+; tables for the 8 exception cases
+
+ExpTChar
+            .BYTE   $79                 ;lower case y (with unlaut)
+            .BYTE   $41                 ;upper case A (with grave) - was acute JTC
+            .BYTE   $41                 ;upper case A (with tilde)
+            .BYTE   $4F                 ;upper case O (with tilde)
+
+            .BYTE   $45                 ;upper case E (with acute)
+            .BYTE   $41                 ;upper case A (with umlaut)
+            .BYTE   $4F                 ;upper case O (with umlaut)
+            .BYTE   $55                 ;upper case U (with umlaut)
+            .BYTE   $4E                 ;upper case N (with tilde)
+            .BYTE   $61                 ;lower case a (with tilde)
+            .BYTE   $6F                 ;lower case o (with tilde)
+            .BYTE   $6E                 ;lower case n (with tilde)
+
+ExpTDead
+            .BYTE   $AC                 ;umlaut (with y)
+            .BYTE   $60                 ;grave (with A) - was acute JTC
+            .BYTE   $7E                 ;tilde (with A)
+            .BYTE   $7E                 ;tilde (with O)
+
+            .BYTE   $AB                 ;acute (with E)
+            .BYTE   $AC                 ;umlaut (with A)
+            .BYTE   $AC                 ;umlaut (with O)
+            .BYTE   $AC                 ;umlaut (with U)
+            .BYTE   $7E                 ;upper case N (with N)
+            .BYTE   $7E                 ;tilde (with a)
+            .BYTE   $7E                 ;tilde (with o)
+            .BYTE   $7E                 ;tilde (with n)
+
+ExpTMap
+            .BYTE   $D8                 ;umlaut y
+            .BYTE   $CB                 ;grave A - was acute JTC
+            .BYTE   $CC                 ;tilde A
+            .BYTE   $CD                 ;tilde O
+
+            .BYTE   $83                 ;acute E
+            .BYTE   $80                 ;umlaut A
+            .BYTE   $85                 ;umlaut O
+            .BYTE   $86                 ;umlaut U
+            .BYTE   $84                 ;tilde N
+            .BYTE   $8B                 ;tilde a
+            .BYTE   $9B                 ;tilde o
+            .BYTE   $96                 ;tilde n
+
+; table for general case vowel mapping
+
+VBaseMap
+            .BYTE   $87                 ;lower case a
+            .BYTE   $8E                 ;lower case e
+            .BYTE   $92                 ;lower case i
+            .BYTE   $97                 ;lower case o
+            .BYTE   $9C                 ;lower case u
+
+            .BYTE   $41                 ;filler for word alignment
+
+OffsetTable     ; offset into ASCII table for 6 keyboard interpretations
+
+ .WORD  16+0        ; option=0, alpha=0, shift=0  --  normal
+ .WORD  16+53       ; option=0, alpha=0, shift=1  --  shift
+ .WORD  16+106      ; option=0, alpha=1, shift=0  --  alpha-lock
+ .WORD  16+53       ; option=0, alpha=1, shift=1  --  shift
+ .WORD  16+159      ; option=1, alpha=0, shift=0  --  option
+ .WORD  16+212      ; option=1, alpha=0, shift=1  --  option shift
+ .WORD  16+265      ; option=1, alpha=1, shift=0  --  option alpha-lock
+ .WORD  16+212      ; option=1, alpha=1, shift=1  --  option shift
+
+; U.S. keyboard layout
+
+ .BYTE  $73,$61,$64,$66,$68,$67,$7A,$78  ; a s d f h g z x
+ .BYTE  $63,$76,$00,$62,$71,$77,$65,$72  ; c v unused b q w e r
+ .BYTE  $79,$74,$31,$32,$33,$34,$36,$35  ; y t 1 2 3 4 6 5
+ .BYTE  $3D,$39,$37,$2D,$38,$30,$5D,$6F  ; = 9 7 - 8 0 ] o
+ .BYTE  $75,$5B,$69,$70,$0D,$6C,$6A,$27  ; u [ i p RETURN l j '
+ .BYTE  $6B,$3B,$5C,$2C,$2F,$6E,$6D,$2E  ; k ; \ , / n m .
+ .BYTE  $09,$20,$60,$08,$03              ; TAB SPACE ` BACKSPACE ENTER
+
+; shift
+
+ .BYTE  $41,$53,$44,$46,$48,$47,$5A,$58  ; A S D F H G Z X
+ .BYTE  $43,$56,$00,$42,$51,$57,$45,$52  ; C V UNUSED B Q W E R
+ .BYTE  $59,$54,$21,$40,$23,$24,$5E,$25  ; Y T ! @ # $ ^ %
+ .BYTE  $2B,$28,$26,$5F,$2A,$29,$7D,$4F  ; + ( & _ * ) } O
+ .BYTE  $55,$7B,$49,$50,$0D,$4C,$4A,$22  ; U { I P RETURN L J "
+ .BYTE  $4B,$3A,$7C,$3C,$3F,$4E,$4D,$3E  ; K : | < ? N M >
+ .BYTE  $09,$20,$7E,$08,$03              ; TAB SPACE ` BACKSPACE ENTER
+
+; alpha-lock
+
+ .BYTE  $41,$53,$44,$46,$48,$47,$5A,$58  ; A S D F H G Z X
+ .BYTE  $43,$56,$00,$42,$51,$57,$45,$52  ; C V UNUSED B Q W E R
+ .BYTE  $59,$54,$31,$32,$33,$34,$36,$35  ; Y T 1 2 3 4 6 5
+ .BYTE  $3D,$39,$37,$2D,$38,$30,$5D,$4F  ; = 9 7 - 8 0 ] O
+ .BYTE  $55,$5B,$49,$50,$0D,$4C,$4A,$27  ; U [ I P RETURN L J '
+ .BYTE  $4B,$3B,$5C,$2C,$2F,$4E,$4D,$2E  ; K ; \ , / N M .
+ .BYTE  $09,$20,$60,$08,$03              ; TAB SPACE ` BACKSPACE ENTER
+
+;
+; In the following three tables unused keys are mapped into the unused
+; character cells $D9 through $FC.  There was insufficient room for the tail
+; values $FC, $FD, $FE, $FF.
+;
+;option
+
+ .BYTE  $8C,$A7,$B6,$C4,$FA,$A9,$BD,$C5 ; wierd letters and symbols
+ .BYTE  $8D,$C3,$00,$BA,$CF,$B7,$AB,$A8  ;
+ .BYTE  $B4,$A0,$C1,$AA,$A3,$A2,$A4,$B0  ;
+ .BYTE  $AD,$BB,$A6,$D0,$A5,$BC,$D4,$BF  ;
+ .BYTE  $AC,$D2,$5E,$B9,$0D,$C2,$C6,$BE  ;
+ .BYTE  $FB,$C9,$C7,$B2,$D6,$7E,$B5,$B3  ;
+ .BYTE  $09,$CA,$60,$08,$03              ; TAB SPACE grave BACKSPACE ENTER
+
+; option-shift
+
+ .BYTE  $81,$EA,$EB,$EC,$EE,$ED,$F3,$F4  ; more wierd letters
+ .BYTE  $82,$D7,$00,$F5,$CE,$E3,$E4,$E5  ;
+ .BYTE  $E7,$E6,$DA,$DB,$DC,$DD,$DF,$DE  ;
+ .BYTE  $B1,$E1,$E0,$D1,$A1,$E2,$D5,$AF  ;
+ .BYTE  $E8,$D3,$E9,$B8,$0D,$F1,$EF,$AE  ;
+ .BYTE  $F0,$F2,$C8,$F8,$C0,$F6,$F7,$F9  ;
+ .BYTE  $09,$CA,$D9,$08,$03              ; TAB SPACE extra BACKSPACE ENTER
+
+; option alpha-lock
+
+ .BYTE  $81,$EA,$EB,$EC,$EE,$ED,$F3,$F4  ; still more wierd letters
+ .BYTE  $82,$D7,$00,$F5,$CE,$E3,$E4,$E5  ;
+ .BYTE  $E7,$E6,$C1,$AA,$A3,$A2,$A4,$B0  ;
+ .BYTE  $AD,$BB,$A6,$D0,$A5,$BC,$D4,$AF  ;
+ .BYTE  $E8,$D2,$E9,$B8,$0D,$F1,$EF,$AE  ;
+ .BYTE  $F0,$C9,$C7,$B2,$D6,$F6,$F7,$B3  ;
+ .BYTE  $09,$CA,$60,$08,$03              ; TAB SPACE grave BACKSPACE ENTER
+
+; Installation Code
+
+InstallIt
+            LEA     TranKey,A0
+            MOVE.L  A0,Key1Trans
+            RTS
+
+        .END
+
+
+

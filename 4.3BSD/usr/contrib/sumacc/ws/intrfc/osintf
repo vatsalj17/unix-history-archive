@@ -1,0 +1,989 @@
+
+Unit OSINTF;
+
+{    Copyright 1983 by Apple Computer, Inc.  All Rights Reserved.   }
+
+{ Created 23 Nov 83 by Rony Sebok from heapZone.text and osMisc.text.}
+{ Modification history:                                             }
+{       12 Apr 84  JTC  Cleaned up a la Hacker.                     }
+
+Interface
+
+USES {$U-}
+     {$U obj/MemTypes  }  MemTypes,
+     {$U obj/QuickDraw }  QuickDraw;
+
+CONST
+  {for Event Manager}
+
+  everyEvent  = -1;
+  NullEvent   = 0;
+  mouseDown   = 1;
+  mouseUp     = 2;
+  keyDown     = 3;
+  keyUp       = 4;
+  autoKey     = 5;
+  updateEvt   = 6;
+  diskEvt     = 7;
+  activateEvt = 8;
+  networkEvt  = 10;
+  driverEvt   = 11;
+  app1Evt     = 12;
+  app2Evt     = 13;
+  app3Evt     = 14;
+  app4Evt     = 15;
+
+  { event mask equates }
+  mDownMask     = 2;
+  mUpMask       = 4;
+  keyDownMask   = 8;
+  keyUpMask     = 16;
+  autoKeyMask   = 32;
+  updateMask    = 64;
+  diskMask      = 128;
+  activMask     = 256;
+  networkMask   = 1024;
+  driverMask    = 2048;
+  app1Mask      = 4096;
+  app2Mask      = 8192;
+  app3Mask      = 16384;
+  app4Mask      = -32768;
+
+  {to decipher event message for keyDown events}
+  charCodeMask = $000000FF;
+  keyCodeMask = $0000FF00;
+
+
+  { modifiers }
+  optionKey= 2048;   { Bit 3 of high byte }
+  alphaLock= 1024;   { Bit 2 }
+  ShiftKey=   512;   { Bit 1 }
+  CmdKey=     256;   { Bit 0 }
+  BtnState=   128;   { Bit 7 of low byte is mouse button state }
+
+  activeFlag  = 1;   { bit 0 of modifiers for activate event }
+  changeFlag  = 2;   { bit 1 of modifiers for activate event }
+
+  {error for PostEvent}
+  EvtNotEnb = 1;
+
+{for Memory Manager}
+  MemFullErr = -108;     { Not enough room in heap zone }
+  NilHandleErr = -109;   { Master Pointer was NIL in HandleZone or other   }
+  MemWZErr   = -111;     { WhichZone failed (applied to free block)        }
+  MemPurErr  = -112;     { trying to purge a locked or non-purgeable block  }
+  NoErr      =  0;       { All is well }
+
+  {file system error codes}
+  DirFulErr   =    -33;     { Directory full}
+  DskFulErr   =    -34;     { disk full}
+  NSVErr      =    -35;     { no such volume}
+  IOErr       =    -36;     { I/O error (bummers)}
+  BdNamErr    =    -37;     { there may be no bad names in the final system!}
+  FNOpnErr    =    -38;     { File not open}
+  EOFErr      =    -39;     { End of file}
+  PosErr      =    -40;     { tried to position to before start of file (r/w)}
+  MFulErr     =    -41;     { memory full(open) or file won't fit (load)}
+  TMFOErr     =    -42;     { too many files open}
+  FNFErr      =    -43;     { File not found}
+
+  WPrErr      =    -44;     { diskette is write protected}
+  FLckdErr    =    -45;     { file is locked}
+  VLckdErr    =    -46;     { volume is locked}
+  FBsyErr     =    -47;     { File is busy (delete)}
+  DupFNErr    =    -48;     { duplicate filename (rename)}
+  OpWrErr     =    -49;     { file already open with with write permission}
+  ParamErr    =    -50;     { error in user parameter list}
+  RFNumErr    =    -51;     { refnum error}
+  GFPErr      =    -52;     { get file position error}
+  VolOffLinErr =   -53;     { volume not on line error (was Ejected)}
+  PermErr     =    -54;     { permissions error (on file open)}
+  VolOnLinErr =    -55;     { drive volume already on-line at MountVol}
+  NSDrvErr    =    -56;     { no such drive (tried to mount a bad drive num)}
+  NoMacDskErr =    -57;     { not a mac diskette (sig bytes are wrong)}
+  ExtFSErr    =    -58;     { volume in question belongs to an external fs}
+  FSRnErr     =    -59;     { file system rename error:}
+                              {  during rename the old entry was deleted }
+                              {  but could not be restored . . .}
+  BadMDBErr   =    -60;     { bad master directory block}
+  WrPermErr   =    -61;     { write permissions error}
+  firstDskErr =    -84;     {first of the range of low-level disk errors}
+  lastDskErr  =    -64;     {last of the range of low-level disk errors}
+
+
+  MaxSize    = $800000;  { Max data block size is 512K bytes  }
+
+  {finder constants}
+  fHasBundle = 8192;
+  fInvisible = 16384;
+  fTrash = -3;
+  fDesktop = -2;
+  fDisk = 0;
+
+  {io constants}
+
+  {ioPosMode values}
+  fsAtMark = 0;
+  fsFromStart = 1;
+  fsFromLEOF = 2;
+  fsFromMark = 3;
+
+  {ioPermission values}
+  fsCurPerm = 0;
+  fsRdPerm = 1;
+  fsWrPerm = 2;
+  fsRdWrPerm = 3;
+
+  {refNums fro the serial ports}
+  AinRefNum = -6;       {serial port A input}
+  AoutRefNum = -7;      {serial port A output}
+  BinRefNum = -8;       {serial port B input}
+  BoutRefNum = -9;      {serial port B output}
+
+  {baud rate constants}
+  baud300 = 380;
+  baud600 = 189;
+  baud1200 = 94;
+  baud1800 = 62;
+  baud2400 = 46;
+  baud3600 = 30;
+  baud4800 = 22;
+  baud7200 = 14;
+  baud9600 = 10;
+  baud19200 = 4;
+  baud57600 = 0;
+
+  {SCC channel configuration word}
+  {driver reset information masks}
+  stop10 = 16384;
+  stop15 = -32768;
+  stop20 = -16384;
+  noParity = 8192;
+  oddParity = 4096;
+  evenParity = 12288;
+  data5 = 0;
+  data6 = 2048;
+  data7 = 1024;
+  data8 = 3072;
+
+
+  {serial driver error masks}
+  swOverrunErr = 0;
+  parityErr = 16;
+  hwOverrunErr = 32;
+  framingErr = 64;
+
+  {serial driver message constant}
+  xOffWasSent = $80;
+
+  {for application parameter}
+  {constants for message returned by the finder on launch}
+  appOpen = 0;
+  appPrint = 1;
+
+  {for sound driver}
+  SWmode = -1;
+  FTmode = 1;
+  FFmode = 0;
+
+  {for the disk driver}
+  currPos = 0;
+  absPos = 1;
+  relPos = 3;
+  rdVerify = 64;
+
+TYPE
+  {for Event Manager}
+  EventRecord = RECORD
+                  what:      INTEGER;
+                  message:   LongInt;
+                  when:      LongInt;
+                  where:     Point;
+                  modifiers: INTEGER;
+                 END;
+
+
+
+  Zone       = Record
+                  BkLim:      Ptr;
+                  PurgePtr:   Ptr;
+                  HFstFree:   Ptr;
+                  ZCBFree:    LongInt;
+                  GZProc:     ProcPtr;
+                  MoreMast:   Integer;
+                  Flags:      Integer;
+                  CntRel:     Integer;
+                  MaxRel:     Integer;
+                  CntNRel:    Integer;
+                  MaxNRel:    Integer;
+                  CntEmpty:   Integer;
+                  CntHandles: Integer;
+                  MinCBFree:  LongInt;
+                  PurgeProc:  ProcPtr;
+                  SparePtr:   Ptr;        { reserved for future }
+                  AllocPtr:   Ptr;
+                  HeapData:   Integer;
+               End;
+  THz        = ^Zone;        { pointer to the start of a heap zone }
+  Size       = LongInt;      { size of a block in bytes }
+  OsErr     = Integer;      { error code }
+
+  QElemPtr = ^QElem;                        {ptr to generic queue element}
+
+{Vertical Blanking Control Block Queue Element}
+VBLTask = RECORD
+    qLink: QElemPtr;    {link to next element}
+    qType: INTEGER;     {unique ID for validity check}
+    vblAddr: ProcPtr;   {address of service routine}
+    vblCount: INTEGER;  {count field for timeout}
+    vblPhase: INTEGER;  {phase to allow synchronization}
+  END; {VBLCntrlBlk}
+{VBLQElPtr = ^VBLTask;}
+
+evQEl = RECORD
+    qLink:      QElemPtr;
+    qType:      INTEGER;
+    evtQwhat:   INTEGER;    {this part is identical to the EventRecord as...}
+    evtQmessage:LongInt;    {defined in ToolIntf}
+    evtQwhen:   LongInt;
+    evtQwhere:  Point;
+    evtQmodifiers: INTEGER;
+  END;
+
+  {drive queue elements}
+DrvQEl = RECORD
+    qLink:      QElemPtr;
+    qType:      INTEGER;
+    dQDrive:    INTEGER;
+    dQRefNum:   INTEGER;    {ref num of the drvr which handles this drive}
+    dQFSID:     INTEGER;    {id of file system which handles this drive}
+    dQDrvSize:  INTEGER;    {size of drive in 512-byte blocks -- not for drvs 1&2}
+  END;
+DrvQElPtr = ^DrvQEl;
+
+  ParamBlkType = (IOParam,FileParam,VolumeParam,CntrlParam);
+
+
+  OsType = PACKED ARRAY[1..4] OF CHAR; {same as rsrc mgr's Restype}
+  FInfo = RECORD                    {record of finder info}
+            fdType: OsType;         {the type of the file}
+            fdCreator: OsType;      {file's creator}
+            fdFlags: INTEGER;       {flags ex. hasbundle,invisible,locked, etc.}
+            fdLocation: Point;      {file's location in folder}
+            fdFldr: INTEGER;        {folder containing file}
+          END; {FInfo}
+
+  ParamBlockRec = RECORD
+        {12 byte header used by the file and IO system}
+        qLink: QElemPtr;            {queue link in header}
+        qType: INTEGER;             {type byte for safety check}
+        ioTrap: INTEGER;            {FS: the Trap}
+        ioCmdAddr: Ptr;             {FS: address to dispatch to}
+
+        {common header to all variants}
+        ioCompletion: ProcPtr;      {completion routine addr (0 for synch calls)}
+        ioResult: OsErr;            {result code}
+        ioNamePtr: StringPtr;       {ptr to Vol:FileName string}
+        ioVRefNum: INTEGER;         {volume refnum (DrvNum for Eject and MountVol)}
+
+        {different components for the different type of parameter blocks}
+        CASE ParamBlkType OF
+        ioParam:
+          (ioRefNum: INTEGER;       {refNum for I/O operation}
+           ioVersNum: SignedByte;   {version number}
+           ioPermssn: SignedByte;   {Open: permissions (byte)}
+
+           ioMisc: Ptr;             {Rename: new name}
+                                    {GetEOF,SetEOF: logical end of file}
+                                    {Open: optional ptr to buffer}
+                                    {SetFileType: new type}
+           ioBuffer: Ptr;           {data buffer Ptr}
+           ioReqCount: LongInt;     {requested byte count}
+           ioActCount: LongInt;     {actual byte count completed}
+           ioPosMode: INTEGER;      {initial file positioning}
+           ioPosOffset: LongInt);   {file position offset}
+
+        FileParam:
+          (ioFRefNum: INTEGER;       {reference number}
+           ioFVersNum: SignedByte;   {version number}
+           filler1: SignedByte;
+           ioFDirIndex: INTEGER;    {GetFileInfo directory index}
+           ioFlAttrib: SignedByte;  {GetFileInfo: in-use bit=7, lock bit=0}
+           ioFlVersNum: SignedByte; {file version number}
+           ioFlFndrInfo: FInfo;     {user info}
+           ioFlNum: LongInt;        {GetFileInfo: file number}
+           ioFlStBlk: INTEGER;      {start file block (0 if none)}
+           ioFlLgLen: LongInt;      {logical length (EOF)}
+           ioFlPyLen: LongInt;      {physical lenght}
+           ioFlRStBlk: INTEGER;     {start block rsrc fork}
+           ioFlRLgLen: LongInt;     {file logical length rsrc fork}
+           ioFlRPyLen: LongInt;     {file physical length rsrc fork}
+           ioFlCrDat: LongInt;      {file creation date & time (32 bits in secs)}
+           ioFlMdDat: LongInt);     {last modified date and time}
+
+         VolumeParam:
+           (filler2: LongInt;
+            ioVolIndex: INTEGER;    {volume index number}
+            ioVCrDate: LongInt;     {creation date and time}
+            ioVLsBkUp: LongInt;     {last backup date and time}
+            ioVAtrb: INTEGER;       {volume attrib}
+            ioVNmFls: INTEGER;      {number of files in directory}
+            ioVDirSt: INTEGER;      {start block of file directory}
+            ioVBlLn: INTEGER;       {GetVolInfo: length of dir in blocks}
+            ioVNmAlBlks: INTEGER;   {GetVolInfo: num blks (of alloc size)}
+            ioVAlBlkSiz: LongInt;   {GetVolInfo: alloc blk byte size}
+            ioVClpSiz: LongInt;     {GetVolInfo: bytes to allocate at a time}
+            ioAlBlSt: INTEGER;      {starting disk(512-byte) block in block map}
+            ioVNxtFNum: LongInt;    {GetVolInfo: next free file number}
+            ioVFrBlk: INTEGER);     {GetVolInfo: # free alloc blks for this vol}
+
+          CntrlParam:
+            (filler3: INTEGER;      {refNum for I/O operation}
+             CSCode: INTEGER;       {word for control status code}
+             CSParam: ARRAY[0..10] OF INTEGER);  {operation-defined parameters}
+      END; {ParamBlockRec}
+  ParmBlkPtr = ^ParamBlockRec;
+
+ {20 bytes of system parameter area}
+  SysParmType = RECORD
+          Valid: LongInt;       {high byte = validation field ($A7)}
+                                {low 3 bytes = odometer}
+          PortA: INTEGER;       {port A configuration}
+          PortB: INTEGER;       {port B configuration}
+          Alarm: LongInt;       {alarm time}
+          Font: INTEGER;        {default font id}
+          KbdPrint: INTEGER;    {high byte = kbd repeat}
+                                    {high nibble = thresh in 4/60ths}
+                                    {low nibble = rates in 2/60ths}
+                                {low byte = print stuff}
+          VolClik: INTEGER;     {low 3 bits of high byte = volume control}
+                                {high nibble of low byte = double time in 4/60ths}
+                                {low nibble of low byte = caret blink time in 4/60ths}
+          Misc: INTEGER;        {EEEC EEEE PSKB FFHH}
+                                    {E = extra}
+                                    {P = paranoia level}
+                                    {S = mouse scaling}
+                                    {K = key click}
+                                    {B = boot disk}
+                                    {F = menu flash}
+                                    {H = help level}
+     END; {SysParmType}
+  SysPPtr = ^SysParmType;
+
+{volume control block data structure}
+VCB = RECORD
+    qLink:          QElemPtr;    {link to next element}
+    qType:          INTEGER;     {not used}
+    vcbFlags:       INTEGER;
+    vcbSigWord:     INTEGER;
+    vcbCrDate:      LongInt;
+    vcbLsBkUp:      LongInt;
+    vcbAtrb:        INTEGER;
+    vcbNmFls:       INTEGER;
+    vcbDirSt:       INTEGER;
+    vcbBlLn:        INTEGER;
+    vcbNmBlks:      INTEGER;
+    vcbAlBlkSiz:    LongInt;
+    vcbClpSIz:      LongInt;
+    vcbAlBlSt:      INTEGER;
+    vcbNxtFNum:     LongInt;
+    vcbFreeBks:     INTEGER;
+    vcbVN:          STRING[27];
+    vcbDrvNum:      INTEGER;
+    vcbDRefNum:     INTEGER;
+    vcbFSId:        INTEGER;
+    vcbVRefNum:     INTEGER;
+    vcbMAdr:        Ptr;
+    vcbBufAdr:      Ptr;
+    vcbMLen:        INTEGER;
+    vcbDirIndex:    INTEGER;
+    vcbDirBlk:      INTEGER;
+END;
+
+{general queue data structure}
+QHdr = RECORD
+    QFlags: INTEGER;        {misc flags}
+    QHead: QElemPtr;        {first elem}
+    QTail: QElemPtr;        {last elem}
+  END; {QHdr}
+QHdrPtr = ^QHdr;
+{there are currently 4 types of queues:                         }
+{   VType   -   queue of Vertical Blanking Control Blocks       }
+{   IOQType -   queue of I/0 queue elements                     }
+{   DrvType -   queue of drivers                                }
+{   EvType  -   queue of Event Records                          }
+{   FSQType -   queue of VCB elements                           }
+{   TimerType no longer is used.  DrvType replaces it here in enum type}
+QTypes = (dummyType,vType,ioQType,drvQType,evType,fsQType);
+
+QElem = RECORD
+        CASE QTypes OF
+        vType:
+          (vblQelem: VBLTask);          {vertical blanking}
+
+        ioQType:
+          (ioQElem: ParamBlockRec);     {I/O parameter block}
+
+        drvQType:
+          (drvQElem: DrvQEl);           {drive}
+
+        evType:
+          (evQElem: EvQEl);             {event}
+
+        fsQType:
+          (vcbQElem: VCB);              {volume control block}
+
+  END; {QElem}
+
+ {device control entry}
+ DCtlEntry = RECORD
+               DCtlDriver: Ptr;         {ptr to ROM or handle to RAM driver}
+               DCtlFlags: INTEGER;      {flags}
+               DCtlQHdr: QHdr;          {driver's i/o queue}
+               DCtlPosition: LongInt;   {byte pos used by read and write calls}
+               DCtlStorage: Handle;     {hndl to RAM drivers private storage}
+               DCtlRefNum: INTEGER;     {driver's reference number}
+               DCtlCurTicks: LongInt;   {long counter for timing system task calls}
+               DCtlWindow: Ptr;         {ptr to driver's window if any}
+               DCtlDelay: INTEGER;      {number of ticks btwn sysTask calls}
+               DCtlEMask: INTEGER;      {desk acessory event mask}
+               DCtlMenu: INTEGER;       {menu ID of menu associated with driver}
+             END; {DCtlEntry}
+ DCtlPtr = ^DCtlEntry;
+ DCtlHandle = ^DCtlPtr;
+
+  {for Serial Driver}
+SerShk = PACKED RECORD              {handshake control fields}
+                  fXOn: Byte;       {XON flow control enabled flag}
+                  fCTS: Byte;       {CTS flow control enabled flag}
+                  xon:  Char;       {XOn character}
+                  xoff: Char;       {XOff character}
+                  errs: Byte;       {errors mask bits}
+                  evts: Byte;       {event enable mask bits}
+                  fInX: Byte;       {Input flow control enabled flag}
+                  null: Byte;       {unused}
+                END;
+
+  {parameter block structure for file and IO routines}
+SerStaRec = PACKED RECORD
+                     cumErrs:  Byte;     {cumulative errors report}
+                     XOFFSent: Byte;     {XOff Sent flag}
+                     rdPend:   Byte;     {read pending flag}
+                     wrPend:   Byte;     {write pending flag}
+                     ctsHold:  Byte;     {CTS flow control hold flag}
+                     XOFFHold: Byte;     {XOff flow control hold flag}
+                   End;
+
+
+  {for Sound Driver}
+
+  {for 4-tone sound generation}
+  Wave = PACKED ARRAY[0..255] OF Byte;
+  WavePtr = ^Wave;
+  FTSoundRec = RECORD
+                  duration: INTEGER;
+                  sound1Rate: LongInt;
+                  sound1Phase: LongInt;
+                  sound2Rate: LongInt;
+                  sound2Phase: LongInt;
+                  sound3Rate: LongInt;
+                  sound3Phase: LongInt;
+                  sound4Rate: LongInt;
+                  sound4Phase: LongInt;
+                  sound1Wave: WavePtr;
+                  sound2Wave: WavePtr;
+                  sound3Wave: WavePtr;
+                  sound4Wave: WavePtr;
+                END;
+  FTSndRecPtr = ^FTSoundRec;
+
+  FTSynthRec = RECORD
+                 mode: INTEGER;
+                 sndRec: FTSndRecPtr;
+               END;
+  FTSynthPtr = ^FTSynthRec;
+
+  Tone = RECORD
+           count: INTEGER;
+           amplitude: INTEGER;
+           duration: INTEGER;
+         END;
+
+  Tones = ARRAY[0..5000] OF Tone;
+
+  SWSynthRec = RECORD
+                 mode: INTEGER;
+                 triplets: Tones;
+               END;
+  SWSynthPtr = ^SWSynthRec;
+
+  freeWave = PACKED ARRAY[0..30000] OF Byte;
+
+  FFSynthRec = RECORD
+                 mode: INTEGER;
+                 count: Fixed;
+                 waveBytes: freeWave;
+               END;
+
+  FFSynthPtr = ^FFSynthRec;
+
+
+
+{for date and time}
+DateTimeRec = RECORD
+                Year,           {1904,1905,...}
+                Month,          {1,...,12 corresponding to Jan,...,Dec}
+                Day,            {1,...31}
+                Hour,           {0,...,23}
+                Minute,         {0,...,59}
+                Second,         {0,...,59}
+                DayOfWeek: INTEGER; {1,...,7 corresponding to Sun,...,Sat}
+              END; {DateTimeRec}
+
+{for application parameter}
+appFile = RECORD
+                 vRefNum: INTEGER;
+                 ftype: OsType;
+                 versNum: INTEGER;   {versNum in high byte}
+                 fName: str255;
+               END; {appFile}
+
+{for RAM serial driver}
+SPortSel = (SPortA,SPortB);
+
+{for disk driver}
+DrvSts = RECORD
+        track: INTEGER;             {current track}
+        writeProt: SignedByte;      {bit 7=1 if volume is locked}
+        diskInPlace: SignedByte;    {disk in place}
+        installed: SignedByte;      {drive installed}
+        sides: SignedByte;          {bit 7=0 if single-sided drive}
+        qLink: QElemPtr;            {next queue entry}
+        qType: INTEGER;             {not used}
+        dqDrive: INTEGER;           {drive number}
+        dqRefNum: INTEGER;          {driver reference number}
+        dqFSID: INTEGER;            {file-system identifier}
+        twoSideFmt: SignedByte;     {-1 if two-sided disk}
+        needsFlush: SignedByte;     {reserved}
+        diskErrs:   INTEGER;        {error count}
+    END; {DrvSts}
+
+{for Event Manager}
+FUNCTION PostEvent(eventNum: INTEGER; eventMsg: LongInt): OsErr;
+PROCEDURE FlushEvents(whichMask,stopMask: INTEGER);
+PROCEDURE SetEventMask(theMask: INTEGER);
+FUNCTION OSEventAvail(mask: INTEGER; VAR theEvent: EventRecord): BOOLEAN;
+FUNCTION GetOSEvent(mask: INTEGER; VAR theEvent: EventRecord): BOOLEAN;
+
+{OS utilities}
+FUNCTION HandToHand(VAR theHndl: Handle): OsErr;
+FUNCTION PtrToXHand(srcPtr: Ptr; dstHndl: Handle; size: LongInt): OsErr;
+FUNCTION PtrToHand(srcPtr: Ptr; VAR dstHndl: Handle; size: LongInt): OsErr;
+FUNCTION HandAndHand(hand1,hand2: Handle): OsErr;
+FUNCTION PtrAndHand(ptr1: Ptr; hand2: Handle; size: LongInt): OsErr;
+PROCEDURE SysBeep(duration: INTEGER);                               INLINE $A9C8;
+
+{from HEAPZONE.TEXT}
+PROCEDURE SetApplBase(startPtr: Ptr);
+PROCEDURE InitApplZone;
+PROCEDURE InitZone(pgrowZone:           ProcPtr;
+                   cmoreMasters:        Integer;
+                   limitPtr,startPtr : Ptr);
+FUNCTION  GetZone: THz;
+PROCEDURE SetZone(hz: THz);
+
+FUNCTION  ApplicZone: THz;
+FUNCTION  SystemZone: THz;
+
+FUNCTION  CompactMem(cbNeeded: Size): Size;
+PROCEDURE PurgeMem(cbNeeded: Size);
+FUNCTION  FreeMem: LongInt;
+PROCEDURE ResrvMem(cbNeeded: Size);
+FUNCTION  MaxMem(Var grow: Size): Size;
+FUNCTION  TopMem: Ptr;
+
+PROCEDURE SetGrowZone(growZone: ProcPtr);
+PROCEDURE SetApplLimit(zoneLimit: Ptr);
+PROCEDURE MaxApplZone;
+
+FUNCTION  NewPtr(byteCount: Size): Ptr;
+PROCEDURE DisposPtr(p: Ptr);
+FUNCTION  GetPtrSize(p: Ptr): Size;
+PROCEDURE SetPtrSize(p: Ptr; newSize: Size);
+FUNCTION  PtrZone(p: Ptr): THz;
+
+FUNCTION  NewHandle(byteCount: Size): Handle;
+PROCEDURE DisposHandle(h: Handle);
+FUNCTION  GetHandleSize(h: Handle): Size;
+PROCEDURE SetHandleSize(h: Handle; newSize: Size);
+FUNCTION  HandleZone(h: Handle): THz;
+FUNCTION  RecoverHandle(p: Ptr): Handle;
+PROCEDURE EmptyHandle(h: Handle);
+PROCEDURE ReAllocHandle(h: Handle; byteCount: Size);
+
+PROCEDURE HLock(h: Handle);
+PROCEDURE HUnLock(h: Handle);
+PROCEDURE HPurge(h: Handle);
+PROCEDURE HNoPurge(h: Handle);
+PROCEDURE  MoreMasters;
+
+PROCEDURE BlockMove(srcPtr, destPtr: Ptr; byteCount: Size);
+FUNCTION  MemError: OsErr;
+
+FUNCTION  GZCritical: Boolean;
+FUNCTION  GZSaveHnd: Handle;
+
+
+{interface for core routines pertaining to the vertical retrace mgr}
+{routines defined in VBLCORE.TEXT}
+FUNCTION  VInstall(VBLTaskPtr: QElemPtr): OsErr;
+FUNCTION  VRemove(VBLTaskPtr: QElemPtr): OsErr;
+
+{interface for Operating System Dispatcher}
+{routines defined in DISPATCH.TEXT}
+FUNCTION  GetTrapAddress(trapNum: INTEGER): LongInt;
+PROCEDURE SetTrapAddress(trapAddr: LongInt; trapNum: INTEGER);
+
+{interface for utility core routines (defined in sysutil)}
+FUNCTION GetSysPPtr: SysPPtr;
+FUNCTION WriteParam: OsErr;
+FUNCTION  SetDateTime(time:  LongInt):OsErr;
+FUNCTION  ReadDateTime(VAR time: LongInt):OsErr;
+PROCEDURE GetDateTime(VAR secs: LongInt);
+PROCEDURE SetTime(d: DateTimeRec);
+PROCEDURE GetTime(VAR d: DateTimeRec);
+PROCEDURE Date2Secs(d: DateTimeRec; VAR s: LongInt);
+PROCEDUR  Secs2Date(s: LongInt; VAR d: DateTimeRec);
+PROCEDURE Delay(numTicks: LongInt; VAR finalTicks: LongInt);
+FUNCTION  EqualString(str1,str2: Str255; caseSens,diacSens: BOOLEAN):BOOLEAN;
+PROCEDURE UprString(VAR theString: Str255; diacSens: BOOLEAN);
+FUNCTION  InitUtil: OsErr;
+
+
+PROCEDURE UnLoadSeg(routineAddr: Ptr);                          INLINE $A9F1;
+PROCEDURE ExitToShell;                                          INLINE $A9F4;
+PROCEDURE GetAppParms(VAR apName: str255; VAR apRefNum: INTEGER;
+                      VAR apParam: Handle);                     INLINE $A9F5;
+PROCEDURE CountAppFiles(VAR message: INTEGER; VAR count: INTEGER);
+PROCEDURE GetAppFiles(index: INTEGER; VAR theFile: AppFile);
+PROCEDURE ClrAppFiles(index: INTEGER);
+
+{queue routines - part of Macintosh core Utility routines}
+PROCEDURE InitQueue(qHeader: QHdrPtr);
+PROCEDURE Enqueue(qElement: QElemPtr; qHeader: QHdrPtr);
+FUNCTION  Dequeue(qElement: QElemPtr; qHeader: QHdrPtr): OsErr;
+FUNCTION  GetFSQHdr: QHdrPtr;
+FUNCTION  GetDrvQHdr: QHdrPtr;
+FUNCTION  GetVCBQHdr: QHdrPtr;
+FUNCTION  GetVBLQHdr: QHdrPtr;
+FUNCTION  GetEvQHdr: QHdrPtr;
+FUNCTION GetDCtlEntry(refNum: INTEGER): DCtlHandle;
+
+{from MACIO.TEXT}
+FUNCTION  PBOpen(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBClose(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBRead(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBWrite(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBControl(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBStatus(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBKillIO(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+
+FUNCTION  PBGetVInfo(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBGetVol(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBSetVol(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBEject(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBOffLine(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBFlushVol(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBCreate(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBDelete(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBOpenRF(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBRename(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBGetFInfo(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBSetFInfo(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBSetFLock(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBRstFLock(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBSetFVers(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBAllocate(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBGetEOF(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBSetEOF(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBGetFPos(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBSetFPos(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBFlushFile(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+FUNCTION  PBMountVol(paramBlock: ParmBlkPtr): OsErr;
+FUNCTION  PBUnMountVol(paramBlock: ParmBlkPtr): OsErr;
+PROCEDURE AddDrive(drvrRefNum: INTEGER; drvNum: INTEGER; QEl: drvQElPtr);
+
+FUNCTION  FSOpen(fileName: Str255; vRefNum: INTEGER; VAR refNum: INTEGER): OsErr;
+FUNCTION  FSClose(refNum: INTEGER): OsErr;
+FUNCTION  FSRead(refNum: INTEGER; VAR count: LongInt; buffPtr: Ptr): OsErr;
+FUNCTION  FSWrite(refNum: INTEGER; VAR count: LongInt; buffPtr: Ptr): OsErr;
+FUNCTION  Control(refNum: INTEGER; csCode: INTEGER;
+                    csParamPtr: Ptr): OsErr;
+FUNCTION  Status(refNum: INTEGER; csCode: INTEGER;
+                   csParamPtr: Ptr): OsErr;
+FUNCTION  KillIO(refNum: INTEGER): OsErr;
+
+
+{-volume level calls-}
+FUNCTION  GetVInfo(drvNum: INTEGER; volName: StringPtr; VAR vRefNum: INTEGER;
+                 VAR FreeBytes: LongInt): OsErr;
+FUNCTION  GetFInfo(fileName: Str255; vRefNum: INTEGER;
+                  VAR FndrInfo: FInfo):OsErr;
+FUNCTION  GetVol(volName: StringPtr; VAR vRefNum: INTEGER):OsErr;
+FUNCTION  SetVol(volName: StringPtr; vRefNum: INTEGER): OsErr;
+FUNCTION  UnMountVol(volName: StringPtr; vRefNum: INTEGER):OsErr;
+FUNCTION  Eject(volName: StringPtr; vRefNum: INTEGER): OsErr;
+FUNCTION  FlushVol(volName: StringPtr; vRefNum: INTEGER):OsErr;
+
+{-file level calls for unopened files-}
+FUNCTION  Create(fileName: Str255; vRefNum: INTEGER; creator: OSType;
+                fileType: OSType):OsErr;
+FUNCTION  FSDelete(fileName: Str255; vRefNum: INTEGER):OsErr;
+FUNCTION  OpenRF(fileName: Str255; vRefNum: INTEGER;
+                VAR refNum: INTEGER): OsErr;
+FUNCTION  Rename(oldName: Str255; vRefNum: INTEGER;
+                newName: Str255):OsErr;
+FUNCTION  SetFInfo(fileName: Str255; vRefNum: INTEGER;
+                  FndrInfo: FInfo):OsErr;
+FUNCTION  SetFLock(fileName: Str255; vRefNum: INTEGER):OsErr;
+FUNCTION  RstFLock(fileName: Str255; vRefNum: INTEGER):OsErr;
+FUNCTION  SetFType(fileName: Str255; oldVers: SignedByte; vRefNum: INTEGER;
+                    newVers: SignedByte):OsErr;
+{-file level calls for opened files-}
+FUNCTION  Allocate(refNum: INTEGER; VAR count: LongInt):OsErr;
+FUNCTION  GetEOF(refNum: INTEGER; VAR LogEOF: LongInt):OsErr;
+FUNCTION  SetEOF(refNum: INTEGER; LogEOF: LongInt):OsErr;
+FUNCTION  GetFPos(refNum: INTEGER; VAR filePos: LongInt):OsErr;
+FUNCTION  SetFPos(refNum: INTEGER; posMode: INTEGER; posOff: LongInt):OsErr;
+FUNCTION  FlushFile(refNum: INTEGER):OsErr;
+
+{Serial Driver Interface}
+FUNCTION  DrvrInstall(name: Str255;  drvrRefNum: INTEGER): OsErr;
+FUNCTION  DrvrRemove(drvrRefNum: INTEGER): OsErr;
+FUNCTION  OpenDriver(name: Str255): INTEGER;
+PROCEDURE CloseDriver(refNum:  Integer);
+
+FUNCTION  SerReset(refNum: INTEGER; serConfig: INTEGER): OSErr;
+FUNCTION  SerSetBuf(refNum: INTEGER; serBPtr: Ptr; serBLen: INTEGER): OSErr;
+FUNCTION  SerHShake(refNum: INTEGER; flags: SerShk): OSErr;
+FUNCTION  SerSetBrk(refNum: INTEGER): OSErr;
+FUNCTION  SerClrBrk(refNum: INTEGER): OSErr;
+FUNCTION  SerGetBuf(refNum: INTEGER; VAR count: LongInt): OSErr;
+FUNCTION  SerStatus(refNum: INTEGER; VAR serSta: SerStaRec): OSErr;
+FUNCTION DiskEject(drvnum: INTEGER): OSErr;
+FUNCTION SetTagBuffer(buffPtr: Ptr): OSErr;
+FUNCTION DriveStatus(drvNum: INTEGER; VAR status: DrvSts): OSErr;
+FUNCTION  RamSDOpen(whichPort: SPortSel; rsrcType: OsType; rsrcID: INTEGER): OSErr;
+PROCEDURE  RamSDClose(whichPort: SPortSel);
+
+{for Sound Driver}
+PROCEDURE SetSoundVol(level: INTEGER);
+PROCEDURE GetSoundVol(VAR level: INTEGER);
+PROCEDURE StartSound(synthRec: Ptr; numBytes: LongInt; CompletionRtn: ProcPtr);
+PROCEDURE StopSound;
+FUNCTION SoundDone: BOOLEAN;
+
+{for the system error handler}
+PROCEDURE SysError(errorCode: INTEGER);
+
+
+IMPLEMENTATION
+{for Event Manager}
+
+FUNCTION PostEvent;         EXTERNAL;
+PROCEDURE FlushEvents;      EXTERNAL;
+PROCEDURE SetEventMask;     EXTERNAL;
+FUNCTION OSEventAvail;      EXTERNAL;
+FUNCTION GetOSEvent ;       EXTERNAL;
+
+{OS utilities}
+FUNCTION HandToHand; EXTERNAL;
+FUNCTION PtrToXHand; EXTERNAL;
+FUNCTION PtrToHand; EXTERNAL;
+FUNCTION HandAndHand; EXTERNAL;
+FUNCTION PtrAndHand; EXTERNAL;
+
+
+{from HEAPZONE.TEXT}
+PROCEDURE SetApplBase; EXTERNAL;
+PROCEDURE InitApplZone; EXTERNAL;
+PROCEDURE InitZone; EXTERNAL;
+FUNCTION  GetZone; EXTERNAL;
+PROCEDURE SetZone; EXTERNAL;
+
+FUNCTION  ApplicZone; EXTERNAL;
+FUNCTION  SystemZone; EXTERNAL;
+
+FUNCTION  CompactMem; EXTERNAL;
+PROCEDURE PurgeMem; EXTERNAL;
+FUNCTION  FreeMem; EXTERNAL;
+PROCEDURE ResrvMem; EXTERNAL;
+FUNCTION  MaxMem; EXTERNAL;
+FUNCTION  TopMem; EXTERNAL;
+
+PROCEDURE SetGrowZone; EXTERNAL;
+PROCEDURE SetApplLimit; EXTERNAL;
+PROCEDURE MaxApplZone; EXTERNAL;
+
+FUNCTION  NewPtr; EXTERNAL;
+PROCEDURE DisposPtr; EXTERNAL;
+FUNCTION  GetPtrSize; EXTERNAL;
+PROCEDURE SetPtrSize; EXTERNAL;
+FUNCTION  PtrZone; EXTERNAL;
+
+FUNCTION  NewHandle; EXTERNAL;
+PROCEDURE DisposHandle; EXTERNAL;
+FUNCTION  GetHandleSize; EXTERNAL;
+PROCEDURE SetHandleSize; EXTERNAL;
+FUNCTION  HandleZone; EXTERNAL;
+FUNCTION  RecoverHandle; EXTERNAL;
+PROCEDURE EmptyHandle; EXTERNAL;
+PROCEDURE ReAllocHandle; EXTERNAL;
+
+PROCEDURE HLock; EXTERNAL;
+PROCEDURE HUnLock; EXTERNAL;
+PROCEDURE HPurge; EXTERNAL;
+PROCEDURE HNoPurge; EXTERNAL;
+PROCEDURE MoreMasters;EXTERNAL;
+
+PROCEDURE BlockMove; EXTERNAL;
+FUNCTION  MemError; EXTERNAL;
+
+FUNCTION  GZCritical; EXTERNAL;
+FUNCTION  GZSaveHnd; EXTERNAL;
+
+
+{from OSMISC.TEXT}
+FUNCTION  DrvrInstall;EXTERNAL;
+FUNCTION  DrvrRemove;EXTERNAL;
+FUNCTION  OpenDriver;EXTERNAL;
+PROCEDURE CloseDriver;EXTERNAL;
+FUNCTION  VInstall;EXTERNAL;
+FUNCTION  VRemove;EXTERNAL;
+FUNCTION  GetTrapAddress;EXTERNAL;
+PROCEDURE SetTrapAddress;EXTERNAL;
+
+FUNCTION GetSysPPtr;EXTERNAL;
+FUNCTION WriteParam;EXTERNAL;
+FUNCTION  SetDateTime;EXTERNAL;
+FUNCTION  ReadDateTime;EXTERNAL;
+PROCEDURE SetTime;EXTERNAL;
+PROCEDURE GetDateTime;EXTERNAL;
+PROCEDURE GetTime;EXTERNAL;
+PROCEDURE Date2Secs;EXTERNAL;
+PROCEDURE Secs2Date;EXTERNAL;
+PROCEDURE Delay;EXTERNAL;
+FUNCTION  EqualString;EXTERNAL;
+PROCEDURE UprString;EXTERNAL;
+FUNCTION  InitUtil;EXTERNAL;
+
+
+{queue routines}
+PROCEDURE InitQueue;EXTERNAL;
+PROCEDURE Enqueue;EXTERNAL;
+FUNCTION  Dequeue;EXTERNAL;
+FUNCTION  GetFSQHdr; EXTERNAL;
+FUNCTION  GetDrvQHdr; EXTERNAL;
+FUNCTION  GetVCBQHdr; EXTERNAL;
+FUNCTION  GetVBLQHdr; EXTERNAL;
+FUNCTION  GetEvQHdr; EXTERNAL;
+FUNCTION GetDCtlEntry; EXTERNAL;
+{FUNCTION  GetDCtlQHdr; EXTERNAL;}
+
+
+{from MACIO.TEXT}
+FUNCTION  PBOpen;EXTERNAL;
+FUNCTION  PBClose;EXTERNAL;
+FUNCTION  PBRead;EXTERNAL;
+FUNCTION  PBWrite;EXTERNAL;
+FUNCTION  PBControl;EXTERNAL;
+FUNCTION  PBStatus;EXTERNAL;
+FUNCTION  PBKillIO;EXTERNAL;
+
+FUNCTION  PBGetVInfo;EXTERNAL;
+FUNCTION  PBGetVol;EXTERNAL;
+FUNCTION  PBSetVol;EXTERNAL;
+FUNCTION  PBEject;EXTERNAL;
+FUNCTION  PBOffLine;EXTERNAL;
+FUNCTION  PBFlushVol;EXTERNAL;
+FUNCTION  PBCreate;EXTERNAL;
+FUNCTION  PBDelete;EXTERNAL;
+FUNCTION  PBOpenRF;EXTERNAL;
+FUNCTION  PBRename;EXTERNAL;
+FUNCTION  PBGetFInfo;EXTERNAL;
+FUNCTION  PBSetFInfo;EXTERNAL;
+FUNCTION  PBSetFLock;EXTERNAL;
+FUNCTION  PBRstFLock;EXTERNAL;
+FUNCTION  PBSetFVers;EXTERNAL;
+FUNCTION  PBAllocate;EXTERNAL;
+FUNCTION  PBGetEOF;EXTERNAL;
+FUNCTION  PBSetEOF;EXTERNAL;
+FUNCTION  PBGetFPos;EXTERNAL;
+FUNCTION  PBSetFPos;EXTERNAL;
+FUNCTION  PBFlushFile;EXTERNAL;
+FUNCTION  PBMountVol;EXTERNAL;
+FUNCTION  PBUnMountVol;EXTERNAL;
+
+PROCEDURE AddDrive;EXTERNAL;
+
+FUNCTION  FSOpen;EXTERNAL;
+FUNCTION  FSClose;EXTERNAL;
+FUNCTION  FSRead;EXTERNAL;
+FUNCTION  FSWrite;EXTERNAL;
+FUNCTION  Control;EXTERNAL;
+FUNCTION  Status;EXTERNAL;
+FUNCTION  KillIO;EXTERNAL;
+
+FUNCTION  GetVInfo;EXTERNAL;
+FUNCTION  GetFInfo;EXTERNAL;
+FUNCTION  GetVol;EXTERNAL;
+FUNCTION  SetVol;EXTERNAL;
+FUNCTION  UnMountVol;EXTERNAL;
+FUNCTION  Eject;EXTERNAL;
+FUNCTION  FlushVol;EXTERNAL;
+
+FUNCTION  Create;EXTERNAL;
+FUNCTION  FSDelete;EXTERNAL;
+FUNCTION  OpenRF;EXTERNAL;
+FUNCTION  Rename;EXTERNAL;
+FUNCTION  SetFInfo;EXTERNAL;
+FUNCTION  SetFLock;EXTERNAL;
+FUNCTION  RstFLock;EXTERNAL;
+FUNCTION  SetFType;EXTERNAL;
+FUNCTION  Allocate;EXTERNAL;
+FUNCTION  GetEOF;EXTERNAL;
+FUNCTION  SetEOF;EXTERNAL;
+FUNCTION  GetFPos;EXTERNAL;
+FUNCTION  SetFPos;EXTERNAL;
+FUNCTION  FlushFile;EXTERNAL;
+FUNCTION  SerReset;EXTERNAL;
+FUNCTION  SerSetBuf;EXTERNAL;
+FUNCTION  SerHShake;EXTERNAL;
+FUNCTION  SerSetBrk;EXTERNAL;
+FUNCTION  SerClrBrk;EXTERNAL;
+FUNCTION  SerGetBuf;EXTERNAL;
+FUNCTION  SerStatus;EXTERNAL;
+FUNCTION DiskEject;EXTERNAL;
+FUNCTION SetTagBuffer;EXTERNAL;
+FUNCTION DriveStatus;EXTERNAL;
+FUNCTION  RamSDOpen;EXTERNAL;
+PROCEDURE  RamSDClose;EXTERNAL;
+PROCEDURE SetSoundVol;EXTERNAL;
+PROCEDURE GetSoundVol;EXTERNAL;
+PROCEDURE StartSound;EXTERNAL;
+PROCEDURE StopSound;EXTERNAL;
+FUNCTION SoundDone;EXTERNAL;
+PROCEDURE SWSetLevel;EXTERNAL;
+
+PROCEDURE ClrAppFiles;EXTERNAL;
+PROCEDURE CountAppFiles;EXTERNAL;
+PROCEDURE GetAppFiles;EXTERNAL;
+
+{for the system error handler}
+PROCEDURE SysError; EXTERNAL;
+
+
+END.
+
+
+

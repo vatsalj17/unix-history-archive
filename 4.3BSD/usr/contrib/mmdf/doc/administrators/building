@@ -1,0 +1,1207 @@
+.\".AU
+.\"Douglas P. Kingston III
+.\".AI
+.\"Ballistic Research Laboratory
+.\"USA AMCCOM
+.\"Aberdeen Proving Ground, Maryland.  21005
+.\"(301) 278-6651
+.NH 1
+Building the \*M System
+.NH 2
+Organization of Source
+.PP
+The \*M sources are arranged in a hierarchical directory
+structure under a directory such as /usr/src/local/mmdf.
+The major directories at the top level are:
+.IP \fBconf\fR 10
+The \fBconf\fR directory contains subdirectories for each of several sample
+sites, for example, csnet-relay or okstate.  Each of these subdirectories
+contains most of the files necessary for compile-time
+configuration of the \*M system.
+.IP \fBdoc\fR 10
+The \fBdoc\fR directory contains the NROFF/TROFF source for all \*M documents
+except manual pages.
+.IP \fBh\fR 10
+Include files used by MMDFII.
+.IP \fBlib\fR 10
+The \fBlib\fR directory contains the source to the \*M library
+(libmmdf.a) which is used in compiling all the other \*M programs.
+There are five subdirectories in the \fBlib\fR directory: \fBaddr\fR,
+\fBdial\fR, \fBmmdf\fR, \fBtable\fR, and \fButil\fR.
+.IP \fBlib/addr\fR 15
+contains the address parser.
+.IP \fBlib/dial\fR 15
+contains the PhoneNet dial in/out package.
+.IP \fBlib/mmdf\fR 15
+contains \*M specific shared routines.
+.IP \fBlib/table\fR 15
+contains the table lookup functions.
+.IP \fBlib/util\fR 15
+contains a variety of utility and system interface routines.
+.IP \fBlibndir\fR 10
+The ``new'' directory access routines for non-Berkeley Unix systems.
+This directory may not be included on some distributions (e.g. 4.3BSD
+where it is standard).
+.IP \fBman\fR 10
+The \fBman\fR directory contains the source for all the \*M manual pages.
+.IP \fBmh\fR 10
+The sources for the MH system. (Not discussed here; see the online
+documentation.  May not be included in all distributions.)
+.IP \fBsamples\fR 10
+The \fRsamples\fR directory contains subdirectories for each of several 
+sample sites.  Each site typically contains the runtime-tailoring file
+(mmdftailor) and other files such as tables, dialling scripts and 
+helpful shell scripts.  Large tables will have been truncated
+to a representative set of entries.
+.IP \fBsrc\fR 10
+The \fBsrc\fR directory contains the source to all \*M programs
+except for the mail posting and mail reading user agent programs
+(e.g. \fImsg\fR, \fIsend\fR, and \fIv6mail\fR).  Within this directory is 
+a subdirectory
+for each major program or program set, and one directory called
+\fBtools\fR for
+miscellaneous programs.
+.IP \fBtestmmdf\fR 10
+The \fBtestmmdf\fR directory is a complete \*M operational subtree that
+can be used to install a test version of \*M in parallel with
+another mail system (even another \*M) on the same system.
+It also serves as a model of what
+the \*M subtree should look like.
+.IP \fBuip\fR 10
+The \fBuip\fR directory contains user interface routines, primarily \fImsg\fR
+and \fIsend\fR.  The subdirectory \fBother\fR contains a number of other user
+programs for dealing with mail.
+The subdirectory \fBucbmail\fR contains a recent version of Berkeley's
+Mail program.  It has been modified to interface well to \*M.
+.PP
+The source directories are set up to use a hierarchical set of Makefiles.
+The directories \fBlib, src\fR, and \fBuip\fR contain master Makefiles.
+In each subdirectory is a file called Makefile.real and a program
+(shellfile) called
+.I gen.
+The                                            
+.I gen
+program calls
+.I make
+with two parts, Makefile.real and a ``common makefile'' called
+Makefile.com that is contained in a parent directory.
+Makefile.com contains configuration specific information such
+as compiler flags, installation directory names, #ifdef flags,
+and the dependency generation code (for ``make depend'').
+.PP
+There is a strict convention for the format of #include lines
+in \*M source files.  If you fail to follow the convention,
+you will break ``make depend'' and thereby your makefile
+dependencies.
+The format is as follows:
+.sp
+.ne 10
+#include <file.h>
+.br
+.ti 10
+For standard include files in /usr/include
+.br
+#include <subdir/file.h>
+.br
+.ti 10
+For files in subdirectories of /usr/include.
+.br
+#include ``file.h''
+.br
+.ti 10
+For files in the \*M header file directory (typically ../../h).
+.br
+#include ``/fullpath/file.h''
+.br
+.ti 10
+For specifying a particular header file by full path name.
+.br
+#include ``./file.h''
+.br
+.ti 10
+For a file in the current directory.
+.PP
+There is a problem with the current ``make depend'' methodology
+on systems that do not have compiler support for it.
+Currently only 4.3BSD has this support through the ``\-M''
+option to
+.I cc.
+As a result, there are two version of the ``depend'' actions
+in Makefile.com.
+On systems that do not have
+.I cc
+\-M,
+due to the way the dependencies are generated, there is no
+preliminary processing of the conditional compile lines.  Files
+that conditionally include either one or another file appear
+to the ``make depend'' code as though they included both files.
+This problem does not show up until you are running the
+.I make 
+program for the first time.
+.I Make
+will complain about not being able to make
+some header file that does not exist on your system.
+The remedy is simply to edit the makefile that broke and 
+delete the line containing the file that doesn't exist.
+You can then run 
+.I make
+again.  
+.PP
+We regret that this process is necessary, but at least
+it only has to be done once per site.
+Luckily there are only a few files (maybe 5) that are affected.
+Look out for the following problem files:  termio.h, ioctl.h,
+and fcntl.h.
+.NH 2
+Getting Ready
+.PP
+\*M requires a significant amount of space for the
+sources, documentation, and binaries
+(about 8 to 10 megabytes for a full distribution).
+The 4.3BSD distribution will take about 3 megabytes for the basic
+sources, and documentation.
+The running system will consume much less, about 2 megabytes of
+installed binaries and tables, and you can remove your old mail programs.
+You will need superuser privileges.
+The distribution you receive may inadvertently contain old binaries
+or libraries despite the best efforts of those preparing the distribution.
+It is recommended that you do a ``make clean'' in the
+directories
+.B lib,
+.B src,
+and
+.B uip
+before starting.
+You can accomplish this by running ``make clean'' from the top directory of
+the MMDF source tree (the parent of \fBlib\fR, \fBsrc\fR, and \fBuip\fR).
+This will give
+you a clean slate upon which to base your compile.
+.XX
+Do a ``make clean'' in the MMDF root directory.
+.NH 2
+System Compile-Time Configuration and Generation
+.PP
+The configuration directory, 
+.B conf,
+contains one directory for
+each site being supported that has compiled-in differences.
+Many sites may share one compile-time configuration by using
+the run-time tailoring facility to specify site-specific information.
+There is also a shell program called
+.I sitesetup
+that is used to install a specified configuration.
+The test configuration is set up to run out of the \fBtestmmdf\fR
+subdirectory and should only be used for testing.
+You will base your running configuration 
+on an existing
+system with possibly extensive changes.
+The following site configurations are available for copying:
+.sp
+.IP bbn 12
+A 4.2BSD Vax Internet host using domain servers for table lookup.
+.IP 4.3vax 12
+A 4.3BSD Vax running a minimal set of tables and using the
+badusers and badhosts channels to pass off unknown addresses
+to MCVAX.UUCP (haring.uucp).
+.IP csnet-relay 12
+A very large PhoneNet relay host with Internet access.
+.IP okstate 12
+A V7 Perkin-Elmer host on CSNET PhoneNet, UUCP and a local network.
+.IP uclvax2 12
+An Internet host with links to various UK networks; illustrates
+authorization on a per-user basis.
+.IP vgr 12
+A 4.2BSD Internet host.
+.PP
+These configurations are supplied as examples and templates for building
+your own configuration.
+Do not modify the contents of any of these configurations.
+You will make your own site's directory in the \fBconf\fR directory.
+.XX
+Make a directory named after your site in the \fBconf\fR directory.
+.XX
+Copy the contents of some other system's directory into your directory.
+.NH 2
+Compile-Time Tailoring conf/\fIsite\fB/conf.h
+.XX
+Edit the file conf.h
+.PP
+The constants at the top of this file should not need tailoring.
+Possible exceptions might be NUMCHANS, NUMTABLES, and NUMDOMAINS.
+These limit the number of domains, channels, and
+tables (channel, domain, alias, and others),
+The numbers supplied should only
+need to be increased on a site acting as a major relay site
+with a large number of channels.
+The system will complain in the logfiles if the limits are reached.
+The ``DL_'' definitions control certain basic
+properties of the dial package used by phone and slave programs
+for PhoneNet.
+They should probably not be modified.
+If the dial package is not used, they are ignored.
+.PP
+The section in conf.h entitled ``JNTMAIL Tailoring'' contains #defines
+that are useful
+primarily in the United Kingdom and gateways to it, like UCL-CS.
+The JNTMAIL definition is used to enable code that is used on the JNT
+mail channel.  The BOTHEND definition enables \*M to parse domain
+names in either ``little-endian'' or ``big-endian''
+format.  ``Little-endian'' is the
+standard format in the DARPA Internet and is the format defined in
+RFC-822.  ``Big-endian'' is used in the UK community, and perhaps elsewhere.
+VIATRACE causes the relaying timestamp to conform to
+UK standards by starting with ``Via:'' instead
+of the Internet standard ``Received:''.
+Despite the best efforts of some British, this remnant remains
+from the days of RFC733.
+Non-JNT systems will leave JNTMAIL, BOTHEND
+and VIATRACE undefined.
+.PP
+The next section of conf.h contains the #include lines necessary to include
+the file time.h and dir.h (as is used with the libndir package).
+The former is typically /usr/include/time.h or /usr/include/sys/time.h
+(a.k.a. <time.h> or <sys/time.h>).
+The latter
+may be called ndir.h on some systems.  This is typically
+/usr/include/dir.h or /usr/include/ndir.h (a.k.a. <dir.h> or <ndir.h>).
+.XX
+Check where your time.h and dir.h are and fix the #includes, if necessary.
+.PP
+The final section of conf.h is used to define a macro that will identify
+privileged UIDs that are likely to be submitting mail on behalf of other.
+We have defined it as a parameterized
+macro in the distribution, but you could undefine the macro
+and write a real function called PRIV_USER() if necessary.
+When used as a macro, it is assumed that the global variable
+.I effecid
+will contain the UID of submit.  Currently only submit uses
+this macro/function.
+The uid for \*M (effecid) is determined at runtime.
+.XX
+Check that the #define has reasonable UID values (root, daemon?, and effecid).
+.NH 2
+Compile-Time Tailoring conf/\fIsite\fB/conf.c
+.XX
+Edit the file conf.c
+.NH 3
+Public Names
+.PP
+The first section is PUBLIC NAMES.  The string
+.I mmtailor
+is the location of your runtime tailoring file.  This is typically
+.I /usr/mmdf/mmdftailor.
+.PP
+The
+.I locname
+string should be set to your host name without the domain portion.
+For example if your host is SPOOK.BRL.MIL, then your locname
+should be ``SPOOK'', and your
+.I locdomain
+should be ``BRL.MIL''.
+Case is not important, but it will be preserved in some cases, so
+enter case as you would like to see it.  We prefer to use all caps.
+.I Sitesignature
+should not be altered as it is an indication of which mail system you
+are running.
+.I Mmdflogin
+is the login id that you have chosen to give to the \*M mail system.
+This is usually ``mmdf''.
+The
+.I supportaddr
+string gives the address that the mailsystem will send problem
+notifications to, and this is also the address that will be placed in
+the from field of messages generated by the mail system.  This address
+should reach the person or persons maintaining the mail system.
+Normally, it is defined as ``Postmaster@\fIlocname.locdomain\fR'', which is, in 
+turn, an alias for the appropriate systems people.
+.XX
+Configure \fIlocname, locdomain, mmdflogin\fR, and \fIsupportaddr\fR.
+.NH 3
+\*M Directories Locations
+.PP
+The next section, DEFAULT BASE DIRECTORIES, defines the location of 
+certain \*M directories.
+The comments are fairly clear about the use of most of them.
+The locking directory will only be used if the link based locking
+mechanism is used.  If it is, you should make sure this direcory
+is cleared at each reboot.
+.I Tbldbm
+is not actually a directory but is instead the basename of the
+DBM style database used by \*M to store tables for fast lookup.
+See the manual section \fIdbm(3)\fR for more information.  Systems using
+System III or System V will have to obtain this code from another
+Unix site, preferably a 4.2BSD site.
+The original V7 version of the DBM library only provides
+for the files to be opened read/write.
+If you have this version you will need
+to modify it to try opening the files readonly if read/write
+access fails.
+The typical values are as follows:
+.sp
+.in +1i
+.KS
+.TS
+l l .
+\fIcmddfldir\fR	/usr/mmdf
+\fIlogdfldir\fR	/usr/mmdf/log
+\fIphsdfldir\fR	/usr/mmdf/log/phase
+\fItbldfldir\fR	/usr/mmdf/table
+\fItbldbm\fR	/usr/mmdf/table/mmdfdbm
+\fIquedfldir\fR	/usr/mmdf/lock/home
+\fIchndfldir\fR	/usr/mmdf/chans
+\fIlckdfldir\fR	/tmp/mmdf
+.TE
+.KE
+.sp
+.in -1i
+.XX
+Configure directories, if necessary (unlikely).
+.NH 3
+Default Logging Parameters
+.PP
+The next section, DEFAULT LOG LOCATIONS & SETTINGS, controls the main
+logging facilities of the \*M system.
+There should not be any tailoring necessary here.
+The
+.I mlogloc
+and
+.I chlogloc
+variables are somewhat magic, in that if they are simple file names,
+then they are opened in the default logging directory (\fBlogdfldir\fR
+above).  If they are full pathnames, then they will be opened as
+specified.
+They must exist for any logging to take place.  If they do not exist,
+then no logging will take place.
+Another possible tailorable item is the default logging level, which
+is the third element of the ll_struct structure.  See the explanation
+of the ll_struct structure in llog(3)
+before altering.  This is normally tailored from
+the runtime configuration file.
+.XX
+Adjust \fImlogloc\fR and \fIchlogloc\fR, if necessary.
+.NH 3
+Message Queue Parameters
+.PP
+The section MESSAGE QUEUE SUBSTRUCTURE
+has only two tailorable entries,
+.I warntime
+and
+.I failtime.
+.I Warntime
+is the minimum number of hours before \*M will send a
+warning letter indicating that a message has not yet been delivered.
+After
+.I failtime
+hours since submission, a message is eligible to be
+returned as undeliverable.  Actual timing of warnings and returns will 
+depend on how frequently the 
+.I cleanque
+program is run.
+Neither of these actions will occur unless the program is run.
+It is suggested that
+.I warntime
+be at least 1/2 day and more like 2 or
+3 if you are connected to a large network (e.g. the Internet) where
+there is a significant chance that a host will be down for a couple
+of days on occasion.
+.I Failtime
+should be at least 3 days, especially on
+large networks.  You should be able to take a machine being down over
+a long weekend without returning mail.
+.XX
+Choose the \fIwarntime\fR and \fIfailtime\fR values (in hours).
+.NH 3
+Command Names and Locations 
+.PP
+The section COMMAND NAMES & LOCATIONS should only need tailoring if
+you do change the names of the programs mentioned
+(something you do at your own risk).
+.NH 3
+Submit Parameters
+.PP
+The value
+.I maxhops
+in the section SUBMIT TAILORING is the maximum number of times a message
+may be relayed as indicated by the number of Received: lines before
+the message is considered dead due to looping.  It is possible that
+this value may have to be made significantly larger in the future
+to handle mail that has passed to us through numerous RFC-822 UUCP hosts.
+For now, we have used the value 20.
+.PP
+The \fIlnk_listsize\fR value
+specifies the maximum number of addresses in a message
+before it is considered to have a ``big'' list.
+If there are more than the maximum number of addresses, then \*M
+will not send a warning message for waiting mail and will only
+return a ``citation'' for failed mail.  A ``citation'' consists
+of the entire header plus the first few lines of the message
+body.
+.PP
+The \fImgt_addid\fR will cause \fIsubmit\fR to guarantee the existence
+of a Message-ID: line on every message entering the \*M system.
+A Message-ID will only be added if it is missing.
+.XX
+Set the value of \fImaxhops\fR, \fIlnk_listsize\fR, and \fImgt_addid\fR.
+.NH 3
+Deliver Parameters
+.PP
+The section DELIVER TAILORING controls the deliver program.
+.I Maxqueue
+is the maximum number of messages that will be tolerated before deliver
+stops sorting the mail queue before delivering.  If there are more than
+.I maxqueue
+messages in the channel's queue,
+deliver will process the queue in the order it
+is read which will probably not be the order in which messages
+were queued.
+A suggested value is 300.  This value can be larger if you do not
+have any dial-in sites that might time out waiting for you to find a
+message in pickup mode.
+.I Mailsleep
+is the number of seconds that the daemon sleeps between sweeps on the
+mail queues looking for messages to deliver.  The value is typically
+600 (10 minutes).
+.XX
+Set the values of \fImaxqueue\fR and \fImailsleep\fR.
+.NH 3
+Address Transformation
+.PP
+The section ADDRESS TRANSFORMATION should not be altered.  This section
+was used to override the default header munging behavior.
+It has been superceded by a more general mechanism, but this
+table is kept in case the capability is needed again in some
+special situation.  It cannot be runtime tailored.
+.NH 3
+Local Delivery Options
+.PP
+The next section, LOCAL DELIVERY TAILORING,
+has several variables that can be tuned to local requirements.
+The
+.I dlvfile
+variable is the name of the maildelivery control file (see the manual
+section \fImaildelivery(5)\fR).  This should be ``.maildelivery''
+to be standard and avoid confusion with the documentation.
+.I Sysdlvfile
+is the full path of the name of a maildelivery file
+to be used if the user does not specify one.
+If this is set to `(char *)0', then there will not be a default
+maildelivery file.  This file must be owned by root and generally
+unwritable.
+.I Mldfldir
+is used to control the location of default mailboxes.
+If the variable is set to 0, the mailbox will be created in the user's
+home directory.  If it is non-zero, it will be treated as the name
+of a directory in which the mailbox name will be the same as the
+username (old V7 style mail boxes).
+.I Mldflfil
+is the name to call the mailbox if the mailbox is going to be in the
+user's home directory.
+.I Mldfldir
+and
+.I mldflfil
+have an inverse relationship.  Only one should be defined at a time,
+the other should be zero.  We recommended that
+.I mldfldir
+be zero and that
+.I mldflfil
+be ``mailbox''.
+Another common value for
+.I mldflfil
+is ``.mail''.
+The strings
+.I delim1
+and
+.I delim2
+define the message prefix and message suffix respectively for mailbox
+files.  These should probably not be altered as some user programs
+may still have these values hardcoded to ``\\001\\001\\001\\001''.
+If you are introducing MMDF for the first time at your site you will
+not have this problem, but it is still unwise to change the delimiter
+unless you have a very good reason.
+.XX
+Set the values of \fImldflfil\fR and \fImldfldir\fR.
+.NH 3
+UUCP Channel Parameters
+.PP
+The section UUCP CHANNEL TAILORING controls the behavior of the
+.I rmail
+and
+UUCP channel
+programs, the input side of the UUCP channel.
+The things to tailor here are the strings
+.I Uchan
+and
+.I Uuxstr.
+.I Uchan
+defines the default channel that rmail will indicate as
+the source channel for incoming UUCP mail.
+This should probably be ``uucp''.
+The string
+.I Uuxstr
+controls UUX
+invocation.
+One or both of the strings in this part may be removed
+in the future as the UUCP channel is modified to use more of the
+basic channel configuring facilities.
+.br
+.XX
+Adjust the strings \fIUuxstr\fR and \fIUchan\fR.
+.NH 3
+NIFTP Channel Parameters
+.PP
+The section headed NIFTP CHANNEL TAILORING is only for UK sites
+running the JNTmail code.  Tailoring is self explanatory
+(JNTmail spool location).
+.NH 3
+Multiple Host Feature Parameters
+.PP
+The variable
+.I locmachine
+in the section MULTIPLE HOST TAILORING must be changed to contain
+your machine name.  This is the simple identifier that distinguishs
+your host from others at your site.  This is used by code that
+makes a collection of hosts look like one site.  This string
+can also be set in the runtime configuration file for sites that
+want to run common binaries.  This is normally the name of the host
+minus the domain suffix (e.g. VGR for VGR.BRL.MIL, or
+BRL-ORANGE for BRL-ORANGE.ARPA).
+.XX
+Set \fBlocmachine\fR to a string appropriate for your machine.
+.NH 3
+Authorization Parameters
+.PP
+The last section, AUTHORIZATION TAILORING, is tailoring for the
+authorization code (`authorisation' for you folks in the UK).
+The
+.I authrequest
+string is the address of someone who should get notices of
+requests for authorization.
+The
+.I authfile
+string is the file which should contain a politely worded warning
+about usage of a restricted path.  The paper on authorization
+in the \fIdoc\fR directory,
+\fIConfiguring MMDF Authorization\fR by Steve Kille,
+describes this facility in greater detail.  Typically
+the address used for
+.I authrequest
+is simply the same as
+.I supportaddr
+in Section 2.5.1 of this paper.
+.XX
+Choose appropriate strings for \fIauthrequest\fR and \fIauthfile\fR.
+.NH 2
+Compile-Time Tailoring conf/\fIsite\fB/chan.c
+.PP
+The file chan.c is used to tailor certain channel and table
+specific structures of \*M.
+If you plan on using runtime configuration you can simply skip this
+section since this need only be tailored by systems that plan
+to hardcode in all channel and table information for speed or
+size considerations.
+.XX
+Edit the file chan.c (if you are not using runtime configuration).
+.PP
+The variable
+.I ch_dflnam
+defined the name of the default channel to which mail is submitted.
+In any normal system, this should be ``local''.
+The definition for the head of the list of alias sources
+follows ( Alias *al_list = (Alias *)0 ).
+This should not be altered.
+The following section defines two more tables (\fItb_mailids\fR and
+\fItb_users\fR).  These are only used if the flag variable \fImid_enable\fR
+is non-zero indicating that you wish to use the Mail-IDs feature
+of \*M.  The Mail-IDs feature disassociates mail addresses from login names.
+If Mail-IDs are disabled, you should still leave the table
+definitions installed as they are referenced in other modules even
+when not used.
+.XX
+Set \fImid_enable\fR to either 0 or 1 (1 enables Mail-IDs).
+.PP
+In the next section you should define and initialize channel, table, and
+domain structures for all your channels if you are using a hardcoded
+configuration.  This is not common and requires a reasonable
+knowledge of C and structure initialization.  See the file h/ch.h
+for a definition of the channel structures, h/tb* for table
+structures,
+and h/dm* for domain table
+structures. Once these are defined and initialized,
+proceed to add all your tables to the arrays
+.I chsrch,
+.I exsrch,
+and
+.I tblist.
+You will also have to make sure you do not exceed the maximum
+array sizes (NUMTABLES, NUMCHANS, and NUMDOMAINS).  (If necessary,
+increase these values).  Finally count up the number of pointers
+in each array and update the variables
+.I tb_numtables,
+.I ch_numchans,
+and
+.I dm_numtables.
+.XX
+Add pointers to your structures to the appropriate arrays.
+.XX
+Adjust the xx_numwhatits variables to indicate number in use.
+.NH 2
+Compile-Time Tailoring conf/\fIsite\fB/conf_dial.c
+.XX
+Edit the file conf_dial.c
+.PP
+This file is used to hardcode information for the dial-out package used 
+by the PhoneNet channel (phone/slave).
+You can ignore this file if you do not intend to use the PhoneNet code.
+Although you can hardcode the information for ports (dial-out lines)
+and lines (directly connected lines, no separate dialer),
+the common practice
+is to use runtime configuration.  If you want or need to hardcode,
+see the d_*.h files for definitions of the contents of these structures.
+As you add entries to the structures, be sure to update
+the
+.I d_num{prts,lines}
+variables and don't exceed the definitions for
+NUMPRTS and NUMLINES.  These maximums must be set even if you do
+runtime configuration.
+If you expect to need more ports or lines
+than those #defines allow, even if doing runtime configuration, then
+increase the size of these definitions appropriately.
+.I D_calllog
+is the file in which the dialing software will record call attempts
+for billing or statistics purposes.  Choose an appropriate place.
+Finally, the
+.I d_dialprog
+variable is the name of a program that will do dialing for your dial
+out ports if you have such a program.  This variable is obsolete and
+will likely be removed in the near future.
+.XX
+Check NUMPRTS and NUMLINES; adjust \fId_calllog\fR if necessary.
+.PP
+The section PHONE RELAYING TAILORING is for controlling the
+behavior protocol layer of the dial package.
+The arrays d_lrill and d_lxill have a bit for each of the 128 ASCII characters.
+If the bit is set, then that character will never be sent
+directly, but will be sent using a two character encoding in printable
+ASCII.
+These should not need altering unless your system is quite non-standard
+and use of a certain character not already disabled causes your terminal
+driver to not pass the character directly to the user.
+.PP
+The section PHONE LOGGING is similar to the logging section in conf.c
+You may wish to adjust the path of \fIph_log\fR.  The same
+is true of the string
+.I def_trn.
+.I def_trn
+is a transcript file which is not size limited, but is recreated
+at the beginning of each call.
+.NH 2
+Compile-Time Tailoring conf/\fIsite\fB/Makefile.com
+.PP
+.XX
+Set HOST to match your configuration directory name
+.PP
+The SYSTEM definition is used to select the appropriate
+versions of several files that are system type dependent.
+Currently, we support SYSTEM types of `4.1', `4.2', `v7', and `5.2',
+corresponding to Version 7, 4.1BSD, 4.2BSD and System 5 Release 2
+respectively.
+For 4.3BSD, use `4.2' (you will need to compile the inetd
+version of smtpd manually if you don't want the standalone daemon).
+Most (if not all) of the systems in current use can be
+fit into one of these four types.
+.XX
+Set SYSTEM to the type for your system.
+.PP
+MMPREF is simply the string to be appended to the front of every
+command when installed.  This is a seldom-used kludge retained for
+system testing.  It should be blank.
+The definitions of LIBDIR, CHANDIR, and TBLDIR must coincide with
+the variables \fIcmddfldir\fR, \fIchndfldir\fR, and \fItbldfldir\fR
+in conf.c (tailored above).
+Typically these are /usr/mmdf, /usr/mmdf/chans, and /usr/mmdf/table
+respectively.
+BINDIR is the directory into which you wish to install the user interface
+programs.  Typically, this is /usr/bin or /usr/local/bin.
+On BRL Unix systems
+this is /usr/brl/bin.
+RCVDIR is the directory into which
+you wish to install the various ``rcvmail''
+programs.  These are automatic mail receiving programs that
+are activated by the user's installation of a .maildelivery file to control
+the delivery of mail to files and pipes.
+The directory should be generally accessible but write protected
+for security.  A typical value is /usr/mmdf/rcvmail.
+.XX
+Set the definitions for MMDF directories.
+.PP
+The next section relates to access control.
+CHOWN should be set to the full pathname of the
+.I chown
+program on your system.
+Normally this is either /bin/chown or /etc/chown.
+MMDFLOGIN is the name of the account created for use by
+the mail system, and must agree with the variable \fImmdflogin\fR
+in the file conf.c (in Section 2.5.1 of this paper).
+ROOTLOGIN is the name of the superuser account on your system
+(first line in /etc/passwd), typically `root'.
+PGMPROT controls the default mode for executables.  It should be
+no less restrictive than 511 and no more permissive than 775
+if you have a systems group for maintenance activities.  We recommend 755.
+.XX
+Tailor CHOWN, MMDFLOGIN, ROOTLOGIN, and PGMPROT if necessary.
+.PP
+The CONFIGDEFS line contains a wealth of tailoring, some of which
+may be peculiar to your system and not known to me.
+The line is used to define C preprocessor
+variables.  To define a C preprocessor variable, prepend "-D" to the variable
+and list it on the CONFIGDEFS line.  For example, to define DEBUG level one,
+you would add
+-DDEBUG=1 to CONFIGDEFS.
+CONFIGDEFS is used to build both the CFLAGS and LFLAGS option lines
+(these lines should end with $(CONFIGDEFS)).
+The available preprocessor variables are:
+.IP DOASSIGN 15
+Enables the d_assign code in the dial package.  This code calls the program
+/bin/assign to gain exclusive access to a file.  It does not appear that 
+the d_assign code is ever used so don't bother defining DOASSIGN.
+.IP SECURETTY 15
+Many sites are running their systems with TTYs in more secure mode
+than generally writable.  Usually these systems use the execute bit
+to indicate write permission and have a privileged program make the
+access.  If you are such a site, you will want to investigate
+the effect of SECURETTY and modify it if necessary.  Vanilla sites
+should not define SECURETTY.  BRL VAX UNIX sites must define SECURETTY.
+.IP DEBUG 15
+Most sites should enable DEBUG=1 unless there is a serious
+crunch for space.  This will give you fairly detailed debugging of
+the system if you need it.
+Setting DEBUG=2 will include even more debugging for address parser
+and reformatting code.
+If you do not enable DEBUG=1, you will seriously
+affect your ability to trace problems later.
+Once you have your system up an running reliably you can recompile it
+without DEBUG of either kind if you want the space and the very minor
+performance increase.
+.IP D_LOG 15
+The same caution applies for D_LOG as for DEBUG.  This variable controls
+logging in the dial package.
+If you are tight on space or
+if you don't use the dial package (no phone or
+pobox channels) you may safely omit D_LOG.
+.IP D_DBGLOG 15
+This controls more debug logging for the dial package.
+Again, if you have the
+space and if you use the dial package (PhoneNet),
+define it to allow extensive tracing if
+problems arise later.
+.IP RUNALONE 15
+This makes the channel programs operate independently from \fIdeliver\fR.  It
+hasn't been used for years and requires reading the code to understand its
+effect.  Do NOT define RUNALONE! (it is used for debugging)
+.IP V4_2BSD 15
+Enables code that is specific for 4.2 BSD .  All 4.2 BSD sites must define this
+variable.  This should be used by 4.3 BSD sites as well.
+4.3 BSD sites will also want the new src/smtp/smtpd.4.3.c for use with INETD.
+They will have to compile this manually for now (or copy it to smtpd.4.2.c).
+.IP NODIAL 15
+Prevents the dial package (PhoneNet protocol) from being compiled.
+This saves a fair amount of space and compile time.
+Define NODIAL if you do not intend
+to use the phone or pobox channels.
+(You will also need to take `dial' out of Makefile.lib, see below.)
+.IP SYS5 15
+Enables code that does Bell System V tricks (probably also useful for System
+III installations).  Note: if you are running System V, you must also append
+-Drindex=strrchr and -Dindex=strchr to CFLAGS.
+.IP ALTOS 15
+Enables code that does ALTOS tricks.  Define this variable if you have an ALTOS
+system.
+.IP NODUP2 15
+Define this variable if you don't have a dup2() system call or subroutine.
+.IP NOFCNTL 15
+If you defined NODUP2, then you should also define NOFCNTL if you don't have
+the fcntl(x, F_DUPFD) system call either.
+.IP NAMESERVER 15
+Enables the nameserver lookup code for accessing domain servers.  The
+NAMESERVER support is new.  You will be required to include either
+tb_ns.fake.c or tb_ns.<sys>.c.  Currently there is only support for
+4.2BSD networking.  See TB_NS below.
+.IP UUCPLOCK 15
+Uses UUCP/tip/cu-style locking for PhoneNet dial-out lines.  Define UUCPLOCK
+if you intend to run UUCP (or tip/cu) and PhoneNet on the same dial-out line.
+This causes \*M to use the LCK..tty?? locking of UUCP.
+.IP NODOMLIT 15
+Prevents Domain Literals (such as [10.0.0.59]) from appearing in addresses.
+Since \*M doesn't currently handle Domain Literals properly, use of this option
+is strongly advised.
+.XX
+Tailor the CONFIGDEFS line to your site's requirements and system type.
+.PP
+The CFLAGS line is the combination of the CONFIGDEFS given above
+and any C compiler dependent options.
+The basic boilerplate content is ``-O -I../../h''
+which asks for the object code optimizer and specifies the path to
+the header file directory.  If you do not have an optimizer or
+it does not work properly, remove the ``-O''.
+.XX
+Tailor the CFLAGS line to your system's C compiler.
+.PP
+LINT is the pathname of your lint program, if you have one.  If not,
+define LINT to be something innocuous like `echo'.
+LFLAGS are the flags to LINT; tailor as you like.
+This line should end with $(CONFIGDEFS) just like CFLAGS.
+LDFLAGS are the flags you want to give to the loader (ld).
+These may be site dependent; for example, a PDP-11 will require use
+of split instruction and data space by using `-i'.
+Do not include libraries in the LDFLAGS definition.
+Do not tailor MMDFLIBS.
+SYSLIBS is a list of libraries required from the system given
+either explicitly or using the -l\fIlibname\fR notation.
+Typically you will require at least -ldbm for the hashed database
+library if you are using it.
+Systems without the new Berkeley directory access routines will also need
+to include -lndir or ../../libndir/libndir.a.
+The ndir library is normally supplied in the sub-directory libndir in
+the \*M distribution.
+The AR definition is simply the path or name of the library archiver,
+typically just `ar'.
+.XX
+Tailor LDFLAGS and SYSLIBS (and perhaps LINT, LFLAGS, and AR).
+.PP
+CH_TB selects one of two types of table lookup.  The two choices: use
+linear search tables (slow) or the hashed database mechanism (fast).
+In an independent survey,
+99 out of 100
+sites recommended fast over slow (the 100th was a masochist).
+If you don't have the dbm library, get it from some other site.
+It was distributed with V7 and all BSD systems.  It is FAST.
+Set CH_TB to `ch_tbdbm' if you want to use a dbm hashed
+database (recommended) or `ch_tbseq' if you want to use linear
+searched tables.
+.PP
+The TB_NS variable indicates which nameserver module to use.
+There are currently only
+two choices, `fake' and `4.2'.  `fake' is appropriate
+if you didn't specify -DNAMESERVER in CFLAGS above
+or if your system is a non-BSD4.2 Unix.
+.XX
+Tailor TB_NS.
+.PP
+LOCALUTIL is for listing special modules needed based on
+different configurations.
+.IP \(bu
+If you do not want runtime tailoring, include tai_fake.o.
+Otherwise you should include tai_file.o.  The latter is highly
+recommended (tai_file.o).
+.IP \(bu
+You must include the name of one of the several locking code
+modules.
+There are many systems with home grown locking mechanisms that
+are much better than those provided with vanilla UNIX.
+4.2BSD comes with a very good discretionary locking mechanism.
+Examine the various lk_lock.*.c files in lib/util and choose
+one that is appropriate for your system and include the name
+of its object module here (substitute .o for .c).
+If you have a type of locking available for which we do not have
+a module, choose one that is close to what you need and modify
+it accordingly.
+If you have no locking mechanism, you should specify lk_lock.o.
+This will include a locking package that uses links to lock files.
+.PP
+The last item to tailor here is which dependency generation
+script to use.  The first one is for systems that do NOT
+have the
+.I cc
+\-M flag.  It uses
+.I grep
+and
+.I sed
+to generate
+the dependencies.  The second entry for ``depend:'' uses
+the \-M option to
+.I cc
+to generate dependencies more accurately.
+This is currently only usable with 4.3BSD systems.
+.XX
+Make sure the proper version for your
+system is uncommented and comment out
+the other version.
+.NH 2
+Compile-Time Tailoring conf/\fIsite\fB/Makefile.lib
+.PP
+There are only three things to be modified here: all defines at the top
+of the file.
+First, tailor MAKE.  If you need to use a special path for the make program,
+then define MAKE to be that path, otherwise MAKE should just be `make'.
+Second, tailor RANLIB.  Some systems (primarily System III and System V
+sites) do not have the \fIranlib\fR archive table of contents program
+and so must always create a library in the proper order for searching.
+This is done with the
+.I lorder
+and
+.I tsort
+programs.  If you do not have
+.I ranlib,
+define RANLIB to be `libfix'.  Libfix is a shellfile
+in the directory 
+.B lib
+that will do the proper things to build
+a sorted \*M library.  If you are a site that has
+.I ranlib,
+then
+simply define RANLIB to be `ranlib'.
+Finally, if you do not plan to use the dial package (no PhoneNet)
+then remove dial from the list of SUBDIRS (in this case
+you should also have defined NODIAL in Makefile.com).
+Normally SUBDIRS will be ``addr dial mmdf table util''.
+.XX
+Set MAKE, RANLIB, and SUBDIRS to appropriate strings.
+.NH 2 
+Compile-Time Tailoring conf/\fIsite\fB/Makefile.src
+.PP
+There are a couple of experimental or new channels that you may
+want to use that are not on the line defining
+SUBDIR, or it may be commented out (preceded by a #).
+The standard entries are tools, submit, deliver, local,
+list, delay, smtp, phone, pobox, uucp, and prog.
+If you include the nameserver code you will need `delay', otherwise
+it can be left out.
+You may also want to remove references to
+directories you know you are not going
+to use.
+This will save compile time, since you will not build things
+you do not intend to use.  If you have specified -DNODIAL, you can safely
+comment-out the phone and pobox directories.
+.XX
+Check the contents of SUBDIR and adjust if necessary.
+.NH 2
+Compile-Time Tailoring conf/\fIsite\fB/msgtailor.c
+.PP
+There are a quite a few things to tailor for the
+.I msg
+program.
+The first is the number of messages supported in one mailbox.  This
+is basically limited only by the host machine's address space.
+The
+.I msgtailor.c
+file already has some typical values for 16 bit and 32 bit systems.
+NMSGS is the maximum number of messages to be supported.  For 16 bit
+systems, the maximum should be no more than 500, on 32 bit systems,
+the upper limit is somewhat arbitrary, but does affect storage space.
+We suggest 2000.
+.I Savmsgfn
+is the name of the place to save mail from the main mailbox (as
+tailored in Section 2.5.7).  This is usually ``mbox''.
+The string
+.I resendprog
+is a string that is fed to a subroutine of 
+.I msg
+to cause the resending
+program (supplied as uip/other/resend.c) to be invoked.
+It must begin with a `|' (pipe symbol) and
+the remainder of the string must be the path to the resending program,
+which normally gets installed in BINDIR (see Section 2.8).
+It is possible to omit the full path but it is not recommended.
+Note that a space character is required at the end of
+.I resendprog.
+The stand-alone section should be ignored.
+.XX
+Set up \fIsavemsgfn\fR and \fIresendprog\fR, and NMSGS if necessary.
+.PP
+The strings
+.I dflshell
+and
+.I dfleditor
+define the default shell for subprocesses and default editor
+for two window answer mode (respectively).  Both can be
+overridden by the normal shell variables (``SHELL'' and ``EDITOR'').
+The default editor should be able to edit multiple files simultaneously
+if invoked
+with more than one file name.
+If you have no editors with this feature you can probably concoct a
+shell file to do it or make do with just invoking an editor (e.g., 
+\fBex\fR or \fBvi\fR)
+on a copy of the original message.
+.XX
+Set up the \fIdflshell\fR and \fIdfleditor\fR.
+.PP
+The following variables are basically self explanatory and control
+the default behavior of such features as command completion, paging,
+informative messages, and timezone constants.  If in doubt, leave the
+settings alone.  Note that the time stuff need not be tailored
+for System V systems.
+For unusual time zones (perhaps all time zones), it is recommended
+that you use the offset notation from Greenwich Mean Time.
+For the US Eastern Time
+zone this would be `{ ``-0500'', ``-0600'' };', and Middle European
+Time would be `{ ``+0200'', ``+0100'' };'.
+The normal BRL settings are given below:
+.sp
+.TS
+l l l .
+int	pagesize = 22;		/* default line count */
+int	linelength = 80;	/* default line size */
+
+int	paging = OFF;		/* Internal paging of long messages */
+int	verbose = ON;		/* Command completion (raw mode) */
+int	keystrip = ON;		/* Strip header lines on display */
+int	bdots = ON;		/* Binary box dots */
+int	mdots = ON;		/* Mailbox dots */
+int	bprint = ON;		/* Reading... messages */
+int	quicknflag = OFF;	/* Turn off NEW before message prints */
+int	filoutflag = ON;	/* Filter text (display controls as ^X) */
+int	binsavflag = ON;	/* Save binary box on exec's & pauses */
+#ifndef SYSV
+long	timezone = 5*60*60L;	/* Seconds West of GMT (Greenwich Mean Time) */
+		/* (-1)*60*60L is Middle European Time. */
+		/* 5*60*60L is U.S. Eastern Time. */
+		/* 8*60*60L is U.S. Pacific Time. */
+int	daylight = 1;		/* Do you use daylight savings time? */
+		/* 0 = NO, 1 = YES */
+char	*tzname[] = {"EST", "EDT",};
+		/* Timezone strings, primary and daylight
+		savings time if used, in that order */
+#endif SYSV
+.TE
+.NH 2
+Compile-Time Tailoring conf/\fIsite\fB/s_tailor.h
+.PP
+This file defines some of the operating characteristics of the 
+\fIsend\fR program.
+There are three #defines you can tailor in this file.
+Your choice is to either #define or #undef each of the following.
+SENTFILE causes a copy of each message sent to be placed in a file
+called .sent in the user's home directory.  This option is obsoleted by
+the new version of  \fIsend\fR; the user can now tailor this feature
+by editing the .sendrc file in the user's home directory.
+FNCYPRNT enables paginated printing of the message by the review
+command.  If this is not defined, listing will occur without
+pagination.  This is normally left undefined.
+PWNAME, when defined, enables the code that will try to get the
+user's real name from the gecos field of /etc/passwd if no .signature
+file exists.
+The code stops at the first comma and knows about the '&'
+notation for abbreviating the login name.
+If your site has gecos fields which contain other
+information or the format is not compatible, do not #define PWNAME.
+.XX
+Check the settings of SENTFILE, FNCYPRNT, and PWNAME.
+.NH 2
+Compile-Time Tailoring conf/\fIsite\fB/s_tailor.c
+.PP
+This is the main tailoring file for the \fIsend\fR program.
+There are three things to tailor here.
+Set the initialization of the strings for the default
+line and screen editors, and the default spelling checker.
+.I Dfleditor
+should be set to the local default line editor.
+.I Dflveditor
+should be set to the local default visual (screen) editor.
+.I Dflchecker
+should be set to the local default spelling checker.
+If the names are simple names (e.g. "ed") your users will be able
+to find versions in their search paths; if the names are full paths,
+\fIsend\fR will always run the versions you specify unless overridden
+by the user.
+Users can always override these settings in their .sendrc files.
+.XX
+Set the strings \fIdfleditor\fR, \fIdflveditor\fR and \fIdflchecker\fR
+for your site.
+.NH 2
+Other Compile Time Problems
+.PP
+If you are a 4.3BSD site or have access to the
+Berkeley Inetd or another Internet super-server,
+you will probably want the version of smtpd designed to
+run under these super-servers.
+For the time being, you will need to
+move smtpd.4.2.c to smtpd.4.2.old
+and install smtpd.4.3.c as smtpd.4.2.c in the
+directory src/smtp so the makefiles can generate
+the module you need.
+In the future this difference will be more cleanly handled
+in the configuration procedure.
+.XX
+If you have a super-server, install smtpd.4.3.c.
+.NH 2
+Compiling Your \*M System
+.PP
+You are now ready to generate your version of \*M.
+You must first go to the conf directory and install your
+site specific files by running the `sitesetup' shell program
+located there.  Yoursitname is the name of the directory
+you chose and should also match the HOST variable in the Makefile.com
+you edited earlier.
+Please do not try to run this shellscript with C-shell or
+some other non-standard shell.
+.XX
+In conf, run `sh sitesetup yoursitename'.
+.PP
+If you have not run a ``make clean'' yet, you should do so now.
+.PP
+Next you should go to the top directory and run ``make depend''.
+This will go recursively through \fBlib\fR, \fBsrc\fR and \fBuip\fR
+generating the dependencies for your system.  Remember the comments
+about this mechanism made at the beginning of this document.
+.XX
+In the top directory, run `make depend'.
+.PP
+The master makefile in the top of the \*M source tree
+will attempt to recompile everything in the subdirectories
+\fBlib\fR, \fBsrc\fR, and \fBuip\fR (in that order).  You can also run
+make in each of these directories alone, although
+\fImake\fR must be run in \fBlib\fR first.
+.PP
+If you want to run each of the make's separately,
+change directory to the \fBlib\fR directory and run \fImake\fR.
+This should result in the file lib/libmmdf.a several minutes
+later (15-30 minutes, depending on machine speed).
+Assuming libmmdf.a was generated
+successfully, change directory to the \fBsrc\fR directory
+and run \fImake\fR to build the core \*M programs (burn another 15-30
+minutes).
+Finally, go to the \fBuip\fR directory and run \fImake\fR there.
+In all cases, libmmdf.a must be built before any other directories
+are made or the objects will not load successfully (they need
+the library!).
+.PP
+Remember that make depend will insert some bogus dependencies if
+you do not have
+.I cc
+\-M, so make will stop a few times.  When it does
+remove the offending bogus dependency and continue.  You will only
+have to do this once.  Make depend should not have to be run again
+unless significant source changes are made.
+.XX
+If you didn't run the make's separately
+above, run `make' at the top of the \*M source tree
+.NH 2
+Handling Problems While Compiling
+.PP
+If you run into problems you can always interrupt the process,
+correct the problem, and continue by calling \fImake\fR again
+from the directories lib, src, or uip (or just running the master
+makefile again from the top directory).
+Remember that if you try to build any of the subdirectories of \fBlib\fR, 
+\fBsrc\fR, or \fBuip\fR (e.g. \fBsrc/deliver\fR)
+while in that directory, you must invoke \fImake\fR via the shellfile
+\fIgen\fR in the subdirectory.  \fIGen\fR takes all the same arguments
+as \fImake\fR but includes the file ../../Makefile.com along
+with ./Makefile.real by using the \-f option of \fImake\fR.
+.NH 2
+Additional Makefile Features
+.PP
+The makefiles in \fBsrc\fR and \fBuip\fR also support
+the command ``make dist''
+which makes a tar-format file with all the executable binaries
+and a shellfile called ``install.sh'' which, if run, will install all
+the binaries and chown/chmod them appropriately.  A ``make dist'' should 
+only be run after the system has been successfully built and (preferably)
+tested on the current system.  This facility makes it much easier to
+maintain multiple systems from a master source machine and greatly
+simplifies distributing and installing new versions.
+(This facility is a bit flakey.)
+.PP
+As mentioned before, all the Makefiles support ``make clean''
+and ``make depend'' (or ``gen clean'' and ``gen depend'' as
+appropriate to your current directory).

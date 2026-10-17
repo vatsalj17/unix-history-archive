@@ -1,0 +1,22 @@
+dir="/service/mailstats"
+day=`lday`
+file="$dir/stat/$day"
+cd /usr/spool/mmdflogs
+(grep "end msg" msg.log; grep "[rl]in msg" msg.log) | mail mmdf.arch.44d@44a
+mv msg.log  "$dir/msg/$day"
+mv chan.log "$dir/chan/$day"
+mv auth.log "$dir/auth/$day"
+mv ph.log   oph.log
+mv ph.trn   oph.trn
+cp /dev/null msg.log
+cp /dev/null chan.log
+cp /dev/null ph.log
+cp /dev/null ph.trn
+cp /dev/null auth.log
+chmod 666 msg.log chan.log ph.log ph.trn auth.log
+find "$dir" -mtime +5 -a -exec rm -f {} ";"
+cd "$dir/auth"
+if cat *:* >>`day`.44dmlog
+then
+        rm -f *:*
+fi

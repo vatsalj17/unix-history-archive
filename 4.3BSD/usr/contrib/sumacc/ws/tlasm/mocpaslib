@@ -1,0 +1,24 @@
+3. "6F^5D!$^; This mockup of the Pascal library MACPASLIB allows an assembly program to
+; run standalone without the overhead of the normal Pascal library.  This may
+; either be included in the program source or linked with the assembled program.
+          .PROC     MOCPASLIB
+          .DEF      %_BEGIN
+          .DEF      %_END
+          .DEF      %_Term
+          .DEF      %_INIT
+
+%_BEGIN:
+          CLR.L   $10(SP)
+%_END:
+          RTS
+
+%_Term
+          MOVE.L  (SP)+,A0
+          LINK    A5,#0
+          JMP     (A0)
+
+%_INIT:
+          MOVE.L  (SP)+,A0
+          UNLK    A5
+          JMP     (A0)
+.END

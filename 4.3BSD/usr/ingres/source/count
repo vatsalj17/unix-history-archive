@@ -1,0 +1,27 @@
+#
+cp /dev/null count.out
+
+foreach j ( conf ctlmod dbu decomp equel gutil h iutil libq monitor ovqp parser qrymod support )
+	cd $j
+	wc *.[chys] | tail -1 >> ../count.out
+	cd ..
+end
+
+ex - count.out << 'FRED'
+1,$<<
+1,$s/ .*$/
+1,$s/$/ +/
+1s/+/
+$a
+p
+.
+wq
+'FRED'
+
+dc < count.out > tmp
+echo Total Number of Lines in INGRES Source > count.out
+echo -n "	" >> count.out
+cat tmp >> count.out
+
+cat count.out
+\rm -f tmp count.out

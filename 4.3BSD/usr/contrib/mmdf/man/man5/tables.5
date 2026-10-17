@@ -1,0 +1,310 @@
+.TH TABLES 5
+.SH NAME
+MMDF Name Tables
+.SH SYNOPSIS
+Name tables, for aliases, domains, and hosts
+.SH DESCRIPTION
+.PP
+All of the MMDF name tables are encoded into a database 
+which is built on top of the
+\fIdbm\fR(3X)
+package.
+A number of tables are associated with MMDF, the exact set
+being specified by the tailor file described in
+the "Installing and Operating MMDF II" document.
+Name tables all have the same format and are accessed via the
+.I tb_dbm.c
+module.
+Functionally, they permit a simple key/value pairing.
+The syntax for tables is specified here:
+.RS
+.IP "entries ::=" 15
+entries entry
+.IP "entry ::=" 15
+comment / real-entry
+.IP "comment ::=" 15
+ '#' value eol
+.IP "real-entry ::=" 15
+name separator value eol
+.IP "name ::=" 15
+{string of chars not containing a <separator>}
+.IP "separator ::=" 15
+{see the chars in _hkeyend[], usually ':' and space}
+.IP "value ::=" 15
+{string of chars not containing an <eol>}
+.IP "eol ::=" 15
+{see the chars in _hvalend[]}
+.IP "where:"
+.IP "name is" 15
+a key
+.IP "value is" 15
+any relevant text.
+.RE
+.PP
+Examples of alias, domain, and host usage are
+given in a sample sheet in the MMDF documentation.
+Special
+handling is required for the local machine's user identification
+file (on Unix, /etc/passwd).
+.SS "Hosts and Domains"
+.PP
+Two basic types of table are host and domain tables.  This
+section gives a brief discussion of these concepts in terms of
+the MMDF system.  The domain namespace is treated as a logical global
+hierarchy, according to the model of RFC 819, with subdomains
+separated by '.'s (e.g ISI.USC.ARPA is a three level hierarchy
+with ARPA at the top level).   A host is a computer associated
+with a channel as described in
+channels(7),
+which may be directly connected or reached through a relay
+associated with the channel.  The distinction between hosts as
+physical entities, and domains as logical entities should be
+noted.  All hosts known to an MMDF system must have unique names.
+For this reason, the convention of labelling hosts by an
+associated domain name is adopted in many cases.  This is a
+useful method to guarantee unique names, but is not required.
+The domain and host table structures are devised with three
+basic aims in mind:
+.RS
+.IP 1.
+To map a string into a fully expanded domain
+name.
+.IP 2.
+To map this domain into a source route starting with a host.
+.IP 3.
+To obtain the transport address associated with the host.
+.RE
+.SS "Domain Tables"
+.PP
+Domains are split in a two-level manner, with the top part of
+the tree specified in the tailor file as described in 
+the "Installing and Operating MMDF II" document
+and the lower parts of the tree in tables.  The two level
+structure is intended as a balance between generality and
+efficiency.
+The order of searching is also specified in the tailor file.
+The structure of a domain table is to have name as the part of
+the domain not in the tailor file.
+Thus for ISI.USC.ARPA there might be a domain ARPA with 
+name=isi.usc
+or domain USC.ARPA with 
+name=isi.  The structure of
+value is:
+.RS
+.IP "value ::=" 15
+*(domain dm_separator) host
+.RE
+.PP
+The possible values of dm_separator are given in
+tai(3),
+although typically ',' or ' ' would be used.
+This value is essentially a source route to be traversed from
+right to left.  Consider an example table for the domain ARPA:
+.nf
+
+# Sample ARPA domain table
+isi.usc:a.isi.usc.arpa
+b.isi.usc:b.isi.usc.arpa
+foobar.isi.usc:b.isi.usc.arpa
+graphics.isi.usc:graphics.isi.usc.arpa z.mit.arpa
+
+.fi
+Thus, if the "isi.usc.arpa" is analysed, domain table ARPA will
+be selected, and host "a.isi.usc.arpa" associated with domain
+"isi.usc.arpa".  If only "isi.usc" were given, the domain tables
+would be searched in order, and if the ARPA table were the first
+one to give a match, then the same result would be reached.  If
+"foobar.isi.usc" is given, it would be mapped to host
+"b.isi.usc.arpa" and (official) domain "b.isi.usc.arpa".
+If "graphics.isi.usc.arpa" is given, a source route to domain
+"graphics.isi.usc.arpa" through HOST "z.mit.arpa" will be
+identified.  If "xy.isi.usc.arpa" (or "xy.isi.usc") is given, then
+it will not be found.  However, a subdomain will be stripped
+from the left  and the search repeated. Thus domain
+"xy.isi.usc.arpa" will be identified as reached by a source route
+through host "a.isi.usc.arpa".
+.PP
+As specified earlier, the
+order of searching is also specified in the tailor file.
+For example, a host in domain UCL-CS.AC.UK, might have a search
+order UCL-CS.AC.UK, AC.UK, UK, SWEDEN, ARPA, "".   Thus, if
+there were a domain isi.usc.ac.uk, it would be the preferred
+mapping for isi.usc over isi.usc.arpa.  The last domain
+searched is null.  This could be used to contain random fully
+qualified domains or to identify gateways to other domains.
+An example file is:
+.nf
+
+#  Sample Top level domain table
+#  Odd host
+basservax.australia:basservax.australia scunthorpe.ac.uk
+# UUCP Gateway
+uucp:seismo.arpa
+# Mailnet Gateway  (-> multics -> educom ->mailnet)
+mailnet:educom.mailnet mit-multics.arpa
+
+.fi
+To specify the top domain in the tailor file, the name and
+dmn parameters of the domain should be set to "".
+.SS "Host Tables"
+.PP
+For every host associated with the channel, there will be one
+or more entries.  In each case, the key is the name identified
+from the domain tables.  A host may have multiple entries if it
+has more than one transport address which the channel might
+utilise.
+.PP
+When a channel just sends all its mail to a relaying site, the
+address portion (value) of the entry is not needed, directly, 
+during the transmission
+process.  Hence, it need not be accurate.  However, it still is
+used to logically collect together host names, that is, all table
+entries with the same value are regarded as being aliases for the same
+host.
+.SS "P.O. Box Channels"
+.PP
+POBox channels, for passive, telephone-based exchange, operate
+in two modes.  In one case, a single
+login is authorized to pickup all mail for the channel.  In this
+case, the host-table addresses are only used for the "collecting"
+function.  For the second mode, different logins
+share the channel and are to receive only some of the mail queued
+for the channel.  In this case, the login is treated as an
+"address", and the table entries should have the value fields contain
+the name of the login authorized to pickup mail for that "host".
+.SS "Access control tables"
+.PP
+Channels also have access control tables associated with them,
+to determine whether a message is allowed to use a given route.
+Each channel has four (optional) tables that determine the
+access controls used: insrc, outsrc, indest, and outdest. 
+These tables and the access control mechanism are more fully
+described in "Configuring MMDF Authorization" by Steve Kille.
+.SS "Reformatting tables"
+.PP
+There may also be a "known hosts" table associated with each
+channel.  This is exactly the same format as a host table.
+If a message is being reformatted, and if an address does not
+have its host in this list, then it will be modified to appear
+as a percent route (RFC733 or JNT Mail route) address, with the local
+domain as the root.
+.SS "Local Aliases"
+.PP
+The password file specifies the name of all local recipients; their mailing
+names are their login names.  Since this is a rather restricted
+name space, and since it is useful to have some other kinds of locally-known
+names, there is a second file used to specify "aliases".  The
+location of the aliases file
+is specified in the tailor file.
+.PP
+An alias entry may be used for one of five functions:
+.RS
+.IP 1.
+True aliasing, where the key value maps to a local user's login name,
+e.g. "dave:dcrocker";
+.IP 2.
+Forwarding, where the key value maps to a foreign address, such
+as "dcrocker:dcrocker@udel"; and
+.IP 3.
+Address lists, where the key value maps to a set of addresses, such
+as "mother:cotton,dcrocker,farber".
+.IP 4.
+Redirection of a message to a file. For example,
+"foobar:dpk/foobar" would cause user and group ids to be set to
+dpk and the text of the message to be appended to the file "foobar" in
+dpk's default
+login directory.   Similarly, "foobar:dpk//tmp/foobar" would do
+the same for file /tmp/foobar.
+.IP 5.
+Redirection of a message to a pipe.  For example,
+"news-inject:news|/usr/lib/news/uurec" would
+cause a message to be sent to be passed into a unix
+pipe (see pipe(2)) 
+with userid and groupid set to news.
+.RE
+.PP
+As a convenience, the value-part of an entry may specify a file
+name, so that the
+.I actual
+value is taken from the file.
+There are two possible notations for this:
+.RS
+.IP 1.
+By having left-angle bracket
+('<') precede the value specification.  For example:
+"mother: < /etc/mmdf/mother_list@udel-relay.arpa".
+.IP 2.
+By using a data type with value "include".  For example:
+"mother: :include: /etc/mmdf/mother@udel-relay.arpa"
+.RE
+In both cases, the @HOST (not a domain) is optional.  If specified, it should
+be the local host.
+.PP
+Recursive specification is permitted.
+For example, "crocker" may map to "dcrocker" and
+"dcrocker" may map to "dcrocker at udel", so that
+both "crocker" and "dcrocker" are locally-known names, but mail
+sent to either of them will be forwarded to "dcrocker@udel".
+.PP
+In practice, it is useful to organize alias files into the following
+ordering:
+.RS
+.IP "List aliases"
+which contain a value referring to a later address list.
+This constitutes a one-to-one mapping of a key to a value, where
+the value points into the "Lists" group.
+.IP "Lists"
+which contain values referring to multiple addresses;
+This constitutes a one-to-many mapping, where some of the addresses
+may refer to other entries (address lists) in the Lists group, as
+well as other entries (individual addresses) later in the table.
+.IP "Mailbox aliases"
+which contain values referring to single addresses.
+These constitute one-to-one mappings, where the value refers to an
+entry in the password file or to an entry in the "Forwarding aliases"
+group.
+.IP "Forwarding aliases"
+which contain values referring to single addresses on other
+machines.
+These, also, are one-to-one mappings, where the value always refers
+to an off-machine address.
+.RE
+.PP
+By organizing the file in this manner, only the "Lists" portion
+requires a topological sort.  Since the other three sections will
+never point to entries within their section, they may be sorted
+more conveniently, such as alphabetically.
+Such a structure also tends to make changes easy.  In particular,
+the handling of forwarding is easy, since
+.I all
+references to a user will get intercepted, at the end of the
+table.
+.SS "Mail-ID tables"
+.PP
+The Mail-ID tables are used only if the Mail-IDs feature is enabled.
+This can be done by initializing the mailids variable in conf/conf.c
+or dynamically, in the tailoring file, by defining MMAILID to be 1.
+Mail-IDs are used to disassociate mail addresses from login names.
+There are two tables that are used to map Mail-IDs to users login names
+and login ids to Mail-IDs.  The "users" file is used to map
+users (login ids) to Mail-IDs, and the "mailids" file is used to map
+Mail-IDs to users.  The names of these files can be overridden, but it
+is not recommended.  Each file has lines with two entries per line
+(user and Mail-ID, or Mail-ID and user).
+.PP
+A user can have more than one entry in the Mail-IDs file, but should have
+only one entry in the users file.  This does not prevent him from
+sending mail with any of his Mail-IDs.  The users file is just a source
+of default Mail-IDs.
+.SH FILES
+.IP conf/<site>/chan.c 20
+defines existing channels, including the location of their
+host name tables and the local aliases file.
+.IP lib/table/tb_dbm.c  20
+is the code which accesses the tables.
+.IP tbldfldir[] 20
+is the default location for host names tables and the local
+aliases file.
+.SH SEE ALSO
+.PP
+dbm(3X), tai(3), channels(7), submit(8), "Installing and Operating MMDF II"

@@ -1,0 +1,28 @@
+Here is a couple of things that could stand to be done.
+
+	If you are running 4.3bsd then undef all the sigmask's.
+
+	I am surprised this runs as fast as it does.  Lots of things could
+	be done to speed it up.  It just has too many open files that it
+	reads and rereads and rereads.  How about a structure to store
+	the headers for instance?
+
+Running Lint:
+
+I did this as of June 2, 1986  (Galvin).  I gave  up on trying  to eliminate
+all the possible pointer conversion problems.  For some  reason lint insists
+on complaining about all the "calloc" and "salloc" calls.
+
+I  ifdef'ed  whole subprograms  which are   unused  with  "NOT_USED".  Those
+subprograms which are actually available from the C library  I ifdef'ed with
+NO_LIB.
+
+Remember that all  routines  in  "CmdTab" must  return  zero or non-zero  as
+appropriate.  Lint complains about return values that are not used but these
+routines are called indirectly.
+
+Untold numbers of  variables/parameters   which were  unused  were  deleted.
+Quite a bit of type casting was also done.
+
+What's left?  Mail works.  It probably should only be provided as an interim
+facility, though.  Sites should really use msg/send.

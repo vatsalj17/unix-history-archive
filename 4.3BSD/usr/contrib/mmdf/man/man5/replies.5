@@ -1,0 +1,67 @@
+.TH REPLIES 5
+'ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.SH NAME
+MMDF Reply Values
+.SH SYNOPSIS
+.nf
+#include "mmdf.h"
+
+struct rp_bufstruct		  /* for reading reply strings          */
+{
+    char    rp_val;
+    char    rp_line[256];
+};
+
+char *rp_valstr (rp_val);
+
+rp_gval(rp_val)     /* get the entire return value        */
+rp_gbval(rp_val)    /* get the basic part of return value */
+rp_gcval(rp_val)    /* get the domain part of value       */
+rp_gsval(rp_val)    /* get the specific part of value     */
+rp_gbbit(rp_val)    /* get the basic part right-shifted   */
+rp_gcbit(rp_val)    /* get the domain part right-shifted  */
+rp_gsbit(rp_val)    /* get the specific part right-shifted */
+rp_isgood(rp_val)   /* is return value positive?          */
+rp_isbad(rp_val)    /* is return value negative?          */
+.fi
+.SH DESCRIPTION
+.PP
+Within MMDF, process, procedure, and protocol reply values
+are handled uniformly.  The file
+.I mmdf.h
+defines all legal reply
+values and contains pseudo-functions for interpreting the values.
+For protocol replies, a text string is included and may be passed
+to the user or recorded in a log.
+
+Values are coded into 8-bits, to allow them to be returned by
+Unix PDP-11 processes.  A value comprises three fields.  The first
+indicates overall degree of success.  Success or failure can be
+complete or partial.
+
+The second field indicates the semantic domain to which the
+reply refers, for example "the mail system" or "the file system".
+
+The third field is used to distinguish the exact value.
+
+In order to bypass machine-dependent handling of bit-strings,
+.I mmdf.h
+contains some macro pseudo-functions.  On PDP-11 Unices, the
+main problem encountered is with sign-extension when the value
+passes through a register.  The macros eliminate this problem.
+
+The macro, rp_gval(), extracts the whole value.  The macros
+rp_isgood() and rp_isbad() will be the most heavily used, since
+they test for basic success or failure.
+
+The specific values in
+.I mmdf.h
+have explanations in comments.
+
+The structure rp_bufstruct allocates a reply buffer, divided
+into value and string parts.
+.SH FILES
+.IP "h/mmdf.h" 20
+Actual reply values
+.IP "lib/mmdf/rp_valstr.c" 20
+maps values to strings, for printout.

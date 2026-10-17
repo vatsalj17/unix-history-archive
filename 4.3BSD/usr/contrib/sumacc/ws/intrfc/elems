@@ -1,0 +1,95 @@
+O^75PH r^%Dc{$C Copyright Apple Computer Inc., 1983 }
+
+UNIT Elems;
+
+    { Macintosh version. }
+
+    {------------------------------------------------------------------------}
+
+    INTERFACE
+
+        USES
+
+            {$U OBJ/SANE.OBJ }
+             {  ^^^^ changed 'Obj:' filename reference to 'Obj/' for Workshop-2/24/84 MB}
+                SANE { Standard Apple Numeric Environment } ;
+
+        procedure Log2X (var x : Extended);
+            { x := log2 (x) }
+
+        procedure LnX (var x : Extended);
+            { x := ln (x) }
+
+        procedure Ln1X (var x : Extended);
+            { x := ln (1 + x) }
+
+        procedure Exp2X (var x : Extended);
+            { x := 2^x }
+
+        procedure ExpX (var x : Extended);
+            { x := e^x }
+
+        procedure Exp1X (var x : Extended);
+            { x := e^x - 1 }
+
+        procedure XpwrI (i : integer; var x : Extended);
+            { x := x^i }
+
+        procedure XpwrY (y : Extended; var x : Extended);
+            { x := x^y }
+
+        procedure Compound (r, n : Extended; var x : Extended);
+            { x := (1 + r)^n }
+
+        procedure Annuity (r, n : Extended; var x : Extended);
+            { x := (1 - (1 + r)^-n) / r }
+
+        procedure SinX (var x : Extended);
+            { x := sin(x) }
+
+        procedure CosX (var x : Extended);
+            { x := cos(x) }
+
+        procedure TanX (var x : Extended);
+            { x := tan(x) }
+
+        procedure AtanX (var x : Extended);
+            { x := atan(x) }
+
+        procedure NextRandom (var x : Extended);
+            { x := next random (x) }
+
+    {$p----------------------------------------------------------------------}
+    IMPLEMENTATION
+
+        procedure Log2X { (var x : Extended) } ;                EXTERNAL;
+        procedure LnX { (var x : Extended) } ;                  EXTERNAL;
+        procedure Ln1X { (var x : Extended) } ;                 EXTERNAL;
+        procedure Exp2X { (var x : Extended) } ;                EXTERNAL;
+        procedure ExpX { (var x : Extended) } ;                 EXTERNAL;
+        procedure Exp1X { (var x : Extended) } ;                EXTERNAL;
+
+        {
+            Since Elems implementation expects pointer to integer argument,
+            use this extra level of interface.
+        }
+        procedure XpwrIxxx(var i : integer; var x : Extended);  EXTERNAL;
+        procedure XpwrI { (i : integer; var x : Extended) } ;
+        begin
+                XpwrIxxx(i, x);
+        end;
+
+        procedure XpwrY { (y : Extended; var x : Extended) } ;  EXTERNAL;
+        procedure Compound { (r, n : Extended; var x : Extended) } ;  EXTERNAL;
+        procedure Annuity { (r, n : Extended; var x : Extended) } ;  EXTERNAL;
+        procedure SinX { (var x : Extended) } ;                 EXTERNAL;
+        procedure CosX { (var x : Extended) } ;                 EXTERNAL;
+        procedure TanX { (var x : Extended) } ;                 EXTERNAL;
+        procedure AtanX { (var x : Extended) } ;                EXTERNAL;
+        procedure NextRandom { (var x : Extended) } ;           EXTERNAL;
+
+    END
+    {========================================================================}
+    {========================================================================}
+    {=======================================================================}.
+

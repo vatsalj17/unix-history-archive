@@ -1,0 +1,48 @@
+.TH NICTABLE 8 "17 June 85"
+.SH NAME
+nictable - process NIC database into channel/domain tables
+.SH SYNOPSIS
+nictable
+\-[CDT]
+[\-d \fIdomain\fR]
+[\-s \fIservice\fR]
+[\-t \fItransport\fR] 
+.SH DESCRIPTION
+.PP
+.I Nictable
+is the tool responsible
+for taking the hosts.txt table supplied by the SRI Network
+Information Center and creating domain and channel tables.
+The format of the NIC table is subject to change, and occasionally
+this program must be modified appropriately.
+.PP
+The \-C option causes the program to generate a channel table on the
+standard output.
+The \-D option creates a domain table.  This option should be combined
+with the \-d option explained below to state which domain table you are
+building.
+The \-T option creates a ``top'' or ``rootdomain'' table.
+No trailing domain spec is removed from the LHS entry.
+.PP
+There are several options for further restricting the number of hosts chosen.
+The \-d \fIdomain\fR option states that only hosts in the domain specified
+should be output.  An exception to this is when \-d is combined with \-T.
+In this case, all entries will be output EXCEPT for those in the domain
+specified.  The intention is that you grap all of one domain with \-D,
+and then grab everybody else with \-T.
+The \-s \fIservice\fR option states that only hosts that are listed as
+supporting the service specified should be output.
+The \-t \fItransport\fR option is like \-s except it states that only
+hosts supporting the transport protocol specified should be considered.
+.PP
+Typical usage involves two or three invocations:
+.sp
+nictable -C < /etc/hosts.txt > smtpchannel
+.sp
+nictable -D -d ARPA < /etc/hosts.txt > arpadomain
+.sp
+(and optionally)
+.sp
+nictable -T -d ARPA < /etc/hosts.txt > rootdomain
+.SH "SEE ALSO"
+"Installing and Operating MMDF II"

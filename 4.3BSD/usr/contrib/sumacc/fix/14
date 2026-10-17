@@ -1,0 +1,67 @@
+Return-Path: <@seismo.ARPA:rlgvax!guy@seismo>
+Received: from seismo.ARPA by safe with TCP; Wed, 17 Oct 84 10:21:34 pdt
+Return-Path: <rlgvax!guy>
+Received: from rlgvax.UUCP by seismo.ARPA with UUCP; Tue, 16 Oct 84 13:59:22 EDT
+Received: by rlgvax.UUCP; Tue, 16 Oct 84 13:45:11 EDT
+Date: Tue, 16 Oct 84 13:45:11 EDT
+From: Guy Harris <rlgvax!guy@seismo.ARPA>
+Message-Id: <8410161745.AA04336@rlgvax.UUCP>
+To: seismo!croft@safe
+Subject: Re:  MIT C compiler bug fix
+
+Here's the article (not posted by me), which had the code fragment in
+question:
+
+	Recent articles have noted that some 68000 C compilers produce bogus
+	"Invalid Operand" messages when compiling a program like:
+
+		#define MAXLLEN 80
+
+		struct line {
+			char    len;
+			char    flags;
+			char    l[MAXLLEN];
+		};
+
+		_fixlines() {
+			register struct line *	lp;
+			register char *		p;
+
+			lp->len = p + 1 - lp->l;
+		}
+
+The symptom is that it produces a byte move into an address register;
+"move.b	<something>,aN" or whatever the MIT assembler equivalent is.
+Here's the fix; we use a modified MIT assembler which accepts Motorola
+assembler syntax, so your compiler should have a different syntax for the
+generated code if you use the vanilla MIT assembler:
+
+In "table.c", before the table entry that reads something like
+
+	ASSIGN,	INAREG|FOREFF|FORCC,
+		EAA,	TSCALAR|TFLOAT,
+		EA,	TSCALAR|TFLOAT,
+			0,	RLEFT|RRIGHT|RESCC,
+			"	moveZB	AR,AL\nT",
+
+put an entry that reads like
+
+	ASSIGN,	INAREG|FOREFF|FORCC,
+		EAA,	TCHAR,
+		SBREG|STBREG,	TCHAR,
+			NAREG|NASR,	RLEFT|RRIGHT|RESCC,
+			"	move.l	AR,A1\n	moveZB	A1,AL\nT",
+
+(your mileage and exact entries may differ).  This entry forces a move of
+a "char" into a "B register" (which is an address register) to proceed
+first by moving the character into a scratch "A register" (data register)
+and then move the data register into the address register.
+
+This fix is thanks to somebody at MIT named, I believe, Jonathan something-
+or-other, and was posted in response to an article from Steve Kramer mentioning
+the bug.  (Apologies to Jonathan X, but I don't have the article any more
+and don't remember his name.)
+
+	Guy Harris
+	{seismo,ihnp4,allegra}!rlgvax!guy
+

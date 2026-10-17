@@ -1,0 +1,135 @@
+.TH DELIVER 8 "20 October 84"
+.SH NAME
+deliver \- MMDF mail delivery process
+.SH SYNOPSIS
+deliver [-bdpsw]
+[-c\fIchan,chan\fR]
+[-l\fImins\fR]
+[-t\fIhrs\fR]
+[-m\fImaxsort\fR]
+[-L\fIlogfile\fR]
+[-T\fIsecs\fR]
+[-V\fIloglevel\fR]
+[\fImessage1 ... messageN\fR]
+.SH DESCRIPTION
+The deliver program handles the management of all mail delivery
+under the MMDF mail system.  \fIDeliver\fR does not deliver mail directly,
+but instead calls on MMDF channels to handle actual delivery.
+\fIDeliver\fR's actions are guided by the MMDF tailoring file,
+\fI/usr/mmdf/mmdftailor\fR, and by the command line options.
+The program can run as either a daemon or a user-invoked program.
+The program may be called to process the entire mail queue or just
+handle some explicitly named messages.
+When possible,
+.I deliver
+will attempt to process messages in the order received.
+Deliver also maintains a cache of host information on a per-channel
+basis which allows hosts which are unavailable for delivery
+to be skipped until available.
+.PP
+.I Deliver
+first builds a list of channels to process, either from the
+command line or composed of all the non-passive channels in
+the system.  Next, a list of messages to process is collected,
+either from the command line or by scanning the mail queue for
+for each channel.  If the the number of messages in the queue
+for a given channel is more than \fImaxsort\fR (set in tailor
+file or on command line), 
+the queue directory for that channel
+will be processed in the order read, without sorting by submission
+time.  If a list of messages is given on the command line, no
+sorting will take place and the messages will be delivered in the order
+specified.
+The sorting keys are (in order): channel,
+submission time, and finally host.
+This causes many accesses to the messages
+but minimizes the invocation of channel programs.
+.PP
+.I
+Deliver
+is \fIsetuid\fR to the superuser to allow it to set its
+real and effective UID and GID to that of the MMDF user.
+.PP
+The following options may be used to alter \fIdeliver\fR's behavior:
+.TP
+.B \-b
+Background mode. Causes 
+.I deliver
+to run as a background daemon
+making periodic sweeps over the mail queues looking for undelivered
+mail and attempting deliver.  The invoker must be the MMDF user
+or the superuser to use this option.
+.I Deliver
+attempts delivery for all eligible messages, then sleeps,
+and then repeats the process.
+The default sleep time is 10 minutes but it can be changed
+(see the \-T option below).
+.TP
+.BI \-c channel1,channel2,...
+Channel selection.  A comma-separated list of channels to be processed.
+.TP
+.B \-d
+Already in ``quedfldir''.  This option will cause
+.I deliver
+to assume it is already in the mail queue and therefore it will not
+issue an explicit chdir().  This is useful if you wish to have deliver
+operate on an alternate mail queue hierarchy, mainly for testing.
+.TP
+.BI \-l minutes
+Sets the ``time-to-live'' for entries in the dead-host cache.
+This time defaults to 2 hours.  The dead host cache
+is used to prevent attempts to deliver to hosts that are
+known to be down.  The ``time-to-live'' is given in minutes.
+If the number of minutes is negative, dead host caching is disabled.
+.TP
+.BI \-m maxsort
+Sets the sort threshold.  If there are more than \fImaxsort\fR messages in
+a given channel's queue, then they are processed in directory order 
+without first sorting by submission time.  
+If \-m is not specified, the value of 
+\fImaxsort\fR is given in the tailor file by MMAXSORT or in conf.c.
+.TP
+.B \-p
+Pickup only mode. Indicates that the invoker would like to pickup
+a passive mail channel.
+.TP
+.B \-s
+Force linear search of the mail queue.  Normally
+.I deliver
+will deliver messages in the order they were received which
+seldom matches the order in the directory.  This option is useful if the
+queue gets so large that
+.I deliver
+can no longer deal with sorting the
+queue in a reasonable time.
+.TP
+.BI \-t hrs
+Time limiting. This option prevents
+.I deliver
+from attempting to deliver messages which have been in the queue for more
+than \fIhrs\fR hours.
+.TP
+.B \-w
+Watch the delivery. Causes
+.I deliver
+to print informative messages on the standard output as
+it is attempting delivery.
+This option is passed onto the channel programs
+which also give informative messages.
+.TP
+.BI \-L logfile
+Sets the logfile for this deliver to the file specified.
+The default is to log into the file msg.log in the MMDF
+log directory.
+This option is only available to the Superuser and MMDF.
+.TP
+.BI \-T seconds
+Sets the sleep time between background sweeps of the mail queue.
+This defaults to 10 minutes.
+.TP
+.BI \-V loglevel
+Sets the logging level for this deliver to the level specified.
+The \fIloglevel\fR should be a valid mmdf logging level string such as FTR.
+This option is only available to the Superuser and MMDF.
+.SH "SEE ALSO"
+submit(8), channels(7), queue(5), "Installing and Operating MMDF II"

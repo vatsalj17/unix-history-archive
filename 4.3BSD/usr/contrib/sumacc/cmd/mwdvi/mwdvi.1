@@ -1,0 +1,104 @@
+
+.TH MWDVI 1 LOCAL
+.SH NAME
+mwdvi \- convert Macwrite files to dvi format
+.SH SYNOPSIS
+.B mwdvi
+[ options ] file1 [file2 ...]
+.SH DESCRIPTION
+.I mwdvi
+converts
+.IR file s,
+which should be in Macwrite format (version 3),
+to TeX dvi format.  There are a several popular programs (such as
+IMAGEN's 
+.I dviimp(1)
+program) that can be used to print files in this
+format on a high quality electronic printer. 
+.sp
+In order to use mwdvi, the macwrite document must be saved with its
+rulers and font information intact (not as TEXT ONLY) then transferred to
+the host system (see macget(1)).
+.sp
+.I Mwdvi
+will convert the macwrite document into dvi format and optionally submit
+the resultant file to
+.I dviimp(1) 
+for printing on an electronic printer.
+.sp
+Mwdvi assumes that the file is to be printed using the TeX
+cmr fonts and substitutes Computer Modern Roman for all plain
+Macintosh fonts, Computer Modern Bold for all bold Macintosh fonts
+and Computer Modern Italic for all italic Macintosh fonts, at the
+appropriate point sizes.  Since the fonts used to print the
+document are different from those used when viewing the 
+document in macwrite, the spacing may come out somewhat differently.
+The spacing will be proportional, but probably not quite the same.
+.sp
+If a different mapping is desired, a font
+substitution file can be constructed using the following format:
+.sp
+.nf
+	macfontname [style] [pt size] -> texfontname [targ pt]
+.fi
+.sp
+Where
+.I macfontname
+can be any of \fBsystem, application, geneva, new_york, toronto, monaco, 
+venice, london, athens, or san_fran,\fP or a decimal number indicating
+the Macintosh internal number of the font to be substituted, 
+.I style
+can be any of \fBplain, bold, or italic,\fP
+.I pt size
+is the size to be replaced, 
+.I texfontname
+is the TeX font with which this font should be replaced,
+and 
+.I "targ pt"
+is the point size at which the new font should be used.
+.sp
+For example:
+.sp
+.nf
+	london bold 12 -> cmb10 12
+.fi
+.sp
+The name of the substitution file can be specified 
+in the environment variable "MACFONTS" or with a command line
+option (that overrides any environment variable setting).
+.sp
+The options are:
+.TP
+.B \-p
+Causes the output to be submitted to dviimp and spooled for printing
+on an IMAGEN printer.
+If no target printer is specified, the value of the PRINTER
+environment variable is assumed to be the target printer.
+.TP
+.B \-Pprinter
+Causes the indicated printer to be used for spooling of mwdvi output.
+.TP
+.B \-o
+Causes the dvi file output by mwdvi to be put into the file named as
+the next argument.
+.TP
+.B \-s
+Causes the file named by the next argument to be used as the name of the file
+that is to direct font substitutions.
+.TP
+.B \-v
+Causes 
+.I mwdvi
+to operate in a verbose fashion, producing lots of interesting output.
+.sp
+If spooling is requested and no target file is indicated, 
+.I mwdvi
+will use a temporary file for the duration of the program.
+.SH FILES
+/usr/lib/font/imagen/tfm/*  -- description of host resident fonts.
+.SH SEE ALSO
+macget(1), dviimp(1), lpr(1)
+.SH BUGS
+Pictures, decimal tabs, and header/footer icons are not currently supported.
+.SH AUTHOR
+Douglas Orr - University of Michigan EECS dept.

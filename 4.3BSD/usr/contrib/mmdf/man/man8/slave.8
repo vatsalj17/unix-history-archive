@@ -1,0 +1,44 @@
+.TH SLAVE 8
+.SH NAME
+slave \- MMDF PhoneNet Slave Program
+.SH SYNOPSIS
+slave
+.SH DESCRIPTION
+.PP
+The \fIslave\fR program is the passive component of the PhoneNet protocol
+package.  The active component is the \fIphone\fR channel (see \fIphone\fR(8)).
+Typically, \fIslave\fR is the login shell for an account which is reserved
+for picking up mail on a particular channel.  When invoked, \fIslave\fR asks
+for the channel name of a pobox channel defined in the runtime tailoring file.
+The user= field in that channel's definition must match the username of the
+account running \fIslave\fR.
+.LP
+If a valid channel specification has been given, 
+\fIslave\fR starts up the PhoneNet link-level protocol (dial package).
+The dial package uses the default illegal character sets configured in
+conf_dial.c and (possibly) overridden by DBADIN, DBADOUT, or DBAD in the
+runtime tailoring file.  See section 3.13 of the ``Installing and Operating
+MMDF II'' document for more information regarding illegal character sets.
+The dial package defaults to a packet window size of 1.  It is the master's
+responsibility to override that default if desired (see the ``window'' command
+documented in script(5)).
+.LP
+\fISlave\fR responds to three commands from the master: pickup, submit, and end.
+In pickup mode, \fIslave\fR passes messages which have been queued up locally
+on the specified pobox channel out to the remote machine.  
+It does this by invoking
+\fIdeliver\fR in pickup mode (-p) on the specified channel.  The \fIpobox\fR
+program manages the interface between the \fIslave\fR (i.e. the dial package) 
+and \fIdeliver\fR (i.e. the mail queue).  
+.LP
+In submit mode, \fIslave\fR passes messages to the local \fIsubmit\fR program
+which queues messages on the local machine.  The messages are submitted just as
+if a pickup were being done with the \fIphone\fR channel.  The source channel
+and host are set according to the values defined for the specified pobox
+channel.
+.LP
+The end command causes \fIslave\fR to drop the link-level connection with the
+remote machine.  Slave then exits.
+.SH "SEE ALSO"
+\fIphone\fR(8), \fIsubmit\fR(8), \fIdeliver\fR(8)
+

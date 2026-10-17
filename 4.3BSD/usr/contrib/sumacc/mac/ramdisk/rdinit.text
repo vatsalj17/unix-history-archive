@@ -1,0 +1,78 @@
+; I'm lazy and hacked this together from some pieces on the workshop,
+; should convert to SUMacC...
+; File: rdInit.Text - init resource to bring in ramdisk driver at boot time
+
+            .NoList
+            .Include        Tlasm/SysEqu.Text
+            .Include        Tlasm/SysMacs.Text
+            .Include        Tlasm/SysErr.Text
+            .Include        Tlasm/ToolMacs.Text
+            .List
+            .NOMACROLIST
+            .Proc   rdInit,0
+
+rdInstall
+;            move.l  #$11000,BufPtr
+OpenIt
+            MOVEQ   #<IOQElSize/2>-1,D0
+@0          CLR.W   -(SP)               ; clear a parameter blk off the stack
+            DBRA    D0,@0
+;
+            clr.w   -(sp)
+            _button
+            tst.w   (sp)+
+            bne     initexit        ;if user wants to skip the ramdisk
+
+            MOVE.L  SP,A0
+
+            LEA     rdName,A1
+            MOVE.L  A1,IOFileName(A0)
+            _Open
+            BNE     InitExit
+
+            CLR.L   -(SP)
+            MOVE.L  #'DRVR',-(SP)
+
+            move.w  #31,-(sp)
+            _GetResource
+            _DetachResource
+;
+; add to drive queue
+;
+          MOVEQ     #DQElLnth,D0             ; get size of drive queue element
+          _NewPtr,SYS                        ;  and allocate one
+
+          MOVE.W    #0,DQFSID(A0)            ; zero means local file system
+
+          MOVEQ     #3,D0                    ; call it drive number 3
+          SWAP      D0
+          MOVE.W    #-32,D0          ;  my refnum
+          _AddDrive
+
+          LEA       Mparams,A0               ; point to params
+          _MountVol                          ; mount as a volume
+
+InitExit
+            ADD     #IOQElSize,SP
+            LEA     rdInstall,A0
+            _RecoverHandle
+            _DisposHandle
+            RTS
+
+rdName      .Byte   8
+            .Ascii  '.ramdisk '
+            .Align  2
+
+
+
+
+Mparams   .BLOCK          12,0                ; header
+          .WORD           0,0                 ; completion routine  (NIL)
+          .WORD           0                   ; ioresult
+          .WORD           0,0                 ; misc don't-cares
+          .WORD           3                   ; drive num
+
+          .end
+
+
+

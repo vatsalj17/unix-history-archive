@@ -1,0 +1,385 @@
+.\".AU
+.\"Steve Kille
+.\".AI
+.\"Department of Computer Science
+.\"University College London
+.\".AB
+.\"The \*M mail system provides a flexible table structure to
+.\"allow (user) transparent connectivity to a large number of sites,
+.\"using multiple mail protocols and a mixture of direct and indirect
+.\"connections.   This document explains how set up these tables.
+.\".AE
+.bp
+.NH
+Configuring Tables for \*M
+.NH 2
+Introduction
+.PP
+This section explains how to construct the tables which are defined in the
+runtime tailoring file.  The exact syntax of the tables is documented in
+tables(5).  
+It is assumed that most sites will be in one of a fairly small number of
+standard situations regarding mail connectivity.  It is suggested that
+the simplest approach for most sites will be to base the configuration
+on that of a site in a similar situation.  For this reason, we supply
+a number of sample configurations.  For a given sample site \fIfoo\fR, 
+the runtime tailoring file and its associated tables are contained in
+the directory \fBsamples/\fIfoo\fR.  
+.PP
+The current sample configurations are:
+.RS
+.IP bbn 12
+A 4.2BSD Internet host using domain servers.
+.IP vgr 12
+A 4.2BSD Internet host with heavy mail traffic.
+.IP uclvax2 12
+An Internet host with links to various UK networks; illustrates
+authorization on a per-user basis.
+.IP 4.3vax 12
+A 4.3BSD workstation on an ethernet.  Offloads remote
+traffic to another host.
+.IP csnet-relay 12
+A very large PhoneNet relay host with Internet access.
+.IP okstate 12
+A V7 Perkin-Elmer host on CSNET PhoneNet, UUCP and a local network.
+.IP laser 12
+A System V Release 0 based 68000 workstation.  One UUCP link to a
+gateway host.  It pretends its name is that of the gateway to
+hide the name laser from the rest of the world.  Unknown hosts
+and users are passed to the gateway.
+.IP scripts
+Various samples of PhoneNet dialout scripts.
+.RE
+.PP
+A basic word about the tables for domains and channels is in order.
+The tables may appear similar, but they serve very different functions.
+The host lookup procedure is a two-tier process.
+A destination is first looked up in the domain tables.
+\*M need not find an exact match, a match on a partial domain reference
+will also succeed, although the full domain match will be attempted first.
+When a match is found in the domain tables, the RHS (right hand side) will
+have the full domain specification of a host to which the message should
+be passed to reach the destination (in many cases this IS the destination).
+That host is then looked up in the channel tables, searching in the order
+the channels were defined.
+The channel tables contain host names (full domain form) on the LHS and 
+typically addressing data on the RHS.
+Sometimes addressing data does not make sense (like in the local channel)
+and some fixed string is substituted.  (See the addressing document for more
+information about the domain matching process).
+.PP
+In the examples here, the RHS and the LHS are separated by a colon
+and some white space.  The colon is in fact optional.  You may find the
+colon missing from many of the sample files.
+.NH 2
+Setting Up Domain Tables
+.PP
+Domain tables are themselves specified by a domain.  When the
+domain of a table
+is concatenated with the LHS of any entry in the table, a
+domain must result.
+On the RHS are HOST values.
+This two level hierarchy is intended as a compromise between
+efficiency and flexibility.   Domain tables are matched longest first.
+Take the `AC.UK' domain for example (United Kingdom, Academic community).
+Thus when matching `CS.CAMFORD.AC.UK', if a table "CAMFORD.AC.UK" is
+present this will be examined before "AC.UK".  If an entry `CAMFORD'
+was found in "AC.UK" (thus corresponding to domain `CAMFORD.AC.UK'),
+then it would be identified as a relay point.   If no domain table
+is identified, then the domain tables are searched in order.  In this
+case, if `CS.CAMFORD' were presented, tables would first be searched for
+CS.CAMFORD and then (if no match) for CAMFORD.  If the latter were found
+in "AC.UK", then `CAMFORD.AC.UK' would be identified as a relay domain
+for `CS.CAMFORD.AC.UK'.
+.PP
+Note that if #define BOTHEND is set, then this will work for both
+RFC 819 and NRS ordering (for those lucky enough to live in the UK).
+.PP
+The best place to start is with the "TOP" table which matches
+rooted domains.  It should contain the domain on the LHS and an
+appropriate gateway on the RHS (host name, using full domain notation).
+For example, on an ARPANET site it might be:
+.ne 8
+.nf
+.RS
+.TS
+l l .
+mailnet:	mit-multics.arpa
+bitnet:	wiscvm.arpa
+csnet:	csnet-relay.arpa
+uucp:	harvard.arpa
+ac.uk:	ucl-cs.arpa
+.TE
+.RE
+.fi
+.ne 7
+In the UK it might be:
+.nf
+.RS
+.TS
+l l .
+arpa:	ucl-cs.ac.uk
+csnet:	ucl-cs.ac.uk
+dec:	ucl-cs.ac.uk
+.TE
+.RE
+.fi
+Other domains will be given explicit tables, derived from various sources.
+There is a domain extension which can be useful. If
+domains are not directly
+connected, but require further verification (i.e. beyond the top
+level or two) the entry should be of the form:
+.sp
+	partial-domain:\ \ \ \ host.domain\ \ \.\.\.\ \ \ host.domain
+.sp
+As with other entries, alternative partial domain names should
+follow the first one, with the same RHS value.  The semantics of
+the RHS is a source route from RIGHT TO LEFT.  The connect site is
+specified by the right-hand host.  The left-hand host value will be
+visible only
+when ap=host reformatting is used (otherwise, the concatenation
+of the preferred partial domain and the domain associated with the
+table is used).   For example, if EECS.SALBRIDGE.AC.UK is reached through
+CAMFORD.AC.UK, the entry in the ``AC.UK'' table would be:
+.sp
+	salbridge:\ \ \ \ salbridge.ac.uk\ \ \ camford.ac.uk
+.sp
+and would be suitable to route all mail destined for machines at
+Salbridge via Camford.
+.NH 2
+Setting up Channel Tables
+.PP
+In section 3.8, a set of channels was determined.  Now the channel tables
+should be built.
+The LHS should contain the domain of the host served by that
+channel
+and the RHS should contain information used by the channel
+to connect to the host.
+The local channel requires the RHS to be the string specified by MLNAME (or
+.I locname
+from conf.c if it is not runtime tailored).
+The smtp channel, for example, requires the Internet
+address on the RHS of its channel table (e.g. "129.11.5.3").
+The phone and
+pobox channels don't use the RHS (but the RHS is typically set to the host
+name).
+.NH 2
+How to Modify a Standard Configuration
+.PP
+This section assumes that you have identified a suitable configuration
+on which to base your tables.  
+.NH 3
+Modifying Channel Tables
+.PP
+Each of the channels will have a set of hosts associated with it.
+All channel tables associated with external hosts should be usable
+as they stand.  The local channel table (used by both the local and
+list channels) should have at least the following two entries:
+.ne 12
+.nf
+.RS
+.TS
+l l .
+\fIlocname\fR.\fIlocdomain\fR:	\fIlocname\fR
+\fIlocname\fR:	\fIlocname\fR
+.TE
+.RE
+You may also need the entries with
+LHS \fIlocmachine.locname.locdomain\fR and \fIlocmachine\fR
+if you are going to hide a number of sites behind a single name.
+The RHS should still be \fIlocname\fR.
+For example for UFOO.CSNET with locmachine set to "VAX1":
+.RS
+.TS
+l l .
+ufoo.csnet:	ufoo
+ufoo:	ufoo
+vax1.ufoo.csnet:	ufoo
+vax1:	ufoo
+.TE
+.RE
+.fi
+.NH 3
+Modifying Domain Tables
+.PP
+Domain tables associated with a number of domains will be provided.
+All can be taken as given, except the table for the local domain.
+To this should be prepended all alternative names of \fIlocname\fR.
+The RHS of all these entries should be \fIlocname\fR.
+The first entry in this table should be \fIlocname\fR:\fIlocname\fR\ .
+Thus if UFOO is also know as UBAR and UPIG, the first entries in the
+CSNET domain table should be:
+.ne 6
+.nf
+.RS
+.TS
+l l .
+ufoo:	ufoo
+ubar:	ufoo
+upig:	ufoo
+.TE
+.RE
+.fi
+.NH 3
+Alias Tables
+.PP
+The next step is to set up a small alias file.  Assuming your own
+login on UNIX to be ``bill'', the following initial file is suggested
+as a example:
+.ne 6
+.nf
+.RS
+.TS
+l l .
+root:	bill
+mmdf:	bill
+postmaster:	bill
+.TE
+.RE
+.fi
+In particular, the \*M \fIcheckup\fR program will check to see
+that an alias exists for ``postmaster'' and the \*M login
+you specified in the configuration (herein assumed to be ``mmdf'').
+It is suggested that one of the sample alias files be used as a model
+for the alias file organization.  To handle the expansion of a
+mailing-list ``foo'' from a file, the entries for the list ``foo''
+should be of the form:
+.ne 12
+.nf
+.RS
+.TS
+l l .
+foo:	foo-outbound@\fIlocname\fR@list
+foo-outbound:	:include:filename
+foo-request:	list-maintainer
+.TE
+.RE
+For example:
+.RS
+.TS
+l l .
+staff:	staff-outbound@ufoo@list
+staff-outbound:	:include:/etc/alias/staff
+staff-request:	bill
+.TE
+.RE
+.fi
+.NH 3
+User and Mail-ID Tables
+.PP
+The final step is to set up the User and Mail-ID tables.  This step is only
+necessary if you have enabled use of Mail-IDs.  The ``user'' table maps users to
+Mail-IDs.  For example:
+.RS
+.TS
+l l .
+wiz:	unix-wizards-request
+wiz2:	unix-wizards-request
+joe:	joe
+bob:	bob
+.TE
+.RE
+The ``mailids'' table maps Mail-IDs to users.  For example:
+.RS
+.TS
+l l .
+unix-wizards-request:	wiz
+joe:	joe
+bob:	bob
+.TE
+.RE
+In this example, mail addressed to ``unix-wizards-request'' would be delivered
+to user ``wiz''.  However, both users ``wiz'' and ``wiz2'' could send mail and
+the mail would appear to come from ``unix-wizards-request''.
+.NH 2
+How to Design Your Own Tables
+.PP
+This section is written for those who have the misfortune not to be
+able to base their design on one of the standard configurations, or
+who wish to make radical extensions to a standard configuration.
+Rather than attempting to
+describe many possibilities, it tries to explain what is being aimed at.
+.PP
+The terms DOMAIN and HOST are used here in a quite specific manner.
+The domain name space is assumed to be
+a global hierarchy with the most significant component on the RHS
+(with apologies to the long suffering UK Mailpeople who will have to
+live with back to front names).  Domains are implicitly fully
+qualified (i.e. extending to the root).  For example: UK, AC.UK,
+CAMFORD.AC.UK, and CS.CAMFORD.AC.UK are all domains.  CAMFORD is not
+a domain.  Domains are administrative entities and may be synonymous
+with a host.  A host is a computer
+to which your computer makes a direct connection.  
+The entries on the LHS of channel tables and
+RHS of domain tables are hosts.  All host names must be unique within
+a given system (to allow host -> channel lookup).
+A useful convention
+to ensure host uniqueness is to have the host name the same as the fully
+qualified domain.  This convention is also likely to facilitate the
+introduction of nameservers.
+.PP
+The key to remember is that the validation of an address is a two-fold
+operation.  First, the domain or a parent of it must be found in the
+domain tables (CS.CAMFORD.AC.UK, or CAMFORD.AC.UK, or AC.UK, or UK).
+Once it is found, the RHS will contain a host or route to a host.
+The second step is to try and find/verify the route to the host by
+looking up the host or route elements in the various channel tables.
+The basic premise is that you should be able to find hosts specified in
+the RHS of a domain table by looking in the LHS of channel tables.
+.NH 2
+Hashing Your Tables
+.PP
+Once you have created the necessary tables to support the domains and channels
+defined in your runtime tailoring file, you must combine these tables into a
+hashed database.  If you defined CH_TB to be 'ch_tbseq', then you can skip
+this section.  The dbmbuild program uses the definitions in the runtime
+tailoring file to build the hashed database.  
+It will report if it finds any tables missing.  See
+\fIdbmbuild(8)\fR for details.
+.XX
+Run \fIdbmbuild\fR (no switches are required -- the default -n is correct).
+.NH 2
+Testing Your Configuration
+.PP
+Now test your configuration by running the \fIcheckup\fR
+program (see \fIcheckup\fR(8)).  This program will report any inconsistencies
+in your installation.  Items marked with asterisks are worthy of note.  Items
+in brackets are advisory only.
+.XX
+Run \fIcheckup\fR.
+.PP
+Now test your tables by seeing if various addresses are accepted by  
+\fIcheckaddr\fR(8) or \fIsend\fR(1).
+You may want to give the -W option to submit via send or the -w option
+to checkaddr.  This will tell you on what channel \*M chose to queue the
+message.
+.XX
+Run \fIcheckaddr\fR or \fIsend\fR to check your tables and configuration.
+.PP
+If you find
+a problem with an address (or more likely, a particular class of addresses), 
+you should make the following checks.
+Assume as an example that CAMFORD.AC.UK
+is in question:
+.IP (1)
+If there is a domain table for AC.UK, the LHS `CAMFORD' should exist.
+If there is no domain table for AC.UK, but there is one for UK, then
+LHS `CAMFORD.AC' or `AC' should exist.  Finally if there is no
+UK or AC.UK domain table, then on the LHS of the ``top''
+table, `UK', `AC.UK', or `CAMFORD.AC.UK' should exist.
+It is noted that the required domain should be equal to or a subdomain of
+the concatenation of a table key (LHS) and the domain
+associated  with the table
+(I hope that the
+pattern is clear from this).
+.IP (2)
+Then consider the RHS of the first entry identified above.  This should
+be found on the LHS of the appropriate channel and (given that all
+domain table RHSs must be unique) not found on the LHS of any inappropriate
+channel.  This entry should identify either CAMFORD.AC.UK or the
+preferred relay.  (If there are multiple matches, the first one is generally
+selected according to the order of channel definitions in the tailoring file).
+.IP (3)
+These first two criteria should be sufficient to cause the message to
+be queued, and the RHS of the channel table entry may be used by
+the channel to deliver the message.

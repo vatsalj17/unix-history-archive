@@ -1,0 +1,265 @@
+(Message inbox:64)
+Return-Path: <ddj%brown.csnet@csnet-relay.arpa>
+Received: from csnet-relay by safe with TCP; Wed, 14 Nov 84 15:55:01 pst
+Received: from brown by csnet-relay.csnet id aa05981; 14 Nov 84 18:43 EST
+Message-Id: <8411142336.AA23729@nancy.CS.Brown.CSNet>
+Date:     14 Nov 84 (Wed) 18:36:07 EST
+From: Dave Johnson <ddj%brown.csnet@csnet-relay.arpa>
+To: croft@su-safe.ARPA, jkf%ucbmike@csnet-relay.arpa
+Subject:  last minute fixes to sumacc for the sun
+
+I can't remember if I sent a report of the "last" bug I found
+in the assembler source (cmd/as/ps1.c).
+
+What happened is everything but quoted strings worked -- .byte
+instructions were broken such that they always generated nulls
+(the char was written into the low byte, but the high byte was
+being read out of the code generating shorts array).
+
+Just to be sure, here's my log of the changes I made again.
+
+I am planning to port the loader to the apollos (AUX environment)
+someday soon; the rest of the sun changes applied directly to the
+apollos, but their ar format is different (sys III).  might be
+easier just to port the 4.2 ar to the apollos, though.  Let me
+know if you need any clarification.
+	
+	Dave Johnson
+
+========
+CHANGES:
+all:	(in makefile_t, makefile, or Makefile)
+    /usr/sun/include -> /usr/include/mac, /usr/stanford/bin -> /usr/local/bin
+	
+include/mac: b.out.h
+--------------------
+*** b.out.h	Wed Jul 18 06:43:28 1984
+--- b.out.h.orig	Tue Jun 26 01:45:48 1984
+***************
+*** 30,38
+  /* types of files */
+- #ifndef sun
+  #define	ARCMAGIC 016230236041
+- #else
+- #define	ARCMAGIC 0x213C6172
+- #endif
+  #define OMAGIC	0405
+  #define	FMAGIC	0407
+  #define	NMAGIC	0410
+
+--- 29,34 -----
+  
+  /* types of files */
+  #define	ARCMAGIC 016230236041
+  #define OMAGIC	0405
+  #define	FMAGIC	0407
+  #define	NMAGIC	0410
+--------------------
+
+lib: libmake.c -- different bitfield order in struct breloc, undef nohtonl
+--------------------------
+*** lib/libmake.c	Wed Jul 18 22:34:36 1984
+--- lib/libmake.c.orig	Thu Jun  7 02:29:33 1984
+***************
+*** 67,75
+  };
+  
+  struct breloc brtrap = {
+- #ifdef sun
+- 	RLONG<<12 | REXT<<14, 0, 2	/* relocate _mactrap, sym 0, offset 2 */
+- #else
+  	RLONG<<2 | REXT, 0, 2	/* relocate _mactrap, sym 0, offset 2 */
+- #endif
+  };
+
+--- 67,72 -----
+  };
+  
+  struct breloc brtrap = {
+  	RLONG<<2 | REXT, 0, 2	/* relocate _mactrap, sym 0, offset 2 */
+  };
+  struct breloc brext = {
+***************
+*** 74,82
+  #endif
+  };
+  struct breloc brext = {
+- #ifdef sun
+- 	RLONG<<12 | REXT<<14, 2, 10	/* relocate stubaddr, sym 2, offset 10 */
+- #else
+  	RLONG<<2 | REXT, 2, 10	/* relocate stubaddr, sym 2, offset 10 */
+- #endif
+  };
+
+--- 70,75 -----
+  	RLONG<<2 | REXT, 0, 2	/* relocate _mactrap, sym 0, offset 2 */
+  };
+  struct breloc brext = {
+  	RLONG<<2 | REXT, 2, 10	/* relocate stubaddr, sym 2, offset 10 */
+  };
+  
+***************
+*** 232,235
+! /* #define nohtonl */
+  #ifdef nohtonl	/* if not in library */
+  /*
+   * "Host" to "net" byte order swappers.
+
+--- 221,227 -----
+! #define nohtonl 
+  #ifdef nohtonl	/* if not in library */
+  /*
+   * "Host" to "net" byte order swappers.
+--------------------------
+cmd: rmaker.c -- undef VAX, undef nohtonl;
+	this kind of stuff belongs 
+	in the makefile, not in the g-dd--n source!!!;
+	besides, cpp defines vax, sun, whathaveyou...
+--------------------------
+*** cmd/rmaker.c	Wed Jul 18 22:45:54 1984
+--- cmd/rmaker.c.orig	Thu Jul 19 03:06:33 1984
+***************
+*** 490,497
+  	printf("\n");
+  }
+  
+! /*#define VAX*/
+! /*#define nohtonl*/
+  #ifdef nohtonl	/* if not in library */
+  #ifdef	VAX
+  /*
+
+--- 490,498 -----
+  	printf("\n");
+  }
+  
+! 
+! #define VAX
+! #define nohtonl
+  #ifdef nohtonl	/* if not in library */
+  #ifdef	VAX
+  /*
+
+--------------------------
+cc/cmd:
+	ld: rl68.c -- bitfields don't work as array indices on sun.
+	    when stanford/lucas versions were merged, the good ideas
+	    from lucasfilm were commented out, with #ifdef STANFORD around
+	    the old crufty code.  Checking for ar headers !<arch> should
+	    be done as a string compare rather than as an integer.
+	as: changes below required for the sun, should be done on the vax
+		as well; I have no idea how it manages to work on the vax as
+		it is.  The code uses twice as much space as is allocated in
+		the Code array, but bug only gets exercised on 8 or 10 byte
+		instructions, which are not too common.
+	as: ins.c, print.c, ps1.c, rel.c -- WCode changed from int * to short *
+	as: ps1.c -- ByteWord fixed for Which == 1, to fix quoted strings
+	as: rel.c -- byte swapping code in PutWords changed to work
+		with shorts instead of longs;
+		#ifdef BOOTSTRAP changed to #ifndef sun, as we want BOOTSTRAP
+		to mean create .b and b.out files rather than .o and a.out;
+		this code should be replaced by htons().
+--------------------------
+diff -r cmd.orig/makefile cc/cmd/makefile
+6c6
+< DESTDIR= /usr/stanford/bin
+---
+> DESTDIR= /usr/local/bin
+8c8
+< sun-commands: dll dlx cc68 compiler assembler loader 
+---
+> sun-commands: compiler assembler loader # dll dlx cc68 
+13,14c13,14
+< install: $(DESTDIR)/dll $(DESTDIR)/dlx $(DESTDIR)/cc68 \
+<  install-compiler install-assembler install-loader $(DESTDIR)/lorder68
+---
+> install: install-compiler install-assembler install-loader $(DESTDIR)/lorder68 \
+> # $(DESTDIR)/dll $(DESTDIR)/dlx $(DESTDIR)/cc68 
+diff -r cmd.orig/as/ins.c cc/cmd/as/ins.c
+22c22
+< int	*WCode = (int *)Code;
+---
+> short	*WCode = (short *)Code;
+diff -r cmd.orig/as/makefile cc/cmd/as/makefile
+15c15
+< init.o ins.c: mical.h inst.h
+---
+> init.o ins.o: mical.h inst.h
+18c18
+< 	cp as68 /usr/stanford/bin/as68
+---
+> 	cp as68 /usr/local/bin/as68
+diff -r cmd.orig/as/print.c cc/cmd/as/print.c
+4c4
+< extern int *WCode;
+---
+> extern short *WCode;
+diff -r cmd.orig/as/ps1.c cc/cmd/as/ps1.c
+51c51
+< 	short *WCode = (short *)&Code[0];
+---
+> 	int *WCode = (int *)&Code[0];
+70c70
+< 		} else if (Which == 2) {
+---
+> 		} else
+72,74d71
+< 		} else {
+< 			Code[0] = Operand.value_o;
+< 		}
+76c73
+< 			Put_Text(Code, Which);
+---
+> 			Put_Text(WCode, Which);
+diff -r cmd.orig/as/rel.c cc/cmd/as/rel.c
+118c118
+< 	extern int *WCode;		/* buffer for code in ins.c */
+---
+> 	extern short *WCode;		/* buffer for code in ins.c */
+149c149
+< #ifdef BOOTSTRAP
+---
+> #ifndef sun
+152c152
+< 	  {tcode[i++] = code[j++]; tcode[i++]=code[j++];j+=2;}
+---
+> 	  {tcode[i++] = code[j++]; tcode[i++]=code[j++];}
+160c160
+< 	  {j+=2; tcode[i++] = code[j++];tcode[i++]=code[j++];}
+---
+> 	  {tcode[i++] = code[j++];tcode[i++]=code[j++];}
+diff -r cmd.orig/c2/makefile_t cc/cmd/c2/makefile_t
+16c16
+< 	cp c268 /usr/stanford/bin
+---
+> 	cp c268 /usr/local/bin
+diff -r cmd.orig/ccom/makefile_t cc/cmd/ccom/makefile_t
+12c12
+< BINDIR	= 	/usr/stanford/bin
+---
+> BINDIR	= 	/usr/local/bin
+diff -r cmd.orig/ld/Makefile cc/cmd/ld/Makefile
+5,6c5,6
+< BIN = /usr/stanford/bin
+< INCLUDE = /usr/sun/include
+---
+> BIN = /usr/local/bin
+> INCLUDE = /usr/include/mac
+diff -r cmd.orig/ld/rl68.c cc/cmd/ld/rl68.c
+307a308
+> 	int n;
+312,313c313,316
+< 	seg = "TDBE"[rcmd.rsegment];
+< 	size = "BWL?"[rcmd.rsize];
+---
+> 	n = rcmd.rsegment;
+> 	seg = "TDBE"[n];
+> 	n = rcmd.rsize;
+> 	size = "BWL?"[n];
+--------------------------
+cc/libc: changed makefile and sunstuff/makefile to avoid missing include files
+	in emt and sunstuff.
+	(sunemt.h in emt/*; nec7201.h, timer.h & vectors.h in sunstuff/ttyio.c)
+	This makes it impossible to use sprintf, etc; undefined globals.
+========
+

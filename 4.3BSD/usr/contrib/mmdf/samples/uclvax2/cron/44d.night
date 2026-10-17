@@ -1,0 +1,17 @@
+set dir="/usr/spool/mmdflogs/misc"
+set lg="$dir/night.log"
+rm -f $lg
+cd  /lib/mmdf
+/bin/sh setlogs >& $lg
+cleanque >>& $lg
+cd /common/mmdftable >>& $lg
+dbmbuild >>& $lg
+rm -f "$dir/dbmlist"
+cd /common/bin/mmdf
+dbmlist >& "$dir/dbmlist"
+cp /common/mmdftable/helplist /etc/mmdf/helplist >>& $lg
+cp /common/mmdftable/hosts.txt /service/docs/arpa.sites >>& $lg
+mail mail-check@ucl-cs@tunnel -s "test of Satnet loop" < /dev/null
+mail mail-check@ucl-cs@nipss -s "test of PSS loop" < /dev/null
+mail mail-check@ucl-cs@niserc -s "test of Sercnet loop" < /dev/null
+exit

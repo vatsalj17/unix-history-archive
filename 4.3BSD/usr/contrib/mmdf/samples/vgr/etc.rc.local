@@ -1,0 +1,32 @@
+#/etc/ifconfig vv0 192.5.24.0 up -trailers
+/etc/console << FROB
+l
+s
+FROB
+/bin/hostname brl-vgr
+/etc/ifconfig pcl0  192.5.21.6 -trailers up
+/etc/ifconfig imp0 128.20.1.1 up
+/etc/ifconfig il0 192.5.23.1 up -trailers
+#/etc/route add brlnet2 brl-voc 2
+/etc/route add 0 192.5.21.5 3
+
+/etc/savecore /s/crash					>/dev/console
+
+				echo -n mail system:		>/dev/console
+if [ -d /usr/mmdf ]; then
+	(cd /usr/mmdf; deliver -b -clocal,brlnet,list &)
+	echo -n ' local'					>/dev/console
+	(cd /usr/mmdf; deliver -b -t24 -csmtp &)
+	echo -n ' smtp'						>/dev/console
+	(cd /usr/mmdf; deliver -b -csmtp &)
+	echo -n ' smtp'						>/dev/console
+fi
+/etc/impmon							>/dev/console
+	echo -n ' impmon'					>/dev/console
+/etc/hmpserver							>/dev/console
+	echo -n ' hmpserver'					>/dev/console
+/etc/hmppoll tgr vgr amsaa voc brl				>/dev/console
+	echo -n ' hmppoll'					>/dev/console
+(cd /usr/local/lib/druid; druid &)				>/dev/console
+	echo -n ' druid'					>/dev/console
+echo '.'							>/dev/console

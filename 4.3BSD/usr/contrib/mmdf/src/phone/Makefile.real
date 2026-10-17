@@ -1,0 +1,96 @@
+#
+#   phone:   telephone-based channel transmission
+#
+MODULES =	ch_phone qu2ph_send ph2mm_send ph_rdmail \
+		ph_wtmail ph_io ph_iouser
+
+POBJECTS =	ch_phone.o qu2ph_send.o ph2mm_send.o ph_rdmail.o \
+		ph_wtmail.o ph_io.o ph_iouser.o
+
+SOBJECTS =	ph_slave.o mm2ph_send.o ph2mm_send.o ph_rdmail.o \
+		ph_wtmail.o ph_io.o ph_ioslave.o
+
+PSOURCES =	ch_phone.c ph_iouser.c qu2ph_send.c
+
+SSOURCES = 	ph_slave.c ph_ioslave.c mm2ph_send.c
+
+CSOURCES =	ph2mm_send.c ph_rdmail.c \
+		ph_wtmail.c ph_io.c
+
+real-default:	phone slave
+
+install:	$(CHANDIR)/phone $(LIBDIR)/slave
+
+$(CHANDIR)/phone  :   xphone
+	cp xphone $(CHANDIR)/phone
+	-$(CHOWN) $(MMDFLOGIN) $(CHANDIR)/phone
+	-chmod 04$(PGMPROT) $(CHANDIR)/phone
+	-@ls -ls $(CHANDIR)/phone
+	-@echo "PhoneNet outbound channel installed normally"; echo ""
+
+phone:	xphone
+xphone:	$(POBJECTS) $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ $(POBJECTS) $(MMDFLIBS) $(SYSLIBS)
+
+$(LIBDIR)/slave  :   xslave
+	cp xslave $(LIBDIR)/slave
+	-$(CHOWN) $(MMDFLOGIN) $(LIBDIR)/slave
+	-chmod 0$(PGMPROT) $(LIBDIR)/slave
+	-@ls -ls $(LIBDIR)/slave
+	-@echo "PhoneNet slave installed normally"; echo ""
+
+slave:	xslave
+xslave:	$(SOBJECTS) $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ $(SOBJECTS) $(MMDFLIBS) $(SYSLIBS)
+
+lint:   l-phone l-slave
+
+l-phone:
+	$(LINT) $(LFLAGS) $(PSOURCES) $(CSOURCES) $(LLIBS)
+
+l-slave:
+	$(LINT) $(LFLAGS) $(SSOURCES) $(CSOURCES) $(LLIBS)
+
+clean:
+	-rm -f xphone xslave *.o x.c makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+ch_phone.o: ch_phone.c
+ch_phone.o: ../../h/util.h
+ch_phone.o: ../../h/mmdf.h
+ch_phone.o: /usr/include/signal.h
+ch_phone.o: ../../h/ch.h
+ch_phone.o: ../../h/phs.h
+qu2ph_send.o: qu2ph_send.c
+qu2ph_send.o: ../../h/util.h
+qu2ph_send.o: ../../h/mmdf.h
+qu2ph_send.o: ../../h/ch.h
+qu2ph_send.o: ../../h/chan.h
+qu2ph_send.o: ../../h/phs.h
+qu2ph_send.o: ../../h/ap.h
+ph2mm_send.o: ph2mm_send.c
+ph2mm_send.o: ../../h/util.h
+ph2mm_send.o: ../../h/mmdf.h
+ph2mm_send.o: ../../h/ch.h
+ph2mm_send.o: ../../h/phs.h
+ph_rdmail.o: ph_rdmail.c
+ph_rdmail.o: ../../h/util.h
+ph_rdmail.o: ../../h/mmdf.h
+ph_wtmail.o: ph_wtmail.c
+ph_wtmail.o: ../../h/util.h
+ph_wtmail.o: ../../h/mmdf.h
+ph_io.o: ph_io.c
+ph_io.o: ../../h/util.h
+ph_io.o: ../../h/mmdf.h
+ph_io.o: ../../h/d_returns.h
+ph_iouser.o: ph_iouser.c
+ph_iouser.o: ../../h/util.h
+ph_iouser.o: ../../h/mmdf.h
+ph_iouser.o: ../../h/d_returns.h
+ph_iouser.o: ../../h/ch.h
+ph_iouser.o: ../../h/phs.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

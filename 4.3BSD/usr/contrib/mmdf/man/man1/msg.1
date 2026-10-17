@@ -1,0 +1,476 @@
+.TH MSG 1 "30 May 86"
+.SH NAME
+msg \- read mail
+.SH SYNOPSIS
+.B msg
+[
+.B message_file
+[
+.B mbox_file
+]\ ]
+.SH DESCRIPTION
+.PP
+\fIMsg\fR reads mail stored in message files. If it is invoked
+with no arguments, it accesses mail contained in a file
+associated with the invoker's account.
+With one argument, \fImsg\fR reads the named message file.
+If it is the users main mailbox, \fImsg\fR will discover this and also
+set up to use the default mbox file.
+If two arguments are given, the second is the mbox
+to be used with the first file.
+.PP
+The user types only the first letter of a \fImsg\fR command.
+\fIMsg\fR recognizes and completes the command.
+Commands take the form:
+.RS
+command [argument(s)]
+.RE
+.PP
+A few of the \fImsg\fR commands take no argument; others require a file name
+argument or a confirmation of the command.
+\fIMsg\fR will prompt for these. When a file name is needed, ~ may
+be used to specify the invokers home directory; ~name will specify the
+home directory of the person with the login of name.
+.PP
+Commands which require confirmation request it by typing ``[Confirm]''
+after the command.  
+To confirm the command, type a `y' (which will be
+expanded to ``yes'' in verbose mode) or just a carriage return.  
+.PP
+The most commonly required argument is a message number
+or number range (called a ``message sequence''),
+which indicates on which message(s) the command should be performed.
+If a message sequence is required and none is given, the
+.I current
+message is assumed.
+.PP
+Commands which are followed by a numerical message
+sequence or user-supplied file name or string must be terminated with a
+carriage return <CR>.
+Commands without arguments, or commands followed by alphabetic message
+sequences that do not require a user-supplied string,
+are not terminated with <CR> in verbose mode.  In non-verbose mode,
+all commands are terminated with <CR>.
+.PP
+The list of commands below shows which arguments are required for each
+command.
+.SS "Message Sequences"
+.PP
+Message sequences may be numeric or alphabetic.
+A numeric message sequence takes one of the following forms,
+where
+.I `n'
+is a single valid message number, `.' or `c' which stand for the current
+message, `@' which stands for the current message with the ``mark'',
+or `$' which stands for the last message, regardless of its number.
+.RS
+.TP 7
+n
+represents a single message
+.TP 7
+n1\-n2
+represents a continuous range of messages  (note that `>' or `:' may be
+used as message number separators in place of `\-').
+.TP 7
+m1,m2,...mx
+(where each `m' is one of the above
+constructs) represents all specified single messages and number ranges.
+.RE
+.PP
+Alphabetic message sequences are recognized and expanded in the 
+same manner as commands. Alphabetic and numeric message sequences
+may not be combined.  
+Alphabetic sequences include the following, and
+may be preceded by i(nverse) to cause the specified messages to be
+expanded in reverse order.
+.RS
+.IP "a(ll) messages"
+.IP "c(urrent) message"
+.IP "d(eleted) messages"
+.IP "e(xpression:) [user-supplied string]"
+every message whose body includes the user-specified string.
+.IP "f(rom:) [user-supplied string]"
+.IP "l(eaving) messages"
+every message that will be leaving the mailbox upon exit.
+.IP "m(ark) message"
+.IP "n(ew) messages"
+every message whose "from" field contains user-specified string.
+.IP "s(ubject:) [user-supplied string]"
+every message whose "subject" field includes user-specified string.
+.IP "t(o:) [user-supplied string]"
+every message whose "to" field contains user-specified string.
+.IP "u(ndeleted) messages"
+.RE
+.PP
+.sp 2v
+\fIMsg\fR commands include the following:
+.IP "a(nswer) [msg seq]"
+Calls (\fIsend\fR(1)) program with the ``To:'' and ``Subject:''
+fields already filled in.
+Their contents are taken from the "From:" and "Subject:" fields of
+specified message.
+Use the ``headers'' command in send to change their contents, if necessary.
+.RS
+.PP
+The user is prompted as to whom additional (``cc:'') copies should be sent.
+The options are to send to all original recipients, to those
+listed in the original ``To:'' fields, to those listed in the "cc:'' fields,
+or just those who the message was from.  A null input (just a carriage
+return) will cause the reply to go just to those listed in the ``From:''
+field (the original authors).
+.RE
+.IP "b(ack up)"
+Sets current message to the previous message
+and types the message.
+.IP "c(urrent)"
+Prints the current message number, the number of messages,
+and the current mailbox name.
+.IP "d(elete) [msg seq]"
+Sets a flag saying the message(s) is(are) deleted and removes ``keep'' flag.
+.RS
+.IP
+NOTE:
+Nothing in the message file is actually removed unless an o(verwrite)
+or e(xit) command is given during the current session.
+.RE
+.IP "e(xit and update) [Confirm]"
+The same as ``o(verwrite)'' followed by ``q(uit)'' (see below)
+for any message file that does not have an mbox.
+For ``mailbox'' or when an explicit mbox has been specified,
+it removes deleted messages, moves undeleted messages to
+mbox, then quits.
+.IP "f(orward) [msg seq]"
+Calls
+.I "send,"
+with
+the body of the draft message initialized to
+contain copies of the named message(s).  The ``Subject:'' field of the
+message is also initialized.
+.IP "g(o to) [msg #]"
+Specified message becomes the current message.
+.IP "h(eaders) [msg seq]"
+Prints a one-line header for each specified message.
+For example:
+.RS
+1 NDKAFP 475: 11 Dec 79 bass\ \ \ Meeting tomorrow
+.RE
+.RS
+The header line contains the following information:
+.RS
+.br
+the message number (in this case, 1)
+.br
+status flags \- N:new, D:delete, K:keep, A:answered, F:forwarded/resent, P:put
+.br
+the number of characters in the message (475:)
+.br
+the date the message was sent (11 Dec 1979)
+.br
+the author truncated to fit available space (bass)
+.br
+the subject, truncated to fit available space (Meeting tomorrow)
+.RE
+.IP "j(ump) into lower fork running:"
+Allows user to give any one shell command. Type of shell is determined
+from the environment variable SHELL. (\fIsh\fR
+(1) is the default).  \fIMsg\fR will prompt for command.
+Control is not returned to the \fImsg\fR program until execution of the command
+is completed.
+.IP "k(eep) [msg seq]"
+Keep messages in mailbox and do not move them to mbox on exit and update.
+Sets ``keep'' flag and removes ``delete'' flag.
+.IP "l(ist) [msg seq]"
+Copy messages (without internal separators, and optionally with a page
+separator between messages) to file, in preparation for printing.
+\fIMsg\fR will prompt for file name. Default is /dev/tty.
+Messages may also be piped to other processes by typing ``|\ command''
+in place of the file name.
+.RS
+.TP 7
+NOTE:
+"Internal separators" are lines of CTRL-A's
+(supplied by the message distribution system when the message is delivered)
+which separate each message in the mailbox.
+.RE
+.IP "m(ove) [msg seq]"
+Is the same as ``p(ut)'' (see below), followed by ``d(elete)''.
+.IP "n(ext)"
+Sets the current message to be the next message in the message file
+and types the message.
+.IP "o(verwrite) [Confirm]"
+Actually removes messages marked for deletion; then re-reads the message file.
+.IP "p(ut) [msg seq]"
+Copies messages (with internal separators) to a file.
+\fIMsg\fR prompts for the file name. The default file is mbox.
+Messages may also be piped to other processes by typing ``|\ command''
+in place of the file name.
+.IP "q(uit) [Confirm]"
+Exit without changing mailbox.
+.RS
+.TP 7
+NOTE:
+If q(uit) command is used, deletions are NOT performed but status
+flags, including the ``delete'' flags are retained.
+.RE
+.IP "r(ead)"
+Read a new message file.
+\fIMsg\fR will prompt for the file name.
+The default is mailbox.
+.IP "s(end)[Confirm]"
+Calls
+.I "send"
+(1) program.
+.IP "t(ype) [msg seq]"
+Types designated messages on the terminal. Embedded control characters
+are displayed as ^char with the exception of BS, NL, BEL and TAB.
+Control character filtering can be disabled using an ``x(tra command)''
+(see below)
+or a .msgrc option.
+.IP "u(ndelete)[msg seq]"
+Removes "delete" marking from messages,
+so that they will
+.B not
+be removed by an o(verwrite) or e(xit) command. Also removes ``keep''
+flag.
+.IP "x(tra command)"
+A second set of commands available by using the xtra command
+prefix.  Currently the following xtra commands are available:
+.RS
+.IP "b(inary file write)"
+Writes a fresh copy of the binary file.
+.IP "c(trl char filter on/off)"
+Turn display of control characters as ^char off or on.
+.IP "l(ist body) [msg seq]"
+Copy message bodies (without internal separators and headers, and optionally
+with a page separator between messages) to file, in preparation for
+printing.  \fIMsg\fR will prompt for the output file name.  The default is
+/dev/tty.  Messages may
+also be piped to other processes by typing "|\ command" in place of the file
+name.
+.IP "m(ark) message"
+The current message number is saved and can be quickly returned to by typing
+g(o) followed by a carriage return.
+.IP "n(umbered list on/off)"
+Turns on or off the "numbered list" mode which
+determines whether messages listed with the "list" command are preceded by an
+"index" of header lines and whether each message is shown with its number
+in the listing.
+.IP "o(utput mbox file)"
+Prompts for a new mbox file.  There is no default.
+The current mailbox and the new mbox will be treated in the
+same manner as regular mailbox and mbox are treated.
+The new mbox will receive any read but unkept messages on \fIexit\fR.
+It will also become the default output file for \fIput\fR and \fImove\fR.
+.IP "p(age on/off)"
+Turn "page" mode on (or back off). When on, \fImsg\fR pauses after printing
+22 lines and displays the
+message "Continue? (y)"; a response of "y" or " " will print the
+next page, a carriage return will print the next line and "n" or "/" will
+stop the output from the current command.
+The number of lines between pauses can be changed using the .msgrc
+file; the TIOCGWINSZ ioctl will be used if available.
+.IP "r(eorder)"
+Reorders (sorts) the entire message file. The following keys may be given:
+.RS
+.TP 4
+d \- 
+sort by Date: field.
+.TP 4
+f \- 
+sort by From: field.
+.TP 4
+r \-
+sort by date but group together messages with the same subject.
+.TP 4
+s \-
+sort by Subject: field.
+.TP 4
+t \-
+sort by To: field.
+.RE
+.IP "s(trip on/off)"
+When on, the strip option examines each line of the
+message header and, if the line begins with a specific keyword, the
+line is not printed. When \fImsg\fR is invoked, strip is turned on and
+the default list of keywords is via, remailed-from, remailed-to, message,
+sender, mail, article, received and origin. The keyword strip list
+can be changed by using the .msgrc file described below.
+.IP "v(erbose on/off)"
+Turn ``verbose'' mode on (or back off).  ``Verbose'' mode causes
+.I msg
+to complete command names and does not require the user to type a <CR>
+to end a command.
+.IP "x(tra options status)"
+Print the names of the current mailbox and savebox, and the status of 
+the
+.I \.msgrc
+options.
+.RE
+.IP "y = resend [msg seq]"
+Prompts for messages and a list of addresses. Each message will be resent
+to the list of addresses. The original From:, To: and Date: fields will
+be unchanged; new Resent-from:, Resent-to: and Resent-date: fields will be
+added to each message.
+.IP "z = two window answer"
+Calls the editor specified in the EDITOR environment variable
+(or a site dependent choice if EDITOR is not defined)
+with two file names.
+The first file is the original message being answered, and the second
+is the name of a draft file to be edited.
+Some editor like Emacs will cause the them to be displayed
+in two-window mode with the message displayed in the
+top window and space for your reply in the bottom window.
+When you exit from
+the editor,
+\fIsend\fR is called with the reply.
+Two window mode will only work if the
+editor you specify can handle the multiple file arguments in
+a useful fashion.
+This can be used by others if they make EDITOR a program
+that copies the first file to the second (perhaps with
+each line prepended with ``>>\ '' or some such) and then invokes
+the EDITOR on the draft file.
+.IP "! = sub-shell escape"
+!<CR> forks a sub-shell. The type of shell is determined
+from the environment variable SHELL. (\fIsh\fR
+(1) is the default).
+Control is returned to the \fImsg\fR program when the shell is terminated.
+!command forks a sub-shell and executes the single command before
+returning to the \fImsg\fR program.
+.TP 
+\@ = undigestify
+.br
+Breaks the messages contained in a single digest message into
+separate messages.
+.IP "/ = shorthand for delete current followed by a next command."
+.IP "(null character) - mark message"
+The current message number is saved and can be quickly returned to by typing
+g(o) followed by a carriage return.
+.IP ": (current date and time)"
+The system "date" command is executed.
+.IP "; (comment)"
+Ignores the rest of the input line.
+.RE
+.sp
+.SS \fIMsg\fR Tailoring
+.PP
+When invoked, \fImsg\fR looks for a file called .msgrc in the
+home directory which can contain instructions to ``customize'' \fImsg\fR.
+Instructions are read from .msgrc one line at a time. The instructions are:
+.IP "bdots or nobdots"
+turns on or off the printing of a dot for each message when reading or
+writing the binary file.
+.IP "bprint or nobprint"
+turns on or off the printing of messages about reading or
+writing the binary file.
+.IP "ctrlfil or noctrlfil"
+turns on or off the display of control characters as ^char.
+.IP "draftdir directoryname"
+specifies the directory which will be used for the draft files created
+during the two-window answer command. If directoryname begins with a /,
+it is interpreted as a full pathname; otherwise, it is interpreted relative
+to the invokers home directory (default: <home directory>).
+.IP "draftorig filename"
+specifies the name of the file which contains the original text from the
+two-window answer command and the message text if writemsg is enabled
+(default: draft_original).
+.IP "writemsg or nowritemsg"
+turns on or off the writing of messages when send or answer is invoked. For
+example, if you have the following in your .msgrc:
+.nf
+draftdir .d
+draftorig d
+writemsg
+.nf
+then, whenever send or answer is invoked, a copy of the original mail is saved
+in <home directory>/.d/d and can be easily referenced using an editor while
+in \fIsend\fR.
+.IP "linelength \fInumber\fR"
+sets the number of characters per screen line. Only used if
+paging is on.
+.IP "mdots or nomdots"
+turns on or off printing of a dot for each message when reading messages
+file.
+.IP "nostrip"
+turns off keyword stripping.
+.IP "numberedlist or nonumberedlist"
+determines whether messages listed with the "list" command are preceded by an
+"index" of header lines and whether each message is shown with its number
+in the listing.
+.IP "pagesize \fInumber\fR"
+sets the number of screen lines printed between pauses (default: 22).
+.IP "paging or nopaging"
+turns on or off paging.
+.IP "quickexit or noquickexit"
+determines whether msg exits immediately upon finding an empty mailbox.
+.IP "quicknflag or noquicknflag"
+turns on or off the ``quick new flag''.
+Normally, a message is marked ``new'' until the
+entire message is read; interrupting a message (by typing SIGINT while it
+is being displayed) leaves it marked ``new'' and ``exit and update''
+leaves ``new'' messages in the mailbox.
+If this option is on, the ``new'' flag
+is removed as soon as the message starts to be typed (default: off).
+.IP "savebox filename"
+specifies the name of the file to which
+undeleted mailbox messages will be moved upon exit
+(default: <home directory>/mbox).
+.IP "strip keyword"
+header lines beginning with keyword will not be printed.
+A maximum of 40 keywords may be given
+(one per strip).  ``strip'' must be
+in lower case but keywords may be upper or lower case
+(they are converted to lower case in \fImsg\fR) and will match upper or lower case
+characters in header lines.
+.IP "verbose or noverbose"
+turns on or off verbose mode.  In verbose mode, single-character commands are
+automatically "completed" or filled-out.  The verbose mode setting also affects
+when you must type <CR> at the end of a command.  In non-verbose mode, you
+must type <CR> after each command.  In either mode, you must type <CR> after
+commands which are followed by a numerical message sequence or user-supplied 
+file name or string.  In non-verbose mode, spaces are not significant and
+commands must be abbreviated to their single letters (e.g. ``a'' for answer).
+.IP "zbinsave or nozbinsave"
+turns on or off the automatic binary file write whenever a SIGTSTP is received.
+.PP
+For example, if .msgrc contains
+.PP
+.RS
+.nf
+nobdots
+paging
+pagesize 20
+strip via
+strip cc
+.fi
+.RE
+.PP
+then all headers lines beginning with the words ``via'' and ``cc''
+will not be printed and dots will not be printed when reading the binary file.
+Paging is turned on and \fImsg\fR will pause after every 20 lines in a
+message.
+.PP
+A binary file is created for each mailbox. The binary file
+maintains status information and speeds up the subsequent reading of
+mailboxes. The binary file for the mailbox mbox is called ._mbox.
+.RE
+.SH FILES 
+The following are typical values which may vary on site by site basis.
+Check with your system administration if you want to be sure.
+.IP "/etc/passwd" 35
+to find login directory
+.IP "<login directory>/mailbox" 35
+recently received mail
+.IP "<login directory>/._mailbox" 35
+binary status file for mailbox
+.IP "<login directory>/mbox" 35
+default output file
+.IP "<login directory>/.msgrc" 35
+\fImsg\fR tailoring file
+.SH "SEE ALSO"
+send(1), v6mail(1)
+.SH "BUGS"
+The user cannot use both \fIv6mail\fR and \fImsg\fR to read his mail
+since \fIv6mail\fR does not update information for the binary file.
+Unfortunately there is currently no way for \fImsg\fR to know this has happened.
+Moral: use one or the other but not both.

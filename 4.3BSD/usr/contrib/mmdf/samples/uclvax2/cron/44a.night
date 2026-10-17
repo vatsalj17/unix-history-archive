@@ -1,0 +1,13 @@
+set dir="/usr/spool/mmdflogs/misc"
+set lg="$dir/night.log"
+rm -f $lg
+cd /lib/mmdf
+/bin/sh /lib/mmdf/setlogs >& $lg
+/common/mmdftable/send_to_vax >& $lg
+cleanque >>& $lg
+cd /common/mmdftable
+dbmbuild >>& $lg
+rm -f "$dir/dbmlist"
+dbmlist >& "$dir/dbmlist"
+cp /common/mmdftable/helplist /etc/mmdf/helplist >& $lg
+exit

@@ -1,0 +1,39 @@
+Return-Path: <ron%vogon%udel-cc-relay.delaware@udel-relay.ARPA>
+Received: from udel-relay by safe with TCP; Sun, 30 Sep 84 16:21:53 pdt
+Received: From udel-dewey.ARPA by udel-relay.ARPA id a021999
+          ;30 Sep 84 19:24 EDT
+Received: From vogon.DELAWARE by udel-dewey.DELAWARE id a008677
+          ;30 Sep 84 19:24 EDT
+Received: by vogon.cc.delaware.arpa (4.12/4.7)
+	id AA08732; Sun, 30 Sep 84 19:21:01 edt
+Date: Sun, 30 Sep 84 19:21:01 edt
+From: Ron Reisor <ron%vogon%vogon%udel-cc-relay.delaware@udel-relay.ARPA>
+Message-Id: <8409302321.AA08732@vogon.cc.delaware.arpa>
+To: croft@su-safe.ARPA
+
+Hi Bill,
+
+     Have you seen a problem with the cc68 compiler generating bad code
+when you take the difference of two pointers, which should yield an int,
+and then try to store this int in a char?  It seems that the cc68 compiler
+generates the differenct in an a register, then tries to 'movb' from the
+a reg into wherever the char is.  The 68k can't do this and as68 knows it.
+It seems to me if you ever to a 'pointer minus pointer' then the result
+should be in a d register because it's now data and not an address.  I
+added a couple of lines to ccom/table.c to handle this special case:
+
+344a345,350
+> MINUS,		INAREG|INTAREG,
+> 	SBREG,	TPOINT,
+> 	EA,	TPOINT,
+> 		NAREG|NASL,	RESC1,
+> 		"\tsubl\tAR,AL\n\tmovl\tAL,A1 | new pointer-pointer is d\n",
+> 
+
+	 Now, this seems to make MY program compile ok, but I do have a feeling
+that I don't quite know what I'm doing.  Do you, by any chance, know of
+a better fix?
+
+Ron Reisor
+ron%udel-cc-relay@udel
+

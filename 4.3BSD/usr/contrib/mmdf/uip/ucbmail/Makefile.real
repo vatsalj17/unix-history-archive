@@ -1,0 +1,204 @@
+#
+# Copyright (c) 1980 Regents of the University of California.
+# All rights reserved.  The Berkeley software License Agreement
+# specifies the terms and conditions for redistribution.
+#
+#	@(#)Makefile	5.1 (Berkeley) 6/6/85
+#
+# Berkeley Mail
+#
+
+XSTR=	/usr/ucb/xstr
+DESTDIR=
+CTAGS=	/usr/ucb/ctags -w
+VPRINT=	/usr/ucb/print
+LIBES=
+AS=	-as
+RM=	-rm
+OBJS=	version.o aux.o cmd1.o cmd2.o cmd3.o cmdtab.o collect.o \
+	config.o dateparse.o edit.o fio.o \
+	getname.o head.o v7.local.o lex.o list.o main.o names.o \
+	next_address.o optim.o popen.o quit.o send.o strings.o temp.o tty.o \
+	vars.o str.o
+SRCS=	aux.c cmd1.c cmd2.c cmd3.c cmdtab.c collect.c config.c dateparse.c \
+	edit.c fio.c \
+	getname.c head.c v7.local.c lex.c list.c main.c \
+	names.c optim.c popen.c quit.c send.c strings.c temp.c tty.c vars.c \
+	version.c
+MODULES= aux cmd1 cmd2 cmd3 cmdtab collect config dateparse \
+	edit fio \
+	getname head v7.local lex list main \
+	names optim popen quit send strings temp tty vars \
+	version
+HDRS=	rcv.h configdefs.h def.h glob.h v7.local.h local.h
+ALL=	xMail xfmt
+S = $(SRCS) $(HDRS)
+
+#
+# Special massaging of C files for sharing of strings
+#
+.c.o:
+	${CC} -E ${CFLAGS} $*.c | ${XSTR} -c -
+	${CC} -c ${CFLAGS} x.c 
+	mv x.o $*.o
+	@$(RM) -f x.c
+
+real-default: all
+
+all:	${ALL}
+
+xMail:	$S $(OBJS)
+	$(RM) -f xMail
+	@echo Loading ...
+	@$(CC) -o xMail $(OBJS) $(MMDFLIBS) $(SYSLIBS)
+	@size xMail
+
+install: ${DESTDIR}/usr/ucb/Mail ${DESTDIR}/usr/ucb/fmt
+
+${DESTDIR}/usr/ucb/Mail: xMail
+	install -c -s xMail ${DESTDIR}/usr/ucb/Mail
+	cp misc/Mail.help* ${DESTDIR}/usr/lib
+	rm -f ${DESTDIR}/usr/ucb/mail
+	ln ${DESTDIR}/usr/ucb/Mail ${DESTDIR}/usr/ucb/mail
+
+${DESTDIR}/usr/ucb/fmt: xfmt
+	install -c -s xfmt ${DESTDIR}/usr/ucb/fmt
+
+version.o:	version.c
+	$(CC) -c -R version.c
+
+$S:
+	sccs get $@;
+
+srcs:	$S
+
+tags:	$(SRCS)
+	${CTAGS} $(SRCS);
+
+clean:
+	$(RM) -f *.o
+	$(RM) -f xMail a.out xfmt x.c xs.c tags core
+	cp /dev/null strings
+
+lint:
+	$(LINT) $(LFLAGS) $(SRCS) $(LLIBS)
+
+xfmt:	fmt.c head.c
+	$(CC) fmt.c head.c -o xfmt
+	size xfmt
+
+str.o: strings
+	$(XSTR)
+	$(CC) -R -c xs.c
+	mv xs.o str.o
+	$(RM) xs.c
+
+cmdtab.o: cmdtab.c
+	$(CC) -R -c $(CFLAGS) cmdtab.c
+
+print:	$S fmt.c
+	@$(VPRINT) Makefile rcv.h def.h glob.h local.h v7.local.h $(SRCS) fmt.c
+
+wc:
+	@wc rcv.h def.h glob.h local.h v7.local.h $(SRCS)
+
+sc:
+	@grep -c \; rcv.h def.h glob.h local.h v7.local.h $(SRCS)
+  
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+aux.o: aux.c
+aux.o: rcv.h
+aux.o: /usr/include/sys/stat.h
+aux.o: /usr/include/ctype.h
+aux.o: /usr/include/sys/time.h
+cmd1.o: cmd1.c
+cmd1.o: rcv.h
+cmd1.o: /usr/include/sys/stat.h
+cmd2.o: cmd2.c
+cmd2.o: rcv.h
+cmd2.o: /usr/include/sys/stat.h
+cmd2.o: mmdf.h
+cmd3.o: cmd3.c
+cmd3.o: rcv.h
+cmd3.o: /usr/include/sys/stat.h
+cmdtab.o: cmdtab.c
+cmdtab.o: def.h
+collect.o: collect.c
+collect.o: rcv.h
+collect.o: /usr/include/sys/stat.h
+collect.o: sigretro.h
+config.o: config.c
+config.o: configdefs.h
+dateparse.o: dateparse.c
+dateparse.o: rcv.h
+dateparse.o: /usr/include/ctype.h
+dateparse.o: /usr/include/sys/timeb.h
+edit.o: edit.c
+edit.o: rcv.h
+edit.o: /usr/include/stdio.h
+edit.o: /usr/include/sys/stat.h
+fio.o: fio.c
+fio.o: rcv.h
+fio.o: mmdf.h
+fio.o: /usr/include/sys/stat.h
+fio.o: /usr/include/errno.h
+fio.o: sigretro.h
+getname.o: getname.c
+getname.o: /usr/include/pwd.h
+getname.o: rcv.h
+head.o: head.c
+head.o: rcv.h
+head.o: /usr/include/ctype.h
+v7.local.o: v7.local.c
+v7.local.o: rcv.h
+v7.local.o: mmdf.h
+lex.o: lex.c
+lex.o: rcv.h
+lex.o: mmdf.h
+lex.o: /usr/include/sys/file.h
+lex.o: /usr/include/sys/stat.h
+lex.o: /usr/include/errno.h
+list.o: list.c
+list.o: rcv.h
+list.o: /usr/include/ctype.h
+main.o: main.c
+main.o: rcv.h
+main.o: /usr/include/sys/stat.h
+names.o: names.c
+names.o: rcv.h
+names.o: mmdf.h
+names.o: /usr/include/ctype.h
+optim.o: optim.c
+optim.o: rcv.h
+optim.o: configdefs.h
+optim.o: /usr/include/ctype.h
+popen.o: popen.c
+popen.o: /usr/include/stdio.h
+popen.o: /usr/include/signal.h
+popen.o: /usr/include/errno.h
+popen.o: sigretro.h
+quit.o: quit.c
+quit.o: rcv.h
+quit.o: /usr/include/sys/stat.h
+quit.o: /usr/include/sys/file.h
+quit.o: mmdf.h
+send.o: send.c
+send.o: rcv.h
+send.o: /usr/include/ctype.h
+send.o: /usr/include/sys/stat.h
+send.o: mmdf.h
+strings.o: strings.c
+strings.o: rcv.h
+temp.o: temp.c
+temp.o: rcv.h
+tty.o: tty.c
+tty.o: rcv.h
+vars.o: vars.c
+vars.o: rcv.h
+version.o: version.c
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

@@ -1,0 +1,27 @@
+: This shellfile must be run with a Bourne shell derivative, not csh.
+if test $# != 1
+then
+	echo "Usage: $0 host"
+	exit 1
+fi
+
+echo Removing old config files and linking in new ones
+set -x
+rm -f ../h/conf.h
+rm -f ../Makefile.com ../lib/Makefile ../src/Makefile
+rm -f ../uip/msg/msgtailor.c
+rm -f ../uip/send/s_tailor.h ../uip/send/s_tailor.c
+rm -f ../lib/mmdf/conf.o ../lib/mmdf/chan.o
+if ln $1/conf.h ../h/conf.h
+then
+	touch ../h/conf.h
+	ln $1/Makefile.com ../Makefile.com
+	ln $1/Makefile.lib ../lib/Makefile
+	ln $1/Makefile.src ../src/Makefile
+	ln $1/msgtailor.c ../uip/msg/msgtailor.c
+	ln $1/s_tailor.h ../uip/send/s_tailor.h
+	ln $1/s_tailor.c ../uip/send/s_tailor.c
+	exit 0
+fi
+echo '*** Please check that you supplied a valid host.'
+exit 99

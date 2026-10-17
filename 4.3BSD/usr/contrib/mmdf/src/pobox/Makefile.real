@@ -1,0 +1,57 @@
+#
+# ch_pobox:   passive delivery (wait for pickup) channel transmission
+#
+
+MODULES =	ch_pobox qu2po_send po_wtmail po_io
+
+OBJECTS =	ch_pobox.o qu2po_send.o po_wtmail.o po_io.o
+
+SOURCES =	ch_pobox.c qu2po_send.c po_wtmail.c po_io.c
+
+real-default:	pobox
+
+install:	$(CHANDIR)/pobox
+
+$(CHANDIR)/pobox  :   xpobox
+	cp xpobox $(CHANDIR)/pobox
+	-$(CHOWN) $(MMDFLOGIN) $(CHANDIR)/pobox
+	-chmod 0$(PGMPROT) $(CHANDIR)/pobox
+	-@ls -ls $(CHANDIR)/pobox
+	-@echo "pobox channel installed normally"; echo ""
+
+pobox:	xpobox
+xpobox:	$(OBJECTS) $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(MMDFLIBS) $(SYSLIBS)
+
+lint:
+	$(LINT) $(LFLAGS) $(SOURCES) $(LLIBS)
+
+clean:
+	-rm -f xpobox *.o x.c makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+ch_pobox.o: ch_pobox.c
+ch_pobox.o: ../../h/util.h
+ch_pobox.o: ../../h/mmdf.h
+ch_pobox.o: /usr/include/signal.h
+ch_pobox.o: ../../h/ch.h
+ch_pobox.o: ../../h/phs.h
+qu2po_send.o: qu2po_send.c
+qu2po_send.o: ../../h/util.h
+qu2po_send.o: ../../h/mmdf.h
+qu2po_send.o: ../../h/ch.h
+qu2po_send.o: ../../h/chan.h
+qu2po_send.o: /usr/include/pwd.h
+qu2po_send.o: ../../h/ap.h
+po_wtmail.o: po_wtmail.c
+po_wtmail.o: ../../h/util.h
+po_wtmail.o: ../../h/mmdf.h
+po_io.o: po_io.c
+po_io.o: ../../h/util.h
+po_io.o: ../../h/mmdf.h
+po_io.o: ../../h/ch.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

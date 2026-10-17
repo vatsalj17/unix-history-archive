@@ -1,0 +1,62 @@
+#
+#   deliver:    Manage message queues & invoke channel programs
+#
+MODULES =	deliver ch_wtmail ch_io ch_poll
+
+OBJECTS =	deliver.o ch_wtmail.o ch_io.o ch_poll.o
+
+SOURCES =	deliver.c ch_wtmail.c ch_io.c ch_poll.c
+
+real-default:	deliver
+deliver:	xdeliver
+xdeliver:	$(OBJECTS) $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(MMDFLIBS) $(SYSLIBS)
+
+install:	$(LIBDIR)/$(MMPREF)deliver
+
+$(LIBDIR)/$(MMPREF)deliver:	xdeliver
+	cp xdeliver $(LIBDIR)/$(MMPREF)deliver
+	-$(CHOWN) root $(LIBDIR)/$(MMPREF)deliver
+	-chmod 04$(PGMPROT) $(LIBDIR)/$(MMPREF)deliver
+	-@ls -ls $(LIBDIR)/$(MMPREF)deliver
+	-@echo "deliver installed normally"; echo ""
+
+
+lint:
+	$(LINT) $(LFLAGS) $(SOURCES) $(LLIBS)
+
+clean:
+	-rm -f xdeliver *.o x.c makedep eddep make.out errs
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+deliver.o: deliver.c
+deliver.o: deliver.c
+deliver.o: ../../h/util.h
+deliver.o: ../../h/mmdf.h
+deliver.o: /usr/include/signal.h
+deliver.o: /usr/include/sys/stat.h
+deliver.o: /usr/include/pwd.h
+deliver.o: ../../h/ch.h
+deliver.o: ../../h/msg.h
+deliver.o: ../../h/adr_queue.h
+ch_wtmail.o: ch_wtmail.c
+ch_wtmail.o: ../../h/util.h
+ch_wtmail.o: ../../h/mmdf.h
+ch_wtmail.o: ../../h/ch.h
+ch_wtmail.o: /usr/include/signal.h
+ch_io.o: ch_io.c
+ch_io.o: ../../h/util.h
+ch_io.o: ../../h/mmdf.h
+ch_io.o: ../../h/ch.h
+ch_io.o: /usr/include/signal.h
+ch_io.o: ../../h/nexec.h
+ch_poll.o: ch_poll.c
+ch_poll.o: ../../h/util.h
+ch_poll.o: ../../h/mmdf.h
+ch_poll.o: ../../h/ch.h
+ch_poll.o: /usr/include/sys/stat.h
+ch_poll.o: ../../h/nexec.h
+ch_poll.o: ../../h/phs.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

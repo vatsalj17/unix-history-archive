@@ -1,0 +1,77 @@
+.../bin
+
+This directory holds the system binaries.  Generally, copies of the
+directly executable stuff (e.g., ingres, printr, etc.) are here, plus
+a set of programs that are only used internally (ksort, monitor, etc.).
+
+It is CRITICAL that file modes are correct in this directory.  Here
+is an "ls -l" from our system.  Note: you may not have all of these
+programs, since some may not be applicable to your release.  The truly
+critical programs are marked with an asterisk.  The ones that should
+be installed in user-available directories are marked with a plus.
+
+-rws--x--x . . . . alldbu
+			The database utilities, not used in normal
+			VAX configuration.
+-rwxr-xr-x . . . . checkid
+			Checks for all SCCS id's properly expanded.
+			For system gurus only.
+-rwsr-x--x . . . . creatdb+
+			The "create database" utility.
+-rws--x--x . . . . decomp
+			Query optimization & execution, not used in
+			normal VAX configurations.
+-rwxr-xr-x . . . . demodb+
+			Creates a database & fills it with some demo
+			relations.
+-rwsr-x--x . . . . destroydb+
+			Destroys a database.
+-rwxr-xr-x . . . . equel+
+			Precompiles an EQUEL program.
+-rwxr-xr-x . . . . findtTf
+			Discovers trace flags.  Used by system
+			maintainers.
+-rwsr-x--x . . . . helpr+
+			Standalone "help" facility.
+-rwsr-x--x . . . . ingres+
+			The INGRES driver -- this is how you normally
+			execute the system.
+-rwsr-x--x . . . . ingresx
+			Typically a link to INGRES, this defaults to
+			a different process table.  It is used to make
+			life easier for system maintainers.
+-rwsr----- . . . . ksort*
+			Used internally to sort relations.
+-rwxr-x--x . . . . monitor*
+			The terminal monitor, i.e., the program you
+			talk to when you are running INGRES.
+-rws--x--x . . . . parser
+			The parser module; not used in a normal VAX
+			configuration.
+-rwsr-x--x . . . . printadmin
+			Prints the admin file for a database, used by
+			system maintainers.
+-rwsr-x--x . . . . printr+
+			Standalone "print" facility.
+-rwsr-x--x . . . . purge+
+			Purges cruft out of the database.
+-rws--x--x . . . . qrymod
+			The query modification module; not used in
+			normal VAX configurations.
+-rwsr-x--x . . . . restore+
+			Restore the database after a crash.
+-rwsr----- . . . . sysdump
+			Dumps the state of the world.  This can be
+			configured into INGRES for use by system
+			maintainers.
+-rwsr-x--x . . . . sysmod+
+			Modifies your data dictionaries to reasonable
+			formats.  This should be run regularly on
+			active databases.
+-rwx------ . . . . usersetup
+			Used once to initialize the users files.  See
+			the READ_ME files in .../files.
+-rwsr----- . . . . vaxingres*
+			The internal module that "ingres" calls to
+			implement INGRES.  This is essentially the
+			sum of parser, qrymod, decomp, and alldbu.

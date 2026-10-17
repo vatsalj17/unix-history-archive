@@ -1,0 +1,90 @@
+#
+#   Makefile for submit:     Accept, check, & queue mail from users
+#
+
+MODULES =	submit hdr_parse adr_submit lnk_submit \
+		mq_wtmail mgt_submit auth_submit
+
+OBJECTS =	submit.o hdr_parse.o adr_submit.o lnk_submit.o \
+		mq_wtmail.o mgt_submit.o auth_submit.o
+
+SOURCES =	submit.c hdr_parse.c adr_submit.c auth_submit.c \
+		lnk_submit.c mq_wtmail.c mgt_submit.c
+
+real-default:	submit
+submit:	xsubmit
+xsubmit:	$(OBJECTS) $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(MMDFLIBS) $(SYSLIBS)
+
+install:	$(LIBDIR)/$(MMPREF)submit
+
+$(LIBDIR)/$(MMPREF)submit:	xsubmit
+	    cp xsubmit $(LIBDIR)/$(MMPREF)submit
+	    -$(CHOWN) $(MMDFLOGIN) $(LIBDIR)/$(MMPREF)submit
+	    -chmod 04$(PGMPROT) $(LIBDIR)/$(MMPREF)submit
+	    -@ls -ls $(LIBDIR)/$(MMPREF)submit
+	    -@echo "submit installed normally"; echo ""
+
+lint:
+	$(LINT) $(LFLAGS) $(SOURCES) $(LLIBS)
+
+clean:
+	-rm -f xsubmit *.o x.c makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+submit.o: submit.c
+submit.o: ../../h/util.h
+submit.o: ../../h/mmdf.h
+submit.o: /usr/include/sys/stat.h
+submit.o: /usr/include/pwd.h
+submit.o: ../../h/nexec.h
+submit.o: ../../h/ap.h
+submit.o: ../../h/ch.h
+submit.o: ../../h/adr_queue.h
+submit.o: ../../h/msg.h
+submit.o: ../../h/hdr.h
+hdr_parse.o: hdr_parse.c
+hdr_parse.o: ../../h/util.h
+hdr_parse.o: ../../h/mmdf.h
+hdr_parse.o: ../../h/hdr.h
+adr_submit.o: adr_submit.c
+adr_submit.o: ../../h/util.h
+adr_submit.o: ../../h/mmdf.h
+adr_submit.o: /usr/include/pwd.h
+adr_submit.o: ../../h/ch.h
+adr_submit.o: ../../h/dm.h
+adr_submit.o: ../../h/ap.h
+lnk_submit.o: lnk_submit.c
+lnk_submit.o: ../../h/util.h
+lnk_submit.o: ../../h/mmdf.h
+lnk_submit.o: ../../h/ch.h
+lnk_submit.o: ../../h/adr_queue.h
+lnk_submit.o: ../../h/msg.h
+mq_wtmail.o: mq_wtmail.c
+mq_wtmail.o: ../../h/util.h
+mq_wtmail.o: ../../h/mmdf.h
+mq_wtmail.o: ../../h/ch.h
+mq_wtmail.o: ../../h/adr_queue.h
+mgt_submit.o: mgt_submit.c
+mgt_submit.o: ../../h/util.h
+mgt_submit.o: ../../h/mmdf.h
+mgt_submit.o: ../../h/ch.h
+mgt_submit.o: /usr/include/pwd.h
+mgt_submit.o: ../../h/cnvtdate.h
+mgt_submit.o: ../../h/ap.h
+mgt_submit.o: ../../h/dm.h
+mgt_submit.o: ../../h/msg.h
+mgt_submit.o: ../../h/hdr.h
+mgt_submit.o: ../../h/ns.h
+auth_submit.o: auth_submit.c
+auth_submit.o: ../../h/util.h
+auth_submit.o: ../../h/mmdf.h
+auth_submit.o: ../../h/cmd.h
+auth_submit.o: ../../h/ch.h
+auth_submit.o: ../../h/dm.h
+auth_submit.o: ../../h/ap.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

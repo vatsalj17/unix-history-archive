@@ -1,0 +1,55 @@
+W^56PH r^..YO
+{ QuickDraw2.text: Implementation part of QuickDraw }
+
+{$S Graf }
+
+TYPE FMOutPtr = ^FMOutRec;
+     FMOutrec = PACKED RECORD
+                  errNum:     INTEGER;     { used only for GrafError    }
+                  fontHandle: QDHandle;    { handle to font             }
+                  bold:       0..255;      { how much to smear horiz    }
+                  italic:     0..255;      { how much to shear          }
+                  ulOffset:   0..255;      { pixels below baseline      }
+                  ulShadow:   0..255;      { how big is the halo        }
+                  ulThick:    0..255;      { how thick is the underline }
+                  shadow:     0..255;      { 0,1,2,or 3 only            }
+                  extra:   -128..127;      { extra white dots each char }
+                  ascent:     0..255;      { ascent measure for font    }
+                  descent:    0..255;      { descent measure for font   }
+                  widMax:     0..255;      { width of widest char       }
+                  leading: -128..127;      { leading between lines      }
+                  unused:     0..255;
+                  numer:      Point;       { use this modified scale to }
+                  denom:      Point;       { draw or measure text with  }
+                END;
+
+
+
+VAR wideOpen:   RgnHandle;     { a dummy rectangular region, read-only }
+    wideMaster: RgnPtr;
+    wideData:   Region;
+    rgnBuf:     QDHandle;      { point saving buffer for OpenRgn       }
+    rgnIndex:   INTEGER;       { current bytes used in rgnBuf          }
+    rgnMax:     INTEGER;       { max bytes allocated so far to rgnBuf  }
+    playPic:    PicHandle;     { used by StdGetPic                     }
+    playIndex:  INTEGER;       { used by StdGetPic                     }
+    thePoly:    PolyHandle;    { the current polygon being defined     }
+    polyMax:    INTEGER;       { max bytes allocated so far to thePoly }
+    patAlign:   Point;         { to align pattern during DrawPicture   }
+    fontAdj:    LongInt;       { Fixed Point to adjust for font subst. }
+    fontPtr:    FMOutPtr;      { the last font used, used by DrawText  }
+    fontData:   FMOutRec;
+
+
+{ grafPort routines }
+
+{ It seems you have to have at least one procedure or function defined in the
+  implementation section...}
+
+Procedure InitGraf; EXTERNAL;
+
+END. { of UNIT }
+
+
+
+

@@ -1,0 +1,486 @@
+From ddj@csnet-relay.csnet Mon Jul 30 01:51:45 1984
+Received: from csnet-relay by safe with TCP; Mon, 30 Jul 84 01:51:34 pdt
+Received: From brown.csnet by csnet-relay;  29 Jul 84 18:23 EDT
+Message-Id: <8407292216.AA29989@nancy.Brown.CSNet>
+Date:     29 Jul 84 (Sun) 18:16:10 EDT
+From: Dave Johnson <ddj%brown.csnet@csnet-relay.arpa>
+To: croft@su-safe.arpa
+Subject:  porting cc68 to 4.2 sun
+Status: RO
+
+I got most of the c environment running on the suns (about 10 hours
+chasing down byte-swapping and bitfield problems).  I'm missing one
+include file that seems necessary for using sprintf, etc, and a couple
+more that don't look quite as useful for the mac.  Could you send me:
+
+	sunemt.h -- needed for emt_putchar, etc in libc/emt directory
+
+	nec7201.h \
+	timer.h    > -- needed to compile the libc/sunstuff directory
+	vectors.h /
+
+The assembler was the hardest to debug; as far as I can tell, the
+code is just plain wrong:  it allocates an array of shorts, then 
+uses an int pointer to step through it.  Later there is some hacked
+up code that "skips over garbage bytes" when the code is emitted,
+which reduces to byte-swapping when the array is declared as short
+instead.
+
+libmake.c had some problems with bitfields.  Might it not be better
+to just use the b.out.h declarations, rather than try to second guess
+how the compiler will allocate the bits?
+
+Anyhow, here are the notes and diffs . . . I'm also sending these
+to Alan Crosswell at Columbia, as I believe he's trying a port to
+the 370 (or amdahl).
+
+all:	(in makefile_t, makefile, or Makefile)
+    /usr/sun/include -> /usr/include/mac, /usr/stanford/bin -> /usr/local/bin
+	
+lib: libmake.c -- different bitfield order in struct breloc, undef nohtonl
+--------------------------
+*** lib/libmake.c	Wed Jul 18 22:34:36 1984
+--- lib/libmake.c.orig	Thu Jun  7 02:29:33 1984
+***************
+*** 67,75
+  };
+  
+  struct breloc brtrap = {
+- #ifdef sun
+- 	RLONG<<12 | REXT<<14, 0, 2	/* relocate _mactrap, sym 0, offset 2 */
+- #else
+  	RLONG<<2 | REXT, 0, 2	/* relocate _mactrap, sym 0, offset 2 */
+- #endif
+  };
+
+--- 67,72 -----
+  };
+  
+  struct breloc brtrap = {
+  	RLONG<<2 | REXT, 0, 2	/* relocate _mactrap, sym 0, offset 2 */
+  };
+  struct breloc brext = {
+***************
+*** 74,82
+  #endif
+  };
+  struct breloc brext = {
+- #ifdef sun
+- 	RLONG<<12 | REXT<<14, 2, 10	/* relocate stubaddr, sym 2, offset 10 */
+- #else
+  	RLONG<<2 | REXT, 2, 10	/* relocate stubaddr, sym 2, offset 10 */
+- #endif
+  };
+
+--- 70,75 -----
+  	RLONG<<2 | REXT, 0, 2	/* relocate _mactrap, sym 0, offset 2 */
+  };
+  struct breloc brext = {
+  	RLONG<<2 | REXT, 2, 10	/* relocate stubaddr, sym 2, offset 10 */
+  };
+  
+***************
+*** 232,235
+! /* #define nohtonl */
+  #ifdef nohtonl	/* if not in library */
+  /*
+   * "Host" to "net" byte order swappers.
+
+--- 221,227 -----
+! #define nohtonl 
+  #ifdef nohtonl	/* if not in library */
+  /*
+   * "Host" to "net" byte order swappers.
+--------------------------
+cmd: rmaker.c -- undef VAX, undef nohtonl;
+	this kind of stuff belongs 
+	in the makefile, not in the g-dd--n source!!!;
+	besides, cpp defines vax, sun, whathaveyou...
+--------------------------
+*** cmd/rmaker.c	Wed Jul 18 22:45:54 1984
+--- cmd/rmaker.c.orig	Thu Jul 19 03:06:33 1984
+***************
+*** 490,497
+  	printf("\n");
+  }
+  
+! /*#define VAX*/
+! /*#define nohtonl*/
+  #ifdef nohtonl	/* if not in library */
+  #ifdef	VAX
+  /*
+
+--- 490,498 -----
+  	printf("\n");
+  }
+  
+! 
+! #define VAX
+! #define nohtonl
+  #ifdef nohtonl	/* if not in library */
+  #ifdef	VAX
+  /*
+
+--------------------------
+cc/cmd:
+	makefile: cc68 source is elsewhere, dll and dlx not useful.
+	ld: rl68.c -- bitfields don't work as array indices on sun.
+	as: changes below required for the sun, should be done on the vax
+		as well; I have no idea how it manages to work on the vax as
+		it is.  The code uses twice as much space as is allocated in
+		the Code array, but bug only gets exercised on 8 or 10 byte
+		instructions, which are not too common.
+	as: ins.c, print.c, ps1.c, rel.c -- WCode changed from int * to short *
+	as: rel.c -- byte swapping code in PutWords changed to work
+		with shorts instead of longs;
+		#ifdef BOOTSTRAP changed to #ifndef sun, as we want BOOTSTRAP
+		to mean create .b and b.out files rather than .o and a.out;
+		this code should be replaced by htons().
+--------------------------
+diff -r cmd.orig/makefile cc/cmd/makefile
+6c6
+< DESTDIR= /usr/stanford/bin
+---
+> DESTDIR= /usr/local/bin
+8c8
+< sun-commands: dll dlx cc68 compiler assembler loader 
+---
+> sun-commands: compiler assembler loader # dll dlx cc68 -- source elsewhere
+13,14c13,14
+< install: $(DESTDIR)/dll $(DESTDIR)/dlx $(DESTDIR)/cc68 \
+<  install-compiler install-assembler install-loader $(DESTDIR)/lorder68
+---
+> install: install-compiler install-assembler install-loader $(DESTDIR)/lorder68 \
+> # $(DESTDIR)/dll $(DESTDIR)/dlx $(DESTDIR)/cc68 
+diff -r cmd.orig/as/ins.c cc/cmd/as/ins.c
+22c22
+< int	*WCode = (int *)Code;
+---
+> short	*WCode = (short *)Code;
+diff -r cmd.orig/as/makefile cc/cmd/as/makefile
+15c15
+< init.o ins.c: mical.h inst.h
+---
+> init.o ins.o: mical.h inst.h
+18c18
+< 	cp as68 /usr/stanford/bin/as68
+---
+> 	cp as68 /usr/local/bin/as68
+diff -r cmd.orig/as/print.c cc/cmd/as/print.c
+4c4
+< extern int *WCode;
+---
+> extern short *WCode;
+diff -r cmd.orig/as/ps1.c cc/cmd/as/ps1.c
+51c51
+< 	int *WCode = (int *)&Code[0];
+---
+> 	short *WCode = (short *)&Code[0];
+diff -r cmd.orig/as/rel.c cc/cmd/as/rel.c
+118c118
+< 	extern int *WCode;		/* buffer for code in ins.c */
+---
+> 	extern short *WCode;		/* buffer for code in ins.c */
+149c149
+< #ifdef BOOTSTRAP
+---
+> #ifndef sun
+152c152
+< 	  {tcode[i++] = code[j++]; tcode[i++]=code[j++];j+=2;}
+---
+> 	  {tcode[i++] = code[j++]; tcode[i++]=code[j++];}
+160c160
+< 	  {j+=2; tcode[i++] = code[j++];tcode[i++]=code[j++];}
+---
+> 	  {tcode[i++] = code[j++];tcode[i++]=code[j++];}
+diff -r cmd.orig/c2/makefile_t cc/cmd/c2/makefile_t
+16c16
+< 	cp c268 /usr/stanford/bin
+---
+> 	cp c268 /usr/local/bin
+diff -r cmd.orig/ccom/makefile_t cc/cmd/ccom/makefile_t
+12c12
+< BINDIR	= 	/usr/stanford/bin
+---
+> BINDIR	= 	/usr/local/bin
+diff -r cmd.orig/ld/Makefile cc/cmd/ld/Makefile
+5,6c5,6
+< BIN = /usr/stanford/bin
+< INCLUDE = /usr/sun/include
+---
+> BIN = /usr/local/bin
+> INCLUDE = /usr/include/mac
+diff -r cmd.orig/ld/rl68.c cc/cmd/ld/rl68.c
+307a308
+> 	int n;
+312,313c313,316
+< 	seg = "TDBE"[rcmd.rsegment];
+< 	size = "BWL?"[rcmd.rsize];
+---
+> 	n = rcmd.rsegment;
+> 	seg = "TDBE"[n];
+> 	n = rcmd.rsize;
+> 	size = "BWL?"[n];
+--------------------------
+cc/libc: changed makefile and sunstuff/makefile to avoid missing include files
+	in emt and sunstuff.
+	(sunemt.h in emt/*; nec7201.h, timer.h & vectors.h in sunstuff/ttyio.c)
+	sunemt.h is needed for some of the standard io stuff (sprintf, etc).
+
+:w cc.bugs
+
+From MIKES@CIT-20 Wed Jul 25 10:09:35 1984
+Received: from CIT-20.ARPA by safe with TCP; Wed, 25 Jul 84 10:09:29 pdt
+Date: 25 Jul 1984 1007-PDT
+Subject: SUMACC on Methus' 68k
+From: Mike Schuster <MIKES@CIT-20.ARPA>
+To: croft@SU-SAFE.ARPA
+Status: RO
+
+Bill,
+  Here are the changes I made to get SUMACC running on our Methus 68k 
+workstation.  The first fixes machine dependent code in as68 associated with
+the ".byte" command.  The second fixes machine dependent initializations
+in lib/libmake.c.  You may want to delete the printf's.  I've been using
+them to get list of trapcodes (after filtering with sort).  Thanks.
+
+Mike
+
+diff cc/cmd/as/ps1.c- cc/cmd/as/ps1.c
+--------
+72a73
+> #ifdef	BOOTSTRAP
+73a75,77
+> #else
+> 			Put_Text(((char *)WCode) + 3, Which);
+> #endif
+--------
+
+diff lib/libmake.c- lib/libmake.c
+--------
+69,74c69,70
+< struct breloc brtrap = {
+< 	RLONG<<2 | REXT, 0, 2	/* relocate _mactrap, sym 0, offset 2 */
+< };
+< struct breloc brext = {
+< 	RLONG<<2 | REXT, 2, 10	/* relocate stubaddr, sym 2, offset 10 */
+< };
+---
+> struct reloc brtrap;
+> struct reloc brext;
+95a92,103
+> 
+> 	brtrap.rsegment = REXT;		/* _mactrap is an external symbol */
+> 	brtrap.rsize = RLONG;		/* long field */
+> 	brtrap.rdisp = 0;		/* not a displacement */
+> 	brtrap.rsymbol = 0;		/* _mactrap is symbol 0 */
+> 	brtrap.rpos = 2;		/* offset 2 in text segment */
+> 	brext.rsegment = REXT;		/* stub is an external symbol */
+> 	brext.rsize = RLONG;		/* long field */
+> 	brext.rdisp = 0;		/* not a displacement */
+> 	brext.rsymbol = 2;		/* stub is symbol 2 */
+> 	brext.rpos = 10;		/* offset 10 in text segment */
+> 
+137a146
+> 		printf("%4x %s\n", (atoi(trap)>>16)&0xFFFF, label);
+142a152
+> 		printf("%s %s\n", trap, label);
+224a235
+> /* #define VAX */
+231a243
+> #ifdef	VAX
+238a251,253
+> #else
+> 	return (a);
+> #endif
+244a260
+> #ifdef	VAX
+253a270,272
+> #else
+> 	return (a);
+> #endif
+--------
+-------
+
+(Message inbox:11)
+Return-Path: <@SUMEX-AIM.ARPA:bob%basser.OZ@decwrl>
+Received: from SUMEX-AIM.ARPA by safe with TCP; Mon, 6 Aug 84 04:26:06 pdt
+Received: from decwrl.ARPA by SUMEX-AIM.ARPA with TCP; Mon 6 Aug 84 04:25:44-PDT
+Received: by decwrl.ARPA (4.22.01/4.7.33)
+	id AA16327; Mon, 6 Aug 84 04:25:10 pdt
+From: bob%basser.OZ@decwrl.ARPA
+Return-Path: <decvax!mulga!bob@basser.OZ>
+Received: by decvax.UUCP (4.12/1.0)
+	id AA20060; Mon, 6 Aug 84 07:13:23 edt
+Message-Id: <8408061113.AA20060@decvax.UUCP>
+Received: by mulga.OZ (4.3)
+	id AA11365; Sun, 5 Aug 84 23:40:41 EST
+Date: Sun, 5 Aug 84 21:40:25 EST
+To: croft%sumex.stanford%mulga.OZ@decwrl.ARPA,
+        croft%sumex.arpa%mulga.OZ@decwrl.ARPA
+Subject: SUMAC stuff
+Status: RO
+
+
+Glenn Trewitt suggested I let you know what we have done with the sumacc
+distribution that you gave him for us.
+
+We (University of Sydney, CS Dept) are running our own version of UNIX
+on a pair of VAX780's. It developed originally from 32V and later from
+System III, it is VERY different from BSD4.x.
+We are closer to System V than BSD4.2.
+
+I had two problems getting the Sumacc software running - one minor, one
+major. The minor one was that some library include files were not in the
+expecte directories, this was trivial to fix. The other problem was that
+the loader and assembler assumed that the "a" mode of opening a file
+positioned the file at the end at open time BUT if the file was
+repositioned before being written on, the write would not necessarily
+occur at the end of the file. Unfortunately, in our system opening a
+file "a" means that EVERY write puts the data at the end of the file,
+regardless of any lseeks done in the mean time.
+
+The second problem took me considerable time to find!!
+
+Both the loader and assembler are affected. The fix is trivial. The "a"
+opens occur immediately after opening the same file "w", thus truncating
+the file anyway. The "a"'s were changed to "w"'s and the problem was
+fixed!
+
+My only remaining, minor problem is that I can't get rid of the "little
+picture of the sea" icon for C programs on the Mac. I put my own icon
+bit pattern in the resource file, set the bundle bit on the file when it
+got to the Mac but the "sea" still appears! This is not helped by the
+non-arrival of my copy of "Inside Macintosh". Please don't expend any
+thought on this problem - the answer probably lies in IM and I'll fix it
+eventually.
+
+I would be willing to act as a redistributor of Sumacc for Australia if
+you want. I have had several requests (including one from Wollongong).
+
+Glenn has also asked that we be put on the info-mac mailing list. I will
+relay messages to others interested in Macs in Australia.
+
+Regards,
+Bob Kummerfeld
+Computer Science Dept,
+University of Sydney
+Australia
+
+(Message mcu:5)
+Return-Path: <unisoft!normac!stephen@Berkeley>
+Received: from UCB-VAX.ARPA by safe with TCP; Thu, 23 Aug 84 19:09:39 pdt
+Received: by UCB-VAX.ARPA (4.24/4.33)
+	id AA07719; Thu, 23 Aug 84 19:07:53 pdt
+Date: Thu, 23 Aug 84 19:07:53 pdt
+From: unisoft!normac!stephen@Berkeley
+Message-Id: <8408240207.AA07719@UCB-VAX.ARPA>
+To: CROFT@SAFE.ARPA
+Subject: Sumacc on Unisoft
+Cc: stephen@Berkeley
+
+Mail received - thanks.  Help much appreciated. 
+I read "fa.info-mac" on USENET (not ARPA) but any other info is welcome.
+I'm prepared to assist anyone with a Unisoft system III or V
+and have access to 4.1 VAX, 4.2 Suns, Lisa-2 also.
+Stephen Lewis.
+("ucbvax!unisoft!normac!stephen@BERKELEY")
+
+
+
+
+Sorry for the delay, I've been busy.
+
+  This is not meant to be criticism - just for reference. I refer to a
+  target environment of a 68000 running Unisoft System 3 as "mine" and
+  the original as "yours".
+  First my system does not have symbol table entries as long as yours
+  hence name conflicts. These derive from Lisa Pascal which allows 8.
+  Solution a bunch of "foomung.h" files in the "foo.h's".
+
+You'd be better off putting flexnames in your compiler system.  You'll
+certainly have to warn users about this one.
+
+  Second my "cc -S" syntax differs from yours. Hence "sed" script doesn't
+  work. Specific difficulty mine defaults to hex for parms yours to
+  decimal. 
+  Third my "as" knows not ".macro", ".blockb", ".insrt". Also uses "0x1234" not
+  "/1234". Hence need to run through "sed" and use "m4" instead thus
+  preserving usefulness of include files and macros but making more
+  general. My "as" uses ".comm" and lets the loader resolve addresses.
+  Fourth since I wanted to use standard local ".o's" and archives
+  I had to change "libmake" considerably to use "a.out.h" and "ar.h"
+  which differ from yours. Also had to read hex values from
+  library fragments. You did a good job of "htons" byte swapping but
+  there is a problem in libmake (the bit fields in the reloc data
+  does this work on your 68000 ? - you changed them but its still not
+  right on my 68000 compiler It depends how compiler allocates bits).
+
+Have I mailed you the notes from some other port-er's?  I'll send
+it in the next letter.
+
+  Fifth my "ld" has different flags.
+  Sixth I had to write a local version of "mklint" since lint passes
+  and lint libraries are all in different places.
+  I am happy to say that "rmaker" works as is. Though I had to add some
+  debug code to find out what "impossible relocation" meant.
+  Well thats all that comes to mind right now - if you get any
+  System 3 or 5 questions feel free to give them my name. Now to my
+  questions:
+  1/ Please tell me what name you get from "nm68 test.o" if
+  you a/ compile b/ assemble the following:
+  /* test.c */
+  foo()
+  {
+  };
+  /* end */
+  | test.s
+  	.globl	bar
+  bar:
+  | end
+  On my system I get "_foo" from "cc" and "bar" from "as" I suspect
+  that you get "foo" from "cc68" and "_bar" from "as68". This has given
+  me some confusion. And difficulty getting names to resolve themselves
+  in the library.
+
+Nope.  I get "foo" and "bar", no leading underscores are automatically
+prefixed.  Perhaps youre confused by the underscore convention I chose
+myself for the stub files.
+
+  2/ My "as" is pretty dumb it only knows what "cc" feeds it. It could
+  assemble several things in your sources e.g.
+  "moveml	#D0+D1+A0+A1,sp@" - I fixed this with equates
+  for "D0" etc does yours "know" this construct?
+
+They are just equates in this assembler also.
+
+  "movq	#[ioqelsize/2]-1,d0" - mine knows "+, -, *" but, alas
+  not "/" for operand arithmetic. I did this one at run time.
+  Here is the problem:
+  	btst	d0,sp@(0,d1)	
+  	bclr	d0,sp@(0,d1)
+  	bset	d0,sp@(0,d1)
+
+1044    00 02F4  0101                                     btst    d0,sp@(0,d1)
+1111    00 0360  0181                                     bclr    d0,sp@(0,d1)
+1114    00 0364  01C1                                     bset    d0,sp@(0,d1)
+
+  I am not sure of this addressing mode *please* assemble these
+  three instructions for me and give me the code from your "as68".
+  3/ Right now there is only "sane.s" that I have not got
+  assembled - here is the problem:
+  	fbne
+  	fbo
+  	fbgt
+  	fbu
+
+These are defined as macros in ../h/sanemacs.h
+
+  all appear as opcodes - these are not known to my "as" and not in
+  my Motorola book either (at least not these names). What are they?
+  Are they "fast" branches? Or "far" branches? Hope they are not
+  "floating" branches. Please feed them to your "as68" and send
+  me the output.
+
+I did receive this twice, sorry again for the delay...
+

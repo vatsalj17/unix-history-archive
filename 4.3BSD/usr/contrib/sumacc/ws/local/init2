@@ -1,0 +1,287 @@
+3. "6F^5PH r^&1212;File UserAlerts.Text
+;
+;   Standard Alerts for the production system -- Resource Type INIT, ID 2
+;
+;   These alerts are intended for naive users.  Programmers should use "sysAlerts"
+;   instead of these "userAlerts" during development.  There is only one alert
+;   here, which informs the user that she's in trouble... (plus one for the
+;   final stage of booting)
+
+;
+;  last change -- tweaked disk switch alert 2/23/84 AJH
+;                 Mercilessly chopped out stuff, added RESET 4/14/84 SC
+;
+               .INCLUDE    TlAsm/SYSEQU.TEXT
+               .INCLUDE    TlAsm/SYSMACS.TEXT
+               .INCLUDE    TlAsm/FSEQU.TEXT
+               .INCLUDE    TlAsm/TOOLEQU.TEXT
+               .INCLUDE    TlAsm/QUICKMACS.TEXT
+               .INCLUDE    TlAsm/TOOLMACS.TEXT
+               .INCLUDE    TlAsm/GrafTypes.Text
+
+               .PROC       INIT,0
+
+                BRA        InstallIt
+
+DSStart
+               .WORD     21                       ;number of entrys
+
+; alert definitions
+
+               .WORD     32767,10,50,0,36,94,72    ;system error
+
+               .WORD     30,10,46,0,37,96,0         ;disk switched
+               .WORD     31,10,45,0,37,0,0          ;bad disk switch
+
+               .WORD     41,10,67,0,36,0,70        ;can't find finder
+               .WORD     28,10,50,0,36,95,72       ;special case stack overflow
+
+; text definitions
+
+Text0
+               .WORD     50,Text1-Text0-4
+               .WORD     100,110
+               .ASCII    'Sorry, a system error occurred.'
+               .BYTE     00
+               .ALIGN    2
+Text1
+               .WORD     67,Text2-Text1-4
+               .WORD     86,130
+               .ASCII    "Can't load the finder!"
+               .BYTE     0
+               .ALIGN    2
+Text2
+               .WORD     46,Text3-Text2-4
+               .WORD     30,75
+               .ASCII    'Please insert the disk:'
+               .BYTE     0
+               .ALIGN    2
+Text3
+Text4
+;
+; icons -- Susan's bomb
+;
+               .WORD     36,136
+               .WORD     72,50,104,82
+
+          .LONG     $00000808
+          .LONG     $00000010
+          .LONG     $00000420
+          .LONG     $00008040
+          .LONG     $00002200
+          .LONG     $00000800
+          .LONG     $001F002A
+          .LONG     $0020C700
+          .LONG     $00403800
+          .LONG     $00400020
+          .LONG     $00400910
+          .LONG     $03F81008
+          .LONG     $03F82104
+          .LONG     $03F80000
+          .LONG     $0FFE0100
+          .LONG     $3FFF8000
+          .LONG     $3FFF8000
+          .LONG     $7FFFC000
+          .LONG     $7FFFC000
+          .LONG     $FFFDE000
+          .LONG     $FFFFE000
+          .LONG     $FFFEE000
+          .LONG     $FFFEE000
+          .LONG     $FFFEE000
+          .LONG     $FFFFE000
+          .LONG     $FFFDE000
+          .LONG     $7FFFC000
+          .LONG     $7FF7C000
+          .LONG     $3FFF8000
+          .LONG     $3FFF8000
+          .LONG     $0FFE0000
+          .LONG     $03F80000
+
+;
+; disk switched icon
+
+           .WORD     37,136
+           .Word     20,24,52,56
+
+           .LONG    $002ADE00
+           .LONG    $00800100
+           .LONG    $00000080
+           .LONG    $01000080
+           .LONG    $000003E0
+           .LONG    $010001C0
+           .LONG    $00000080
+           .LONG    $00000000
+           .LONG    $FFF83FFC
+           .LONG    $88A44452
+           .LONG    $88A24451
+           .LONG    $88224411
+           .LONG    $8FE247F1
+           .LONG    $80024001
+           .LONG    $80024001
+           .LONG    $9FF24FF9
+           .LONG    $A00A5005
+           .LONG    $A00A5005
+           .LONG    $A00A5005
+           .LONG    $A00A5005
+           .LONG    $A00A5005
+           .LONG    $A00A5005
+           .LONG    $FFFE7FFF
+           .LONG    $00000000
+           .LONG    $01000000
+           .LONG    $03800080
+           .LONG    $07C00000
+           .LONG    $01000080
+           .LONG    $01000000
+           .LONG    $00800100
+           .LONG    $007B5400
+           .LONG    $00000000
+
+
+;
+; buttonList
+;
+               .WORD     70,14
+               .WORD     1
+               .WORD     80,160,50,180,110,90
+
+
+               .WORD     71,14
+               .WORD     1
+               .WORD     80,160,50,180,110,90
+
+
+               .WORD     72,14
+               .WORD     1
+               .WORD     80,160,54,180,113,90
+
+
+               .WORD     73,26
+               .WORD     2
+               .WORD     80,160,54,180,113,90
+               .WORD     82
+ResumeRect
+               .WORD     160,129,180,189
+               .WORD     92
+;
+; strings
+;
+               .WORD     80,8
+               .ASCII    'Restart '
+
+               .WORD     82
+               .BYTE     0
+ResumeString
+               .BYTE     6
+               .ASCII    'Resume'
+
+;
+; procs
+;
+P1              .WORD   90,P2-P1-4
+
+; reboot the system
+
+                 RESET
+
+P2
+                .WORD   92,P3-P2-4
+
+                MOVE.L   CurrentA5,A5
+                MOVE.L   CurStackBase,A7
+                MOVE.L   RestProc,A0
+                JMP      (A0)                ; restart
+P3
+
+; print the ID of the DS alert
+; also, plot a grayed out resume button if saveProc = NIL
+
+P4
+               .WORD     94,P5-P4-4
+P4A
+               BSR.S     PlotGrayBut
+
+               MOVE.L    #$00A40180,-(SP)    ;push location
+               _MoveTo                       ;move the pen
+
+               PEA       IDString
+               _DrawString
+
+               MOVEQ     #0,D3
+               MOVE.W    DSErrCode,D3
+               DIVU      #10,D3              ;divide by 10
+               BSR.S     OutChar             ;out high char
+               SWAP      D3                  ;get low char
+OutChar
+               OR.W      #$30,D3             ;turn into ASCII
+               MOVE.W    D3,-(SP)            ;push it
+               _DrawChar
+               RTS
+
+PlotGrayBut
+               TST.L    RestProc             ;got a restart proc?
+               BNE.S    @1                   ;if so, skip...
+
+; plot a grayed out resume button
+
+               MOVE.L   ResumeRect,-(SP)     ;push topLeft of rect
+               ADD.L    #$000E0003,(SP)      ;offset for drawing
+               _MoveTo                       ;move the pen
+
+               PEA      ResumeString         ;push the string
+               _DrawString                   ;draw it
+
+               PEA      ResumeRect           ;push the rect
+               MOVE.L   (SP),-(SP)           ;copy it
+               MOVE.L   (SP),-(SP)           ;and copy again
+               MOVE.L   (SP),-(SP)           ;and copy again
+               MOVE.L   #$00100010,-(SP)     ;push rounding factor
+               _FrameRoundRect               ;frame it
+
+               MOVE.L    #$00030003,-(SP)
+               _InsetRect
+
+               MOVE.L    (A5),A0
+               PEA       Gray(A0)
+               _PenPat
+               MOVE      #patBIC,-(SP)
+               _PenMode
+
+               _PaintRect
+               _PenNormal
+
+               MOVE.L     #$FFFDFFFD,-(SP)           ;push it
+               _InsetRect
+@1
+               RTS
+IDString
+               .BYTE     5
+               .ASCII    'ID = '
+
+P5
+               .WORD     95,P6-P5-4
+
+               MOVE.L    (SP)+,A0            ;get return address
+               MOVE.L    CurStackBase,SP     ;reset the stack
+               MOVE.L    A0,-(SP)            ;restore return address
+               BRA.S     P4A                 ;go print the ID
+P6
+               .WORD     96,P7-P6-4
+
+               MOVE.L    #$0033004B,-(SP)    ;push pen position
+               _MoveTo                       ;position the pen
+
+               MOVE.L    ReqstVol,A1         ;get VCB ptr
+               PEA       VCBVN(A1)           ;push ptr to volume name
+               _DrawString
+
+               RTS
+P7
+
+InstallIt
+                LEA     DSStart,A0
+                MOVE.L  A0,DSAlertTab
+                RTS
+
+               .END
+
+

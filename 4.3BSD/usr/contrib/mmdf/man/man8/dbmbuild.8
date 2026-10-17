@@ -1,0 +1,44 @@
+.TH DBMBUILD 8 "8 January 1986"
+.SH NAME
+dbmbuild \- database builder for MMDF address database
+.SH SYNOPSIS
+dbmbuild [ \-nvdk] ] [ database [table ...] ] 
+.SH DESCRIPTION
+.I Dbmbuild
+reads the tables specified in the MMDF tailor file into a hashed
+database for use in quickly verifying addresses and efficiently assigning
+channels to submitted messages.  If no database file is specified, the
+default dbm filename is used from the MMDF tailor file.  If no table files
+are specified, all tables listed in the tailor file are used.  In particular,
+three tables are read for each channel definition: the list of authorized
+sources, the list of authorized destinations, and the table of names/aliases
+for that channel.  Also, the remaining tables (MTBL and MDMN) are read.
+.PP
+The options are:
+.IP n
+Create a new database.  If this option is omitted, 
+.I dbmbuild
+updates an existing database.
+.IP v
+Verbose mode.  Print out information during table processing.
+.IP d
+Debug mode.  Report everything that happens.
+.IP k
+Keep going.  If a file is mentioned that doesn't exist, ignore it.
+It might be appropriate to make this the default at some sites.
+.PP
+If no options are specified, `-n' is assumed.  Appropriate locks are placed on
+the database so that
+.I dbmbuild
+can safely be run while MMDF is in operation.
+N.B.  Even use of the `-v' option
+will turn off the default `-n' option.
+.SH FILES
+.nf
+$(tbldbm).dir    - database directory
+$(tbldbm).pag    - database pages
+$(tbldbm).lck    - database locking file
+$(tbldfldir)/*   - various tables that form the database.
+.fi
+.SH "SEE ALSO"
+dbm(3X), tables(5), dbmedit(8), dbmlist(8), "Installing and Operating MMDFII"

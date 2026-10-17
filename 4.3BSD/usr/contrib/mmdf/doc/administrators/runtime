@@ -1,0 +1,1234 @@
+.\".AU
+.\"Julian Onions
+.\".AI
+.\"Department of Computer Science,
+.\"The University,
+.\"NOTTINGHAM,
+.\"NG7 2RD.
+.\"ENGLAND.
+.\"(0602) 506101 ext 3595
+.bp
+.NH
+Runtime Tailoring the \*M system
+.NH 2
+Introduction
+.PP
+The \*M Mail Transport system
+can be run in one of two modes.
+It can either have all the site dependent information
+tailored at compile time,
+or else it can be asked to read the information from an
+ASCII human-readable file each time it starts up.
+Obviously the latter provides much more scope for tweaking
+various constants etc.
+but does slow down the start-up time of the programs using
+this information.
+Most sites will want to run somewhere in the middle, with
+most of the static information (bug address, directories,
+filenames, etc.) compiled in, and the remainder configured
+at runtime.  If you later have a need to change some
+compiled in values, you can simply add an item to the runtime
+tailoring file to override the compiled-in value and
+thus avoid having to recompile the mail system.
+There are obvious efficiencies to be had from a smaller configuration
+file which makes it attractive to try to keep it small.
+Typically one would runtime configure the host name and domain,
+the support address, the tables, the channels, the domains, and the
+logging levels.
+.PP
+Many people may be worried about the cost of runtime tailoring.
+The method for reading in the tailoring file is very efficient,
+involving only a single read system call.  The use of runtime
+tailoring adds very little overhead to the \*M mail system.
+The advantages of runtime tailoring generally far outweigh the
+minor extra cost at startup.
+.PP
+Occasionally there will be a need to compile in the configuration
+at a particular site (e.g. CSNET-RELAY) because the runtime tailoring file
+becomes far too large.  There are two tools for helping to do this in
+src/tools.
+\fBFixtai\fR reads a specified runtime tailoring file and produces structure
+initializations for those structures suitable
+for being #included into chan.c.
+\fBRem_chans\fR comments out specified channel entries in a runtime tailoring
+file that you now expect to compile in.  You may wish to do this by
+hand if you only have a few.
+.PP
+In general,
+keywords in the tailoring file are case independent,
+however such things as filenames and similar values,
+obviously are not. The full specification for the tailoring
+parsing can be found in manual section tai(3).
+Strings are generally quoted to prevent them from being parsed
+into separate words accidentally.  Simple words consisting of
+only alpha-numeric characters can be safely left unquoted, but
+all others strings should be quoted, especially those containing
+spaces or punctuation.
+.PP
+This section describes tailoring through the external file,
+but much of this information is applicable when using the
+compiled-in tailoring.
+The 
+subsections below describe the specific entries which can be placed
+in the tailoring file.
+.PP
+Examples are given for a number of sites
+including most of those with directories in the \fBconf\fR directory.
+See the directory \fBsamples\fR; subdirectories will contain actual
+tables and tailoring files for these systems.
+.PP
+This whole process is perhaps easiest if you copy a tailor file
+for some other system
+and change the bits you need.
+This example will show you common values that have been
+used for parameters;
+they are not necessarily what you want,
+but they should give you a guide.
+In some cases, there is more than one way to do something.
+For example, setting up the list channel tables was done differently
+at BRL and UCL.
+This does not mean that one is wrong, just different.
+One is perhaps more elegant, but both should work.
+.XX
+Choose a tailor file to copy.
+.XX
+Copy the chosen tailor file to the location you specified as
+.I mmtailor
+in the conf.c file (see section 2.5.1).
+.XX
+Edit your tailor file as described below.
+.NH 2
+Local Names and Site-Specific Information
+.PP
+The MLNAME is the name of your machine
+or site as you wish it to
+be known throughout the network.
+This may be a generic host name used to hide a number of local
+hosts.
+If a generic host name,
+internal hosts will be differentiated by MLOCMACHINE (described below).
+.DS
+.TS
+l l .
+MLNAME	``Maths''		# UK site
+MLNAME	``Arpahost''		# ARPA site
+.TE
+.DE
+Case should not matter here.
+.PP
+The MLDOMAIN line gives your full local domain.
+This,
+combined with the MLNAME (and possibly the MLOCMACHINE) will
+give you the full network address.
+.DS
+.TS
+l l .
+MLDOMAIN	``Nott.AC.UK''	# UK site
+MLDOMAIN	``ARPA''	# ARPA site
+.TE
+.DE
+This will give as your address
+.DS
+.TS
+l l .
+Maths.Nott.AC.UK	# UK site
+Arpahost.ARPA		# ARPA site
+.TE
+.DE
+.PP
+The MLOCMACHINE line is often set to the null string,
+unless you are a large transparent site.
+The normal use of this is for a site which has several machines
+but wishes the machines themselves to appear as one address.
+.LP
+For example:
+.br
+Arpahost is, say, really a name that covers 5 machines,
+mach1 to mach5.
+Mail leaving any ``Arpahost'' machine
+is stamped as originating from
+Arpahost, and mail is addressed to username@Arpahost by outsiders.
+The alias table then maps the incoming address to
+.DS
+.TS
+l l .
+username	username@mach1.Arpahost.ARPA
+.TE
+.DE
+Take a look at the ucl-cs setup for an example of how such
+things function in real life.
+Remember that the mail system will really believe its name
+is \fIlocname.locdomain\fR and any mail with that domain will
+be verified locally.  If it finds a more specific domain such
+as \fIlocmachine.locname.locdomain\fR it will pass it on to
+the referenced host.
+If defined, the
+.I locmachine
+string will never be generated in addresses by the system,
+although it is recognized and can be supplied
+by a user if it is important to
+bypass the normal aliasing done by the system.
+The
+.I locmachine
+string will be used in id strings (Received: and Message-ID:
+header lines).
+.DS
+.TS
+l l .
+MLOCMACHINE	maths70
+.TE
+.DE
+The MSIG line is the signature that MMDF will use when notifying senders
+of mail delivery problems.  This should be
+something that indicates a message agent was responsible.
+.DS
+.TS
+l l .
+MSIG	  ``MMDF Mail System''
+.TE
+.DE
+MLOGIN is the user that owns the MMDF transport system.
+.DS
+.TS
+l l .
+MLOGIN	mmdf
+.TE
+.DE
+MSUPPORT is the address to which to send mail that
+MMDF can't cope with (i.e. that MMDF can't deliver or return
+to sender).  Be sure MSUPPORT is a legal address!
+.DS
+.TS
+l l l .
+MSUPPORT	mmdf@Maths.Nott.AC.UK	# UK site
+MSUPPORT	mmdf@Arpahost.ARPA	# ARPA site
+		or perhaps
+MSUPPORT	postmaster@Arpahost.ARPA
+.TE
+.DE
+.PP
+AUTHREQUEST is the address to which users should mail if they have questions
+about why a message was not authorized for delivery.  It is also used as the
+sender of authorization warning messages.  It is not used if authorization
+is not enabled on some channel.
+.DS
+.TS
+l l .
+AUTHREQUEST	postmaster
+.TE
+.DE
+The MMAILID line is used to enable the use of the the
+Mail-IDs facility of \*M which disassociates mail addresses
+from login names.  The line is of the form:
+.DS
+.TS
+l l .
+MMAILID	       \fInumber\fR
+.TE
+.DE
+where \fInumber\fR is either 0 to disable the feature, or
+1 (non-zero) to enable it.
+If it is enabled, you should have the tables ``users'' and ``mailids''
+with appropriate mapping from userids to mailids and vica-versa.
+See section 5.4.4 of this document and tables(5) for more information on
+setting up these tables. 
+.NH 2
+Directory Tailoring
+.PP
+Next, a whole heap of path names to directories can
+be tailored.  The example that follows has the \*M file
+under both /usr/spool and /usr/lib/mmdf.  This is the
+way UCL arranges their \*M directories.  Also shown are
+the values used at BRL where everything is placed under
+under /usr/mmdf (see the samples directory for more examples).
+.br
+MLOGDIR is the default directory in which the log files are kept.
+.DS
+.TS
+l l .
+MLOGDIR	 ``/usr/spool/mmdflogs''
+MLOGDIR	 ``/usr/mmdf/log''
+.TE
+.DE
+MPHSDIR is the directory in which the timestamps for the
+channels are made,
+showing what state of activity they are in.
+.DS
+.TS
+l l .
+MPHSDIR	   ``/usr/spool/mmdflogs/phase''
+MPHSDIR	   ``/usr/mmdf/log/phase''
+.TE
+.DE
+MTBLDIR is the default directory for the table files.
+.DS
+.TS
+l l .
+MTBLDIR	   ``/usr/lib/mmdf/mmdftable''
+MTBLDIR	   ``/usr/mmdf/table''
+.TE
+.DE
+MQUEDIR is the parent directory for the various queues and
+address directories.
+.DS
+.TS
+l l .
+MQUEDIR	   ``/usr/spool/mmdflock/que''
+MQUEDIR	   ``/usr/mmdf/lock/home''
+.TE
+.DE
+MLCKDIR is the directory where the locking of files takes
+place,
+this is dependent on what style of locking you are doing.
+.DS
+.TS
+l l .
+MLCKDIR	   ``/usr/spool/mmdf/locks''
+MLCKDIR	   ``/tmp/mmdf''
+.TE
+.DE
+MTEMPT is the temporary files directory;
+if not a full pathname, it is taken relative to MQUEDIR.
+.DS
+.TS
+l l .
+MTEMPT	   ``temp/''
+.TE
+.DE
+MADDRQ as above, but holds the address files.
+.DS
+.TS
+l l .
+MADDRQ	   ``addr/''
+.TE
+.DE
+MMSGQ as above, used for the message texts.
+.DS
+.TS
+l l .
+MMSGQ	   ``msg/''
+.TE
+.DE
+MCMDDIR is the default commands directory
+where the various \*M commands live;
+any command that does not have a full pathname
+is taken relative to this directory.
+.DS
+.TS
+l l .
+MCMDDIR	   ``/usr/lib/mmdf''
+MCMDDIR	   ``/usr/mmdf''
+.TE
+.DE
+MCHNDIR is where the channel programs are to be found.
+.DS
+.TS
+l l .
+MCHNDIR	   ``/usr/lib/mmdf/chans''
+MCHNDIR	   ``/usr/mmdf/chans''
+.TE
+.DE
+The MQUEPROT gives the protection mode in octal that the
+parent of the MQUEDIR directory will have.
+.DS
+.TS
+l l .
+MQUEPROT   0700
+.TE
+.DE
+.NH 2
+Database Files
+.PP
+The MDBM line tells MMDF where to find the database file
+containing the associative store.
+Dbm style databases get their speed and
+flexibility by dynamic hashing and can get quite large.
+By default, the file is located in the MTBLDIR dirctory, but
+it might need to be relocated due to its size.
+.DS
+.TS
+l l .
+MDBM	   ``/usr/spool/mmdfdbm''
+.TE
+.DE
+This is not the actual form of the file name,
+as the dbm(3) package forms two files with the suffices
+.I \&.pag
+and
+.I \&.dir
+which are closely coupled by the dbm package.
+Another file may also appear with a
+.I \&.lck
+suffix.
+This is a file that is used in locking the database.
+.NH 2
+The Log Files
+.PP
+Several parameters affecting the logging of information can be tailored.
+One parameter is the level of detail that should be logged.  If this parameter
+is set for verbose logging,
+then enormous amounts of information can be gleaned,
+probably most of it indecipherable (but a good start towards
+your guru's badge),
+and most of the \*M programs become noticeably slower and
+I/O bound. To get the fullest logging information available,
+the programs have to be compiled with the \-DDEBUG flag.  Setting this
+flag may cause
+the programs to get too large for some PDP-11
+computers.
+.PP
+The MMSGLOG controls the logging information produced by
+\fIdeliver\fR and \fIsubmit\fR; MCHANLOG controls the logging by most
+other \*M programs with the following exceptions:
+PHLOG controls phone logging information
+and AUTHLOG controls authorisation information.
+An argument without an equal sign is taken as the new name of
+the log.
+Logging files and levels can also be specified in the channel
+descriptions.  The logging file, if specified there, will override
+the MCHANLOG definition.  The logging level for the channel will be
+set to the maximum of the MCHANLOG level and the channel description's
+level.  The MCHANLOG level can therefore be used to increase logging
+on all channels at once.
+.DS
+.TS
+l l .
+MMSGLOG	/tmp/mmdf.log, level=FST, size=40, stat=SOME
+MCHANLOG	level=FST, size=40, stat=SOME
+MPHLOG	level=FST, size=40, stat=SOME
+AUTHLOG	level=FST, size=40, stat=SOME
+.TE
+.DE
+These examples set the logging level to FST (full statistics).
+Alternatives here are:
+.RS
+.TS
+l l .
+FAT	\- Logging of fatal errors only.
+TMP	\- Temporary errors and fatal errors.
+GEN	\- Include the generally interesting diagnostics.
+BST	\- Show some basic statistics.
+FST	\- Full statistics.
+PTR	\- Give a program trace listing of what is happening.
+BTR	\- Give more detailed tracing.
+FTR	\- Give every diagnostic you can.
+.TE
+.RE
+.PP
+The last two conditions (BTR and FTR) are enabled only if you have compiled
+the MMDF system with DEBUG #define'd.  This amount of tracing
+can quickly fill up log files.
+During normal operation, the logging level should be set somewhere
+between GEN and FST.
+.PP
+Size is set to the number of 25-block lumps you wish your log file
+to grow to. When the log files reach that size,
+logging either stops or it may start to cycle around overwriting old data.
+.PP
+Stat sets up various status flags for logging.
+Options here are:
+.RS
+.IP close 10
+Close the log after each entry; this allows other processes
+to write to it as well.
+.IP wait 10
+If the log is busy, wait awhile for it to free.
+.IP cycle 10
+If the log is at maximum length specified above, then
+cycle to the beginning (this feature doesn't work currently).
+.IP some 10
+Sets the values close, cycle, and wait. It is the most
+common setting.
+.RE
+.PP
+The logfile tailoring is generally done at the end of the
+tailor file to prevent logging the tailoring action itself,
+thereby needlessly filling the logfiles when higher tracing
+levels are enabled.
+If you have bugs in the tailoring, you will obviously want to move
+the logfile tailoring closer to the top.
+.PP
+The DEFTRAN line gives the name of the default transcript
+file for use in phone logging.
+It is the only log that is not size limited,
+as it is created anew each time a connection is made with
+the phone channel or slave program.
+.DS
+.TS
+l l .
+DEFTRAN	"ph.trn"
+.TE
+.DE
+.NH 2
+Runtime Table Definitions
+.PP
+Table contents are discussed in section 4 of this document.  Table definitions
+are discussed here.  Tables fall into three categories: domain, channel, and
+others.  Domain and channel tables are discussed below.  The "other" category
+is discussed here.  
+Regardless of category, table definitions all have the same format.
+They all consist of the following parts:
+.RS
+.IP name 10
+A name by which the table is known.
+.IP file 10
+A file from which the contents of the table are built up.
+.IP show 10
+A display line,
+which is used for pretty printing purposes to explain what
+the table is all about.
+.IP flags 10
+The flags line is optional.  It is used to indicate additional
+properties about the table being defined.
+This can be specified more than once for a given table to set
+more than one flag.
+Currently this is used to specify various table options - source type,
+nameserver lookup and partial lookups.
+There are three source types defined: ``file'', ``dbm'', and ``ns''.
+The type ``file'' means that the table comes from a sequentially
+read file (the default).
+The type ``dbm'' indicates that the table is in the MMDF hashed
+database built with \fIdbmbuild\fR.
+The type ``ns'' indicates that the table data is obtained by making
+queries on a nameserver.  In the case of an ns-type table,
+the ``flags'' field will also specify the type of nameserver lookup.
+Currently ``domain'',  ``channel'', and ``root'' are supported.
+``Domain'' indicates a lookup of the given address in the domain
+specified by the table name (e.g. FOO.ARPA in table ARPA).  ``Channel''
+indicates a lookup of the given fully-qualified domain name to determine
+the address(es) to use in delivering via SMTP.  ``Root'' indicates a
+domain lookup of the given fully-qualified domain name without regard to
+the table name (e.g. FOO.OXBRIDGE.EDU in table ROOTDOMAIN).
+Normally, only fully-qualified names will be checked.  The optional type
+``partial'' indicates that, for ns-type domain tables,
+partially qualified names can be used (e.g. if ns-type domain tables ARPA
+and EDU have the ``partial'' flag set, an address of FOO
+will generate queries for FOO.ARPA
+and FOO.EDU).  The ``partial'' flag is often used for the local domain table
+to allow users to omit the full domain specification when referring to local
+machines.
+.sp
+Note:  In the current release there are only two modes of operation.
+If you use tb_io.c, you will get sequential table io ONLY.  If you
+use tb_dbm.c you will get DBM and NS support (and the latter only if you
+define NAMESERVER).  The source types ``file'' and ``dbm'' are therefore
+treated the same.
+.RE
+.LP
+A typical example might be:
+.DS
+MTBL  name=aliases, file=aliases, show=``User & list aliases''
+MTBL  name=smtpchan, flags=channel, flags=ns, show=``SMTP Addrs via NS''
+.DE
+If the first argument does not have an equal sign in it,
+it is taken as the value for the other parameters.
+For example:
+.DS
+MTBL  aliases, show=``Alias table''
+.DE
+sets the name,
+file and show parameters to the string ``aliases'',
+and then resets the show parameter to the string ``Alias table''.
+.PP
+The following tables are provided automatically via chan.c
+and the tailoring package when Mail-IDs are enabled (see section 3.2 above):
+.RS
+.IP users 10
+A mapping of usernames to Mail-IDs
+.IP mailids 10
+A mapping of Mail-IDs to usernames
+.RE
+.PP
+The aliases tables are sometimes compiled in from the configuration
+file chan.c, so they can be left out of a runtime configuration.
+If they are not in chan.c they must be specified in the runtime configuration.
+If this is your first time through, best go for runtime tailoring
+until you know what you want.
+The tables for mailids and users are also compiled into
+chan.c since other parts of MMDF need to know about these tables.
+Changes to the mailids or users table definitions are best made in chan.c.
+.XX
+Define or change the aliases tables (if necessary).
+.NH 2
+Runtime Alias Definitions
+.PP
+Alias definitions are used to tell the system about the
+various sources of alias information.  \*M can have more than
+one alias file.
+In addition, each alias source has the option of being trusted
+and the option of preventing bypassing (via the\ \~\ on the front
+of an address).
+.PP
+Making an alias file trusted is a serious decision.
+A trusted alias file can direct mail to be delivered
+to any file or process using the permissions of any user on the
+system.  It should only be modifiable by the Superuser,
+or guarded as such.  Typically there is only one or two trusted
+alias files per system.
+.PP
+The alias tables are searched in the order they are defined.
+When a hit is made, no further searching is done for additional
+hits in later tables.
+.RS
+.IP table 10
+Specifies name of the table to be associated with this alias entry.
+.IP trusted 10
+The entries in the table will be allowed to cause delivery to
+files and pipes.
+.IP nobypass 10
+The `\~address' alias bypass mechanism will not work on this file.
+.RE
+.DS
+ALIAS	table=sysaliases, trusted, nobypass
+ALIAS	table=forward\ \ \ \ \ \ # modified by users (== .forward)
+ALIAS	table=useraliases, trusted
+.DE
+.XX
+Define your alias tables and their attributes.
+.NH 2
+Runtime Domain Definitions
+.PP
+See section 5.2 for a discussion of how to choose a set of domains to include
+in the tailor file.
+Domain definitions consist of the following:
+.RS
+.IP name 10
+A name by which to refer to
+this domain.
+.IP show 10
+A display line,
+which is used for pretty printing purposes to explain what
+the domain is all about.
+.IP dmn 10
+The full domain name (x.y.z...) that specifies this domain.
+.IP table 10
+The associated table entry of known sites in this domain.  If the specified
+table has not been previously defined, it will be defined with the same name,
+file, and show as for this domain.
+.IP lname 10
+An optional local name by which you are known in that
+domain.  This defaults to the value of LOCNAME.
+.RE
+.PP
+There are many defaults to make life easier.
+As in the table case,
+if the first argument does not have an equal sign,
+the values of the name,
+domain and show parameters take on this value.
+.DS
+MDMN	name=``nott.ac.uk'', dmn=``nott.ac.uk'', table=nott,
+	show=``Nottingham Domain''
+MDMN	arpa, show=``ARPANET Domain''
+MDMN	``'', show=``Root Domain'', table=rootdomain
+.DE
+.XX
+Define a set of domains in your tailor file.
+.NH 2
+Runtime Channel Definitions
+.PP
+The first stage is to determine the set of channels to be used.
+Typically, a local and list channel will be required.
+Then, there will be one channel for each PhoneNet link, and one channel
+(at least) for each protocol network pair (e.g. smtp channel for
+SMTP/ARPANET and an NIFTP channel for JNT Mail/X.25).  UUCP
+needs only one channel.  In some cases it may be desirable to split what
+would normally be one channel
+so that some authorisation can be used on the basis of channel.
+For example, one may choose to have a separate channel for ARPANET and
+Hosts using SMTP/TCP on a local ethernet, even though they could use
+the same channel.  Another case might be to have separate JNT Mail
+channels for JANET and PSS.   This allows for logical authorisation
+functions to be applied on a per-channel basis.
+.XX
+Decide what channels you will need to use.
+.PP
+Next you must define these channels in the tailor file.  The channel
+definitions are more complex than tables and domains.  There are
+a large number
+of parameters available because of the diverse behavior of the different
+channel programs.  
+Many of the parameters are not necessary for most of the
+channels.
+The specific parameters are as follows:
+.RS
+.IP name 10
+The name of the channel.
+.IP show 10
+A display line,
+which is used for pretty printing purposes to explain what
+the channel is used for.
+.IP que 10
+The queue directory into which messages for this channel should be queued.
+.IP tbl 10
+The associated table entry of hosts that are accessible on this
+channel.  If the specified table has not been previously defined,
+it will be defined with the same name, file, and show as for this channel. 
+.IP pgm 10
+The channel program to be invoked for this channel.
+.IP mod 10
+The mode in which this channel works.  If several values are selected,
+they are cumulative.  Normally, one of ``reg'', ``bak'', ``psv'',
+or ``imm'' is selected.  ``Pick'' and ``send'' are usually both selected
+on two-way channels such as phone or pobox.
+The values are:
+.RS
+.IP "reg \-" 9
+regular mode (the default).  The channel may be explicitly invoked by running
+.I deliver.
+.IP "bak \-" 9
+channel may be invoked only by the background deliver daemon.
+.IP "psv \-" 9
+the channel is passive; it is a pickup type channel (e.g. pobox).
+.IP "imm \-" 9
+this channel may be started up immediately; there is no 
+need to batch up mail.
+.IP "pick \-" 9
+This channel may pick up mail from the remote host.
+.IP "send \-" 9
+This channel may send mail to the remote host.
+.RE
+.IP ap 10
+The address-parser type to be used for reformatting headers
+on messages going out on this channel. 
+The settings of ap control reformatting.  If none is selected, the
+channel will not reformat.  If several values are selected, they are
+cumulative:
+.RS
+.IP "822 \-" 9  
+selects RFC 822 style source routes (e.g. @A:B@C)
+.IP "733 \-" 9
+selects % style\ (JNT) source routes (e.g. B%C@A)
+.IP "big \-" 9  
+selects NRS hierarchy ordering (for the UK)
+.IP "nodots \-" 9
+selects output of leftmost part of domain names (e.g. A in A.B.C) for sites
+that can't handle domains (usually used in conjunction with `known=' (described
+below) to hide domain names behind a smart relay).
+.IP "jnt \-" 9
+is equivalent to ap=733 + ap=big
+.RE
+.IP lname 10
+This specifies a name overriding the default MLNAME value
+when used in this channel.  This is the name by which the local host
+is known to hosts accessed by this channel.
+This is used when the channel should have non-standard values
+for the local domain.  If \fIlocname\fR = `UCL-CS' and \fIlocdomain\fR = `AC.UK',
+then for an arpa smtp channel, one would set the parameters
+ldomain = `ARPA' (and, implicitly, lname = `UCL-CS').  All local references
+in this channel would be mapped to UCL-CS.ARPA if reformatting is used.
+.IP ldomain 10
+As above, but overriding the value of MLDOMAIN.  See the example above.
+.IP host 10
+The name of the host that is being contacted by this
+channel, usually used in the phone and pobox channels.
+(Also the name of the relay host when all mail to hosts in this
+channel's table gets relayed to one host.
+This is required on the
+.I badusers
+and
+.I badhosts
+pseudo-channels.  It is also required to be set to the local host for the
+.I list
+channel.
+.IP user 10
+The login name of the account which uses the slave program to pick up mail
+(used for the pobox channel only).
+.IP scr 10
+The name of the dialing script file to be used by the phone channel.
+.IP trn 10
+The name of the transcript file to be used for this channel;
+this currently applies only to PhoneNet,
+and defaults to DEFTRAN (usually ph.trn).
+.IP poll 10
+The frequency of polling the remote machine.  A poll on a two-way channel
+(such as the phone channel) is used to see if any mail is waiting to be
+picked up from the remote host.
+A value of 0 disables polling;
+a value of -1 requests polling to be done every time the
+channel is started up.
+Any other value is the number of 15-minute intervals to wait
+between polls.  Note that the value of poll is ignored if any mail is waiting
+to be sent; in this case, a connection is always attempted.
+.IP insrc 10
+Table of hosts controlling message flow.   See the paper
+.B "Configuring MMDF Authorisation"
+by Steve Kille for details.
+.IP outsrc 10
+See insrc, above.
+.IP indest 10
+See insrc, above.
+.IP outdest 10
+See insrc, above.
+.IP known 10
+This is a table of hosts that are known on this channel.
+If a known table is specified and a given host is not in the table,
+then a relay form of the address is used,
+specifying that the return address goes through this
+host.  Only the LHS of this table is used; the RHS
+is ignored.  The LHS should contains hosts, not domains.
+Typically, channel tables double as ``known
+tables''.  Be sure that the table also contains your own 
+fully specified name (localhost.locdomain).  Note that
+The ``known table'' must exist.  A tailor entry will not define a ``known
+table'' that has not been predefined.
+.IP confstr 10
+This is a string that is used by some channels for
+specifying the invocation of another program.
+There is a form of macro expansion in this string,
+so that it can include the target address,
+the return address, etc.  Refer to the man pages describing specific channels
+for more information about using the confstr.  Most channels don't use this
+string currently.
+.IP auth 10
+This specifies the authorisation tests that are made on this
+channel.
+It takes any combination of the following modes:
+.RS
+.IP free 10 
+default, no checking takes place.
+.IP inlog 10
+log information regarding incoming messages.
+.IP outlog 10
+log information regarding outgoing messages.
+.IP inwarn 10
+warn sender of incoming message if his/her authorisation is
+inadequate (the message still goes through).
+.IP outwarn 10
+as above, but for outgoing messages.
+.IP inblock 10
+reject incoming messages that have inadequate
+authorisation.
+.IP outblock 10
+as above, but for outgoing messages.
+.IP hau 10
+Host And User control.  Requires both host and user
+authorisations to be acceptable.
+.IP dho 10
+Direct Host Only. 
+When applying host controls, the message must be associated
+with a user local to that host (i.e. no source routes).
+.RE
+.IP ttl 10
+The \fIdeliver\fR program keeps track of connection failures to specific hosts.
+ When a connection fails, the host is marked ``dead'' for a certain period of
+time.  This period is called the ``time-to-live'' of the dead-host entry.
+After a connection failure to a given host, retries are blocked for ttl
+minutes.  This value may be overridden on the deliver command line.  If the ttl
+is not given here or given to deliver, a default of 2 hours is used.
+.IP log 10
+This specifies the name of the log file to be used instead of
+the default channel log file (see CHANLOG above).
+Typically this is something like ``log=smtplog'' which will use
+a logfile called smptlog if it exists in the default logging directory.
+.IP level 10
+This specifies the logging level to use for this channel.
+The form is the same as that used to specify the default logging
+level (e.g. ``level=FST'') as described in section 3.5 of this document.
+The actual logging level used is the maximum of this level (if present)
+and the default MCHANLOG level.
+.RE
+.PP
+As mentioned above,
+the majority of these options are not used for most
+channels.
+.RS
+.TS
+center;
+l l.
+MCHN	name=local, que=local, tbl=local, show=``Local (maths)'',
+	pgm=local, poll=0, mod=imm, ap=822, level=BST
+MCHN	uucp, name=uucp, que=uucp, tbl=uucp, show=``UUCP'',
+	pgm=uucp, poll=0, mod=reg, ap=822, auth=inlog, auth=outlog
+MCHN	smtp, show=``SMTP/TCP'', que=smtp, tbl=smtp,
+	pgm=smtp, mod=reg, ap=822, log=smtp.log, level=FST,
+	confstr=``mysite.mydomain''
+MCHN	list, show=``Mailing List Processor'', que=list, tbl=list,
+	pgm=list, mod=reg
+MCHN	bboards, show=``BBoards Delivery'', que=bboards, tbl=bboards,
+	pgm=bboards, mod=reg, ap=822
+MCHN	dial-out, show=``Dial-out channel to dial-site'',
+	que=dial-site, tbl=dial-site, trn="dial-out.trn", ap=822,
+	pgm=phone, mod=reg, mod=send, mod=pick, poll=8,
+	host=dial-site, scr="dial-site.script"
+MCHN	dial-in,  show=``Dial-in channel from dial-site'',
+	que=dial-site, tbl=dial-site, trn="dial-in.trn", ap=822,
+	pgm=pobox, mod=psv, mod=send, mod=pick,
+	host=dial-site, user=dislave
+.TE
+.RE
+In the ``uucp'' example, the name, que, tbl and pgm could have been omitted;
+they would have defaulted to ``uucp'' since it was the first argument.  It is
+common, however, to include these explicit settings for clarity.
+The order of parameters is unimportant.
+.XX
+Define the channels needed at your site.
+.NH 2
+Some Runtime Constants for Messages
+.PP
+Now there are a collection of constants defined:
+.LP
+MADDID controls whether
+.I submit
+will add Message-ID: header lines if they are missing from
+messages.  It takes a number as an argument.  If the number
+is 0, no action is taken.  If the number is non-zero,
+then
+.I submit
+will add Message-ID: header lines if they are missing from messages.
+.DS
+MADDID  1
+.DE
+.LP
+MLISTSIZE specifies the maximum number of addresses in a message
+before it is considered to have a ``big'' list.
+If there are more than the maximum number of addresses, then \*M
+will not send a warning message for waiting mail and will only
+return a ``citation'' for failed mail.  A ``citation'' consists
+of the entire header plus the first few lines of the message
+body.
+.DS
+MLISTSIZE  20
+.DE
+.LP
+MMAXHOPS specifies the maximum number of Received: or Via:
+lines in a message before it is considered to be looping, and is rejected.
+.DS
+MMAXHOPS  20
+.DE
+.LP
+MWARNTIME specifies the time in hours that a message may
+remain in a queue before a warning message about delayed
+delivery is sent to the sender.
+.DS
+MWARNTIME  72
+.DE
+.LP
+MFAILTIME is the time a message may remain in a queue before
+a failed mail message is sent to the sender and the message is
+purged from the queue.
+.DS
+MFAILTIME  144
+.DE
+If the number of items in the queue is less than
+MMAXSORT,
+the messages will be sorted by arrival time and dispatched
+in that order;
+otherwise a message will be dispatched as it is found in the
+directory search.
+.DS
+MMAXSORT   150
+.DE
+MSLEEP is the length of time in seconds that the background
+delivery daemon sleeps between queue scans.  The following
+causes the daemon to sleep 5 minutes between passes.
+.DS
+MSLEEP	   300
+.DE
+.NH 2
+Runtime UUCP Settings
+.PP
+The only uucp string worth bothering with is UUXSTR,
+which is the command used to invoke the UUCP software.
+In general you may want to tailor the grade level if supported
+and the disabling of immediate attempts (via \-r).
+If you have special per-message  arguments, then you will
+need to modify the UUCP channel itself (e.g. \-a\fIsender\fR).
+.DS
+UUXSTR  ``uux -''
+\tor
+UUXSTR  ``uux - -r''
+\tor perhaps
+UUXSTR  ``uux - -r -gA''
+.DE
+.NH 2
+Runtime General Variables
+.PP
+Now some more general variables.
+.DS
+.TS
+l l .
+MSUBMIT	path=submit
+MDELIVER	deliver deliver
+MPKUP	name=pickup, path=deliver
+MV6MAIL	mmdfmail ``/bin/v6mail''
+.TE
+.DE
+MSUBMIT tells MMDF where the \fIsubmit\fR program lives.
+MDELIVER is where the \fIdeliver\fR program lives, and MPKUP is the
+post box pickup program.
+MV6MAIL is the mail program MMDF should use to return
+undeliverable messages and to send diagnostics.
+It should behave rather like the original Bell \fImail\fR program.
+It is not typically necessary to include these tailoring entries.
+.NH 2
+Runtime Delivery Tailoring
+.PP
+MDLVRDIR is the directory in which to deliver mail.
+If this is null, then the user's home directory is used.
+MMBXNAME is the name of the mailbox.
+If this is null, then the user's login name is used.
+The following would set \*M to deliver mail to /usr/spool/mail
+with each mailbox named after the user's login name:
+.DS
+MDLVRDIR   ``/usr/spool/mail''
+MMBXNAME   ``''
+.DE
+The following causes mailbox files to be created
+in the user's home directory:
+.DS
+MDLVRDIR   ``''
+MMBXNAME   ``mailbox''
+.DE
+MMBXPROT is the protection mode that should be used when
+creating the user's mailbox. Its value is an octal number.  See manual 
+section \fIchmod(1)\fR.
+.DS
+MMBXPROT   0600
+.DE
+MMBXPREF and MMBXSUFF are two strings that are written
+before and after the message is written into the mailbox.
+These are usually set to a sequence of control-A's.
+.DS
+MMBXPREF ``\e001\e001\e001\e001\en''
+MMBXSUFF ``\e001\e001\e001\e001\en''
+.DE
+MDLV is the name of the maildelivery file,
+used for tailoring the delivery for each user.
+See manual section \fImaildelivery\fR(5).
+.DS
+MDLV ``.maildelivery''
+.DE
+The preceding parameters are also good contenders for being compiled-in
+since they very seldom change once established at a given site.
+.NH 2
+Runtime PhoneNet Tailoring
+.PP
+If you do not use the phone or pobox channels, you may skip this section of the
+tailoring document.
+.PP
+DBADOUT and DBADIN are eight octal integers
+specifying the ASCII codes that can be used for host-to-host
+communications over PhoneNet.
+If there is a bit set in the ASCII position,
+then that ASCII code is not allowed to be used in the
+transmissions and therefore is escaped.
+.DS
+.TS
+l l .
+DBADOUT	0177777,0177777,0000010,0000000,
+	0000001,0010000,0000000,0100000
+DBADIN	0177777,0177777,0000010,0000000,
+	0000001,0010000,0000000,0100000
+.TE
+.DE
+In this example, the following
+characters are declared ``illegal'' to send or receive: all control characters
+(0x000 - 0x037), '#' (0x043), '@' (0x100), '\\' (0x134), and del (0x177).
+If the sending and receiving character sets are the same (as in this example),
+the DBAD tailoring item may be used to set both character sets at once:
+.DS
+.TS
+l l .
+DBAD	0177777,0177777,0000010,0000000,
+	0000001,0010000,0000000,0100000
+.TE
+.DE
+.PP
+When installing the dial protocol package on a Unix system,
+there are a few things that have to be changed to reflect the
+environment
+such as the names, types, and speeds of the various dial-out ports
+and direct connect lines to other hosts.
+Each DPORT entry sets the parameters for a given dial-out port.  A
+dial-out port is a modem with a separate autodialer associated with it.
+Each DPORT entry contains
+five positional arguments and then, optionally, any of three named arguments.
+The positional arguments are:
+.IP 1. 10
+The path name of the port itself.
+.IP 2. 10
+The path name of the lock file which is used to insure that no more than
+one process tries to use the same port at a time.  If the UUCPLOCK feature
+was specified on the CONFIGDEFS line in Makefile.com, then the path name must
+be of the form "/usr/spool/uucp/LCK..tty??" where ?? is the number of the
+tty line being used.
+.IP 3. 10
+The path name of the automatic calling unit (acu) that is associated with the
+dial-out port.
+.IP 4. 10
+The speeds that the modem can support.  This is an octal number whose bits
+represent supported speeds.  The relationship is as follows:
+.DS
+.sp
+.TS
+box;
+c c
+l l .
+\fIBit\fR	\fIBaud Rate\fR
+0	50
+1	75
+2	110
+3	134.5
+4	150
+5	200
+6	300
+7	600
+8	1200
+9	1800
+10	2400
+11	4800
+12	9600
+.TE
+.DE
+For example, 0177 is used for modems that can operate at speeds from 0-300
+baud and 0400 is used for modems that only operate at 1200 baud.
+.IP 5. 10
+The line type of this port.  Line types such as "local", "wats", or "instate"
+are referenced in the dialing script (see script(5)) and allow selection
+of ports based on the capability of the associated phone line.
+.IP pref= 10
+The prefix string to send to the acu before sending the
+phone number contained in the dialing script.  This is typically a command
+string that tells the acu to get ready for a phone number and to select the
+appropriate outgoing modem.
+.IP suff= 10
+The suffix string to send to the acu after sending the
+phone number contained in the dialing script.  This is typically a command
+string that tells the acu to actually start dialing.
+.IP access= 10
+This is a filename which contains a list of usernames (one per line) of the
+people authorized to use the associated dial-out port.  If this argument is 
+omitted, everyone will be given access.  
+.PP
+For example, the following entry
+sets up a dial-out port for a Vadic MACS where the modem is on tty14, 
+the dialer is on dn0, the speed is 1200-only.  The prefix string gives 
+control information to the dialer such as connection-type and modem slot
+address.  The suffix string signals the end of the phone number.
+.DS
+DPORT ``/dev/tty14'', ``/usr/spool/uucp/LCK..tty14'', ``/dev/dn0'',
+	0400, pref=08, suff=``<''
+.DE
+.PP
+The DLINE entry does a similar job for directly connected
+lines.  Directly connected lines can be of three types: a hard-wired
+connection between two machines, an autodialing modem, and
+a pseudo-tty.  These three cases are discussed below and the format of the
+DLINE entry for each is presented.
+.PP
+The first type, a
+hard-wired connection between 2 machines, uses a single tty port on each
+system.  In this configuration, one machine is designated the master.  The
+master machine has logins disabled on its tty port.  The other machine, the
+slave, has logins enabled at a known and fixed baud rate.  The master machine's
+port is defined with a DLINE entry which tells the name of the line (this gets
+used in the ``dial'' command in the dialing script (see script(5)), the path
+name of the port itself, the path name of a lock file to use to insure
+exclusive access to the port, and the speed to use for the connection.
+Thus, for a 9600 baud hard-wired connection, the following DLINE might be used:
+.DS
+DLINE ``udeleehp'', ``/dev/tty05'', ``/usr/spool/uucp/LCK..tty05'', 9600
+.DE
+.PP
+The second type, an autodialing modem, uses a single tty port to both
+tell the modem what number to dial and to exchange data with the remote machine.
+The dialing script must contain the necessary commands to tell the modem what
+number to call.  The DLINE entry looks just like that for a hard-wired
+connection.  More than one DLINE entry may be included with the same name;
+the phone channel will try each one in succession until it finds one available.
+.DS
+DLINE ``hayes'', ``/dev/tty05'', ``/usr/spool/uucp/LCK..tty05'', 1200
+DLINE ``hayes'', ``/dev/tty06'', ``/usr/spool/uucp/LCK..tty06'', 1200
+.DE
+.PP
+The third type, a pseudo-tty, allows you to enter commands in the dialing 
+script which log back into your own host and which run an auxiliary program
+to connect to the remote machine.  This program might be an X.25 pad-out program
+or it might be ``cu'' or ``tip''.  You must first allocate a pseudo-tty pair 
+(e.g. /dev/ptypf and /dev/ttypf) for this
+application by renaming them (e.g. to /dev/ptymmdf and 
+/dev/ttymmdf, respectively).  Next, enable logins on the latter device (e.g.
+by placing a line such as ``12ttymmdf'' in /etc/ttys).  The DLINE entry that
+may then be used to establish a connection back to your own machine is:
+.DS
+DLINE ``pty'', ``/dev/ptymmdf'', ``/usr/spool/uucp/LCK..ptymmdf'', 9600
+.DE
+Note that the speed designator must be valid but that it is ignored.
+.TP
+DACCT specifies a file to use for logging phone calls for accounting purposes.  
+Only calls made on a DPORT are logged.  If the specified file does not exist, 
+then logging of calls is disabled.
+.DS
+DACCT ``/usr/mmdf/log/dial_log''
+.DE
+.NH 2
+Some Miscellaneous Bits
+.PP
+MDFLCHAN is used to set the default channel to something
+other than local.
+.PP
+NIQUEDIR is set to a directory used for NIFTP temporary files
+hence is only used on NIFTP channels.
+.NH 2
+Installation
+.PP
+Now that you have a runtime tailor file in place, you are ready to
+create the required directory structure and install the binaries in it.
+Run the program src/tools/xsetup (see \fIsetup\fR(8)) to generate the needed 
+directories.  You will have to create the RCVDIR and BINDIR directories by
+hand if they don't already exist; \fIsetup\fR
+has no notion of these directories (tailored in Makefile.com).
+.XX
+Run src/tools/xsetup (it will ask for confirmation before changing anything).
+.XX
+Create the directories RCVDIR and BINDIR if necessary.
+.PP
+The programs \fIsubmit\fR and \fIdeliver\fR are unable to automatically
+create queue directories (q.xxx).  If you later add new channel definitions
+to your runtime tailoring file, you will need to create the queue directories
+for those channels.
+The program \fIsetup\fR can be used to do this.
+Note that this program will
+sometimes complain unnecessarily about permission problems if
+you have played with the file modes to allow group access to the
+lock directory.
+.PP
+Now that the directories have been created, you are ready to install the
+binaries.  Running `make install' from the top of the \*M source
+tree will install
+everything in the subdirectories \fIsrc\fR and \fIuip\fR (in that order).
+You can also run `make install' in each of these directories alone.
+Note that all \*M programs such as background \fIdeliver\fR's and smtp daemons
+must be killed off before running `make install'.
+.XX
+Run `make install' from the top of the \*M source tree.
+.sp 2
+.ne 10
+.NH 1
+Miscellaneous Tasks
+.PP
+There remain a number of things to be done either now or sometime
+later that are not critical but should eventually be attended to.
+You will need to setup your tables and run dbmbuild if you
+are using the hashed database (DBM library).
+Setting up tables is described in the next section of this
+document.
+You should arrange for the \fIcleanque\fR program
+to be called from \fIcron\fR at least twice a day, and perhaps
+more often at your choice.
+You will need to install a program called `setlogs' in the log directory
+to do periodic cleanup on the logging files.
+This should also be called from \fIcron\fR at some
+reasonable interval.
+The \fIcheckup\fR program will complain if the \fIsetup\fR program
+is missing, but this is not a critical error.
+Eventually you will need to edit /etc/rc to have it start up
+at least one background
+.I deliver
+daemon.
+Be sure that there is an ampersand (`&')
+on the end of the line invoking
+.I deliver
+since it does not automatically detach itself.
+In some situations you may wish to have more than one.
+See the section on tuning for more information.

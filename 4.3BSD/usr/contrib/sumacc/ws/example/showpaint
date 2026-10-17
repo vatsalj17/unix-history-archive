@@ -1,0 +1,91 @@
+3. "6F^5D!$^22
+{$X-}
+{$U-}
+program showPaint;
+
+{Scott Knaster   Macintosh Tech Support   5/84
+ Displays the upper-left corner of a MacPaint document on the screen.
+ Based on Bill Atkinson's document
+ Note: screen sizes are hard-coded for 512 by 342 }
+
+{Small and slow version.
+ This version saves memory by doing a CopyBits for each line individually, so
+ it's much slower than the all-at-once method.
+ You can speed it up by making the constant srcBlocks larger, but every srcBlock
+ costs you 512 bytes.
+ Ultra-fast, pig version which reads in the whole picture (needs 24K) then does
+ CopyBits is available from Macintosh Tech Support                 }
+
+   uses
+      {$U obj/memtypes}    memtypes,
+      {$U obj/quickdraw}   quickdraw,
+      {$U obj/osintf}      osintf,
+      {$U obj/toolintf}    toolintf;
+
+   const
+      srcBlocks = 2; {Make this number larger to speed things up.  Uses 512 bytes
+                      for each number increased.}
+      headerSize = 512;
+
+   type
+      diskBlock = packed array [1..512] of QDbyte;
+
+   var
+      srcBuf : array [1..srcBlocks] of diskBlock;
+      theBits : packed array [1..72] of byte;
+      srcPtr, dstPtr : Ptr;
+      dstBits : bitmap;
+      error : OSErr;
+      refNum, scanline, srcSize : integer;
+      count : longint;
+      aPort : GrafPort;
+      debug : text;
+      showRect, lineRect : Rect;
+
+begin
+   InitGraf (@thePort);
+   FlushEvents (everyEvent, 0);
+   InitCursor;
+   OpenPort (@aPort);
+
+   srcSize := srcBlocks * 512;
+
+   srcPtr := @srcBuf;
+
+   dstBits.rowBytes := 72;
+   dstBits.baseAddr := @theBits;
+   SetRect (dstBits.bounds, 0, 0, 576, 1);
+   dstPtr := pointer (dstBits.baseAddr);
+
+   error := FSOpen ('macPic', 0, refNum);
+
+   {skip the header}
+   count := headerSize;
+   error := FSRead (refNum, count, @srcBuf);
+
+   {prime srcBuf}
+   count := srcSize;
+   error := FSRead (refNum, count, @srcBuf);
+   SetRect (lineRect, 0, 0, 512, 1);
+   SetRect (showRect, 0, 0, 512, 1);
+   count := count - 512;
+
+   {unpack each scanline into dstBits, reading more source as needed}
+   for scanline := 1 to 342 do
+      begin
+         UnpackBits (srcPtr, dstPtr, 72);
+         CopyBits (dstBits, screenBits, lineRect, showRect,
+             srcCopy, nil);
+         dstPtr := pointer (dstBits.baseAddr);
+         OffsetRect (showRect, 0, 1);
+         if ord (srcPtr) > (ord (@srcBuf) + srcSize - 512)
+            then begin
+                  srcBuf [1] := srcBuf [srcBlocks];
+                  error := FSRead (refNum, count, @srcBuf [2]);
+                  srcPtr := pointer (ord (srcPtr) + 512 - srcSize);
+                 end;
+      end;
+   error := FSClose (refnum);
+   repeat until button;
+end.
+

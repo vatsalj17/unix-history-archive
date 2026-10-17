@@ -1,0 +1,83 @@
+The code was lint'ed.  No guarantees are made but there shouldn't be any
+problems (famous last words).
+
+--- TO DO ---
+	Merge in edward's speed improvements
+	Merge in guy's update to rfc822
+NO	Add "Header" command to allow user defined headers.
+		It will disallow "From", "Sender", "To", "Subject", "Cc", "Bcc"
+
+--- DONE ---
+cmd2.c	swrite()
+	Made "write" command delete entire header instead of just 1st line
+list.c	sender()
+	Made "type user" do a substring match instead of straight comparison
+	(this allows user to match user@machine, which makes it USEFUL)
+cmd3.c	unread()
+	unread/Unread/new/New command marks messages as unread
+list.c	markall()
+	Made "-" and "+" skip over deleted messages	(from guy@sun)
+cmd1.c	type1()
+	if PAGER variable is set, use it instead of MORE (#define)
+		to paginate articles
+cmd3.c	respond()
+	if Replyall variable is set, do a "Reply" (e.g. reverse R and r)
+cmd3.c	Respond()
+	if Replyall variable is set, do a "reply" (e.g. reverse R and r)
+main.c	main()
+	Print header info even if -f given.
+lex.c	setfile()
+	Don't allow editing anything other than regular files.
+aux.c	isatty()
+	deleted isatty() - it's in the C library
+aux.c	strncmp()
+	deleted strncmp() - it's in the C library
+cmd3.c	shell()
+	Lint clean up:	0 -> (char *)0
+cmd3.c	dosh()
+	Lint clean up:	0 -> (char *)0
+optim.c	rename()
+	Fix uninitialized variable problem	(from guy@sun)
+optim.c	rpair
+	Fix uninitialized variable problem	(from guy@sun)
+The following changes had to be made to MMDF for Berkeley Mail.
+
+	adjusted ../../Makefile.com to have VMUNIX.
+	added conf/SITE/Makefile.uip and changed conf/sitesetup
+
+The following changes indicate how this version of Berkeley Mail
+differs from the virgin version.
+
+	change name of cmdtab to CmdTab so as not to conflict with
+	the MMDF command table which is called cmdtab.
+
+	use of MMDF routines to determine mail box location, etc.
+
+	must have flock call because it is impossible to pass the
+	filename around of the currently open file.  this means the
+	lk_open/close interface is not exactly transparent.
+
+	take advantage of knowing flock works by eliminating the
+	CANLOCK option.
+
+	add file mmdf.h
+
+	add another parameter to send() to indicate whether or not
+	the message being printed should be delimited with MMDF
+	message delimiters.
+
+	use the MMDF ml_*() routines to interface to MMDF when sending
+	mail.  this is a total rewrite of mail1().
+
+	sorry, but you lose blind carbon copies.
+
+	mail1() no longer returns a meaningful value (of course it
+	only did half the time before anyway).
+
+	borrow ../other/adrparse.c and dateparse.c (from ../msg/msg6.c).
+
+One last final note.  You should know that if you begin to use this version
+of Mail I don't think that you will be able to switch back to the old
+version (almost definitely if you are running MMDF, which I guess is
+assumed).  I can not try this but it would seem to be the case.  So be
+sure it is what you want to do before you start using it.

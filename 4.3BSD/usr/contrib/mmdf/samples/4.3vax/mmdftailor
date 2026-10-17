@@ -1,0 +1,36 @@
+MLNAME	sering
+MLDOMAIN UUCP
+MLOCMACHINE sering
+MSUPPORT "postmaster@sering.uucp"
+
+; Table entries
+MTBL	alias,		file="aliases",		show="Local Name Aliases"
+MTBL	local,		file="local",		show="Local Host Aliases"
+MTBL	smtp,		file="smtp",		show="SMTP Hosts"
+MTBL	uucpchn,	file="uucpchn",		show="UUCP Routes"
+MTBL	uucpdom,	file="uucpdom",		show="UUCP Domains"
+MTBL	rootdomain,	file="rootdomain",	show="Root Domain"
+
+ALIAS	table=alias, trusted
+
+; Channel entries
+MCHN	local, show="Local Delivery", que=local, tbl=local,
+	pgm=local, mod=imm
+MCHN	smtp, show="SMTP/TCP", que=smtp, tbl=smtp
+	pgm=smtp, mod=reg, ap=822, confstr="sering.uucp"
+MCHN	uucp, show="UUCP", que=uucp, tbl=uucpchn,
+	pgm=uucp, mod=reg, ap=822, lname=sering
+MCHN	list, show="List Processing", que=list, tbl=local,
+	pgm=list, mod=reg
+MCHN	badhosts, show="Bad Host Forwarding", que=badhosts, tbl=smtp
+	pgm=smtp, mod=reg, ap=822, confstr="sering.uucp", host="haring.uucp"
+MCHN	badusers, show="Bad User Forwarding", que=badusers, tbl=smtp
+	pgm=smtp, mod=reg, ap=822, confstr="sering.uucp", host="haring.uucp"
+
+; Domain tables
+MDMN	"UUCP", show="UUCP Domain", table=uucpdom
+MDMN	"", show="Root Domain", table=rootdomain
+
+; Logging levels
+MMSGLOG     level=FST
+MCHANLOG    level=FST

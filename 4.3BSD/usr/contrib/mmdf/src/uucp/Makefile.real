@@ -1,0 +1,83 @@
+#
+#   uucp:   uucp (direct) delivery channel transmission
+#
+
+MODULES =	ch_uucp qu2uu_send uu_wtmail rmail
+
+OBJECTS =	ch_uucp.o qu2uu_send.o uu_wtmail.o
+
+SOURCES =	ch_uucp.c qu2uu_send.c uu_wtmail.c
+
+real-default:	xuucp xrmail
+
+install:	inst-uucp inst-rmail
+
+inst-uucp:	$(CHANDIR)/$(MMPREF)uucp
+$(CHANDIR)/$(MMPREF)uucp:	xuucp
+	cp xuucp $(CHANDIR)/$(MMPREF)uucp
+	-$(CHOWN) $(MMDFLOGIN) $(CHANDIR)/$(MMPREF)uucp
+	-chmod 04$(PGMPROT) $(CHANDIR)/$(MMPREF)uucp
+	-@ls -ls $(CHANDIR)/$(MMPREF)uucp
+	-@echo "uucp installed normally"; echo ""
+
+uucp:	xuucp
+xuucp:	$(OBJECTS) $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(MMDFLIBS) $(SYSLIBS)
+
+inst-rmail:	/usr/bin/rmail
+/usr/bin/rmail:	xrmail
+	-@echo "***** Please install rmail by hand in /bin or /usr/bin."
+	: cp xrmail /usr/bin/rmail
+	: -$(CHOWN) root /usr/bin/rmail
+	: -chmod 04$(PGMPROT) /usr/bin/rmail
+	: -@ls -ls /usr/bin/rmail
+	: -@echo "rmail installed normally"; echo ""
+
+rmail:	xrmail
+xrmail:	rmail.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ rmail.o $(MMDFLIBS) $(SYSLIBS)
+
+lint:	l-uucp l-rmail
+
+l-uucp:
+	$(LINT) $(LFLAGS) $(SOURCES) $(LLIBS)
+
+l-rmail:
+	$(LINT) $(LFLAGS) rmail.c $(LLIBS)
+
+clean:
+	-rm -f xuucp xrmail *.o x.c makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+deliver.o: deliver.c
+ch_uucp.o: ch_uucp.c
+ch_uucp.o: ../../h/util.h
+ch_uucp.o: ../../h/mmdf.h
+ch_uucp.o: ../../h/ch.h
+ch_uucp.o: ../../h/phs.h
+ch_uucp.o: /usr/include/signal.h
+qu2uu_send.o: qu2uu_send.c
+qu2uu_send.o: ../../h/util.h
+qu2uu_send.o: ../../h/mmdf.h
+qu2uu_send.o: ../../h/ch.h
+qu2uu_send.o: /usr/include/signal.h
+qu2uu_send.o: ../../h/ap.h
+qu2uu_send.o: ../../h/phs.h
+uu_wtmail.o: uu_wtmail.c
+uu_wtmail.o: ../../h/util.h
+uu_wtmail.o: ../../h/mmdf.h
+uu_wtmail.o: ../../h/ch.h
+uu_wtmail.o: ../../h/ap.h
+rmail.o: rmail.c
+rmail.o: ../../h/util.h
+rmail.o: ../../h/mmdf.h
+rmail.o: ../../h/ap.h
+rmail.o: ../../h/ch.h
+rmail.o: ../../h/dm.h
+rmail.o: /usr/include/pwd.h
+rmail.o: /usr/include/signal.h
+rmail.o: /usr/include/sys/stat.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

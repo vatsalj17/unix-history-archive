@@ -1,0 +1,89 @@
+
+README -- MMDFII, Release B (beta), April 22nd, 1986
+
+*****************************************************************************
+* This is a beta release of MMDFIIb.  We believe it is quite stable or we   *
+* would not have put it out with 4.3 but users should still be aware that   *
+* it is beta-test.  The most critical error(s) are listed at the end of     *
+* this file.                                                                *
+*****************************************************************************
+
+The first thing you should do is look at the administrators guide
+in doc/administrators.  There is a makefile there to make an nroff
+or troff version of "Installing and Operating MMDFII".  Read it.
+
+For a current status report on MMDFII, including information on
+how to get an up-to-date buglist and updates to the 4.3 distribution,
+you should mail a request to the CSNET Info Server (info@sh.cs.net).
+Simply cut out the following text and mail it to info@sh.cs.net for
+the current status.
+
+------cut-here------
+request: mmdf
+topic: status
+request: end
+-----cut-here-------
+
+You should also join the MMDFII mailing list.  The list
+is mmdf2@relay.cs.net.  Send requests to join/drop/etc to
+mmdf2-request@relay.cs.net.  DO NOT CALL BERKELEY with MMDF2
+questions.  Send bug reports to mmdf2-bugs@relay.cs.net.
+
+Thanks and much credit is due to Doug Kingston, Phil Cockcroft,
+Steve Kille, Howard Walter, and others who put in considerable time
+and effort into this release.
+
+Dan Long
+Craig Partridge
+CSNET Coordination and Information Center (BBN Laboratories)
+cic@sh.cs.net
+
+--------------------------
+
+Comments and Bug list:
+
+1.  The program channel is new and has not been widely used.  Expect
+portability problems.
+
+2.   4.2 and 4.3 sites should be aware that MMDFII is a complete mail
+system, and as such, replaces sendmail et. al.  As a result you no
+longer need the following files:
+
+    /usr/lib/sendmail.*
+    /usr/ucb/newaliases
+    /etc/aliases
+    /etc/delivermail
+    /etc/comsat
+    /usr/ucb/biff
+    /usr/ucb/mailq
+
+The following programs are replaced by MMDFII (you may want to save them)
+
+    /bin/rmail
+    /bin/mail
+    /usr/lib/sendmail		MMDFII has a fake sendmail that fools
+				most applications
+
+    /usr/ucb/Mail		There are MMDFII versions that work
+    /usr/ucb/mail		with MMDFII.   Most people seem to prefer
+				to use MMDFII's own user interface (msg/send)
+				or MH (6.4 or later).
+
+3.  Internet sites which want to interact with nameservers and use MX
+RR's should make sure that NAMESERVER is defined in Makefile.com.
+
+4.  There are lot of bugs.  Many of them are so minor they have been
+around since the early days of MMDFIIa and no one has bothered to fix them.
+The most critical ones are:
+
+    -  dotted quads aren't parsed properly.  As a result we
+    don't put them into return addresses.  This occasionally
+    means a user may get a message with a return address
+    that he/she can't reply to.
+
+    - the routines controlling timeouts may not be quite in
+    sync with the BIND resolver routines distributed with 4.3.
+    As a result, timeouts and delays may be slightly off.  This
+    sometimes has unfortunate performance implications.  (A fix
+    for this is expected shortly).
+

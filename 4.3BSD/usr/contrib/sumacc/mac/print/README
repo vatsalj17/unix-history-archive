@@ -1,0 +1,41 @@
+Date: 21 Aug 1984 11:44:27 PDT
+Subject: Print desk accessory
+From: Mike Schuster <sri-tsc!MIKES@CIT-20.ARPA>
+To: info-mac@SUMEX-AIM.ARPA
+Resent-Date: Tue 21 Aug 84 16:38:26-PDT
+Resent-From: Ed Pattermann <sri-tsc!PATTERMANN@SUMEX-AIM.ARPA>
+Resent-To: info-mac:;
+
+Included below is the source for an experimental Print desk accessory that
+prints TEXT files.  You can queue up several print requests and continue
+running another application while print proceeds.  Print prints only plain
+ascii text files, and not, for example, MacWrite files.
+
+Make note of the following problems:
+
+  1) Print resides in the applications heap, and hence when you quit the
+     application, printing stops and all queued requests are lost.
+
+  2) I tried forcing print to reside in the system heap, but I couldn't
+     get it to work.  Maybe there is not enough room after an application
+     is launched.  Any ideas?
+
+  3) Since print has no window, there is no way to close print and reclaim
+     memory.  Maybe Print can call CloseDeskAcc() itself when the print
+     queue is empty, but this sounds dangerous.  Any ideas?
+
+  4) Print will sometimes crash.  I haven't yet isolated the circumstances,
+     so BEWARE.
+
+  5) There is no way to cancel the current print and purge the print queue.
+     Maybe the Cancel button in the Open dialog should do this.  A better
+     way would be to add another button to the Open dialog.  Unfortunately,
+     this is messy, since a new dialog resource would have to be added
+     to the System file, and hence, Print would not be self-contained.
+     Any suggestions?
+
+Print is compiled and installed just like Calendar.  Use the latest
+"cmd/rmaker.c" and "h/device.h" files released by Bill Croft.
+
+Good Luck!
+Mike (mikes@cit-20, mikes@cit-vax)

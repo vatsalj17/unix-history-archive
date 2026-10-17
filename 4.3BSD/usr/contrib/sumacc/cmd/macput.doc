@@ -1,0 +1,404 @@
+Date:     22 Jun 84 (Fri) 18:32:17 EDT
+From:     Dave Johnson <ddj%brown.csnet@csnet-relay.arpa>
+To:       info-mac@sumex-aim.arpa
+Subject:  downloading files using macterminal/modem7
+
+This program emulates the Mac's modified modem7 protocol on
+a unix system so that files can be easily downloaded through
+MacTerminal.  It can be used for both binary and mundane text
+files, and avoids the need to convert binaries to and from 
+printable-hex format.  The source and the manual page follow
+immediately, with everything shifted over one tab stop to avoid
+problems with mailers eating lines which start with '.'.
+
+Macput has been tested under 4.2 on both vaxes and suns, but
+since I didn't use any 4.2 specific features, it should work
+under 4.1 without any hassles.  Let me know if you have any
+problems or improvements; I will post updates when/if MacTerminal
+changes out from under macput.
+
+	Dave Johnson
+	Brown University
+	ddj%brown@csnet-relay
+
+Date:     18 Jun 84 (Mon) 01:26:06 EDT
+From: Dave Johnson <ddj%brown.csnet@csnet-relay.arpa>
+To: croft@su-safe.arpa
+Subject:  macput summary
+Status: R
+
+In MacTerm you should check off no flow control and modem7 protocol.
+Mac vs Other Computer doesn't seem to affect anything.  You don't
+need to pull down "Receive File..." -- the <esc>a seems to do the
+trick all by itself.
+
+For downloading a resource file to the Mac, the proper usage would
+be (assuming the file is called macscrawl.rsrc or just macscrawl):
+	macput -r macscrawl
+
+The -d and -u options are for data only, where -u converts unix-style
+newlines into carriage returns.  The code looks for extensions of 
+ .data, .text, and then nothing. The -r, -d, and -u options are intended
+to be mutually exclusive, and the last one on the line will be honored.
+
+Default values for name, filetype, and author are given in the code,
+and may be overridden by the -n name, -t type, and -a author options.
+
+If no options are given, then full mode is assumed, and all three
+segments must exist in the current directory; extensions are .info,
+ .data, and .rsrc .   This is intended for restoring files from the
+unix machine, where macget was used to back them up.
+
+From ddj@csnet-relay.csnet Sun Jun 17 22:58:47 1984
+Received: from csnet-relay by safe with TCP; Sun, 17 Jun 84 22:58:42 pdt
+Received: From brown.csnet by csnet-relay;  18 Jun 84 1:31 EDT
+Message-Id: <8406180504.AA02067@nancy.Brown.CSNet>
+Date:     18 Jun 84 (Mon) 01:04:55 EDT
+From: Dave Johnson <ddj%brown.csnet@csnet-relay.arpa>
+To: croft@su-safe.arpa
+Subject:  MacTerminal file transfer
+Status: R
+
+Sorry for the delay in getting this to you, but I was at
+Usenix all last week.  I will send you an amended version
+of the modem7 documentation that I found in net.sources 
+back in April, with my notes as appendices explaining what
+MacTerminal does.  Following that is my "macput" program,
+(Unix -> MacTerm), which seems to be quite reliable, even at
+9600 baud.  In a day or so I will send "macget" and maybe
+even some manual pages. 
+
+I also found the umodem36a program on net.sources, but
+couldn't wade through all the options, so ignored it!
+It would have probably been more work to hack in yet
+another protocol anyway.
+
+We have the -0.15X version (Almost Alpha MacTerminal) of 
+April 18, 1984; the problems I noted in the spec might be
+what Haeberli was alluding to when he said it wasn't fully
+working.  All the problems were seen when the Mac was sending
+(so far; am keeping fingers crossed).
+
+I hope there aren't any major changes when the real release
+comes out, but as soon as I get it, I will beat on it heavily.
+I'd be a little hesitant to send macput out to info-mac, as the
+MacTerminal program is still pre-release, but it should be ok
+to make it available with your ftp distribution, if you want.  
+
+I agree with your comments in the distribution cover letter 
+regarding other protocols -- we have problems with modem7 in
+that it will not survive over a flow-controlled serial line
+(we use Sytek System/20 equipment heavily here).  Something 
+that can escape the XON/XOFF characters, or stick to printable
+characters (ala uuencode/uudecode) might be preferable.  I'm
+not familiar with kermit to know if it would work over the
+Sytek connections, but I should look into it.  Do you have
+a spec for it?   
+
+An idea that we had here would be to write a desk accessory
+which would provide a simple window for the user to log into
+the host and send the command to initiate the transfer, and
+then handle the transfer protocol.  This would likely be small,
+and it would be convenient not to exit the application to do
+the transfer.  I may start here with a small application
+implementing a glass tty with file transfer but I would like
+to make it into a driver someday (that part of the OS manual
+was missing from my copy of Inside Mac).
+
+If I finish off this letter here, I might even get the manual
+pages written.  Keep me posted, and I'll continue to send you
+anything useful we get working here.
+	Dave Johnson
+
+From ddj@csnet-relay.csnet Sun Jun 17 22:59:00 1984
+Received: from csnet-relay by safe with TCP; Sun, 17 Jun 84 22:58:52 pdt
+Received: From brown.csnet by csnet-relay;  18 Jun 84 1:32 EDT
+Message-Id: <8406180506.AA02081@nancy.Brown.CSNet>
+Date:     18 Jun 84 (Mon) 01:06:21 EDT
+From: Dave Johnson <ddj%brown.csnet@csnet-relay.arpa>
+To: croft@su-safe.arpa
+Subject:  modem7 spec for MacTerminal
+Status: R
+
+From: jph@whuxle.UUCP Sun Apr 29 17:55:05 1984
+(whuxle.330)net.micro.pc : Re: XMODEM protocol query - (nf)
+Organization: Bell Labs, Whippany
+
+
+MODEM PROTOCOL OVERVIEW  178 lines, 7.5K
+
+1/1/82 by Ward Christensen.  I will maintain a master copy of
+this.  Please pass on changes or suggestions via CBBS/Chicago
+at (312) 545-8086, or by voice at (312) 849-6279.
+
+NOTE this does not include things which I am not familiar with,
+such as the CRC option implemented by John Mahr.
+
+Last Rev: (none)
+
+At the request of Rick Mallinak on behalf of the guys at
+Standard Oil with IBM P.C.s, as well as several previous
+requests, I finally decided to put my modem protocol into
+writing.  It had been previously formally published only in the
+AMRAD newsletter.
+
+	Table of Contents
+1. DEFINITIONS
+2. TRANSMISSION MEDIUM LEVEL PROTOCOL
+3. MESSAGE BLOCK LEVEL PROTOCOL
+4. FILE LEVEL PROTOCOL
+5. DATA FLOW EXAMPLE INCLUDING ERROR RECOVERY
+6. PROGRAMMING TIPS.
+
+-------- 1. DEFINITIONS.
+<soh>	01H
+<eot>	04H
+<ack>	06H
+<nak>	15H
+<can>   18H
+
+-------- 2. TRANSMISSION MEDIUM LEVEL PROTOCOL
+Asynchronous, 8 data bits, no parity, one stop bit.
+
+    The protocol imposes no restrictions on the contents of the
+data being transmitted.  No control characters are looked for
+in the 128-byte data messages.  Absolutely any kind of data may
+be sent - binary, ASCII, etc.  The protocol has not formally
+been adopted to a 7-bit environment for the transmission of
+ASCII-only (or unpacked-hex) data , although it could be simply
+by having both ends agree to AND the protocol-dependent data
+with 7F hex before validating it.  I specifically am referring
+to the checksum, and the block numbers and their ones-
+complement.
+    Those wishing to maintain compatibility of the CP/M file
+structure, i.e. to allow modemming ASCII files to or from CP/M
+systems should follow this data format:
+  * ASCII tabs used (09H); tabs set every 8.
+  * Lines terminated by CR/LF (0DH 0AH)
+  * End-of-file indicated by ^Z, 1AH.  (one or more)
+  * Data is variable length, i.e. should be considered a
+    continuous stream of data bytes, broken into 128-byte
+    chunks purely for the purpose of transmission.
+  * A CP/M "peculiarity": If the data ends exactly on a
+    128-byte boundary, i.e. CR in 127, and LF in 128, a
+    subsequent sector containing the ^Z EOF character(s)
+    is optional, but is preferred.  Some utilities or
+    user programs still do not handle EOF without ^Zs.
+  * The last block sent is no different from others, i.e.
+    there is no "short block".
+
+-------- 3. MESSAGE BLOCK LEVEL PROTOCOL
+ Each block of the transfer looks like:
+<SOH><blk #><255-blk #><--128 data bytes--><cksum>
+    in which:
+<SOH>       = 01 hex
+<blk #>     = binary number, starts at 01 increments by 1, and
+              wraps 0FFH to 00H (not to 01)
+<255-blk #> = blk # after going thru 8080 "CMA" instr, i.e.
+              each bit complemented in the 8-bit block number.
+              Formally, this is the "ones complement".
+<cksum>     = the sum of the data bytes only.  Toss any carry.
+
+-------- 4. FILE LEVEL PROTOCOL
+
+---- 4A. COMMON TO BOTH SENDER AND RECEIVER:
+
+    All errors are retried 10 times.  For versions running with
+an operator (i.e. NOT with XMODEM), a message is typed after 10
+errors asking the operator whether to "retry or quit".
+    Some versions of the protocol use <can>, ASCII ^X, to
+cancel transmission.  This was never adopted as a standard, as
+having a single "abort" character makes the transmission
+susceptible to false termination due to an <ack> <nak> or <soh>
+being corrupted into a <can> and canceling transmission.
+    The protocol may be considered "receiver driven", that is,
+the sender need not automatically re-transmit, although it does
+in the current implementations.
+
+---- 4B. RECEIVE PROGRAM CONSIDERATIONS:
+    The receiver has a 10-second timeout.  It sends a <nak>
+every time it times out.  The receiver's first timeout, which
+sends a <nak>, signals the transmitter to start.  Optionally,
+the receiver could send a <nak> immediately, in case the sender
+was ready.  This would save the initial 10 second timeout.
+However, the receiver MUST continue to timeout every 10 seconds
+in case the sender wasn't ready.
+    Once into a receiving a block, the receiver goes into a
+one-second timeout for each character and the checksum.  If the
+receiver wishes to <nak> a block for any reason (invalid
+header, timeout receiving data), it must wait for the line to
+clear.  See "programming tips" for ideas
+    Synchronizing:  If a valid block number is received, it
+will be: 1) the expected one, in which case everything is fine;
+or 2) a repeat of the previously received block.  This should
+be considered OK, and only indicates that the receivers <ack>
+got glitched, and the sender re-transmitted; 3) any other block
+number indicates a fatal loss of synchronization, such as the
+rare case of the sender getting a line-glitch that looked like
+an <ack>.  Abort the transmission, sending a <can>
+
+---- 4C. SENDING PROGRAM CONSIDERATIONS.
+
+    While waiting for transmission to begin, the sender has
+only a single very long timeout, say one minute.  In the
+current protocol, the sender has a 10 second timeout before
+retrying.  I suggest NOT doing this, and letting the protocol
+be completely receiver-driven.  This will be compatible with
+existing programs.
+    When the sender has no more data, it sends an <eot>, and
+awaits an <ack>, resending the <eot> if it doesn't get one.
+Again, the protocol could be receiver-driven, with the sender
+only having the high-level 1-minute timeout to abort.
+
+-------- 5. DATA FLOW EXAMPLE INCLUDING ERROR RECOVERY
+
+Here is a sample of the data flow, sending a 3-block message.
+It includes the two most common line hits - a garbaged block,
+and an <ack> reply getting garbaged.  <xx> represents the
+checksum byte.
+
+SENDER					RECEIVER
+				times out after 10 seconds,
+			<---		<nak>
+<soh> 01 FE -data- <xx>	--->
+			<---		<ack>
+<soh> 02 FD -data- xx	--->	(data gets line hit)
+			<---		<nak>
+<soh> 02 FD -data- xx	--->
+			<---		<ack>
+<soh> 03 FC -data- xx	--->
+   (ack gets garbaged)	<---		<ack>
+<soh> 03 FC -data- xx	--->		<ack>
+<eot>			--->
+			<---		<ack>
+
+-------- 6. PROGRAMMING TIPS.
+
+* The character-receive subroutine should be called with a
+parameter specifying the number of seconds to wait.  The
+receiver should first call it with a time of 10, then <nak> and
+try again, 10 times.
+  After receiving the <soh>, the receiver should call the
+character receive subroutine with a 1-second timeout, for the
+remainder of the message and the <cksum>.  Since they are sent
+as a continuous stream, timing out of this implies a serious
+like glitch that caused, say, 127 characters to be seen instead
+of 128.
+
+* When the receiver wishes to <nak>, it should call a "PURGE"
+subroutine, to wait for the line to clear.  Recall the sender
+tosses any characters in its UART buffer immediately upon
+completing sending a block, to ensure no glitches were mis-
+interpreted.
+  The most common technique is for "PURGE" to call the
+character receive subroutine, specifying a 1-second timeout,
+and looping back to PURGE until a timeout occurs.  The <nak> is
+then sent, ensuring the other end will see it.
+
+* You may wish to add code recommended by Jonh Mahr to your
+character receive routine - to set an error flag if the UART
+shows framing error, or overrun.  This will help catch a few
+more glitches - the most common of which is a hit in the high
+bits of the byte in two consecutive bytes.  The <cksum> comes
+out OK since counting in 1-byte produces the same result of
+adding 80H + 80H as with adding 00H + 00H.
+
+6/18/84
+Notes by Dave Johnson, Brown University:
+
+-------- Appendix A. Modifications for MacTerm file transfer
+
+  File transfer between Macintoshes running MacTerm is almost
+fully working in version -0.15X (Almost Alpha MacTerminal (tm))
+of April 18, 1984.  I have a file which causes the sender to hang
+after the first record, but most files can be sent without any
+problems.
+
+  The additional protocol to handle Macintosh files, described
+below, was determined by plugging two Macs into separate serial
+ports and writing a "data analyzer" program which watches both
+ports, logging the traffic and passing characters from each port
+to the other.  There may be more features in this protocol which
+have not been observed, but a working emulation which runs on both
+Sun and Vax machines has been written based on these observations.
+(The above-mentioned file can be sent from the Unix systems to the
+Mac without hanging, but can't be sent from the Mac to anything,
+including another Mac through a null modem).
+
+  With this caveat out of the way, I'll describe the protocol as
+used by MacTerm.  When modem7 is selected as the protocol, the
+Macintosh file is sent as three segments: a directory record or 
+header, the data fork of the file, and the resource fork of the
+file.  Each of these chunks is sent using the record formatting
+and acknowledgement described above, with three minor differences.
+
+* The sender notifies the reciever that a file transfer is about
+to begin by transmitting "ESC a".  The receiver replies with an ACK.
+MacTerm seems to try this only once, which is probably sufficient.
+
+* The receiver should NAK the EOTs sent after the directory record
+and data fork, but nothing is sent in response to the EOT following
+the resource fork.
+
+* An empty data fork or resource fork is indicated by simply sending
+the EOT character.  (Slightly amusing note: if the Mac sends an empty
+data fork, it gets confused by the NAK reply to its EOT, and ends up
+sending the first record of the resource fork twice, but it all works
+out ok in any case).
+
+  Diagramatically, the exchange looks like this:
+
+	Sender				Receiver
+	------				--------
+{ INITIAL HANDSHAKE }
+<esc> 'a'		--->
+			<---		<ack>
+
+{ DIRECTORY INFORMATION }
+<soh> 01 FE -header- xx	--->
+			<---		<ack>
+<eot>			--->
+			<---		<nak>
+
+{ DATA FORK }
+<soh> 01 FE -data- xx	--->
+			<---		<ack>
+	.				  .
+	.				  .
+	.				  .
+<soh> nn uu -data- xx	--->
+			<---		<ack>
+<eot>			--->
+			<---		<nak>
+
+{ RESOURCE FORK }
+<soh> 01 FE -data- xx	--->
+			<---		<ack>
+	.				  .
+	.				  .
+	.				  .
+<soh> mm ww -data- xx	--->
+			<---		<ack>
+<eot>			--->
+{ THATS ALL FOLKS }
+
+-------- Appendix B. Header Record Format
+
+  The 128 byte record sent as the first segment of the file
+transfer contains the file name, file type, author, and the
+data and resource segment byte counts.  I think the creation
+date should be kept somewhere in this record, but haven't been
+able to find or decode it.  The offsets (zero based) of these
+fields are summarized here:
+
+	Field		Offset		Size
+	-----		------		----
+	Name Length	   1		  1
+	Name		   2		 63
+	Type		  65		  4
+	Author		  69		  4
+	Data Length	  81		  4
+	Resource Length	  85		  4
+
+(the Name Length might be offset zero and 2 bytes long, but who cares).
+

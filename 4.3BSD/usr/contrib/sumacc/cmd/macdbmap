@@ -1,0 +1,8 @@
+#!/bin/sh
+#	macdbmap - create b.map from b.out for use by "MacDB, vers 8/3/84"
+#
+nm68 -nh b.out | sed -e '
+s/ _\(.*\)$/ \1_/
+s/^\([^ ]*\) \([^ ]*\) \([^ ]*\)$/	\3=1:\1/
+s/:0*/:/
+s/:$/:0/' > b.map

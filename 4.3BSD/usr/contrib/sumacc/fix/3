@@ -1,0 +1,93 @@
+Return-Path: <sdcsvax!dcdwest!ed@Nosc>
+Received: from nosc.ARPA by safe with TCP; Tue, 24 Jul 84 23:38:10 pdt
+Received: from cod.ARPA by nosc.ARPA (4.12/4.7)
+	id AA05870; Tue, 24 Jul 84 23:35:44 pdt
+Received: by cod.ARPA (4.12/4.7)
+	id AA15158; Tue, 24 Jul 84 23:36:19 pdt
+Received: by sdcsvax.UCSD; Tue, 24 Jul 84 22:56:24 pdt
+Date: Tue, 24 Jul 84 20:50:46 pdt
+Message-Id: <8407250350.AA22231@dcdwest.ITT>
+Received: from dcdwest2.ITT (dcdwest2.ARPA) by dcdwest.ITT; Tue, 24 Jul 84 20:50:47 pdt
+To: croft@safe
+Subject: An interesting inconsistence in the MIT C compiler
+Status: RO
+
+I just spent 4 hours chasing a problem that turn out
+to be if not a bug at least an inconsistency in the MIT
+C compiler.  I had code that I had compiled and run on a
+SUN workstation using the SUN version of the C compiler (based
+on the MIT C compiler).  Today I tried to compile it on the
+vax using the MIT C compiler.  The following shows the
+problem.
+
+     1	main()
+     2	{
+     3		register char *pnt;
+     4		char *cpnt;
+     5		*pnt++;
+     6		pnt++;
+     7		*cpnt++;
+     8		cpnt++;
+     9	}
+
+
+I admit that lines 5 and 7 are somewhat stange, but I believe
+they are legal C expressions.
+The MIT C compiler generated the following code:
+
+	.data
+	.text
+	.globl	main
+main:
+	link	a6,#-_F1
+	moveml	#_S1,a6@(-_F1)
+| A1 = 8
+|	line 5, file 
+|	line 6, file 
+	addql	#1,a5
+|	line 7, file 
+	addql	#1,a6@(-4)
+|	line 8, file 
+	addql	#1,a6@(-4)
+	bra	.L12
+.L12:	moveml	a6@(-_F1),#8192
+	unlk	a6
+	rts
+_F1 = 8
+_S1 = 8192
+| M1 = 0
+	.data
+
+Note that it does not generate any code for line 5 in the
+C program.  I assume that somehow it desides that since we are
+dealing with a destination with no source, that it can ignore
+the expression.  However it only does it if the pointer is a
+register. When the pointer is on the stack, it increments it.
+
+Just for comparison, here is the code generated on by the SUN
+compiler.  Note that it increments the pointer for all cases.
+
+LL0:
+	.data
+	.text
+|#PROC# 04
+	.globl	_main
+_main:
+	link	a6,#0
+	addl	#-LF12,sp
+	moveml	#LS12,sp@
+	addql	#1, a5
+	addql	#1,a5
+	addql	#1,a6@(-4)
+	addql	#1,a6@(-4)
+	jra	LE12
+LE12:
+	moveml	sp@,#LS12
+	unlk	a6
+	rts
+   LF12 = 8
+	LS12 = 0x2000
+	LT12 = 0x4
+	LP12 =	8
+	.data
+

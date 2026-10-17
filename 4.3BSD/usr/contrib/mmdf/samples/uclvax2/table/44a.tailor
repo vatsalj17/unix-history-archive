@@ -1,0 +1,96 @@
+MMSGLOG    level=GEN, size=40, stat=SOME
+MCHANLOG   level=GEN, size=400, stat=SOME
+PHLOG     level=GEN, size=40, stat=SOME
+MSMTPLEV   PTR
+MIPCSLEVEL 1
+
+; special strings
+MLOCMACHINE     44a
+MLNAME    Ucl-Cs
+MLDOMAIN  "AC.UK"
+MSIG      "Memo Service (mmdf.2.84)"
+
+; special directories
+MTBLDIR    "/common/mmdftable"
+MQUEDIR    "/usr/spool/mmdflock/que"
+
+;  general tables
+MTBL  name=aliases, file=aliases, display="User & list aliases"
+MTBL  name=auth, file=auth, display="Authorisation file"
+
+
+; Domain tables
+MTBL    "Ucl-Cs",file="ucl-cs",show="Ucl-Cs domain table"
+MDMN    "Ucl-Cs.AC.UK",show="Ucl-Cs.AC.UK domain",table="Ucl-Cs"
+MTBL    "AC-UK",file="ac-uk",show="AC.UK Domain"
+MDMN    "AC.UK",show="AC.UK Domain",table="AC-UK"
+MTBL    "ARPA",file="arpa",show="ARPA Domain"
+MDMN    "ARPA",show="ARPA Domain",table="ARPA"
+MTBL    "SWEDEN",file="sweden",show="Swedish Domain"
+MDMN    "SWEDEN",show="Swedish Domain",table="SWEDEN"
+MTBL    "MAILNET",file="mailnet",show="Mailnet Domain"
+MDMN    "MAILNET",show="Mailnet Domain",table="MAILNET"
+MTBL    "UUCP",file="uucp",show="Usenet Domain"
+MDMN    "UUCP",show="Usenet Domain",table="UUCP"
+MDMN    "AC",show="AC.UK Domain (AC)",table="AC-UK",name="AC",dmn="AC.UK"
+MDMN    "UK",show="AC.UK Domain (UK)",table="AC-UK",name="UK",dmn="AC.UK"
+MTBL    "Top-Level",file="top",show="Top Level Domain"
+MDMN    "Top-Level",show="Top level Domain",table="Top-Level",name="",dmn=""
+
+
+;  channel definitions
+MTBL  local     file="44a.names"
+MCHN  local    name=local,que=local,tbl=local,show="Local (44a)",pgm=local,poll=0,mod=reg,ap=733,ap=big
+
+MCHN  newslist  name=newslist,que=newslist,tbl=local,show="News feed from 44d",pgm=local,poll=0,mod=reg
+
+MTBL  list     file="44a-list.names"
+MCHN  list    name=list,que=list,tbl=list,show="via List-Channel",pgm=list,poll=0,mod=reg,host=Ucl-Cs.AC.UK
+
+; MTBL  vaxlink    file="vaxlink.names"
+; MCHN  vaxlink name=vaxlink,que=vaxlink,tbl=vaxlink,show="via Phonenet link to VAX",pgm=pobox,poll=0,mod=psv,user=vaxmmdf,host=Vax.Ucl-Cs.AC.UK
+
+MTBL  sring    file="sring.names"
+MCHN  sring name=sring,que=sring,tbl=sring,show="with SMTP",pgm=smtp,poll=0,mod=reg,confstr="%s/"
+
+; SMTP channel stuff
+MTBL  smtp      file="smtp.names"
+; (going through rc tunnel)
+; MTBL  tunnilsmtp      file="tunnil.names"
+; MCHN  tunnil      name=tunnil,que=tunnil,tbl=tunnilsmtp,show="via IPSS-Tunnel (tunnel only hosts ) with SMTP",pgm=smtp,poll=0,mod=reg,ldomain="ARPA",confstr="tcpx/128.16.9.3,X;%s.25,B,200:",ap=733,ap=host,ldomain=ARPA,known=smtp
+; (going over Satnet)
+MCHN  satnet     name=satnet,que=satnet,tbl=smtp,show="via Satnet with SMTP",pgm=smtp,poll=0,mod=reg,ldomain="ARPA",confstr="tcpx/128.16.9.3,X;%s.25,B,200:",ap=733,ap=host,ldomain=ARPA,known=smtp,auth=inlog,auth=outlog
+; (going through tunnel)
+MCHN  tunnel      name=tunnel,que=tunnel,tbl=smtp,show="via IPSS-Tunnel with SMTP",pgm=smtp,poll=0,mod=reg,ldomain="ARPA",confstr="tcpx/14.0.0.9,X;%s.25,B,200:",ap=733,ap=host,ldomain=ARPA,known=smtp
+
+MTBL  niserc    file="serc.names"
+MCHN  niserc    name=niserc,que=niserc,tbl=niserc,show="via Janet with NIFTP",pgm=niftp,poll=0,mod=reg,ap=jnt,confstr="/usr/bin/cpf cpf -t -f\"$(SENDER)\" $(FILE) @$(ADR)",auth=inlog,auth=outlog
+
+MTBL  nipss    file="pss.names"
+MCHN  nipss    name=nipss,que=nipss,tbl=nipss,show="via PSS with NIFTP",pgm=niftp,poll=0,mod=reg,ap=jnt,confstr="/usr/bin/cpf cpf -t -f\"$(SENDER)\" $(FILE) @$(ADR)",auth=inlog,auth=outlog
+
+MTBL  niipss    file="ipss.names"
+MCHN  niipss    name=niipss,que=niipss,tbl=niipss,show="via IPSS with NIFTP",pgm=niftp,poll=0,mod=reg,host=ykxa,ap=733,ap=host,confstr="/usr/bin/cpf cpf -t -f\"$(SENDER)\" $(FILE) @$(ADR)",auth=inlog,auth=outlog
+
+
+MTBL  xuucp    file="uucp.names"
+MCHN  uucp name=uucp,que=uucp,tbl=xuucp,show="with UUCP",pgm=uucp,poll=0,mod=reg,ldomain=UUCP,ap=733,auth=inlog,auth=outlog
+
+; Karsruhe special link
+MTBL  karlsruh    file="karl.names"
+MCHN  karlsruh name=karlsruh,que=karlsruh,tbl=karlsruh,show="via Phonenet link to Karlsruhe",pgm=pobox,poll=0,mod=psv,user=karlsruh,host=karlsruh,ap=733,ap=host,auth=inlog,auth=outlog
+
+
+; Deliver tailoring
+MWARNTIME  72
+MFAILTIME  144
+MSLEEP     300 ; daemon sleep time
+
+;smtp server
+MTBL  name="smtp.nets", file="smtp.nets", display="SMTP net to channel map"
+
+MTBL  name="niftp.nets", file="niftp.nets", display="NIFTP net to channel map"
+
+PHLOG      level=FST
+MCHANLOG   level=FST
+MMSGLOG    level=FST

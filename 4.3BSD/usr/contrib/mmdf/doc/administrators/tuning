@@ -1,0 +1,218 @@
+.\".AU
+.\"Douglas P. Kingston III
+.\".AI
+.\"Ballistic Research Laboratory
+.\"USA AMCCOM
+.\"Aberdeen Proving Ground, Maryland.  21005
+.\"(301) 278-6651
+.bp
+.NH
+Tuning \*M
+.NH 2
+Introduction
+.PP
+Mail systems can vary greatly in the amount of traffic they carry
+and the communities they serve.  This variety of environments and
+loads cannot be properly served without appropriate tuning of the
+mailsystem to the environment it must serve.
+Tuning can take many forms, but the most common is adjusting
+the number and type of
+.I deliver
+daemons you have servicing the mail queues.
+Another common technique is to create additional mail queues
+which may serve a special subset of a larger queue to enable
+processing of that subset at a higher or lower priority.
+.NH 2
+Multiple Queues and Channels
+.PP
+One common method to improve the performance of \*M is to
+partition the mail queue into multiple directories.
+Generally this is done such that each channel has its own
+queue.
+The advantage is that when the daemon is working on a given
+channel, it need only examine messages which it knows are for that
+channel (by virtue of being in the queue directory for that channel).
+It is possible to have multiple channels operating from a single
+queue, and this might be advantageous if you had a very large number
+of channels each with a very small amount of traffic, but this is
+unlikely and probably  only worth thinking about when the number
+of channels approaches 100 or more.
+.PP
+Adding channels which cover a subset of hosts accessible by another
+channel is a good technique for increasing throughput and
+reduce delivery latency.
+.PP
+A good example of this is the BRLNET channel used at BRL.
+All BRL hosts are on the ARPANET (MILNET), and as such could
+be queued into the smtp channel for delivery.  If this were
+done, the BRLNET messages would be mixed up with the hundreds
+of messages pending for tardy ARPANET sites.  In addition, the
+delivery latency would rise dramatically since you would have to
+wade through all the tardy messages on each pass over the queue.
+To provide better service to the directly connected hosts, we
+defined a BRLNET channel, with its own queue, and re-used the
+smtp program.
+This channel is defined before the SMTP channel so when a message
+is queued for a BRL host, the \fIsubmit\fR program
+finds the BRL host name first in the BRLNET channel table and
+therefore queues it into the BRLNET channel.
+The \fIdeliver\fR servicing the BRLNET channel services only
+the BRLNET channel and a couple of lightly loaded channels
+like the local and list channels.  This means the the BRLNET channel
+gets a high level of service and because of our high-speed local
+area networks, the delivery latency is quite small.
+.PP
+Another use for separate channels is for tardy hosts.  At times
+there have been several hosts tardy over a long period of time (weeks).
+Rather than have them fill up the regular mail queues, we created
+a special channel with only these ``turkey'' hosts and placed
+this channel ahead of the smtp channel in the configuration file.
+This caused mail for the turkey hosts to be queued into this channel
+rather than the smtp channel.
+The turkey channel had its \fIdeliver\fR run less often than normal.
+.NH 2
+Multiple Daemons
+.PP
+It is possible to run multiple invocations of
+the \fIdeliver\fR daemon.  There are three advantages to multiple
+daemons.  The first is increased throughput.  Although the mail
+processes do use a considerable amount of cpu time, they spend a
+large amount of time waiting while actually delivering mail so
+it is possible for two \fIdeliver\fR daemons to deliver close to twice
+as much mail in the same period as one daemon.
+Second, with more than one deliver, the delivery latency will be reduced
+since with more daemons, the chances that one will find your message
+in the same amount of time are twice as good.
+Third, multiple daemons servicing the same channel provide redundant
+service.  If one daemon should die off, the remaining delivers on that
+channel will continue to deliver, although providing a reduced level
+of service.
+.NH 2
+Tailoring Delivery Characteristics
+.PP
+There are numerous options that can be used to control the behavior
+of deliver daemons.  The most common is
+`\-c\fIchannel,channel,channel\fR' which sets which channels the
+deliver will attempt to process.
+One might have one daemon processing local, uucp, and localnet
+mail and two other daemons just processing smtp
+mail if you were a large site relaying a lot of mail to the
+Arpanet.
+The configuration used on the main
+mail host at BRL is as follows:
+.sp
+.nf
+.RS
+.nf
+deliver \-L/usr/mmdf/log/deliver1 \-b \-l15 \-clocal,brlnet,list,uucp,bb
+deliver \-L/usr/mmdf/log/deliver2 \-b \-t24 \-csmtp
+deliver \-L/usr/mmdf/log/deliver3 \-b \-t48 \-csmtp
+deliver \-L/usr/mmdf/log/deliver4 \-b \-csmtp
+deliver \-b \-l15 \-s \-T300 \-cucl
+.fi
+.RE
+.fi
+.PP
+This is a very good example because it demonstrates the use of almost all the
+different delivery tuning mechanisms.
+There are seven different queues.
+There are five separate \fIdeliver\fR daemons.
+The queues can be characterized as follows:
+.sp
+.nf
+.DS
+.TS
+l l .
+local	\- Local mail delivery, light volume, fast
+brlnet	\- Mail to other BRL hosts via LANs, medium volume, some backup
+list	\- List processor, light volume, fast
+uucp	\- UUCP channel, light volume, fast
+bb	\- BBoards channel, light volume, fast
+smtp	\- SMTP to Arpanet, heavy volume, large queue backups
+ucl	\- SMTP to UCL-CS only, heavy volume, occasional large backups
+.TE
+.DE
+.sp
+.fi
+The first five are grouped together under one deliver daemon,
+with the only major user being the BRLNET channel.  Since
+the other channels create an insignificant load, the BRLNET
+hosts get an essentially dedicated \fIdeliver\fR daemon.
+The smtp channel has so much volume, and spends so much time
+waiting for read and writes across the country, that we have three
+daemons processing this channel.  The ucl channel
+was created to handle all the mail headed to one host, UCL-CS,
+since we send them a considerable volume of mail, and occasionally
+the satellite has a bad day, and the mail backs up.  We have
+had over a thousand messages backed up for this host on more
+than one occasion.  The first time this happened, it really slowed
+down the smtp delivery.  Now when UCL-CS
+is tardy, they hurt no one.
+.NH 2
+Dead Host Cache Time-to-live
+.PP
+When a host is discovered to be dead or not responding, it is
+marked ``dead'' by the \fIdeliver\fR daemon.  All further addresses
+for that host in the current message or subsequent messages are
+skipped until the time-to-live of the ``dead host'' record has
+been reached.  The time-to-live is usually defaulted to 2 hours.
+The time-to-live can be changed by using the \-l\fIminutes\fR
+flag on the \fIdeliver\fR command line.
+For example, you will note that on the first \fIdeliver\fR daemon
+in the example, the time-to-live is set to 15 minutes since
+we do not expect BRLNET hosts to spend much time down and we
+want the \fIdeliver\fR daemon to quickly notice when a BRLNET host comes
+back on line.
+.NH 2
+Recent Message Selection
+.PP
+One of the properties of sending to hundreds of hosts is that if a host
+is down for more than a day or two, it is likely to be down considerably
+longer.  It is wasteful to have all the daemons constantly working over
+all the old messages when the chance of a machine reappearing are relatively
+small compared to the chances that a machine down only 4 hours
+will reappear.  The \-t\fIhours\fR switch allows us to force the daemon
+to consider only messages that were queued in the past \fIhours\fR hours.
+In other words, we force the daemon to concentrate on delivering the
+recent messages, which have a higher likelihood of delivery.
+One daemon looking after the dregs is enough.
+You should only use this if you have at least one daemon that does not
+have the \-t flag, processing the same queue.
+In the example above you can see the \-t flag is being used on both
+the second and third \fIdeliver\fR daemons which both service
+the largest channel (smtp).  The third daemon is not restricted
+with a \-t.
+.NH 2
+Daemon Sleep Time
+.PP
+There are certain channels that you wish to run in the background
+but for which you do not wish to attempt delivery
+as often as the default settings would try.
+The \-T\fIseconds\fR switch changes the amount of time in seconds
+the daemon will sleep between attempts to deliver messages.
+In our example above, we have used this switch on the ucl channel.
+This is generally a low-priority mail queue and we are not concerned
+that we wait an extra 10 or 20 minutes to discover that the host
+has been down, since when it goes down, it is usually down for hours
+or days.
+The time when this really pays off is when the host is down and mail
+has backed up.
+When this happens, each time the daemon wakes up, the daemon examines every
+address and then decides to skip it because the host is down.   
+Occasionally the daemon
+will retry the connection (if the time-to-live has expired) but it spends most
+of its time not delivering mail.  We simply elect to not attempt as
+often, therefore wasting less time.
+.NH 2
+Queue Sort Override
+.PP
+In normal operation, \fIdeliver\fR will attempt to sort the
+queue of messages for each channel in the order they were submitted.
+Sorting a large mail queue can be quite expensive and time consuming.
+On some channels you don't care in what order the messages are
+delivered.  In these cases it is advantageous from an efficiency
+standpoint to be able to disable the queue sorting.
+The \-s option does just that.  If this option is specified,
+the daemon will read the queue and process the messages in the
+order they were found.  This will often not be the order in which
+they were submitted.

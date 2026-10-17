@@ -1,0 +1,127 @@
+#
+#   smtp:    ArpaNet-based channel transmission
+#
+MODULES = 	ch_smtp qu2sm_send sm_wtmail tcp.${SYSTEM} \
+		smtpsrvr smtpd.${SYSTEM}
+
+real-default:	smtp smtpd smtpsrvr
+
+install: inst-smtp inst-smtpd inst-smtpsrvr
+
+lint:	l-smtp l-smtpd l-smtpsrvr
+
+inst-smtp:	$(CHANDIR)/smtp
+$(CHANDIR)/smtp:	xsmtp
+	cp xsmtp $(CHANDIR)/smtp
+	-$(CHOWN) $(MMDFLOGIN) $(CHANDIR)/smtp
+	-chmod 0$(PGMPROT) $(CHANDIR)/smtp
+	-@ls -ls $(CHANDIR)/smtp
+	-@echo "smtp channel installed normally"; echo ""
+
+smtp: xsmtp
+xsmtp:	ch_smtp.o qu2sm_send.o sm_wtmail.o tcp.${SYSTEM}.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ \
+		ch_smtp.o qu2sm_send.o sm_wtmail.o tcp.${SYSTEM}.o \
+		$(MMDFLIBS) $(SYSLIBS)
+
+l-smtp:
+	$(LINT) $(LFLAGS) $(TCPINCL) \
+		ch_smtp.c qu2sm_send.c sm_wtmail.c tcp.${SYSTEM}.c $(LLIBS)
+
+inst-smtpsrvr: $(CHANDIR)/smtpsrvr
+
+$(CHANDIR)/smtpsrvr:  xsmtpsrvr
+	cp xsmtpsrvr $(CHANDIR)/smtpsrvr
+	-$(CHOWN) $(MMDFLOGIN) $(CHANDIR)/smtpsrvr
+	-chmod 0$(PGMPROT) $(CHANDIR)/smtpsrvr
+	-@ls -ls $(CHANDIR)/smtpsrvr
+	-@echo "smtp server installed normally"; echo " "
+
+
+smtpsrvr : xsmtpsrvr
+xsmtpsrvr: smtpsrvr.o $(MMDFLIBS) 
+	$(CC) $(LDFLAGS) -o $@ \
+		smtpsrvr.o $(MMDFLIBS) $(SYSLIBS)
+
+l-smtpsrvr:
+	$(LINT) $(LFLAGS) smtpsrvr.c $(LLIBS)
+
+
+inst-smtpd: $(CHANDIR)/smtpd
+
+$(CHANDIR)/smtpd:  xsmtpd
+	cp xsmtpd $(CHANDIR)/smtpd
+	-$(CHOWN) $(MMDFLOGIN) $(CHANDIR)/smtpd
+	-chmod 0$(PGMPROT) $(CHANDIR)/smtpd
+	-@ls -ls $(CHANDIR)/smtpd
+	-@echo "smtp daemon installed normally"; echo " "
+		
+smtpd: xsmtpd
+xsmtpd: smtpd.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ \
+		smtpd.o $(MMDFLIBS) $(SYSLIBS)
+
+smtpd.o:	smtpd.${SYSTEM}.c
+	$(CC) $(CFLAGS) -c smtpd.${SYSTEM}.c
+	mv smtpd.${SYSTEM}.o smtpd.o
+
+l-smtpd:
+	$(LINT) $(LFLAGS) smtpd.${SYSTEM}.c $(LLIBS)
+
+clean:
+	-rm -f x* *.o x.c makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+ch_smtp.o: ch_smtp.c
+ch_smtp.o: ch_smtp.c
+ch_smtp.o: ../../h/util.h
+ch_smtp.o: ../../h/mmdf.h
+ch_smtp.o: /usr/include/signal.h
+ch_smtp.o: ../../h/phs.h
+ch_smtp.o: ../../h/ch.h
+qu2sm_send.o: qu2sm_send.c
+qu2sm_send.o: ../../h/util.h
+qu2sm_send.o: ../../h/mmdf.h
+qu2sm_send.o: ../../h/ch.h
+qu2sm_send.o: ../../h/ap.h
+qu2sm_send.o: ../../h/smtp.h
+sm_wtmail.o: sm_wtmail.c
+sm_wtmail.o: ../../h/util.h
+sm_wtmail.o: ../../h/mmdf.h
+sm_wtmail.o: ../../h/ch.h
+sm_wtmail.o: /usr/include/signal.h
+sm_wtmail.o: ../../h/phs.h
+sm_wtmail.o: ../../h/ap.h
+sm_wtmail.o: ../../h/dm.h
+sm_wtmail.o: ../../h/smtp.h
+tcp.4.2.o: tcp.4.2.c
+tcp.4.2.o: ../../h/util.h
+tcp.4.2.o: ../../h/mmdf.h
+tcp.4.2.o: /usr/include/sys/socket.h
+tcp.4.2.o: /usr/include/netinet/in.h
+tcp.4.2.o: /usr/include/netdb.h
+smtpsrvr.o: smtpsrvr.c
+smtpsrvr.o: ../../h/util.h
+smtpsrvr.o: ../../h/mmdf.h
+smtpsrvr.o: ../../h/ch.h
+smtpsrvr.o: ../../h/ap.h
+smtpsrvr.o: ../../h/phs.h
+smtpsrvr.o: ../../h/smtp.h
+smtpsrvr.o: /usr/include/stdio.h
+smtpsrvr.o: /usr/include/signal.h
+smtpsrvr.o: /usr/include/sys/stat.h
+smtpsrvr.o: /usr/include/errno.h
+smtpsrvr.o: ../../h/ns.h
+smtpd.4.2.o: smtpd.4.2.c
+smtpd.4.2.o: ../../h/util.h
+smtpd.4.2.o: /usr/include/signal.h
+smtpd.4.2.o: /usr/include/sys/socket.h
+smtpd.4.2.o: /usr/include/netinet/in.h
+smtpd.4.2.o: /usr/include/netdb.h
+smtpd.4.2.o: /usr/include/sys/wait.h
+smtpd.4.2.o: /usr/include/sys/ioctl.h
+smtpd.4.2.o: ../../h/ns.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

@@ -1,0 +1,263 @@
+.TH MMDF 3
+'ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.SH NAME
+MMDF (mm_) Mail Submission and Pickup
+.SH SYNOPSIS
+.nf
+#include "util.h"
+#include "mmdf.h"
+
+.TP 30
+mm_init ()
+/* get ready */
+.TP 30
+mm_end (type)
+/* done with mail */
+.nf
+    int          type;    /* OK or NOTOK */
+.fi
+.TP 30
+mm_sbinit ()
+/* initialize submission */
+.TP 30
+mm_sbend ()
+/* done with submission */
+.TP 30
+mm_pkinit (chname)
+/* initialize for pickup */
+.nf
+    char         *chname;    /* Channel being picked up */
+.fi
+.TP 30
+mm_pkend ()
+/* done with pickup */
+.TP 30
+mm_rrply (valstr, len)
+/* get a reply */
+.nf
+    struct rp_bufstruct *valstr;
+    int          *len;
+.fi
+.TP 30
+mm_wrply (valstr, len)
+/* send a reply */
+.nf
+    struct rp_bufstruct *valstr;
+    int          len;
+.fi
+.TP 30
+mm_rrec (linebuf, len)
+/* read one "record" */
+.nf
+    char *linebuf;
+    int  *len;      /* sizeof buf on call, nread on return */
+.fi
+.TP 30
+mm_rstm (buffer, len)
+/* buffered text read */
+.nf
+    char *buffer;
+    int  *len;      /* sizeof buf on call, nread on return */
+.fi
+.TP 30
+mm_wrec (linebuf, len)
+/* write a record/packet */
+.nf
+    char *linebuf;
+    int  len;
+.fi
+.TP 30
+mm_wstm (buffer, len)
+/* buffered text write */
+.nf
+    char *buffer;
+    int  len;
+.fi
+.TP 30
+mm_rinit (info, retadr)
+/* message initialization */
+.nf
+    char *info,
+         *retadr;
+.fi
+.TP 30
+mm_radr (host, adr)
+/* read an address */
+.nf
+    char *host,
+         *adr;
+.fi
+.TP 30
+mm_rtxt (buffer, len)
+/* buffered msg text read */
+.nf
+    char *buffer;
+    int  *len;      /* sizeof buf on call, nread on return */
+.fi
+.TP 30
+mm_winit (vianet, info, retadr)
+/* initialize for one message */
+.nf
+    char *vianet,
+         *info,
+         *retadr;   /* if == 0, use 'r' or 's' in info */
+.fi
+.TP 30
+mm_wadr (host, adr)
+/* write one address */
+.nf
+    char *host,
+         *adr;   /* adr@host, if host is null */
+.fi
+.TP 30
+mm_waend ()
+/* end of address list */
+.TP 30
+mm_wtxt (buffer, len)
+/* buffered msg text write */
+.nf
+    char *buffer;
+    int  len;
+.fi
+.TP 30
+mm_wtend ()
+/* end of message text */
+.SH DESCRIPTION
+The
+.I mm
+package is intended to simplify a user program's task of interacting
+with MMDF.  This will primarily be used for message submission (posting).
+The basic sequence of calls is to
+initialize the package, initialize for the submission of one
+message, indicate the addresses for the message and receive
+validations for them, send the message text, terminate the message
+and receive a final validation for the message, and then optionally
+repeat submission from the point of initializing for submission.
+.PP
+It is important to note the relationship between the info and sender
+arguments to mm_winit().  If the info strings contains
+either `r' or `s', then the sender must be a (char *)0.
+.SS "Sample Submission Code"
+.PP
+The following depicts a typical use of calls to
+.I mm.
+(No attempt is made to provide for the
+way a user might choose to acquire the address and text
+information needed for the variables "sender", "host", "adr", or
+"buffer".)
+
+.nf
+.RS
+.ne 15
+send_manage ()
+{   /* submit a batch of messages */
+    if (rp_isbad (mm_init()) ||
+	rp_isbad (mm_sbinit()))
+	    abort-submit;
+	    /* initialize for submission */
+
+    while (more-messages)
+    {   /* process each message */
+	if (rp_isbad (do_a_message ()))
+	    abort-submit;
+    }
+    return (RP_OK);
+}
+
+.ne 17
+do_a_message ()
+{   /* process a single message */
+    if (rp_isbad (mm_winit("", "mv", sender)) ||
+	rp_isbad (mm_rrply(&thereply, &len) ||
+	rp_isbad (thereply.rp_val))
+	abort-submit;
+	/* initialize the message */
+
+    while (more_addresses)
+    {   /* step through address list */
+	if (rp_isbad (do_an_address ()))
+	    abort-submit;
+    }
+    if (rp_isbad (mm_waend ()))
+	abort-submit;
+	/* indicate no more addresses */
+
+    return (do_text ());
+}
+
+.ne 31
+do_an_address ()
+{   /* process a single address */
+    struct rp_bufstruct thereply;
+    int len;
+
+    /* somehow begin with a host and adr */
+
+    if (rp_isbad (mm_wadr(host, adr)) ||
+	rp_isbad (mm_rrply (&thereply, &len)))
+	    { abort-submit; }
+	/* send address & get status */
+
+    switch (rp_gval (thereply.rp_val))
+    {       /* was address acceptable? */
+	case RP_AOK:    /* yes */
+	    { note-the-acceptance }
+	    break;
+
+	case RP_NO:     /* not acceptable */
+	case RP_USER:
+	case RP_NDEL:
+	case RP_AGN:
+	case RP_NS:
+	case RP_NOOP:
+	case RP_PARM:
+	    { note-failure; }
+	    break;
+
+	default:        /* unexpected reply value */
+	    { probably-should-treat-as-illegal-value; }
+    }
+    return (RP_OK);
+}
+
+.ne 37
+do_text ()
+{
+    struct rp_bufstruct thereply;
+    int len;
+
+    len = sizeof buffer;
+    while (more-text)
+    {   /* somehow get buffer's text and len */
+	if (rp_isbad (mm_wtxt (buffer, len)))
+	    abort-submit;
+	len = sizeof buffer;
+    }       /* send a chunk of text */
+
+    if (rp_isbad (mm_wtend ()))
+	abort_submit;
+
+    if (rp_isbad (mm_rrply (&thereply, &len)))
+	abort-submit;
+
+    switch (rp_gval (thereply.rp_val))
+    {   /* was text acceptable? */
+	case RP_OK:
+	case RP_MOK:
+	    { note-acceptance; }
+	    break;
+
+	case RP_NO:
+	case RP_NDEL:
+	case RP_AGN:
+	case RP_NS:
+	case RP_NOOP:
+	    { note-failure; }
+	    break;
+
+	default:
+	    { treat-as-illegal-value }
+	    break;
+    }
+    return (RP_OK);
+}

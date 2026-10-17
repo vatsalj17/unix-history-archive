@@ -1,0 +1,8 @@
+cd /lib/mmdf
+cleanque &
+deliver -b -clist,local,niserc,nipss,niipss,uucp &
+deliver -b -l120 -T900 -ctunnel,satnet &
+deliver -b -l30 -csring &
+usmtpdaemon  "smtp/" sring &
+smtpdaemon -n 3 "tcpx/25; 0.0.0.0.0,B,120:" satnet &
+exit

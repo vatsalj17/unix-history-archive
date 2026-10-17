@@ -1,0 +1,1015 @@
+.nr Fn 0 +1
+.de FN
+.ps -2
+\u\\n+(Fn\d
+.ps +2
+.FS \\n(Fn
+\n(Fn. 
+..
+.TL
+Addressing in MMDF II
+.AU
+Steve Kille
+.sp
+<Steve@CS.UCL.AC.UK>
+.AI
+Department of Computer Science
+University College London
+.AB
+The Multi-channel Memorandum Distribution Facility (MMDF) is a
+powerful and flexible Message Handling System for the
+.UX
+operating system.  It is a message transport system designed to
+handle large numbers of messages in a robust and efficient
+manner.  MMDF's modular design allows flexible choice of User
+Interfaces, and direct connection to several different
+message transfer protocols.
+.PP
+This paper is intended as a sequel to the paper presented by
+Doug Kingston at the 1984 Usenix meeting in Salt Lake City \*([.Kingston84\*(.].
+A brief technical overview of MMDF is given, and then two aspects are
+considered in more detail.
+First, the table-driven approach taken by MMDF to
+handling a structured address space is described, and then the
+extension of this approach to use with distributed nameservers
+is considered.
+Several distributed message systems using similar, but
+distinct, message and address formats have emerged.  The
+message reformatting
+approach taken by MMDF to allow interworking is described.
+Finally, a comparison with other systems is
+made.
+.AE
+.SH
+Introduction
+.PP
+The Multi-channel Memorandum Distribution Facility (MMDF) is a
+powerful and flexible Message Handling System for the UNIX
+operating system \*([.Crocker79,\|Kingston84\*(.].
+It was originally developed for use on
+Csnet \*([.Comer83\*(.],
+to provide message relaying services.  A version of MMDF
+stabilised in 1982 is the production system used by most Csnet
+sites.
+MMDF\ II, which is described here, has many
+changes relative to the earlier system.
+MMDF\ II is on beta test at several
+sites both in Europe and the US, and is expected to be
+fully available before this paper is presented.
+Although it is not currently a production system,
+it has been used to provide message
+relaying services for about two years at the
+Ballistic Research Laboratories, Maryland and at University
+College London, and more recently on the Csnet hub machine.
+Each of these sites has a variety of particularly demanding requirements,
+and are regarded as good testbeds.
+.PP
+The main requirements and features of MMDF\ II are as follows:
+.IP (1)
+Robust, reliable, and efficient message relaying.  Particular
+emphasis is placed on reducing message loss  to an absolute
+minimum.
+A two phase
+warning is used to handle message transfer delays.
+.IP (2)
+Support for multiple Message Transfer Protocols, and general
+interworking between them.  Currently supported are: Phonenet \*([.Crocker79\*(.],
+the Arpanet Simple Mail Transfer Protocol (SMTP) \*([.Postel82\*(.],
+the UK JNT
+Mail Protocol (Grey Book) \*([.Kille84\*(.],
+UUCP Mail \*([.Nowitz78\*(.],
+and indirectly CCITT X.400 protocols
+by use of
+the EAN system developed at University of British Columbia \*([.CCITT83,\|Neufeld83\*(.].
+.IP (3)
+Support for a wide range of User Interfaces.
+At present, v6mail, Shoens Mail, msg/send \*([.Vittal81\*(.],
+and MH \*([.Borden79\*(.],
+can all be used with
+MMDF\ II.
+.IP (4)
+Authentication \- that is submission time verification that a
+message conforms to RFC 822 (the standard on which  the generic
+message format for all
+MMDF\ II messages is based) \*([.Crocker82\*(.],
+and that the source is correctly specified.
+.IP (5)
+Authorisation \- that is the restriction of message flow for
+policy reasons, or assigning responsibility for a given message
+transfer (possibly for billing purposes) on the basis of
+the networks, users, and hosts involved.  This is discussed
+more fully in \*([.Brink85\*(.].
+.IP (6)
+Submission time address checking.  This allows for maximum
+address checking within the User Interface, and for more
+efficient network use by protocols such as SMTP and Phonenet.
+.IP (7)
+Flexible handling of local addresses, including aliasing,
+delivery to pipes and files, and enhanced support for
+distribution lists by use of a list channel.
+This is described
+in \*([.Kingston84\*(.].
+.IP (8)
+User configurable delivery time options.  This allows messages
+to be sorted according to destination and message header,
+and then
+processed accordingly.
+Processing can include: filing;
+redistribution; standard delivery; delivery to a pipe; user
+notification; destruction.
+This is described in more detail in \*([.Kingston84\*(.].
+.IP (9)
+Straightforward runtime configuration (by use of a
+.B "tailor file" ).
+.IP (10)
+Flexible handling of remote addresses.
+.IP (11)
+Message reformatting to support several environments
+using protocols similar to, but different from, RFC 822.
+.PP
+These last two points are the main subject of this paper.
+.SH
+MMDF System Structure
+.PP
+To describe the address handling, it is first necessary to
+understand the basic system structure.
+.DS B
+
+                   -----------      -----------
+                   |  User   |      |Protocol |
+                   |Interface|      | Server  |
+                   -----------      -----------
+                        |         /
+___________________     |       /
+|                  \\\\\\\\    |     /
+|                  -----------
+|                  | Submit  |
+|                  |         |
+|                  -----------  . . . . . . . .->
+|                       .                         Message
+|                       .
+|                       .                         Queues
+|                  ----------- <- . . . . . . . .
+|                  | Deliver |
+|                  |         |
+|                  -----------
+|                /      |     \\\\\\\\
+|              /        |       \\\\\\\\
+|            /          |         \\\\\\\\
+| -----------      -----------      -----------
+| |  List   |      |  Local  |      |Protocol |
+| | Channel |      | Channel |      | Channel |
+| -----------      -----------      -----------
+|______|
+
+
+              MMDF Process Structure
+
+.DE
+.PP
+The key to the operation of MMDF\ II is the process
+.B submit .
+Submit accepts messages in one of two modes:
+.IP (i)
+\'Message' mode, where a message is accepted on the standard
+input and addresses extracted from specified message header fields.
+.IP (ii)
+\'Protocol' mode, where addresses are first checked in an SMTP
+like negotiation \*([.Postel82\*(.],
+and then the message is accepted.  This mode is usually invoked
+by another process interacting with submit by use of a pair of
+pipes.
+.FN
+See
+.B "pipe(2)"
+in any UNIX reference manual.
+.FE
+.PP
+Submit is invoked both by User Interface processes to send local
+messages, and by Message Transfer
+Protocol servers (e.g. an SMTP server, rmail,
+.FN
+rmail is the process invoked by UUCP to transfer mail.
+.FE
+or a JNT Mail Protocol server).
+Submit verifies the addresses, and then checks conformance to
+authorisation policies.  It also authenticates the source and
+format of the message.  The most important part of this
+authentication
+is that locally generated messages have a correct originator
+specification (i.e. that of the invoker of submit), and that
+messages originated remotely are only submitted by a process
+with the appropriate privileges.
+Finally, the message is queued, with the text of the message
+(both body and header) in one file, and the associated
+addresses and control information in another file.
+Each address is associated with a
+.B channel ,
+and each channel has an associated queue, managed independently
+as a
+directory containing files which are links to the appropriate
+address file.
+The address to channel binding is discussed later.
+.PP
+Each channel has a process for delivering
+messages associated with it.
+More than one channel may use the same channel
+process (and thus protocol), as channels may have: different
+(sets of) hosts associated with them; different routes to the
+same hosts; or a different quality of service to the same hosts.
+.FN
+This flexible mapping becomes particularly important when applying
+authorisation on the basis of multiple criteria.
+A fuller discussion is given in \*([.Brink85\*(.].
+.FE
+There are two special channels:
+.IP (1)
+Local channel.  This delivers messages to local mailboxes,
+including any user specified processing.
+.IP (2)
+List channel.  This allows a list to be expanded in two phases,
+by passing the message back to submit with a modified return
+address.  This approach gives several advantages, particularly when
+handling large lists.
+.PP
+Both of these channels are discussed in more detail in \*([.Kingston84\*(.].
+.B Deliver
+is a process which reads the queue associated with one or more
+channels, and invokes a channel process with which it interacts through
+a pair of pipes.
+Deliver will read addresses from the queue, and pass them in turn to the
+channel process.  When an address is fully processed  (which
+may not be immediately if multiple addresses are being sent to a
+given host before any text is transferred) this information is
+passed back to deliver.
+Deliver then sends any necessary error
+messages, and the queue is adjusted accordingly.
+Caching and time control parameters allow for a variety of backoff
+strategies to handle hosts which do not respond.
+Deliver may also be invoked in pickup mode to allow messages
+to be pulled as well as pushed, which is particularly important
+for dialup links.
+This is discussed in \*([.Crocker79\*(.].
+.SH
+Address handling
+.PP
+The mechanism for verifying addresses is now considered.
+First, some terminology is defined:
+.IP Address
+Address is used to mean the text that the user supplies to a typical
+message sending interface in order to direct a message to a desired
+destination.
+This loose usage has been selected, because it is familiar to most message
+system users.
+.IP Domain
+.br
+The DARPA domain scheme \*([.Mockapetris84\*(.],
+and the UK Name Registration Scheme (NRS) \*([.Larmouth83\*(.],
+allow an untyped global namespace to be allocated in an
+hierarchical fashion.
+Examples of domains are: UK, Salford.AC.UK, CompSci.Salford.AC.UK,
+USC-ISID.ARPA, ARPA, UUCP.
+If a domain is sufficiently specified
+.FN
+To identify a specific service in the
+context of domain UK is unlikely to make sense,
+whereas it might for Salford.AC.UK.
+.FE
+it is possible
+to identify a direct connection to a Host, which may be
+associated with the domain or be a relay to the domain.
+.IP Mailbox
+A mailbox (User Agent) is the source or destination of a
+message, often associated with a human user.  A mailbox can be
+globally specified in RFC 822 as local-part@domain.
+.IP Host
+A host is a computer connected to directly by the
+local computer.  A domain associated with a host not directly
+connected to by the local computer
+should be regarded only as a domain: the domain to
+host binding is immaterial if there is no direct connection.
+.IP Route
+.br
+Routes are considered to be implicitly at the message level.
+A Route is an explicit
+sequence of domains over which a message should traverse.
+Two types of route are considered:
+.IP (i) 8
+A Formal Route consists of a sequence of globally valid
+domains, recognised as a source route by the originating system.
+In RFC 822, this is specified by a syntax of the style
+<@domain1:local-part@domain2>.
+A Formal Route is used to reach domains which cannot be accessed directly,
+or where indirect access is preferred.
+.IP (ii) 8
+An Informal Route is one that is not recognised as a route by
+the sending system, but is interpreted as such by a receiving
+system.  In the RFC 822 world, a common Informal Route syntax,
+making use of a special form of local-part is:
+user%domain2@domain1.
+Interestingly, this syntax is a Formal Route in the JNT Mail
+world.
+An Informal Route is used when different domains have a
+different interpretation of the global namespace (e.g.
+user%domain2@domain1 is used where the message originator's local system does
+not interpret domain2 as intended, but domain1 does).
+.PP
+A number of domain specifications have been adopted informally
+by different groups
+(e.g. .ARPA .AC.UK .MAILNET .UUCP .CSNET .CDN .EDU),
+and it seems likely that many networks will be able to
+agree on a global namespace.
+All Message Routing in MMDF\ II is currently controlled by tables.
+This is likely to continue for hosts where all external
+communication is by use of dialup links, and
+the NRS (at least) will distribute information as tables..
+The approach taken by MMDF\ II to table based domain handling is
+now described.
+.PP
+The MMDF\ II process
+.B submit
+performs the address checking function.
+There are two orthogonal operations.
+The first is to parse the address, to extract a Formal Route.
+The second phase is to interpret the 'end' domain of the
+route.
+If the domain being verified is
+identified as the local domain, the next
+domain component is considered.  If the local-part is
+reached, it is then interpreted as an Informal Route.
+MMDF\ II supports a number of Informal Route specifications,
+including the UUCP "!" syntax.
+If the local-part under consideration is
+not an Informal  Route, it is looked up as an alias.
+If it is identified as an alias, the alias value is then parsed
+as a sequence of addresses, and the whole procedure recurses.
+Finally, if it is not an alias, it will be checked as a local
+account and, if valid, queued for delivery by the local channel.
+.PP
+Each channel is associated with a set of hosts,
+which are
+directly connected to the local system.
+.FN
+The directness is conceptual rather than physical.
+This is illustrated later.
+.FE
+A host may be associated with more than one channel.
+Each channel has a channel table
+.FN
+Tables are considered here as if they were physical files.
+In practice, they are implemented by hashed database lookup.
+Many of the operations described are optimised further
+by taking advantage of the structure of this database.
+.FE
+which maps its associated hosts
+onto the necessary connection information (e.g. transport
+addresses).
+The host namespace is arbitrary, but given that all hostnames
+must be unique (to allow for host to channel binding),
+the convention that the hostname is that of the associated
+domain is convenient.
+A reason for sometimes violating this convention is discussed later.
+.PP
+Domains are handled in a two level manner.
+The top part of the domain is specified in the tailor file, and
+indicates an associated table.
+This top part is referred to as the
+.B "domain table specification"
+The rest of the domain is specified as the LHS of the table,
+with the RHS of the table specifying the host associated with
+the domain.
+The split can occur in more than one way.
+For example, CS.SALFORD.AC.UK could be split as:
+.DS B
+
+domain table specification          table entry
+
+SALFORD.AC.UK                       CS
+AC.UK                               SALFORD.CS
+UK                                  CS.SALFORD.AC
+""                                  CS.SALFORD.AC.UK
+
+.DE
+The last case has a null domain table specification, known
+informally as the 'top' table.
+.PP
+The method of domain interpretation is now considered.
+When a potential domain is examined by submit, it is first assumed to be
+a full domain specification.
+.FN
+The procedure is substantially optimised for domains in this
+form, as this is the most common case.
+.FE
+Components are repeatedly
+stripped from the LHS and matched against the list of domain
+table specifications.  Thus, if TREES.BIO.STANFORD.EDU is
+considered, domain table specifications are searched for in the
+order: BIO.STANFORD.EDU, STANFORD.EDU, EDU, "".  For each
+match,  the remainder is looked up in the associated domain
+table.  If a domain is identified, it is then mapped into its
+official value by looking for the first component in the table
+with the same RHS.  This allows for domain aliases.  The RHS (host
+name) is then looked up in the channel tables, and the address
+is bound to the first channel satisfying management
+requirements.
+Some extensions to this basic procedure are now described.
+.IP "Source Routes" 12
+An alternative specification for the RHS of a domain table is
+as a series of components; the first being the host directly
+connected to, and the rest being a sequence of domains
+traversed in order.  These domains will be added to the source
+route passed to the channel (message transport protocol).
+This source route information can be added in an ad hoc manner,
+or can be systematically obtained (e.g. from the NRS).
+.IP Subdomains 12
+If CS.SALFORD.AC.UK is specified, and has no corresponding domain table
+entries, but there is one for SALFORD.AC.UK, CS.SALFORD.AC.UK
+is accessed as a source route through SALFORD.AC.UK.
+This approach means that not all leaves of the tree need be stored.
+In particular, the 'top' table (i.e. the one with null domain
+table specification) may have entries such as:
+.DS
+CSNET:CSNET-RELAY.ARPA
+CA.UUCP:UCB-VAX.ARPA
+.DE
+This would route all subdomains of CSNET (e.g. UPENN.CSNET) through
+CSNET-RELAY.ARPA, and all subdomains of CA.UUCP through
+UCB-VAX.ARPA.
+This is useful in (the currently common) cases
+where the logical domain structure
+has a physical mapping.
+.IP "Partially specified domains" 12
+When all these checks have been made on the assumption of fully
+specified domains, these checks are repeated in each domain
+table on the assumption that the domain table specification was
+omitted.  For example, if there is a table ARPA, and BRL is
+being tested, BRL will be looked up in table ARPA (and matched)
+on the assumption that BRL.ARPA was intended.
+.IP "NRS domain ordering" 12
+It has been assumed until now that the UK NRS (Name
+Registration Scheme) and DARPA Domain scheme specify domains
+in the same manner.
+An unfortunate difference is, that although the semantics are
+similar and syntax the same, the ordering of the hierarchy is
+reversed.
+Thus, SALFORD.AC.UK in the DARPA form is UK.AC.SALFORD in NRS
+form.
+This difference has caused much confusion to (UK) users communicating
+with systems using both of these schemes, and so
+it is not very satisfactory to assume consistent
+specification (within the UK).
+Therefore, MMDF\ II may be configured to check for domains in
+either order. It does this in an interleaved fashion (i.e. for
+each check done performing it first in one order, and then the
+other).
+This minimises the weight given to the order a domain happens
+to be specified in, and maximises weight on the degree of specification
+(e.g. preferring to interpret "UK.AC.AVON.MULTICS"  as MULTICS.AVON.AC.UK
+rather than UK.AC.AVON.MIT-MULTICS.ARPA).
+In practice, the few problems which have occurred, have been
+caused by palindromic
+partial domain specifications.
+Except where explicitly noted otherwise, this paper assumes
+DARPA ordering, as NRS ordering is mostly confined to the UK
+Academic Community.
+.IP "Routing by the channel" 12
+There are currently two cases of routing by channel.
+In the
+first case, which can be used for any channel,
+the channel connects only to one host acting
+as relay for all the hosts in the channel table.
+The second is the UUCP channel.
+Here, hosts are considered to be any UUCP host reachable
+through UUCP, and the RHS of the channel table is the UUCP route
+(expressed in the form host!host!host!%s).
+Use of this style of channel routing should be minimised, as it is
+preferable both to route incrementally and to bind addresses to channels
+as late as possible.
+.IP "Support for multiple machines" 12
+It is common for UNIX sites to have many machines, and to have
+an allocation of users between machines with no clear meaning
+external to the site.
+If the machine name must be specified to send mail to a user,
+this leads to names which are hard to memorise/guess, and
+makes the movement of mailboxes between machines visible
+external to the site.
+MMDF\ II allows for multiple machines to share a common namespace,
+common binaries and common tables, and for each user to have a default
+machine for mail delivery.
+Further, many machines can appear externally
+to be the same domain.
+This is achieved by treating each machine as a (different) subdomain
+of the visible domain  (e.g. a message apparently from
+Steve@CS.UCL.AC.UK might be originated on machine VAX2.CS.UCL.AC.UK).
+This approach is clearly more user-friendly.  In some
+circumstances it will be more efficient, and in others, less.
+.PP
+It is interesting to note how the MMDF\ II addressing approach
+fits into the transition of various networks to a
+domain based addressing scheme.
+There is currently a draft proposal for the UUCP transition \*([.Horton85\*(.].
+The author's interpretation of this suggests,
+assuming that this proposal is followed, that MMDF\ II
+will provide all of the needed functionality for users to get the
+full advantage of a domain based scheme.
+In the UK, the information supplied by the NRS can be used in a
+straightforward fashion.
+.PP
+Perhaps the most interesting case is the DARPA Domain
+Nameserver scheme \*([.Mockapetris84\*(.].
+In general, domain information will not be available in table
+form, but is obtained dynamically by querying a sequence of
+nameservers.
+MMDF\ II will be extended to support this within the timescale of
+the DARPA transition.
+A brief description of a
+.I possible
+approach is described, the aim being to illustrate that the
+DARPA scheme can be integrated, rather than to describe how it
+will be integrated.
+In general, a final solution will have a mixture of table and
+nameserver determined bindings.
+It seems likely that the domain namespaces controlled by tables and
+nameservers will overlap substantially in many cases.
+A channel will be either table driven (as at present), or nameserver driven.
+A nameserver channel will be given a domain, which will be
+mapped into a connection (and possibly a route) when the
+domain in question is processed.
+At message submission time, the
+domain namespace would first be checked for
+fully specified domains contained in domain tables, which
+would be dealt with as before.
+.FN
+Note that a domain determined from a table could be bound to a
+nameserver channel.  In general, this would be undesirable.
+.FE
+A table (most likely the 'top' table) could specify a domain as
+being associated with one or more (nameserver) channels
+(e.g. ARPA maps to the SMTP channel).
+This domain would then be bound to one of those channels on the
+basis of management considerations.
+This gives submission time checking of only the higher level
+domains, with the full nameserver checking occurring in
+background when the channel is invoked.
+Alternatively, the domain could simply indicate use of a
+nameserver.
+In this case, the domain being checked would be passed to the
+nameserver.
+.FN
+Detailed interaction with a DARPA nameserver will be provided
+by a resolver interface, which is likely to be implemented
+as a library of functions on UNIX.
+This is certainly the case for two implementations currently
+in progress \*([.Karp84,\|Terry84\*(.].
+.FE
+If matched, any specification of a 'Mail Forwarder' could be
+used to specify a source route.
+The 'class' of address returned would be looked up (in a table)
+to determine a set of channels.
+This fuller submission time checking is desirable,
+but would only be acceptable if the mean nameserver
+response time was not too large.
+Then, table checks for partial domains would be made.
+Assuming that completion services are provided by a
+local nameserver,
+the potential partial domain could be checked by the
+nameserver, if desired.
+This scheme would extend naturally if there was a need to use either
+different types of nameserver, or disjoint systems of the same
+type of nameserver.
+This is however, only one of several potential approaches.
+.SH
+Message Reformatting
+.PP
+The need to reformat messages is an unfortunate reality.
+It is caused by the requirement of interworking between functionally
+similar, but differently encoded, end to end message protocols.
+MMDF\ II provides two basic types of message reformatting: the
+first, applicable to all message transfer protocols; and the
+second protocol specific.
+MMDF\ II messages are expected (by submit) to be in a generic
+format,  and are queued directly.
+This format is flexible, so that User Interface Processes do
+not need to have overly stringent requirements in order to generate legal
+format messages.
+In particular, the following aspects are flexible:
+.IP \-
+Formal Routes may be specified either in RFC 822 format or as
+\'local-part@domain@domain'.
+.IP \-
+Domains do not have to be
+.B normalised ,
+that is to say they may be partially specified or fully
+specified aliases (e.g. ISID, USC-ISID, ISID.ARPA,
+USC-ISID.ARPA are all acceptable).
+.IP \-
+Local domain specifications may be omitted.
+.PP
+In a system configured for the UK Academic Community, the following are also
+flexible:
+.IP \-
+Formal routes may also be specified in 'local-part%domain@domain'
+form, as used by the JNT Mail Protocol.
+.IP \-
+Domains may be specified in either NRS or DARPA order.
+.PP
+The general reformatting provided by MMDF\ II
+may be selected optionally on a per channel basis.
+This reformatting
+should be
+regarded conceptually, as being provided by deliver.
+It is really performed within the standard routines for
+interaction with deliver, called by each channel.
+If reformatting is selected, before each message is processed,
+a reformatted header will be generated into a temporary file.
+This is then used (transparently) by the channel instead of the
+real message header.  The reformatting functions
+provided are now described.
+It is interesting that they all relate to address format,
+which in practice is the only interesting message transfer
+protocol independent form of reformatting.
+If reformatting is selected for a given channel,
+an alternative for each of the functions must be specified.
+.IP (1)
+Domain normalisation (the conversion of all domain
+specifications to fully qualified preferred forms) is a basic
+function of message reformatting.
+An alternative form of normalisation makes use of the host
+namespace maintained by MMDF\ II and, in cases where a domain has
+an associated host, normalises to the host name.
+This is useful when connected to two worlds with
+differing views of the global namespace, or in transition
+situations.
+A common host specification is the leftmost component of the
+domain (e.g. UPENN is the host associated with UPENN.CSNET).
+.IP (2)
+Formal Route specifications may be reformatted to either RFC 822
+form (@domain1:local-part@domain2) or to percent form
+(user%domain2@domain1).
+This is useful for mapping between JNT Mail formal source
+routes and RFC 822 formal source routes.
+It is also useful where domains are used internally, and are
+not known globally.
+This mechanism allows formal routes to be mapped into informal
+routes, thus making the domain interpretation private.
+.IP (3)
+Domain/Host specifications may be output in either DARPA or NRS
+ordering.
+This is protocol independent, as the NRS ordering is associated
+with the UK Academic Community and not with any specific
+message transfer protocol.
+.IP (4)
+The local domain may be mapped into another specified form.
+This is used when one system has a different name in different
+environments.
+.IP (5)
+A treatment known as 'exorcising' against a table of domains.
+It is assumed that only the domains specified are known by
+domains accessed through the
+channel, and addresses relative
+to all other domains will be mapped to an informal
+source route behind the local system.
+.PP
+Message reformatting is also applied on a protocol specific
+basis.
+This occurs in two places.
+.IP "Channel Reformatting" 12
+Channels may perform reformatting in addition to that provided
+as standard.
+The JNT Mail channel performs some simple reformatting, to
+ensure that the return path, calculated according to the
+protocol, is correct.
+MMDF\ II currently supports two UUCP channels.  The first assumes
+that the remote site is 'modern' and does no reformatting
+on the basis that the remote site expects a standard RFC 822
+message.
+The second UUCP channel assumes that the remote site is 'old
+fashioned', and maps all addresses into UUCP route syntax
+(e.g. user@CS.UCL.AC.UK is changed to ucl-cs!user).
+Both channels may be used simultaneously by one system.
+.IP "Server Reformatting" 12
+Where an incoming message does not conform to the generic MMDF\ II
+format, the protocol server must perform reformatting.
+In practice, this is only done for UUCP and EAN X.400.
+The protocol server for UUCP (the rmail process), will map
+incoming addresses, which (by their syntax) appear to be from 'old
+fashioned' systems into RFC 822 format addresses.
+Where possible, UUCP routes are shortened.
+This reformatting will not change the message format if the remote UUCP
+site is 'modern'.
+.SH
+Comparison with other Systems
+.PP
+The only system considered in comparison
+is Sendmail \*([.Allman83\*(.].
+A comparison with various non-UNIX systems would be
+interesting, but not appropriate here.
+No other UNIX systems with comparable functionality are known to
+the author.
+Only addressing and message
+reformatting aspects are considered here.
+.PP
+Sendmail's address parsing and message reformatting is
+controlled by a
+.B "configuration file" .
+Sendmail
+.B mailers
+are analogous to MMDF\ II channels,
+but are less tightly coupled.
+Sendmail's address parsing and domain interpretation are
+controlled by the configuration file, and are not specifically
+decoupled.
+Whilst allowing for an amazingly general syntax, it can lead to
+cases where domain interpretation is syntax dependent.
+.FN
+Careful design of Sendmail configuration files should minimise
+this dependency, although
+generation of configuration files to handle complex cases is
+not straightforward.
+.FE
+The decoupling of address parsing and domain interpretation,
+as provided by MMDF\ II,
+is seen as both correct and desirable.
+.PP
+Current domain handling by Sendmail uses explicit recognition
+of domains listed in the configuration file to bind to a given
+mailer.
+After this partial address checking, the message is then queued
+for a specific mailer, where further checking is done.
+If configuration files are kept to a reasonable size, this
+approach must rely on the fact that the higher level domains can
+be used to determine the message transfer protocol in most cases.
+The MMDF\ II approach of maximising address checking at submission
+time is seen as desirable in view of the trend towards logical domain
+specifications which do not imply specific message transfer
+protocols.
+A domain handling package is expected to be added to Sendmail in
+the near future, and this may well allow for a more flexible
+approach.
+.PP
+Sendmail reformatting, is highly general and flexible, and has
+been used to deal with a variety of unusual formats.
+Some difficulty has been encountered when trying to handle NRS
+domain ordering, but this is probably not insuperable.
+MMDF\ II's more basic facilities cover a wide range of
+commonly used formats and, where appropriate, are more
+straightforward to configure.
+It seems likely that more systems will be moving to standard
+formats.
+The simpler approach also tends towards greater robustness,
+and protects against protocol violations.
+.SH
+Afterword
+.PP
+MMDF\ II is expected to be available as a production system by
+the time this paper is presented.  It is available in the US
+through University of Delaware, and in the UK through
+University College London.
+There is a (currently nominal) licence fee for commercial
+sites, and a tape handling charge.
+.sp
+.]<
+.\"Allman.E.-1983-2
+.ds [F Allman83
+.]-
+.ds [T SENDMAIL - An Internetwork Mail Router
+.ds [A E. Allman
+.ds [R Paper
+.ds [D 1983
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Borden.B.S.-1979-3
+.ds [F Borden79
+.]-
+.ds [A B.S. Borden
+.as [A " and others
+.ds [T The MH Message Handling System
+.ds [D November 1979
+.ds [J Project Airforce document, obtainable from RAND, Santa Monica, Ca 90406
+.ds [K MH
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Brink.D.-1985-4
+.ds [F Brink85
+.]-
+.ds [A D. Brink
+.as [A " and S.E. Kille
+.ds [T Authorisation and Accounting in Store and Forward Messaging systems
+.ds [D June 1985
+.ds [J Submitted to Networks 85, Wembley
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"1983-1
+.ds [F CCITT83
+.]-
+.ds [Q CCITT SG 5/VII
+.ds [T Recommendations X.400
+.ds [D November 1983
+.ds [R Message Handling Systems: System Model - Service Elements
+.ds [K x400
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Comer.D.A.-1983-16
+.ds [F Comer83
+.]-
+.ds [A D.A. Comer
+.ds [T A Computer Science Research Network: CSNET
+.ds [J Communications of the ACM
+.ds [V 26
+.ds [N 10
+.ds [P 747-753
+.nr [P 1
+.ds [D October 1983
+.ds [K csnet overview
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Crocker.D.-1979-5
+.ds [F Crocker79
+.]-
+.ds [A D. Crocker
+.as [A ", E. Szwkowski
+.as [A ", and D. Farber
+.ds [T An Internetwork Memo Distribution Capability - MMDF
+.ds [D November 1979
+.ds [J Proc. 6th. Data Comm Symp, IEEE/ACM
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Crocker.D.H.-1982-6
+.ds [F Crocker82
+.]-
+.ds [A D.H. Crocker
+.ds [T Standard of the Format of ARPA Internet Text Messages
+.ds [D August 1982
+.ds [R RFC 822
+.ds [K RFC822
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Horton.M.R.-1985-7
+.ds [F Horton85
+.]-
+.ds [T UUCP Mail Transmission Format Standard
+.ds [A M.R. Horton
+.ds [R Draft received as message
+.ds [D January 1985
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Karp.P.D.-1984-18
+.ds [F Karp84
+.]-
+.ds [T DRUID: A Distributed Name Server
+.ds [A P.D. Karp
+.ds [R Stanford Internal Report
+.ds [D June 1984
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Kille.S.E.-1984-8
+.ds [F Kille84
+.]-
+.ds [A S.E. Kille, (editor)
+.ds [T JNT Mail Protocol (revision 1.0)
+.ds [D March 1984
+.ds [I Joint Network Team
+.ds [C Rutherford Appleton Laboratory
+.ds [K greybook
+.ds [K jntmail
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 2 book
+.\"Kingston.D.P.-1984-9
+.ds [F Kingston84
+.]-
+.ds [A D.P. Kingston
+.ds [T MMDFII: A Technical Review
+.ds [J Usenix Conference
+.ds [C Salt Lake City
+.ds [D August 1984
+.ds [K MMDF
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Larmouth.J.-1983-10
+.ds [F Larmouth83
+.]-
+.ds [A J. Larmouth
+.ds [T JNT Name Registration Technical Guide
+.ds [D April 1983
+.ds [J Salford University Computer Centre
+.ds [K NRS
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Mockapetris.P.V.-1984-17
+.ds [F Mockapetris84
+.]-
+.ds [A P.V. Mockapetris
+.ds [T A Domain Nameserver Scheme
+.ds [D May 1984
+.ds [J IFIP WG 6.5 Conference, Nottingham
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.ds [F Mockapetris84
+.\"Neufeld.G.W.-1983-11
+.ds [F Neufeld83
+.]-
+.ds [A G.W. Neufeld
+.ds [T EAN: A distributed message system
+.ds [J Proceedings CIPS National Meeting, Ottowa
+.ds [P 144-149
+.nr [P 1
+.ds [D May 1983
+.ds [K ean
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Nowitz.D.A.-1978-12
+.ds [F Nowitz78
+.]-
+.ds [A D.A. Nowitz
+.as [A " and M.E. Lesk
+.ds [T A Dial-up Network of UNIX systems
+.ds [D August 1978
+.ds [R UNIX Programmer's Manual, 7th edition, Bell Labs.
+.ds [K UUCP
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Postel.J.B.-1982-15
+.ds [F Postel82
+.]-
+.ds [A J.B. Postel
+.ds [T SIMPLE MAIL TRANSFER PROTOCOL
+.ds [D August 1982
+.ds [R RFC 821
+.ds [K RFC821
+.ds [K SMTP
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Terry.D.B.-1984-13
+.ds [F Terry84
+.]-
+.ds [T The Berkeley Internet Name Domain Server
+.ds [A D.B. Terry
+.as [A " and others
+.ds [J Usenix, Salt Lake City
+.ds [D August 1984
+.ds [K bind
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Vittal..J.-1981-14
+.ds [F Vittal81
+.]-
+.ds [A J. Vittal
+.ds [T MSG: A simple message system
+.ds [J Proc. Int. Symp. Computer Message Systems, Ottowa
+.ds [I North Holland
+.ds [D April 1981
+.ds [K msg
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.]>
+.sp
+RFC indicates a DARPA Request For Comments, which may be
+obtained from: USC Information Sciences Institute, Marina del
+Rey, Ca. USA.
+.SH
+Acknowledgements
+.PP
+Many people have worked on MMDF\ II, including
+Phil Cockroft, Bernie Cosell,
+Dave Farber, Dan Long, Lee McLoughlin, Mike Muus,
+Julian Onions, Brendan Reilly, Dennis
+Rockwell, and Marshall Rose.
+Particular credit to Dave
+Crocker who designed the bulk of MMDF\ II, and to Doug Kingston who bore
+the brunt of making it work as a production system.

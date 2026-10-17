@@ -1,0 +1,76 @@
+W^56P:H r
+^m2{$X-}
+{$S Graf    }
+UNIT Graf3D;
+
+{ three-dimensional graphics routines layered on top of QuickDraw }
+
+INTERFACE
+
+USES {$U-}
+     {$U obj/QuickDraw }  QuickDraw,
+     {$U obj/Sane      }  Sane,
+     {$U obj/Elems     }  Elems;
+
+CONST radConst='57.29578';
+
+
+TYPE Point3D=RECORD
+               x: extended;
+               y: extended;
+               z: extended;
+             END;
+
+     Point2D=RECORD
+               x: extended;
+               y: extended;
+             END;
+
+     XfMatrix  = ARRAY[0..3,0..3] OF extended;
+     Port3DPtr = ^Port3D;
+     Port3D    = RECORD
+                   GPort:                     GrafPtr;
+                   viewRect:                  Rect;
+                   xLeft,yTop,xRight,yBottom: extended;
+                   pen,penPrime,eye:          Point3D;
+                   hSize,vSize:               extended;
+                   hCenter,vCenter:           extended;
+                   xCotan,yCotan:             extended;
+                   ident:                     BOOLEAN;
+                   xForm:                     XfMatrix;
+                 END;
+
+
+VAR thePort3D: Port3DPtr;
+
+  PROCEDURE Open3DPort  (port: Port3DPtr);
+  PROCEDURE SetPort3D   (port: Port3DPtr);
+  PROCEDURE GetPort3D   (VAR port: Port3DPtr);
+
+  PROCEDURE MoveTo2D(x,y: extended);  PROCEDURE MoveTo3D(x,y,z: extended);
+  PROCEDURE LineTo2D(x,y: extended);  PROCEDURE LineTo3D(x,y,z: extended);
+  PROCEDURE Move2D(dx,dy: extended);  PROCEDURE Move3D(dx,dy,dz: extended);
+  PROCEDURE Line2D(dx,dy: extended);  PROCEDURE Line3D(dx,dy,dz: extended);
+
+  PROCEDURE ViewPort    (r: Rect);
+  PROCEDURE LookAt      (left,top,right,bottom: extended);
+  PROCEDURE ViewAngle   (angle: extended);
+  PROCEDURE Identity;
+  PROCEDURE Scale       (xFactor,yFactor,zFactor: extended);
+  PROCEDURE Translate   (dx,dy,dz: extended);
+  PROCEDURE Pitch       (xAngle: extended);
+  PROCEDURE Yaw         (yAngle: extended);
+  PROCEDURE Roll        (zAngle: extended);
+  PROCEDURE Skew        (zAngle: extended);
+  PROCEDURE TransForm   (src: Point3D; VAR dst: Point3D);
+  FUNCTION  Clip3D      (src1,src2: Point3D; VAR dst1,dst2: POINT): BOOLEAN;
+
+  PROCEDURE SetPt3D     (VAR pt3D: Point3D; x,y,z: extended);
+  PROCEDURE SetPt2D     (VAR pt2D: Point2D; x,y: extended);
+
+
+
+IMPLEMENTATION
+
+{$I intrfc/GRAF3DIMPL}
+

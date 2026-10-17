@@ -1,0 +1,37 @@
+.TH LORDER68 1 
+.UC 4
+.SH NAME
+lorder68 \- find ordering relation for an MC68000 object library
+.SH SYNOPSIS
+.B lorder68
+file ...
+.SH DESCRIPTION
+The input
+is one or more object
+.I files.
+The standard output
+is a list of pairs of object file names,
+meaning that the first file of the pair refers to
+external identifiers defined in the second.
+The output may be processed by
+.IR  tsort (1)
+to find an ordering of
+a library suitable for one-pass access by
+.IR  ld68 (1).
+.PP
+This brash one-liner intends to build a new library
+from existing `.b' files.
+.IP
+ar cr library \`\|lorder68 *.b | tsort\`
+.SH FILES
+*symref, *symdef
+.br
+nm(1), sed(1), sort(1), join(1)
+.SH "SEE ALSO"
+tsort(1),
+ld68(1),
+.SH BUGS
+The names of object files, in and out of libraries, must end with `.b';
+nonsense results otherwise.
+.PP
+Doesn't handle libraries.

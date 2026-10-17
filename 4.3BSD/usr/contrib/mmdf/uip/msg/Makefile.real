@@ -1,0 +1,86 @@
+#   Instructions to Make, for compilation of MSG
+
+MODULES	= msg1 msg2 msg3 msg4 msg5 msg6 msgtailor version
+
+PARTS	= msg1.o msg2.o msg3.o msg4.o msg5.o msg6.o msgtailor.o
+
+SOURCES	= msg1.c msg2.c msg3.c msg4.c msg5.c msg6.c msgtailor.c
+
+real-default: xmsg
+
+xmsg   :   $(PARTS) version.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o xmsg $(PARTS) version.o $(MMDFLIBS) \
+		-ltermcap $(SYSLIBS)
+	-size xmsg
+
+
+install:	$(BINDIR)/msg
+
+$(BINDIR)/msg: xmsg
+	-mv $(BINDIR)/msg $(BINDIR)/msg.bak
+	cp xmsg $(BINDIR)/msg
+	-chmod $(PGMPROT) $(BINDIR)/msg
+
+version.o: $(PARTS) $(MMDFLIBS)
+	mkversion
+	$(CC) $(CFLAGS) -c version.c
+
+lint:
+	lint $(LFLAGS) $(SOURCES) $(LLIBS)
+
+clean:
+	-rm -f *.o xmsg core make.out tags
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+msg1.o: msg1.c
+msg1.o: ../../h/util.h
+msg1.o: ../../h/mmdf.h
+msg1.o: /usr/include/pwd.h
+msg1.o: /usr/include/signal.h
+msg1.o: /usr/include/sys/stat.h
+msg1.o: /usr/include/sgtty.h
+msg1.o: /usr/include/sys/ioctl.h
+msg1.o: msg.h
+msg2.o: msg2.c
+msg2.o: ../../h/util.h
+msg2.o: ../../h/mmdf.h
+msg2.o: /usr/include/pwd.h
+msg2.o: /usr/include/signal.h
+msg2.o: /usr/include/sys/stat.h
+msg2.o: /usr/include/sgtty.h
+msg2.o: msg.h
+msg3.o: msg3.c
+msg3.o: ../../h/util.h
+msg3.o: ../../h/mmdf.h
+msg3.o: /usr/include/pwd.h
+msg3.o: /usr/include/signal.h
+msg3.o: /usr/include/sys/stat.h
+msg3.o: /usr/include/sgtty.h
+msg3.o: /usr/include/sys/wait.h
+msg3.o: msg.h
+msg4.o: msg4.c
+msg4.o: ../../h/util.h
+msg4.o: ../../h/mmdf.h
+msg4.o: /usr/include/pwd.h
+msg4.o: /usr/include/signal.h
+msg4.o: /usr/include/sys/stat.h
+msg4.o: /usr/include/sgtty.h
+msg4.o: msg.h
+msg5.o: msg5.c
+msg5.o: ../../h/util.h
+msg5.o: ../../h/mmdf.h
+msg5.o: /usr/include/pwd.h
+msg5.o: /usr/include/signal.h
+msg5.o: /usr/include/sys/stat.h
+msg5.o: msg.h
+msg5.o: /usr/include/sys/file.h
+msg6.o: msg6.c
+msg6.o: ../../h/util.h
+msg6.o: ../../h/mmdf.h
+msgtailor.o: msgtailor.c
+msgtailor.o: msg.h
+version.o: version.c
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

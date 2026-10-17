@@ -1,0 +1,84 @@
+.TH NM68 1 
+.SU
+.SH NAME
+nm68 \- print name list of MC68000 object files
+.SH SYNOPSIS
+.B nm68
+[
+.B \-cgnfopruh
+]
+[ file ... ]
+.SH DESCRIPTION
+.I Nm68
+prints the name list (symbol table) of each object
+.I file
+in the argument list.
+If an argument
+is an archive, a listing for each object
+file in the archive will be produced.
+.PP
+Each symbol name is preceded by its value in hex
+and one of the letters
+.SM
+.B U
+(undefined),
+.SM
+.B A
+(absolute),
+.SM
+.B  T
+(text segment symbol),
+.SM
+.B D
+(data segment symbol),
+.SM
+.B B
+(bss segment symbol),
+If the symbol is local (non-external) the type letter is in
+lower case.
+The output is sorted alphabetically.
+.PP
+Options are:
+.TP
+.B  \-g
+Print only global (external) symbols.
+.TP
+.B \-n
+Sort numerically rather than alphabetically.
+.TP
+.B \-o
+Prepend file or archive element name to each
+output line rather than only once.
+.TP
+.B  \-p
+Don't sort; print in symbol-table order.
+.TP
+.B  \-r
+Sort in reverse order.
+.TP
+.B  \-d
+Print only defined symbols.
+.TP
+.B  \-u
+Print only undefined symbols.
+.TP
+.B \-h
+Print values in hex rather than in octal.  (
+.B \-x
+is a synonym for
+.B \-h
+\.)
+.TP
+.B \-c
+Print only C-style symbols (those beginning with `~' or `_'.)
+.TP
+.B \-f
+Give the name of each object file as it is processed.  This
+implies a
+.B \-p
+flag.  (If the
+.B \-p
+flag is not present, nm68 sorts symbols
+without regard to which object file they came from.)
+.SH SEE ALSO
+ar(1), ar(5), b.out(5)

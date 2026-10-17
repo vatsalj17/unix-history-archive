@@ -1,0 +1,43 @@
+MLDOMAIN ARPA
+MLNAME	BRL-VGR
+MLOCMACHINE BRL-VGR
+
+MDBM "/usr/src/newbrl/mmdf/testmmdf/table/mmdfdbm"
+
+; Table entries
+MTBL	local,		file="local",	show="Local Host Aliases"
+MTBL	brlnet,		file="brlnet",	show="BRLNET Hosts"
+MTBL	smtp,		file="smtp",	show="TCP/ARPA Hosts"
+MTBL	arpa,		file="arpa",	show="ARPA Domains"
+MTBL	list,		file="list",	show="List Pseudo Hosts"
+
+; Channel entries
+MCHN	local, show="Local Delivery", que=local, tbl=local,
+	pgm=local, mod=imm
+MCHN	brlnet, show="BRLNET", que=brlnet, tbl=brlnet
+	pgm=smtp, mod=reg, known=smtp, ap=822
+MCHN	smtp, show="SMTP/TCP", que=smtp, tbl=smtp
+	pgm=smtp, mod=reg, ap=822, confstr="BRL-VGR.ARPA"
+MCHN	list, show="Mailing List Processor", que=list, tbl=list
+	pgm=list, mod=imm
+
+; Domain tables
+MDMN    ARPA, show="ARPA Domain", table=arpa, flags=01
+
+MLOGDIR "/usr/src/newbrl/mmdf/testmmdf/log"
+MPHSDIR "/usr/src/newbrl/mmdf/testmmdf/log/phase"
+MTBLDIR "/usr/src/newbrl/mmdf/testmmdf/table"
+MQUEDIR "/usr/src/newbrl/mmdf/testmmdf/lock/home"
+MCMDDIR "/usr/src/newbrl/mmdf/testmmdf"
+MCHNDIR "/usr/src/newbrl/mmdf/testmmdf/chans"
+MLOGIN  mmdf
+MSUPPORT "mmdf@brl-vgr.arpa"
+PHLOG "/usr/src/newbrl/mmdf/testmmdf/log/ph.log"
+PHTRAN "/usr/src/newbrl/mmdf/testmmdf/log/ph.trn"
+
+;logging levels
+MMSGLOG     level=FST
+MCHANLOG    level=FST
+
+MWARNTIME	24
+MFAILTIME	48

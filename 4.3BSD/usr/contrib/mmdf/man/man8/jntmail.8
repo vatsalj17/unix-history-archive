@@ -1,0 +1,95 @@
+.TH JNTMAIL 8 MMDF
+.SH NAME
+JNT Mail Channel
+.SH DESCRIPTION
+.PP
+The JNT Mail channel is structured and invoked in the manner
+described in
+.IR channels (7).
+The channel generates files of the format specified in the JNT Mail
+Protocol.  Copies of the JNT Mail Protocol can be obtained from
+the Joint Network Team, c/o Rutherford Appleton Labs., Chilton,
+Oxon, UK.
+JNT Mail Files are created in the directory specified by the
+variable
+.br
+        char    *pn_quedir
+.br
+which is tailored by the parameter NIQUEDIR (see the MMDF installation guide).
+If #define VIATRACE  is set, the message header in the JNT
+Mail File will be modified to ensure that a correct receiving
+implementation will determine  a return path corresponding to
+that passed to the channel.
+.PP
+When the file has been created, a file transfer process is
+called.  Whilst this could in  principle be any File Transfer
+Protocol, it is expected that in general the NIFTP (blue book)
+protocol will be used.  The calling (execl) sequence is specified by
+the channel tailor parameter confstr.  If the string contains a
+sequence $(parm) where parm is one of the strings listed, the
+value appropriate to the file will be inserted:
+.ne 6
+.nf
+
+        file    - The full path of the JNT Mail File
+        host    - The host (LHS of channel table)
+        adr     - The address (RHS of channel table)
+        sender  - Error return address
+
+.fi
+.ne 16
+Examples:
+.nf
+
+For the York NIFTP:
+
+MCHN  janet    name=janet,que=janet,tbl=janet,
+        show="via Janet with NIFTP",
+        pgm=niftp,poll=0,mod=reg,ap=jnt,
+        confstr="/usr/lib/x25/mhhcp mhhcp $(FILE) $(ADR)"
+
+For the UCL/UKC NIFTP:
+
+MCHN  janet    name=janet,que=janet,tbl=janet,
+        show="via Janet with NIFTP",
+        pgm=niftp,poll=0,mod=reg,ap=jnt,
+        confstr="/usr/bin/cpf cpf -t -f\e"$(SENDER)\e" $(FILE) @$(ADR)"
+.fi
+.ne 15
+.PP
+The channel interprets the FILE Transfer Protocol exit values
+according to the values defined in h/jnt.h:
+.nf
+
+#define JNT_OK          0       (Successful)
+
+#define JNT_TEMP        1       (Temporary failure
+                                - MMDF will retry)
+                                (This is the default)
+
+#define JNT_PERM        75      (Permanent failure
+                                - MMDF will send
+                                an error message
+                                to the sender)
+
+.fi
+If JNT_OK is returned, the File Transfer Protocol is expected
+to unlink the JNT Mail File, to allow for spooled or
+non-spooled operation.   In other cases, the channel will unlink the
+file.
+.PP
+The JNT Mail channel runs setuid to daemon.  If it is used with
+a File Transfer Protocol which expects a different uid, both
+this uid and the ownership of the JNT Mail spool directory
+should be changed accordingly.
+.SH FILES
+.nf
+
+        <mmdflib>/chans/niftp
+        /usr/spool/jntmail.ni.???????
+        <mmdfsource>/h/jnt.h
+.fi
+.SH "SEE ALSO"
+.IR ni_niftp (8)
+.br
+.IR york-inst (8)

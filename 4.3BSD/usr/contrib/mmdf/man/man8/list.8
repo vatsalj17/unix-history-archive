@@ -1,0 +1,80 @@
+.TH "LIST" 8 "8 Nov 84"
+.SH NAME
+list \- list processor channel for MMDF
+.SH SYNOPSIS
+list
+.SH DESCRIPTION
+.I List
+is an MMDF channel program for handling mailing lists.
+The channel functions as a feed-through between 
+.I deliver
+and
+.I submit.
+The list channel has its own host table and domain table
+with one entry for the pseudo host ``list-processor'' or something
+similar.
+This program is called by the program \fIdeliver\fR and is not
+meant to be invoked by users directly.
+.PP
+The 
+.I list
+channel performs two basic services.  First, it postpones
+the verification of the list addresses and performs 
+the (possibly lengthy) verification
+in the background when the 
+.I list
+channel resubmits the message
+to the mail system.  This prevents tying up a network connection
+or a user's terminal when verifying a long mailing list.
+Second, the 
+.I list
+channel will, under special circumstances, change
+the return address for the message to a generic maintainer's address.
+The return address is determined by first taking the destination
+address (e.g. ``largelist'') and seeing if there is an address
+in the alias file called ``largelist\-request''.  If there is,
+then ``largelist-request'' is used as the return address.
+If that was not found, the list channel checks to see if
+the destination address has a trailing ``\-outbound''.
+If so, this is
+stripped and a ``\-request'' is added and the lookup in the
+alias file is made a second time.  If the ``\-request'' address
+is found, then that address is used as the return address.
+If no ``\-request'' address is found, then the original return address
+is used (normally the address of the sender).
+.PP
+To use the
+.I list
+channel to process a list, it is generally necessary
+to make three entries in the alias file(s).
+Let us say that we wish to set up a list called ``largelist''
+and we want this list to be processed by the
+.I list
+channel.
+We would need the following entries in the alias file:
+.nf
+.ta 2.0i
+.sp
+.in +.6i
+largelist:	largelist-outbound@list-processor
+.br
+largelist-outbound:	</usr/mmdf/lists/largelist-file
+.br
+largelist-request:	maintainer
+.in -.6i
+.fi
+.sp
+The first line causes mail sent to ``largelist'' to be sent through
+the list processor, readdressed to ``largelist-outbound''.
+The second line is what actually references the mailing list
+file for ``largelist''.
+The third line is optional, and is used to set up the
+(informal) standard maintenance address.  This \-\fIrequest\fR
+address, if present, will also be used by the 
+.I list
+channel
+as the return address for mail submitted to the list.
+.SH SEE ALSO
+deliver(8), submit(8)
+.SH FILES
+<mmdf-table-directory>/aliases \- to find list\fI\-request\fR addresses

@@ -1,0 +1,62 @@
+.TH MLIST 1
+.SH NAME
+mlist \- mailing list addition and query program
+.SH SYNOPSIS
+.B mlist
+[\-ch] [\-f filename] [arg.....]
+.SH DESCRIPTION
+.I Mlist
+is an interactive program that allows the user to create a new mailing list
+or specify changes to an old one, and uses
+\fIv6mail\fR(1) to send a request to the system administrator.
+For each list, there is a list manager
+indicated in the MMDF alias file by an alias of the form
+``foo-request'' where ``foo'' is the name of the list.
+This person, as well as the
+mailsystem owner and the superuser have a mechanism to add and
+remove any list entry.
+.I Mlist
+attempts to ensure that erroneous and duplicate entries do not
+get entered.  There is also a mechanism to verify the contents of a
+list.
+.PP
+.I Mlist
+may either be used in a self-explanatory interactive mode  (no
+arguments), or by use of flags.
+.RS
+.TP 4
+\-c
+initiates mail list creation request
+.TP 4
+\-h
+initiates help
+.TP 4
+\-f
+filename     specifies another help file
+.TP 4
+other args are taken as names of lists to manipulate
+.RE
+.PP
+Mailing list files should never be accessed directly by the
+user, and should always be owned by the mail system.  The mode of
+the file indicates how it should be handled.  There are four
+possibilities.
+.RE
+.TP 4
+666
+All users have list manager status
+.TP 4
+744
+Users may add or remove their own names
+.TP 4
+644
+Only list manager may make changes
+.TP 4
+600
+Contents of list private.  This does not affect usage controls.
+.RE
+.SH FILES
+/etc/mmdf/helplist for default helpfile.
+.SH "SEE ALSO"
+malias(1), tables(5), v6mail(1)
+

@@ -1,0 +1,651 @@
+56                                                                                                          N1N^!wn .S-@ALCR 0 <-@Bn-|AB1/.HnL/.BHnHn?.<Nj nJPn|%-n=|=nBn`-nH nHBXRni
+0.no/.?.?<NlVddSTXTX2-CI"jLxx2-CISTAR^dSTART.TEXTTRZN^O`O`XX0T{$R-}
+{$X-}
+PROGRAM SoundDemo;
+
+  {  Program to play with the new proto sound }
+  {  written by Andy Hertzfeld  Oct 3, 1982   }
+
+  {  modified for 4 voice ROM sound       -- Nov 2, 1982  }
+  {  for ROM 4T                           -- Jun 18, 1983 }
+  {  made to run under ToolBox, OSInterfc -- Jan 8, 1983  }
+  {  changes for new interfaces           -- Jun 26, 1984 }
+
+  {  Historical note:  since this program was written a long, long time ago,
+     please note that the programming style is a little strange in places. }
+
+   USES {$U-}
+      {$U Obj/Memtypes    } Memtypes,
+      {$U Obj/QuickDraw   } QuickDraw,
+      {$U Obj/OSIntf      } OSIntf,
+      {$U Obj/ToolIntf    } ToolIntf,
+      {$U Obj/Sane        } SANE,
+      {$U Obj/Elems       } Elems;
+
+   VAR
+      tempRect: Rect;
+      mousePt,myPt: Point;
+      myEvent: EventRecord;
+      theFolder: WindowPtr;
+      doneFlag: Boolean;
+      theMenu,theItem: INTEGER;
+      code: INTEGER;
+      whichWindow: WindowPtr;
+      whichControl: ControlHandle;
+      folRect: Rect;
+      mBox: Rect;
+      dial1,dial2,dial3,dial4: ControlHandle;
+      dialV: ControlHandle;
+      fullRect: Rect;
+
+      UserVol:  Integer;
+      soundTblPtr: FTSynthPtr;
+      MySoundRec: FTSoundRec;    {fixed size, so no reason to allocate on heap}
+      MySynthRec:  FTSynthRec;   {fixed size, so no reason to allocate on heap}
+      wave1,wave2,wave3,wave4, sinWave: Wave;
+      t,I: INTEGER;
+      waveWindow,topWindow: WindowPtr;
+      whichWave: INTEGER;
+      myMenu,menu2,menu3,deskMenu: MenuHandle;
+      mResult: LongInt;
+      title1,title2,title3,title4: Str255;
+      offSwitch: Boolean;
+      myString: Str255;
+      refNum: INTEGER;
+
+   PROCEDURE SetUpMenus;
+   {once only initialization for menus}
+
+      VAR
+         I: INTEGER;
+         menuFile: Text;
+         drvrType: ResType;
+
+      BEGIN
+         InitMenus; {initialize Unit Menus}
+         drvrType := 'DRVR';
+
+         myMenu := GetMenu(256);
+         menu2 := GetMenu(257);
+         menu3 := GetMenu(258);
+         deskMenu := GetMenu(1);
+
+         AddResMenu(deskMenu,drvrType);
+
+         InsertMenu(deskMenu,0);
+         InsertMenu(myMenu,0);
+         InsertMenu(menu2,0);
+         InsertMenu(menu3,0);
+         DrawMenuBar;
+      END;
+
+   PROCEDURE MakeTheFolder;
+   { set up and draw one folder }
+
+      VAR
+         tempRect: Rect;
+         folName: Str255;
+         tempPt: Point;
+
+      BEGIN
+         theFolder := GetNewWindow(1,NIL,NIL);
+
+         waveWindow := GetNewWindow(2,NIL,theFolder);
+         topWindow := theFolder;
+      END;
+
+   PROCEDURE MakeTheDials;
+
+      VAR
+         tempRect: Rect;
+
+      BEGIN
+         SetRect(mBox,120,30,280,46);
+         dial1 := NewControl(theFolder,mBox,' ',TRUE,0,0,8191,ScrollBarProc,1);
+         SetRect(mBox,120,60,280,76);
+         dial2 := NewControl(theFolder,mBox,' ',TRUE,0,0,8191,ScrollBarProc,2);
+         SetRect(mBox,120,90,280,106);
+         dial3 := NewControl(theFolder,mBox,' ',TRUE,0,0,8191,ScrollBarProc,3);
+         SetRect(mBox,120,120,280,136);
+         dial4 := NewControl(theFolder,mBox,' ',TRUE,0,0,8191,ScrollBarProc,4);
+
+         SetRect(mBox,76,160,256,192);
+         dialV := NewControl(theFolder,mBox,' ',TRUE,7,0,7,ScrollBarProc,5);
+      END;
+
+   PROCEDURE LabelControls;
+
+      BEGIN
+         MoveTo(30,42);
+         DrawString('Channel A');
+
+         MoveTo(30,72);
+         DrawString('Channel B');
+
+         MoveTo(30,102);
+         DrawString('Channel C');
+
+         MoveTo(30,132);
+         DrawString('Channel D');
+
+         MoveTo(140,208);
+         DrawString('Volume');
+      END;
+
+   PROCEDURE Triangle(VAR theWave: Wave);
+   { make a simple triangle wave }
+
+      VAR
+         I: INTEGER;
+
+      BEGIN
+         FOR I := 0 TO 127 DO
+            BEGIN
+            theWave[I] := 2*I;
+            theWave[255-I] := 2*I;
+            END;
+      END;
+
+   FUNCTION sineval (period:  INTEGER):  INTEGER;
+   CONST        Increment = 3.14159*2/256; {2 pi = waveform period; 256 samples}
+   VAR          newval, holder:  extended;
+
+   BEGIN
+      I2X (period, newval);
+      S2X (Single(Increment), holder);
+      MulX (holder, newval);
+      SinX (newval);
+      I2X (128, holder);
+      MulX (holder, newval);
+      AddX (holder, newval);
+      X2I (newval, period);
+      sineval := period;
+   END;
+
+
+
+   PROCEDURE buildSinWave;
+
+
+   VAR   Index :  Integer;
+
+      BEGIN
+         SetRnd (Downward);
+         For Index := 0 to 255 DO
+            BEGIN
+               SinWave[Index] := sineval (Index);
+            END;
+      END;
+
+   PROCEDURE mysine(VAR sine: Wave);
+
+   BEGIN
+      Sine := sinWave;
+   END;
+
+   PROCEDURE Square(VAR theWave: Wave);
+   { make a simple square wave }
+
+      VAR
+         I: INTEGER;
+
+      BEGIN
+         FOR I := 0 TO 127 DO
+            BEGIN
+            theWave[I] := ord (255); { ord() is needed because of compiler bug,
+                                       fixed in version 3.0 }
+            theWave[255-I] :=  0;
+            END;
+      END;
+
+   PROCEDURE CopyWave(VAR src,dst: Wave);
+
+      VAR
+         I: INTEGER;
+
+      BEGIN
+         FOR I := 0 TO 255 DO dst[I] := src[I];
+      END;
+
+   PROCEDURE InitSTab;
+
+      VAR
+         l: LongInt;
+
+      BEGIN
+         WITH soundTblPtr^.sndRec^ DO
+            BEGIN
+            duration := 8192;
+            l := 256;
+            sound1Rate := l*GetCtlValue(dial1);
+            sound1Phase := 0;
+
+            sound2Rate := l*GetCtlValue(dial2);
+            sound2Phase := 0;
+
+            sound3Rate := l*GetCtlValue(dial3);
+            sound3Phase := 0;
+
+            sound4Rate := l*GetCtlValue(dial4);
+            sound4Phase := 0;
+
+            sound1Wave := @wave1;
+            sound2Wave := @wave2;
+            sound3Wave := @wave3;
+            sound4Wave := @wave4;
+            END
+      END;
+
+   PROCEDURE SetPitch(voiceIndex: INTEGER; pitch: INTEGER);
+
+      VAR
+         l: LongInt;
+
+      BEGIN
+         l := 256;
+         WITH soundTblPtr^.sndRec^ DO
+            BEGIN
+            CASE voiceIndex OF
+               1: sound1Rate := l*pitch;
+               2: sound2Rate := l*pitch;
+               3: sound3Rate := l*pitch;
+               4: sound4Rate := l*pitch
+            END
+            END
+      END;
+
+   PROCEDURE BumpDial(whichControl: ControlHandle; amount: INTEGER);
+
+      VAR
+         v: INTEGER;
+
+      BEGIN
+         v := GetCtlValue(whichControl)+amount;
+         SetCtlValue(whichControl,v);
+
+         If whichControl = dial1 THEN
+            SetPitch(1,v)
+         ELSE If whichControl = dial2 THEN
+            SetPitch(2,v)
+         ELSE If whichControl = dial3 THEN
+            SetPitch(3,v)
+         ELSE If whichControl = dial4 THEN
+            SetPitch(4,v)
+         ELSE
+            BEGIN
+               If v < 0 then v := 0
+               Else If v > 7 then v := 7;
+               SetsoundVol(v)
+            END
+      END;
+
+   PROCEDURE ScrollUp(whichControl: ControlHandle; theCode: INTEGER);
+
+      BEGIN
+         IF theCode=inUpButton THEN BumpDial(whichControl,-1);
+      END;
+
+   PROCEDURE ScrollDown(whichControl: ControlHandle; theCode: INTEGER);
+
+      BEGIN
+         IF theCode=inDownButton THEN BumpDial(whichControl,1);
+      END;
+
+   PROCEDURE PageUp(whichControl: ControlHandle; theCode: INTEGER);
+
+      BEGIN
+         IF theCode=inPageUp THEN
+            IF whichControl<>dialV THEN
+               BumpDial(whichControl,-200)
+            ELSE
+               BumpDial(whichControl,-1)
+      END;
+
+   PROCEDURE PageDown(whichControl: ControlHandle; theCode: INTEGER);
+
+      BEGIN
+         IF theCode=inPageDown THEN
+            IF whichControl<>dialV THEN
+               BumpDial(whichControl,200)
+            ELSE
+               BumpDial(whichControl,1);
+      END;
+
+   PROCEDURE DrawTheWave(theWave: Wave);
+
+      VAR
+         I,J: INTEGER;
+
+      BEGIN
+         EraseRect(thePort^.portRect);
+         FOR I := 0 TO 255 DO
+            BEGIN
+            J := 255-theWave[I];
+            SetRect(tempRect,I,J,I+1,J+1);
+            PaintRect(tempRect);
+            END;
+      END;
+
+   PROCEDURE DrawWaveFolder;
+
+      BEGIN
+         SetPort(waveWindow);
+         CASE whichWave OF
+         1:
+            DrawTheWave(wave1);
+         2:
+            DrawTheWave(wave2);
+         3:
+            DrawTheWave(wave3);
+         4: DrawTheWave(wave4)
+         END    {case}
+      END;
+
+   PROCEDURE SetNewPt(VAR theWave: Wave; myPt: Point);
+
+      VAR
+         h,v,J: INTEGER;
+
+      BEGIN
+         h := myPt.h; v := myPt.v;
+
+         IF (h<0) OR (h>255) THEN EXIT(SetNewPt);
+         IF (v<0) OR (v>255) THEN EXIT(SetNewPt);
+
+         IF v=theWave[h] THEN EXIT(SetNewPt);
+
+         J := 255-theWave[h];
+         SetRect(tempRect,h,J,h+1,J+1);
+         EraseRect(tempRect);
+
+         tempRect.top := v; tempRect.bottom := tempRect.top+1;
+         PaintRect(tempRect);
+
+         theWave[h] :=  255-v;
+
+      END;
+
+   PROCEDURE EditTheWave(VAR theWave: Wave);
+
+      VAR
+         lastX,lastY: INTEGER;
+         I: INTEGER;
+         thePt: Point;
+
+      BEGIN
+         GetMouse(myPt);
+         lastX := myPt.h; lastY := myPt.v;
+         WHILE StillDown DO
+            BEGIN
+            GetMouse(myPt);
+            IF myPt.h=lastX THEN
+               SetNewPt(theWave,myPt)
+            ELSE IF myPt.h<lastX THEN
+               BEGIN
+               I := lastX-1;
+               REPEAT
+                  thePt.h := I;
+                  thePt.v := lastY;
+                  SetNewPt(theWave,thePt);
+                  I := I-1;
+               UNTIL I<myPt.h;
+               END
+            ELSE
+               BEGIN
+               I := lastX+1;
+               REPEAT
+                  thePt.h := I;
+                  thePt.v := lastY;
+                  SetNewPt(theWave,thePt);
+                  I := I+1;
+               UNTIL I>myPt.h;
+               END;
+            lastX := myPt.h; lastY := myPt.v;
+            END;
+      END;
+
+   PROCEDURE EditWaveForm;
+
+      BEGIN
+         SetPort(waveWindow);
+         CASE whichWave OF
+         1:
+            EditTheWave(wave1);
+         2:
+            EditTheWave(wave2);
+         3:
+            EditTheWave(wave3);
+         4: EditTheWave(wave4)
+         END    {case}
+      END;
+
+   PROCEDURE ChangeTheWave(which: INTEGER; VAR theWave: Wave);
+
+      BEGIN
+         CASE which OF
+         1:
+            Triangle(theWave);
+         2:
+            Square(theWave);
+         3:
+            mysine(theWave);
+         4:
+            CopyWave(wave1,theWave);
+         5:
+            CopyWave(wave2,theWave);
+         6:
+            CopyWave(wave3,theWave);
+         7: CopyWave(wave4,theWave)
+         END;   {case}
+
+         DrawWaveFolder;
+      END;
+
+   PROCEDURE ChangeWave(which: INTEGER);
+
+      BEGIN
+         CASE whichWave OF
+         1:
+            ChangeTheWave(which,wave1);
+         2:
+            ChangeTheWave(which,wave2);
+         3:
+            ChangeTheWave(which,wave3);
+         4: ChangeTheWave(which,wave4)
+         END    {case}
+      END;
+
+   PROCEDURE InitWave;
+
+      BEGIN
+         Triangle(wave1);
+         Square(wave2);
+         mysine(wave3);
+         Triangle(wave4);
+      END;
+
+   BEGIN
+      InitGraf(@thePort);
+      InitFonts;
+      FlushEvents(everyEvent,0);
+
+      InitWindows;
+      SetUpMenus;
+      SetRect(fullRect,0,20,512,342);
+
+      title1 := 'Channel A WaveForm';
+      title2 := 'Channel B WaveForm';
+      title3 := 'Channel C WaveForm';
+      title4 := 'Channel D WaveForm';
+      buildSinWave;
+      MakeTheFolder;
+
+      SetPort(theFolder);
+      MakeTheDials;
+      LabelControls;
+      GetSoundVol (UserVol);  {save and restore--hope user doesn't use control panel}
+
+      doneFlag := FALSE;
+      SoundTblPtr := @MySynthRec;
+      SoundTblPtr^.mode := ftMode;
+      SoundTblPtr^.sndRec := @MySoundRec;
+      InitWave;
+      DrawWaveFolder;
+      SetsoundVol(0);   {minimize pop}
+      InitSTab;
+      StartSound(Pointer(soundTblPtr),SizeOf (FTSynthRec),NIL);
+      SetsoundVol(7);
+      offSwitch := FALSE;
+
+      whichWave := 1;
+      CheckItem(myMenu,1,TRUE);
+      InitCursor;
+
+      REPEAT
+         SystemTask;
+
+         soundTblPtr^.sndRec^.duration := 8192;
+         IF GetNextEvent(everyEvent,myEvent) THEN
+            CASE myEvent.what OF
+
+               mouseDown:
+                  BEGIN
+                  code := FindWindow(myEvent.where,whichWindow);
+                  myPt := myEvent.where;
+                  WITH whichWindow^.portBits.bounds DO
+                     BEGIN
+                     myPt.h := myPt.h+left;
+                     myPt.v := myPt.v+top;
+                     END;
+
+                  Case code of
+                  inMenuBar:
+                     BEGIN
+                     theMenu := 0; theItem := 0;  {???}
+                     mResult := MenuSelect(myEvent.where);
+                     theMenu := HiWord(mResult); theItem := LoWord(mResult);
+
+                     IF (theItem>0) THEN
+                        CASE theMenu OF
+                        256:
+                           BEGIN
+                           CheckItem(myMenu,whichWave,FALSE);
+                           CheckItem(myMenu,theItem,TRUE);
+                           IF whichWave<>theItem THEN
+                              BEGIN
+                              CASE theItem OF
+                              1:
+                                 SetWTitle(waveWindow,title1);
+                              2:
+                                 SetWTitle(waveWindow,title2);
+                              3:
+                                 SetWTitle(waveWindow,title3);
+                              4: SetWTitle(waveWindow,title4)
+                              END;         {case}
+                              whichWave := theItem;
+                              DrawWaveFolder;
+                              END
+                           END;
+                        257:
+                           ChangeWave(theItem);
+                        258:
+                           IF offSwitch THEN
+                              BEGIN
+                              StartSound(Pointer(soundTblPtr),
+                                         SizeOf (FTSynthRec),NIL);
+                              offSwitch := FALSE;
+                              SetItem(menu3,1,'Sound Off');
+                              END
+                           ELSE
+                              BEGIN
+                              GetSoundVol (I);
+                              SetSoundVol (0); {minimize pop}
+                              StopSound;
+                              SetSoundVol (I); {restore volume}
+                              offSwitch := TRUE;
+                              SetItem(menu3,1,'Sound On');
+                              END;
+                        1:
+                           BEGIN
+                           GetItem(deskMenu,theItem,myString);
+                           refNum := OpenDeskAcc(myString)
+                           END
+                        END;  {case}
+
+                     HiLiteMenu(0);
+                     END; { onMenuBar }
+
+                  inDesk:
+                     BEGIN
+                     END;
+                  inDrag:
+                     DragWindow(whichWindow,myEvent.where,fullRect);
+                  inGoAway:
+                     BEGIN
+                     IF TrackGoAway(whichWindow,myEvent.where) THEN
+                        doneFlag := TRUE;
+                     END;
+                  inSysWindow:
+                     SystemClick(myEvent,whichWindow);
+                  inContent:
+                     BEGIN
+                     IF topWindow<>whichWindow THEN
+                        BEGIN
+                        SelectWindow(whichWindow);
+                        topWindow := whichWindow;
+                        END
+                     ELSE IF whichWindow=waveWindow THEN
+                        EditWaveForm
+                     ELSE
+                        BEGIN
+                        code := FindControl(myPt,whichWindow,whichControl);
+                        CASE code OF
+                        inUpButton:
+                           t := TrackControl(whichControl,myPt,@ScrollUp);
+                        inDownButton:
+                           t := TrackControl(whichControl,myPt,@ScrollDown);
+                        inPageUp:
+                           t := TrackControl(whichControl,myPt,@PageUp);
+                        inPageDown:
+                           t := TrackControl(whichControl,myPt,@PageDown);
+                        inThumb:
+                           BEGIN
+                           code := TrackControl(whichControl,myPt,NIL);
+                           BumpDial(whichControl,0);
+                           END
+                        END              {case}
+
+                        END
+                     END
+                  END    {of case code}
+
+               END; { of button down }
+
+               updateEvt:
+                  BEGIN
+                  whichWindow := WindowPtr(myEvent.message);
+                  SetPort(whichWindow);
+                  BeginUpdate(whichWindow);
+
+                  IF whichWindow=waveWindow THEN
+                     DrawWaveFolder
+                  ELSE
+                     BEGIN
+                     DrawControls(whichWindow);
+                     LabelControls;
+                     END;
+
+                  EndUpdate(whichWindow);
+                  END; {of update event}
+
+               OTHERWISE
+                  BEGIN
+                  END;
+
+            END; { of event case }
+
+      UNTIL doneFlag;
+      SetSoundVol (0);
+      StopSound;
+      SetSoundVol (UserVol);
+   END.

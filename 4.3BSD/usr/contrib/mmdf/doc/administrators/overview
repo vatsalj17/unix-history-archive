@@ -1,0 +1,145 @@
+.\".AU
+.\"Douglas P. Kingston III
+.\".AI
+.\"Ballistic Research Laboratory
+.\"USA AMCCOM
+.\"Aberdeen Proving Ground, Maryland.  21005
+.\"(301) 278-6651
+.NH 1
+Overview
+.NH 2
+Introduction
+.PP
+The \*M mail system has seen a great deal of development over the
+past several years and has involved a large number of people.
+This guide is an attempt to gather together the information
+which until now was only passed along as folklore or learned by reading
+the code.  The guide is divided into five parts.  The Overview will attempt
+to give a summary of the contents of the \*M distribution and where
+to look for more information.
+The next section explains, step by step, how to compile your own
+tailored \*M.
+The following sections cover runtime tailoring from the configuration
+file, building host, domain, and alias tables, and finally tuning
+\*M for best performance on your system.
+The \*M programs are all linked with a library that contains a default
+compiled-in configuration (which may be very scant).
+The compiled-in values can be overridden or augmented by the
+runtime tailoring file and tables.
+.NH 2
+Available Channels
+.NH 3
+The Local Channel
+.PP
+The local channel is responsible for delivering mail to mailboxes and
+processes on the local machine.  It normally delivers directly to
+a mailbox file in the user's home directory or /usr/spool/mail.
+It is also capable of delivering to processes or alternate files under
+the control of the alias file and/or the user's own "maildelivery"
+file, as described in manual section \fImaildelivery(5)\fR.  There
+is also provision for a system default maildelivery file if the user
+does not supply one.
+.NH 3
+The List Channel
+.PP
+The list channel is a special channel that remails messages.
+The channel simply invokes \fBsubmit\fR and feeds the addresses
+and text back into the \*M mail system.
+This is often useful to avoid long address verification
+procedures at posting time or to force the verification
+take place in the background.  The list channel also knows how
+to replace the return address of a message with the list-request
+address when appropriate.
+.NH 3
+The SMTP Channel
+.PP
+This channel implements the Simple Mail Transfer Protocol as described
+in RFC-821.  There is currently code to support the 4.1aBSD, 4.2BSD,
+and 4.3BSD network semantics,
+BBN TCP network semantics, and 2.9BSD semantics.
+.NH 3
+The Delay Channel
+.PP
+Generally used in conjunction with nameserver support.
+If there is a nameserver failure for whatever reason, and this channel
+is configured, the mail will be conditionally accepted and queued
+to the delay channel.
+The delay channel will re-submit the mail at a later date until a
+definitive reply is received from the nameserver.
+.NH 3
+The BadUsers Channel
+.PP
+There is no specific code associated with this channel.
+Submit knows if it finds a username it does not know, it can
+queue it on this channel for forwarding to another host that
+has a better user database.
+The channel name is hardcoded as ``badusers''.
+.NH 3
+The BadHosts Channel
+.PP
+Like the BadUsers channel, except this is for mail to hosts
+that submit does not know.
+The channel name is hardcoded as ``badhosts''.
+.NH 3
+The Phone Channel
+.PP
+The PhoneNet dialup network protocol is supported by this channel.
+PhoneNet is a dialup package developed at UDEL
+and used extensively by the CSNET and the Army
+as a link layer for \*M for its hosts not directly connected
+to a Local or Wide-Area network.
+.NH 3
+The Pobox Channel
+.PP
+This is a do-nothing channel that allows queued mail to be picked
+up by another process.  The Pobox channel is typically used in a PhoneNet
+slave site, but is by no means limited to this.  In the PhoneNet application,
+the Pobox channel passes mail from the queue (via deliver) to the phone (via
+the PhoneNet Slave program).
+.NH 3
+The UUCP Channel
+.PP
+UUCP mailing is supported by this channel.
+Addresses are converted as necessary.
+Inbound mail is converted into RFC822 format, preserving
+existing 822 format header lines.
+Outbound, ``From<space>'' lines are added
+and rmail arguments
+are generated in UUCP bang route format.
+The channel will make use of pathalias output paths to simplify
+incoming addresses and to route outgoing addresses.
+.NH 3
+The NIFTP Channel
+.PP
+NIFTP is a batched file transfer facility used in the UK.  This channel
+uses NIFTP to send and receive mail by creating batched requests that send
+mail as files.
+.PP
+The NIFTP channel produces message files formatted according to the
+JNT Mail Protocol.  These are transferred by a file transfer protocol,
+typically the UK NIFTP (Network Independent FTP), to the remote site.
+.NH 3
+The BBoards+POP Channel
+.PP
+This channel is used to interface into the BBoards system that is part
+of MH.{4,5,&6} as developed at UCI.
+The channel is also compiled to a slightly different version for
+supporting Post Office box Protocol (POP).  (Provided by Marshall Rose)
+.NH 3
+The EAN Channel
+.PP
+This channel is used to access the EAN X.400 system produced by the 
+University of British Columbia.
+.NH 3
+The Program Channel
+.PP
+This channel is used to interface well behaved programs to the \*M mail
+system.
+It does no more than try to reliably pass mail in or out of \*M.
+Systems that require special reformatting of the message (such
+as UUCP) cannot use this channel.
+For example this channel could be used to interface the ACSNET
+network or a Batch SMTP implementation both of which prefer
+to deal with RFC822 format mail.
+This is a new channel and may change somewhat in the future to make it
+more powerful.

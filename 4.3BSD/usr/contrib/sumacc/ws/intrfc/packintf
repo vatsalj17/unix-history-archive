@@ -1,0 +1,237 @@
+3. "6F^5D!$^:UU.;UNIT PackIntf;
+
+{ Jan 28, 1984.  Rony Sebok   Interface for Macintosh packages              }
+{ Modification history:                                                     }
+{       11 Apr 84   JTC   Modified a la Rose.                               }
+
+{ Copyright 1982 by Apple Computer, Inc.  All Rights Reserved.              }
+
+INTERFACE
+
+USES    {$U-}
+        {$U obj/MemTypes  }  MemTypes,
+        {$U obj/QuickDraw }  QuickDraw,
+        {$U Obj/OsIntf    }  OsIntf,
+        {$U obj/toolIntf  }  ToolIntf;
+CONST
+
+{constants for Standard File package}
+  putDlgID = -3999;     {SFPutFile dialog template ID}
+
+  putSave = 1;          {save button}
+  putCancel = 2;        {cancel button}
+  putEject = 5;         {eject button}
+  putDrive = 6;         {drive button}
+  putName = 7;          {editTExt item for file name}
+
+  getDlgID = -4000;     {SFGetFile dialog template ID}
+
+  getOpen = 1;          {open button}
+  getCancel = 3;        {cancel button}
+  getEject = 5;         {eject button}
+  getDrive = 6;         {drive button}
+  getNmList = 7;        {userItem for file name list}
+  getScroll = 8;        {userItem for scroll bar}
+
+
+
+{constants for manipulation of international resources}
+  {masks used for setting and testing currency format flags}
+  currLeadingZ = 128;   {set if leading zero}
+  currTrailingZ = 64;   {set if trailing zero}
+  currNegSym = 32;      {set if minus sign for negative num, reset if parentheses}
+  currSymLead = 16;     {set if currency symbol leads, reset if trails}
+
+  {constants specifying absolute value of short date form}
+  MDY = 0;              {month,day,year}
+  DMY = 1;              {day,month,year}
+  YMD = 2;              {year,month,day}
+
+  {masks used for date element format flags}
+  century = 128;         {set if century, reset if no century}
+  mntLdingZ = 64;        {set if leading 0 for month}
+  dayLdingZ = 32;        {set if leading zero for day}
+
+  {masks used for time element format flags}
+  hrLeadingZ = 128;      {set if leading zero for hours}
+  minLeadingZ = 64;      {set if leading zero for minutes}
+  secLeadingZ = 32;      {set if leading zero for seconds}
+
+  {country codes for version numbers}
+  verUS         = 0;
+  verFrance     = 1;
+  verBritain    = 2;
+  verGermany    = 3;
+  verItaly      = 4;
+  verNetherlands   = 5;
+  verBelgiumLux    = 6;
+  verSweden        = 7;
+  verSpain         = 8;
+  verDenmark       = 9;
+  verPortugal      = 10;
+  verFinland       = 11;
+  verNorway        = 12;
+  verIsrael        = 13;
+  verJapan         = 14;
+  verAustralia     = 15;
+  verArabia        = 16;
+  verFrCanada      = 17;
+  verSwissFr       = 18;
+  verSwissGr       = 19;
+  verGreece        = 20;
+  verIceland       = 21;
+  verMalta         = 22;
+  verCyprus        = 23;
+  verTurkey        = 24;
+  verYugoslavia    = 25;
+
+
+TYPE
+
+{Standard File}
+SFReply = RECORD
+            good: BOOLEAN;      {ignore command if FALSE}
+            copy: BOOLEAN;      {not used}
+            fType: OsType;      {file type or not used}
+            vRefNum: INTEGER;   {volume reference number}
+            version: INTEGER;   {file's version number}
+            fName: String[63];  {file name}
+          END; {SFReply}
+SFTypeList = ARRAY[0..3] OF OSType;
+
+
+{interface for international resources}
+intl0Hndl = ^intl0Ptr;
+intl0Ptr = ^intl0REc;
+intl0Rec = PACKED RECORD
+    decimalPt: char;                {ASCII character for decimal point}
+    thousSep: char;                 {ASCII character for thousand separator}
+    listSep: char;                  {ASCII character for list separator}
+    currSym1: char;                 {ASCII for currency symbol (3 bytes long)}
+    currSym2: char;
+    currSym3: char;
+    currFmt: Byte;                  {currency format flags}
+    dateOrder: Byte;                {short date form - DMY,YMD, or MDY}
+    shrtDateFmt: Byte;              {date elements format flag}
+    dateSep: char;                  {ASCII for date separator}
+    timeCycle: Byte;                {indicates 12 or 24 hr cycle}
+    timeFmt: Byte;                  {time elements format flags}
+    mornStr: PACKED ARRAY[1..4] OF char; {ASCII for trailing string from 0:00 to 11:59}
+    eveStr: PACKED ARRAY[1..4] OF char; {ASCII for trailing string from 12:00 to 23:59}
+    timeSep: char;                  {ASCII for the time separator}
+    time1Suff: char;                {suffix string used in 24 hr mode}
+    time2Suff: char;                {8 characters long}
+    time3Suff: char;
+    time4Suff: char;
+    time5Suff: char;
+    time6Suff: char;
+    time7Suff: char;
+    time8Suff: char;
+    metricSys: Byte;                {indicates metric or English system}
+    intl0Vers: INTEGER;             {version: high byte = country, low byte = vers}
+  END; {intl0Rec}
+
+DateForm = (shortDate, longDate, abbrevDate);
+
+intl1Hndl = ^intl1Ptr;
+intl1Ptr = ^intl1REc;
+intl1Rec = PACKED RECORD
+    days: ARRAY[1..7] OF String[15];    {length and word for Sunday through Monday}
+    months: ARRAY[1..12] OF String[15]; {length and word for January to December}
+    suppressDay: Byte;                  {0 for day of week, 255 for no day of week}
+    lngDateFmt: Byte;                   {expanded date format 0 or 255}
+    dayLeading0: Byte;                  {255 for leading 0, 0 for no leading 0}
+    abbrLen: Byte;                      {length of abbreviated names in long form}
+    st0: PACKED ARRAY[1..4] OF char;           {the string st0}
+    st1: PACKED ARRAY[1..4] OF char;           {the string st1}
+    st2: PACKED ARRAY[1..4] OF char;           {the string st2}
+    st3: PACKED ARRAY[1..4] OF char;           {the string st3}
+    st4: PACKED ARRAY[1..4] OF char;           {the string st4}
+    intl1Vers: INTEGER;                 {version word}
+    localRtn: INTEGER;                  {routine for localizing mag comp;       }
+                                        {minimal case is $4E75 for RTS, but     }
+                                        {routine may be longer than one integer.}
+  END; {intl1Rec}
+
+
+
+{Standard File}
+PROCEDURE SFPutFile(where: Point; prompt: Str255; origName: Str255;
+                    dlgHook: ProcPtr; VAR reply: SFReply);
+PROCEDURE SFPPutFile(where: Point; prompt: Str255; origName: Str255;
+                     dlgHook: ProcPtr; VAR reply: SFReply; dlgID: INTEGER;
+                     filterProc: ProcPtr);
+PROCEDURE SFGetFile(where: Point; prompt: Str255; fileFilter: ProcPtr;
+                    numTypes: INTEGER; typeList: SFTypeList; dlgHook: ProcPtr;
+                    VAR reply: SFReply);
+PROCEDURE SFPGetFile(where: Point; prompt: Str255; fileFilter: ProcPtr;
+                     numTypes: INTEGER; typeList: SFTypeList; dlgHook: ProcPtr;
+                     VAR reply: SFReply; dlgID: INTEGER; filterProc: ProcPtr);
+
+{interface to Disk Initialization Package}
+PROCEDURE DILoad;
+PROCEDURE DIUnLoad;
+FUNCTION DIBadMount(where: Point; evtMessage: LongInt): INTEGER;
+FUNCTION DIFormat(drvNum: INTEGER): OsErr;
+FUNCTION DIVerify(drvNum: INTEGER): OsErr;
+FUNCTION DIZero(drvNum: INTEGER; volName: Str255): OsErr;
+
+
+{interface to International Utilities}
+FUNCTION  IUGetIntl(theID: INTEGER): Handle;
+PROCEDURE IUSetIntl(refNum: INTEGER; theID: INTEGER; intlParam: Handle);
+PROCEDURE IUDateString(dateTime: LongInt; longFlag: DateForm; VAR result: Str255);
+PROCEDURE IUDatePString(dateTime: LongInt; longFlag: DateForm; VAR result: Str255;
+                     intlParam: Handle);
+PROCEDURE IUTimeString(dateTime: LongInt; wantSeconds: BOOLEAN; VAR result: Str255);
+PROCEDURE IUTimePString(dateTime: LongInt; wantSeconds: BOOLEAN; VAR result: Str255;
+                     intlParam: Handle);
+FUNCTION  IUMetric: BOOLEAN;
+FUNCTION  IUCompString(aStr,bStr: Str255): INTEGER;
+FUNCTION  IUEqualString(aStr,bStr: Str255): INTEGER;
+FUNCTION  IUMagString(aPtr,bPtr: Ptr; aLen,bLen: INTEGER): INTEGER;
+FUNCTION  IUMagIDString(aPtr,bPtr: Ptr; aLen,bLen: INTEGER):INTEGER;
+
+
+{interface to Binary-Decimal Conversion}
+
+PROCEDURE StringToNum(theString: Str255; VAR theNum: LongInt);
+PROCEDURE NumToString(theNum: LongInt; VAR theString: Str255);
+
+IMPLEMENTATION
+
+{Binary-Decimal Conversion}
+
+PROCEDURE StringToNum;EXTERNAL;
+PROCEDURE NumToString;EXTERNAL;
+
+{Standard File}
+PROCEDURE SFPutFile;EXTERNAL;
+PROCEDURE SFPPutFile;EXTERNAL;
+PROCEDURE SFGetFile;EXTERNAL;
+PROCEDURE SFPGetFile;EXTERNAL;
+
+{Disk Initialization}
+PROCEDURE DILoad;EXTERNAL;
+PROCEDURE DIUnLoad;EXTERNAL;
+FUNCTION DIBadMount;EXTERNAL;
+FUNCTION DIFormat;EXTERNAL;
+FUNCTION DIVerify;EXTERNAL;
+FUNCTION DIZero;EXTERNAL;
+
+{interface to International Utilities}
+FUNCTION IUGetIntl;EXTERNAL;
+PROCEDURE IUSetIntl;EXTERNAL;
+PROCEDURE IUDateString;EXTERNAL;
+PROCEDURE IUDatePString;EXTERNAL;
+PROCEDURE IUTimeString;EXTERNAL;
+PROCEDURE IUTimePString;EXTERNAL;
+FUNCTION IUMetric;EXTERNAL;
+FUNCTION  IUCompString;EXTERNAL;
+FUNCTION  IUEqualString;EXTERNAL;
+FUNCTION IUMagString;EXTERNAL;
+FUNCTION IUMagIDString;EXTERNAL;
+
+
+END. { of unit }
+

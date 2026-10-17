@@ -1,0 +1,87 @@
+Old Way of Downloading (using fromhex/tohex).
+
+Back in the dark ages before macget/macput, resource files were
+downloaded in 'hex' form, and then converted to binary.  To obtain
+the printable hex form of a program, 'tohex' was used in the
+compilation cycle:  'tohex <grow.rsrc >grow.dl'.  Then on the
+Mac, 'fromhex' converted the printable scroll-off output of 
+MacTerminal, to binary.
+
+For historians, or those who are just curious, these were the
+steps:
+
+After obtaining a download file (e.g. grow.dl) from the
+compilation cycle, you download it as follows:
+
+[1] Launch MacTerminal.  When it comes up, type cat grow.dl.
+    The file will scroll by on the screen and at the same
+    time MacTerminal will be saving the 'lines off the top'
+    into a file.  If you were previously using MacTerminal
+    before the downloading step, then you will want to
+    select the clear lines off top menu command before cat-
+    ting the file.  Alternately you could turn on the File
+    Transfer / Remember Lines off Top mode just before the
+    cat.  Personally, I use another terminal for my VAX work
+    and I throw an RS232 switch just before I invoke MacTer-
+    minal and cat the file.
+
+[2] With early versions of MacTerminal, the output file is
+    called TermCache.  The latest version of MacTerminal
+    places this output into the data fork of your MacTermi-
+    nal configuration file.  For example if my configuration
+    file is called 'C', the baud rate settings and so forth
+    are held in the resource fork of C, while the 'scroll-
+    off' is placed in the data fork of C.
+
+[3] After the cat is complete, hit a few more CRs, to ensure
+    that the lines are 'scrolled off the top' and thus
+    saved.  (There's a shell file in test/mcat to do this if
+    you're lazy).  Then exit MacTerminal.
+
+[4] The fromhex program takes its input from a file called
+    'C' and places the output on 'C prog'.  If the output
+    from MacTerminal is not already named 'C', select it
+    with the mouse and type 'c'.  This will change the name
+    (case is not important).  Now launch 'fromhex'.  If all
+    works correctly it will read 'C' and create an execut-
+    able 'C prog'.  If the checksum fails (very rare), it
+    will beep at you, which tells you to try the transfer
+    over again with MacTerminal.
+
+[5] Finally (phew!) you can launch 'C prog' and it will exe-
+    cute.  Rename 'C prog' to something else if you want to
+    keep it around and run fromhex some more.  If your pro-
+    gram uses a special icon (as do the samples provided), a
+    strange feature of the 'finder' requires that the 'bun-
+    dle' bit be set at least once on one of these binaries.
+    You can use the 'Set File' program for this.  After
+    finder caches the icon in it's 'DeskTop', further bundle
+    bits are not needed.
+
+Although macput is now a much better way of downloading your
+files, you will occasionally see a 'fromhex' format binary program
+posted to a bboard or somesuch.  It is a handy way to send a program
+binary thru the mail.
+
+In decoding such programs, you can either use the steps above
+(a Mac C version of fromhex is in the 'cmd' directory), or you
+can simply convert the hex to binary on your UNIX and download
+as normal with macput.  This cuts the size of the file transfered
+to your Mac in half (of course).  The UNIX version of fromhex
+is called 'fromhexu' in the 'cmd' directory.
+
+	[at sending side]
+	% tohex <grow.rsrc >grow.dl
+	% mail john@china
+	John, here's the grow program:
+	~r grow.dl
+	^D
+
+	[at the receiving site, china]
+	% ed mailfile
+	1,12d			[delete the mail header (e.g. 1st 12 lines)]
+	w grow.dl
+	q
+	% fromhexu <grow.dl >grow.rsrc
+	checksum good!
+	% macput -r grow

@@ -1,0 +1,47 @@
+Date:    Tue, 7 Jan 86 15:22:04 GMT
+From: Julian Pardoe <jbdp@cl.cam.ac.uk>
+Subject: The `prog' channel
+
+The  outgoing side (sendprog) consists of the following (fairly standard)
+modules:
+    ch_prog  qu2pr_send pr_wtmail
+
+The  incoming  side (recvprog) consists of a main module pr2mm_send and a
+module pr_errmsg which contains various bits  of  code  associated  with
+the  reporting  of errors.  Its main failing is that is does no logging,
+but with SAFEFORK #defined it does a good job at ensuring  failures  are
+reported.
+
+There  are  probably  several  ways  the channel could be improved.  Its
+most obvious failing is that sendprog has no understanding  of  the  code
+returned  by  the called program,  currently treating all non-zero codes
+as temporary errors (if I've done it correctly).
+
+Knowledge  of  these  could  most  easily  be  built  in  by  adding the
+possibility of a configuration file,  specified by  having  `<'  as  the
+first  letter  of  the configuration parameter.  This file would contain
+the command line and further information.  I could imagine  one  reading
+something like:
+
+    # configuration file for the example channel
+    command /bin/program -s $(from) $(to.local)
+
+    #define return code values: code(s) MMDF_error descriptive_string
+    error 0   OK   message delivered
+    error 1   PARM invalid parameter
+    error 2-9 AGN  service not available
+
+    # norelay: implies that this program can deliver mail only
+    # to its ultimate destination (often set when $(to.local) is
+    # specified as this means we're throwing away all host names)
+    norelay 
+
+
+Julian Pardoe
+-------------
+
+University of Cambridge         Tel:     +44 223 352435 ext. 265
+        Computer Laboratory     Arpa:    <@ucl-cs: jbdp@cl.cam.ac.uk>
+Corn Exchange Street            Janet:   jbdp@UK.AC.Cam.CL
+CAMBRIDGE, CB2 3QG              UUCP:    mcvax!ukc!cl-jenny!jbdp
+Great Britain

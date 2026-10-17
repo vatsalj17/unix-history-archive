@@ -1,0 +1,189 @@
+.TH QUEUE 5
+'ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.SH NAME
+MMDF QUEUE FILES \- for storing mail in transit
+.SH SYNOPSIS
+.nf
+quedfldir[]  =  e.g.: "/usr/mmdf/lock/home"
+.fi
+.SH DESCRIPTION
+.PP
+MMDF stores mail in an isolated part of the file system, so
+that only authorized software may access the mail.
+Mail is stored under the directory sub-tree, specified in the
+.I conf.c
+global variable quedfldir[].  
+.PP
+It must specify a path with
+at least two sub-directories.  The next-to-bottom one is used as a "locking"
+directory and the bottom one is the \fBhome\fR.  For full
+protection, only authorized software can move through the locking
+directory.  Hence, it is owned by MMDF and accessible only to it.
+
+.I Submit,
+.I deliver,
+.I cleanque,
+and
+.I checkque
+must run
+\fIsetuid\fR()
+to MMDF.  (In order to set both
+its effect and real uid/gid to that of mmdf,
+.I deliver
+is usually run \fIsetuid\fR() to root.
+On some systems it may only need to be
+be \fIsetuid\fR() to MMDF.  This has not been tested).
+The \fBhome\fR
+directory is open access.
+.SS "QUEUE ENTRIES"
+.PP
+When mail is queued by
+.I submit, 
+it is actually stored as two files.  One contains the actual message text and
+the other contains some control information and the list of addressees.
+.PP
+The text file is stored in the \fBmsg\fR directory.  The other file is stored
+in the \fBaddr\fR directory and is linked into one or more queue directories.
+The queue directories are selected based on the channels on which this message
+will be delivered.  Each output channel typically has its own queue directory.
+.PP
+Another directory below \fBhome\fR is a temporary area called \fBtmp\fR.
+It holds temporary address-lists as they are being built.  Queuing
+of a message is completed by linking this address file into \fBaddr\fR
+and the queue directories.
+The \fBmsg\fR directory contains files with message
+text.  \fBAddr\fR and \fBmsg\fR files are synchronized by giving
+them the same unique name, which MMDF occasionally calls the
+message "name".  The message name is derived by use of
+.I mktemp(3),
+using \fBmsg\fR as the base directory.  The files created in
+\fBaddr\fR[] must be open read-write access; the ones in \fBmsg\fR must
+be open read access.
+.PP
+When
+.I submit
+runs, it changes into \fBhome\fR for its working
+directory.  It then does a
+\fIsetuid\fR()
+to run as the caller.  This
+is necessary to permit
+.I submit
+to access the caller's address-list
+files (specified as "< file"), but probably will be changed.
+.I Deliver
+changes into the queue directory to minimize the time spent
+searching for messages to deliver.
+.PP
+.ne 16
+The following depicts the directory organization:
+.sp
+.nf
+	                          \fBlock\fR                        (\fBlock\fR: 0700)
+		           |                           (mmdf  only)
+		           |
+	        ________\fBhome\fR______          (open: 0777)
+	       /           |              |          \\
+	      /            |              |           \\
+                  \fBtmp\fR         \fBaddr\fR          \fBq.*\fR         \fBmsg\fR      (open: 0777)
+
+           addresses  ==> moved      and linked   message text
+           built here ==> into here    into here     put here
+
+           entries:            0666          0666          0644
+
+.fi
+.SS "QUEUE FILE FORMATS"
+.PP
+The \fBmsg\fR portion of a queued message simply contains the
+message, which must conform to the Arpanet standard syntax,
+specified in RFC822.  It is expected that the format of the message
+contents file eventually will be more structured, permitting
+storage of multi-media mail.
+.PP
+The following specifies the syntax of the \fBaddr\fR (and queue directory)
+address-list portion of the queued message:
+.SS "Address File Contents"
+.RS
+.IP "file ::=" 15
+creation late flags '\\n' [rtrn-addr] '\\n' *(adr_queue '\\n')
+.IP "creation ::=" 15
+{long integer decimal representation of time message was created}
+.IP "late ::=" 15
+ADR_MAIL / ADR_DONE
+{from adr_queue.h}
+.IP "flags ::=" 15
+{decimal representation of 16-bits of flags}
+.IP "rtrn-addr ::=" 15
+{rfc822 return address}
+.IP "adr_queue ::=" 15
+temp_ok mode queue host local {conforms to structure specified in
+adr_queue.h}
+.IP "temp_ok ::=" 15
+{temporary flag indicating whether this address has been verified by the
+receiving host: "yes" is "+"; "not yet" is "-"}
+.IP "mode ::=" 15
+{send to mailbox(m), tty(t), both(b), either(e), or processing completed(*)}
+.IP "queue ::=" 15
+{name of the queue into which this message is linked for this address}
+.IP "host ::=" 15
+{official name (and domain) of recipient host}
+.IP "local ::=" 15
+{local address on receiving host}
+.RE
+.SS "Address File Description"
+.PP
+An address queue file contains a creation time-stamp, an
+indication if the sender has been notified of delayed delivery,
+some flags, an optional return-mail address, and an address list.
+Several <flags>
+are currently in use (as specified in msg.h).  ADR_NOWARN indicates whether
+late warnings
+should be sent to the return-mail address if the entire address list has not
+been processed within the number of hours specified by "warntime".
+ADR_NORET indicates whether mail should be returned to the sender if it hasn't
+been completely processed within the number of hours specified by "failtime".
+ADR_CITE indicates whether warning and failure messages are to contain only a 
+citation of the message.
+An ADR_DONE ("*") value, for the "late" flag, indicates that a warning
+notice has been sent.  
+.PP
+The creation date is coded as a long ASCII decimal string, terminated by
+the "late" flag.  This has to be stuffed into the file because
+Unix doesn't maintain it.  The date is used to sort the queue so
+that mail is delivered in the order submitted.
+.PP
+The return address is a line of text and may be any address
+acceptable to
+.I submit.
+.PP
+Each address entry is on a separate line, and conforms to the
+adr_struct format, defined in
+.I adr_queue.h.
+It contains several fields separated by spaces or commas.  Fields containing
+spaces or commas must be enclosed in double quotes.
+.PP
+The temp_ok flag indicates whether the address has been accepted during an
+"address verification" dialog with the receiving host.  When the message text
+is successfully accepted by the receiving host, then this flag no longer 
+applies and the mode is set to ADR_DONE ("*").
+Before final acceptance of message text, the mode flag indicates whether the
+mail is for a mailbox,
+terminal, both, or either.  (Currently only mailbox delivery, ADR_MAIL,
+is used.)
+.PP
+The queue name is the name of the sub-queue in which the message is queued for
+this
+address.  Each addressee's host may be on a separate queue or some hosts may
+share the same queue.  When all addressees in the same queue have been
+delivered, the address file is removed from that queue directory.  When all
+queues have been processed, the address file (in both \fBaddr\fR and the queue
+directory) and the text file (in \fBmsg\fR) are removed.
+.PP
+The host and local strings are used by the channel program.  The host
+determines the type of connection the channel program makes.  The local string
+is passed to the host; it should be something meaningful to that host.  The
+local string must not contain newline or null and it be a valid local address
+per RFC822.
+.SH "SEE ALSO"
+deliver(8), cleanque(8), submit(8)
+

@@ -1,0 +1,93 @@
+.sp 3
+.ce 3
+\fBUK MMDF OVERVIEW
+
+Steve Kille
+
+February 1985\fP
+
+.sp
+This document is a supplement to the MMDF Overview
+for sites in the UK Academic Community.  It summarizes those
+features and changes peculiar to, or of particular relevance to
+such sites.
+Aspects peculiar to the JNT Mail Protocol
+are described, and a summary of the
+JNT Mail modules is given.  The UK Academic community uses a
+domain hierarchy ordering reversed from that in all other RFC
+822 based networks.  UK ordering, as specified by the JNT Name
+registration Scheme is referred to as NRS ordering (e.g.
+UK.AC.Salbridge.CS).  Standard
+RFC 822 ordering is described as RFC 819 ordering (e.g.
+CS.Salbridge.AC.UK).
+MMDF uses RFC 819 ordering internally, including in all tables,
+as this ordering is implicitly assumed in a large number of
+places in the code.  The implications of this are discussed
+below.
+.sp
+When editing conf/sitename/conf.h to set site specific
+information, the following parameters are of particular
+relevance:
+.in +5
+.sp
+.ti -5
+#define JNTMAIL
+.br
+This should be defined for all sites running the JNT Mail
+channel.  Its major function is to ensure that "%" is treated
+as lexically equivalent to "@", which is needed for correct
+handling of JNT Mail source routes.
+.sp
+.ti -5
+#define BOTHEND
+.br
+This should be defined by all sites following NRS domain
+ordering.  It causes domains to be interpreted in both NRS and
+RFC 819 ordering.  As described below, the internal RFC 819
+ordering can be made completely transparent to the user.
+.sp
+.ti -5
+#define VIATRACE
+.br
+If this is defined, trace will be inserted in the "Via:" form
+with the domain in NRS ordering.  This conforms to the JNT Mail
+protocol.  The RFC 822 header reformatting discussed in
+\fBjntmail(8.mmdf)\fP is also turned off.  If this is not
+defined, standard RFC 822 "Received:" trace will be used.
+VIATRACE should be defined by all UK Academic Community sites
+which neither intend to perform relaying from RFC 822
+protocols other than JNT Mail to JNT Mail nor intend to make
+extensive external use of the list channel.
+.in -5
+.sp
+The function of the JNT Mail channel (sending module) is
+described in \fBjntmail(8.mmdf)\fP, and handling of incoming
+files in \fBni_niftp(8.mmdf)\fP.   For sites operating the York
+NIFTP (Blue Book),  configuration
+and changes needed to the York NIFTP
+code are described in \fByork-inst(8.mmdf)\fP.
+The york code is located in the directory york/ on the UK
+distribution.
+.sp
+As noted above, all internal MMDF tables as described in
+\fBtables(5.mmdf)\fP, are in RFC 819 ordering.  To make this
+transparent to the user, all channels should be configured to
+reformat to NRS ordering.  This is done in the tailor file
+described in \fBmmdftailor(5.mmdf)\fP.  The ap channel
+parameter should be set to ap=jnt  [which is equivalent to
+ap=host (i.e. use host value not domain) + ap=733 (use JNT
+source routes) + ap=big (use NRS ordering)].  Some sites may
+prefer ap=733 + ap=big.  This will be appropriate when the NRS is
+in general use.  Example tailor lines are:
+.sp
+.nf
+MCHN  janet    name=janet,que=janet,tbl=janet,show="Janet Channel",
+        pgm=niftp,poll=0,confstr="/usr/lib/x25/mhhcp $(FILE) $(ADR)",
+        mod=reg,ap=jnt
+
+or
+
+MCHN  janet    name=janet,que=janet,tbl=janet,show="Janet Channel",
+        pgm=niftp,poll=0,mod=reg,confstr="/usr/lib/x25/mhhcp $(FILE) $(ADR)",
+        ap=733,ap=big
+.fi

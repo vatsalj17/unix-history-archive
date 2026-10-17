@@ -1,0 +1,48 @@
+#
+#  List Channel
+#
+
+MODULES =	ch_delay qu2ds_send
+
+OBJECTS =	ch_delay.o qu2ds_send.o
+
+SOURCES =	ch_delay.c qu2ds_send.c
+
+real-default:	delay
+
+install:	$(CHANDIR)/delay
+
+$(CHANDIR)/delay  :   xdelay
+	     cp xdelay $(CHANDIR)/delay
+	    -$(CHOWN) $(MMDFLOGIN) $(CHANDIR)/delay
+	    -chmod 0$(PGMPROT) $(CHANDIR)/delay
+	    -@ls -ls $(CHANDIR)/delay
+	    -@echo "delay channel installed normally"; echo ""
+
+delay:	xdelay
+xdelay:	$(OBJECTS) $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(MMDFLIBS) $(SYSLIBS)
+
+lint:   ;  $(LINT) $(LFLAGS) $(SOURCES) $(LLIBS)
+
+clean:
+	-rm -f xdelay *.o x.c makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+ch_delay.o: ch_delay.c
+ch_delay.o: ch_delay.c
+ch_delay.o: ../../h/util.h
+ch_delay.o: ../../h/mmdf.h
+ch_delay.o: /usr/include/signal.h
+ch_delay.o: ../../h/phs.h
+ch_delay.o: ../../h/ch.h
+qu2ds_send.o: qu2ds_send.c
+qu2ds_send.o: ../../h/util.h
+qu2ds_send.o: ../../h/mmdf.h
+qu2ds_send.o: ../../h/phs.h
+qu2ds_send.o: ../../h/ch.h
+qu2ds_send.o: ../../h/ap.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

@@ -1,0 +1,77 @@
+.tr ~
+.TH RCVFILE 1 "26 December 1985"
+.SH NAME
+rcvfile \- put message into named file.
+.SH SYNOPSIS
+.B rcvfile
+directory [
+.B \-l
+logfile ] [
+.B \-m
+]
+.SH DESCRIPTION
+This program is intended to be invoked
+from the user's
+.I \&.maildelivery
+file in the manner suggested below.
+Its purpose in life is to examine the
+.I Subject:
+field of the message and determine if this message
+is a candidate for filing.
+If so, the program skips over the message headers and
+files the text into the file given in the subject line.
+It can be invoked manually if desired, and a message piped into it.
+.PP
+A message is considered fair game if the subject line
+has the word
+.I rcvfile
+as the first word of the
+.I Subject:
+field.
+The
+.I directory
+argument is required.
+The destination file name is created by concatenation of the
+.I directory,
+a "/", and the filename given in the subject field after 
+The filename from the subject field is not allowed to contain
+any ".." directory components.  If any are found, rcvfile aborts.
+.PP
+The
+.I \-l
+option sets the logfile where a record of
+.I rcvfile
+activity is made.  The file must already exist and be writable
+to the recipient.
+The
+.I \-m
+option enables the creation of missing directories in the pathname
+of a file to be created.  They will be mode 0755.
+.PP
+The owner of the created file will be notified by mail of the fact that
+a file has been delivered, with information about who sent it
+and other interesting bits.
+The owner may not be the recipient if the referenced file existed,
+was owned by another user, and was writable.
+If the file delivery fails for any reason, the message
+will be delivered as normal mail.
+.SH EXAMPLE
+A typical entry in the user's
+.I .maildelivery
+file is:
+.nf
+subject    rcvfile      pipe    A    rcvfile
+.br
+.I or
+.br
+Addr      user=file    pipe    A    rcvfile
+.fi
+.sp
+You may need to give the full pathname of rcvfile if it is not
+in the search path of a vanilla /bin/sh.
+.SH FILES
+.IP "<login directory>/.maildelivery"
+.SH SEE ALSO
+maildelivery(5)
+.SH AUTHOR
+David H. Crocker

@@ -1,0 +1,424 @@
+.TH SEND 1 "4 January 1986"
+.SH NAME
+send \- send mail
+.SH SYNOPSIS
+.B send
+[address\.\.\.] [\-a\ field:body] [\-b\ address\.\.\.]
+[\-c\ address\.\.\.] [\-h\ host] [\-n] [\-s\ subject] [\-t\ address\.\.\.]
+.SH DESCRIPTION
+.PP
+.I Send
+sends messages to a user-specified list of recipients.
+When invoked without arguments, it prompts for
+the following information:
+.sp 1
+.RS
+.nf
+To:
+cc:
+Subject:
+.fi
+.sp 1
+.RE
+The expected user responses are:
+.RS
+.IP "1)" 4
+To the "To:" and "cc:" prompts,
+a list of valid user names (see below).
+.IP "2)" 4
+To the "Subject:" prompt,
+a brief description of the subject of the message.
+.RE
+.PP
+Copies of the message are delivered to recipients on
+the "To:" and "cc:" lists.
+A response to the "To:" prompt is required, unless blind carbon
+copies (bcc) are specified.
+A field may be left empty by typing a carriage return <CR>.
+.PP
+If the user's input for any of the above fields will require
+more than one line, then when typing the input the user
+should precede carriage
+returns with a backslash (\\).  In any case, the user's input for any
+one of these fields must not exceed 512 characters.
+.sp
+.SS Arguments
+.PP
+.I "Send"
+may be invoked with arguments.
+If they are specified, then the
+contents of any resulting fields are displayed, before the
+user is prompted for additional input.
+Unless switches (a character preceded by a dash) are used, the
+arguments are taken to be addresses for the "To:" field.
+.RS
+.IP "\-a" 4
+causes the next argument to be added to the header of the 
+message.  For example, ``\-a Reply-To:dcrocker''.  Enclose the
+argument in quotes if it contains spaces.
+.IP "\-b" 4
+causes following arguments to be added to the "BCC:" field.
+.IP "\-h" 4
+causes the next argument to be used as the default host reference,
+for addresses not explicitly containing a hostname.  When not
+specified, the default is the local host.
+.IP "\-c" 4
+causes following arguments to be added to the "cc:" field.
+.IP "\-s" 4
+causes the next argument to be used as
+the "Subject:" field's contents.
+.IP "\-t" 4
+causes following arguments to be added to the "To:" field.
+.IP "\-d" 4
+causes the state of the directedit
+option to be changed (see "directedit" below).
+Alone, "\-d" disables the directedit option.  "\-de" causes the directedit
+option to use the \fIline editor\fR, and "\-dv" causes the directedit option
+to use the \fIvisual (screen) editor\fR.
+.IP "\-n" 4
+prevents send from prompting for message text either directly or via
+direct edit.  The user is immediately given the command prompt after
+entering the header data.  Prompting for header data can be prevented
+by giving null header arguments to send without contents.  For example:
+.sp
+.ti +.5i
+\fIsend \-t "" \-c "" \-s "" \-n\fR
+.RE
+.sp
+.SS "Valid User Addresses"
+.PP
+A valid address name takes one of the following forms:
+.RS
+.IP "1)" 4
+A local Unix user's login name, such as "crocker."
+.IP "2)" 4
+A name which has been designated as a local alias, such as "support."
+This usually will not look any different from a login name, except
+that it may be longer than the standard 8-character limit.
+.IP "3)" 4
+The two-part "mailbox @ domain" address for a user on another machine.
+.RE
+.PP
+Validation of names is done at posting time, and is performed
+by the message delivery system, rather than by
+.I "send."
+All addresses
+are made to have a domain reference.  If the user does not specify
+a domain for an address, then the default host is assumed.
+.PP
+When the "To:", "cc:" and "Subject:" fields have been completed,
+.I "send"
+will prompt for the body of the message, with:
+.sp 1
+.ne 3
+.RS
+Type message; end with CTRL-D...
+.RE
+.PP
+The user now enters the text of the message.
+When the message is completed, or when the user wishes to insert
+a file or make changes, s/he types a control-D at the beginning of a new line.
+.I Send
+then prompts the user for its next action.
+.sp
+.SS "User Options and Environmental Tailoring"
+.PP
+The user may define a file in his home directory called ".sendrc".  If such a
+file exists,
+.I "send"
+will open the file and set options as specified,
+otherwise the defaults will be used. Below are listed the options available
+for user modification along with their default values.
+.sp 2
+.IP "aliases"
+.RS
+Allows the user to declare his own set of aliases for use with
+.I "send"
+and 
+.I "resend."
+Unless this file name begins with a '/', 
+.I send
+will look for this file in the user's home directory.
+The format for this file is:
+.RS
+aliasname  user1@domain,user2@domain,user3@domain...
+.RE
+Note that each entry must be on a single line but each line may be
+up to 511 characters long.
+.RE
+.IP "checker"
+.RS
+This will be the user's spelling checker while using \fIsend\fR.  The default
+for this option is \fIspell\fR.
+.RE
+.IP "copyfile"
+.RS
+This is the file in which copies of messages will be stored if
+requested by the user. Unless the first character of the supplied
+filename is '/', the file will be created in the user's home
+directory. The default for the copyfile is a file
+called ".sent" in the users home directory.
+See also 
+"file, nofile, fileonquery" below.
+.RE
+.IP "directedit"
+.RS
+If this option is specified, the
+.I send
+program will immediately enter the editor after the "To:", "cc:" and "Subject:"
+fields have been supplied.  The directedit option expects an argument
+which specifies which editor to use.  "directedit v" causes the
+visual editor to be used (see "veditor" below).  "directedit e" causes the
+line editor to be used (see "editor" below).
+.RE
+.IP "draftdir"
+.RS
+If supplied, draft files will be created in this directory.
+Otherwise, they will be created in the user's home directory.  
+Draftdir should be a complete path name.
+.RE
+.IP "editor"
+.RS
+This will be the user's line editor while using 
+.I "send."
+The default for this option is system dependent, but normally set to
+.I "ed."
+If the environment variable ``EDITOR'' is set, it will be
+taken as the default instead of the system default.
+.RE 
+.IP "file, nofile, fileonquery"
+.RS
+The presence of one of these options allows the users to control
+the keeping of file copies.  ``File''
+will result in a copy being kept of every
+message sent by the user.  ``Nofile''
+will turn off the file copy
+option and no copies will ever be kept.  ``Fileonquery''
+will cause
+.I "send"
+to query the user as to whether a copy should be kept or not.
+.RE
+.IP "signature, nosignature"
+.RS
+.I "Send"
+will automatically fill in the ``From:'' field with your address.  The
+form of the contents is either:
+.RS
+login@host  or  Full Name <login@host>
+.RE
+where ``login'' is your Unix login name, and ``host''
+is the name of the Unix machine you are using.  The second form is the
+default on
+some systems.  On these systems, ``Full Name'' is derived from the system
+password file.  The ``nosignature''
+command forces \fIsend\fR to use the form:
+.RS
+login@host
+.RE
+.PP
+You may personalize your messages by including a signature.  If
+your 
+.I ".sendrc"
+file contains a signature line, its contents
+will be used in the ``From:'' field, ahead of the address information.
+The signature cannot contain any of the following characters
+unless it is quoted with double quotes: `( ) < > @ , ; : \ \ " . [ ]' 
+and it cannot be blank.
+The program will verify the signature line for correctness at startup
+and will complain if your signature is illegal.
+The ``From:'' field then will appear as follows:
+.RS
+signature <login@host>
+.RE
+.RE
+.IP "subargs"
+.RS
+Allows the user to specify additional flags for the \fIsubmit\fR program
+('v' and 'm' are always passed). Probably not for general use.
+.RE
+.IP "veditor"
+.RS
+This is the \fIvisual editor\fR (screen editor) for use with
+.I "send."
+The default for
+this editor is site dependent, but is usually some
+version of vi or emacs.
+If the environment variable ``VISUAL'' is set, it will be
+taken as the default instead of the system default.
+.RE
+.sp
+.PP
+The format for a typical
+.I ".sendrc"
+profile is shown below:
+.RS
+.nf
+
+copyfile sent_mail
+draftdir .drafts
+signature Joe Foobar
+subargs w
+veditor emacs
+fileonquery
+aliases joes_aliases
+.fi
+.RE
+.SS "Commands"
+.PP
+.I "Send"
+commands must be followed by a carriage return.
+Only enough of a command to make it unique need be typed.
+The following are valid commands:
+.IP "?"
+.br
+displays a list of
+.I "send's"
+commands.
+.IP "bcc"
+.br
+prompts for addresses for the ``BCC:'' Blind carbon copies field.
+If any addresses are specified for Blind carbon copies, 
+they receive a slightly different message than those listed
+in ``To:'' or ``cc:''.  Their copy has a header component
+named ``BCC:''; its
+contents are the string ``(Private)''.
+If the message had no ``To:'' addresses,
+then the ``To:'' field will contain the string ``list:'' and there will be no
+BCC field.  In addition, the ``To:'' and ``cc:'' fieldnames
+are modified to prevent
+recipients from
+automatically replying to
+anyone in the ``To:'' or ``cc:'' fields.
+.sp
+.RS
+NOTE: If a message has normal and BCC recipients and there is an error
+with a BCC address, the normal addresses will have been processed,
+and the copy of their message sent, before the BCC address error
+is detected.
+.RE
+.IP "bye"
+.br
+exits the
+.I "send"
+program.
+If the user has not yet sent the message, the user is asked
+to confirm the action.
+A ``yes'' (or 'y') is required, followed by a <CR>, or the command will
+be aborted and the user returned to the ``Command or ?:'' prompt.
+.IP "check spelling"
+.br
+will invoke the spelling checker with the draft filename as the argument
+to the checker program.  (See ``checker'' user option above.)
+.IP "delete body"
+.br
+permits the user to abort
+.I "send"
+without saving the draft body.
+If \fIsend\fR is aborted without giving the ``delete body'' command,
+a copy of the draft will be kept as drft.nnnnn in the draft directory
+specified by the ``draftdir'' option above.
+This command can also be given at any time to erase the current draft
+before inputing more text.  It requires confirmation for obvious reasons.
+.IP "edit"
+.br
+will invoke the user's line editor (usually the Unix editor \fIed\fR(1))
+and read in the user's message body for editing.
+(See ``editor'' user option above.)
+.IP "file"
+.br
+indicates the user wishes to append a file to the end of the message body.
+.I "Send"
+will prompt for file name.
+.IP "header edit"
+.br
+allows the user to change the contents of the header fields
+(``To:'', ``cc:'', and ``Subject:'').  The ``BCC:'' field is included, if not
+empty.
+For each header field,
+.I "send"
+shows the current field contents and then repeats the prompt.
+The user may type in new input which will then become the contents of
+that header field.
+To leave the contents of the field unchanged, the user types
+only a carriage return.
+To delete a specific entry, the user types a minus sign followed
+by the address to be deleted (e.g. ``\-dcrocker@udel'').
+To simply delete the first entry of a list, the
+user can type a minus sign (\-) followed by a carriage return.
+To add to the field, the user types a plus sign (+), followed
+by the text to be added, followed by a carriage return. For example, to
+add a name to a field, one would type the command ``+user@domain''.
+More than one address can be added at a time by listing several addresses
+separated by commas (e.g. +u1,u2).
+.IP "input more body"
+.br
+this command allows the user to type more text onto the end of the
+message body, ending with a control-d on a new line (as before).
+.IP "post"
+.br
+same as ``send''.
+.IP "quit"
+.br
+same as ``bye''.
+.IP "review message"
+.br
+retypes message in its current form.
+.IP "send"
+.br
+posts the message to the message delivery system.
+The message is delivered immediately to local users and queued for later
+delivery to non-local users.
+The sender is informed of the posting disposition of the message.
+Each address
+is listed and followed by its status, indicating that the
+address is ok, or that there was a problem.
+.RS
+.PP
+If all addresses are valid, the sender is then informed that the message
+has successfully been posted for delivery.
+If any addresses are found to be invalid, the remaining addresses are
+still checked, but submission is aborted.  The user
+is returned to command input,
+so that he may change the addresses and make them legal.
+.RE
+.IP "set"
+.br
+allows the user to check the current values of option variables. If followed
+by arguments, allows the user to change the current setting of variables.
+The changed value lasts only for the current invocation of 
+.I "send."
+Option values are those listed above under ``User Options and Environmental
+Tailoring''.  For example, the command ``set editor ex'' would
+change the ``editor'' option to ``ex'' for the duration of the current
+.I send
+session.
+.IP "vedit"
+.br
+will invoke the screen editor as specified by the ``veditor''
+option and read in the user's message body, for editing.
+(See ``veditor'' user option above.)
+.IP "program run"
+.br
+allows the user to give a shell command.
+.I "Send"
+prompts for program.
+The user's response is passed to the shell.
+Control is returned to
+.I "send"
+when the command has been executed.
+.IP "CTRL-D"
+.br
+same as ``bye''
+.SH FILES
+.IP "<login directory>/.sendrc" 38
+user options
+.IP "<login directory>/aliases" 38
+user-supplied alias file
+.IP "<login directory>/.sent" 38
+sent messages
+.IP "<login directory>/drft.XXXXXX" 38
+body of current message
+.SH "SEE ALSO"
+v6mail(1), msg(1), resend(1)
+.SH DIAGNOSTICS
+All diagnostic messages are intended to be self explanatory.

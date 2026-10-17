@@ -1,0 +1,44 @@
+Return-Path: <CROFT@SUMEX-AIM.ARPA>
+Received: from SUMEX-AIM.ARPA by safe with TCP; Tue, 14 Aug 84 17:56:22 pdt
+Date: Tue 14 Aug 84 17:55:10-PDT
+From: Bill Croft <CROFT@SUMEX-AIM.ARPA>
+Subject: [utcsrgv!dciem!mmt: bug fix for macget]
+To: croft@SUMEX-AIM.ARPA
+
+Mail-From: PATTERMANN created at 14-Aug-84 16:32:52
+Return-Path: <utcsrgv!dciem!mmt@uw-beaver>
+Received: from uw-beaver by SUMEX-AIM.ARPA with TCP; Mon 13 Aug 84 22:48:40-PDT
+Date: 13 Aug 84 22:47:36 PDT (Mon)
+From: utcsrgv!dciem!mmt
+Received: by uw-beaver.arpa (3.346/1.9)
+	id AA14008; 13 Aug 84 22:47:36 PDT (Mon)
+Return-Path: <utcsrgv!dciem!mmt>
+Message-Id: <8408140547.AA14008@uw-beaver.arpa>
+To: utcsrgv!uw-beaver!info-mac
+Subject: bug fix for macget
+ReSent-date: Tue 14 Aug 84 16:32:52-PDT
+ReSent-From: Ed Pattermann <PATTERMANN@SUMEX-AIM.ARPA>
+ReSent-To: info-mac: ;
+
+I complained about difficulty using macget with V7 a little while ago.
+It turns out that the problem is an insufficient character timeout.
+The symptom was that part of a file would be transferred, and then the
+program (macget) would abort, and a packet would go to the parent process,
+which might cause a logout.  After a while, the Mac would report an I/O
+error 1.
+
+The correction is to set the define CHRTIMO to 2 instead of 1. (3 might be
+safer, but I have had good success with 2, whereas at 1 I almost never
+could pass more than 3-6K of a file.
+
+There is another potential bug in macget, but I don't know whether it is
+a real one.  In the recv_file routine, case ACK, tputc(ACK) should be
+just before the break (ie after fwrite(buf,n,1,outf).
+
+The version of macget intended to be portable and to work with Beta releases
+of MacTerminal works well on 4.2 and V7 systems with the changed CHRTIMO.
+It worked on neither with CHRTIMO set to 1.
+
+
+-------
+

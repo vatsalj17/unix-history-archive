@@ -1,0 +1,38 @@
+Nop high-frequency stuff (like LineTo,FixMul,etc.) in lib*.c, then
+make a new "libfast.c" with just the lint lines.  "fast.s" will
+contain the direct C callable functions with in-line argument
+conversion.  Note that libsane.c/sane.s/elems.s already accomplishes
+this for floating point (at ~1ms/operation in sane I'm not sure this
+was worth the effort).
+
+Request for Apple:  In your next version, please put sanescan in
+a package or somewhere that I can get at without having to load the
+pascal subroutines str2dec/dec2str/int2dec with my C programs.
+I had to hack around too long to put sanescan into assembler and combine
+it with the proper support routines (%_pos,%_copy,etc.) so I could
+assemble / load with it on my UNIX system.  How about the same for
+Graf3D also?
+
+If Apple doesn't help with sanescan/graf3d (even worse, other user
+linked routines may show up in the future), I guess this would work:
+Dumpobj the offending code and upload it; strip off the disassembled stuff
+so we have just the raw hex.  Since the code should be position
+independent, we should be able to "call" this glob of hex words(!)
+Will need to dummy up a main program calling the function, since
+library subroutines need to be linked in (%_pos...).
+This could result in multiple copies of the Pascal helpers being loaded.
+Access to pascal source for assembly generation ($ASM ONLY compiler
+option), or disassembling (dumpobj) is not the way to go (discovered
+through painful experience) since the Lisa and UNIX assembler syntax
+and semantics are too different (e.g. pea .+1234 generates PC-rel 
+on Lisa, long-abs on UNIX).
+
+For VAX folks, convert a version of ranlib to ranlib68 and make it
+interact properly with ld68.  People running UNIX on a 68000 should
+already have this capability.
+
+Some of the library routines are not currently reentrant (callable
+from interrupt level), such as mactrap.s.  If this is important, it
+would be possible to setup a little code segment that resides on the
+stack.  Alternately Apple could provide an "indirect" trap that takes
+the trap code out of a register.

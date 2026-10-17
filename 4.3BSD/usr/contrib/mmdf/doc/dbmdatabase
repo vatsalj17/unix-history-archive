@@ -1,0 +1,651 @@
+.TL
+The MMDF Database
+.br
+(somewhat obsolete)
+.AU
+Steve Kille
+.AI
+Department of Computer Science
+University College London
+.NH
+Overview
+.PP
+This design specifies modifications to the database access procedures
+of the MMDF mail system.
+The changes are motivated by the expansion of the names database for the
+SRI environment.
+The major changes involve the reorganization of the database for more
+efficient random access methods that would reduce the processing
+inefficiencies of the sequential access of large databases.
+The changes take advantage of the database management dbm(3)[*]
+.FS
+[*] The notation dbm(3) refers to the documentation as found in the Unix
+Programmer's Manual, Vol. 1, e.g., the database documentation is in
+Section 3 under the title
+.B dbm.
+.FE
+libraries
+of V7 Unix.
+
+.NH 1
+Scope of Changes
+.PP
+All changes are restricted to two modules of MMDF.
+One module is part of the
+.B submit
+process
+and the other module is shared by the
+.B submit,
+.B deliver,
+and
+.B channel
+processes.
+There are potential efficiencies that could be gained in other modules due
+to the use of the new design but these changes are left for a future effort.
+The include file
+.B ch.h
+is compacted by eliminating obsolete fields in the channel
+structures.
+
+.NH 2
+Affected Modules
+.PP
+The two modules that are affected are
+.B ch_table.c
+and
+.B adr_submit.c.
+.B ch_table
+is completely rewritten to use the dbm(3) library.
+Two procedures are respecified because their functions have been altered.
+The remaining procedures are reimplemented.
+The procedure
+.B loc_alsrch
+in the module
+.B adr_submit.c
+is modified to remove references to and logic for the obsolete procedure
+.B ch_tseek
+and to add logic to use the procedure
+.B ch_tsetnum.
+.NH 2
+Interfaces
+.PP
+The interfaces to the public procedures of ch_table.c are preserved.
+The re-implemented procedures have the same names, accept the same
+arguments, and
+return the same results as the procedures they replace.
+The respecified procedures have different names and arguments to
+ensure that incompatible calls to the old procedures would be caught and
+prevented from improperly linking to the new procedures.
+Some of the re-implemented procedures have a boolean argument that indicates
+whether the search
+should start at the beginning of the file or where the pointer is currently
+located.
+The argument now indicates whether the partial ordering information stored
+in the database should be used to detect possible name circuits.
+
+.NH 2
+Affected Procedures
+.PP
+Only one procedure,
+.B loc_alsrch,
+in the module
+.B adr_submit.c
+is modified.
+The modification is described above.
+All other procedures in this section are in the module
+.B ch_table.c.
+.SH
+ch_tblopen
+.IP
+This procedure is removed completely and
+its replacement,
+.B ch_tdbminit,
+is made completely internal to the module.
+It calls the
+.B dbminit
+procedure for the first database access
+to initialize the database.
+
+.SH
+ch_tseek
+.IP
+This procedure is removed completely.
+It is replaced by the procedure
+.B ch_tsetseq
+which sets the minimum acceptable point for an entry to be in the partial
+ordering of the database.
+.SH
+ch_ttell
+.IP
+This is really a macro defined in the file
+.B ch.h.
+It is removed and the procedure
+.B ch_tgetseq
+is defined in its place to return the partial ordering of the most recently
+accessed entry in the database.
+.SH
+ch_h2adr
+.IP
+This procedure is rewritten internally to use the dbm(3) library.
+The argument
+.B first
+is redefined to be a flag to indicate whether partial ordering of the entries
+is to be enforced.
+All other aspects of the procedure remain the same.
+.SH
+ch_ad2first
+.IP
+This procedure is rewritten internally to use the dbm(3) library.
+The external interface for this procedure remains the same.
+.SH
+ch_h2first
+.IP
+This procedure is rewritten internally to use the dbm(3) library.
+The argument
+.B frst
+is redefined to be a flag to indicate whether partial ordering of the entries
+is to be enforced.
+All other aspects of the procedure remain the same.
+.SH
+ch_h2chan
+.IP
+This procedure is rewritten internally to use the dbm(3) library.
+The external interface for this procedure remains the same.
+.PP
+The procedures no longer access each other internally.
+They instead set up their own calls to the dbm(3) procedure
+.B fetch
+and process the returned data themselves.
+The linkages between data records is defined in the logic of the access
+procedures.
+
+.NH 1
+Addressing Database Design
+.PP
+The support provided by the dbm(3) library consists of procedures to
+store and retrieve data items using arbitrary ascii strings as keys.
+Since no provision is made for accessing the internal representation of
+keys or data pointers, all linkages are maintained as ascii keys.
+The interpretation of a data item as a key for further searches of the
+database is therefore embedded in the MMDF access procedures.
+The subsections below define these relationships between data items and
+other keys.
+
+.NH 2
+Database Internals
+.PP
+The sequential database is composed of lists of key and value pairs.
+Each list is a separate text file that is appropriate only in certain
+contexts.
+An address or name is either a mailbox or a host depending on whether it
+is in the file used for aliases or the file used for channel host addresses.
+The formats however are identical.
+.PP
+A data entry is composed of three components; the keyword that is used for
+access, a partial ordering number, and a list of one or more values
+separated by FS ('\\034') characters.
+See Figure 2 and Section 5.2.1 for the details and format of the entry.
+
+.PP
+A value is composed of a channel code character followed by a printable
+ascii string.
+There are three basic types of values used in the data entries.
+They provide single, multiple, and indirect values for the keys.
+All of the types are transparent to the database procedures and are returned
+unmodified to the calling procedures for processing.
+
+.IP Single 10
+This is the simplest form of database value.
+It is a single ascii string that is passed back to the address processor.
+The value can be the real name associated with an alias, a host name
+associated with a channel, or a host address associated with a host name.
+
+.IP Multiple 10
+A multiple value is a comma ',' separated list of single values.
+All of the single values are associated simultaneously with the key.
+Such a value is used for small distribution lists or for aliasing a name
+to mailboxes for a user on different machines.
+
+.IP Indirect 10
+The indirect value is an extension of the multiple value.
+A value that starts with a left angle bracket '<' character is treated
+as a filename (not including the '<') where a list of values may be found.
+Distribution lists are implemented with indirect values.
+The referred to file is not searched but is read sequentially for
+values that are then recursively processed against the database.
+
+.PP
+Only one file is used in the dbm(3) library[*].
+.FS
+[*] There are really two files, one data file and one key hash file,
+but they are considered as one in this context since they are intimately
+connected in the dbm(3) library.
+.FE
+Identical keys that are in different lists in the sequential files are
+stored under one key in the random access database.
+The storing of identical keys is described in the next section.
+
+.NH 3
+Partial Ordering Numbers
+.PP
+The ordering of entries in the sequential database is used by the sequential
+database to detect name circuits.
+The first two bytes of an entry datum are an unsigned 16 bit ordering number
+that indicates the partial ordering between any two entries in the database.
+The numbers are assigned by the database management program.
+Section 3.2 Name Circuit Prevention describes its use.
+
+.NH 3
+Channel Encoding
+.PP
+The context information implied in the multiple files used for the sequential
+database must be preserved in the random access database.
+This context is preserved by prepending a code character to the value.
+This code is either the official name code or the code character
+assigned to a channel.
+The code is used both to check whether the value is valid
+for a particular channel and to map a name(host) to a channel.
+.PP
+Identical keys may be stored in more than one file in the sequential database.
+This feature is implemented in the random access database by concatenating
+the entries from the multiple files and separating them by the FS ('\\034')
+character.
+The first character of each entry in such a list is the code character for
+that entry.
+Note that the first character is a code only for these multiple entries and
+not for the multiple comma ',' separated values described above.
+The code character is stripped by the procedures and not returned.
+The sequential order of the entries implies the partial ordering imposed
+in the sequential database.
+
+.NH 3
+Official Names
+.PP
+An official name is the primary identifier for a host.
+Other names are allowed but the official name is the only name that is
+universally known by all other hosts.
+Alternate or alias names are available but MMDF converts these names to
+the official name before the address is used in the system.
+.PP
+By convention, the key associated with the first occurrence of a value
+(address) in the sequential file is the official name.
+It may be found from an address by searching for the first occurrence of the
+address in the value field and returning the key as the official name.
+The official name is found from an alternate by first finding the alternate
+and then by taking its value (address) and searching for the its first
+occurrence.
+
+.PP
+There are two entries stored in the database for an official name.
+One is a normal name-key with address-entry and the other is
+an address-key and name-entry.
+The name-entry has a code character of '='.
+An official name is recognized when the database is being built and the
+inverse of the entry is generated by exchanging key and entry and storing
+the result.
+The official name is also stored as the first entry of all other (alias)
+entries that have the same address as the official name.
+The official name is retrieved from a value (address) by retrieving
+the entry under the address key.
+It is retrieved from an alternate name by retrieving the entry with the
+alternate name keyword and then selecting the official name entry.
+
+.NH 3
+Name List Redirection
+.PP
+Name list redirection is not part of the sequential search database
+procedures.
+The procedure
+.B alst_proc
+parses the value returned from reading the current address.
+The address line may either come from an input line or
+a database value due to the recursive
+logic of the address parsing procedures.
+The redirection is done on all addresses that start with the '<' character.
+This character is transparent to the database system and is considered part
+of the returned value.
+The partial ordering numbers are used by the database procedures to detect and
+reject name circuits generated when keywords in the indirect files do not
+map to out of order entries in the database.
+.NH 3
+Reserved Code Characters
+.PP
+The only reserved code character is '='.
+This character may not be used for channel codes because it is used to
+identify an official name.
+It should be considered to be the official name channel code character.
+The FS ('\\034') character is also reserved for use as the entry separator.
+All other characters are acceptable.
+
+.NH 2
+Name Circuit Prevention
+.PP
+A name circuit exists when a name key is self referencing though an
+arbitrary number of name translations.
+Such a name would put the address checking procedures in an infinite loop.
+The sequential database defeats some cases of self reference by forcing
+the search of any one list at any one level to be one pass.
+This algorithm forces a partial ordering of all addresses;
+but it is only enforced for one file at a time.
+.PP
+The random access database contains an ordering number for each entry in the
+database that identifies the order in which the entries were stored in the
+database.
+This partial ordering of the
+entries prevents name circuits by forcing all translations to be
+forward references that would eventually terminate with the end of the list.
+The check for partial ordering is under the control of the argument to the
+the applicable procedures that controlled whether the sequential search
+started from the beginning of the file.
+The partial ordering is not enforced if the argument is TRUE to be compatible
+with the old procedures.
+
+.NH 1
+Database Access Procedures
+.PP
+This section describes the algorithms used to implement the database with
+the dbm(3) package.
+These procedures replace those procedures of the same name in the file
+.B ch_table.c
+
+.NH 2
+Access Initialization
+.PP
+The procedure
+.B ch_tblopen
+is removed and it is replaced by the procedure
+.B ch_tdbminit
+which is callable only by the procedures
+within the module.
+There is no argument list.
+An internal static flag is maintained by the procedure to
+record if the database file is initialized.
+During the course of this procedure it will call the dbm(3) procedure
+.B dbminit
+and set the flag so further calls to the procedure will not attempt to
+initialize the database again.
+
+.NH 2
+Partial Ordering Control
+.PP
+The old procedure
+.B ch_tseek
+and the macro
+.B ch_ttell
+are deleted from the file along with all references to them.
+They are replaced by the procedures
+.B ch_tsetseq
+and
+.B ch_tgetseq
+which control the partial ordering in the database.
+.B ch_tgetseq
+returns the sequence number of the most recently accessed entry and
+.B ch_tsetseq
+changes the internal sequence number value to its argument.
+A sequence number is a value of type unsigned short.
+
+.NH 2
+Database Record Access
+.PP
+All records in the database are accessed by the internal procedure
+.B ch_fetch.
+It correctly forms its string argument into a key for the dbm(3) procedure
+.B fetch
+and decomposes the returned datum into the partial ordering number and
+a vector of char pointers to the individual values.
+The number and the vector are stored in the data structure passed to the
+procedure.
+Success return is indicated by returning the pointer to the data structure
+and failure is indicated by a NULL pointer.
+
+.NH 2
+Key to Value Access
+.PP
+This function is done by the procedure
+.B ch_h2adr.
+The 'name' parameter is passed to the internal procedure
+.B ch_fetch.
+The returned structure may have multiple entries because the same key may
+be used for more than one channel or alias list.
+The code character of each entry is checked against the code character
+stored in the channel structure and
+the entry that matches is returned in the pointer parameter 'buf' with its
+code character stripped off.
+TRUE is returned if a match was found and FALSE is returned if
+.B ch_fetch
+can not find the key or if the code character for the channel does not
+match an entry in the datum.
+
+.NH 2
+Value to Primary Key Access
+.PP
+This function is performed by the procedure
+.B ch_ad2first.
+The parameter 'adrstr' is passed to the procedure
+.B ch_fetch
+as described above and the returned structure is scanned for an entry whose
+code character matches the official name code character '='.
+The result is returned via the pointer parameter 'buf'.
+TRUE is returned if a match was found and FALSE is returned if
+.B ch_fetch
+can not find the key or if there is no official name.
+
+.NH 2
+Key to Primary Key Access
+.PP
+This function is performed by the procedure
+.B ch_h2first.
+The parameter 'str' is passed to the procedure
+.B ch_fetch
+and the returned structure is searched for an official name entry.
+The official name is returned via
+the pointer parameter 'buf'.
+TRUE is returned if a match was found and FALSE is returned if
+.B ch_fetch
+can not find the key or if there is no official name entry.
+The parameter 'str' is returned if no official name is found.
+
+.NH 2
+Key to Any Channel Access
+.PP
+This function is performed by the procedure
+.B ch_h2chan.
+The parameter 'hostr' is passed to the procedure
+.B ch_fetch.
+The pointer parameter 'adrstr' is used to return either the official name
+if it is found or the parameter 'adrstr' if none is found.
+The procedure returns NOTOK if there is no official name.
+Each value except the official name in the entry is used in turn to find
+the first channel available for the key.
+The code character of the value is passed to the procedure
+.B ch_c2struct
+which will either return a channel pointer or the value NOTOK.
+If there is no channel to match any of the code characters then
+.B ch_h2chan
+also returns NOTOK.
+If the channel found by
+.B ch_c2struct
+is the local channel and local delivery is ok then the procedure returns OK.
+Otherwise, it returns the channel pointer.
+
+.NH 1
+Database Management Program
+.PP
+The program
+.B dbmbuild
+generates the database from ascii files of the same format
+as the sequential database.
+It does not attempt to do updates to an existing database; rather, it
+regenerates the entire database each time and the resultant files are
+moved into place with other commands.
+
+.NH 2
+Inputs
+.PP
+The input to the program is in the current sequential file format.
+The code character is passed to the program as a command line argument.
+A command line argument selects official name processing; the default
+action is no processing.
+
+.KS
+.DS
+line ::= text eol
+text ::= comment | entry
+comment ::= '#' <any printable ascii string>
+entry ::= key sep value
+key ::= <lower case printable ascii string>
+sep ::= ':' | <space> | <tab>
+value ::= <printable ascii string with optional spaces or tabs>
+eol ::= '\e012'
+.ce
+Fig . 1, Input Line format
+.DE
+.KE
+.NH 2
+Outputs
+.PP
+The output file is generated into two files.
+The file\fI.dir\fP file contains a bitmap directory of the actual
+keys and values
+located in the file\fI.pag\fP file.
+The file is generated by the
+.B store
+procedure of the dbm(3) library.
+See the Unix Programmer's Manual, Vol 1, dbm(3x), for further details on
+the database library.
+
+.NH 3
+Record Format
+.PP
+A record consists of a key and a datum.
+The key is an arbitrary ascii text string but for matching purposes
+it is all lower case with all extraneous white space compressed out.
+The datum is an arbitrary variable length byte string.
+The length is controlled by a count field.
+The subfields of the datum are defined below.
+There is no white space separating any of the fields.
+They are either defined by position and count or by the field separator
+(FS) character.
+.KS
+.DS
+datum ::= serial-number entry-list
+serial-number ::= <two bytes used as unsigned short>
+entry-list ::= entry
+	     | entry-list FS entry
+entry ::= code-char value
+code-char ::= <printable ascii char matching channel char>
+value ::= <arbitrary compressed printable ascii string>
+FS ::= '\e034'
+.ce
+Fig. 2, Internal Record Format
+.DE
+.KE
+
+.NH 2
+Algorithms
+.PP
+These algorithms convert a sequential database into the random access
+database suitable for the online MMDF.
+
+.NH 3
+Partial Ordering Control
+.PP
+At the start of processing an input file the entry under the key
+"Local-Name" is retrieved and the serial number field is retained for
+further processing.
+If the entry is not found then the serial number is initialized to 1 and
+the key "Local-Name" is stored.
+The name is stored again at the end of processing with a datum containing
+the updated serial number.
+Any values stored under the key are preserved so that the key may be
+used to store other information in addition to the serial number.
+In future, this entry can be used to store the host's local name instead
+of the separate file currently used.
+
+
+.NH 3
+Channel Encoding
+.PP
+Channel code characters are passed to the program with the sequential
+data file.
+The code characters are retained by the program and prepended to values
+as they are stored in the database.
+There is currently one code character assigned for each channel in the
+system as well as the '=' character which identifies an official name.
+
+.NH 3
+Identical Keys
+.PP
+Identical keys are allowed in the sequential database.
+They are implemented in the random database by concatenating the entries
+according to the record format in Fig 2.
+The key part of an input line is retrieved before it is stored into the
+database.
+The retrieved datum is used instead of an initialized empty datum
+whenever the retrieval returns a valid datum.
+The new entry is appended to the end along with its code character and
+separated from the rest of the retrieved entry by the FS character.
+
+.NH 3
+Official Name Processing
+.PP
+An official name in the sequential database is the first name associated with
+a particular address.
+Official names are detected and marked in the random access database in a
+similar manner.
+Official names are entered into the database under the control of a command
+line argument; the default action is to not process official names.
+.PP
+As the sequential input file is read for entries to store in the database, the
+value, i.e., address, part is \fIfetch\fPed to see if it is present.
+If the
+.B fetch
+returns a valid pointer to an official name then it will be used to build
+the datum for the current input line.
+If the pointer is valid but the value is not an official name then
+the official name is appended using the format from Fig 2 and datum is
+stored back into the database.
+A NULL pointer indicates that the current entry is an official name.
+The value from the address part (from above) is used as a key and the key
+part of the current input line is used as the value for the new entry.
+The entry has a '=' code character and the value
+is 'canonicalized', i.e., the first character and the
+first character after a '-' are capitalized.
+This official name entry is always stored as the first value in the datum for
+all names, including itself, that refer to it.
+The string is stored in every datum already canonicalized in order to
+save processing time for MMDF.
+.NH 3
+Name Circuit Detection
+.PP
+A name circuit is exists if there is a valid key to the database that is
+equal to the value in the current input line that is not
+the inverse key of an official name.
+This can occur only if there was a previous entry in the database that
+had a key equal to the value of the current entry.
+The input line is stored as an additional value in the entry.
+(See Section 5.3.3).
+There is a change in the way name circuits are rejected by the database
+because the partial ordering for the entry remains the same.
+Any identical keys which would have been valid in the sequential database
+because they were positionally correct are no longer valid because they
+are, in effect, moved up to be just below (actually part of)
+the first, out of order key.
+This restriction prohibits certain obscure or clever alias list
+manipulations.
+.PP
+Forward references, i.e., the value field of a previous entry is equal to
+the key of the current entry, are allowed in the sequential database since
+the linkages will terminate at the end of file.
+These are allowed in the random access database too because the database
+procedures will check sequence numbers when requested by the calling
+procedure and reject all fetches that are not
+forward references thereby preventing the name circuit.
+.NH 2
+Error Processing
+.PP
+All system and database inconsistency errors are reported to the
+operator on the standard error output.
+All improperly formed entries
+are rejected.
+

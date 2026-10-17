@@ -1,0 +1,113 @@
+Mackermit Information:
+
+This is an "alpha" release of the program.  Much of the code is sloppy
+and buggy, but I believe that all the program's funadmentals work 
+adequately.  This program is cheifly an adaptation of Columbia's Unix
+kermit.  The kermit file transfer system is a communication between two 
+running programs, one on each computer.  This document is minimal 
+information concerning the operation of the Macs end of the program.  
+Please see your systems manual pages for kermits operation there.
+
+
+Any questions or comments can be mailed over the networks to 
+engel@harvard.
+
+Kermit is a file transfer program, and has four main modes, which can
+be selected by clicking the appropriate item on the mode menu.  
+
+Controls:
+
+This mode allows the user to change the  type of communication to
+adequately interface with the other computer.  Selecting this option
+and pressing the appropriate buttons on the screen  changes the baud
+rate, the number of bits passed, the number  of stop bits, and the type
+of parity, if any.
+
+
+Connect:
+
+Connect mode allows kermit to behave as a dumb terminal.   Control 
+characters can be sent using the clover leaf key.  
+The enter key sends a break across.  The terminal is 
+hardwired for 9600 baud eight bit, one stop bit connection.    Clicking the 
+mouse button exits this mode, and breaks communication.  Occasional
+characters may be lost.
+
+Transmit:
+
+In this mode the Mackermit sends a file  to the other machine.  After
+sending some initial data, it will prompt the suer for a filename.  At
+this time the file entered must be on the disk in the internal drive.
+The filename must also be compatible with the receiving machine.  
+All filenames are translated to lower case, and any spaces are removed.
+Once communicating Mackermit prints out a few status messages during 
+transmission.
+
+
+
+
+
+
+                                                        2
+
+
+
+Receive:
+
+Mackermit receives files sent over by other kermits.  They can be of any
+name with the exception of names already used on the Mac's 
+current disk.
+
+Protocol:
+
+     To send (upload) files:
+
+     Run Mackermit.  Select connect mode, and login to the appropriate
+     machine.  Note that this machine must have a working kermit.
+     Type to the shell, "kermit r  <cr> ".  Hit the mouse button to exit
+     connect mode.  Select the appropriate option. (see below)  Select
+     transmit mode.  A prompt for filename will appear.  Enter the
+     appropriate one.  Mackermit will report either success or failure.
+
+To receive (download) files:
+
+      Do the same as above until typeing kermit r to the shell.  Instead
+      type "kermit s filname <cr> ", where filname can be any readable
+      file.  Disconnect by hitting the mouse button, select the appropriate 
+     option, and finally select receive mode.  Again mackermit will
+     report either success or failure.
+
+
+Options:
+
+The options menu concerns how kermit handles carriage returns in  files.
+The macwrite mode allows kermit to handle those type files nicely,
+by mapping CRs to NLs on sending, and doing the reverse upon receiving
+a file.  The image mode is a holdover from the Columbia version.  If it
+is turned off, NL is mapped to CRLF on output, and CRs are ignored on
+input.  If it is selected, NLs and CRs are left alone.   Selecting image
+also allows eight data bits to be sent or received. Note that macwrite
+may be selected along with an image option, but that its operations are 
+executed first.  The third mode, executable, allows the
+transfer of executable Macintosh code .  If selected, it places the data
+passed over into the resource fork of an "application" file.  If the code
+passed over was valid Macintosh machine code and resource data, the
+file can be successfully run on the mac.   The code must be sent
+over by the non-mac kermit as eight bit data, however.  This is why selecting
+executable always also selects image.
+
+
+Additional features (Kermit 1.1):
+
+	The terminal mode now accepts many escape sequence, and feebly emulates
+	a VT100
+
+	Debug option may now be selected.  This causes information about
+	all packets sent and received to be displayed.  Each packet
+	is displayed until the mouse button is pressed.
+
+	Pressing a key during execution causes the last packet to be
+	resent.  This is useful if, for example, a packet length comes
+	across distorted, and Mackermit waits for characters that are not
+	coming.
+

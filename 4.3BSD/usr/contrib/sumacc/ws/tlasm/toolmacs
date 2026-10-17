@@ -1,0 +1,1036 @@
+5P:H r^;File ToolMacs.Text
+;-----------------------------------------------------
+;
+;  User Interface ToolBox Assembly Language Interface
+;
+;    These macros expand into toolBox traps allowing
+;  a convenient, symbolic ToolBox interface for the
+;  assembly lanaguage programmer.
+;
+;  Version for ROM 2.0 --     Februrary 10, 1983
+;  regenerated for ROM 4.0 -- June 3, 1983
+;  changed AlertSound to ErrorSound
+;  added InsertResMenu, OpenDeskAcc -- June 13, 1983
+;  added UniqueID, CloseDeskAcc,SystemEdit,LBin2Dec,LDec2Bin
+;        Secs2Date,Date2Secs; removed sound traps -- July 2, 1983
+;  added TEGetText, TESetJust and TEInsert - august 4
+;  added SysBeep, DrawGrow - august 6
+;  added HandAndHand, PtrAndHand - august 6
+;  Removed EndSubResource.  Changed BeginSubResource to HomeResFile.
+;  added GetFinderInfo and SetFinderInfo - august 6
+;  added DragGrayRgn - august 11
+;  Removed GetFinderInfo and SetFinderInfo (august 18?)
+;  Added scrap macros
+;  Added resource set/getresfileattr
+;  Added EnQueue, DeQueue (19-Dec-83, LAK)
+;  Added CouldDialog, FreeDialog, SizeRsrc (12-Jan-84, LAK)
+;
+;-----------------------------------------------------
+
+
+                .MACRO  _InitFont
+                .WORD  $A8FE
+                .ENDM
+
+                .MACRO  _GetFName
+                .WORD  $A8FF
+                .ENDM
+
+                .MACRO  _GetFNum
+                .WORD  $A900
+                .ENDM
+
+                .MACRO  _FMSwapFo
+                .WORD  $A901
+                .ENDM
+
+                .MACRO  _RealFont
+                .WORD  $A902
+                .ENDM
+
+                .MACRO  _SetFontL
+                .WORD  $A903
+                .ENDM
+
+                .MACRO  _DrawGrow
+                .WORD  $A904
+                .ENDM
+
+                .MACRO  _DragGrayRgn
+                .WORD  $A905
+                .ENDM
+
+                .MACRO  _NewStrin
+                .WORD  $A906
+                .ENDM
+
+                .MACRO  _SetStrin
+                .WORD  $A907
+                .ENDM
+
+                .MACRO  _ShowHide
+                .WORD  $A908
+                .ENDM
+
+                .MACRO  _CalcVis
+                .WORD  $A909
+                .ENDM
+
+                .MACRO  _CalcVBehind
+                .WORD  $A90A
+                .ENDM
+
+                .MACRO  _ClipAbov
+                .WORD  $A90B
+                .ENDM
+
+                .MACRO  _PaintOne
+                .WORD  $A90C
+                .ENDM
+
+                .MACRO  _PaintBeh
+                .WORD  $A90D
+                .ENDM
+
+                .MACRO  _SaveOld
+                .WORD  $A90E
+                .ENDM
+
+                .MACRO  _DrawNew
+                .WORD  $A90F
+                .ENDM
+
+                .MACRO  _GetWMgrP
+                .WORD  $A910
+                .ENDM
+
+                .MACRO  _CheckUpD
+                .WORD  $A911
+                .ENDM
+
+                .MACRO  _InitWind
+                .WORD  $A912
+                .ENDM
+
+                .MACRO  _NewWindo
+                .WORD  $A913
+                .ENDM
+
+                .MACRO  _DisposWindow
+                .WORD  $A914
+                .ENDM
+
+                .MACRO  _ShowWind
+                .WORD  $A915
+                .ENDM
+
+                .MACRO  _HideWind
+                .WORD  $A916
+                .ENDM
+
+                .MACRO  _GetWRefC
+                .WORD  $A917
+                .ENDM
+
+                .MACRO  _SetWRefC
+                .WORD  $A918
+                .ENDM
+
+                .MACRO  _GetWTitl
+                .WORD  $A919
+                .ENDM
+
+                .MACRO  _SetWTitl
+                .WORD  $A91A
+                .ENDM
+
+                .MACRO  _MoveWind
+                .WORD  $A91B
+                .ENDM
+
+                .MACRO  _HiliteWi
+                .WORD  $A91C
+                .ENDM
+
+                .MACRO  _SizeWind
+                .WORD  $A91D
+                .ENDM
+
+                .MACRO  _TrackGoA
+                .WORD  $A91E
+                .ENDM
+
+                .MACRO  _SelectWi
+                .WORD  $A91F
+                .ENDM
+
+                .MACRO  _BringToF
+                .WORD  $A920
+                .ENDM
+
+                .MACRO  _SendBehi
+                .WORD  $A921
+                .ENDM
+
+                .MACRO  _BeginUpD
+                .WORD  $A922
+                .ENDM
+
+                .MACRO  _EndUpDat
+                .WORD  $A923
+                .ENDM
+
+                .MACRO  _FrontWin
+                .WORD  $A924
+                .ENDM
+
+                .MACRO  _DragWind
+                .WORD  $A925
+                .ENDM
+
+                .MACRO  _DragTheR
+                .WORD  $A926
+                .ENDM
+
+                .MACRO  _InvalRgn
+                .WORD  $A927
+                .ENDM
+
+                .MACRO  _InvalRec
+                .WORD  $A928
+                .ENDM
+
+                .MACRO  _ValidRgn
+                .WORD  $A929
+                .ENDM
+
+                .MACRO  _ValidRec
+                .WORD  $A92A
+                .ENDM
+
+                .MACRO  _GrowWind
+                .WORD  $A92B
+                .ENDM
+
+                .MACRO  _FindWind
+                .WORD  $A92C
+                .ENDM
+
+                .MACRO  _CloseWin
+                .WORD  $A92D
+                .ENDM
+
+                .MACRO  _SetWindo
+                .WORD  $A92E
+                .ENDM
+
+                .MACRO  _GetWindo
+                .WORD  $A92F
+                .ENDM
+
+                .MACRO  _InitMenu
+                .WORD  $A930
+                .ENDM
+
+                .MACRO  _NewMenu
+                .WORD  $A931
+                .ENDM
+
+                .MACRO  _DisposMenu
+                .WORD  $A932
+                .ENDM
+
+                .MACRO  _AppendMe
+                .WORD  $A933
+                .ENDM
+
+                .MACRO  _ClearMen
+                .WORD  $A934
+                .ENDM
+
+                .MACRO  _InsertMe
+                .WORD  $A935
+                .ENDM
+
+                .MACRO  _DeleteMe
+                .WORD  $A936
+                .ENDM
+
+                .MACRO  _DrawMenu
+                .WORD  $A937
+                .ENDM
+
+                .MACRO  _HiliteMe
+                .WORD  $A938
+                .ENDM
+
+                .MACRO  _EnableIt
+                .WORD  $A939
+                .ENDM
+
+                .MACRO  _DisableI
+                .WORD  $A93A
+                .ENDM
+
+                .MACRO  _GetMenuB
+                .WORD  $A93B
+                .ENDM
+
+                .MACRO  _SetMenuB
+                .WORD  $A93C
+                .ENDM
+
+                .MACRO  _MenuSele
+                .WORD  $A93D
+                .ENDM
+
+                .MACRO  _MenuKey
+                .WORD  $A93E
+                .ENDM
+
+                .MACRO  _GetItmIcon
+                .WORD  $A93F
+                .ENDM
+
+                .MACRO  _SetItmIcon
+                .WORD  $A940
+                .ENDM
+
+                .MACRO  _GetItmStyle
+                .WORD  $A941
+                .ENDM
+
+                .MACRO  _SetItmStyle
+                .WORD  $A942
+                .ENDM
+
+                .MACRO  _GetItmMark
+                .WORD  $A943
+                .ENDM
+
+                .MACRO  _SetItmMark
+                .WORD  $A944
+                .ENDM
+
+                .MACRO  _CheckIte
+                .WORD  $A945
+                .ENDM
+
+                .MACRO  _GetItem
+                .WORD  $A946
+                .ENDM
+
+                .MACRO  _SetItem
+                .WORD  $A947
+                .ENDM
+
+                .MACRO  _CalcMenu
+                .WORD  $A948
+                .ENDM
+
+                .MACRO  _GetMHand
+                .WORD  $A949
+                .ENDM
+
+                .MACRO  _SetMFlash
+                .WORD  $A94A
+                .ENDM
+
+                .MACRO  _PlotIcon
+                .WORD  $A94B
+                .ENDM
+
+                .MACRO  _FlashMen
+                .WORD  $A94C
+                .ENDM
+
+                .MACRO  _AddResMe
+                .WORD  $A94D
+                .ENDM
+
+                .MACRO  _CountMIt
+                .WORD  $A950
+                .ENDM
+
+                .MACRO  _InsertResMenu
+                .WORD  $A951
+                .ENDM
+
+                .MACRO  _PinRect
+                .WORD  $A94E
+                .ENDM
+
+                .MACRO  _DeltaPoi
+                .WORD  $A94F
+                .ENDM
+
+                .MACRO  _NewContr
+                .WORD  $A954
+                .ENDM
+
+                .MACRO  _DisposControl
+                .WORD  $A955
+                .ENDM
+
+                .MACRO  _KillCont
+                .WORD  $A956
+                .ENDM
+
+                .MACRO  _ShowCont
+                .WORD  $A957
+                .ENDM
+
+                .MACRO  _HideCont
+                .WORD  $A958
+                .ENDM
+
+                .MACRO  _MoveCont
+                .WORD  $A959
+                .ENDM
+
+                .MACRO  _GetCRefC
+                .WORD  $A95A
+                .ENDM
+
+                .MACRO  _SetCRefC
+                .WORD  $A95B
+                .ENDM
+
+                .MACRO  _SizeCont
+                .WORD  $A95C
+                .ENDM
+
+                .MACRO  _HiliteCo
+                .WORD  $A95D
+                .ENDM
+
+                .MACRO  _GetCTitl
+                .WORD  $A95E
+                .ENDM
+
+                .MACRO  _SetCTitl
+                .WORD  $A95F
+                .ENDM
+
+                .MACRO  _GetCtlVa
+                .WORD  $A960
+                .ENDM
+
+                .MACRO  _GetMinCtl
+                .WORD  $A961
+                .ENDM
+
+                .MACRO  _GetMaxCtl
+                .WORD  $A962
+                .ENDM
+
+                .MACRO  _SetCtlVa
+                .WORD  $A963
+                .ENDM
+
+                .MACRO  _SetMinCtl
+                .WORD  $A964
+                .ENDM
+
+                .MACRO  _SetMaxCtl
+                .WORD  $A965
+                .ENDM
+
+                .MACRO  _TestCont
+                .WORD  $A966
+                .ENDM
+
+                .MACRO  _DragCont
+                .WORD  $A967
+                .ENDM
+
+                .MACRO  _TrackCon
+                .WORD  $A968
+                .ENDM
+
+                .MACRO  _DrawCont
+                .WORD  $A969
+                .ENDM
+
+                .MACRO  _GetCtlAc
+                .WORD  $A96A
+                .ENDM
+
+                .MACRO  _SetCtlAc
+                .WORD  $A96B
+                .ENDM
+
+                .MACRO  _FindCont
+                .WORD  $A96C
+                .ENDM
+
+                .MACRO  _DeQueue
+                .WORD  $A96E
+                .ENDM
+
+                .MACRO  _EnQueue
+                .WORD  $A96F
+                .ENDM
+
+                .MACRO  _GetNextE
+                .WORD  $A970
+                .ENDM
+
+                .MACRO  _EventAva
+                .WORD  $A971
+                .ENDM
+
+                .MACRO  _GetMouse
+                .WORD  $A972
+                .ENDM
+
+                .MACRO  _StillDow
+                .WORD  $A973
+                .ENDM
+
+                .MACRO  _Button
+                .WORD  $A974
+                .ENDM
+
+                .MACRO  _TickCoun
+                .WORD  $A975
+                .ENDM
+
+                .MACRO  _GetKeys
+                .WORD  $A976
+                .ENDM
+
+                .MACRO  _WaitMous
+                .WORD  $A977
+                .ENDM
+
+                .MACRO  _CouldDialog
+                .WORD  $A979
+                .ENDM
+
+                .MACRO  _FreeDialog
+                .WORD  $A97A
+                .ENDM
+
+                .MACRO  _InitDial
+                .WORD  $A97B
+                .ENDM
+
+                .MACRO  _GetNewDi
+                .WORD  $A97C
+                .ENDM
+
+                .MACRO  _NewDialo
+                .WORD  $A97D
+                .ENDM
+
+                .MACRO  _SelIText
+                .WORD  $A97E
+                .ENDM
+
+                .MACRO  _IsDialog
+                .WORD  $A97F
+                .ENDM
+
+                .MACRO  _DialogSe
+                .WORD  $A980
+                .ENDM
+
+                .MACRO  _DrawDial
+                .WORD  $A981
+                .ENDM
+
+                .MACRO  _CloseDia
+                .WORD  $A982
+                .ENDM
+
+                .MACRO  _DisposDi
+                .WORD  $A983
+                .ENDM
+
+                .MACRO  _Alert
+                .WORD  $A985
+                .ENDM
+
+                .MACRO  _StopAler
+                .WORD  $A986
+                .ENDM
+
+                .MACRO  _NoteAler
+                .WORD  $A987
+                .ENDM
+
+                .MACRO  _CautionA
+                .WORD  $A988
+                .ENDM
+
+                .MACRO  _CouldAle
+                .WORD  $A989
+                .ENDM
+
+                .MACRO  _FreeAler
+                .WORD  $A98A
+                .ENDM
+
+                .MACRO  _ParamTex
+                .WORD  $A98B
+                .ENDM
+
+                .MACRO  _ErrorSou
+                .WORD  $A98C
+                .ENDM
+
+                .MACRO  _GetDItem
+                .WORD  $A98D
+                .ENDM
+
+                .MACRO  _SetDItem
+                .WORD  $A98E
+                .ENDM
+
+                .MACRO  _SetIText
+                .WORD  $A98F
+                .ENDM
+
+                .MACRO  _GetIText
+                .WORD  $A990
+                .ENDM
+
+                .MACRO  _ModalDia
+                .WORD  $A991
+                .ENDM
+
+                .MACRO  _DetachRe
+                .WORD  $A992
+                .ENDM
+
+                .MACRO  _SetResPu
+                .WORD  $A993
+                .ENDM
+
+                .MACRO  _CurResFi
+                .WORD  $A994
+                .ENDM
+
+                .MACRO  _InitReso
+                .WORD  $A995
+                .ENDM
+
+                .MACRO  _RsrcZone
+                .WORD  $A996
+                .ENDM
+
+                .MACRO  _OpenResF
+                .WORD  $A997
+                .ENDM
+
+                .MACRO  _UseResFi
+                .WORD  $A998
+                .ENDM
+
+                .MACRO  _UpdateRe
+                .WORD  $A999
+                .ENDM
+
+                .MACRO  _CloseRes
+                .WORD  $A99A
+                .ENDM
+
+                .MACRO  _SetResLo
+                .WORD  $A99B
+                .ENDM
+
+                .MACRO  _CountRes
+                .WORD  $A99C
+                .ENDM
+
+                .MACRO  _GetIndRe
+                .WORD  $A99D
+                .ENDM
+
+                .MACRO  _CountTyp
+                .WORD  $A99E
+                .ENDM
+
+                .MACRO  _GetIndTy
+                .WORD  $A99F
+                .ENDM
+
+                .MACRO  _GetResou
+                .WORD  $A9A0
+                .ENDM
+
+                .MACRO  _GetNamed
+                .WORD  $A9A1
+                .ENDM
+
+                .MACRO  _LoadReso
+                .WORD  $A9A2
+                .ENDM
+
+                .MACRO  _ReleaseR
+                .WORD  $A9A3
+                .ENDM
+
+                .MACRO  _HomeResF
+                .WORD  $A9A4
+                .ENDM
+
+                .MACRO  _SizeRsrc
+                .WORD  $A9A5
+                .ENDM
+
+                .MACRO  _GetResAt
+                .WORD  $A9A6
+                .ENDM
+
+                .MACRO  _SetResAt
+                .WORD  $A9A7
+                .ENDM
+
+                .MACRO  _GetResIn
+                .WORD  $A9A8
+                .ENDM
+
+                .MACRO  _SetResIn
+                .WORD  $A9A9
+                .ENDM
+
+                .MACRO  _ChangedR
+                .WORD  $A9AA
+                .ENDM
+
+                .MACRO  _AddResou
+                .WORD  $A9AB
+                .ENDM
+
+                .MACRO  _AddRefer
+                .WORD  $A9AC
+                .ENDM
+
+                .MACRO  _RmveReso
+                .WORD  $A9AD
+                .ENDM
+
+                .MACRO  _RmveRefe
+                .WORD  $A9AE
+                .ENDM
+
+                .MACRO  _ResError
+                .WORD  $A9AF
+                .ENDM
+
+                .MACRO  _WriteRes
+                .WORD  $A9B0
+                .ENDM
+
+                .MACRO  _CreateRe
+                .WORD  $A9B1
+                .ENDM
+
+                .MACRO  _SystemEv
+                .WORD  $A9B2
+                .ENDM
+
+                .MACRO  _SystemCl
+                .WORD  $A9B3
+                .ENDM
+
+                .MACRO  _SystemTa
+                .WORD  $A9B4
+                .ENDM
+
+                .MACRO  _SystemMe
+                .WORD  $A9B5
+                .ENDM
+
+                .MACRO  _OpenDeskAcc
+                .WORD  $A9B6
+                .ENDM
+
+                .MACRO  _CloseDeskAcc
+                .WORD  $A9B7
+                .ENDM
+
+                .MACRO  _GetPatte
+                .WORD  $A9B8
+                .ENDM
+
+                .MACRO  _GetCurso
+                .WORD  $A9B9
+                .ENDM
+
+                .MACRO  _GetStrin
+                .WORD  $A9BA
+                .ENDM
+
+                .MACRO  _GetIcon
+                .WORD  $A9BB
+                .ENDM
+
+                .MACRO  _GetPictu
+                .WORD  $A9BC
+                .ENDM
+
+                .MACRO  _GetNewWi
+                .WORD  $A9BD
+                .ENDM
+
+                .MACRO  _GetNewCo
+                .WORD  $A9BE
+                .ENDM
+
+                .MACRO  _GetRMenu
+                .WORD  $A9BF
+                .ENDM
+
+                .MACRO  _GetNewMB
+                .WORD  $A9C0
+                .ENDM
+
+                .MACRO  _UniqueID
+                .WORD   $A9C1
+                .ENDM
+
+                .MACRO  _SysEdit
+                .WORD   $A9C2
+                .ENDM
+
+                .MACRO  _LBin2Dec
+                .WORD   $A9C4
+                .ENDM
+
+                .MACRO  _LDec2Bin
+                .WORD   $A9C5
+                .ENDM
+
+                .MACRO  _Secs2Date
+                .WORD   $A9C6
+                .ENDM
+
+                .MACRO  _Date2Secs
+                .WORD   $A9C7
+                .ENDM
+
+                .MACRO  _SysBeep
+                .WORD  $A9C8
+                .ENDM
+
+                .MACRO  _SysError
+                .WORD  $A9C9
+                .ENDM
+
+                .MACRO  _PutIcon
+                .WORD  $A9CA
+                .ENDM
+
+                .MACRO  _TEGetText
+                .WORD  $A9CB
+                .ENDM
+
+                .MACRO  _TEInit
+                .WORD  $A9CC
+                .ENDM
+
+                .MACRO  _TEDispos
+                .WORD  $A9CD
+                .ENDM
+
+                .MACRO  _TextBox
+                .WORD  $A9CE
+                .ENDM
+
+                .MACRO  _TESetText
+                .WORD  $A9CF
+                .ENDM
+
+                .MACRO  _TECalTex
+                .WORD  $A9D0
+                .ENDM
+
+                .MACRO  _TESetSel
+                .WORD  $A9D1
+                .ENDM
+
+                .MACRO  _TENew
+                .WORD  $A9D2
+                .ENDM
+
+                .MACRO  _TEUpdate
+                .WORD  $A9D3
+                .ENDM
+
+                .MACRO  _TEClick
+                .WORD  $A9D4
+                .ENDM
+
+                .MACRO  _TECopy
+                .WORD  $A9D5
+                .ENDM
+
+                .MACRO  _TECut
+                .WORD  $A9D6
+                .ENDM
+
+                .MACRO  _TEDelete
+                .WORD  $A9D7
+                .ENDM
+
+                .MACRO  _TEActiva
+                .WORD  $A9D8
+                .ENDM
+
+                .MACRO  _TEDeacti
+                .WORD  $A9D9
+                .ENDM
+
+                .MACRO  _TEIdle
+                .WORD  $A9DA
+                .ENDM
+
+                .MACRO  _TEPaste
+                .WORD  $A9DB
+                .ENDM
+
+                .MACRO  _TEKey
+                .WORD  $A9DC
+                .ENDM
+
+                .MACRO  _TEScroll
+                .WORD  $A9DD
+                .ENDM
+
+                .MACRO  _TEInsert
+                .WORD  $A9DE
+                .ENDM
+
+                .MACRO  _TESetJust
+                .WORD  $A9DF
+                .ENDM
+
+                .MACRO  _Munger
+                .WORD  $A9E0
+                .ENDM
+
+                .MACRO  _HandToHa
+                .WORD  $A9E1
+                .ENDM
+
+                .MACRO  _PtrToXHa
+                .WORD  $A9E2
+                .ENDM
+
+                .MACRO  _PtrToHan
+                .WORD  $A9E3
+                .ENDM
+
+                .MACRO  _HandAndH
+                .WORD  $A9E4
+                .ENDM
+
+                .MACRO  _InitPack
+                .WORD  $A9E5
+                .ENDM
+
+                .MACRO  _InitMath
+                .WORD  $A9E6
+                .ENDM
+
+                .MACRO  _Pack0
+                .WORD  $A9E7
+                .ENDM
+
+                .MACRO  _Pack1
+                .WORD  $A9E8
+                .ENDM
+
+                .MACRO  _Pack2
+                .WORD  $A9E9
+                .ENDM
+
+                .MACRO  _Pack3
+                .WORD  $A9EA
+                .ENDM
+
+                .MACRO  _FP68K          ;same as Pack4
+                .WORD  $A9EB
+                .ENDM
+
+                .MACRO  _Pack4
+                .WORD  $A9EB
+                .ENDM
+
+                .MACRO  _Pack5
+                .WORD  $A9EC
+                .ENDM
+
+                .MACRO  _Pack6
+                .WORD  $A9ED
+                .ENDM
+
+                .MACRO  _Pack7
+                .WORD  $A9EE
+                .ENDM
+
+                .MACRO  _PtrAndHa
+                .WORD  $A9EF
+                .ENDM
+
+                .MACRO  _LoadSeg
+                .WORD  $A9F0
+                .ENDM
+
+                .MACRO  _UnLoadSe
+                .WORD  $A9F1
+                .ENDM
+
+                .MACRO  _Launch
+                .WORD  $A9F2
+                .ENDM
+
+                .MACRO  _Chain
+                .WORD  $A9F3
+                .ENDM
+
+                .MACRO  _ExitToSh
+                .WORD  $A9F4
+                .ENDM
+
+                .MACRO  _GetAppPa
+                .WORD  $A9F5
+                .ENDM
+
+
+                .MACRO _GetResFil
+                .WORD  $A9F6
+                .ENDM
+
+                .MACRO _SetResFil
+                .WORD  $A9F7
+                .ENDM
+
+                .MACRO _InfoScra
+                .WORD  $A9F9
+                .ENDM
+
+                .MACRO _UnlodeSc
+                .WORD  $A9FA
+                .ENDM
+
+                .MACRO _LodeScra
+                .WORD  $A9FB
+                .ENDM
+
+                .MACRO _ZeroScra
+                .WORD  $A9FC
+                .ENDM
+
+                .MACRO _GetScrap
+                .WORD  $A9FD
+                .ENDM
+
+                .MACRO _PutScrap
+                .WORD  $A9FE
+                .ENDM
+
+

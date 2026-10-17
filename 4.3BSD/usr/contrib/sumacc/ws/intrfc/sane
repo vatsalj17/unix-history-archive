@@ -1,0 +1,216 @@
+
+A       O9!5P:H r^{$C Copyright Apple Computer, 1982 }
+{MacIntosh version.}
+
+UNIT Sane;
+
+    INTERFACE
+
+        CONST
+
+            SIGDIGLEN = 20;     { Maximum length of SigDig. }
+
+            DECSTRLEN = 80;     { Maximum length of DecStr. }
+
+        TYPE
+
+            {-----------------------------------------------------------------
+            ** Numeric types.
+            -----------------------------------------------------------------}
+
+                Single   = array [0..1] of integer;
+                Double   = array [0..3] of integer;
+                Comp     = array [0..3] of integer;
+                Extended = array [0..4] of integer;
+
+            {-----------------------------------------------------------------
+            ** Decimal string type and intermediate decimal type,
+            ** representing the value:
+            **      (-1)^sgn * 10^exp * dig
+            -----------------------------------------------------------------}
+
+                SigDig   = string [SIGDIGLEN];
+                DecStr   = string [DECSTRLEN];
+                Decimal  = record
+                               sgn : 0..1;    { Sign (0 for pos, 1 for neg). }
+                               exp : integer; { Exponent. }
+                               sig : SigDig   { String of significant digits. }
+                           end;
+
+            {-----------------------------------------------------------------
+            ** Modes, flags, and selections.
+            ** NOTE: the values of the style element of the DecForm record
+            ** have different names from the PCS version to avoid name
+            ** conflicts.
+            -----------------------------------------------------------------}
+
+                Environ   = integer;
+                RoundDir  = (TONEAREST, UPWARD, DOWNWARD, TOWARDZERO);
+                RelOp     = (GT, LT, GL, EQ, GE, LE, GEL, UNORD);
+                            { >   <  <>  =   >=  <=  <=> }
+                Exception = (INVALID, UNDERFLOW, OVERFLOW, DIVBYZERO,
+                                                                     INEXACT);
+                NumClass  = (SNAN, QNAN, INFINITE, ZERO, NORMAL, DENORMAL);
+                DecForm   = record
+                                style  : (FloatDecimal, FixedDecimal);
+                                digits : integer
+                            end;
+
+        {-----------------------------------------------------------------
+        ** Two address, extended-based arithmetic operations.
+        -----------------------------------------------------------------}
+
+        procedure AddS (x : Single;   var y : Extended);
+        procedure AddD (x : Double;   var y : Extended);
+        procedure AddC (x : Comp;     var y : Extended);
+        procedure AddX (x : Extended; var y : Extended);
+            { y := y + x }
+
+        procedure SubS (x : Single;   var y : Extended);
+        procedure SubD (x : Double;   var y : Extended);
+        procedure SubC (x : Comp;     var y : Extended);
+        procedure SubX (x : Extended; var y : Extended);
+            { y := y - x }
+
+        procedure MulS (x : Single;   var y : Extended);
+        procedure MulD (x : Double;   var y : Extended);
+        procedure MulC (x : Comp;     var y : Extended);
+        procedure MulX (x : Extended; var y : Extended);
+            { y := y * x }
+
+        procedure DivS (x : Single;   var y : Extended);
+        procedure DivD (x : Double;   var y : Extended);
+        procedure DivC (x : Comp;     var y : Extended);
+        procedure DivX (x : Extended; var y : Extended);
+            { y := y / x }
+
+        function  CmpX (x : Extended; r : RelOp;
+                                        y : Extended) : boolean;
+            { x r y }
+
+        function  RelX (x, y : Extended) : RelOp;
+            { x RelX y, where RelX in [GT, LT, EQ, UNORD] }
+
+        {-----------------------------------------------------------------
+        ** Conversions between Extended and the other numeric types,
+        ** including the types integer and Longint.
+        -----------------------------------------------------------------}
+
+        procedure I2X (x : integer;  var y : Extended);
+        procedure S2X (x : Single;   var y : Extended);
+        procedure D2X (x : Double;   var y : Extended);
+        procedure C2X (x : Comp;     var y : Extended);
+        procedure X2X (x : Extended; var y : Extended);
+            { y := x (arithmetic assignment) }
+
+        procedure X2I (x : Extended; var y : integer);
+        procedure X2S (x : Extended; var y : Single);
+        procedure X2D (x : Extended; var y : Double);
+        procedure X2C (x : Extended; var y : Comp);
+            { y := x (arithmetic assignment) }
+
+        {-----------------------------------------------------------------
+        ** These conversions apply to 68K systems only.  Longint is
+        ** a 32-bit two's complement integer.
+        -----------------------------------------------------------------}
+
+        procedure L2X (x : Longint;  var y : Extended);
+        procedure X2L (x : Extended; var y : Longint);
+            { y := x (arithmetic assignment) }
+
+        {-----------------------------------------------------------------
+        ** Conversions between the numeric types and the intermediate
+        ** decimal type.
+        -----------------------------------------------------------------}
+
+        procedure S2Dec (f : DecForm; x : Single;   var y : Decimal);
+        procedure D2Dec (f : DecForm; x : Double;   var y : Decimal);
+        procedure C2Dec (f : DecForm; x : Comp;     var y : Decimal);
+        procedure X2Dec (f : DecForm; x : Extended; var y : Decimal);
+            { y := x (according to the format f) }
+
+        procedure Dec2S (x : Decimal; var y : Single);
+        procedure Dec2D (x : Decimal; var y : Double);
+        procedure Dec2C (x : Decimal; var y : Comp);
+        procedure Dec2X (x : Decimal; var y : Extended);
+            { y := x }
+
+        {-----------------------------------------------------------------
+        ** Conversions between the numeric types and strings.
+        ** (These conversions have a built-in scanner/parser to convert
+        ** between the intermediate decimal type and a string.)
+        -----------------------------------------------------------------}
+
+        procedure S2Str (f : DecForm; x : Single;   var y : DecStr);
+        procedure D2Str (f : DecForm; x : Double;   var y : DecStr);
+        procedure C2Str (f : DecForm; x : Comp;     var y : DecStr);
+        procedure X2Str (f : DecForm; x : Extended; var y : DecStr);
+            { y := x (according to the format f) }
+
+        procedure Str2S (x : DecStr; var y : Single);
+        procedure Str2D (x : DecStr; var y : Double);
+        procedure Str2C (x : DecStr; var y : Comp);
+        procedure Str2X (x : DecStr; var y : Extended);
+            { y := x }
+
+        {-----------------------------------------------------------------
+        ** Numerical 'library' procedures and functions.
+        -----------------------------------------------------------------}
+
+        procedure RemX    (x : Extended; var y : Extended;
+                                                         var quo : integer);
+            { new y := remainder of ((old y) / x), such that
+                       |new y| <= |x| / 2;
+              quo := low order seven bits of integer quotient y / x,
+                     so that -127 <= quo <= 127.                     }
+        procedure SqrtX   (var x : Extended);
+            { x := sqrt (x) }
+        procedure RintX   (var x : Extended);
+            { x := rounded value of x }
+        procedure NegX    (var x : Extended);
+            { x := -x }
+        procedure AbsX    (var x : Extended);
+            { x := |x| }
+        procedure CpySgnX (var x : Extended; y : Extended);
+            { x := x with the sign of y }
+
+        procedure NextS   (var x : Single;   y : Single);
+        procedure NextD   (var x : Double;   y : Double);
+        procedure NextX   (var x : Extended; y : Extended);
+            { x := next representable value from x toward y }
+
+        function  ClassS  (x : Single;   var sgn : integer) : NumClass;
+        function  ClassD  (x : Double;   var sgn : integer) : NumClass;
+        function  ClassC  (x : Comp;     var sgn : integer) : NumClass;
+        function  ClassX  (x : Extended; var sgn : integer) : NumClass;
+            { sgn := sign of x (0 for pos, 1 for neg) }
+
+        procedure ScalbX (n : integer; var y : Extended);
+            { y := y * 2^n }
+        procedure LogbX  (var x : Extended);
+            { returns unbiased exponent of x }
+
+        {-----------------------------------------------------------------
+        ** Manipulations of the static numeric state.
+        -----------------------------------------------------------------}
+
+        procedure SetRnd  (r : RoundDir);
+        procedure SetEnv  (e : Environ);
+        procedure ProcExit(e : Environ);
+
+        function  GetRnd  : RoundDir;
+        procedure GetEnv  (var e : Environ);
+        procedure ProcEntry (var e : Environ);
+
+        function  TestXcp (x : Exception) : boolean;
+        procedure SetXcp  (x : Exception; OnOff : boolean);
+        function  TestHlt (x : Exception) : boolean;
+        procedure SetHlt  (x : Exception; OnOff : boolean);
+
+    {------------------------------------------------------------------------}
+
+    IMPLEMENTATION
+
+        {$I SANEIMP.TEXT}
+
+END

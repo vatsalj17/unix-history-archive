@@ -1,0 +1,745 @@
+W^5P:H r^&47!7!N^;
+;File wProcAsm.TEXT
+;--------------------------------------------------------------------------
+;
+;  Window Definition Routine for the
+;       MacIntosh Window Manager
+;
+;  written by Andy Hertzfeld  Aug 4, 1982
+;
+;  (c) 1982 by Apple Computer, Inc.  All rights reserved.
+;
+;    This file contains the window definition procedure
+;  "DocumentProc", the standard Mac window type.  It is
+;  a rectangular window with a title bar.  It is assembled
+;  part of the window manager.
+;
+;  Modification History:
+;
+;    21-Aug-82  AJH  Made DocumentProc support rectangular windows only
+;    30-Aug-82  AJH  Added growIcon hit detection, fixed hit to exclude perimeter drag
+;    07-Sep-82  AJH  Added handler for grow message
+;    12-Sep-82  AJH  Made it so proc doesn't have to calcRgns when not visible
+;    20-Sep-82  AJH  Added go-away button drawing and hit-testing
+;    25-Sep-82  AJH  Added cheap dialogBox window definition proc
+;    28-Sep-82  AJH  New GoAway button; restructured goAway drawing
+;    05-Oct-82  AJH  Removed Init message to save code
+;    06-Oct-82  AJH  Fixed dialogBox dragRgn bug
+;    10-Oct-82  AJH  Converted to QuickDraw trap interface
+;    16-Oct-82  AJH  Fixed GoAway hit-test origin bug
+;    17-OCt-82  AJH  Made both windowProcs preserve A1
+;    07-Nov-82  AJH  Changed DocumentProc hiliting to Lisa way
+;    14-Nov-82  AJH  Improved shape of Grow outline ala Lisa
+;    16-Nov-82  AJH  Made branch table offset-based to save space
+;    16-Nov-82  AJH  Special-cased hiliting of small windows
+;    20-Dec-82  AJH  Changed title bar to 20 pixels tall
+;    24-Dec-82  AJH  Made wProcAsm a separate assembly
+;    17-Mar-83  AJH  Added third variant -- shadowless dBoxProc
+;    27-Apr-83  AJH  only plot, hit-test goAway if window is active
+;    25-Jul-83  SC   Fixed third variant -- frame was incorrect, see DrawDBox
+;    06-Aug-83  AJH  changed hiliting to use pattern
+;    09-Aug-83  AJH  added draw grow icon message receiver
+;    20-Aug-83  AJH  made it only hit-test or draws goAway if window is active
+;    29-Oct-83  AJH  new dBox border
+;    10-Nov-83  AJH  added variant 4 -- just like variant 0, but no inGrow
+;    24-Dec-83  AJH  fixed structRgn calc bug in variant 1
+;    24-Feb-84  AJH  fixed hit-testing of go-away -- was off by 2
+;
+;----------------------------------------------------------------------------
+
+                .INCLUDE  TlAsm/SYSEQU.TEXT
+                .INCLUDE  TlAsm/SYSMACS.TEXT
+                .INCLUDE  TlAsm/GRAFEQU.TEXT
+                .INCLUDE  TlAsm/GRAFTYPES.TEXT
+                .INCLUDE  TlAsm/TOOLEQU.TEXT
+                .INCLUDE  TlAsm/QuickMacs.TEXT
+                .INCLUDE  TlAsm/ToolMacs.TEXT
+;
+                .PROC     WDEF,0
+
+;
+;  FUNCTION   DocumentProc(selector: INTEGER;
+;                          window: WindowPtr,
+;                          message: INTEGER;
+;                          parameter: LongInt): LongInt
+;
+DocumentProc
+                BRA.S   DP1
+;
+; standard header
+;
+                .WORD   0                       ;flags word
+                .ASCII  'WDEF'                  ;resource type
+                .WORD   0                       ;resource ID
+                .WORD   2                       ;version number
+
+DP1
+                LINK    A6,#0                   ;set up a stack frame to address parameters
+                MOVEM.L D3-D6/A1/A3-A4,-(SP)    ;save work registers
+;
+; fetch the parameters into registers
+;
+                LEA     8(A6),A0                ;get ptr to first parameter
+                MOVE.L  (A0)+,D3                ;get param in D3
+                MOVE.W  (A0)+,D0                ;get message
+                MOVE.L  (A0)+,A3                ;get the window pointer
+                MOVE.W  (A0)+,D5                ;get the selector integer
+                MOVE    D5,D6                   ;keep copy in D6
+                AND     #3,D5                   ;ignore "inGrow" variant
+                CLR.L   (A0)                    ;clear out function result
+;
+; case out on the message number
+;
+                ADD     D0,D0                   ;double for word index
+                LEA     GoDocProc,A0            ;get jump table address
+                ADD.W   GODOCPROC(D0),A0        ;compute dispatch address
+                JSR     (A0)
+;
+; we're done -- restore registers and return to caller
+;
+                MOVEM.L (SP)+,D3-D6/A1/A3-A4    ;restore work registers
+                UNLK    A6                      ;unlink stack frame
+                MOVE.L  (SP)+,A0                ;get return address
+                ADD     #12,SP                  ;strip parameters
+                JMP     (A0)                    ;return to caller
+;
+; DocumentProc dispatch table -- entries must be long branches!
+;
+GODOCPROC
+                .WORD   DrawDoc-GoDocProc       ;draw is message 0
+                .WORD   HitDoc-GoDocProc        ;hit test is message 1
+                .WORD   CalcDoc-GoDocProc       ;calc test is message 2
+                .WORD   DoneDoc-GoDocProc       ;it doesn't need init
+                .WORD   DoneDoc-GoDocProc       ;it doesn't need dispose
+                .WORD   GrowDoc-GoDocProc       ;grow message is #5
+                .WORD   DrawGIcon-GoDocProc     ;draw grow icon is #6
+;
+;  DrawDoc -- draw the document window.   The windowPtr is in A3
+;
+DrawDoc
+                TST.B   WVISIBLE(A3)             ;is it visible?
+                BEQ     DoneDoc                  ;if not, don't do anything
+;
+; see if its a EORGoAway call and special case it
+;
+                CMP     #wInGoAway,D3            ;is it a goAway call?
+                BEQ     EorGoAway                ;if so, go handle it
+;
+                _PenNormal                       ;we want the normal pen
+                TST.W   D5                       ;test dialogBox flag
+                BNE     DrawDBox                 ;dBox window has no title bar
+;
+; derive the titleBar rectangle from the structRgn and keep it in TempRect
+;
+                BSR     BuildTBarRect
+;
+; draw the title bar
+;
+                PEA     TEMPRECT                ;tempRect bounds the title bar
+                MOVE.L  (SP),-(SP)              ;make another copy of tempRect pointer
+                MOVE.L  (SP),-(SP)              ;and yet another
+                _FrameRect                      ;frame the title bar
+                MOVE.L  OneOne,-(SP)            ;push inset factor
+                _InsetRect
+                _EraseRect                      ;clear the inside
+;
+; hilite the title bar by filling it with specified pattern
+;
+CheckHilite
+                TST.B   WHILITED(A3)            ;is it hilited?
+                BEQ.S   DrawTheTitle            ;if not, just draw the title
+
+                PEA     TEMPRECT                ;push the title rect
+                MOVE.L  (SP),-(SP)              ;push a second copy
+
+                MOVE.L  #$00030001,-(SP)
+                _InsetRect                      ;inset it some
+
+                MOVE.L  (A5),A0                 ;get grafGlobals
+                MOVE.L  TempRect,D0             ;get topLeft
+                AND.L   #$00070007,D0           ;only use mod 8
+                MOVE.L  D0,PatAlign(A0)         ;get up patAlign
+
+                PEA     HilitePattern           ;push the pattern address
+                _FillRect                       ;fill the titleBar with the pattern
+;
+                MOVE.L  (A5),A0
+                CLR.L   PatAlign(A0)
+DrawTheTitle
+                BSR     DoTitleString           ;draw the centered Title
+;
+; plot the goAway button, if necessary
+;
+                TST.B   WGoAway(A3)             ;is the a goaway button?
+                BEQ.S   DrawBody                ;if not, skip
+;
+                TST.B   WHilited(A3)            ;only plot goAway if hilited
+                BEQ.S   DrawBody                ;if not, don't plot goAway
+
+                BSR     BuildTBarRect
+                LEA     GoAwayData,A1           ;get the goAway symbol
+                MOVEQ   #srcCopy,D1             ;plot in srcCopy mode
+                BSR     PlotGoAway
+DrawBody
+                MOVE.L  OneOne,D4               ;constant for shadowing
+;
+; frame the body of the window
+;
+DrawFrame
+                MOVE.L  STRUCTRGN(A3),A0        ;get region handle
+                MOVE.L  (A0),A0                 ;get region ptr
+                LEA     RGNBBOX(A0),A4          ;point A4 at the bounding box
+                SUB     D4,Bottom(A4)           ;inset the bottom (ignore shadow)
+                SUB     D4,Right(A4)            ;inset the right to ignore shadow
+                MOVE.L  A4,-(SP)                ;push bounding box
+                _FrameRect                      ;frame the body
+;
+; draw the drop shadow (for variant 0 and 3)
+;
+                CMP     #3,D5                   ;variant 3?
+                BEQ.S   @3                      ;if so, paint it
+
+                TST.W   D5                      ;variant 0?
+                BNE.S   @1                      ;if not, skip
+@3
+                BSR     PaintDropShadow         ;paint the drop shadow
+;
+; draw fancy for dialog box ( only for variant 1)
+;
+@1
+                CMP     #1,D5                   ;dialog box?
+                BNE.S   @2                      ;if not, skip
+
+                MOVE.L  (A4),TempRect           ;copy bounds into tempRect
+                MOVE.L  4(A4),TempRect+4
+
+                PEA     TempRect
+                MOVE.L  (SP),-(SP)              ;copy it
+                MOVE.L  (SP),-(SP)
+                MOVE.L  OneOne,-(SP)
+                _InsetRect                      ;inset it
+
+                MOVE.L  #$000A000A,-(SP)        ;set pen size
+                _PenSize
+                MOVE.L  (A5),A0
+                PEA     White(A0)
+                _PenPat
+                _FrameRect
+
+                MOVE.L  (A5),A0
+                PEA     Black(A0)
+                _PenPat
+
+                MOVE.L  #$00020002,-(SP)        ;push inset factor
+                MOVE.L  #$00020002,-(SP)        ;push new pen size
+                _PenSize                        ;set new pen size
+                _InsetRect
+                PEA     TempRect
+                _FrameRect                      ;and frame it
+
+                _PenNormal
+
+@2              ADD     D4,Bottom(A4)
+                ADD     D4,Right(A4)
+DoneDoc
+                RTS
+
+HilitePattern
+                .WORD   $FF00,$FF00,$FF00,$FF00
+;
+; BuildTBarRect builds a rectangle enclosing the titleBar in TempRect
+;
+BuildTBarRect
+                LEA     TEMPRECT,A0             ;get pointer to tempRect
+                MOVE.L  STRUCTRGN(A3),A1        ;get structure region handle
+                MOVE.L  (A1),A1                 ;get strucRgn pointer
+                ADDQ    #RGNBBOX,A1             ;point A1 at the bounding box
+                MOVE.L  (A1)+,(A0)              ;copy bounding box into tempRect
+                MOVE.L  (A1),4(A0)
+;
+;  make bottom := top + 19
+;
+                MOVE    Top(A0),D0              ;get top
+                ADD     #19,D0                  ;compute top+19
+                MOVE    D0,Bottom(A0)           ;update bottom
+                SUBQ    #1,Right(A0)            ;inset right
+                RTS                             ;return to caller
+;
+; EORGoAway hilites/unhilites the goAway button.  It falls through into PlotGoAway
+;
+EorGoAway
+                BSR.S   BuildTBarRect           ;build the bounding rect
+                LEA     GoAwayData,A1           ;get the bitMap
+                ADD.W   #32,A1                  ;bump to the EOR Mask
+                MOVEQ   #2,D1                   ;set EOR as the plot mode
+;
+; PlotGoAway plots the goAway button.  A1 holds the symbol, D1 the plotting mode
+;
+PlotGoAway
+                LEA     TempRect,A0             ;get pointer to tempRect
+                MOVE    Left(A0),D0             ;get left edge
+                ADDQ    #7,D0                   ;leave some margin
+                MOVE    D0,Left(A0)             ;update left
+                ADD     #16,D0
+                MOVE    D0,Right(A0)            ;update right
+;
+                MOVE    D1,D0                   ;set plotting mode
+                ADDQ    #2,TempRect+Top
+                SUBQ    #1,TempRect+Bottom
+                MOVE.L  #$00100010,D1
+                BSR     PlotSymbol              ;plot it in tempRect
+                BSR.S   BuildTBarRect           ;rebuild tempRect
+                RTS
+
+;
+; DialogBoxes have no title bar and extra shadow
+;
+DrawDBox
+                MOVE.L  #$00020002,D4           ;get shadow factor
+                CMP.W   #3,D5                   ;does it have shadow?
+                BEQ.S   DrawFrame               ;if so, we're cool
+                MOVEQ   #0,D4                   ;otherwise no shadow
+                BRA.S   DrawFrame               ;go draw it
+;
+; DoTitleString is the common code that draws the title centered in tempRect.  Warning --
+; it trashes D3.
+;
+DoTitleString
+                BSR     BuildTBarRect           ;calculate title bar rect
+;
+; compute indent factor based on GoAwayButton state
+;
+@1              MOVE.W  TempRect+Right,D3       ;get right
+                SUB.W   TempRect+Left,D3        ;compute width
+;
+                SUB.W   WTITLEWIDTH(A3),D3      ;compute extra x
+                ASR.W   #1,D3                   ;divide by 2
+;
+; if there's a goAway button, make sure the margin is at least 32pixels
+;
+                TST.B   WGoAway(A3)             ;is there a go away button
+                BEQ.S   @2                      ;skip if there's not
+                TST     D3                      ;is it negative?
+                BMI.S   @3                      ;if so, pin at 32
+                CMP.W   #32,D3                  ;if goAway button, must have some margin
+                BGT.S   @2
+@3              MOVEQ   #32,D3
+;
+@2              ADD     TempRect+Left,D3        ;compute x position
+                MOVE.W  D3,-(SP)                ;and push for MoveTo
+;
+                MOVE    TempRect+Bottom,-(SP)   ;push bottom
+                SUBQ    #5,(SP)                 ;leave room for descenders
+                _MoveTo
+
+; clear it out if it was hilited
+
+                TST.B   WHilited(A3)            ;was it hilited?
+                BEQ.S   @4                      ;if not, skip
+
+                SUBQ    #6,D3                   ;indent to the left
+                MOVE    D3,TempRect+Left
+                ADD.W   WTitleWidth(A3),D3      ;add in the length
+                ADD     #12,D3                  ;indent on right
+                MOVE    D3,TempRect+Right
+                SUBQ    #2,TempRect+Bottom      ;protect bottom line (in business)
+                PEA     TempRect
+                _EraseRect                      ;erase it
+;
+; draw the string
+;
+@4
+                MOVE.L  WTITLEHANDLE(A3),A0     ;get titleHandle
+                MOVE.L  (A0),-(SP)              ;push title pointer
+                _DrawString                     ;draw it
+;
+DoneDString
+                RTS                             ;all done drawing title...
+
+;
+; BitMap for default GoAway button
+;
+GoAwayData
+                .WORD   $0000,$0000,$BFFB,$2008
+                .WORD   $A00B,$2008,$A00B,$2008
+                .WORD   $A00B,$2008,$A00B,$2008
+                .WORD   $BFFB,$0000,$0000,$0000
+
+;  Mask for goAway button
+;
+                ;.WORD   $0000,$0000,$FFF4,$4110
+                ;.WORD   $C934,$4550,$C014,$5C60
+                ;.WORD   $C014,$4550,$C934,$4110
+                ;.WORD   $FFF4,$0000,$0000,$0000
+
+;                .WORD   $0000,$0000,$0000,$0118
+;                .WORD   $093C,$0558,$001C,$1C68
+;                .WORD   $001C,$0558,$093C,$0118
+;                .WORD   $0000,$0000,$0000,$0000
+
+                .WORD   $0000,$0000,$0000,$0100
+                .WORD   $0920,$0540,$0000,$1C70
+                .WORD   $0000,$0540,$0920,$0100
+                .WORD   $0000,$0000,$0000,$0000
+
+;
+;
+; HitDoc -- perform a hit test on the document.  On entry, D3 contains the mousePoint
+; in global coordinates while A3 holds the window pointer
+;
+HitDoc
+                MOVEQ   #16,D4                  ;keep 16 in a register to save code
+                CLR.W   -(SP)                   ;make room for function result
+                MOVE.L  D3,-(SP)                ;push the mouse point
+                MOVE.L  CONTRGN(A3),-(SP)       ;push content region handle
+                _PtInRgn                        ;is the point in the content region?
+                TST.B   (SP)+                   ;well, is it?
+                BEQ.S   NotInContent            ;if not, go check out drag region
+;
+; its in the content region -- see if its in the grow icon area
+;
+                TST.W   D5                      ;is it a dialogBox?
+                BNE.S   justContent             ;if so, its only in the content
+                SUBQ    #3,D6                   ;inGrow enabled?
+                BGT.S   justContent             ;if not, skip
+
+                TST.B   WHilited(A3)            ;is it active?
+                BEQ.S   justContent             ;if not, it cant be in grow
+;
+                MOVE.L  ContRgn(A3),A0          ;get region handle
+                MOVE.L  (A0),A0                 ;get region ptr
+                MOVE.L  RgnBBox+botRight(A0),D0 ;get bottom left of content
+;
+; first consider the x coordinate
+;
+                SUB     D4,D0                   ;offset x by 16
+                CMP     D0,D3                   ;if <, just in content
+                BLT.S   justContent
+;
+; its within range on x so try y
+;
+                SWAP    D0
+                SUB     D4,D0                   ;check out y dimension
+                SWAP    D3
+                CMP     D0,D3                   ;compare y coordinates
+                BLT.S   justContent
+;
+                MOVEQ   #wInGrow,D0             ;flag in grow Icon
+                BRA.S   DoneHitDoc
+;
+; the point is in the content region so return a '1'
+;
+justContent
+                MOVEQ   #wInContent,D0          ;return in content
+                BRA.S   DoneHitDoc              ;go store function result and return
+;
+; its not in the content -- see if its in the dragRgn (content extended by titleBar)
+;
+NotInContent
+;
+                TST     D5                      ;is it a dialogBox?
+                BNE.S   DoneHit1                ;dBoxes have no drag region
+;
+                CLR.W   -(SP)                   ;make room for function result
+                MOVE.L  D3,-(SP)                ;push the mouse point
+                MOVE.L  ContRgn(A3),A4          ;get content region handle
+                MOVE.L  (A4),A4                 ;get region ptr
+                ADDQ    #RgnBBox,A4             ;get bounding box ptr
+                SUB     #19,Top(A4)             ;make it 19 higher
+                MOVE.L  A4,-(SP)                ;push the rect
+                _PtInRect                       ;is the point in the title bar?
+                ADD     #19,Top(A4)             ;fix up content bounds
+;
+                TST.B   (SP)+                   ;examine result
+                BEQ.S   DoneHit1                ;if not, return 0 (do nothing)
+;
+; see if its in leftmost 16 of drag, which is the goAway button
+;
+                TST.B   WHilited(A3)            ;is it hilited?
+                BEQ.S   ItsInDrag               ;if not, can't be in GoAway
+
+                TST.B   WGoAway(A3)             ;is there a goAway button?
+                BEQ.S   ItsInDrag               ;if not, skip
+                MOVE    D3,D0                   ;get mousePt
+                ADD     PortBounds+Left(A3),D0  ;convert to local
+                SUB     PortRect+Left(A3),D0    ;compensate for origin
+                CMP     #18,D0                  ;is it too far right?
+                BGT.S   ItsInDrag               ;if so, its in drag
+                SUBQ    #8,D0                   ;it must be at least 6
+                BMI.S   ItsInDrag
+;
+; its in the goAway button so signal it
+;
+                MOVEQ   #wInGoAway,D0
+                BRA.S   DoneHitDoc
+;
+ItsInDrag
+                MOVEQ   #wInDrag,D0             ;flag in drag region
+DoneHitDoc
+                MOVE.L  D0,20(A6)               ;update function result
+DoneHit1        RTS
+
+;
+; CalcDoc  -- calculate the structure and content regions for the window pointed
+; to by A3.
+;
+CalcDoc
+                LEA     TEMPRECT,A0             ;get a pointer to the work rectangle
+                MOVE.L  A0,-(SP)                ;push for later offset
+                MOVE.L  PORTRECT(A3),(A0)+      ;copy topLeft of portRect
+                MOVE.L  PORTRECT+4(A3),(A0)     ;copy botLeft of portRect
+;
+; offset it to global coordinates
+;
+                MOVE.L  PORTBOUNDS(A3),-(SP)    ;push topLeft of port.portBits.bounds
+                NEG     0(SP)                   ;negate offset
+                NEG     2(SP)                   ;both words
+                _OffsetRect                     ;offset tempRect to global coordinates
+;
+;  make the rectangular content region
+;
+                MOVE.L  CONTRGN(A3),-(SP)       ;content region gets the esult
+                PEA     TempRect                ;tempRect is the rectangle
+                _RectRgn                        ;go make the region into content region
+;
+; now do the structure region.  First correct the bounding rectangle (tempRect) for
+; structure instead of content
+;
+                MOVE.L  #$00020002,D4           ;get the shadow factor for DBox
+                MOVE.L  STRUCTRGN(A3),-(SP)     ;push the structRgn for later
+                PEA     TEMPRECT                ;push a pointer to the rect
+                MOVE.L  (SP),-(SP)              ;make two copies
+                MOVE.L  MinusOne,-(SP)          ;make 1 pixel bigger, all around
+                _InsetRect                      ;make it bigger
+
+                TST.W   D5                      ;is it dBox?
+                BNE.S   DoDBoxCalc              ;skip if it is
+
+                SUB     #18,TempRect+Top        ;make top 18 pixels higher
+                LSR.L   #1,D4                   ;adjust shadow factor
+CalcCommon
+                _RectRgn                        ;RectRgn(structRgn,tempRect)
+;
+; now add in the 1 or 2 pixel drop shadow (if necessary)
+;
+                TST     D5
+                BEQ.S   @1                      ;if so, it has shadow
+
+                CMP     #3,D5                   ;is it variant 3?
+                BNE.S   NoDropShadow            ;if not, no shadow
+@1
+                CLR.L   -(SP)                   ;make space for result
+                _NewRgn                         ;allocate new region
+
+                MOVE.L  (SP),A4                 ;remember it
+                PEA     TempRect                ;push tempRect
+                MOVE.L  (SP),-(SP)              ;save another copy
+                MOVE.L  D4,-(SP)                ;push shadow factor
+                _OffsetRect                     ;offset it
+                _RectRgn
+;
+                MOVE.L  StructRgn(A3),-(SP)
+                MOVE.L  A4,-(SP)                ;offset region
+                MOVE.L  StructRgn(A3),-(SP)     ;structure gets the result
+                _UnionRgn                       ;add it in
+;
+                MOVE.L  A4,-(SP)                ;we're done with it so
+                _DisposRgn                      ;dispose of it
+;
+; all done with CalcDocRgns
+;
+NoDropShadow
+                RTS
+
+DoDBoxCalc
+                CMP     #1,D5                   ;is it variant 1?
+                BNE.S   CalcCommon
+
+                PEA     TempRect                ;push our rectangle
+                MOVE.L  #$FFF9FFF9,-(SP)        ;push (-7,-7)
+                _InsetRect                      ;inset it
+                BRA.S   CalcCommon              ;use common code for the rest
+
+;
+; GrowDoc handles the grow message by drawing a grow outline based on the rectangle
+; passed in D3
+;
+GrowDoc
+;
+; first make it one pixel bigger to jibe with the structure
+;
+                MOVE.L  D3,-(SP)                ;push the rect
+                MOVE.L  MinusOne,-(SP)          ;push (-1,-1)
+                _InsetRect
+                MOVE.L  D3,A0                   ;get rect ptr
+                SUB     #18,Top(A0)             ;make it higher
+;
+                MOVE.L  D3,-(SP)                ;push the rectangle
+                _FrameRect                      ;frame it
+                MOVE.L  D3,A3                   ;keep rectangle pointer in A-reg
+;
+;  now that the rectangle is drawn, draw the lower horizontal line
+;
+                MOVE.W  Left(A3),-(SP)          ;push left
+                MOVE.W  (SP),-(SP)              ;save for upper line
+                MOVE.W  Bottom(A3),-(SP)        ;push bottom
+                SUB     #16,(SP)                ;really 16 pixels above bottom
+                MOVE.L  (SP),-(SP)              ;make a copy of this point
+                _MoveTo                         ;move to it
+                MOVE.W  Right(A3),2(SP)         ;now go to the right edge
+                _LineTo                         ;draw the horizontal line
+;
+; draw the upper horizontal line
+;
+                MOVE.W  Top(A3),-(SP)           ;push top
+                ADD     #18,(SP)                ;really 18 pixels below top
+                MOVE.L  (SP),-(SP)              ;make a copy of this point
+                _MoveTo                         ;move to it
+                MOVE.W  Right(A3),2(SP)         ;now go to the right edge
+                _LineTo                         ;draw the horizontal line
+;
+; draw the vertical line
+;
+                MOVE.W  Right(A3),-(SP)         ;push right
+                SUB     #16,(SP)                ;really want right - 16
+                MOVE.W  Top(A3),-(SP)           ;push top
+                ADD     #18,(SP)                ;really want top + 18
+                MOVE.L  (SP),-(SP)              ;make a copy of this point
+                _MoveTo                         ;and move to it
+                MOVE.W  Bottom(A3),(SP)         ;now go to bottom edge
+                _LineTo                         ;draw the vertical line
+;
+; restore the rect back to how it was when we got it
+;
+                MOVE.L  D3,-(SP)                ;push the rect
+                MOVE.L  OneOne,-(SP)            ;push (1,1)
+                _InsetRect
+                MOVE.L  D3,A0                   ;get it in an A-reg
+                ADD     #18,Top(A0)             ;fix up the top
+;
+                RTS                             ;all done!
+;
+;  Utility PaintDropShadow -- drop shadows the rectangle in A4, by the amount in D4
+;
+PaintDropShadow
+                MOVE.L  D4,-(SP)                ;push shadow factor
+                _PenSize                        ;make penSize = shadow factor
+;
+                MOVE    RIGHT(A4),D0            ;get right of menuRect
+                MOVE    D0,-(SP)                ;push right
+                MOVE    TOP(A4),-(SP)           ;push top
+                ADD     D4,(SP)                 ;want top+shadow
+                MOVE    D0,-(SP)                ;push right
+                MOVE    BOTTOM(A4),D0           ;get bottom
+                MOVE    D0,-(SP)                ;push bottom
+                MOVE    LEFT(A4),-(SP)          ;push left
+                ADD     D4,(SP)                 ;want left+shadow
+                MOVE    D0,-(SP)                ;push bottom
+;
+                _MoveTo                         ;MoveTo(left+shadow,bottom)
+                _LineTo                         ;LineTo(right,bottom)
+                _LineTo                         ;LineTo(right,top+shadow)
+;
+                _PenNormal                      ;restore normal pen
+                RTS
+
+;
+;  PlotSymbol -- plot the little 16 by 16 symbol bitmap pointed to by A1 into the rectangle
+;  pointed held in TempRect. D0 holds the mode.
+;
+PlotSymbol
+                LEA     IconBitMap,A0           ;get pointer to source bitmap
+                MOVE.L  A1,(A0)+                ;update base address of bitMap
+                MOVE    #2,(A0)+                ;update rowBytes
+                CLR.L   (A0)+                   ;topLeft is zero, zero
+                MOVE.L  D1,(A0)                 ;adjust boundsRect
+;
+; push parameters for CopyBits call to transfer arrow bitMap
+;
+                PEA     IconBitMap              ;push pointer source bitmap
+                MOVE.L  (SP),A0                 ;remember in A0, too
+                MOVE.L  LGLOBALS(A5),A1         ;get lisaGraf global baseaddress
+                MOVE.L  THEPORT(A1),A1          ;get thePort
+                PEA     PORTBITS(A1)            ;that's the destination bitmap
+;
+                PEA     BOUNDS(A0)              ;boundsRect of bitmap is source
+                PEA     TempRect                ;tempRect is the destination
+                MOVE.W  D0,-(SP)                ;theMode is in D0
+                CLR.L   -(SP)                   ;no mask region
+;
+; transfer the bitMap (stretching as necessary...)
+;
+                _CopyBits                       ;let Bill stretch those bits
+
+                RTS                             ;return to caller
+
+
+;  Draw the grow icon.  First make this window the current grafPort
+
+DrawGIcon
+                MOVE.L  A3,-(SP)                ;push it
+                _SetPort                        ;make that the port
+;
+;  compute the grow icon rectangle in tempRect
+;
+                LEA     TempRect,A4             ;get pointer to tempRect
+                MOVE.L  PortRect+4(A3),4(A4)    ;copy in botRight of tempRect
+                MOVE.L  4(A4),(A4)              ;into the topLeft, too
+                SUB.W   #15, Top(A4)            ;subtract from Top
+                SUB.W   #15,Left(A4)            ;and left, too
+;
+; plot the grow icon
+;
+                TST.B   WHilited(A3)            ;is it hilited?
+                BEQ.S   ClearGoAway             ;if not, go clear it
+
+                LEA     GrowBits,A1             ;get pointer to the bits
+                MOVEQ   #0,D0                   ;use srcCopy
+                MOVE.L  #$00100010,D1
+                BSR     PlotSymbol              ;plot it
+;
+; plot the  boundary lines
+;
+PlotBoundary
+                MOVE.W  Left(A4),-(SP)          ;push tempRect.left
+                MOVE.W  (SP),-(SP)              ;copy it again for later
+                MOVE    PortRect+Top(A3),-(SP)  ;push portRect.top
+                _MoveTo                         ;move to it
+                MOVE    PortRect+Bottom(A3),-(SP) ;push portRect.bottom
+                _LineTo                         ;draw the vertical line
+;
+; now draw the horizontal line
+;
+                MOVE.W  PortRect+Left(A3),-(SP) ;push portRect.left
+                MOVE.W  Top(A4),-(SP)           ;push tempRect.top
+                _MoveTo
+                MOVE.W  PortRect+right(A3),-(SP) ;push portRect.right
+                MOVE.W  Top(A4),-(SP)           ;push tempRect.top
+                _LineTo
+;
+; all done with DrawDocGrow
+;
+DoneDDG
+                RTS
+ClearGoAway
+                PEA     TempRect
+                _EraseRect
+                BRA.S   PlotBoundary
+
+;
+; BitMap for GrowIcon
+;
+GrowBits
+                .WORD   $0000,$0000,$0000,$1FE0
+                .WORD   $1020,$103E,$1022,$1022
+                .WORD   $1022,$1022,$1FE2,$0402
+                .WORD   $0402,$0402,$07FE,$0000
+
+                ;.WORD   $0000,$0000,$3E00,$2200
+                ;.WORD   $2FC0,$2840,$3840,$09FC
+                ;.WORD   $0904,$0F04,$0104,$0104
+                ;.WORD   $0104,$01FC,$0000,$0000
+;
+
+                .END
+

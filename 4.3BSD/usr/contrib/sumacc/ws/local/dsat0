@@ -1,0 +1,133 @@
+3. "6F^5P:H r^#;
+; DS Alerts for Booting -- Resource Type DSAT, ID 0
+
+            .INCLUDE    TlAsm/SYSEQU.TEXT
+            .INCLUDE    TlAsm/SYSMACS.TEXT
+
+             .PROC           DSAT,0
+
+              .WORD     19                     ;number of entrys
+
+; alert definitions
+
+               .WORD     40,10,50,0,31,0,0      ;welcome to Mac OS
+               .WORD     42,10,0,0,30,0,0       ;cant mount boot volume
+               .WORD     43,10,52,0,0,0,60      ;cant find macsys.code
+               .WORD     -10,10,53,0,0,0,0      ;loading Macsbug
+               .WORD     -11,10,54,0,0,0,0      ;loading disassembler
+               .WORD     -12,10,55,0,0,0,0      ;loading MacSys.code
+
+; text definitions
+
+Text0
+               .WORD     50,Text2-Text0-4
+               .WORD     108,192
+               .ASCII    'Welcome to Macintosh.'
+               .BYTE     00
+               .ALIGN    2
+Text2
+
+; can't load RAM-based OS
+
+               .WORD     52,Text3-Text2-4
+               .WORD     108,130
+               .ASCII    'Warning -- this start-up disk is not usable.'
+               .BYTE     0
+               .ALIGN    2
+Text3
+               .WORD     53,Text4-Text3-4
+               .WORD     126,192
+               .ASCII    'MacsBug installed.'
+               .BYTE     0
+               .ALIGN    2
+Text4
+               .WORD     54,Text5-Text4-4
+               .WORD     146,192
+               .ASCII    'Disassembler installed.'
+               .BYTE     0
+               .ALIGN    2
+Text5
+                .WORD   55,Text6-Text5-4
+                .WORD   166,192
+                .ASCII  ' '
+                .BYTE   0
+                .ALIGN  2
+Text6
+
+;
+; "Mac Look" Icon for welcome message
+;
+               .WORD     31,136
+               .WORD     89,56,121,88
+
+               .LONG     $0007FF80
+               .LONG     $00080000
+               .LONG     $00087E20
+               .LONG     $00080120
+               .LONG     $00080120
+               .LONG     $04080120
+               .LONG     $0C080120
+               .LONG     $08080120
+               .LONG     $66080120
+               .LONG     $99080120
+               .LONG     $8108FE20
+               .LONG     $80080020
+               .LONG     $80080020
+               .LONG     $4A001F20
+               .LONG     $34000020
+               .LONG     $00FC0020
+               .LONG     $03000000
+               .LONG     $0401FFF0
+               .LONG     $04000008
+               .LONG     $03E01FE4
+               .LONG     $00100552
+               .LONG     $001000A9
+               .LONG     $00200001
+               .LONG     $002001FE
+               .LONG     $00180000
+               .LONG     $00040000
+               .LONG     $0000C000
+               .LONG     $00012000
+               .LONG     $00025000
+               .LONG     $00008800
+               .LONG     $00000800
+               .LONG     $00001000
+
+;
+; buttonList
+;
+               .WORD     60,26
+               .WORD     2
+               .WORD     70,150,50,170,100,80
+               .WORD     71,150,130,170,190,81
+;
+; strings
+;
+               .WORD     70,6
+               .ASCII    'Eject '
+
+               .WORD     71,8
+               .ASCII    'Restart '
+;
+; procs
+;
+P1              .WORD   80,P2-P1-4
+
+                 SUB     #40,SP              ; make room for pBlock
+                 MOVE.L  SP,A0
+                 MOVE.W  #DskRfN,IORefNum(A0); driver refnum
+                 MOVE.W  #EjectCode,CSCode(A0)
+                 MOVE.W  BootDrive,IODrvNum(A0)
+                 _Control                    ; eject the bad diskette
+                 ADD     #40,SP              ; pop off the pBlock
+                 JMP     $40000A             ; go reboot
+
+
+P2
+                .WORD   81,P3-P2-4
+
+                 JMP     $40000A             ; go reboot
+P3
+
+               .END
+

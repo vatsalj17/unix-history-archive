@@ -1,0 +1,512 @@
+W^5P-H r H r^BBF;----------------------------------------------------------------
+;  Example desk accessory
+;
+;  Desk Accessory for displaying the heap.
+;  Written by Jerome Coonen  29 July 83.
+;  Based on the great-great-grandson of the canonical
+;  Papa Hertzfeld ornament.
+;
+;    Modification History:
+;
+;-----------------------------------------------------------------
+
+                .INCLUDE        tlasm/SYSEQU.TEXT
+                .INCLUDE        tlasm/GRAFEQU.TEXT
+                .INCLUDE        tlasm/SYSMACS.TEXT
+                .INCLUDE        tlasm/GrafTypes.Text
+                .INCLUDE        tlasm/ToolEqu.Text
+                .INCLUDE        tlasm/QuickMacs.TEXT
+                .INCLUDE        tlasm/ToolMacs.Text
+                .INCLUDE        tlasm/ResEqu.Text
+                .INCLUDE        tlasm/HeapDefs.Text
+
+                .PROC           Uriah
+
+cMenuID         .EQU    -666    ; a random resource ID
+cSizeRecord     .EQU    100     ; random size of ornament storage
+cMenuHandle     .EQU    0       ; offset in orn storage for menu handle
+cUseHeap        .EQU    4       ; set to heap to display
+cAutoUpdate     .EQU    8       ; boolean -- update every 10 seconds?
+
+
+OrnEntry
+                .WORD           $2400           ; ctl-enable = needsTime
+                .WORD           300             ; take a hit every 5 seconds
+                .WORD           $0002           ; mouse down
+                .WORD           cMenuID         ;
+
+; Entry point offset table
+
+                .WORD   OrnOpen   - OrnEntry    ; open routine
+                .WORD   OrnDone   - OrnEntry    ; prime
+                .WORD   OrnCtl    - OrnEntry    ; control
+                .WORD   OrnDone   - OrnEntry    ; status
+                .WORD   OrnClose  - OrnEntry    ; close
+
+
+OrnTitle        .BYTE   11                      ; length of string
+                .ASCII  'Uriah Heap '           ; title
+
+; Open Routine -- allocate a window, initialize the count, allocate menu
+
+OrnOpen
+                MOVEM.L A3-A4,-(SP)             ;preserve regs
+                MOVE.L  A1,A4                   ;keep DCE ptr in A4
+
+                TST.L   DCtlWindow(A1)          ;already have a window?
+                BNE     GotAWindow              ;if so, don't make a new one
+;
+; now allocate the new window
+;
+                CLR.L   -(SP)                   ; make room for the result
+                CLR.L   -(SP)                   ; allocate on heap
+                PEA     cBounds                 ; push the boundsRect
+                PEA     OrnTitle                ; push the title
+                CLR.L   -(SP)                   ; invisible/use defProc 0
+                MOVEQ   #-1,D0                  ; get -1
+                MOVE.L  D0,-(SP)                ; behind = -1
+                MOVE    #$0100,-(SP)            ; yes, we have a goAway
+                CLR.L   -(SP)                   ; refCon is zero
+                _NewWindow                      ; allocate a new window
+                MOVE.L  (SP)+,A0                ; get the windowPtr
+                MOVE.L  A0,DCtlWindow(A4)       ; save in the DCE
+                MOVE    DCtlRefNum(A4),windowKind(A0) ; mark as system window
+;
+; Font stuff, as though we were going to write in the window.
+;
+                MOVE    #4,TxFont(A0)           ; use Gacha
+                MOVE    #10,TxSize(A0)          ; size 10
+                MOVE    #srcCopy,TxMode(A0)
+;
+; Get a relocatable block for static values.
+;
+                MOVE.L  #cSizeRecord,D0         ; Get the local storage
+                _NewHandle
+                MOVE.L  A0,DCtlStorage(A4)      ; save the storage handle away
+;
+; Allocate the menu.  Initialize the check-off menu items.
+;
+                SUBQ    #4,SP                   ; make room for menu handle
+                MOVE.W  #cMenuID,-(SP)          ; push menu ID
+                PEA     cMenuTitle              ; Allocate the menu
+                _NewMenu
+                MOVE.L  (SP)+,A2                ; save menu handle in temp.
+
+                MOVE.L  DCtlStorage(A4),A3      ; Get the storage handle
+                MOVE.L  (A3),A3                 ; dereference it
+
+                MOVE.L  A2,cMenuHandle(A3)      ; salt menu handle away in storage
+                MOVE.L  ApplZone,cUseHeap(A3)   ; set so application heap shown
+                MOVE.B  #$01,cAutoUpdate(A3)    ; do automatic updating
+
+                MOVE.L  A2,-(SP)
+                PEA     cMenuItems              ; Set the items
+                _AppendMenu
+
+                MOVE.L  A2,-(SP)                ; get the menu handle
+                MOVE    #2,-(SP)                ; application heap
+                MOVE.B  #1,-(SP)                ; push the boolean
+                _CheckItem
+
+                MOVE.L  A2,-(SP)                ; get the menu handle
+                MOVE    #4,-(SP)                ; auto update
+                MOVE.B  #1,-(SP)                ; push the boolean
+                _CheckItem
+GotAWindow
+                MOVEM.L  (SP)+,A3-A4            ;restore regs
+OrnDone
+                MOVEQ   #0,D0                   ;no error
+                RTS                             ;all done with open
+;
+; Close Routine -- to close the ornament, we dispose the window and menu
+;
+OrnClose
+                MOVE.L  A4,-(SP)                ; save A4
+                MOVE.L  A1,A4                   ; save A1=DCE from Pascal routine
+                MOVE.L  DCtlWindow(A4),-(SP)    ; push the window
+                CLR.L   DCtlWindow(A4)          ; we no longer have a window
+                _DisposWindow                   ; dispose it
+
+                BSR     CloseStorage            ; allocate the menu, etc.
+
+                MOVE.L  DCtlStorage(A4),A0      ; Delete the storage area
+                _DisposHandle
+
+                MOVE.L  (SP)+,A4                ; restore sole saved register
+                BRA.S   OrnDone                 ; all done with close
+
+; OrnCtl handles the control messages, which are the heart of the driver.  We case out on
+; the "opCode" field, which is 64 for "SendEvent", 65 for "Run", 66 for "Cursor",
+; and 67 for "Menu".  Ignore messages less than 64 or greater than 67.
+
+OrnCtl
+                MOVEM.L A2-A4,-(SP)             ; preserve A3 and A4
+                MOVE.L  A1,A4                   ; keep DCE ptr in A4
+                MOVE    CSCode(A0),D0           ; get the control opCode
+                SUB     #64,D0                  ; compare message with 64
+                BMI.S   CtlDone                 ; < 64 -- just ignore
+                BEQ     DoCtlEvent              ; = 64 --  it's an event
+                SUBQ.W  #2,D0                   ; compare message with 66
+                BMI.S   DoRun                   ; = 65 -- run request
+                BEQ     DoCtlCursor             ; = 66 -- cursor
+                SUBQ.W  #1,D0                   ; compare message with 67
+                BEQ.S   DoMenu                  ; = 67 -- menu request
+                BRA.S   CtlDone                 ; > 67 -- ignore
+
+;------------------------------------------------
+;
+DoRun
+                MOVE.L      DCtlStorage(A4),A3  ; get the heap
+                MOVE.L      (A3),A3             ; dereference it
+                TST.B       cAutoUpdate(A3)
+                BEQ.S       @1
+
+                BSR     DrawWindow              ; then fall through...
+@1
+
+;------------------------------------------------
+;
+CtlDone
+                MOVE.L  A4,A1                   ; return DCE ptr to A1
+                MOVEM.L  (SP)+,A2-A4            ; A3 and A4
+                MOVEQ   #0,D0                   ; no error
+                RTS                             ; bye-bye
+
+;------------------------------------------------
+;
+DoMenu
+                MOVE.L  DCtlStorage(A4),A3      ; get orn storage handle
+                MOVE.L  (A3),A3                 ; dereference it
+
+                MOVE    CSParam+2(A0),D0        ; Get the menuItem
+
+                SUBQ    #1,D0                   ; See if item 1
+                BEQ.S   SetSysHeap
+                SUBQ    #1,D0                   ; See if item 2
+                BEQ.S   SetAppHeap
+                SUBQ.W  #2,D0                   ; Can't be 3
+                BEQ.S   SetAutoUpdate
+                SUBQ.W  #1,D0
+                BEQ.S   HandUpdate
+                BRA.S   CtlDone
+
+SetSysHeap
+                MOVE.L  SysZone,cUseHeap(A3)     ; set so sys heap shown
+                MOVE.B  #00,D0                   ; not the application
+                BRA.S   ToggleHeap
+
+SetAppHeap
+                MOVE.L  ApplZone,cUseHeap(A3)    ; set so application heap shown
+                MOVE.B  #01,D0                   ; the application
+
+ToggleHeap
+                MOVE.B  D0,-(SP)
+                MOVE.B  #2,D1
+                BSR.S   MarkIt
+                MOVE.B  (SP)+,D0
+                EOR.B   #01,D0                   ; flip it
+                MOVE.B  #1,D1                    ;
+                BSR.S   MarkIt
+;
+; Erase the display window before drawing other window.
+;
+                MOVEA.L DCtlWindow(A4),A0       ; get port
+                PEA     portRect(A0)            ; push rect for EraseRect
+                PEA     (A0)                    ; push the window for SetPort
+                _SetPort                        ; make it the port
+                _EraseRect
+                BSR     DrawWindow
+
+                BRA.S   CtlDone
+
+;------------------------------------------------
+; D0 contains boolean true or false
+; D1 contains item number
+; A3 contains local storage
+;
+markIt
+                MOVE.L  cMenuHandle(A3),-(SP)   ; get the menu handle
+                MOVE    D1,-(SP)                ; push the item
+                MOVE.B  D0,-(SP)                ; push the boolean
+                _CheckItem
+                RTS
+
+;-------------------------------------------------
+; Flip auto-update boolean
+;
+SetAutoUpdate
+                MOVE.B      cAutoUpdate(A3),D0  ; get auto flag
+                EORI.B      #1,D0               ; toggle it
+                MOVE.B      D0,cAutoUpdate(A3)  ; replace
+
+;-------------------------------------------------
+; Common menu update code
+;
+MarkMenu
+            MOVE.W          CSParam+2(A0),D1    ; item number
+            BSR.S           MarkIt
+            BRA.S           CtlDone
+
+;-------------------------------------------------
+; Just redraw the window
+;
+HandUpdate
+                BSR     DrawWindow
+                BRA.S   CtlDone
+;
+; DoCtlCursor might be used to change the cursor shape when over our window
+; and back to the arrow when it's not.
+;
+DoCtlCursor
+                BRA.S   CtlDone                 ;all done
+;
+; DoCtlEvent handles the events received by the memWindow ornament.  It handles
+; mouse down, keyDown and update events
+;
+DoCtlEvent
+                MOVE.L  A3,-(SP)                ;save registers
+                MOVE.L  CSParam(A0),A3          ;get the event pointer
+                MOVE.W  EvtNum(A3),D0           ;get the event number
+
+; case out on the event number.  We handle events 1 (mouse down), and
+; 6 (update event),
+
+                CMP     #8,D0                   ;is it an activate?
+                BEQ     DoTheActivate           ;if so, go handle it
+
+                SUBQ    #1,D0                   ;is it mouse down?
+                BEQ.S   ItsMouseDown            ;branch if it is
+                SUBQ    #2,D0                   ;is it key down?
+                BEQ.S   ItsKeyDown              ;branch to handle keyDown
+                SUBQ    #3,D0                   ;is it an update?
+                BEQ.S   ItsUpdate               ;if so, handle it
+
+; its not an event we handle so ignore it
+
+CtlEvtDone      MOVE.L  (SP)+,A3                ;restore registers
+                BRA     CtlDone
+
+; ignore keyDowns for now
+
+ItsKeyDown
+                BRA.S   CtlEvtDone              ;all done
+
+; handle the update event by redrawing the contents of the window
+
+ItsUpdate
+                MOVE.L  EvtMessage(A3),-(SP)    ;push the window ptr
+                MOVE.L  (SP),-(SP)              ;push it again
+                _BeginUpdate                    ;set vis to update
+                BSR     DrawWindow              ;draw it
+                _EndUpdate
+                BRA.S   CtlEvtDone
+
+; handle the mouseDown by calling FindControl and tracking the control if its in one
+
+ItsMouseDown
+                BRA     CtlEvtDone              ;all done!
+
+; DoTheActivate either puts shows or hides the scroll bar, depending on
+; the state of the activate bit.
+
+DoTheActivate
+                BTST    #0,EvtMeta+1(A3)        ; activate or de-activate?
+                BEQ.S   TakeItDown              ; if deactivate, take it down
+
+; show the menu
+
+                MOVE.L  DCtlStorage(A4),A3      ; Insert the menu item
+                MOVE.L  (A3),A3                 ; dereference it
+                MOVE.L  cMenuHandle(A3),-(SP)   ;
+                CLR.W   -(SP)                   ; on the end
+                _InsertMenu
+                _DrawMenuBar                    ; Display it
+
+                BRA     CtlEvtDone              ; all done
+;
+; hide the menu
+;
+TakeItDown
+                MOVE.W  #cMenuID,-(SP)          ; Delete the menu from bar
+                _DeleteMenu
+                _DrawMenuBar                    ; Redisplay it
+
+                BRA     CtlEvtDone
+;
+; CloseStorage deallocates the menu and sets up local memory
+;
+CloseStorage
+                MOVE.W  #cMenuID,-(SP)          ; Delete the menu from bar
+                _DeleteMenu
+                _DrawMenuBar                    ; Redisplay it
+
+                MOVE.L  DCtlStorage(A4),A0      ; Delete the menu data
+                MOVE.L  (A0),A0
+                MOVE.L  cMenuHandle(A0),A0      ; get handle in A0
+                _DisposHandle
+
+                RTS
+;
+; DrawWindow scans the heap and redraws the window.
+;
+DrawWindow
+            MOVEM.L D3-D6/A2-A3,-(SP)           ; save work regs
+
+            MOVE.L  DCtlWindow(A4),-(SP)        ; push the window ptr twice for
+            MOVE.L  (SP),-(SP)                  ; SizeWindow and setport
+;
+; Initialize the topLeft pointer (D6) to 0,0.
+; Then work down and to the right.
+;
+            MOVEQ       #0,D6
+
+            MOVE.L      DCtlStorage(A4),A3      ; get the heap
+            MOVE.L      (A3),A3                 ; dereference it
+
+            MOVE.L      cUseHeap(A3),A3         ; get zone ptr
+;
+; Size the window by computing the heap extent and dividing by 260 to get
+; the number of columns of pixels.  Force width up to a multiple of 8 and
+; require a minimum.
+;
+            LEA         HeapData(A3),A1         ; ptr to first block
+            MOVE.L      A1,D1
+            MOVE.L      BkLim(A3),D0            ; ptr beyond last usable block
+            AND.L       maskBC,D1
+            AND.L       maskBC,D0
+            SUB.L       D1,D0                   ; size of heap in bytes
+            DIVU        #260,D0                 ; number of pixel columns
+
+            LSR.L       #3,D0                   ; divide by eight...
+            ADDQ.L      #1,D0                   ; round up...
+            LSL.L       #3,D0                   ; and multiply by eight
+
+            CMPI.W      #152,D0                 ; a reasonable minimum
+            BHS.S       @2
+            MOVE.W      #152,D0
+@2
+            MOVE.W      D0,-(SP)                ; width
+            MOVE.W      #260,-(SP)              ; fixed height
+            MOVE.B      #0,-(SP)                ; FALSE, no update
+            _SizeWindow
+
+            _SetPort                            ; make it the port
+            LEA         HeapData(A3),A0         ; ptr to first block, for loop
+Continue
+;
+; Compute the next pointer right away.  For the purposes of displaying even
+; blocks of 8 bytes, round the first pointer down to nearest 8-byte block.
+;
+            MOVE.L      tagBC(A0),D0            ; size/tag
+            MOVE.L      handle(A0),D1           ; handle
+            MOVE.L      D0,D2
+            ANDI.L      #BCMask,D0              ; block size in bytes
+            MOVEA.L     D0,A2
+            ADDA.L      A0,A2                   ; ptr to next block
+
+            MOVE.L      A0,D0
+            ANDI.L      #$FFFFFFF8,D0           ; kill low 3 bits
+            SUB.L       A2,D0
+            NEG.L       D0
+            LSR.L       #3,D0                   ; number of indicator lines
+
+;
+; Now set up the pen pattern in A0 for call to display routine.
+;
+            MOVEA.L     0(A5),A1               ; get global ptr for graphics
+            LEA         white(A1),A0           ; pen pattern for nonrelocatable
+            AND.L       #TagMask,D2
+            BEQ.S       FreeBlock
+            BGT.S       GotBlock
+;
+; Classify the relocatable blocks as
+;   (1) unlocked and not purged
+;   (2) locked
+;   (3) purged
+;
+            LEA         dkGray(A1),A0           ; assume (1) unlk and not prgbl
+            MOVE.B      0(A3,D1),D1             ; master ptr, if relocatable
+            BMI.S       LockedBlock
+            ADD.B       D1,D1                   ; get purgeable bit in sign
+            BPL.S       GotBlock
+
+            LEA         PurgeablePat,A0         ; purgeable relocatable
+            BRA.S       GotBlock
+LockedBlock
+            LEA         ltGray(A1),A0           ; locked relocatable block
+            BRA.S       GotBlock
+FreeBlock
+            LEA         black(A1),A0            ; free block
+GotBlock
+            BSR.S       ShowLines
+
+            MOVEA.L     A2,A0                   ; get next block pointer
+            CMP.L       bkLim(A3),A0            ; see if at end
+            BNE         Continue
+
+            MOVEM.L     (SP)+,D3-D6/A2-A3
+            RTS
+
+;------------------------------------------------
+; Display D0.W lines of pattern (A0)
+; D6 is the current topLeft pointer, which is updated
+; after each block is displayed.
+;
+ShowLines
+            MOVE.W      D0,D3                   ; safe place for index
+            PEA         (A0)
+            _PenPat                             ; pen pattern for PaintRect
+ShQuickEntry
+            MOVE.L      D6,D0                   ; top/left
+            MOVE.L      D6,D1                   ; will be bottom/right
+            ADDQ.W      #8,D1                   ; right := left + 8
+            SWAP        D1                      ; align bottom in low word
+            ADD.W       D3,D1                   ; tentative bottom
+            CMPI.W      #260,D1                 ; farther down than 260?
+            BHS.S       ShTwoBlocks
+
+            SWAP        D1                      ; align bottom/right
+            MOVE.L      D1,D6                   ; new top/left
+            SUBQ.W      #8,D6                   ; convert top/right to top/left
+            BRA.S       PaintTheRect            ; Easy case -- paint and go
+;
+; If there is a spillover, just paint the rest of this column
+; and fake another call to routine.
+;
+ShTwoBlocks
+            SUBI.W      #260,D1                 ; what's left after this column
+            MOVE.W      D1,D3                   ; the next count
+            MOVE.W      #260,D1                 ; set bottom to the real bottom
+            SWAP        D1                      ; align bottom/right
+            MOVEQ       #0,D6                   ; next top will be zero
+            MOVE.W      D1,D6                   ; this right will be next left
+            BSR.S       PaintTheRect
+            BRA.S       ShQuickEntry
+
+;------------------------------------------------
+; D0 = top/left
+; D1 = bottom/right
+;
+PaintTheRect
+            MOVEM.L     D0-D1,-(SP)             ; push rect value
+            PEA         (SP)
+            _PaintRect
+            ADDQ.L      #8,SP                   ; kill rect value
+            RTS
+
+FreePat         .WORD   $FFFF, $FFFF, $FFFF, $FFFF
+RelPat          .WORD   $AAAA, $AAAA, $AAAA, $AAAA
+NonRelPat       .WORD   $0000, $0000, $0000, $0000
+PurgeablePat    .WORD   $E7E7, $E7E7, $E7E7, $E7E7
+LockedPat       .WORD   $BDBD, $BDBD, $BDBD, $BDBD
+
+cMenuTitle      .BYTE   6
+                .ASCII  'Uriah '
+cMenuItems      .BYTE   52
+                .ASCII  'System;Application;-------'    ; 26 each
+                .ASCII  ';Auto-Refresh;Hand-Refresh'
+
+cBounds         .WORD   42,0,302,200
+
+                .END
+

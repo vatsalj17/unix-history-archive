@@ -1,0 +1,103 @@
+.TH RCVTRIP 1 "5 December 1984"
+.SH NAME
+rcvtrip \- notifies mail sender that recipient is away.
+.SH SYNOPSIS
+.B rcvtrip
+[
+.B \-d
+] [
+.B address
+]
+.SH DESCRIPTION
+.I Rcvtrip
+is run by MMDF at the user's
+direction, rather than by the user directly.
+A line entered in the user's .maildelivery file causes
+.I rcvtrip
+to be run when mail is delivered.
+The user's must add an entry to the .maildelivery
+file and place a reply message in a file named `tripnote'.
+.PP
+.I Rcvtrip
+makes it possible for you
+to notify the sender of the message that you are on
+holiday and you won't be answering the message for some time.
+.PP
+.I Rcvtrip
+reads incoming mail, checking for three things:
+.RS
+.IP "1)"
+address(es) in `Reply-To:' or in `From:' and `Sender:',
+.IP "2)"
+the presence of the user's name in the `To:' or `cc:' fields, and
+.IP "3)"
+the contents of the `Subject:' field.
+.RE
+.PP
+Any originator of mail who has not previously been notified
+receives a reply, as long as the recipient is explicitly mentioned in
+an address field (`To:' or `cc:') or is a first-order alias of one
+of the `To:'/`cc:' addresses.  The contents of the reply
+begins with some standard text; supplied by,
+.I rcvtrip
+followed by whatever
+text the user has placed in the `tripnote' file.
+The name(s) are recorded, along with the date and
+time the message came in, whether it was answered,
+and the first few characters of the subject.
+This appears as:
+.sp
+.nf
++ jpo@nott.ac.uk	Wed Oct 8 16:08 >> about your last message
+.fi
+.PP
+The plus sign indicates that a reply was sent.
+.PP
+The user has the option of not replying to specified individuals,
+by placing their addresses into the file `triplog', one
+address per line.  Also, the program will not reply to messages sent to
+address lists, unless the recipient is explicitly mentioned
+in an address field.  Only one reply is generated per
+sender name; further mail from that person is not answered,
+although the log entry is made and the mail accepted.
+.PP
+If the message contains a `Reply-to:' component, then this
+address is replied to.  Otherwise a copy of the message
+is sent to the addresses given in the `From:' component and the `Sender:'
+component, if present.  
+.PP
+If a `\fB\-d\fR' flag is given,
+debugging is enabled.  If an \fBaddress\fR argument is given and no `Sender:'
+component is present in the message, the \fBaddress\fR is used in its place.
+.SH FILES
+.IP "<login directory>/tripnote" 25
+The user-written reply message is located in this file.
+.IP "<login directory>/triplog" 25
+This contains a list of who sent a message, what was its subject,
+when it arrived, and if a response was sent.  It can also be initialized by
+hand to contain
+the addresses, one per line, which are not to receive replies.
+.IP "<login directory>/logfile" 25
+If this exists, then diagnostic messages are put in it for debugging
+purposes. It is not a good idea to leave this lying around if you're
+going to be away for some time, as the output can be quite voluminous.
+.IP "<login directory>/.maildelivery" 25
+The user's mail delivery specification file
+.SH EXAMPLE
+A typical
+entry in the file is:
+.sp
+.nf
+*    \-    pipe    R    rcvtrip $(sender)
+.fi
+.sp
+where the $(sender) argument is optional (but recommended).
+You may need to give the full pathname of rcvtrip if it is not
+in the search path of a vanilla /bin/sh.
+.SH SEE ALSO
+rcvalert(1), maildelivery(5)
+.SH AUTHOR
+.nf
+Bruce Whittaker (Initial Version)
+.br
+Julian Onions (Total Rewrite)

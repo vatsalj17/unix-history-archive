@@ -1,0 +1,29 @@
+.TH REV68 1 
+.SU
+.SH NAME
+rev68 \- reverse byte order in 68000 .b and .68 (b.out) files
+.SH SYNOPSIS
+.B rev68 infile [ outfile ... ]
+.SH DESCRIPTION
+.I Rev68
+translates .b and .68 (b.out) files into a form readable by the 68000.  This
+entails reversing the byte order within short and long words, and rearranging
+structs to agree with the c68 interpretation of structs.
+.PP
+The transformations that take place are:  the 8 longs in the header (including
+the magic number) are each byte reversed; the text and data segments are
+unchanged; the symbol segment is modified so that the struct defining the type
+and value of the symbol fits in 6 bytes instead of 8 (to agree with the c68
+interpretation of struct sym in /usr/sun/ld68/b.out.h); each symbol is
+padded with an extra 0 if necessary to force word alignment; and the relocation
+commands are repacked to agree with the c68 interpretation of struct reloc in
+/usr/sun/ld68/b.out.h.
+.PP
+The output is written to outfile, which if not specified defaults to r.out.
+The output will be smaller than the input unless there are no symbols or
+relocation commands.
+.PP
+The intent is that r.out files not be the input to any Unix program, but that
+they be sent directly to the 68000 as a byte stream.
+.SH AUTHOR
+V.R. Pratt

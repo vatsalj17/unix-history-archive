@@ -1,0 +1,52 @@
+.TH "SENDPROG" 8 "28 December 85"
+.SH NAME
+sendprog \- MMDF outbound generalized program channel
+.SH SYNOPSIS
+sendprog (called by deliver)
+.SH DESCRIPTION
+The generalized program outbound channel
+is part of the MMDF mail system.
+\fISendprog\fR is called directly by \fIdeliver\fR.
+It follows the standard deliver/channel protocol and handles outbound
+traffic via some program specified in the channel table associated
+with the channel.
+.PP
+There are two ways the channel can be configured.
+In the first mode, the channel configuration string (`confstr=\.\.\.')
+specifies the command to be used to send the mail with
+certain strings expanded to per-message information (see below).
+In the second mode, the conf string is null, and the address portion
+of the channel table (RHS) gives the command to send the mail.
+Again, certain strings can be expanded to per-message information.
+.PP
+The following strings can be expanded in command strings:
+.br
+.nf
+.ta 1.7i
+$(from)	expands to the from address
+$(local)	expands to the local host name
+$(to)	expands to the full addressee string
+$(to.user)	expands to the user portion of addressee
+$(to.host)	expands to the host portion of addressee
+$(to.address)	expands to the address from channel table RHS
+	(only when confstr is non-null)
+.fi
+.PP
+The following is a sample program channel description for
+the \fImmdftailor\fR file if one were to use the program channel
+to interface to ACSNET system (untested to date):
+.br
+.ta 1.5i
+MCHN	acsnet, show=``ACSNET Channel'', que=acsnet, tbl=acsnet,
+.br
+	pgm=sendprog, mod=reg, ap=822,
+.br
+	confstr="/usr/acsnet/sendfile -a mailer $(to.address)"
+.SH "SEE ALSO"
+deliver(8), submit(8), recvprog(8)
+.SH BUGS
+This is a new channel and has not been widely tested, but will continue
+to be supported in future versions.  In particular, the entry in the
+channel table may become the name of a ``configuration file'',
+describing the program, how to give mail to the program, and how to
+interpret the return codes.

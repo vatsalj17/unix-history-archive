@@ -1,0 +1,43 @@
+(Message inbox:440)
+Return-Path: <CROFT@SUMEX-AIM.ARPA>
+Received: from SUMEX-AIM.ARPA by safe with TCP; Mon, 12 Nov 84 10:11:25 pst
+Date: Mon 12 Nov 84 10:10:53-PST
+From: Bill Croft <CROFT@SUMEX-AIM.ARPA>
+Subject: [breuel@harvard.ARPA (Thomas M. Breuel):]
+To: croft@SUMEX-AIM.ARPA
+
+Mail-From: PATTERMANN created at 11-Nov-84 22:48:29
+Return-Path: <breuel@harvard.ARPA>
+Received: from harvard.ARPA by SUMEX-AIM.ARPA with TCP; Sun 11 Nov 84 18:10:44-PST
+Date: Sun, 11 Nov 84 21:09:17 EST
+From: breuel@harvard.ARPA (Thomas M. Breuel)
+Apparently-To: info-mac
+ReSent-date: Sun 11 Nov 84 22:48:29-PST
+ReSent-From: Ed Pattermann <PATTERMANN@SUMEX-AIM.ARPA>
+ReSent-To: info-mac: ;
+
+I had some trouble installing the ramdisk driver from the new release of
+the sumacc system. The problem seems to be that the call to allocate
+space for the ramdisk in the system heap zone fails if the requested size
+is at all significant. The system heap size cannot be extended beyond
+64kbytes. I fixed it as follows:
+
+rd.c:
+
+substitute the statement 'if((myrambase = NewPtrSys...))...;' with
+'myramBase = 0x28000' (for 512k Macs and 512k LISAs). Substitute the
+directive '#define myramSize 0x2000' with '#define myramSize 0x27b00'
+(for 512k LISA's with debugger installed). For different configurations
+you'll have to figure out 'myramSize' by looking at the variable 'bufptr'
+in the syscom area (at address $10c). Define 'myramSize' as the difference
+of 'bufptr' and '0x28000'. The ws source claims that for 512k Macs you 
+can '#define myramSize 0x50000'.
+
+rdinit.s:
+
+substitute the line '| movl #0x11000,bufptr' with ' movl #0x28000,bufptr'.
+
+						Thomas.
+						(breuel@harvard)
+-------
+

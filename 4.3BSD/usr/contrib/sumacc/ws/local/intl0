@@ -1,0 +1,93 @@
+3. "6F^5D!$^G//;   INTL,0  Source for International time and date formats, currency symbols
+;   and sorting orders.
+;
+;   Prepared by Kent Edquist and the GEA marketing team.
+;
+                    .PROC     INTL,0
+
+IntlDecPoint
+                    .ASCII    ','            ;decimal point character
+IntlThouSep
+                    .ASCII    ' '            ;thousands separator character
+IntlListSep
+                    .ASCII    ';'            ;list separator character
+IntlCurSym
+                    .ASCII    '$'            ;currency symbol
+                    .BYTE     0,0            ;filler
+IntlCurFmt
+;
+;   Flag to set currency symbol before or after the amount.
+;   Set it to $D0 (D,zero) to have it before the amount.
+;   Set it to $E0 (E,zero) to have it behind the amount.
+;
+                    .BYTE     $D0            ;currency format flag
+
+IntlDateOrder
+;
+;   Flag to set the short date format.
+;   Set it to 0 (zero) to have the mm/dd/yy format (month/day/year).
+;   Set it to 1 (one) to have the dd/mm/yy format.
+;   Set it to 2 (two) to have the yy/mm/dd format.
+;
+                    .BYTE     2              ;order for short form dates
+IntlLdZeroFlag
+;
+;   Flag to set a leading zero before the day number in the short date format.
+;   Set it to $E0 (E,zero) to have a leading zero.
+;   Set it to 0 (zero) to remove a leading zero.
+;
+
+                    .BYTE     $E0            ;leading zero flags for days
+IntlDSep
+                    .ASCII    '-'            ;seperator character for short dates
+
+IntlTimeMode
+;
+;   Flag to set 12 or 24 hours mode for time format.
+;   Set it to 0 (zero) for 24 hour format (will use 24 hour suffix).
+;   Set it to 255 or $FF for 12 hour format (will use AM and PM suffixes).
+;
+                    .BYTE     0              ;12 or 24 hour time mode flag
+IntlTLZFlags
+;
+;   Flag to set a leading zero before the hour in the time format.
+;   Set it to 255 or $FF to have a leading zero.
+;   Set it to $60 (sixty) to remove a leading zero.
+;
+                    .BYTE     $FF            ;time leading zero flags
+IntlAMSuffix
+;
+;   AM and PM suffix strings use 4 bytes.
+;   These are only used in 12 hour mode.
+;   Fill with zero bytes when shorter strings are used or not used at all.
+;
+                    .BYTE     0,0
+                    .BYTE     0,0            ;suffix string for AM times
+IntlPMSuffix
+                    .BYTE     0,0
+                    .BYTE     0,0            ;suffix string for PM times
+IntlTSep
+                    .ASCII    ':'            ;time separator character
+Intl24Suffix
+;
+;   Suffix string of 8 bytes when using 24 hour mode.
+;   Fill with zero bytes when shorter string is used or no string is used.
+;
+                    .BYTE     0,0,0,0
+                    .BYTE     0,0,0,0        ;suffix for 24 hr mode
+
+IntlMetric
+;
+;   Flag for English or Metric ruler in applications.
+;   Set it to 255 or $FF to have a Metric system.
+;   Set it to 0 (zero) to have an English system.
+;
+                    .BYTE     $FF            ;boolean for Metric
+Intl0Version
+;
+;   Do not change the following version word.
+;   Restricted to be used by APPLE only.
+;
+                    .WORD     0              ;version word
+
+                    .END

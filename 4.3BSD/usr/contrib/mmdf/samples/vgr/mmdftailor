@@ -1,0 +1,55 @@
+MLNAME	BRL
+MLDOMAIN ARPA
+MLOCMACHINE VGR
+MMAILID 1
+MSUPPORT "mmdf@brl.arpa"
+
+; Table entries
+MTBL	aliases,	file="aliases",		show="Local User Aliases"
+MTBL	local,		file="local",		show="Local Host Aliases"
+MTBL	brlnet,		file="brlnet",		show="BRLNET Hosts"
+MTBL	rootdomain,	file="rootdomain",	show="Root Domain"
+MTBL	smtp,		file="channel", flags=ns, show="SMTP Hosts via NS"
+MTBL	arpa,		file="domain", flags=ns, show="ARPA Domains via NS"
+MTBL	mil,		file="domain", flags=ns, show="MIL Domains via NS"
+MTBL	edu,		file="domain", flags=ns, show="EDU Domains via NS"
+MTBL	com,		file="domain", flags=ns, show="COM Domains via NS"
+MTBL	gov,		file="domain", flags=ns, show="GOV Domains via NS"
+MTBL	org,		file="domain", flags=ns, show="ORG Domains via NS"
+MTBL	list,		file="list",		show="List Pseudo Hosts"
+MTBL	uucpdom,	file="uucpdom",		show="UUCP Domain"
+MTBL	uucpchn,	file="uucpchn",		show="UUCP Routings"
+MTBL	bboards,	file="bboards",		show="BBoard Pseudo Hosts"
+
+; Alias sources
+ALIAS	table=aliases, trusted
+
+; Channel entries
+MCHN	local, show="Local Delivery", que=local, tbl=local,
+	pgm=local, mod=imm
+MCHN	brlnet, show="BRLNET", que=brlnet, tbl=brlnet
+	pgm=smtp, mod=reg, known=smtp, ap=822
+MCHN	smtp, show="SMTP/TCP", que=smtp, tbl=smtp
+	pgm=smtp, mod=reg, ap=822, confstr="BRL-VGR.ARPA"
+MCHN	list, show="Mailing List Processor", que=list, tbl=list
+	pgm=list, mod=reg
+MCHN	uucp, show="UUCP Channel (Test)", que=uucp, tbl=uucpchn
+	pgm=uucp, mod=reg, lname="brl-vgr"
+MCHN	bb, show="BBoards", que=bboards, tbl=bboards
+	pgm=bboards, mod=reg
+
+; Domain tables
+MDMN    ARPA, show="ARPA Domain", table=arpa
+MDMN    MIL, show="MIL Domain", table=mil
+MDMN    EDU, show="EDU Domain", table=edu
+MDMN    COM, show="COM Domain", table=com
+MDMN    GOV, show="GOV Domain", table=gov
+MDMN    ORG, show="ORG Domain", table=org
+MDMN	LIST, show="List Pseudo Domain", table=list
+MDMN	UUCP, show="UUCP Domain", table=uucpdom
+MDMN	BB, show="List Pseudo Domain", table=bboards
+MDMN	"", show="Root Domain", table=rootdomain
+
+; Logging levels
+MMSGLOG     level=BST
+MCHANLOG    level=BST

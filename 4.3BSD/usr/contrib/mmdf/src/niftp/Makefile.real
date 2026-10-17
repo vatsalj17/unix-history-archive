@@ -1,0 +1,97 @@
+#
+#   niftp (jntmail) channel
+#
+MODULES =       hdr_proc ni_mail ni_niftp pn_wtmail qn2mm_send \
+		qn_rdmail rtn_proc qu2pn_send
+
+OBJECTS =       hdr_proc.o ni_mail.o ni_niftp.o pn_wtmail.o qn2mm_send.o \
+		qn_rdmail.o rtn_proc.o qu2pn_send.o
+
+SOURCES =       hdr_proc.c ni_mail.c ni_niftp.c pn_wtmail.c qn2mm_send.c \
+		qn_rdmail.c rtn_proc.c qu2pn_send.c
+
+real-default:   niftp ni_niftp
+
+install:        $(CHANDIR)/$(MMPREF)niftp $(LIBDIR)/$(MMPREF)ni_niftp
+
+$(CHANDIR)/$(MMPREF)niftp:      xniftp
+	cp xniftp $(CHANDIR)/$(MMPREF)niftp
+	-$(CHOWN) daemon $(CHANDIR)/$(MMPREF)niftp
+	-chmod 04$(PGMPROT) $(CHANDIR)/$(MMPREF)niftp
+	-@ls -ls $(CHANDIR)/$(MMPREF)niftp
+	-@echo "niftp installed normally"; echo ""
+
+niftp:  xniftp
+xniftp: ch_niftp.o qu2pn_send.o pn_wtmail.o $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ ch_niftp.o qu2pn_send.o \
+		pn_wtmail.o $(MMDFLIBS) $(SYSLIBS)
+
+
+$(LIBDIR)/$(MMPREF)ni_niftp:      xni_niftp
+	cp xni_niftp $(LIBDIR)/$(MMPREF)ni_niftp
+	-$(CHOWN) mmdf $(LIBDIR)/$(MMPREF)ni_niftp
+	-chmod 04$(PGMPROT) $(LIBDIR)/$(MMPREF)ni_niftp
+	-@ls -ls $(LIBDIR)/$(MMPREF)ni_niftp
+	-@echo "ni_niftp installed normally"; echo ""
+
+ni_niftp:  xni_niftp
+xni_niftp: ni_niftp.o qn2mm_send.o qn_rdmail.o hdr_proc.o rtn_proc.o  \
+		$(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ ni_niftp.o qn2mm_send.o qn_rdmail.o \
+		hdr_proc.o rtn_proc.o $(MMDFLIBS) $(SYSLIBS)
+
+
+
+lint:   ;  $(LINT) $(LFLAGS) $(SOURCES) $(LLIBS)
+
+clean:
+	-rm -f xni_niftp xniftp *.o x.c makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+deliver.o: deliver.c
+hdr_proc.o: hdr_proc.c
+hdr_proc.o: ../../h/util.h
+hdr_proc.o: ../../h/mmdf.h
+hdr_proc.o: ../../h/hdr.h
+hdr_proc.o: ../../h/ch.h
+hdr_proc.o: ../../h/ap.h
+ni_mail.o: ni_mail.c
+ni_mail.o: ../../h/util.h
+ni_mail.o: ../../h/mmdf.h
+ni_niftp.o: ni_niftp.c
+ni_niftp.o: ../../h/util.h
+ni_niftp.o: ../../h/mmdf.h
+ni_niftp.o: /usr/include/signal.h
+ni_niftp.o: ../../h/ch.h
+pn_wtmail.o: pn_wtmail.c
+pn_wtmail.o: ../../h/util.h
+pn_wtmail.o: ../../h/mmdf.h
+pn_wtmail.o: /usr/include/signal.h
+pn_wtmail.o: ../../h/ch.h
+pn_wtmail.o: ../../h/ap.h
+pn_wtmail.o: ../../h/jnt.h
+qn2mm_send.o: qn2mm_send.c
+qn2mm_send.o: ../../h/util.h
+qn2mm_send.o: ../../h/mmdf.h
+qn2mm_send.o: ../../h/ch.h
+qn_rdmail.o: qn_rdmail.c
+qn_rdmail.o: ../../h/util.h
+qn_rdmail.o: ../../h/mmdf.h
+qn_rdmail.o: ../../h/ap.h
+qn_rdmail.o: ../../h/ch.h
+qn_rdmail.o: ../../h/dm.h
+rtn_proc.o: rtn_proc.c
+rtn_proc.o: ../../h/util.h
+rtn_proc.o: ../../h/mmdf.h
+rtn_proc.o: ../../h/msg.h
+rtn_proc.o: ../../h/adr_queue.h
+qu2pn_send.o: qu2pn_send.c
+qu2pn_send.o: ../../h/util.h
+qu2pn_send.o: ../../h/mmdf.h
+qu2pn_send.o: ../../h/ch.h
+qu2pn_send.o: ../../h/phs.h
+qu2pn_send.o: ../../h/ap.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

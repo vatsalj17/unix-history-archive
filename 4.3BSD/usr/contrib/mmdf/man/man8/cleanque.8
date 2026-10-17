@@ -1,0 +1,29 @@
+.TH "CLEANQUE" 8 "7 Nov 84"
+.SH NAME
+cleanque \- send warnings and return expired mail
+.SH SYNOPSIS
+cleanque [ \-w ]
+.SH DESCRIPTION
+.I Cleanque 
+removes extraneous files from the \fBtmp\fR and \fBmsg\fR subdirectories
+of the MMDF "home queue" directory.  It also sends warnings for mail which
+has not been fully delivered after "warntime" hours following submission.  
+Finally, it returns mail which has not been fully delivered after "failtime"
+hours after submission.  "Warntime" and "failtime" are defined in MMDF's 
+.I conf.c
+file (or set in the runtime tailor file).
+.PP
+Generally,
+.I cleanque
+should be run by
+.I cron,
+once a day, but may be run at any time to free up space.
+.PP
+The optional argument, \-w, can be used if you are running
+\fIcleanque\fR manually and want to see what the program is doing.
+.SH "SEE ALSO"
+queue(5), deliver(8)
+.SH BUGS
+.I Cleanque
+should also remove extraneous files from the individual queues (\fBq.*\fR
+subdirectories).  

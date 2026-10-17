@@ -1,0 +1,54 @@
+window 2 0
+xmitpack 130
+recvpack 130
+dial 1200|<wats5>14095551111,1200|<wats5>14095550000
+xmit "\r\x\x\r"
+recv "sername: " 30
+xmit "ACCOUNT\r"
+{
+  alternate
+	recv "assword:" 30
+  alternate	   
+	replay
+	recv "ailure" 5
+	log "WARNING: login failed--redialing"
+	dial 1200|<wats5>14095550000,1200|<wats5>14095551111
+	xmit "\x\x\x\r\x\r"
+	recv "sername: " 30
+	xmit "ACCOUNT\r"
+	recv "assword:" 30
+  alternate
+	replay
+	recv "sername: " 5
+	log "WARNING: starting over at Username: prompt"
+	xmit "ACCOUNT\r"
+	recv "assword:" 30
+  alternate	   
+	replay
+	recv "ailure" 5
+	log "WARNING: login failed--redialing"
+	dial 1200|<wats5>14095550000,1200|<wats5>14095551111
+	xmit "\x\x\x\r\x\r"
+	recv "sername: " 30
+	xmit "ACCOUNT\r"
+	recv "assword:" 30
+}
+xmit "PASSWORD\r"
+{
+  alternate
+	recv "annel: " 60
+  alternate
+	replay
+	recv "ailure" 5
+	log "WARNING: login/passwd failed--redialing"
+	dial 1200|<wats5>14095551111,1200|<wats5>14095550000
+	xmit "\x\x\r\x\r"
+	recv "sername: " 30
+	xmit "ACCOUNT\r"
+	recv "assword:" 30
+	xmit "PASSWORD\r"
+	recv "annel: " 60
+}
+xmit "pobox\r"
+start
+end

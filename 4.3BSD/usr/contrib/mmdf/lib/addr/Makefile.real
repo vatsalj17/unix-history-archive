@@ -1,0 +1,131 @@
+#
+#	Makefile for address parser portion of libmmdf.a
+#
+#  Just the prefix of the name should be given (i.e. "foo" for "foo.c")
+MODULES =  ap_s2tree ap_p2s ap_t2s ap_t2parts ap_normali \
+	    ap_1adr ap_util ap_lex ap_lxtable ap_dmflip \
+	    ap_s2p adrparse td norm parse ghost
+
+OBJECTS =   ap_normali.o ap_s2tree.o ap_p2s.o ap_t2s.o ap_t2parts.o \
+	    ap_1adr.o ap_util.o ap_lex.o ap_lxtable.o ap_dmflip.o \
+	    ap_s2p.o adrparse.o
+
+LIBSRCS =  ap_s2tree.c ap_p2s.c ap_t2s.c ap_t2parts.c ap_normali.c \
+	    ap_1adr.c ap_util.c ap_lex.c ap_lxtable.c ap_dmflip.c \
+	    ap_s2p.c adrparse.c
+
+real-default: ../addr-made
+../addr-made: $(OBJECTS)
+	$(AR) r ../libmmdf.a $(OBJECTS)
+	-touch ../addr-made
+	-@echo "address parser routines built normally"
+
+parse: parse.o fullparse.o $(MMDFLIBS)
+	cc $(LDFLAGS) -o parse parse.o fullparse.o $(MMDFLIBS) $(SYSLIBS)
+
+td: td.o $(MMDFLIBS)
+	cc $(LDFLAGS) -o td td.o $(MMDFLIBS) $(SYSLIBS)
+
+norm: norm.o $(MMDFLIBS)
+	cc $(LDFLAGS) -o norm norm.o $(MMDFLIBS) $(SYSLIBS)
+
+ghost: ghost.o $(MMDFLIBS)
+	cc $(LDFLAGS) -o ghost ghost.o $(MMDFLIBS) $(SYSLIBS)
+
+lint:
+	$(LINT) -Caddr $(LFLAGS) $(LIBSRCS)
+
+clean:
+	-rm -f parse td norm ghost *.o x.c makedep eddep \
+		make.out errs llib-laddr*
+
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+ap_s2tree.o: ap_s2tree.c
+ap_s2tree.o: ../../h/util.h
+ap_s2tree.o: ../../h/ap.h
+ap_s2tree.o: ../../h/ll_log.h
+ap_p2s.o: ap_p2s.c
+ap_p2s.o: ../../h/util.h
+ap_p2s.o: ../../h/conf.h
+ap_p2s.o: ../../h/ch.h
+ap_p2s.o: ../../h/ap.h
+ap_p2s.o: ../../h/dm.h
+ap_p2s.o: ../../h/ll_log.h
+ap_t2s.o: ap_t2s.c
+ap_t2s.o: ../../h/util.h
+ap_t2s.o: ../../h/conf.h
+ap_t2s.o: ../../h/ch.h
+ap_t2s.o: ../../h/ap.h
+ap_t2s.o: ../../h/dm.h
+ap_t2s.o: ../../h/ll_log.h
+ap_t2parts.o: ap_t2parts.c
+ap_t2parts.o: ../../h/util.h
+ap_t2parts.o: ../../h/ap.h
+ap_t2parts.o: ../../h/ll_log.h
+ap_normali.o: ap_normali.c
+ap_normali.o: ../../h/util.h
+ap_normali.o: ../../h/conf.h
+ap_normali.o: ../../h/ll_log.h
+ap_normali.o: ../../h/ch.h
+ap_normali.o: ../../h/ap.h
+ap_normali.o: ../../h/ap_norm.h
+ap_normali.o: ../../h/dm.h
+ap_1adr.o: ap_1adr.c
+ap_1adr.o: ../../h/util.h
+ap_1adr.o: ../../h/conf.h
+ap_1adr.o: ../../h/ap.h
+ap_1adr.o: ../../h/ap_lex.h
+ap_1adr.o: ../../h/ll_log.h
+ap_util.o: ap_util.c
+ap_util.o: ../../h/util.h
+ap_util.o: ../../h/ap.h
+ap_lex.o: ap_lex.c
+ap_lex.o: ../../h/util.h
+ap_lex.o: ../../h/ap.h
+ap_lex.o: ../../h/ap_lex.h
+ap_lxtable.o: ap_lxtable.c
+ap_lxtable.o: ../../h/ap_lex.h
+ap_lxtable.o: ../../h/util.h
+ap_lxtable.o: ../../h/conf.h
+ap_dmflip.o: ap_dmflip.c
+ap_dmflip.o: ../../h/util.h
+ap_dmflip.o: ../../h/conf.h
+ap_dmflip.o: ../../h/ch.h
+ap_dmflip.o: ../../h/dm.h
+ap_dmflip.o: ../../h/ll_log.h
+ap_s2p.o: ap_s2p.c
+ap_s2p.o: ../../h/ap_lex.h
+ap_s2p.o: ../../h/util.h
+ap_s2p.o: ../../h/ap.h
+adrparse.o: adrparse.c
+adrparse.o: ../../h/util.h
+adrparse.o: ../../h/mmdf.h
+adrparse.o: ../../h/ap.h
+td.o: td.c
+td.o: ../../h/util.h
+td.o: ../../h/mmdf.h
+td.o: ../../h/ch.h
+td.o: ../../h/dm.h
+norm.o: norm.c
+norm.o: ../../h/util.h
+norm.o: ../../h/mmdf.h
+norm.o: ../../h/ap.h
+norm.o: ../../h/ch.h
+parse.o: parse.c
+parse.o: ../../h/ap_lex.h
+parse.o: ../../h/util.h
+parse.o: ../../h/mmdf.h
+parse.o: ../../h/ap.h
+ghost.o: ghost.c
+ghost.o: ../../h/util.h
+ghost.o: ../../h/mmdf.h
+ghost.o: /usr/include/pwd.h
+ghost.o: ../../h/ch.h
+ghost.o: ../../h/dm.h
+ghost.o: ../../h/ap.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

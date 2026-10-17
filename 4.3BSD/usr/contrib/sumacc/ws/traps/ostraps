@@ -1,0 +1,3284 @@
+3. "6F^5D!$^			f .NOLIST
+
+; File OsTraps.text
+;
+;  implements the interface for register based traps.
+;  created 23-Nov-83 by Rony Sebok to contain the contents of
+;  MemTraps.text and MacMisc.text
+;   Modification history:
+;       12 Apr 84  JTC  Hacked up -- get it?
+;
+; from MemTraps.text
+;--------------------------------------------------------
+;
+;  Memory Manager Traps -- implement "Unit HeapZone"
+;  (needed by QuickDraw Pascal clients) by trapping
+;  to the Mac OS.
+;
+;  written by Andy Hertzfeld  May 5,1982
+;  radically revised by Martin Haeberli  Spring, 1983
+;  distorted to reality by Larry Kenyon, 24 September 1983
+;
+;  Modification History:
+;  MPH  25 April 83     Added error code returns to
+;                       HLock, HUnLock, HPurge, HNoPurge.
+;                       Added entry points for
+;                       ApplicZone, SystemZone.
+;  LAK  25 Sept 83      Updated to reflect 7.0 version memory manager
+;                       and generally reorganized.
+;  LAK  26 Sept 83      Added GZCritical and GZSaveHnd.
+;  RS   21 Nov  83      changed .DEFs to .PROC or .FUNC so linker would be able
+;                       to throw out those routines not used by the pascal prog
+;--------------------------------------------------------
+
+                .NoList
+                .INCLUDE tlasm/SysEqu.Text
+                .INCLUDE tlasm/SysErr.Text
+                .INCLUDE tlasm/SysMacs.Text
+                .INCLUDE tlasm/GrafEqu.Text
+                .INCLUDE tlasm/ToolEqu.Text
+                .INCLUDE tlasm/ToolMacs.Text
+                .INCLUDE tlasm/FSEqu.Text
+                .INCLUDE tlasm/HeapDefs.text
+                .List
+
+
+                .MACRO OsCall
+                Move.L  (SP)+,A1        ;get return address
+                Move.W  (SP)+,D0        ;Get ASync flag.
+                Move.L  (SP)+,A0        ;get param pointer.
+                BNE.S   @1
+
+                %1                      ;tell OS to do it Synchronously
+                BrA.S   @2
+
+@1              %1      ,ASYNC          ;Tell OS to do it Asynchronously
+@2              Move.W  D0,(SP)         ;save result
+                Jmp     (A1)            ;return to caller
+                .ENDM
+
+
+;----------------------------------------------------------------------
+;
+; Procedure SetApplBase;
+;
+; Initialize the Application Zone while growing the System zone.
+;
+; Arguments:
+;       A0 - ptr to new application zone base.
+;
+; Registers:
+;       D0 - result code from SetApplBase (always 0)
+;
+                .PROC SetApplBase
+                .REF    SaveRetA1
+;
+                Move.L  (SP)+,A1        ;return address
+                Move.L  (SP)+,A0        ;startPtr
+                _SetApplBase            ;ask OS to do request
+                JMP   SaveRetA1       ;save 0 result code and return via A1
+
+
+;----------------------------------------------------------------------
+;
+; Procedure InitApplZone;
+;
+; Initialize the Application Zone
+;
+; Arguments:
+;       None
+;
+; Registers:
+;       D0 - result code from InitApplZone
+;
+                .PROC InitApplZone
+                .REF    Save
+;
+                _InitApplZone           ;ask OS to do request
+                JMP   Save
+
+
+;----------------------------------------------------------------------
+;
+; Procedure InitZone(growProc:           ProcPtr;
+;                    moreMasters:        Integer;
+;                    limitPtr,startPtr : Ptr);
+; Creates and initializes a fresh zone from unstructured storage
+;
+; Arguments:
+;       growProc:       points to grow procedure for this zone
+;       moreMasters:    number of master pointers to create at a time
+;       limitPtr:       points one past last byte of raw storage
+;       startPtr:       points to first byte of raw storage
+;
+; Registers:
+;       D0 - result code from InitApplZone
+;
+                .PROC InitZone
+                .REF    SaveRetA1
+;
+                MOVE.L  (SP)+,A1        ;return address
+                Move.L  SP,A0           ;stack parameters form req blk
+                _InitZone
+                Add     #14,SP          ;strip parameters
+                JMP   SaveRetA1       ;save 0 result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Function GetZone: THz;
+;
+; Returns value of theZone
+;
+; Arguments:
+;       None
+;
+; Result:
+;                       current value of theZone pointer
+;
+; Registers:
+;       A1 -            holds return address
+;
+                .FUNC GetZone
+                .REF    Save
+
+                _GetZone                ;ask OS to do request
+                Move.L  A0,4(SP)        ;save result
+                JMP   Save            ;Set error code and return
+
+
+;----------------------------------------------------------------------
+;
+; Procedure SetZone(hz: THz);
+;
+; Sets theZone to hz
+;
+; Arguments:
+;       hz:             holds new value for theZone
+;
+; Registers:
+;       A2 -            holds return address
+;
+                .PROC SetZone
+                .REF    SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;zone pointer
+                _SetZone                ;ask OS to do request
+                JMP   SaveRetA1       ;save 0 result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Function ApplicZone: THz;
+;
+; Returns value of ApplZone
+;
+; Arguments:
+;       None
+;
+; Result:
+;                       current value of ApplZone pointer
+;
+; Registers:
+;       A1 -            holds return address
+;
+                .FUNC ApplicZone
+                .REF    Save0
+
+                Move.L  ApplZone,4(SP)
+                JMP   Save0           ;Set error code 0 and return
+
+
+
+;----------------------------------------------------------------------
+;
+; Function SystemZone: THz;
+;
+; Returns value of SysZone
+;
+; Arguments:
+;       None
+;
+; Result:
+;                       current value of SysZone pointer
+;
+; Registers:
+;       A1 -            holds return address
+;
+                .FUNC SystemZone
+                .REF    Save0
+
+                Move.L  SysZone,4(SP)
+                JMP   Save0           ;Set error code and return
+
+
+;----------------------------------------------------------------------
+;
+; Function CompactMem(cbNeeded: Size): Size;
+;
+; Compact the heap until a free block with cbNeeded bytes is found or
+; until the end of the zone is reached.  Returns cbFound, the size of
+; the largest block found.
+;
+; Arguments:
+;       cbNeeded:       size of block needed
+;
+; Result:
+;                       size of largest block found, in bytes
+;
+; Registers:
+;       D0 - number of bytes needed/number of bytes in biggest block
+;
+                .FUNC CompactMem
+                .DEF    Save0RetA1
+
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,D0        ;get cbNeeded
+                _CompactMem             ;tell OS to do it
+                Move.L  D0,(SP)         ;save result
+                BrA.S   Save0RetA1      ;set 0 result code and return via A1
+
+
+;----------------------------------------------------------------------
+;
+; Procedures Save, Save0, Save0RetA1, SaveRetA1;
+;
+; Saves D0 into ErrorCode. Alternately sets D0 to 0 first. Alternately returns
+; via A1.  A1 is destroyed in any case . . .
+;
+; Arguments:
+;       D0:             Error code to be saved in ErrorCode
+;
+; Result:
+;       None
+;
+; Registers:
+;       A1 - points to ErrorCode
+;
+                .DEF    ErrorCode
+                .DEF    SaveRetA1
+                .DEF    Save
+                .DEF    Save0
+
+
+ErrorCode
+               .Word   0
+
+
+Save0RetA1
+                MoveQ   #0,D0           ;this entry zeroes result, returns via A1
+
+SaveRetA1
+                Move.L  A1,-(SP)        ;A1 has return address
+
+Save
+                LEA     ErrorCode,A1    ;points to LastPH save location
+                Move.W  D0,(A1)         ;save error
+
+                RTS                     ;Return
+
+Save0
+                MoveQ   #0,D0           ;this entry zeroes the result
+                BrA     Save
+
+
+
+;----------------------------------------------------------------------
+;
+; Procedure PurgeMem(cbNeeded: Size);
+;
+; Purge purgeable blocks in the heap until a free block of cbNeeded bytes
+; is found, or until the end of the zone is reached.
+;
+; Arguments:
+;       cbNeeded:       size of block needed
+;
+; Result:
+;
+; Registers:
+;       A1 - return address
+;       D0 - number of bytes needed/error code
+;
+                .PROC PurgeMem
+                .REF    SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,D0        ;get cbNeeded
+                _PurgeMem               ;tell OS to do it
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+;----------------------------------------------------------------------
+;
+; Function FreeMem: LongInt;
+;
+; Returns number of free bytes in the current zone
+;
+; Arguments:
+;       None
+;
+; Result:
+;                       number of free bytes in the current zone
+;
+; Registers:
+;       D0 -            holds result value
+;
+                .FUNC FreeMem
+                .REF    Save0
+
+                _FreeMem                ;ask OS to do request
+                Move.L  D0,4(SP)        ;save result
+                JMP     Save0           ;set 0 error code and return
+
+
+
+;----------------------------------------------------------------------
+;
+; Procedure ResrvMem(cbNeeded: Size);
+;
+; Purge purgeable blocks in the heap until a free block of cbNeeded bytes
+; is found, or until the end of the zone is reached.
+;
+; Arguments:
+;       cbNeeded:       size of block needed
+;
+; Result:
+;
+; Registers:
+;       A1 - return address
+;       D0 - number of bytes needed/error code
+;
+                .PROC ResrvMem
+                .REF    SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,D0        ;get cbNeeded
+                _ResrvMem               ;tell OS to do it
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+
+
+;----------------------------------------------------------------------
+;
+; Function MaxMem(VAR grow: Size): Size;
+;
+; Return the size of the maximum block which may be allocated without
+; growing the zone.  Also return the maximum number of bytes by which the
+; zone may be grown.
+;
+; Arguments:
+;       None
+;
+; Result:
+;                       size of largest available block in bytes
+;       grow:           maximum growth allowed in current zone
+;
+; Registers:
+;       A0 - grow/pointer to VAR grow
+;       A1 - return address
+;       D0 - number of bytes in largest free block
+;
+                .FUNC MaxMem
+
+                .REF    Save0RetA1
+
+                Move.L  (SP)+,A1        ;get return address
+                _MaxMem                 ;let OS do it
+                Move.L  A0,D1           ;max growth allowed
+                Move.L  (SP)+,A0        ;get the pointer to VAR grow
+                Move.L  D1,(A0)
+                Move.L  D0,(SP)         ;save result
+                JMP     Save0RetA1      ;set 0 result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Function TopMem: Ptr;
+;
+; Returns the address of the byte after the last byte of real memory.
+;
+; Arguments:
+;       None
+;
+; Result:
+;       Ptr:            Address of byte just following last byte of
+;                         real memory
+;
+; Registers:
+;       D0 - result code
+;
+                .FUNC TopMem
+                .REF    Save0
+
+                Move.L  MemTop,4(SP)    ;set function result
+                JMP     Save0           ;set result and return
+
+
+
+;----------------------------------------------------------------------
+;
+; Procedure SetGrowZone(growZone: ProcPtr);
+;
+; Sets the current heap zone's GrowZone procedure to growZone
+;
+; Arguments:
+;       growZone:       new value for this zone's GrowZone proc
+;
+; Registers:
+;       A1 -            holds return address
+;
+                .PROC SetGrowZone
+                .REF    SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;Procedure pointer
+                _SetGrowZone            ;ask OS to do request
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Procedure SetApplLimit(zoneLimit: Ptr);
+;
+; Sets the application zone's limit to zoneLimit
+;
+; Arguments:
+;       zoneLimit:      new value for application zone limit
+;
+; Registers:
+;       A2 -            holds return address
+;
+                .PROC SetApplLimit
+                .REF    SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;zone pointer
+                _SetApplLimit           ;ask OS to do request
+                JMP     SaveRetA1       ;save 0 result code and return via A1
+
+
+;PROCEDURE MaxApplZone;
+;
+;grows the application zone to as large as allowable (by applLimit)
+
+                .PROC MaxApplZone
+
+                MOVE.L  ApplLimit,A0
+                LEA     HeapEnd,A1
+                MOVE.L  A0,D0
+                SUB.L   (A1),D0                 ;bytes to grow
+                MOVEQ   #MinFree,D2
+                CMP.L   D2,D0
+                BCS.S   @1                      ;br if no room to grow
+
+                MOVE.L  (A1),A1                 ;point to current limit blk
+                MOVE.L  A0,HeapEnd              ;set HeapEnd=ApplLimit
+                MOVE.L  D0,(A1)                 ;inc size of current limit blk
+                CLR.B   (A1)                    ;just to be sure
+
+                MOVE.L  ApplZone,A1             ;adjust heap zone header
+                MOVE.L  A0,(A1)                 ;new limit block (bklim)
+                MOVE.L  D2,(A0)                 ;limit block size is always min
+                ADD.L   D0,ZCBFree(A1)          ;increase free count
+
+@1              RTS
+
+
+
+;----------------------------------------------------------------------
+;
+; Function NewPtr(byteCount: Size): Ptr;
+;
+; Returns a pointer to a newly allocated non-relocatable block of
+; memory byteCount bytes long.
+;
+; Arguments:
+;       byteCount:      number of bytes needed
+;
+; Result:
+;                       pointer to new block, or NIL, if not enough room
+;
+; Registers:
+;       A0 - points to new block, or NIL
+;       A1 - return address
+;       D0 - number of bytes needed/error code
+;
+                .FUNC NewPtr
+                .REF    SaveRetA1
+
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,D0        ;get the byte count
+                _NewPtr                 ;ask OS to do request
+                Move.L  A0,(SP)         ;return result ptr on stack
+               JMP     SaveRetA1       ;save result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Procedure DisposPtr(p: Ptr);
+;
+; Releases the block pointed to by p.
+;
+; Arguments:
+;       p:              pointer to block to be freed
+;
+; Result:
+;       None
+;
+; Registers:
+;       A0 - points to block to be freed
+;       A1 - return address
+;       D0 - error code
+;
+                .PROC DisposPtr
+                .REF  SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;get parameter
+                _DisposPtr              ;let OS do work
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Function GetPtrSize(p: Ptr): Size;
+;
+; Returns number of bytes in the non-relocatable block pointed to by p.
+;
+; Arguments:
+;       p:              points to non-relocatable block
+;
+; Result:
+;                       number of bytes in block
+;
+; Registers:
+;       A0 -            points to block
+;       A1 -            holds return address
+;       D0 -            number of bytes in block
+;
+                .FUNC GetPtrSize
+                .REF  SaveRetA1
+                .REF  Save0RetA1
+
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;get the pointer
+                _GetPtrSize             ;let OS do it
+                Move.L  D0,(SP)         ;return result on stack
+                BPl.S   @1              ;true sizes are positive
+                Clr.L   (SP)            ;return 0 on errors
+                JMP     SaveRetA1       ;and set error code
+
+@1              JMP     Save0RetA1        ;set 0 result code and return via A1
+
+
+;----------------------------------------------------------------------
+;
+; Procedure SetPtrSize(p: Ptr; newSize: Size);
+;
+; Sets the size of the non-relocatable block pointed to by p to newSize
+; bytes.
+;
+; Arguments:
+;       p:              points to non-relocatable block
+;       newSize:        number of bytes needed in block
+;
+; Result:
+;       None
+;
+; Registers:
+;       A0 -            points to block
+;       A1 -            holds return address
+;       D0 -            number of bytes needed/error code
+;
+                .PROC SetPtrSize
+                .REF SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,D0        ;get the new size
+                Move.L  (SP)+,A0        ;get the pointer
+                _SetPtrSize             ;let OS do it
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Function  PtrZone(p: Ptr): THz;
+;
+; Recovers the reference to the heap zone object, given a pointer to
+; a block.
+;
+; Arguments:
+;       p:              points to non-relocatable block
+;
+; Result:
+;                       pointer to the zone object for the zone
+;                       containing the referenced block.
+;
+; Registers:
+;       A0 -            points to block/points to block's zone object
+;       A1 -            holds return address
+;       D0 -            error code
+;
+                .FUNC PtrZone
+                .REF SaveRetA1
+
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;get the pointer
+                _PtrZone                ;let OS do it
+                Move.L  A0,(SP)         ;save zone object pointer
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Function  NewHandle(byteCount: Size): Handle;
+;
+; Returns a handle to a newly allocated relocatable block
+; byteCount bytes long.
+;
+; Arguments:
+;       byteCount:      number of bytes needed
+;
+; Result:
+;                       handle to new block, or NIL, if not enough room
+;
+; Registers:
+;       A0 - handle for new block, or NIL
+;       A1 - return address
+;       D0 - number of bytes needed/error code
+;
+                .FUNC NewHandle
+                .REF SaveRetA1
+
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,D0        ;get the byte count
+                _NewHandle              ;ask OS to do request
+                Move.L  A0,(SP)         ;return result handle on stack
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+;----------------------------------------------------------------------
+;
+; Procedure DisposHandle(h: Handle);
+;
+; Releases the block referenced by h.
+;
+; Arguments:
+;       h:              handle for the block to be freed
+;
+; Result:
+;       None
+;
+; Registers:
+;       A0 - handle for block to be freed
+;       A1 - return address
+;       D0 - error code
+;
+                .PROC DisposHandle
+                .REF SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;get handle
+                _DisposHandle           ;let OS do work
+               JMP     SaveRetA1        ;save result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Function  GetHandleSize(h: Handle): Size;
+;
+; Returns number of bytes in the relocatable block referenced by h.
+;
+; Arguments:
+;       h:              handle for relocatable block
+;
+; Result:
+;                       number of bytes in block
+;
+; Registers:
+;       A0 -            points to block
+;       A1 -            holds return address
+;       D0 -            number of bytes in block
+;
+                .FUNC GetHandleSize
+                .REF SaveRetA1
+                .REF Save0RetA1
+
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;get the handle
+                _GetHandleSize          ;let OS do it
+                Move.L  D0,(SP)         ;return result on stack
+                BPl.S   @1              ;real sizes are positive
+                Clr.L   (SP)            ;on errors, return 0
+                JMP     SaveRetA1       ;and set error code correctly
+
+@1              JMP     Save0RetA1      ;if result is a size, set 0 result code
+
+
+;----------------------------------------------------------------------
+;
+; Procedure SetHandleSize(h: Handle; newSize: Size);
+;
+; Sets the size of the relocatable block referred to by h to newSize
+; bytes.
+;
+; Arguments:
+;       h:              refers to relocatable block
+;       newSize:        number of bytes needed in block
+;
+; Result:
+;       None
+;
+; Registers:
+;       A0 -            points to block
+;       A1 -            holds return address
+;       D0 -            number of bytes needed/error code
+;
+                .PROC SetHandleSize
+                .REF  SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,D0        ;get the new size
+                Move.L  (SP)+,A0        ;get the handle
+                _SetHandleSize          ;let OS do it
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Function  HandleZone(h: Handle): THz;
+;
+; Recovers the reference to the heap zone object, given a handle for
+; a block.
+;
+; Arguments:
+;       h:              refers to relocatable block
+;
+; Result:
+;                       pointer to the zone object for the zone
+;                       containing the referenced block.
+;
+; Registers:
+;       A0 -            handle for block/points to block's zone object
+;       A1 -            holds return address
+;       D0 -            error code
+;
+                .FUNC HandleZone
+                .REF  SaveRetA1
+
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;get the handle
+                _HandleZone             ;let OS do it
+                Move.L  A0,(SP)         ;save zone object pointer
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+;----------------------------------------------------------------------
+;
+; Function  RecoverHandle(p: Ptr): Handle;
+;
+; Recovers the handle for a relocatable block, given a pointer to the
+; relocatable block.  theZone must be set to reflect the zone containing
+; this relocatable block.
+;
+; Arguments:
+;       rp:             points to relocatable block
+;
+; Result:
+;                       handle for the referenced block.
+;
+; Registers:
+;       A0 -            pointer to relocatable block/handle for block
+;       A1 -            holds return address
+;       D0 -            error code
+;
+                .FUNC RecoverHandle
+                .REF  Save0RetA1
+
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;get the reloc block pointer
+                _RecoverHandle          ;let OS do it
+                Move.L  A0,(SP)         ;save handle for block
+                JMP     Save0RetA1      ;save result code and return via A1
+                                        ;(OS fails to set D0 for this call so
+                                        ; we unconditionally set result to 0)
+
+
+;----------------------------------------------------------------------
+;
+; Procedure EmptyHandle(h: Handle);
+;
+; Explicitly purges the relocatable block referred to by h.
+;
+; Arguments:
+;       h:              refers to relocatable block
+;
+; Result:
+;       None
+;
+; Registers:
+;       A0 -            handle for block
+;       A1 -            holds return address
+;       D0 -            error code
+;
+                .PROC EmptyHandle
+                .REF  SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;get the handle
+                _EmptyHandle            ;let OS do it
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Procedure ReAllocHandle(h: Handle; byteCount: Size);
+;
+; Allocates a relocatable block, using an existing handle.
+; If the handle is not already empty, the handle is emptied first,
+; then allocated.
+;
+; Arguments:
+;       h:              refers to relocatable block
+;       byteCount:      number of bytes needed in the new block
+;
+; Result:
+;       None
+;
+; Registers:
+;       A0 -            handle for block/points to block's zone object
+;       A1 -            holds return address
+;       D0 -            new block size/error code
+;
+                .PROC ReAllocHandle
+                .REF  SaveRetA1
+;
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,D0        ;get the new size
+                Move.L  (SP)+,A0        ;get the handle
+                _ReAllocHandle          ;let OS do it
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Procedure HLock(h: Handle);
+; Procedure HUnLock(h: Handle);
+; Procedure HPurge(h: Handle);
+; Procedure HNoPurge(h: Handle);
+;
+; These procedure are used to change the lock and purge attributes of
+; the relocatable block referred to by h.
+;
+; Arguments:
+;       h:              handle for relocatable block
+;
+; Registers:
+;       A0 -            handle for relocatable block
+;       A1 -            holds return address
+;
+                .PROC HLock
+                .REF  SaveRetA1
+;
+                Move.L  (SP)+,A1        ;return address
+                Move.L  (SP)+,A0        ;handle for block
+                _HLock                  ;let OS to do it.
+                JMP     SaveRetA1       ;save result code and return via A1
+
+                .PROC HUnLock
+                .REF  SaveRetA1
+;
+                Move.L  (SP)+,A1        ;return address
+                Move.L  (SP)+,A0        ;handle for block
+                _HUnLock                ;let OS to do it.
+                JMP     SaveRetA1       ;save result code and return via A1
+
+                .PROC HPurge
+                .REF  SaveRetA1
+;
+                Move.L  (SP)+,A1        ;return address
+                Move.L  (SP)+,A0        ;handle for block
+                _HPurge                 ;let OS to do it.
+                JMP     SaveRetA1       ;save result code and return via A1
+
+                .PROC HNoPurge
+                .REF  SaveRetA1
+;
+                Move.L  (SP)+,A1        ;return address
+                Move.L  (SP)+,A0        ;handle for block
+                _HNoPurge               ;let OS to do it.
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+;
+;PROCEDURE MoreMasters;
+;
+
+           .PROC MoreMasters
+           .REF Save
+
+           _MoreMasters
+           JMP  Save
+
+
+;----------------------------------------------------------------------
+;
+; Procedure BlockMove(srcPtr, destPtr: Ptr; byteCount: Size);
+;
+; Marks the relocatable block referred to by h as not purgeable.
+;
+; Arguments:
+;       srcPtr:         source pointer
+;       destPtr:        destination pointer
+;       byteCount:      bytecount for move
+;
+; Registers:
+;       A0 -            source pointer
+;       A1 -            destination pointer
+;       D0 -            bytecount for move
+;       D1 -            holds return address
+;
+                .PROC BlockMove
+                .REF  SaveRetA1
+;
+                Move.L  (SP)+,D1        ;return address
+                Move.L  (SP)+,D0        ;byte count
+                Move.L  (SP)+,A1        ;destination ptr
+                Move.L  (SP)+,A0        ;source ptr
+                _BlockMove              ;let OS to do it.
+                Move.L  D1,A1           ;return address
+                JMP     SaveRetA1       ;save result code and return via A1
+
+
+
+;----------------------------------------------------------------------
+;
+; Function MemError: OsErr;
+;
+; Returns the error observed by the most recent memory manager call.
+;
+; Arguments:
+;       None
+;
+; Registers:
+;
+                .FUNC MemError
+                .REF    ErrorCode
+
+                Move.W  ErrorCode,4(SP) ;last error
+                RTS
+
+
+;----------------------------------------------------------------------
+;
+; Function  GZCritical: BOOLEAN;
+; Function  GZSaveHnd: Handle;
+;
+; These routines are provided to help Pascal GrowZone functions make
+; decisions.
+;
+; Arguments:
+;       None
+;
+; Registers:
+;
+                .FUNC GZSaveHnd
+
+                Move.L  GZRootHnd,4(SP) ;handle which should not be touched
+                RTS
+
+                .FUNC GZCritical
+                Move.L  (SP)+,A1        ;return address
+                Clr.W   (SP)            ;assume non-critical
+                Move.L  GZMoveHnd,D0
+                BEq.S   CritCase
+                Cmp.L   GZRootHnd,D0
+                BNE.S   NonCrit
+CritCase
+                Move.W  #$0100,(SP)     ;return true
+
+NonCrit         Jmp     (A1)
+
+;
+; from MACMISC.TEXT
+;  Miscellanous MacIntosh Interface Routines
+;  this version for Traps based system
+;  It also includes storTraps
+;
+;
+;  written by Andy Hertzfeld  16-Oct-82
+;
+;  Modification History
+;
+;    25-Jan-83  AJH  Modified for new file/IO system
+;    12-Jun-83  AJH  Added OpenDeskAcc
+;
+;------------------------------------------------
+
+
+;
+;FUNCTION VInstall(VBLBlockPtr: VBLCBPtr): OsErr;
+;
+
+            .FUNC VInstall
+
+            MOVE.L  (SP)+,A1                ;get the return address
+            MOVE.L  (SP)+,A0                ;addr of vertical retrace control blk
+            MOVE.L  A1,-(SP)                ;restore return address
+
+            _VInstall
+            MOVE.W  D0,4(SP)                ;return error
+
+            RTS
+
+;
+;FUNCTION VRemove(VBLBlockPtr: VBLCBPtr): OsErr;
+;
+
+            .FUNC VRemove
+
+            MOVE.L  (SP)+,A1                ;get the return address
+            MOVE.L  (SP)+,A0                ;addr of vertical retrace control blk
+            MOVE.L  A1,-(SP)                ;restore return address
+
+            _VRemove
+            MOVE.W  D0,4(SP)                ;return error
+
+            RTS
+
+;
+;FUNCTION DrvrInstall(name: OsStr255;  drvrRefNum: INTEGER): OsErr;
+; InstallDriver installs a driver of the specified name, into the specified
+; unit.
+;
+                .PROC   DrvrInstall,2
+
+                MOVE.W  4(SP),D0        ;get unit number
+                MOVE.L  6(SP),A0        ;get the fileName ptr
+                _DrvrInstall            ;install it
+
+                MOVE.L  (SP)+,A0        ;get return address
+                ADDQ    #6,SP           ;strip parameters
+                MOVE.W  D0,(SP)         ;return error
+                JMP     (A0)            ;return to caller
+
+;
+;FUNCTION DrvrRemove(drvrRefNum: INTEGER): OsErr;
+;
+
+                .PROC   DrvrRemove,2
+
+                MOVE.W  4(SP),D0        ;get driver refNum
+                _DrvrRemove             ;remove it
+
+                MOVE.L  (SP)+,A0        ;get return address
+                ADDQ    #2,SP           ;strip parameters
+                MOVE.W  D0,(SP)         ;return error
+                JMP     (A0)            ;return to caller
+
+;
+; FUNCTION OpenDriver(driverName: OsStr255): INTEGER;
+;
+;   OpenDriver opens the driver of a given name, returning its refNum
+;
+                .FUNC   OpenDriver,1
+
+                MOVE.L  4(SP),A0           ;get a pointer to the name
+                MOVEQ   #<IOQELSIZE/2>-1,D0
+@1              CLR.W   -(SP)
+                DBRA    D0,@1
+
+                MOVE.L  A0,IOFileName(SP)  ;set up name
+                CLR.B   IOPermssn(SP)      ; open for read/write
+                MOVE.L  SP,A0           ;point to it
+                _Open                   ;open the driver
+                BNE.S   BadOpen         ;if an error, don't return refNum
+
+                MOVE.W  IORefNum(SP),D0        ;get the refNum
+DoneOpen
+                ADD     #IOQELSIZE,SP          ;pop off command buffer
+                MOVE    D0,8(SP)               ;return the refNum
+
+                MOVE.L  (SP)+,(SP)      ;strip return address
+                RTS
+BadOpen
+                MOVEQ   #0,D0
+                BRA.S   DoneOpen
+;
+; PROCEDURE CloseDriver(refNum: INTEGER);
+;
+;   CloseDriver closes the driver with the specified refNum
+;
+                .PROC   CloseDriver,1
+
+                MOVE.W  4(SP),D0                ;get the refNum
+                SUB     #30,SP                  ;get space for param block
+                MOVE.W  D0,IORefNum(SP)         ;set up refNum
+                MOVE.L  SP,A0
+                _Close                          ;close it!
+                ADD     #30,SP                  ;pop off param block
+
+                MOVE.L  (SP)+,A0
+                ADDQ    #2,SP
+                JMP     (A0)
+
+;
+;FUNCTION  SerReset(refNum: INTEGER; serConfig: INTEGER): OSErr;
+;
+
+        .FUNC   SerReset
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  10(A6),IORefNum(A0)     ; refnum
+        MOVE.W  #8,CSCode(A0)           ; code for Reset
+        MOVE.W  8(A6),CSParam(A0)       ;the configuration
+
+        _Control
+        MOVE    D0,12(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ    #4,SP                   ; fix up stack
+        JMP     (A1)
+
+;
+;FUNCTION  SerSetBuf(refNum: INTEGER; serBPtr: Ptr; serBLen: INTEGER): OSErr;
+;
+        .FUNC   SerSetBuf
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  14(A6),IORefNum(A0)     ; refnum
+        MOVE.W  #9,CSCode(A0)           ; code for Set buffer
+        MOVE.L  10(A6),CSParam(A0)      ;the ptr to the buffer
+        MOVE.W  8(A6),CSParam+4(A0)     ;the buffer length
+
+        _Control
+        MOVE    D0,16(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ    #8,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION  SerHShake(refNum: INTEGER; flags: SerShk): OSErr;
+;
+        .FUNC   SerHShake
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  12(A6),IORefNum(A0)     ; refnum
+        MOVE.W  #10,CSCode(A0)          ; code for setting handshake options
+        MOVE.L  8(A6),A1                ;ptr to flags record
+        MOVE.L  (A1)+,CSParam(A0)       ;copy the first 4 bytes
+        MOVE.L  (A1),CSParam+4(A0)      ;copy the second 4 bytes
+
+        _Control
+        MOVE    D0,14(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ    #6,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION  SerSetBrk(refNum: INTEGER): OSErr;
+;
+        .FUNC   SerSetBrk
+        .DEF    SetClr
+
+        MOVE.W  #12,D0
+
+SetClr
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  8(A6),IORefNum(A0)      ; refnum
+        MOVE.W  D0,CSCode(A0)          ; code for setting break
+
+        _Control
+        MOVE    D0,10(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ    #2,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION  SerClrBrk(refNum: INTEGER): OSErr;
+;
+        .FUNC   SerClrBrk
+        .REF    SetClr
+
+        MOVE.W  #11,D0                  ;cscode for clearing break
+        JMP     SetClr                  ;got to common set/clr break code
+
+
+;
+;FUNCTION  SerGetBuf(refNum: INTEGER; VAR count: LongInt): OSErr;
+;
+        .FUNC SerGetBuf
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  12(A6),IORefNum(A0)     ; refnum
+        MOVE.W  #2,CSCode(A0)           ; cscode for get buf
+        _Status
+        MOVE    D0,14(A6)               ; return the result code
+        MOVE.L  8(A6),A1                ; ptr to where to put count
+        MOVE.L  CSParam(A0),(A1)        ;return the count
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ    #6,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION  SerStatus(refNum: INTEGER; VAR serSta: SerStaRec): OSErr;
+;
+
+        .FUNC SerStatus
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  12(A6),IORefNum(A0)     ; refnum
+        MOVE.W  #8,CSCode(A0)           ; cscode for get buf
+        _Status
+        MOVE    D0,14(A6)               ; return the result code
+        MOVE.L  8(A6),A1                ; ptr to where to put the status bytes
+        MOVE.L  CSParam(A0),(A1)+       ;return the first 4 bytes
+        MOVE.W  CSParam+4(A0),(A1)      ;return the next 2 bytes
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ    #6,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;FUNCTION DiskEject(drvnum: INTEGER): OSErr;
+;
+
+        .FUNC   DiskEject
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  #DskRfN,IORefNum(A0)    ; refnum of the Sony Disk
+        MOVE.W  #EjectCode,CSCode(A0)   ; code for Eject
+        MOVE.W  8(A6),IODrvNum(A0)       ;the drvNum of drv to be eject
+
+        _Control
+        MOVE    D0,10(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ    #2,SP                   ; fix up stack
+        JMP     (A1)
+
+;FUNCTION SetTagBuffer(buffPtr: Ptr): OSErr;
+;
+
+        .FUNC   SetTagBuffer
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  #DskRfN,IORefNum(A0)    ; refnum of the Sony Disk
+        MOVE.W  #TgBuffCode,CSCode(A0)  ; code for SetTagBuffer
+        MOVE.L  8(A6),CSParam(A0)       ;CSParam is the buffptr
+
+        _Control
+        MOVE    D0,12(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ    #4,SP                   ; fix up stack
+        JMP     (A1)
+
+;FUNCTION DriveStatus(drvNum: INTEGER; VAR status: DrvSts): OSErr;
+;
+
+        .FUNC   DriveStatus
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  #DskRfN,IORefNum(A0)    ; refnum of the Sony Disk
+        MOVE.W  #drvStsCode,CSCode(A0)  ; code for SetTagBuffer
+        MOVE.W  12(A6),IODrvNum(A0)     ;the drvNum of drv to be ejected
+
+        _Status
+        MOVE    D0,14(A6)               ; return the result code
+        MOVE.L  8(A6),A1                ; ptr to where to put the status bytes
+        LEA     CSParam(A0),A0          ;ptr from where to get status bytes
+        MOVE.L  #22,D0                  ;number of bytes to move
+        _BlockMove
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ    #6,SP                   ; fix up stack
+        JMP     (A1)
+
+;
+;FUNCTION  RamSDOpen(whichPort: SPortSel; rsrcType: OsType; rsrcID: INTEGER): OSErr;
+;PROCEDURE  RamSDClose(whichPort: SPortSel);
+;
+;RamSDOpen - loads and installs the RAM serial driver
+; the serial driver is in the application's resource file with type rsrcType
+; and ID rsrcID
+;whichPort is either SPortA or SPort
+;
+
+                    .FUNC RamSDOpen
+                    .DEF RamSDClose
+
+            LINK        A6,#-IOQELSIZE          ;make room for command block
+            MOVEM.L     D2-D7/A2-A4,-(SP)       ;save regs
+            CLR.W       16(A6)                  ;assume no error
+
+            ;get the handle/ptr to the driver and lock it
+            ;don't bother if it is already loaded
+            MOVE.L      RSDHndl,D4          ;drvr or 0 if not loaded
+            BNE.S       haveD               ;it's already in
+            SUBQ        #4,SP               ;save space for handle
+            MOVE.L      10(A6),-(SP)        ;push type
+            MOVE.W      8(A6),-(SP)         ;push ID number
+            _GetResource
+            MOVE.L      (SP),D3             ;did it get the handle?
+            BEQ         badRamSD            ;no, error
+            _DetachResource                 ;make it my handle
+            MOVE.L      D3,A3               ;handle to the RAM driver
+            BSET        #Lock,(A3)          ;lock it
+            LEA         RSDHndl,A0          ;ptr to where I save the handle
+            MOVE.L      A3,(A0)             ;save the handle for later disposal
+
+haveD       MOVE.L      RSDHndl,A3          ;get the handle to the driver
+            MOVE.L      (A3),A3             ;ptr to the driver
+
+            ;now close the appropriate ROM driver  (both the in and the out
+            ;drivers should be closed)
+            LEA         -IOQELSIZE(A6),A0   ;get back the ptr to the param blk
+            MOVE.B      14(A6),D1           ;the value of whichPort
+            BSR         clsPorts
+
+            ;now install the RAM drivers into the unit table
+            ;and preserve the interrupt vectors
+            ;don't do this, however, if they are already installed for this port
+            ;first save away the old interrupt vectors
+            BSR         InitIruptPtrs       ;sets cc non-zero if already installed
+            BNE.S       nowOp               ;don't reInstall, go to open
+            MOVE.L      (A2)+,(A1)+         ;save away the ext/stat vector
+            MOVEQ       #16,D0              ;copy over 16 bytes of the lvl2DT
+            _BlockMove
+
+            ;now save the old drivers (both in and out)
+            ;and install the new ones (both in and out)
+            TST.B       D1                  ;which port is it, A or B?
+            BEQ.S       sdrA
+            LEA         drvBIn,A2           ;ptr to where to save the drv to
+            MOVE.W      DrvBNums,D0         ;refNum used for offset into UTable
+            MOVE.L      #48,D1              ;offset within driver of the code
+            BRA.S       doSdr
+
+sdrA        LEA         drvAIn,A2           ;ptr to where to save the drv to
+            MOVE.W      DrvANums,D0         ;refNum used for offset into UTable
+            CLR.L       D1                  ;0 offset into drvr
+
+doSdr       ADDQ.W      #1,D0               ;get the offset into the unit table
+            NEG.W       D0
+            ASL.W       #2,D0               ;multiply by 4 to get offset
+            MOVE.L      UTableBase,A0       ;ptr to the unit table
+            MOVEQ       #1,D3               ;do the following twice
+instLoop    MOVE.L      0(A0,D0),A1         ;handle to device control entry
+            MOVE.L      (A1),A1             ;ptr to DCE
+            MOVE.L      dCtlDriver(A1),(A2)+ ;save away the driver ptr
+            MOVE.L      A3,D2               ;ptr to the new driver
+            ADD.L       D1,D2               ;add in the offset to the approp dev
+            AND.L       #$00FFFFFF,D2       ;get rid of protect bits
+            MOVE.L      D2,dCtlDriver(A1)   ;stuff in the new driver
+            ADDQ.W      #4,D0               ;go onto the next (ie to output port)
+            ADD.L       #24,D1              ;jump offset in driver
+            DBRA        D3,instLoop         ;install the out port, then quit.
+
+            ;now open both drivers and we are done!
+nowOp       MOVEQ       #1,D2               ;want to do this twice
+            LEA         -IOQELSIZE(A6),A0   ;ptr to param blk
+            TST.B       14(A6)              ;which port?
+            BEQ.S       AName               ;port A
+            LEA         drvBNames,A1        ;ptr to names: bIn and bOut
+            BRA.S       doNames
+
+AName       LEA         drvANames,A1        ;ptr to names for portA in and out
+doNames     MOVE.L      A1,IOFileName(A0)   ;stuff ptr to name
+            CLR.W       IODrvNum(A0)
+            CLR.B       IOPermssn(A0)       ; open for read/write
+            _Open
+            BNE.S       badRamSD
+            CLR.W       D1
+            MOVE.B      (A1)+,D1            ;the length of this string
+            ADD.W       D1,A1               ;skip to next name
+            DBRA        D2,doNames
+
+okRamSD     MOVEM.L     (SP)+,D2-D7/A2-A4       ; restore those regs
+            UNLK        A6
+
+            MOVE.L      (SP)+,A0                ; get rts
+            ADDQ        #8,SP
+            JMP         (A0)
+
+badRamSD    MOVE.W      #OpenErr,16(A6)
+            BRA         okRamSD
+
+
+;PROCEDURE  RamSDClose(whichPort: SPortSel);
+;RamSDClose - closes the drivers (both in and out) for the port indicated by
+;             whichPort.  It disposes of the RAM serial driver if it is no
+;             longer needed (ie the other port is not open)
+RamSDClose
+            LINK        A6,#-IOQELSIZE      ;space for the parm block
+            MOVEM.L     D2-D7/A2-A4,-(SP)   ;save regs
+
+            ;first close the in and out drivers for this port
+            LEA         -IOQELSIZE(A6),A0   ;get back the ptr to the param blk
+            MOVE.B      8(A6),D1           ;the value of whichPort
+            BSR         clsPorts
+
+            ;now uninstall the RAM driver and restore interrupts of the old driver
+            ;obviously don't uninstall if it is already uninstalled
+            ;stuff the old driver back into the unit table
+            TST.B       D1                  ;see which port it is
+            BEQ.S       rstA
+            MOVE.B      instB,D0            ;see if it is currently installed
+            BEQ.S       clDone              ;if not, just quit
+            LEA         drvBIn,A0           ;where to retrieve drvr from
+            MOVE.W      drvBNums,D0         ;the drvr refNum
+            BRA.S       rstEither
+
+rstA        MOVE.B      instA,D0            ;see if portA driver is installed
+            BEQ.S       clDone              ;not, so just quit
+            LEA         drvAIn,A0           ;where to retrieve drvr from
+            MOVE.W      drvANums,D0         ;the drvr refNum
+
+rstEither   MOVE.L      UTableBase,A1       ;ptr to the unit table
+            MOVEQ       #1,D3               ;loop around twice
+            ADDQ.W      #1,D0               ;get the offset into the unit table
+            NEG         D0
+            ASL.W       #2,D0               ;offset for longs
+rstLoop
+            MOVE.L      0(A1,D0),A2         ;DCE handle
+            MOVE.L      (A2),A2             ;DCE ptr
+            MOVE.L      (A0)+,dCtlDriver(A2) ;put the saved drvr back
+            ADDQ.W      #4,D0                ;move on to next entry
+            DBRA        D3,rstLoop
+
+            ;now restore the interrupt vectors
+            BSR         InitIruptPtrs       ;sets cc non-zero if already installed
+            MOVE.L      (A1)+,(A2)          ;restore extStsDT vector
+            EXG         A0,A1               ;from saved to DT
+            MOVEQ       #16,D0              ;number of bytes to copy
+            _BlockMove
+
+            ;now indicate the driver is no longer installed and
+            ;dispose of it if it is not needed for the other port
+            LEA         instA,A0
+            LEA         instB,A1
+            TST.B       D1                  ;see which port
+            BEQ.S       itsA                ;it is port A
+            EXG         A0,A1               ;its b, switch the flags
+
+itsA        CLR.B       (A0)                ;indicate it is no longer installed
+                                            ;for this port
+            TST.B       (A1)                ;see if installed for the other
+            BNE.S       clDone              ;yes, so all done
+            MOVE.L      RSDHndl,A0          ;the handle to the driver
+            _DisposHandle                   ;dispose of it
+            LEA         RSDHndl,A0          ;ptr to the place the handle is stored
+            CLR.L       (A0)                ;indicate no longer loaded
+
+clDone      MOVEM.L     (SP)+,D2-D7/A2-A4   ;get back the regs
+            UNLK        A6
+            MOVE.L      (SP)+,A0
+            ADDQ        #2,SP
+            JMP         (A0)
+
+
+;procedures used by RamSDOpen and Close
+
+;clsPorts closes both the in and out driver of a serial port
+;D1 is 0 if PortA desired and nonzero for PortB
+;A1 pts to refNums of the in and out drivers for the desired port
+;A0 pts to the parameter block
+
+clsPorts    TST.B       D1                  ;portA or portB?
+            BEQ.S       cPortA
+            LEA         drvBNums,A1         ;portB, so get relevant refNums
+            BRA.S       cPorts
+cPortA      LEA         drvANums,A1         ;portA, so get relevant refNums
+cPorts      MOVE.W      (A1)+,IORefNum(A0)  ;set up the parameter block
+            _Close                          ;close the in driver
+            MOVE.W      (A1),IORefNum(A0)   ;refNum of out driver
+            _Close                          ;close it also
+            RTS                             ;and return
+
+;InitIruptPtrs initializes A2 to pt to the entry in the External/Status
+;interrupt vector table that needs to be preserved for the particular port
+;and A0 to pt to the block of 4 ptrs from the secondary interrupt vector table
+;that must be preserved
+;A1 is set to pt to the place to which these vectors are saved
+;expects D1 to be whichPort (0 if portA, nonzero if portB)
+
+InitIruptPtrs
+            MOVE.L      A4,-(SP)            ;preserve reg
+            MOVE.W      #0,D0               ;assume all ok
+            LEA         ExtStsDT,A2         ;ptr to external/status interrupt vectors
+            LEA         lvl2DT,A0           ;ptr to secondary irupt vectors
+            TST.B       D1                  ;portA or portB?
+            BEQ.S       saveA               ;portA
+            LEA         instB,A4            ;installed flag for port B
+            LEA         savedBIrupt,A1      ;portB, so pt to that area
+            BRA.S       initIok
+
+saveA       LEA         instA,A4            ;installed flag
+            LEA         savedAIrupt,A1
+            ADDQ.L      #8,A2               ;ptr t0 chan A nonmouse irupt vector
+            ADD.L       #16,A0              ;ptr to chan A irupt vectors
+
+initIok     MOVE.B      (A4),D0             ;previously installed?
+            BSET        #0,(A4)             ;indicate it is now installed
+            TST.W       D0                  ;indicate back up if installed
+            MOVE.L      (SP)+,A4
+            RTS
+
+
+;globals used by RamSDOpen and RamSDClose
+;
+;drive names and numbers:
+drvANames   .BYTE   4
+            .ASCII  '.AIn'
+            .BYTE   5
+            .ASCII  '.AOut'
+drvBNames   .BYTE   4
+            .ASCII  '.BIn'
+            .BYTE   5
+            .ASCII  '.BOut'
+
+drvANums    .WORD   -6          ;for AIn
+            .WORD   -7          ;for AOut
+drvBNums    .WORD   -8          ;for BIn
+            .WORD   -9          ;for BOut
+
+;saved interrupt vectors
+;vectors saved for portA are ExtStsDT+8 (the third long in the External/Status
+;Interrupt Vector Table) and the last four longs in the Secondary Interrupt
+;Vector Table (ie lvl2DT+16, lvl2DT+20, lvl2DT+24, lvl2DT+28).
+;vectors saved for portB are ExtStsDT (the first long in the External/Status
+;Interrupt Vector Table) and the first four longs in the Secondary Interrupt
+;Vector Table (ie lvl2DT+0, lvl2DT+4, lvl2DT+8, lvl2DT+12).
+
+savedAIrupt     .BLOCK  20
+savedBIrupt     .BLOCK  20
+
+;saved ROM drivers.  when the RAM driver is installed, the ptrs to the ROM
+;driver are saved here and then restored back into the device control entry
+;when the RAM driver is closed.
+drvAIn      .LONG
+drvAOUt     .LONG
+drvBIn      .LONG
+drvBOut     .LONG
+
+;saved RAM driver handle
+RSDHndl     .LONG       0           ;init 0 indicates not currently loaded
+
+;flags indicating the state of the world
+;instA and instB indicate if the RAM serial driver has been installed for each port
+;if both become uninstalled then the handle is disposed
+instA       .BYTE   0
+instB       .BYTE   0
+
+;
+;FUNCTION GetTrapAddress(trapNum: INTEGER): LongInt;
+;
+
+            .FUNC GetTrapAddress
+
+            MOVE.L  (SP)+,A1            ;return address
+            MOVE.W  (SP)+,D0            ;trap word
+            MOVE.L  A1,-(SP)            ;restore return address
+            _GetTrapAddress
+            MOVE.L  A0,4(SP)            ;return corresponding address
+            RTS
+;
+;PROCEDURE SetTrapAddress(trapAddr: LongInt; trapNum: INTEGER);
+;
+            .FUNC SetTrapAddress
+
+            MOVE.L  (SP)+,A1            ;return address
+            MOVE.W  (SP)+,D0            ;trap number
+            MOVE.L  (SP)+,A0            ;address
+            MOVE.L  A1,-(SP)            ;restore return address
+            _SetTrapAddress
+            RTS
+
+;
+;FUNCTION GetSysPPtr: SysPPtr;
+;
+
+            .FUNC   GetSysPPtr
+
+            MOVE.L  #SysParam,4(SP)     ;get the address
+            RTS
+
+
+;
+;FUNCTION WriteParam: OsErr;
+;
+
+            .FUNC WriteParam
+            LEA     SysParam,A0             ;pointer to buffer to write to c chip
+            MOVEQ   #-1,D0                  ;write out all 20 bytes
+            _WriteParam
+            MOVE.W  D0,4(SP)                ;return error
+            RTS
+
+;
+;FUNCTION ReadDateTime(VAR time: LongInt):OsErr;
+;
+
+                .PROC   ReadDateTime,1
+
+                MOVE.L  (SP)+,A1                ;get the return address
+                MOVE.L  (SP)+,A0                ;get the parameter
+                MOVE.L  A1,-(SP)                ;restore return address
+
+                _ReadDateTime
+                MOVE.W  D0,4(SP)                ;return error
+
+                RTS
+
+;
+;PROCEDURE GetDateTime(VAR secs: LongInt);
+;
+;justs returns the value of the global variable Time
+
+                .PROC   GetDateTime,1
+
+                MOVE.L  (SP)+,A1                ;get the return address
+                MOVE.L  (SP)+,A0                ;get the parameter
+                MOVE.L  Time,(A0)
+                JMP     (A1)
+
+;
+; FUNCTION SetDateTime(time: LongInt):OsErr;
+;
+;  Sets the hardware calendar/clock to the specified date/time.
+;
+                .PROC   SetDateTime,1
+
+                MOVE.L  (SP)+,A0                ;get the return address
+                MOVE.L  (SP)+,D0                ;get the parameter
+                MOVE.L  A0,-(SP)                ;restore return address
+
+                _SetDateTime
+                MOVE.W  D0,4(SP)                ;return error
+
+                RTS
+
+;
+;PROCEDURE SetTime(d: DateArray);
+;
+;Converts a date (encoded as an array of integers) to the numver of seconds
+;elapsed since 00:00am, 1 Jan 1904, and stores in clock chip.
+
+            .PROC   SetTime,1
+
+            MOVEA.L 4(SP),A0        ;date
+            _Date2Secs              ;D0 = seconds since 1904
+            _SetDateTime            ;clock = seconds since 1904
+            MOVEM.L (SP)+,A0-A1     ;A0=ret, A1=date
+            JMP     (A0)            ;return
+
+;
+;PROCEDURE GetTime(VAR d: DateTimeRec);
+;
+; Reads the time from the clock as the number of seconds elapsed since 00:00am,
+;1 Jan 1904, and returns the date encoded as an array of integers.
+
+        .PROC       GetTime,1
+                    MOVEQ #0,D0
+                    MOVEA.L 4(SP),A0        ;ptr to date time rec
+;                    _ReadDateTime
+;                    MOVE.L (A0),D0
+                    MOVE.L  Time,D0         ;get time from low memory
+                    _Secs2Date
+                    MOVE.L (A7)+,(A7)
+                    RTS
+
+;
+;PROCEDURE Date2Secs(d: DateArray; VAR s: LongInt);
+;
+;Converts a date (encoded as an array of integers) to the number of seconds
+;elapsed since 00:00am, 1 Jan 1904
+
+        .PROC   Date2Secs,2
+
+        MOVEA.L 8(SP),A0        ;A0=date
+        _Date2Secs              ;D0=seconds elapsed
+        MOVEM.L (SP)+,D1/A0-A1  ;D1=ret, A0=intptr, A1=date
+        MOVE.L  D0,(A0)         ;deliver result
+        MOVEA.L D1,A0           ;ret addr
+        JMP     (A0)
+
+;
+;PROCEDUR Secs2Date(s: LongInt; VAR d: DateArray);
+;
+;Turns s, the number of seconds elapsed since 00:00am, 1Jand 1904, into an
+;array of date values
+
+        .PROC   Secs2Date,2
+        MOVEM.L (SP)+,D0/A0-A1      ;D0=ret, A0=date, A1=s
+        MOVE.L  D0,-(SP)            ;restore return addr
+        MOVE.L  A1,D0               ;place D0=s
+        _Secs2Date                  ;convert D0 to A0
+        RTS
+
+
+;
+;PROCEDURE Delay(numTicks: LongInt; VAR finalTicks: LongInt);
+;                .MACRO  _Delay
+
+                .PROC Delay
+
+                MOVE.L  (SP)+,D0                ;get the return address
+                MOVE.L  (SP)+,A1                ;ptr to where to return result
+                MOVE.L  (SP)+,A0                ;numTicks
+                MOVE.L  D0,-(SP)                ;restore return address
+
+                _Delay
+                MOVE.L  D0,(A1)                ;return value of ticks after delay
+
+                RTS
+
+
+;
+; PROCEDURE SysBeep(duration: INTEGER);
+;Jul 13, 1984   changed this to be inline
+;
+;                .PROC   SysBeep,1
+;
+;                MOVE.W  4(SP),-(SP)             ;push duration
+;                _SysBeep                        ;make the sound
+;                MOVE.L  (SP)+,A0
+;                ADD     #2,SP
+;                JMP     (A0)
+
+
+;
+;FUNCTION EqualString(str1,str2: OsStr255; caseSens,diacSens: BOOLEAN):BOOLEAN;
+;
+
+                .FUNC   EqualString
+                LINK      A6, #0                   ; allocate stack frame
+
+                MOVE.L  16(A6),A0       ;ptr to str1
+                MOVE.L  12(A6),A1       ;ptr to str2
+                MOVEQ   #0,D0
+                MOVE.B  (A0)+,D0        ;str1 length
+                SWAP    D0
+                MOVE.B  (A1)+,D0        ;str2 length
+
+                ;depending on value of booleans, make proper call
+                TST.B   8(A6)           ;value of diacSens
+                BEQ.S   @2              ;strip diacriticals
+                TST.B   10(A6)          ;value of caseSens
+                BEQ.S   @1              ;ignore case
+                _CmpString  ,CASE       ;both diacritical and case sensitive
+                BRA.S   strDone
+
+@1              _CmpString              ;diacritical sensitive,map to upper case
+                BRA.S   strDone
+
+                ;strip diacriticals
+@2              TST.B   10(A6)          ;case sensitive?
+                BEQ.S   @3
+                _CmpString  ,MARKS,CASE ;ignore diacrits, case sensitive
+                BRA.S   strDone
+
+@3              _CmpString  ,MARKS      ;ignore diacrits and map to upper case
+
+strDone         EORI.B  #1,D0           ;take opposite of what cmpString returns
+                MOVE.B  D0,20(A6)       ;return result
+
+                UNLK       A6           ; restore stack
+                MOVE.L     (SP)+,A0     ; rtn addr
+                ADD.L      #12,SP       ; pop args
+                JMP        (A0)
+
+;
+;PROCEDURE UprString(VAR theString: OsStr255; diacSens: BOOLEAN);
+;
+
+                .PROC UprString
+
+                MOVE.L  (SP)+,A1        ;get the return address
+                MOVE.B  (SP)+,D1        ;diacritical sensitivity bool
+                MOVE.L  (SP)+,A0        ;ptr to string to canonize
+                MOVEQ   #0,D0
+                MOVE.B  (A0)+,D0        ;string length
+                MOVE.L  A1,-(SP)        ;restore return address
+
+                ;decide which flavor of uprString to call and call it
+                TST.B   D1
+                BEQ.S   @1              ;ignore diacriticals
+                _UprString              ;keep diacriticals
+                BRA.S   @2
+
+@1              _UprString  ,MARKS
+
+@2              RTS
+
+;
+;FUNCTION InitUtil: OsErr;
+;
+
+            .FUNC InitUtil
+
+            _InitUtil
+            MOVE.W  D0,4(SP)                ;return error
+
+            RTS
+
+;queue routines
+;
+; PROCEDURE InitQueue(qHeader: QHdrPtr);
+;
+
+                .PROC InitQueue
+
+                MOVE.L  (SP)+,A0        ;return address
+                MOVE.L  (SP)+,A1        ;queue header ptr
+                _InitQueue
+                JMP     (A0)            ;return
+
+;
+;PROCEDURE Enqueue(qElement: QElemPtr; qHeader: QHdrPtr);
+;
+;adds qElement (A0) to queue with qHeader (A1)
+
+        .PROC   Enqueue
+
+        MOVE.L  4(SP),A1            ;ptr to QHeader
+        MOVE.L  8(SP),A0            ;ptr ot qElem to be added
+        _EnQueue
+        MOVE.L  (SP)+,A0            ;return address
+        ADDQ    #8,SP               ;pop off params
+        JMP     (A0)                ;return
+
+;FUNCTION Dequeue(qElement: QElemPtr; qHeader: QHdrPtr): OsErr;
+;
+        .PROC   Dequeue
+
+        MOVE.L  4(SP),A1            ;ptr to QHeader
+        MOVE.L  8(SP),A0            ;ptr ot qElem to be added
+        _DeQueue
+        MOVE.W  D0,12(SP)           ;return error
+        MOVE.L  (SP)+,A0            ;return address
+        ADDQ    #8,SP               ;pop off params
+        JMP     (A0)                ;return
+
+;FUNCTION GetFSQHdr: QHdrPtr;
+;
+        .PROC   GetFSQHdr
+
+        MOVE.L     #FSQHdr,4(SP)
+        RTS
+
+;FUNCTION  GetDrvQHdr: QHdrPtr;
+;
+        .PROC   GetDrvQHdr
+
+        MOVE.L     #DrvQHdr,4(SP)
+        RTS
+
+;FUNCTION  GetVCBQHdr: QHdrPtr;
+;
+        .PROC   GetVCBQHdr
+
+        MOVE.L     #VCBQHdr,4(SP)
+        RTS
+
+;FUNCTION  GetVBLQHdr: QHdrPtr;
+;
+        .PROC   GetVBLQHdr
+
+        MOVE.L     #VBLQueue,4(SP)
+        RTS
+
+;FUNCTION  GetEvQHdr: QHdrPtr;
+;
+        .PROC   GetEvQHdr
+
+        MOVE.L  #EventQueue,4(SP)
+        RTS
+
+
+;FUNCTION GetDCtlEntry(refNum: INTEGER): DCtlHandle;
+; does status 1 call to get the DCEHandle
+
+        .FUNC GetDCtlEntry
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  8(A6),IORefNum(A0)      ; drive number
+        MOVE.W  #1,CSCode(A0)           ;code to get DCE handle
+        _Status
+        MOVE.L  CSParam(A0),10(A6)      ;return the DCE Handle
+
+        UNLK    A6
+        MOVE.L  (SP)+,A0                ; return address
+        ADDQ    #2,SP                  ; fix up stack
+        JMP     (A0)
+
+
+
+
+;
+; from IOTRAPS.TEXT -- Mac OS IO Interface routines for Pascal
+;
+; Argument- A0: param: Points to Parameter block.
+;
+; Results-  D0: ec: error code.
+;               <0: OS Call failed.
+;                0: All is well.
+; Registers- D0: ec:     error code
+;            A0: param:  Paramater list address.
+;            A1: ra:     Return Address.
+;
+; Written By:   Martin P. Haeberli      June 3, 1983
+;
+; Modification History:
+;  01 Jun 83    M Haeberli      Cleaned up comments and code.
+;  26 Aug 83    M Haeberli      Added InstallDriver, OpenDriver,
+;                                 CloseDriver.
+;  29 Nov 83    R Sebok         created Macro OSCall
+;                               added interface glue for file system routines
+
+
+; interface routines expecting a parameter block ptr as argument
+; hence the prefix PB
+;
+; Function PBOpen(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; Function PBClose(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; Function PBRead(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; Function PBWrite(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; Function PBControl(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; Function PBStatus(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; Function PBKillIO(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+;
+                .PROC PBOpen
+                OsCall _Open
+
+                .PROC PBClose
+                OsCall _Close
+
+                .PROC PBRead
+                OsCall _Read
+
+                .PROC PBWrite
+                OsCall _Write
+
+                .PROC PBControl
+                OsCall _Control
+
+                .PROC PBStatus
+                OsCall _Status
+
+                .PROC PBKillIO
+                OsCall _KillIO
+
+; FUNCTION PBGetVInfo(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBGetVol(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBSetVol(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBEject(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBOffLine(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBFlushVol(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBCreate(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBDelete(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBOpenRF(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBRename(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBGetFInfo(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBSetFInfo(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBSetFLock(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBRstFLock(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBSetFVers(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBAllocate(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBGetEOF(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBSetEOF(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBGetFPos(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBSetFPos(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+; FUNCTION PBFlushFile(paramBlock: ParmBlkPtr; aSync: BOOLEAN): OsErr;
+
+                .PROC PBGetVInfo
+                OsCall _GetVolInfo
+
+                .PROC PBGetVol
+                OsCall _GetVol
+
+                .PROC PBSetVol
+                OsCall _SetVol
+
+                .PROC PBEject
+                OsCall _Eject
+
+                .PROC PBOffLine
+                OsCall _OffLine
+
+                .PROC PBFlushVol
+                OsCall _FlushVol
+
+                .PROC PBCreate
+                OsCall _Create
+
+                .PROC PBDelete
+                OsCall _Delete
+
+                .PROC PBOpenRF
+                OsCall _OpenRF
+
+                .PROC PBRename
+                OsCall _ReName
+
+                .PROC PBGetFInfo
+                OsCall _GetFileInfo
+
+                .PROC PBSetFInfo
+                OsCall _SetFileInfo
+
+                .PROC PBSetFLock
+                OsCall _SetFilLock
+
+                .PROC PBRstFLock
+                OsCall _RstFilLock
+
+                .PROC PBSetFVers
+                OsCall _SetFilType
+
+                .PROC PBAllocate
+                OsCall _Allocate
+
+                .PROC PBGetEOF
+                OsCall _GetEOF
+
+                .PROC PBSetEOF
+                OsCall _SetEOF
+
+                .PROC PBGetFPos
+                OsCall _GetFPos
+
+                .PROC PBSetFPos
+                OsCall _SetFPos
+
+                .PROC PBFlushFile
+                OsCall _FlushFil
+
+; MountVolume and UnMountVolume calls can only be made synchronously
+; FUNCTION PBMountVol(paramBlock: ParmBlkPtr): OsErr;
+; FUNCTION PBUnMountVol(paramBlock: ParmBlkPtr): OsErr;
+
+                .PROC PBMountVol
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;get param pointer.
+                _MountVol               ;tell OS to do it Synchronously
+                Move.W  D0,(SP)         ;save result
+                Jmp     (A1)            ;return to caller
+
+                .PROC PBUnMountVol
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,A0        ;get param pointer.
+                _UnMountVol             ;tell OS to do it Synchronously
+                Move.W  D0,(SP)         ;save result
+                Jmp     (A1)            ;return to caller
+
+
+; interface for file system and IO procedures and functions which do not require
+; a parameter block
+;
+; PROCEDURE AddDrive(drvrRefNum: INTEGER; drvNum: INTEGER; QEl: drvQElPtr);
+
+                .PROC AddDrive
+                MOVE.L  (SP)+,A1        ;get return address
+                MOVE.L  (SP)+,A0        ;ptr to memory for queue element
+                MOVE.W  (SP)+,D0        ;drive number
+                SWAP    D0              ;put it in high word
+                MOVE.W  (SP)+,D0        ;driver ref num
+                _AddDrive
+                JMP     (A1)
+
+;simple interface to IO routines which does not require caller to set up the
+;parameter block
+;
+;FUNCTION FSOpen(fileName: OsStr255; versNum: SignedByte; vRefNum: INTEGER;
+;                  VAR refNum: INTEGER): OsErr;
+;
+        .FUNC FSOpen
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  14(A6),IOFileName(A0)   ; set ptr to filename
+        MOVE.W  12(A6),IODrvNum(A0)     ; drive number
+        CLR.B   IOFileType(A0)          ; file type
+        CLR.B   IOPermssn(A0)           ; open for read/write
+        CLR.L   IOOwnBuf(A0)            ; use system buffer
+
+        _OPEN
+
+        MOVE.L  8(A6),A1                ; return the refnum
+        MOVE    IORefNum(A0),(A1)
+        MOVE    D0,18(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A0                ; return address
+        ADD.L   #10,SP                  ; fix up stack
+        JMP     (A0)
+
+;
+;FUNCTION FSClose(refNum: INTEGER): OsErr;
+;
+
+        .FUNC FSClose
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+        MOVE    8(A6),IORefNum(A0)      ; get the refnum param
+        _CLOSE
+        MOVE    D0,10(A6)               ; return the result code
+        UNLK    A6
+        MOVE.L  (SP)+,A0                ; return address
+        ADDQ.L  #2,SP                   ; fix up stack
+        JMP     (A0)
+
+;
+;FUNCTION FSRead(refNum: INTEGER; VAR count: LongInt; buffPtr: Ptr): OsErr;
+;
+;FUNCTION FSWrite(refNum: INTEGER; VAR count: LongInt; buffPtr: Ptr): OsErr;
+;
+;
+
+        .FUNC FSRead
+        .DEF  FSWrite
+
+        SF      D1                      ; set up read
+        BRA.S   DoBlk
+
+FSWrite
+        ST      D1                      ; set up write
+
+DoBlk
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  8(A6),IOBuffer(A0)      ; buffer address
+        MOVE.W  16(A6),IORefNum(A0)     ; refnum
+        MOVE.L  12(A6),A1               ; address of the count
+        MOVE.L  (A1),IOByteCount(A0)    ; read count
+        CLR.W   IOPosMode(A0)           ; no special mode
+        CLR.L   IOPosOffset(A0)         ; clear offset
+
+        TST.B   D1                      ; look for read or write
+        BNE.S   @1
+        _READ
+        BRA.S   @2
+@1      _WRITE
+@2
+        MOVE    D0,18(A6)               ; return the result code
+
+        MOVE.L  12(A6),A1               ; address of the count
+        MOVE.L  IONumDone(A0),(A1)      ; return count read
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADD.L   #10,SP                  ; fix up stack
+        JMP     (A1)
+
+;FUNCTION Control(refNum: INTEGER; csCode: INTEGER;
+;                    VAR csParamPtr: Ptr): OsErr;
+
+        .FUNC Control
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  14(A6),IORefNum(A0)     ; refnum
+        MOVE.W  12(A6),CSCode(A0)       ; the control operation to be performed
+        TST.L   8(A6)                   ; see if there is a parameter block
+        BEQ.S   @1                      ; if not, don't bother copying one
+        LEA     CSParam(A0),A1          ; dest address of op specific params
+        MOVE.L  8(A6),A0                ; src address of op specific params
+        MOVEQ   #22,D0                  ; max number of bytes to be moved
+        _BlockMove                      ; copy the op specific params
+        LEA     -IOQELSIZE(A6),A0       ; put cmd block addr back into A0
+
+@1      _CONTROL
+        MOVE    D0,16(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADD.L   #8,SP                   ; fix up stack
+        JMP     (A1)
+
+;
+;FUNCTION Status(refNum: INTEGER; csCode: INTEGER;
+;                   csParamPtr: Ptr): OsErr;
+
+        .FUNC Status                    ;analogous to MacControl but returns
+                                        ;opParams rather than expecting it as arg
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  14(A6),IORefNum(A0)     ; refnum
+        MOVE.W  12(A6),CSCode(A0)       ; the control operation to be performed
+        _STATUS
+        MOVE    D0,16(A6)               ; return the result code
+        LEA     CSParam-IOQELSIZE(A6),A0 ;ptr to the status information
+        MOVE.L  8(A6),A1                ; ptr to where to put this information
+        MOVEQ   #22,D0                  ; max number of bytes to be moved
+        _BlockMove                      ; copy the op specific params
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADD.L   #8,SP                   ; fix up stack
+        JMP     (A1)
+
+;
+;FUNCTION KillIO(refNum: INTEGER): OsErr;
+;
+        .FUNC   KillIO
+
+         LINK    A6,#-32                 ;get space for control p-block
+         LEA     -32(A6),A0              ;point A0 at the block
+         MOVE.W  8(A6),IORefNum(A0)      ; refnum
+         _KillIO                         ; make the control call
+         MOVE    D0,10(A6)               ; return the result code
+
+         UNLK    A6
+         MOVE.L  (SP)+,A1                ; return address
+         ADD.L   #2,SP                   ; fix up stack
+         JMP     (A1)
+
+;
+;FUNCTON GetVInfo(drvNum: INTEGER; volName: OsStrPtr; VAR vRefNum: INTEGER;
+;                 VAR FreeBytes: LongInt): OsErr;
+;
+
+        .FUNC GetVInfo
+
+         LINK   A6,#-IOVQElSize         ; get space for control p-block
+         LEA    -IOVQElSize(A6),A0      ; point A0 at the block
+         MOVE.L 16(A6),IOVNPtr(A0)      ; volume name pointer
+         MOVE.W 20(A6),IOVDrvNum(A0)    ; drive number
+         CLR.W  IOVolIndex(A0)          ; no volume queue index
+         _GetVolInfo                    ; make the control call
+         MOVE   D0,22(A6)               ; return the result code
+         MOVE.L 12(A6),A1               ; pointer to vRefNum
+         MOVE.W IOVRefNum(A0),(A1)      ; return volume ref num
+
+         ;now calculate the number of free bytes on the volume by multiplying
+         ;allocation block size * free allocation blocks
+         ;would ideally like to multiply long * integer but since MULU only
+         ;multiplies two ints, to allow for a larger than 16 bit allocation
+         ;block size we shift it right by 9 (since we know it to be a multiple
+         ;of 512 and then shift the result back.
+         MOVE.L IOVAlBlkSiz(A0),D0      ;num bytes in an allocation block
+         ASR.L  #8,D0                   ;shift over by 8
+         ASR.L  #1,D0                   ;and one more
+         MULU   IOVFrBlk(A0),D0         ;multiply by number of free blocks
+         ASL.L  #1,D0                   ;shift back to the left
+         ASL.L  #8,D0
+         MOVE.L 8(A6),A1                ;pointer to free bytes
+         MOVE.L D0,(A1)                 ;return the value
+
+
+         UNLK    A6
+         MOVE.L  (SP)+,A1                ; return address
+         ADD.L  #14,SP                   ; fix up stack
+         JMP     (A1)
+
+
+;
+;FUNCTION GetFInfo(fileName: OsStr255; versNum: SignedByte; vRefNum: INTEGER;
+;                  VAR FndrInfo: FInfo):OsErr;
+;
+        .FUNC   GetFInfo
+
+
+        LINK     A6,#-IOFQELSIZE         ; make room on stack for cmd block
+        LEA     -IOFQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  14(A6),IOFileName(A0)    ; set ptr to filename
+        MOVE.W  12(A6),IOVRefNum(A0)     ; set volume ref num
+        CLR.B   IOFileType(A0)           ; (version field)
+        CLR.W   IOFDirIndex(A0)          ;clear directory index
+
+        _GetFileInfo                     ;get the info
+        MOVE    D0,18(A6)                ; return the result code
+
+        ;transfer the user defined finder info words (16 bytes) into result
+        LEA     IOFlUsrWds(A0),A0       ;where to copy from
+        MOVE.L  8(A6),A1                ;where to copy to
+        MOVE    #16,D0                  ; 16 bytes of information
+        _BlockMove
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADD.L  #10,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION GetVol(volName: OsStrPtr; VAR vRefNum: INTEGER):OsErr;
+;
+;
+        .FUNC   GetVol
+
+         LINK   A6,#-IOVQElSize         ; get space for control p-block
+         LEA    -IOVQElSize(A6),A0      ; point A0 at the block
+         MOVE.L 12(A6),IOVNPtr(A0)      ; pointer to volume name pointer
+         _GetVol                        ; make the control call
+         MOVE   D0,16(A6)               ; return the result code
+         MOVE.L 8(A6),A1                ; pointer to drive number
+         MOVE.W IOVRefNum(A0),(A1)      ; return drive number
+
+         UNLK    A6
+         MOVE.L  (SP)+,A1                ; return address
+         ADDQ.L  #8,SP                   ; fix up stack
+         JMP     (A1)
+
+;
+;FUNCTION SetVolume(VolName: OsStrPtr; vRefNum: INTEGER): OsErr;
+;
+
+        .FUNC   SetVol
+
+         LINK   A6,#-IOVQElSize          ;get space for control p-block
+         LEA    -IOVQElSize(A6),A0      ; point A0 at the block
+         MOVE.L 10(A6),IOVNPtr(A0)      ; ptr to desired volume name
+         MOVE.W 8(A6),IOVRefNum(A0)     ; desired default drive number
+         _SetVol                        ; make the control call
+         MOVE   D0,14(A6)               ; return the result code
+
+         UNLK    A6
+         MOVE.L  (SP)+,A1                ; return address
+         ADDQ.L  #6,SP                   ; fix up stack
+         JMP     (A1)
+;
+;FUNCTION MountVol(DrvNum: INTEGER; VAR vRefNum):OsErr;
+;
+;
+;        .FUNC   MountVol
+;
+;         LINK   A6,#-IOVQElSize          ;get space for control p-block
+;         LEA    -IOVQElSize(A6),A0      ; point A0 at the block
+;         MOVE.W 12(A6),IOVDrvNum(A0)     ; drive to be mounted
+;         _MountVol                      ; make the control call
+;         MOVE   D0,14(A6)               ; return the result code
+;         MOVE.L 8(A6),A1
+;         MOVE.W IOVRefNum(A0),(A1)      ; return volume reference number
+;
+;         UNLK    A6
+;         MOVE.L  (SP)+,A1                ; return address
+;         ADDQ.L  #6,SP                   ; fix up stack
+;         JMP     (A1)
+
+;
+;FUNCTION UnMountVol(VolName: OsStrPtr; vRefNum: INTEGER):OsErr;
+;
+
+        .FUNC   UnMountVol
+
+         LINK   A6,#-IOVQElSize         ;get space for control p-block
+         LEA    -IOVQElSize(A6),A0      ; point A0 at the block
+         MOVE.W 8(A6),IOVRefNum(A0)     ; drive to be unmounted
+         MOVE.L 10(A6),IOVNPtr(A0)      ; volume name pointer
+         _UnMountVol
+         MOVE   D0,14(A6)               ; return the result code
+
+         UNLK    A6
+         MOVE.L  (SP)+,A1                ; return address
+         ADDQ.L  #6,SP                   ; fix up stack
+         JMP     (A1)
+
+;
+;FUNCTION Eject(VolName: OsStrPtr; vRefNum: INTEGER): OsErr;
+;
+
+        .FUNC   Eject
+
+         LINK   A6,#-IOVQElSize         ; get space for control p-block
+         LEA    -IOVQElSize(A6),A0      ; point A0 at the block
+         MOVE.W 8(A6),IOVRefNum(A0)     ; drive to be unmounted
+         MOVE.L 10(A6),IOVNPtr(A0)      ; volume name pointer
+         _Eject
+         MOVE   D0,14(A6)               ; return the result code
+
+         UNLK    A6
+         MOVE.L  (SP)+,A1                ; return address
+         ADDQ.L  #6,SP                   ; fix up stack
+         JMP     (A1)
+
+;
+;FUNCTION OffLine(VolName: OsStrPtr; vRefNum: INTEGER): OsErr;
+; removed 12 Apr 84
+;
+;       .FUNC   OffLine
+;
+;        LINK   A6,#-IOVQElSize         ; get space for control p-block
+;        LEA    -IOVQElSize(A6),A0      ; point A0 at the block
+;        MOVE.W 8(A6),IOVRefNum(A0)     ; drive to be unmounted
+;        MOVE.L 10(A6),IOVNPtr(A0)      ; volume name pointer
+;        _OffLine
+;        MOVE   D0,14(A6)               ; return the result code
+;
+;        UNLK    A6
+;        MOVE.L  (SP)+,A1                ; return address
+;        ADDQ.L  #6,SP                   ; fix up stack
+;        JMP     (A1)
+
+;
+;FUNCTION FlushVolume(VolName: OsStrPtr; vRefNum: INTEGER):OsErr;
+;
+
+        .FUNC   FlushVol
+
+         LINK   A6,#-IOVQElSize         ; get space for control p-block
+         LEA    -IOVQElSize(A6),A0      ; point A0 at the block
+         MOVE.W 8(A6),IOVRefNum(A0)     ; drive to be unmounted
+         MOVE.L 10(A6),IOVNPtr(A0)      ; volume name pointer
+         _FlushVol
+         MOVE   D0,14(A6)               ; return the result code
+
+         UNLK    A6
+         MOVE.L  (SP)+,A1                ; return address
+         ADDQ.L  #6,SP                   ; fix up stack
+         JMP     (A1)
+
+;
+;FUNCTION Create(fileName: OsStr255; vRefNum: INTEGER; creator: OSType;
+;                fileType: OSType):OsErr;
+
+        .FUNC Create
+
+
+        LINK     A6,#-IOFQELSIZE        ; make room on stack for cmd block
+        LEA     -IOFQELSIZE(A6),A0      ; address of cmd block
+
+        MOVE.L  18(A6),IOFileName(A0)    ; set ptr to filename
+        MOVE.W  16(A6),IOVRefNum(A0)      ; set volume ref num
+        CLR.B   IOFileType(A0)           ; clear type, permissions (version field)
+
+        _Create
+        TST.W   D0                      ;error?
+        BNE.S   crDone                  ;yes, don't bother setting type
+
+        CLR.W   IOFDirIndex(A0)          ;clear directory index
+        _GetFileInfo                     ;get the previous info
+
+        ;transfer the user defined finder info words (16 bytes)
+        MOVE.L  A0,D0                   ;save ptr to param block
+        LEA     IOFlUsrWds(A0),A1       ;where to copy user words
+        MOVE.L  8(A6),(A1)+             ;enter in the new file type
+        MOVE.L  12(A6),(A1)             ;enter in the new file creator
+        _SetFileInfo
+
+crDone
+        MOVE    D0,22(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADD.L   #14,SP                  ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION FSDelete(fileName: OsStr255; vRefNum: INTEGER):OsErr;
+;
+
+        .FUNC FSDelete
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  10(A6),IOFileName(A0)    ; set ptr to filename
+        MOVE.W  8(A6),IOVRefNum(A0)      ; set volume ref num
+        CLR.B   IOFileType(A0)           ; clear type, permissions (version field)
+
+        _Delete
+        MOVE    D0,14(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ.L  #6,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION OpenRF(fileName: OsStr255; vRefNum: INTEGER;VAR refNum: INTEGER): OsErr;
+;
+;
+
+        .FUNC OpenRF
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  14(A6),IOFileName(A0)    ; set ptr to filename
+        MOVE.W  12(A6),IOVRefNum(A0)     ; set volume ref num
+        CLR.B   IOFileType(A0)           ; clear type, permissions (version field)
+        CLR.B   IOPermssn(A0)           ; open for read/write
+        CLR.L   IOOwnBuf(A0)            ; use system buffer
+
+        _OpenRF
+        MOVE    D0,18(A6)               ; return the result code
+        MOVE.L  8(A6),A1                ;ptr to refNum
+        MOVE.W  IORefNum(A0),(A1)       ; return the refNum
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADD.L  #10,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION Rename(oldName: OsStr255; vRefNum: INTEGER;
+;                newName: OsStr255):OsErr;
+;
+        .FUNC Rename
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  14(A6),IOFileName(A0)    ; set ptr to filename
+        MOVE.W  12(A6),IOVRefNum(A0)     ; set volume ref num
+        CLR.B   IOFileType(A0)           ; clear type, permissions (version field)
+        MOVE.L  8(A6),IONewName(A0)      ;new name to give to file
+
+        _ReName
+        MOVE    D0,18(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADD.L  #10,SP                   ; fix up stack
+        JMP     (A1)
+
+;
+;FUNCTION SetFInfo(fileName: OsStr255; vRefNum; INTEGER;
+;                  FndrInfo: FInfo):OsErr;
+;
+        .FUNC SetFInfo
+
+        LINK     A6,#-IOFQELSIZE         ; make room on stack for cmd block
+        LEA     -IOFQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  14(A6),IOFileName(A0)    ; set ptr to filename
+        MOVE.W  12(A6),IOVRefNum(A0)     ; set volume ref num
+        CLR.B   IOFileType(A0)           ; (version field)
+        CLR.W   IOFDirIndex(A0)          ;clear directory index
+
+        _GetFileInfo                     ;get the previous info
+
+        ;transfer the user defined finder info words (16 bytes)
+        LEA     IOFlUsrWds(A0),A1       ;where to copy user words
+        MOVE.L  8(A6),A0                ;where the user words are now
+        MOVE    #16,D0                  ; 16 bytes of information
+        _BlockMove
+        LEA     -IOFQELSIZE(A6),A0      ;restore A0
+
+        _SetFileInfo
+        MOVE    D0,18(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADD.L  #10,SP                  ; fix up stack
+        JMP     (A1)
+
+;
+;FUNCTION SetFLock(fileName: OsStr255; vRefNum: INTEGER):OsErr;
+;
+;
+        .FUNC SetFLock
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  10(A6),IOFileName(A0)    ; set ptr to filename
+        MOVE.W  8(A6),IOVRefNum(A0)      ; set volume ref num
+        CLR.B   IOFileType(A0)           ; clear type, permissions (version field)
+
+        _SetFilLock
+        MOVE    D0,14(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ.L  #6,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION RstFLock(fileName: OsStr255;  vRefNum: INTEGER):OsErr;
+;
+;
+        .FUNC RstFLock
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  10(A6),IOFileName(A0)    ; set ptr to filename
+        MOVE.W  8(A6),IOVRefNum(A0)      ; set volume ref num
+        CLR.B   IOFileType(A0)           ; clear type, permissions (version field)
+
+        _RstFilLock
+        MOVE    D0,14(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ.L  #6,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION SetFType(fileName: OsStr255; oldVers: SignedByte; vRefNum: INTEGER;
+;                    newVers: SignedByte):OsErr;
+;
+        .FUNC SetFType
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  16(A6),IOFileName(A0)    ; set ptr to filename
+        MOVE.W  10(A6),IOVRefNum(A0)      ; set volume ref num
+        MOVE.B  12(A6),IOFileType(A0)    ; clear type, permissions (version field)
+        MOVE.B  8(A6),IONewType(A0)      ;the new type (version field)
+
+        _SetFilType
+        MOVE    D0,16(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADD.L   #12,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION Allocate(refNum: INTEGER; VAR count: LongInt):OsErr;
+;
+
+        .FUNC Allocate
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.L  8(A6),A1                ;ptr to requested byte count
+        MOVE.L  (A1),IOReqCount(A0)     ;
+        MOVE.W  12(A6),IORefNum(A0)     ; set refnum
+
+        _Allocate
+        MOVE    D0,14(A6)               ; return the result code
+        MOVE.L  IOActCount(A0),(A1)     ; return actual byte count
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ.L  #6,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION GetEOF(refNum: INTEGER; VAR LogEOF: LongInt):OsErr;
+;
+        .FUNC GetEOF
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  12(A6),IORefNum(A0)     ; set refnum
+
+        _GetEOF
+        MOVE    D0,14(A6)               ; return the result code
+        MOVE.L  8(A6),A1                ;ptr to logical length variable
+        MOVE.L  IOLEOF(A0),(A1)         ;return logical end of file
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ.L  #6,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION SetEOF(refNum: INTEGER; LogEOF: LongInt):OsErr;
+;
+        .FUNC SetEOF
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  12(A6),IORefNum(A0)     ; set refnum
+        MOVE.L  8(A6),IOLEOF(A0)        ; the desired end of file
+
+        _SetEOF
+        MOVE    D0,14(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ.L  #6,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION GetFPos(refNum: INTEGER; VAR filePos: LongInt):OsErr;
+;
+        .FUNC GetFPos
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  12(A6),IORefNum(A0)     ; set refnum
+
+        _GetFPos
+        MOVE    D0,14(A6)               ; return the result code
+        MOVE.L  8(A6),A1                ;ptr to logical length variable
+        MOVE.L  IOPosOffset(A0),(A1)    ;return logical end of file
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ.L  #6,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION SetFPos(refNum: INTEGER; posMode: INTEGER; posOff: LongInt):OsErr;
+;
+        .FUNC SetFPos
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  14(A6),IORefNum(A0)     ; set refnum
+        MOVE.W  12(A6),IOPosMode(A0)    ; positioning information
+        MOVE.L  8(A6),IOPosOffset(A0)   ; new file position
+
+        _SetFPos
+        MOVE    D0,16(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ.L  #8,SP                   ; fix up stack
+        JMP     (A1)
+
+
+;
+;FUNCTION FlushFile(refNum: INTEGER):OsErr;
+;
+
+        .FUNC FlushFile
+
+        LINK     A6,#-IOQELSIZE         ; make room on stack for cmd block
+        LEA     -IOQELSIZE(A6),A0       ; address of cmd block
+
+        MOVE.W  8(A6),IORefNum(A0)      ; set refnum
+
+        _FlushFil
+        MOVE    D0,10(A6)               ; return the result code
+
+        UNLK    A6
+        MOVE.L  (SP)+,A1                ; return address
+        ADDQ.L  #2,SP                   ; fix up stack
+        JMP     (A1)
+
+;The following are the implementation of the event mgr routines that are
+;register based as oposed to stack based
+;They are included here because they are OSTraps, however the interfaces for
+;them are in toolIntf
+;
+;  FUNCTION PostEvent(eventNum: INTEGER; eventMsg: LongInt): OsErr;
+;
+                .PROC   PostEvent,2
+;
+                MOVE.L  (SP)+,A1        ;A1 is return address
+                MOVE.L  (SP)+,D0        ;32-bit quantity defined by the event
+                MOVE.W  (SP)+,A0        ;word of event number
+                MOVE.L  A1,-(SP)        ;
+                _POSTEVENT
+                MOVE.W  D0,4(SP)        ;return 0=event posted; 1=not posted
+                RTS
+;
+; procedure FlushEvents(evtMasks: LongInt);
+;
+                .PROC   FLUSHEVENTS ,1
+                MOVE.L  (SP)+,A1        ;pop return address
+                MOVE.L  (SP)+,D0        ;pop long word of event masks
+                MOVE.L  A1,-(SP)
+                _FlushEvents
+                RTS
+
+;
+; procedure SetEventMask;
+;
+                .PROC   SETEVENTMASK,1
+;
+                MOVE.L  (SP)+,A1
+                MOVE    (SP)+,SYSEVTMASK        ;get the mask
+                JMP     (A1)                  ; return to caller
+
+;
+;FUNCTION OSEventAvail(mask: INTEGER; VAR theEvent: EventRecord): BOOLEAN;
+;
+
+                .FUNC OSEventAvail
+
+                MOVE.L  (SP)+,A1            ;return address
+                MOVE.L  (SP)+,A0            ;user event record
+                MOVE.W  (SP)+,D0            ;event mask (set of events desired)
+                MOVE.L  A1,-(SP)            ;push return address
+                _OSEventAvail
+                TST     D0
+                BEQ.S   @1                  ;non-null event returned
+
+                CLR.B   4(SP)               ;null event returned
+                BRA.S   @2
+
+@1              MOVE.B  #1,4(SP)            ;non-null event returned
+@2              RTS
+
+;
+;FUNCTION GetOSEvent(mask: INTEGER; VAR theEvent: EventRecord): BOOLEAN;
+;
+
+                .FUNC GetOSEvent
+
+                MOVE.L  (SP)+,A1            ;return address
+                MOVE.L  (SP)+,A0            ;user event record
+                MOVE.W  (SP)+,D0            ;event mask (set of events desired)
+                MOVE.L  A1,-(SP)            ;push return address
+                _GetOSEvent
+                TST     D0
+                BEQ.S   @1                  ;non-null event returned
+
+                CLR.B   4(SP)               ;null event returned
+                BRA.S   @2
+
+@1              MOVE.B  #1,4(SP)            ;non-null event returned
+@2              RTS
+
+
+
+; Sound Manager interface implementation
+;
+; PROCEDURE SetSoundVol(level: INTEGER);
+;
+                .PROC   SetSoundVol,1
+
+; the following is how you would ideally like to do this (ie with an immediate
+; control call) but since there is a problem with immediate control calls, I have
+; just taken the sound driver volume routine and put it here
+;                MOVE.L  (SP)+,A0                ;get return address
+;                MOVE.W  (SP)+,D0                ;get the volume
+;                MOVE.L  A0,-(SP)                ;replace return address
+;
+;                LINK    A6,#-32                 ;get some space for the control p-block
+;                LEA     -32(A6),A0              ;point A0 at the block
+;                MOVE.W  #-4,IORefNum(A0)        ;set up the sound driver refNum
+;                MOVE.W  #2,CSCode(A0)           ;set up the control "opCode"
+;                MOVE.W  D0,CSParam(A0)          ;set up event ptr as parameter
+;                _Control  ,IMMED                ;make the control call
+;
+;                UNLK    A6                      ;de-allocate parameter block
+;                RTS
+
+;this is from the sound driver:
+                MOVE.L  (SP)+,A0            ;get the return address
+                MOVE.W  (SP)+,D0            ;get the volume level
+                MOVE.L  A0,-(SP)            ;put return addr back on
+                CMP.B   #$FF,$400009        ;are we running on a Lisa?
+                BEQ.S   LisaSound
+
+                ;this is for the Mac
+                MOVE    SR,-(SP)            ;save current status
+                ORI     #$0300,SR           ;only debug interrupts allowed
+                MOVE.B  AVBufA,D1           ;get VIA port byte
+                AND     #$00F8,D1           ;clear low 3 bits
+                AND     #7,D0               ;only use low 3 bits
+                MOVE.B  D0,SDVolume         ;update low memory variable
+                OR      D0,D1               ;combine them
+                MOVE.B  D1,AVBufA           ;store it back
+                RTE                         ;restore interrupts and return
+
+                ;this is for the Lisa
+LisaSound       AND.W   #7,D0               ;low 3 bits specify sound
+                MOVE.B  D0,SDVolume         ;update low memory variable
+                LSL.W   #1,D0               ;shift into position
+                MOVE.B  $FCDD81,D1          ;read from port B (VIA2+PORTB2)
+                AND.B   #$F1,D1             ;clear out bits 1 to 3
+                OR.B    D0,D1
+                MOVE.B  D1,$FCDD81
+                RTS
+
+
+;
+; PROCEDURE GetSoundVol(VAR level: INTEGER);
+; actually, sound is a byte.
+;
+                .PROC   GetSoundVol,1
+
+                MOVE.L  (SP)+,A0                ;get return address
+                MOVE.L  (SP)+,A1                ;ptr to result
+                CLR.B   (A1)+                   ;clear high byte
+                MOVE.B  SDVolume,(A1)           ;return volume level in low byte
+                JMP     (A0)
+
+;
+;PROCEDURE StartSound(synthRec: Ptr; numBytes: LongInt; CompletionRtn: ProcPtr);
+;
+;
+                .PROC   StartSound,1
+                .DEF    myPBlock
+                .DEF    SndQueue
+                .DEF    MyCompletion
+
+;set up the parameter block if it is free, otherwise queue up the request
+;note that synchronous calls do not get queued up.  We just loop around
+;until all pending calls are done and then make the call.  This is because
+;you cannot start up a syncronous call in a VBL task
+               LEA      myPBlock,A0             ;
+               TST.W    IOResult(A0)            ;IOResult is 0 if blk is free
+               BEQ.S    blkFree
+
+                ;parameter block is not free, queue this request up if it is
+                ;asynchronous. If it is syncronous, loop until everything
+                ;else is done and then start it up
+               MOVE.L   4(SP),D1                ;the completion rtn
+               BTST     #0,D1                   ;-1 for asynch otherwise synch
+               BNE.S    sndWait                 ;it is synchronous
+
+                MOVE.L  SndQueue,D0             ;is there a handle?
+                BNE.S   isQ                     ;yes, just add on another entry
+                _NewHandle                      ;no, make a zero length handle
+                LEA     SndQueue,A1             ;ptr to soundqueue handle location
+                MOVE.L  A0,(A1)                 ;save hndl in SndQueue
+                BEQ.S   ssdone                  ;not enough memory, just quit
+
+isQ             MOVE.L  SndQueue,A0             ;get the handle
+                _GetHandleSize                  ;find out it's size
+                MOVE.L  D0,D1                   ;save the size
+                ADD     #12,D0                  ;make room for the next entry
+                _SetHandleSize                  ;make it bigger
+                TST     D0
+                BNE.S   ssdone                  ;quit if couldn't do it
+                MOVE.L  (A0),A1                 ;ptr to the queue
+                ADD.L   D1,A1                   ;add in offset to end of prev data
+                LEA     4(SP),A0                ;ptr to the args
+                MOVEQ   #12,D0                  ;number of bytes to copy
+                _BlockMove
+                BRA.S   ssdone                  ;done queueing up, exit
+
+sndWait         MOVE.W  IOResult(A0),D0         ;see if sound is done yet
+                BGT.S   sndWait                 ;nope, loop on.
+
+blkFree
+               MOVE.L   8(SP),IOByteCount(A0)   ;numbytes
+               MOVE.L   12(SP),IOBuffer(A0)     ;the synthesizer rec
+               MOVE.W   #-4,IORefNum(A0)        ;sound driver refNum
+               CLR.L    IOCompletion(A0)        ;
+               MOVE.L   4(SP),D1                ;the completion rtn
+               BTST     #0,D1                   ;-1 for asynch otherwise synch
+               BEQ.S    doAsync
+               _Write                           ;synchronous write
+               BRA.S    ssDone
+
+doAsync        MOVE.L   D1,IOOwnBuf(A0)         ;save their compl rtn in ownBuff
+               LEA      myCompletion,A1         ;my completion routine
+               MOVE.L   A1,IOCompletion(A0)
+               _Write   ,ASYNC                  ;asynchronous write
+
+ssDone         MOVE.L   (SP)+,A1
+               ADD      #12,SP
+               JMP      (A1)
+
+
+;the completion routine that gets called when an asynchronous call is through
+;note: only asynchronous calls are queued up
+myCompletion
+                MOVEM.L D0-D2/A0-A2,-(SP)   ;preserve the regs
+                LEA     myPBlock,A0         ;the parameter block
+                MOVE.L  IOOwnBuf(A0),D1     ;address of their completion rtn
+                BEQ.S   noCompl             ;NIL completion routine
+                MOVE.L  D1,A1               ;the completion routine
+                JSR     (A1)                ;go to it
+
+noCompl         LEA     SndQueue,A1         ;ptr to sndqueue handle
+                TST.L   (A1)                ;is there a pending sound call?
+                BEQ.S   myCdone             ;no queue, just return
+
+                ;there is a pending call, copy the parameters into the parm blk
+                LEA     myPBlock,A2         ;the parameter block
+                MOVE.L  SndQueue,A0         ;sndQueue handle
+                _GetHandleSize              ;put the size of the handle in D0
+                MOVE.L  (A0),A0             ;deref it
+                MOVE.L  A0,A1               ;make a copy of it
+                MOVE.L  (A0)+,IOOwnBuf(A2)  ;their completion routine
+                MOVE.L  (A0)+,IOByteCount(A2) ;numBytes
+                MOVE.L  (A0)+,IOBuffer(A2)  ;the synthesizer rec
+                MOVE.W  #-4,IORefNum(A2)    ;sound driver refNum
+
+                ;now remove the parameters from the queue
+                SUB     #12,D0              ;was the handle only 12 bytes?
+                BEQ.S   dspQ                ;yes, just dispose of the handle
+                MOVE.L  D0,D1               ;save the new size
+                _BlockMove                  ;shift the bytes up in the queue
+                MOVE.L  SndQueue,A0         ;get the handle again
+                MOVE.L  D1,D0               ;get back the new size
+                _SetHandleSize              ;shrink the handle
+                BRA.S   complSS             ;now start the sound
+
+dspQ            MOVE.L  SndQueue,A0         ;get the handle
+                _DisposHandle               ;dispose it
+                LEA     SndQueue,A0
+                CLR.L   (A0)                ;clear out the queue handle
+
+;set up my completion routine and make the write call
+complSS         LEA     myPBlock,A0         ;get ptr to param block
+                LEA     myCompletion,A1     ;this completion routine
+                MOVE.L  A1,IOCompletion(A0) ;stuff it
+                _Write  ,ASYNC              ;start asyncronous write and return
+
+
+myCdone         MOVEM.L (SP)+,D0-D2/A0-A2   ;restore regs
+                RTS
+
+;global parameter block set up for the user. This allows for general
+;async sound driver calls without the user worrying about memory allocation.
+;if more than one sound driver call is pending at one time, a handle is created
+;which contains a queue of the outstanding calls.   These are posted as soon
+;as the current calls is completed.
+myPBlock        .BLOCK  16          ;50 bytes total, init ioresult to be NIL
+                .WORD   0
+                .BLOCK  32
+
+SndQueue        .LONG   0           ;queue of all pending sound calls beyond the
+                                    ;two queued in the 2 parameter blocks above.
+
+;
+;FUNCTION SoundDone: BOOLEAN;
+;
+;
+                .FUNC   SoundDone
+                .REF    myPBlock
+
+               LEA      myPBlock,A0             ;get current paramter block
+               CLR.W    4(SP)                   ;assume false
+               TST.W    IOResult(A0)            ;see if io is done
+               BNE.S    sdEnd
+               ADD.B    #1,4(SP)                ;yes it's done
+sdEnd          RTS
+
+
+;
+; PROCEDURE StopSound;
+;
+                .PROC   StopSound,1
+                .REF    SndQueue
+                .REF    myPBlock
+
+                LINK    A6,#-32                 ;get some space for the control p-block
+                LEA     -32(A6),A0              ;point A0 at the block
+                MOVE.W  #-4,IORefNum(A0)        ;set up the sound driver refNum
+;               MOVE.W  #1,CSCode(A0)           ;set up the control "opCode"
+                _KillIO ,IMMED                  ;make the control call
+                LEA     myPBlock,A0             ;get my parmeter block
+                CLR.W   IOResult(A0)            ;clear the abort error
+
+                ;now dispose of any pending write calls
+                ;note: I do not call the completion routines of these
+                ;calls as the normal Killio would I just dequeue them
+                MOVE.L  SndQueue,D0             ;the snd queue handle
+                BEQ.S   killDone
+                MOVE.L  D0,A0                   ;get the handle
+                _DisposHandle                   ;dispose it
+                LEA     SndQueue,A0
+                CLR.L   (A0)                    ;clear out the queue handle
+;
+killDone        UNLK    A6                      ;de-allocate parameter block
+                RTS
+
+;
+; PROCEDURE SWSetLevel(ampl: INTEGER);
+; useful if you want to set the level during an asynchronous square wave
+; the problem is that the completion routine of the write is executed when
+; this setLevel call is done as opposed to when the write is done.  Hence,
+; it turns out not to be very useful.  People should use SetSoundVol instead
+;
+;                .PROC   SWSetLevel,1
+;
+;                LINK    A6,#-50                 ;get some space for the control p-block
+;                LEA     -50(A6),A0              ;point A0 at the block
+;                MOVE.W  #-4,IORefNum(A0)        ;set up the sound driver refNum
+;                MOVE.W  #3,CSCode(A0)           ;set up the control "opCode"
+;                MOVE.W  8(A6),CSParam(A0)       ;set up the amplitude
+;                _Control   ,IMMED               ;make the control call
+;
+;                UNLK    A6                      ;de-allocate parameter block
+;                MOVE.L  (SP)+,A0
+;                ADDQ    #2,SP
+;                JMP     (A0)
+
+
+;
+;PROCEDURE CountAppFiles(VAR message: INTEGER; VAR count: INTEGER);
+;
+
+        .PROC CountAppFiles
+
+        MOVE.L  4(SP),A1
+        CLR     (A1)                        ;set default count to 0
+        MOVE.L  AppParmHandle,A0            ;the app parm handle
+        _GetHandleSize                      ;are we real
+        BLE.S   CountEnd
+        MOVE.L  (A0),A0                     ;deref appParm Handle
+        MOVE.L  8(SP),A1                    ;ptr to message
+        MOVE.W  (A0)+,(A1)                  ;return the message
+        MOVE.L  4(SP),A1
+        MOVE.W  (A0),(A1)                   ;return the count
+
+CountEnd
+        MOVE.L  (SP)+,A0                    ;return addr
+        ADDQ    #8,SP
+        JMP     (A0)
+
+
+;
+;PROCEDURE GetAppFiles(index: INTEGER; VAR theFile: AppFile);
+;
+; fType is set to all 0's if no next file was found or there is no file list
+
+;AppFile = RECORD
+;                 vRefNum: INTEGER;
+;                 ftype: OsType;
+;                 versNum: INTEGER;   {versNum in high byte}
+;                 fName: str255;
+;               END; {appFile}
+
+
+;appParm has format:  message (0/1) for load or print   (2 bytes)
+;                     # of entries                      (2 bytes)
+;   for each entry:   volume refNum                     (2 bytes)
+;                     type                              (4 bytes)
+;                     version                           (2 bytes)
+;                     name- padded to even
+
+            .FUNC   GetAppFiles
+
+            MOVEM.L     A2-A3,-(SP)
+            MOVE.L      4+8(SP),A1          ;ptr to fileListElem
+            CLR.L       2(A1)               ;assume failure
+            MOVE.L      AppParmHandle,A0    ;get the application parameter handle
+            _GetHandleSize                  ;are we real?
+            BLE.S       getEnd
+            MOVE.L      (A0),A2             ;deref appParm Handle
+            ADDQ        #2,A2               ;skip the msg
+            MOVE        8+8(SP),D1          ;which entry to go to
+            CMP         (A2)+,D1            ;see if index within limit
+            BGT.S       getEnd
+            SUBQ        #1,D1               ;make index zero based
+
+getLoop     BLT.S       getEnd              ;are we done?
+            MOVE.L      A2,A0               ;where to copy from
+            MOVEQ       #2,D0
+            ADD.B       8(A0),D0            ;length of string
+            AND         #$FFFE,D0           ;evenize it
+            ADD         #8,D0               ;also move refnum,type,versNum
+            ADD         D0,A2               ;move to next
+            _BlockMove
+            SUBQ        #1,D1
+            BRA.S       getLoop
+
+getEnd      MOVEM.L     (SP)+,A2-A3         ;save regs
+            MOVE.L      (SP)+,A0
+            ADDQ        #6,SP               ;pop args
+            JMP         (A0)
+
+;
+;PROCEDURE ClrAppFiles(index: INTEGER);
+;
+
+            .PROC   ClrAppFiles
+
+            MOVE.L      AppParmHandle,A0    ;get the application parameter handle
+            _GetHandleSize                  ;are we real?
+            BLE.S       clrEnd
+            MOVE.L      (A0),A0             ;deref appParm Handle
+            ADDQ        #2,A0               ;skip the msg
+
+            MOVE        4(SP),D1            ;which entry to go to
+            CMP         (A0)+,D1            ;see if index within limit
+            BGT.S       clrEnd
+            SUBQ        #1,D1               ;make index zero based
+
+clrLoop     BLT.S       clrEnd              ;are we done?
+            BEQ.S       ClrType
+            MOVEQ       #2,D0
+            ADD.B       8(A0),D0            ;length of string
+            AND         #$FFFE,D0           ;evenize it
+            ADD         #8,D0               ;also move refnum,type,versNum
+            ADD         D0,A0               ;move to next
+            SUBQ        #1,D1
+            BRA.S       clrLoop
+
+ClrType     CLR.L       2(A0)
+clrEnd
+            MOVE.L      (SP)+,A0
+            ADDQ        #2,SP               ;pop args
+            JMP         (A0)
+
+
+;implementation for system error handler  (ie. deep shit manager)
+;
+
+; PROCEDURE SysError(errorCode: INTEGER);
+;
+;   invoke the deep shit manager with the specified error code
+;
+
+              .PROC SysError
+
+
+               MOVE.L    (SP)+,A0       ;get return address
+               MOVE.W    (SP)+,D0       ;get error code
+               _SysError                ;invoke deeep shit
+               .WORD     $A9FF          ;don't come back!
+
+              .END
+

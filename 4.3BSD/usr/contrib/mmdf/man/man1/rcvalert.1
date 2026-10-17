@@ -1,0 +1,51 @@
+.tr  
+.TH RCVALERT 1 "21 May 1986"
+.SH NAME
+rcvalert \- mail-receipt notification
+.SH SYNOPSIS
+.B rcvalert
+[size]
+.SH DESCRIPTION
+.I Rcvalert
+is run by
+the mail delivery system, on the user's behalf, rather than by the user
+directly.  A line entered in the user's 
+.I .maildelivery
+file causes
+.I rcvalert
+to run when mail is delivered.   The size argument tells the program the
+size of the message.
+.I Rcvalert
+checks whether the user is logged in and the user's terminal may be written to.
+If so,
+.I rcvalert
+prints a scan listing of the
+message on the user's terminal.
+
+The scan line rings the terminal's bell and then prints the
+number of characters in the message and the contents of
+the "From:" and "Subject:" components, if present.  If the "Subject:"
+component is not present or is very short, some of the initial
+text from the body of the message is included.
+.SH EXAMPLE
+A typical entry in the user's
+.I .maildelivery 
+file is:
+.sp
+*    \-    pipe    R    ``rcvalert $(size)''
+.sp
+You will need to give the full path to the rcvalert program.
+if it is not in a directory normally searched by a vanilla /bin/sh.
+.SH SEE ALSO
+rcvtrip(1), maildelivery(5).
+.SH FILES
+.IP "${RCVDIR}/rcvalert" 35
+typical location of rcvalert program
+.IP /etc/utmp 35
+to see who is logged in
+.IP "<login directory>/.maildelivery" 35
+user's delivery specification file
+.SH "SEE ALSO"
+rcvtrip(1), maildelivery(5)
+.SH AUTHOR
+David H. Crocker

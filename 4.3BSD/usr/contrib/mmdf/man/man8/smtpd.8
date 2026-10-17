@@ -1,0 +1,91 @@
+.TH "SMTPD" 8 "21 May 85"
+.SH NAME
+smtpd, smtpsrvr \- SMTP inbound channel for MMDF
+.SH SYNOPSIS
+smtpd [\-d] [\-f] [\-n maxconnects] smtpsrvr channels  (4.2)
+.br
+smtpd smtpsrvr channels port maxconnects network  (4.1 or 5.2)
+.br
+smtpd [\-f] smtpsrvr channels  (4.3)
+.br
+smtpd sourcehost.sourceport  (sun)
+.sp
+.br
+smtpsrvr remotehost localhost channels
+.br
+rsmtpsrvr remotehost localhost channels  (finicky)
+.SH DESCRIPTION
+The SMTP inbound channel is part of the MMDF mail system.
+It consists of two programs,
+an SMTP server (\fIsmptsrvr\fR) and a connection server (\fIsmtpd\fR).
+\fISmptsrvr\fR is designed to be called by a networking daemon
+that has determined the identity of the caller and set up the network
+connection on the server's standard input and output.
+\fISmtpsrvr\fR interfaces between the network and the mail system.
+It calls \fIsubmit\fR to pass mail into the system.
+.PP
+The
+.I smtpd
+program comes in several flavors depending on your operating system.
+In some cases, the burden of limiting and waiting for inbound connections
+is borne by a standard "daemon of daemons".  In other cases, 
+.I smtpd 
+performs these operations.  In any case, 
+.I smtpd
+is the link between the network connection and the
+.I smtpsrvr 
+program.
+.PP
+In the synopsis above, the first two versions of 
+.I smtpd
+are standalone network daemons that accept incoming
+connections and fork off copies of the smptsrvr to process
+them.  The last two versions are called by the standard 
+``daemon of daemons'' with one connection and fork the smtpsrvr to
+process it.
+The sun version calls the standard 
+.I smtpsrvr
+program with channels set to ``smtp''.
+.PP
+The \-d option enables debugging prints on the stderr output.
+The \-f option (the \fBf\fRiniky option) causes 
+incoming connections from unknown
+hosts to be rejected.
+.I Smtpd
+notifies the \fIsmtpsrvr\fR program to use the finicky option
+by calling it with argv[0] set to `rsmtpsrvr'.
+The maxconnects argument sets the maximum number
+of simultaneous connections to support.  This value defaults to 4 on 4.2
+systems.
+.PP
+The smtpsrvr argument is the path to the \fIsmtpsrvr\fR
+program (relative or absolute).
+Generally this is something like /usr/mmdf/chans/smtpsrvr.
+.PP
+The channels argument is a comma-separated list of channels.  When a connection
+is established, 
+the source host is looked up in the host tables for these channels.
+If the source host is found, the 
+corresponding channel name is 
+given to \fIsubmit\fR as the channel it should 
+consider the mail to have come from for authorization purposes.
+In the finicky mode,
+if the source host is not found, \fIsmtpsrvr\fR will
+reject the incoming mail.  In the normal (non-finicky)
+mode, if the source host is not found, \fIsmtpsrvr\fR will assume the
+mail came in on the last channel in the channels list.
+.PP
+If your smtp channel table is a nameserver-type channel table and you
+are running in the finicky mode, then
+you should include the "local" channel in the list of acceptable
+channels.  If you do not include "local" in this case, you will not
+be allowed to connect to your own server and submit mail because the
+nameserver channel will not let you look up your own address.  (RFC 974
+requires this to prevent mail loops).
+.PP
+Since the \fIsmtpsrvr\fR program sets the trustme flag when calling
+\fIsubmit\fR,
+it must be called by a process whose UID is that
+of a trusted mail submitter (generally only root and mmdf).
+.SH SEE ALSO
+deliver(8), submit(8), smtp(8), RFC821

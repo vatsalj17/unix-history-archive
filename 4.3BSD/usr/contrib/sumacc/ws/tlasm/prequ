@@ -1,0 +1,217 @@
+W^65D!l D!l^AAG;-------------------------------------------------------------------------------
+;       These are the definitions for the Print code
+;-------------------------------------------------------------------------------
+fPrDbgOK        .EQU    1               ;Debug enable
+iPrDeapShit     .EQU    29              ;Printcode DeapShit
+iPrAbort        .EQU    128             ;Abort
+iPrRelease      .EQU    2               ;Current version number of the code.
+
+;-------------------------------------------------------------------------------
+;       These are misc Alert & Dialog constants
+;-------------------------------------------------------------------------------
+iOK             .EQU    1               ; OK Button
+iCancel         .EQU    2               ; Cancel Button
+iPrStlDlg       .EQU    $E000           ; {-8192} Style Dialog
+iPrJobDlg       .EQU    $E001           ; {-8191} Job Dialog
+iPrCfgDlg       .EQU    $E002           ; {-8190} Configuration Dialog
+iPgFeedAx       .EQU    $E00A           ; {-8182} Page Feed Dialog
+iPicSizAx       .EQU    $E00B           ; {-8181} Pic Size Alert
+iIOAbrtAx       .EQU    $E00C           ; {-8180} IO Timeout Alert
+;-------------------------------------------------------------------------------
+; The Private Print Globals; 16 bytes located at [SysEqu] PrintVars
+;-------------------------------------------------------------------------------
+iPrErr          .EQU    0               ;Current print error.  Set to iPrAbort to abort printing.
+bDocLoop        .EQU    iPrErr+2        ;The Doc style: Draft, Spool, .., and ..
+                                        ;Currently use low 2 bits; the upper 6 are for flags.
+bUser1          .EQU    bDocLoop+1
+lUser1          .EQU    bUser1+1
+lUser2          .EQU    lUser1+4
+lUser3          .EQU    lUser2+4
+iPrVarSize      .EQU    lUser3+4        ;The PrVar's size.[16]
+
+bDraftLoop      .EQU    0               ;The DocLoop types
+bSpoolLoop      .EQU    1
+bUser1Loop      .EQU    2
+bUser2Loop      .EQU    3
+;-------------------------------------------------------------------------------
+; These are the PrDrvr constants.
+;-------------------------------------------------------------------------------
+iPrDrvrID       .EQU            2               ;Driver's ResID
+iPrDrvrRef      .EQU            $FFFD           ;Driver's RefNum = NOT ResID
+iPrDrvrDev      .EQU            $FD00           ;Driver's QD Dev num = RefNum in Hi Byte, variant in lo
+iPrBitsCtl      .EQU            4               ;The Bitmap Print Proc's ctl number
+lScreenBits     .EQU            $00000000       ;The Bitmap Print Proc's Screen Bitmap param
+lPaintBits      .EQU            $00000001       ;The Bitmap Print Proc's Paint [sq pix] param
+iPrIOCtl        .EQU            5               ;The Raw Byte IO Proc's ctl number
+iPrEvtCtl       .EQU            6               ;The PrEvent Proc's ctl number
+lPrEvtAll       .EQU            $00FFFFFD       ;The PrEvent Proc's CParam for the entire screen
+lPrEvtTop       .EQU            $00FEFFFD       ;The PrEvent Proc's CParam for the top folder
+iPrDevCtl       .EQU            7               ;The PrDevCtl Proc's ctl number
+iPrReset        .EQU            1               ;The PrDevCtl Proc's CParam for reset
+iPrPageEnd      .EQU            2               ;The PrDevCtl Proc's CParam for end page
+iPrLineFeed     .EQU            3               ;The PrDevCtl Proc's CParam for paper advance
+lPrLFSixth      .EQU           -1               ;The PrDevCtl Proc's CParam for 1/6 th inch paper advance
+lPrLFEighth     .EQU           -2               ;The PrDevCtl Proc's CParam for 1/8 th inch paper advance
+iFMgrCtl        .EQU            8               ;The FMgr's Tail-hook ctl call
+iFMgrStat       .EQU            8               ;The FMgr's Pre-hook status call
+
+;-------------------------------------------------------------------------------
+; Various Resource Types & ID's
+;-------------------------------------------------------------------------------
+lPStrType       .EQU   $53545220        ;"STR ": Res type for the Pr Rsrc file name
+iPStrRFil       .EQU   $E000            ;Str -8192 is in SysRes & names the current printer
+
+lPrintType      .EQU   $50524543        ;"PREC": Res type for the hPrint records
+iPrintDef       .EQU   0                ;Default hPrint
+iPrintLst       .EQU   1                ;Last used hPrint
+iPrintDrvr      .EQU   2                ;.Print's parameter record; not a Print rec
+
+lPfType         .EQU   $5046494C        ;"PFIL"
+lPfSig          .EQU   $50535953        ;"PSYS"
+iPfIcon         .EQU   140              ;
+
+lPrType         .EQU   $4150504C        ;"APPL"
+lPrSig          .EQU   $50535953        ;"PSYS"
+iPrIcon         .EQU   138              ;
+
+;-------------------------------------------------------------------------------
+; The Printing data structures
+;-------------------------------------------------------------------------------
+;Print Info Record: The parameters needed for page composition.
+;-------------------------------------------------------------------------------
+iDev            .EQU    0         ;Font mgr/QuickDraw device code
+iVRes           .EQU    iDev+2    ;Resolution of device, in device coordinates.
+iHRes           .EQU    iVRes+2   ;   ..note: V before H => compatable with Point.
+rPage           .EQU    iHRes+2   ;The page (printable) rectangle in device coordinates.
+iPrInfoSize     .EQU    rPage+8   ;The PrInfo size.[14]
+
+;-------------------------------------------------------------------------------
+;Printer Style: The printer configuration and usage information.
+;-------------------------------------------------------------------------------
+wDev            .EQU    0         ;The drvr number.  Hi byte=RefNum, Lo byte=variant.
+iPageV          .EQU    wDev+2    ;paper size in units of 1/iPrPgFract
+iPageH          .EQU    iPageV+2  ;   ..note: V before H => compatable with Point.
+bPort           .EQU    iPageH+2  ;The IO port number.
+feed            .EQU    bPort+1   ;paper feeder type.
+iPrStlSize      .EQU    feed+1    ;The PrStl size.[8]
+
+;-------------------------------------------------------------------------------
+;Print eXtra Info: The print time eXtra information.
+;-------------------------------------------------------------------------------
+iRowBytes       .EQU    0               ;The Band's rowBytes.
+iBandV          .EQU    iRowBytes+2     ;Size of band, in device coordinates
+iBandH          .EQU    iBandV+2        ;   ..note: V before H => compatable with Point.
+iDevBytes       .EQU    iBandH+2        ;Size for allocation.  May be more than rBounds size!
+iBands          .EQU    iDevBytes+2     ;Number of bands per page.
+bPatScale       .EQU    iBands+2        ;Pattern scaling
+bULThick        .EQU    bPatScale+1     ;3 Underscoring parameters
+bULOffset       .EQU    bULThick+1
+bULShadow       .EQU    bULOffset+1
+scan            .EQU    bULShadow+1     ;Band scan direction
+bXInfoX         .EQU    scan+1          ;An eXtra byte.
+iPrXInfoSize    .EQU    bXInfoX+1       ;The PrXInfo size.[16]
+
+;-------------------------------------------------------------------------------
+;Print Job: Print "form" for a single print request.
+;-------------------------------------------------------------------------------
+iFstPage        .EQU    0               ;Page Range.
+iLstPage        .EQU    iFstPage+2
+iCopies         .EQU    iLstPage+2      ;No. copies.
+bJDocLoop       .EQU    iCopies+2       ;Draft quality print flag
+fFromApp        .EQU    bJDocLoop+1     ;Printing from an App (not PrApp) flag
+pIdleProc       .EQU    fFromApp+1      ;The Proc called while waiting on IO etc.
+pFileName       .EQU    pIdleProc+4     ;Spool File Name: NIL for default.
+iFileVol        .EQU    pFileName+4     ;Spool File vol, set to 0 initially.
+bFileVers       .EQU    iFileVol+2      ;Spool File version, set to 0 initially.
+bJobX           .EQU    bFileVers+1     ;An eXtra byte.
+iPrJobSize      .EQU    bJobX+1         ;The PrJob size.[20]
+
+;-------------------------------------------------------------------------------
+;The universal 120 byte printing record
+;-------------------------------------------------------------------------------
+iPrVersion      .EQU    0                       ;Printing software version
+PrInfo          .EQU    iPrVersion+2            ;the PrInfo data associated with the current style.
+rPaper          .EQU    PrInfo  + iPrInfoSize   ;The paper rectangle [offset from rPage].
+PrStl           .EQU    rPaper  + 8             ;This print request's style.
+PrInfoPT        .EQU    PrStl   + iPrStlSize    ;Print Time Imaging metrics
+PrXInfo         .EQU    PrInfoPT+ iPrInfoSize   ;Print-time (expanded) Print info record.
+PrJob           .EQU    PrXInfo + iPrXInfoSize  ;The Print Job request
+iPrintSize      .EQU    120                     ;The Print record size.[120]
+
+;-------------------------------------------------------------------------------
+;Print Port: A graf port, its procs, plus some extra.
+;-------------------------------------------------------------------------------
+GPort           .EQU    0               ;The Printer's graf port.
+GProcs          .EQU    108             ;..and its procs
+lGParam1        .EQU    GProcs+13*4     ;Some params: Our relocatable stuff etc.
+lGParam2        .EQU    lGParam1+4
+lGParam3        .EQU    lGParam2+4
+lGParam4        .EQU    lGParam3+4
+
+fOurPtr         .EQU    lGParam4+4      ;Whether the PrPort allocation was done by us.
+fOurBits        .EQU    fOurPtr+1       ;Whether the BitMap allocation was done by us.
+iPrPortSize     .EQU    fOurBits+1      ;The PrPort size.[178]
+
+;-------------------------------------------------------------------------------
+;Print Status: Runtime status for PrPicFile & PrPic procs.
+;-------------------------------------------------------------------------------
+iTotPages       .EQU    0               ;Total pages in Print File.
+iCurPage        .EQU    iTotPages+2     ;Current page number
+iTotCopies      .EQU    iCurPage+2      ;Total copies requested
+iCurCopy        .EQU    iTotCopies+2    ;Current copy number
+iTotBands       .EQU    iCurCopy+2      ;Total bands per page.
+iCurBand        .EQU    iTotBands+2     ;Current band number
+fPgDirty        .EQU    iCurBand+2      ;True if current page has been written to.
+fImaging        .EQU    fPgDirty+1      ;Set while in band's DrawPic call.
+hPrint          .EQU    fImaging+1      ;Handle to the active Printer record
+pPrPort         .EQU    hPrint+4        ;Ptr to the active PrPort
+hPic            .EQU    pPrPort+4       ;Handle to the active Picture
+iPrStatSize     .EQU    hPic+4          ;The PrStatus size.[26]
+
+;-------------------------------------------------------------------------------
+; These are the constants for using resources to swap in the non-driver
+; print code.  Three numbers are needed:
+;       ResType
+;       ResID
+;       Offset into the seg's jump table
+;
+; The offset is really a formatted Long that contains three fields:
+;       Frame Size; Unlock flag; Offset into the seg's jump table
+; We could use the topmost byte for further stuff: a stack adjust for
+; storing the registers needed by the link code so that it would be re-entrant.
+;-------------------------------------------------------------------------------
+
+lPDefType        .EQU   $50444546       ;Pr Resource TYPE: "PDEF"
+
+iPrDraftID       .EQU   0               ;Pr Draft Resource ID
+iPrSpoolID       .EQU   1               ;Pr Spool Resource ID
+iPrUser1ID       .EQU   2               ;Pr Spare1 Resource ID
+iPrUser2ID       .EQU   3               ;Pr Spare2 Resource ID
+lOpenDoc         .EQU   $000C0000           ;PrOpenDoc JumpTable offset
+lCloseDoc        .EQU   $00048004           ;PrCloseDoc JumpTable offset
+lOpenPage        .EQU   $00080008           ;PrOpenPage JumpTable offset
+lClosePage       .EQU   $0004000C           ;PrClosePage JumpTable offset
+
+iPrDlgsID        .EQU   4               ;Pr Dialogs Resource ID
+lDefault         .EQU   $00048000           ;PrintDefault JumpTable offset
+lStlDialog       .EQU   $00048004           ;PrStlDialog JumpTable offset
+lJobDialog       .EQU   $00048008           ;PrJobDialog JumpTable offset
+lStlInit         .EQU   $0004000C           ;PrStlInit JumpTable offset
+lJobInit         .EQU   $00040010           ;PrJobInit JumpTable offset
+lDlgMain         .EQU   $00088014           ;PrDlgMain JumpTable offset
+lPrValidate      .EQU   $00048018           ;PrintValidate JumpTable offset
+lPrJobMerge      .EQU   $0008801C           ;PrintValidate JumpTable offset
+
+iPrPicID         .EQU   5               ;Pic Printing Resource ID
+lPrPicFile       .EQU   $00148000           ;PrPicFile JumpTable offset
+;lPrPic           .EQU   $00148004           ;PrPic JumpTable offset
+
+iCfgDlgID        .EQU   6               ;Configuration proc Resource ID
+lCfgDialog       .EQU   $00008000           ;PrCfgDialog JumpTable offset
+
+iPrHackID        .EQU   7               ;The "Oops, I Forgot" Resource ID
+lPrHack          .EQU   $000C8000           ;PrHack JumpTable offset
+
+;-------------------------------------------------------------------------------
+
+

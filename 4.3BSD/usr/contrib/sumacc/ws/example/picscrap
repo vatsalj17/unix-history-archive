@@ -1,0 +1,61 @@
+3. "6F^50^)0
+,	d,:dxtRc.Te"jFc.Text>xtTz>YYRR@T  T*\Mv{$U-}
+{$X-}
+program scrap;
+
+{Scott Knaster, Macintosh Tech Support, 6/4/84
+ Displays the PICT scrap.  Clever part is extracting original frameRect from
+ the picture.
+ Some things to do:  add desk accessory support & edit menu; use WindowPic field }
+
+   uses
+      {$U Obj/Memtypes    } Memtypes,
+      {$U Obj/QuickDraw   } QuickDraw,
+      {$U Obj/OSIntf      } OSIntf,
+      {$U Obj/ToolIntf    } ToolIntf,
+      {$U Obj/PackIntf    } PackIntf;
+
+   var
+     theWindow : WindowPtr;
+     theScrap : Handle;
+     thePict : PicHandle;
+     rectPtr : ^Rect;
+     offset, result : longint;
+     theFrame : Rect;
+
+begin
+   InitGraf (@thePort);          {standard initialization stuff}
+   InitFonts;
+   InitWindows;
+   TEInit;
+   InitDialogs (nil);
+
+   theWindow := GetNewWindow (256, nil, pointer (-1));
+   SetPort (theWindow);
+
+   theScrap := NewHandle (0);
+   result := GetScrap (theScrap, 'PICT', offset);
+   InitCursor;
+   if result < 0    {error code returned}
+      then begin
+         MoveTo (5, 50);
+         DrawString ('Nothing of type PICT in scrap');
+           end
+      else begin    {got something}
+         thePict := PicHandle (theScrap);
+              {extract the original frame}
+         theFrame := thePict^^.picFrame;
+              {Move the frame down and to the right a little}
+         OffsetRect (theFrame, -theFrame.left + 15, -theFrame.top + 20);
+
+         HLock (Handle (thePict));
+          {"Always lock a picHandle before doing DrawPicture." - C. Clark, 1984}
+         DrawPicture (thePict, theFrame);
+         HUnlock (Handle (thePict));
+           end;
+   MoveTo (130, 230);
+   TextFace ([bold]);
+   DrawString ('Press mouse button to exit');
+
+   repeat until button;
+end.

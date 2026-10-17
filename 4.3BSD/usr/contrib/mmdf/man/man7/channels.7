@@ -1,0 +1,351 @@
+.TH CHANNELS 7
+.ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.SH NAME
+MMDF Transmission Channels
+.SH SYNOPSIS
+From
+.I deliver:
+
+.nf
+execl (path, name,
+		msgfd, addressfd, responsefd,
+		msg_txname, msg_sender,
+		(domsg) ? "y" : "n", 0)
+	char *path,
+		*name,
+	 	*msg_txname,
+		*msg_sender;
+	int  msgfd,
+		addressfd,
+		responsefd;
+.fi
+.SH DESCRIPTION
+.PP
+Channel programs view themselves as relatively independent.
+Their goal in life is to perform the task of "channel fitting,"
+sending mail from one channel (module) to another, possibly also
+sending mail in the reverse direction.  Most channel programs
+just send mail from
+.I deliver
+to an outbound channel.  Interaction
+with
+.I deliver
+is co-routined, so that it looks, to the channel program, like
+any other mail port.
+.I phone
+and
+.I slave
+are the only two programs that currently send in both directions.
+
+Each program's pattern for doing the fitting entails
+accessing the same types of modules, using similar types of
+interactions.
+
+A channel module has an I/O package, which is called by higher-level
+read\-mail and write\-mail packages.  They are called by the the
+"fitting" module.  Hence, a process which transfers mail in both
+directions between two channels "xx" and "yy" will have the basic
+modules relationships:
+.ta .8i 1.6i 2.8i 4.0i 4.8i
+.nf
+.sp
+.RS
+	xx_rdmail	xx2yy_send	yy_wtmail
+.sp
+xx_io						yy_io
+.sp
+	xx_wtmail	yy2xx_send	yy_rdmail
+.fi
+.RE
+.PP
+As mentioned above, channel programs commonly send only from
+the local machine's
+.I deliver
+program, through module (qu_), out to
+a destination channel.
+
+.ne 7
+Such channel programs will have the basic structure:
+
+.RS
+.nf
+qu_io	qu_rdmail	qu2yy_send	yy_wtmail	yy_io 
+.fi
+.RE
+.SS "CHANNEL INVOCATION"
+.PP
+When a channel program is invoked by
+.I deliver,
+the argument list is as shown in the Synopsis.  The msgfd
+is a read-only file descriptor on the message text.  The
+addressfd is a read-only pipe for getting destination
+addresses from
+.I deliver.
+The responsefd is for sending dispositions back to
+.I deliver.
+The last two arguments are the "name" of the message (almost
+never useful) and the return address, if given, of the message
+sender.  This last is often used by channels during submission
+of the message to the next site.
+
+The argument list is hidden from channel programs, by mapping
+it into the qu_* calls.
+.SS "INTERACTION MODES"
+.PP
+The I/O, read-mail and write-mail modules for channels have
+standard, but not identical, calls.  In particular, a given module might
+not have certain calls.  Also, some calls have mutually exclusive
+return options.  In addition, the permissible sequencing of calls
+may be different.
+
+For example, the write-mail call that sends an address can
+send either of two positive responses:  Address ok, or Message
+ok.  The former means that only the address was sent and that the
+message text must be sent separately, when the address list is
+completed.  The latter means that a copy of the entire message
+was sent.  A channel that can return one of the two values MAY
+NOT EVER return the other.  It is the responsibility of the
+xx2yy_send module to check for correct return values.
+
+The reason for the differences is that different channels may
+have VERY different protocol characteristics.  For example, the 
+local channel expects completed delivery of the entire message
+for each addressee.
+Alternatively, the telephone and SMTP packages expect the address list for
+a message to be sent before the (one) copy of the message text.
+
+For the currently implemented channels, the Local
+delivery channel expects text-writing calls after each address
+call.  Most other channels expect
+addresses to be specified before text is sent.  The independent
+local submission and pickup modules are list oriented, although
+submission can accept text-per-address, somewhat awkwardly.
+The
+.I deliver
+module (qu_) will handle either mode.
+.SS "CHANNEL PROCESSING PHASES"
+.PP
+A channel module might go through several phases:
+
+.nf
+.IP 1. 4
+Channel initialization
+.IP 2. 4
+Mode initialization (sending or receiving)
+.IP 3. 4
+Message initialization
+.IP 4. 4
+Address transmission
+.IP 5. 4
+Text transmission
+.IP 6. 4
+Optional iteration to step 3
+.IP 7. 4
+Mode termination
+.IP 8. 4
+Optional iteration to step 2
+.IP 9. 4
+Channel termination.
+.fi
+.PP
+In many cases, particularly initializations, the module's
+calls for a phase are no-ops.  However, they are included for
+completeness and to permit easy modification.
+
+To callers, message initialization only requires passing a
+mode string (usually containing an "m" to indicate that the mail
+is for a mailbox, rather than a terminal) and a return address
+string.
+
+Address passing entails iteratively passing a host/local address
+combination and retrieving a
+.I mmdf.h
+reply value for the address.  The
+host portion may not be passed to the destination channel, as in
+the case of the local channel
+since there is no question for which host the address is intended.
+(This does not preclude the local address portion from containing
+additional host references, if the one receiving the address is a
+relay.)
+
+Text transfer is essentially a stream file transfer, effected
+by repeated calls to pass successive chunks of the message.
+.SS "INSTRUCTION SETS"
+.PP
+The following are the calls from which a channel draws its
+instructions.  No single module uses the entire set.
+.PP
+.ne 13
+Session handling (in xx_io):
+
+.ta .2i 1.0i 2.4i 4.0i 
+.RS
+.nf
+*	xx_init	Get ready to handle mail
+*	xx_end	End this session
+*	xx_synch	Re-join sub-machines
+
+*	xx_sbinit	Caller will be submitting mail
+*	xx_sbend	Done submitting mail
+
+*	xx_pkinit	Caller wishes to receive mail
+ 	xx_pkkill	Caller wishes to stop receiving
+.fi
+.RE
+.PP
+.ne 12
+Receiving mail (in xx_rmail):
+.RS
+.nf
+*	xx_rinit	Caller wishes to receive a message
+ 	xx_rkill	Terminate current message
+
+ 	xx_rainit	Caller ready to receive addresses
+*	xx_radr	Get an address
+
+*	xx_rtinit	Caller ready to receive text
+*	xx_rtxt	Get some message text
+ 	xx_rtcpy	Give me a handle to text copy
+.fi
+.RE
+.PP
+.ne 13
+Sending mail (in xx_wtmail):
+
+.RS
+.nf
+*	xx_winit	Caller ready to send a message
+ 	xx_wkill	Terminate current message
+
+*	xx_wainit	Get ready for addresses
+*	xx_wadr	Here is an address
+*	xx_waend	Done sending set of addresses
+
+*	xx_wtinit	Get ready for message text
+*	xx_wtxt	Here is some message text
+*	xx_wtend	End of message text
+.fi
+.RE
+.PP
+.ne 11
+Basic I/O (in	xx_io):
+
+.RS
+.nf
+*	xx_wrply	Here is a reply
+*	xx_rrply	Get a reply
+
+*	xx_wrec	Here is a record/packet
+*	xx_wstm	Here is part of a stream of text
+
+*	xx_rrec	Get a record
+*	xx_rsinit	Prepare to read stream
+*	xx_rstm	Get part of a stream of text
+.fi
+.RE
+.PP
+Notes:
+.RS
+.PP
+The asterisks indicate which calls currently are used
+by at least one channel.
+
+.RE
+.PP
+.ne 21
+A common calling sequence will comprise:
+
+.RS
+.ta  1.2i 3.6i
+.nf
+xx_init	/* init for sending	*/
+xx_winit	/* init first message	*/
+xx_wadr	/* send first address	 */
+xx_rrply	/* address acceptable?	*/
+xx_wadr	/* second address...	*/
+xx_rrply
+  ...
+xx_waend	/* no more addresses	*/
+xx_wtinit	/* message text next	*/
+xx_wtxt	/* send a chunk of it	*/
+xx_wtxt	/* another...	*/
+  ...
+xx_wtend	/* no more message	*/
+xx_rrply	/* text accepted ok?*/
+xx_winit	/* next message...	*/
+  ...
+xx_sbend	/* no more sending	*/
+xx_end	/* done with channel	*/
+.fi
+.RE
+.PP
+Note that the only direct user calls to the xx_io part
+of the module are for initialization.  No record or stream calls
+are made directly.
+.ne 16
+.SS "EXISTING MODULES"
+.PP
+The following shows what channel programs and modules exist
+and what their names are.
+
+.nf
+.RS
+.ne 15
+.ta 1.2i 2.4i 3.6i 4.8i 6.0i 
+CHANNEL PROGRAMS
+
+Name	Program	Description
+-------	--------	------------------
+SMTP	smtp	Internet RFC821 SMTP outbound
+SMTP	smtpsrvr	Internet RFC821 SMTP inbound
+Local	local	Local machine send
+Phone	phone	PhoneNet dial-out (send & pickup)
+P.O. Box	pobox	Release held mail (currently to PhoneNet slave)
+UUCP	uucp	UUCP outbound (calls uux)
+UUCP	rmail	UUCP inbound
+List	list	Re-submit mailing list mail with header rewriting
+Ean (in)	ean2mmdf	EAN X.400 mail system to MMDF
+Ean (out)	ean	MMDF to EAN X.400 mail system
+Delay	delay	Delay channel (to resubmit due to NS failure)
+Prog	sendprog	Generalized program interface (outbound)
+Prog	recvprog	Generalized program interface (inbound)
+
+.ne 14
+MAIL MODULES
+
+Channel	Basic	Receiving	Sending
+-------	----------	---------	-----------
+Deliver	qu_io	qu_rdmail
+MMDF	mm_io	mm_rdmail	mm_wtmail
+Local	lo_io	lo_rdmail	 lo_wtmail
+SMTP	sm_io		sm_wtmail
+Phone	ph_io	ph_rdmail	ph_wtmail
+	ph_iouser
+	ph_ioslave
+P.O.Box	po_io		po_wtmail
+.fi
+.RE
+.PP
+Notes:
+.RS
+.PP
+.I phone
+dials out to the site containing
+.I ph_slave
+and
+invokes it.  Ph_io is combined with ph_iouser or
+ph_ioslave to make a full I/O set.  
+
+mm_wtmail calls
+.I submit.
+mm_rdmail calls 
+.I deliver
+(by default) in pickup mode.  The default pickup
+program may be changed by altering the variable
+pathpkup[] in
+.I conf.c.
+The mm module is the user software interface to MMDF, for mail
+submission and POBox delivery (pickup).
+
+Lo_wtmail effects actual mailbox-stuffing.  It does not
+have an associated lo_io because it was not needed.

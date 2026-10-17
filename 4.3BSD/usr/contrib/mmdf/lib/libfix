@@ -1,0 +1,9 @@
+set -x
+set -e
+
+mkdir LIBFIX.$$
+cp $1 LIBFIX.$$/oldlib.a
+(cd LIBFIX.$$; ar x oldlib.a; rm -f oldlib.a; \
+  ar cr newlib.a `lorder *.o | tsort`)
+cp LIBFIX.$$/newlib.a $1
+rm -rf LIBFIX.$$

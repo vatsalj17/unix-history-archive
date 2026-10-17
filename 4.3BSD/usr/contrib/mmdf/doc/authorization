@@ -1,0 +1,917 @@
+.\" ***************************************************
+.\"  indra.me   - Steve Kille - Jan 84
+.\"
+.\"  /vax2/staff/steve/doc/indra/in.me
+.\"
+.\"     based on
+.\"
+.\"  tmac.pl.in  -  internal/departmental-specific macros
+.\"
+.\" ***************************************************
+.\"
+.\"
+.\"
+.\"       INTERNAL NOTE HEADER
+.\"
+.\"       called as .IN "Internal Note number" "date" "other id"
+.\"
+.de IN
+.ec
+.ls 1P          \" will be reset at top of next page to \n(LS
+.sp 4
+.in +5
+.tl ~Internal Note \\$1~~Internal~
+.ie \\w~\\$3~ .tl ~\\$3~~Working \&~
+.el .tl ~~~Working \&~
+.ie \\w~\\$3~ \\{  .tl ~~~Paper   \&~
+.                   tl ~\\$2~~~     \\}
+.el .tl ~\\$2~~Paper   \&~
+..
+.\"
+.\" ***************************************************
+.\"
+.\"       TECHNICAL REPORT HEADER
+.\"       called as .TR "Technical Report number" "date" "other id"
+.\"
+.de TR
+.ec
+.ls 1P          \" will be reset at top of next page to \n(LS
+.sp 4
+.tl ~TECHNICAL REPORT \\$1~~UCL-CS TR \\$1    \&~
+.ie \\w~\\$3~ .tl ~\\$3~~~
+.el .tl ~~~~
+.ie \\w~\\$3~ \\{  .tl ~~~~
+.                   tl ~\\$2~~~     \\}
+.el .tl ~\\$2~~~
+..
+.\"
+.\" ***************************************************
+.\"
+.\"       TITLE & AUTHOR(S)
+.\"
+.\"       called as .TA "title" "subtitle" "author(s)" "co-author(s)"
+.\"
+.de TA
+.sp |3i
+.rb
+.tl ~~\\$1~~
+.if \\w~\\$2~ \\{\
+.       sp
+.       tl ~~\\$2~~   \\}
+.sp 3
+.tl ~~\\$3~~
+.sp
+.if \\w~\\$4~ .tl ~~\\$4~~
+.r
+..
+.\"
+.\" ***************************************************
+.\"
+.\"       ABSTRACT START
+.\"
+.de AB
+.sp |5..5i
+.ds AS ABSTRACT:
+.ll -(\\w~\\*(AS~u-1m)
+.in +(\\w~\\*(AS~u+4m)
+.ti -(\\w~\\*(AS~u+1m)
+\\*(AS \\c
+..
+.\"
+.\" ***************************************************
+.\"
+.\"       ABSTRACT END
+.\"
+.de AE
+.wh -6 UC
+.in
+.ls
+.ll
+.bp 1
+..
+.\"
+.\" ***************************************************
+.\"
+.\"       UCL LOGO
+.\"
+.de UC
+.tl ~~Department of Computer Science~~
+.sp
+.tl ~~University College London \&~~
+.wh -6
+..
+.IN 1726 "April 1985"
+.TA "AUTHORISATION  AND  ACCOUNTING"  \
+IN \
+"STORE  AND  FORWARD  MESSAGE  HANDLING  SYSTEMS" \
+"D.H. Brink and S.E. Kille"
+.he  '[Authorisation]''[Indra Note 1726]'
+.fo  '[Kille/Brink]''[Page %]'
+.AB
+Paper to be presented in June at Networks 85, Wembley.
+.AE
+.rb
+.ce 6
+AUTHORISATION  AND  ACCOUNTING
+IN
+STORE  AND  FORWARD  MESSAGE  HANDLING  SYSTEMS
+
+
+D.H. Brink and S.E. Kille
+Department of Computer Science
+University College London
+.r
+.sp 2
+Most existing store and forward message handling systems have either ignored
+accounting and authorisation problems, or have
+treated them in a simple manner.  The widespread adoption of the
+CCITT X.400 protocols is likely to introduce relayed services provided
+by multiple vendors.
+These services will, by their nature,
+require sophisticated authorisation and accounting.
+This paper develops a model for applying such controls,
+and describes experience with an experimental service
+implemented on the basis of this model.
+Finally, the general utility of this model is considered.
+.sp 2
+.in +4c
+Denis Brink is a research assistant at University College London,
+Department of Computer Science.  He has a BA in Philosophy and
+MSc in Computer Science from University College London.  He
+is currently working on the interconnection service project,
+and has worked in industry on microcomputer operating systems.
+.sp 3
+Steve Kille received a BA in Physics from  Oxford  in  1978,  and
+MScs  in  Electrical  Engineering  from UMIST (1980) and Stanford
+(1981).  He has been a Research Assistant in the department of Computer
+Science,  at University College London since 1981, where he has
+worked on various aspects of Message Handling Systems.
+His current research work is on Directory Services.
+.in -4c
+.bp
+.sh 1 Introduction
+.lp
+Most existing store and forward message handling systems have either ignored
+accounting and authorisation problems, or have
+treated them in a simple manner.  The widespread adoption of the
+CCITT X.400 protocols is likely to lead to the introduction of
+relayed services provided
+by multiple vendors (or management domains in X.400 terms) \*([.CCITT84a\*(.].
+These services will, by their nature,
+require sophisticated authorisation and accounting.
+The first
+part of this paper develops a model of the controls which
+might be applied to such services.
+.pp
+The second part of the paper considers an
+implementation of such controls.
+University College London provides a number of message relaying
+services between the UK and the USA for registered groups of
+users.  A system has been developed to prevent unauthorised
+usage, and to provide accounting and statistics for authorised usage.
+The structure of the database
+system used to generate control and accounting
+information, and the internal message system organisation used
+to apply these controls are described.
+Experience with the use of this system and pragmatic
+difficulties of its application are discussed.
+Finally, the application of such services in a wider context
+are considered.
+.sh 1 "A Model of Authorisation"
+.lp
+The message services under consideration are assumed to be
+provided by systems which can be described in terms of the
+CCITT X.400 model of store and forward Message Handling
+Systems (MHS).
+.sp 7c
+.ce
+Figure 1: X.400 functional model of MHS
+.sp
+The X.400 model assumes two layers.  The lower layer is the Message
+Transfer Layer, and is provided by
+.rb "Message Transfer Agents"
+(MTA),
+which transfer messages in a store and forward manner.
+That is to say, a message may be transferred over a sequence of
+MTAs, and be queued at each one.
+The upper layer is the Inter Personal Messaging layer,
+which is provided by
+.rb "User Agents"
+(UA).
+A UA should be considered as the software with which a user
+interacts to compose or to read electronic messages.
+Communication between UAs is end to end, but there will be no
+OSI connection between a pair of UAs.
+Rather, the store and forward service of the MTA layer is
+used to provide an asynchronous end to end connection.
+A UA is specified by a (globally unique) Originator/Recipient
+Name, or
+.rb "O/R name" .
+There are O/R names at both the UA and MTA level.
+The MTA level O/R names (P1 level in X.400) are
+analogous to the names on an envelope in paper based mail.
+The UA level O/R names (P2 level in X.400) are analogous to the
+names in a contained letter.  They are
+often, but not necessarily, the same.  The
+transfer of a message consists of a number of distinct stages:
+.np
+A user composes a message and addresses it to a (UA level)
+recipient.
+.np
+The message is transferred to an MTA, together with the MTA level recipient
+O/R name.
+The MTA will ensure that a valid MTA level originator O/R name is specified.
+.np
+The message is routed through a sequence of MTAs on the basis of
+the MTA level recipient O/R name.
+.np
+The message is delivered to the recipient's UA.
+.np
+The recipient reads the message, which is usually interpreted in terms
+of UA level O/R names.
+.pp
+A final concept, which is of relevance here, is that of
+.rb "Management Domain" .
+A Management Domain is an organisation providing MTA, and
+(optionally) UA services.  This is illustrated in figure 1.
+A Management Domain does not necessarily supply the
+underlying OSI connection services.
+.pp
+The model proposed here operates on the assumption that MTAs
+can in general be trusted, whereas UAs cannot.
+Thus all control is at the MTA level.
+This has the added advantage that if the
+MTA layer is used for traffic other than inter-personal
+messages, then the control mechanisms still work correctly.
+Controls are now considered, as applied by an individual MTA.
+An MTA is assumed to be trusted in two ways:
+.np
+When accepting a message from a UA, the MTA level originator
+O/R  name is specified correctly by the MTA.
+.np
+When a message is transferred between Management Domains, this
+is indicated accurately (i.e. a specification of the Management
+Domain being left) in the MTA level  trace information\**.
+.(f
+\n($f. In X.400, trace information is on the basis of transfer between
+Management Domains.  In other systems, MTA level trace is on
+the basis of transfer between MTAs, and so what is considered as Management
+Domain accounting here, may be MTA accounting in other systems.
+.)f
+.lp
+This allows an MTA to determine responsibility for a given
+transfer, and implicitly an authority to bill, on the basis of
+two classes of item:
+.np
+One or more management domains.
+Trace information will allow the MTA to determine the sequence
+of Management Domains which have been traversed.
+A recipient O/R name can determine at least the next Management
+Domain, by use of a directory service.
+.np
+Originator and recipient O/R names.
+.lp
+It is assumed that the MTA has information allowing certain
+forms of access on the basis of these parameters.
+The set of parameters determining the authority for the MTA to
+process the message is used to determine a
+.rb "billing authority" \**.
+.(f
+\n($f. The term billing authority is used, but this does not
+necessarily imply any form of bill.
+In practice, the question: "who would pay for this if there was
+a charge" is useful to determine responsibility.
+.)f
+Examples:
+.ip -
+All traffic from Management Domain X to Management Domain Y is
+transferred, and billed to Management Domain X.
+.ip -
+All traffic from user "Zoe Foobar" may be transferred to
+Management Domain "Betta Message Services Inc",
+and billed to the organisation "Widget Manufacturing,
+Plc".
+.pp
+As well as determining whether or not a message is authorised
+to be
+processed by the MTA, the billing authority for a given
+message allows Quality of Service Parameters and appropriate
+costs to be determined.
+Some Quality of Service Parameters of interest are:
+.np
+Route choice, where message can be sent by more that one route.
+This may be an MTA level route, or choice of OSI connection to
+the next MTA.
+.np
+When to send message.  For example, a message transfer may be
+timed to
+take advantage of the tariff structure of the OSI services.
+.np
+Selection of OSI connection Quality of Service (e.g. use of
+encryption).
+.pp
+The basis for identification of billing authority is now
+considered in more detail.
+A common policy will be an agreement between the local Management
+Domain and an adjacent Management Domain.
+This agreement might be to relay all traffic to a set of other Management
+Domains, and to deliver to UAs in (and/or serviced by) the
+local Management Domain.
+This might or might not be restricted to traffic originating in
+the adjacent Management Domain (which can be distinguished from
+relayed traffic by the
+trace information).
+There might also be an agreement with a Management Domain
+connected to through an intermediate Management Domain.
+It is likely that this intermediate Management Domain will be
+explicit, as:
+.ip -
+The intermediate Management Domain is likely to be party to the
+agreement, at least implicitly.
+.ip -
+Use of a different intermediate Management Domains might cause undesired bills
+.ip -
+It makes message forgery harder.
+.lp
+O/R names may be authorised to send and/or receive over a set
+of Management Domains.
+Again, for the same reasons, O/R names are likely to be
+authorised in the context of an explicit route of Management
+Domains.
+This type of authorisation should be regarded as the
+authorisation of individual users to use the services of the
+MTA in question.
+.lp
+The approach described here has the following weaknesses.
+.np
+It relies on MTA security not being breached.
+This seems reasonable, as an MTA will not in general be trusted
+unless real guarantees are given (e.g. by the payment of
+bills).
+.np
+It relies on the integrity of the OSI connection used to verify
+the identity of a remote MTA.
+In principle, this can be made as secure as desired.
+.lp
+In practice, some low level of forgery is acceptable, provided
+accounting and policing techniques allow for higher levels of
+abuse to be detected and traced.
+Some real experiences with this model are now considered.
+.sh 1 "UCL Experience"
+.lp
+The networking environment of the department of Computer
+Science at University College London,
+and its control and accounting requirements are now
+described.  This is followed by overviews of the
+mail system, the database system, and their interaction for
+accounting and control.  Problems encountered and weaknesses
+of the system are identified.
+.br
+.ne 7c
+.sp 6c
+.ce
+
+Figure 2: UCL Connectivity
+.pp
+The department offers an Interconnection Service\*([.Kirstein85a\*(.]
+to allow UK (and some continental European) university and research
+institution workers to communicate with their US
+counterparts.  The requirement for such a service arises from the
+diverse protocol systems used by the interconnected networks \*([.Cole84a\*(.].
+.pp
+The department has connections to the UK X.25 networks PSS and
+JANET, and the DARPA Internet.  PSS (Packet Switched Service) is
+British Telecom's national
+public X.25 network, with gateways to the international X.25
+service.
+JANET (Joint Academic NETwork) is the private X.25 network
+of the Science and Engineering Research Council and the Computer
+Board, linking universities and scientific research
+establishments. The higher level protocols used by the academic
+community on these X.25
+networks in the UK are the "coloured book protocols" serving as an
+"intercept" standard pending the introduction of suitable ISO standards \*([.Rosner82a\*(.].
+Mail services on Janet are provided by use of the JNT Mail Protocol
+(also known as Greybook) \*([.Kille84a\*(.].
+This specifies both an MTA level protocol and a UA level
+protocol.
+.pp
+The DARPA (U.S. Defense Advanced Research Projects Agency)
+Internet is a concatenation of networks linked by
+gateways.
+The department's local area network can be treated as
+one such network.
+These networks
+use a common set of internet protocols based on
+datagrams \*([.Leiner85a\*(.].
+The MTA level protocol is SMTP (Simple Mail Transfer Protocol) \*([.Postel82a\*(.],
+and the UA level protocol is a format specification known as RFC 822 \*([.Crocker82a\*(.].
+The JNT Mail Protocol UA level is derived from RFC 822, and is
+identical in all the major aspects.
+Interworking is thus straightforward.
+The DARPA protocols are also used to access CSNET (the US
+Computer Science Network).
+UCL is also connected to a UNIX\**
+.(f
+\n($f. UNIX is a trademark of AT&T Bell Laboratories.
+.)f
+dialup telephone network,
+Usenet,
+which again uses RFC 822 derived protocols \*([.Nowitz78a\*(.].
+.pp
+The department's local area network consists of three Cambridge rings
+interconnected by bridges, and also an Ethernet.
+Associated with each wide area network
+are one or more network access machines.
+Application processes access the network access machines by use
+of a special Host to Front-end protocol, which allows for
+working over multiple networks in a clean manner.
+Current service applications are Terminal Access, File Transfer
+and Mail.
+.\"Remote users have terminal access
+.\"to a host dedicated to providing interconnection services.  Mail
+.\"systems run on all the hosts.
+.\".pp
+.\"Connectivity mail nets -- numbers direct/indirect
+.pp
+Use of the service is circumscribed by
+the policies of the funding bodies, and by the
+Value Added Carrier Licence from the UK Department of Trade.  These
+restrictions are complex, specifying permitted
+national/international relaying and permitted message path, in
+terms of billing authority.  Coupled with
+the extensive connectivity and high connection
+costs, the above restrictions
+necessitate effective control and accounting measures.
+Users are grouped according to sponsorship, charging
+policy and access rights.  In practice this broadly divides users
+into a centrally-funded class, with access rights
+determined by sponsor, and a directly-funded class with
+corresponding access rights.
+.pp
+The Message Transfer service is provided by MMDF (Multi
+Channel Memo Distribution Facility) \*([.Kingston84a,\|Kille85a\*(.].
+MMDF is a Message Handling System
+for the UNIX
+operating system, having support for multiple message transfer
+protocols, and a selection of UA systems.  MMDF
+provides the user with a homogeneous view of the underlying connectivity.
+The MMDF MTA is implemented by a number of processes and queues.
+The process
+.rb submit
+is invoked to accept messages submitted
+both by local UA processes and by servers handling incoming
+messages.
+All authorisation controls are applied by submit at message
+submission time.
+There are a number of
+.rb channels
+to associate protocols, networks or logical divisions.
+Associated with each channel is a queue into which submit
+places incoming messages.
+The process
+.rb deliver
+reads and manages the queues associated with one or more channels
+and invokes subordinate channel processes to
+perform message transmission.
+.pp
+Channels are used as a mechanism for logically dividing hosts
+into sets for the application of management controls.  There
+are three orthogonal mechanisms for doing this:
+.np
+Splitting a set of hosts into more than one channel.  For example, PSS and
+Janet hosts are on separate channels as the former network charges
+for services, and
+the latter is free, though technically they could be on
+the same channel as the same protocols may be used.
+.np
+Allocating a set of hosts to more than one channel for
+route or Quality of Service selection.
+For example, there are two paths between UCL and the rest of the DARPA
+Internet, for use by different users, and with
+different polling frequencies.
+.np
+Separating inbound and outbound channels, when the policies are
+asymmetric (e.g. where a user can receive messages from a given
+channel, but not send messages over it).
+.pp
+It is noted that a message can be considered both to arrive and
+to depart
+over a channel.
+A message arrives over a fixed
+.rb "inbound channel" ,
+but may leave over one of a set of
+.rb "outbound channels" ,
+as the requested destination may well be accessible over more
+than one channel.
+Submit considers each possible outbound channel in turn, and queues the
+message for the first (if any) channel satisfying
+authorisation criteria.  Access policies for each channel are
+implemented in terms of two basic sets of controls.  The
+following channel access policies are identified; they may
+differ for inbound and outbound directions.
+.np
+FREE:   No controls.
+.np
+LOG:    Note unauthorised access.
+.ne 4
+.np
+WARN:   As for LOG, but send warning to sender of message.  This is
+particularly useful for transition from a free to a controlled
+situation.
+.np
+BLOCK:  Only authorised access to the channel.
+.pp
+The first set of controls is applied on the basis of user (O/R name).
+There is a (hash encoded) database of O/R names, giving a mode and a list of
+authorised channel.
+The following O/R name modes are identified.
+.np
+SEND:   O/R name only valid as originator.
+.np
+RECV:   O/R name only valid as recipient.
+.np
+BOTH:   O/R name valid as both sender and recipient.
+.np
+LIST:   special control for distribution lists expanded as a
+value added service.
+.lp
+When a message is being authorised by submit, the originator and
+recipient O/R names are looked up, and a set of valid inbound and
+outbound channels identified for each.
+This information is used
+.np
+To determine whether there is authorisation for the inbound channel.
+.np
+To identify which (if any) of the potential outbound channels
+are acceptable.
+.lp
+The priority on the matches are: 1) the first possible outbound
+channel; 2) recipient with list authorisation; 3) sender; 4)
+recipient.
+.pp
+The second set of controls is applied on the basis of just the
+MTAs and channels involved.  These controls are
+applied by table lookup in four tables associated with each
+channel.  Two tables are for inbound and two for outbound control.
+As well as MTA and channel, there is the concept of MTA route,
+to identify a sequence of MTAs, with the message having
+originated at the first MTA in the sequence or (ostensibly) be destined
+for a user at the last MTA in the sequence.
+An important special case is that of messages originating on,
+or destined for an adjacent MTA.
+The following may be controlled:
+.ip -
+Inbound channel to everywhere, or to a set of MTAs and outbound
+channels.
+.ip -
+Outbound channel from everywhere, or from a set of MTAs and inbound
+channels.
+.ip -
+Inbound MTA to everywhere, or to a set of MTAs and outbound
+channels.
+.ip -
+Outbound MTA from everywhere, or from a set of MTAs and inbound
+channels.
+.ip -
+Inbound MTA route to everywhere, or to a set of MTAs and outbound
+channels.
+.ip -
+Outbound MTA route from everywhere, or from a set of MTAs and inbound
+channels.
+.lp
+These MTA/channel controls are applied before the user controls and in
+general are considered to override them.  They may also be
+applied in addition to the user controls, to
+apply policy controls
+on top of essentially O/R name based controls.
+This mechanism might be used to prevent third  country
+relaying, in cases where both originator and recipient are
+authorised in other contexts.
+.pp
+The following checks and actions are performed by MMDF, to
+prevent forgery.
+.np
+Only privileged processes can access the message queues.
+.np
+Locally originated messages have correct UA level originator O/R name.
+.np
+Locally originated messages have correct MTA level originator O/R name.
+This is the O/R name used for authorisation.
+.np
+When a message is received, the name of the connecting MTA is
+added to the source route associated with the originator O/R
+name.
+O/R names must have an authorised route, to minimise the risk
+of forgery.
+.pp
+The Interconnection Service Management
+System (ISMS) used to provide high level access
+to and control of the above mechanisms is now discussed.
+ISMS is based on Mistress, a proprietary relational database package \*([.Rhodnius82a\*(.].
+The basic model of operation is that high level administrative
+information is contained in the ISMS.
+This information is used to derive control information for
+MMDF, in the form of plain text files to be incorporated into
+the hash encoded database used by MMDF.
+When a message transfer is authorised or rejected by MMDF, this
+is noted in a log, together with: originator O/R name;
+recipient O/R name; inbound channel; outbound channel; any MTA
+route involved; the size of the message; and
+reason for authorisation
+for both the inbound and outbound channel.
+The MTAs directly involved are implicit in the O/R names.
+Example reasons for authorisation:
+.ip -
+Inbound by originator + no authorisation required outbound.
+.ip -
+Inbound by recipient + outbound by recipient.
+.ip -
+Inbound MTA to outbound channel pair.
+.lp
+These logs are then processed at intervals by the ISMS
+(typically once per
+day),
+and stored in terms of the administrative information in the ISMS.
+This information can then be used to generate bills, and
+usage statistics.
+The following are the main relations in the database.
+.ip -
+Class of user. This gives the set of channels to which access
+is permitted.  Most users fall into one of a very small number
+of classes.
+.ip -
+Project.  A project authorised to use the Interconnection
+Service.  This contains funding information, and indicates the
+class.
+Also various management O/R names.  These can be used for
+automatic mailing of accounting, statistical, and other project
+information.
+.ip -
+Mailbox.  Indicates an O/R name in terms of project.
+.ip -
+Message.  Indicates a transfer, and may be associated with one
+or two mailboxes for authorisation.
+.ip -
+Channel.  Indicates charging policy in terms of class of user.
+.pp
+To prevent administrative overload,
+each project is given an account at UCL allowing project
+administrators to remotely update UA registrations by use
+of a simple program.  This two level scheme,
+means that the UCL administration deals
+with projects and not individual users.
+.pp
+This scheme was brought into operation in February 1985, and
+has clearly demonstrated the viability of the proposed model.
+There are currently about 150 projects and 2000 UAs
+registered.
+The system handles about 1000 messages per day.
+Perhaps the hardest aspect to deal with was the
+transition from an uncontrolled situation, where messages were
+relayed without checking (even though they should have been
+authorised in principle).
+A significant number of project applications were processed
+over this period.
+The following problems were noted:
+.ip -
+Accurate naming is essential.  MTA tables (on all MTAs
+involved) must be kept
+consistent for this scheme to work effectively.
+.ip -
+Certain MTA protocol requirements are made.  A few implementations
+which violated message protocols
+for other obscure reasons had problems registering O/R names.
+.ip -
+Strict matching of the source route for incoming messages means
+that a few sites have to register multiple routes for each
+O/R name.  This is due to both variable internal routing at these
+sites, and non-symmetrical routing for incoming and outgoing
+directions.  This is seen as an unfortunate consequence of a
+control necessary to minimise forgery.
+.ip -
+If a message is routed over an insecure OSI connection, or
+through an insecure MTA, there is clearly a risk of forgery.
+This risk must be borne by the project registering such a
+route.
+.bp
+.ip -
+Submission time checking means that messages which are not
+correctly delivered are still charged for.
+This is undesirable, but removes the (non-trivial) problem of
+correlating submission and delivery logs.
+It does not appear to be a substantial problem in practice.
+.ip -
+If a message transfer is optimised by transferring one copy of
+the message for multiple recipients, the saving is not passed
+on to the user.
+This seems reasonable, on the grounds that the user should be
+charged for services in a uniform manner.
+.sh 1 Conclusions
+.lp
+The model developed here is not a general one;
+A broader description of the theoretical issues may be found in \*([.Kille85b\*(.].
+However, we believe that our work has shown the viability of a
+scheme where messages are authorised, with no requirements
+placed on the remote systems other than accurate and
+trustworthy protocol implementation.
+Our logs have not, as yet, shown any successful attempts to
+break the security.
+In fact the problems of correctly registering authorised users,
+partly due to the stringency of the checks,
+have been far more of a problem.
+.pp
+The major advantage of the approach described is that it allows for MTA
+level accounting,  with minimal assistance from other system
+components.
+It is seen as has having two basic styles of application.
+The first is where a Management Domain (or pair of Management
+Domains) offer communication over an expensive link
+(or some service such as message format conversion).
+This approach would enable billing of users and/or Management
+Domains for the use of this service.
+The UCL implementation is of this type.
+A second area where is might be useful is as a gateway to a
+Management Domain providing services for one organisation.
+This approach would allow the organisation to control its
+employees' access to Message Handling Services, much as
+telephone systems are sometimes controlled at present.
+This type of approach is seen a particularly important as
+controls are introduced into systems without overall control in
+this area.
+.sp
+.]<
+.\"1982-1
+.ds [F Rhodnius82a
+.]-
+.ds [T Mistress: Relational Database Management System Version 2.1
+.ds [Q Rhodnius Incorporated
+.ds [R Manual
+.ds [D 1982
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"1984-2
+.ds [F CCITT84a
+.]-
+.ds [Q CCITT SG 5/VII
+.ds [T Recommendations X.400
+.ds [D November 1984
+.ds [R Message Handling Systems: System Model - Service Elements
+.ds [K x400
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Cole.R.H.-1984-3
+.ds [F Cole84a
+.]-
+.ds [A R.H. Cole
+.as [A " and others
+.ds [T Network Interconnection Facilities at UCL
+.ds [D September 1984
+.ds [J ICCC, Melbourne
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Crocker.D.H.-1982-4
+.ds [F Crocker82a
+.]-
+.ds [A D.H. Crocker
+.ds [T Standard of the Format of ARPA Internet Text Messages
+.ds [D August 1982
+.ds [R RFC 822
+.ds [K RFC822
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Kille.S.E.-1984-5
+.ds [F Kille84a
+.]-
+.ds [A S.E. Kille, (editor)
+.ds [T JNT Mail Protocol (revision 1.0)
+.ds [D March 1984
+.ds [I Joint Network Team
+.ds [C Rutherford Appleton Laboratory
+.ds [K greybook
+.ds [K jntmail
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 2 book
+.\"Kille.S.E.-1985-6
+.ds [F Kille85a
+.]-
+.ds [T Addressing in MMDF II
+.ds [A S.E. Kille
+.ds [J Proc. EUUG Conference, Paris
+.ds [D April 1985
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Kille.S.E.-1985-7
+.ds [F Kille85b
+.]-
+.ds [A S.E. Kille
+.as [A " and D.H. Brink
+.ds [T A Model of Message Flow Control
+.ds [D Sepetmber 1985
+.ds [J Submitted to IFIP WG 6.5 Congress, Washington
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Kingston.D.P.-1984-8
+.ds [F Kingston84a
+.]-
+.ds [A D.P. Kingston
+.ds [T MMDFII: A Technical Review
+.ds [J Usenix Conference
+.ds [C Salt Lake City
+.ds [D August 1984
+.ds [K MMDF
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Kirstein.P.T.-1985-9
+.ds [F Kirstein85a
+.]-
+.ds [T The University College London International Computer Communications Interconnection Service
+.ds [A P.T. Kirstein
+.ds [J Conference on Communications in Distributed Systems, Karlsruhe
+.ds [D March 1985
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Leiner.B.M.-1985-10
+.ds [F Leiner85a
+.]-
+.ds [T The DARPA Internet Protocol Suite
+.ds [A B.M. Leiner
+.as [A ", R.H. Cole
+.as [A ", J.B. Postel
+.as [A ", and D. Mills
+.ds [J Proceedings INFOCOM85
+.ds [I IEEE
+.ds [D March 1985
+.ds [l own paper
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Nowitz.D.A.-1978-11
+.ds [F Nowitz78a
+.]-
+.ds [A D.A. Nowitz
+.as [A " and M.E. Lesk
+.ds [T A Dial-up Network of UNIX systems
+.ds [D August 1978
+.ds [R UNIX Programmer's Manual, 7th edition, Bell Labs.
+.ds [K UUCP
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Postel.J.B.-1982-12
+.ds [F Postel82a
+.]-
+.ds [A J.B. Postel
+.ds [T SIMPLE MAIL TRANSFER PROTOCOL
+.ds [D August 1982
+.ds [R RFC 821
+.ds [K RFC821
+.ds [K SMTP
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 4 tech-report
+.\"Rosner.R.A.-1982-13
+.ds [F Rosner82a
+.]-
+.ds [T Towards OSI among UK Universities
+.ds [A R.A. Rosner
+.ds [J Proc. ICCC'82, London
+.ds [I North-Holland
+.ds [D September 1982
+.ds [P 607-611
+.nr [P 1
+.ds [K OSI Universities
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.]>
+.sp
+.ip Note: 7
+RFC indicates a DARPA Request For Comments, which may be
+obtained from: USC Information Sciences Institute, Marina del
+Rey, Ca. USA.
+.sh 1 Acknowledgements
+.lp
+Thanks to Tom Daniel for helpful comments on the paper.

@@ -1,0 +1,69 @@
+
+
+PROCEDURE ZoomRect(VAR smallRect,bigRect: Rect; zoomUp: BOOLEAN);
+
+{ Given two rectangles in global coords, interpolate one into the other, }
+{ making a zooming rectangle image on the screen.  The rectangles and the }
+{ screen image are not altered }
+
+CONST zoomSteps = 16;
+VAR rect1,rect2,rect3,rect4: Rect;
+    i,j: INTEGER;
+    savePort: GrafPtr;
+    fract,factor,one: Fixed;   { reals are too slow }
+
+   FUNCTION Blend(smallCoord,bigCoord: INTEGER): INTEGER;
+   VAR smallFix,bigFix,tempFix: Fixed;
+   BEGIN
+     smallFix:=one * smallCoord;     { scale up to fixed point }
+     bigFix  :=one * bigCoord;
+     tempFix :=FixMul(fract,bigFix) + FixMul(one-fract,smallFix);
+     Blend   :=FixRound(tempFix);
+   END;
+
+BEGIN
+  GetPort(savePort);
+  SetPort(deskPort);
+  PenPat(gray);
+  PenMode(notPatXor);
+
+  one:=65536;   { fixed point 'const' }
+  IF zoomUp
+  THEN
+    BEGIN
+      rect1:=smallRect;
+      factor:=FixRatio(6,5);        { make bigger each time }
+      fract:=FixRatio(541,10000);   { 5/6 ^16 = 0.540877 }
+    END
+  ELSE
+    BEGIN
+      rect1:=bigRect;
+      factor:=FixRatio(5,6);        { make smaller each time }
+      fract:=one;                   { start full size }
+    END;
+
+  rect2:=rect1;
+  rect3:=rect1;
+  FrameRect(rect1);   { draw initial image }
+
+  FOR i:=1 TO zoomSteps DO
+    BEGIN
+      rect4.left   :=Blend(smallRect.left,bigRect.left);
+      rect4.right  :=Blend(smallRect.right,bigRect.right);
+      rect4.top    :=Blend(smallRect.top,bigRect.top);
+      rect4.bottom :=Blend(smallRect.bottom,bigRect.bottom);
+
+      FrameRect(rect4);  { draw newest }
+      FrameRect(rect1);  { erase oldest }
+      rect1:=rect2;
+      rect2:=rect3;
+      rect3:=rect4;
+
+      fract:=FixMul(fract,factor);  { bump interpolation fraction }
+    END;
+  FrameRect(rect1);  { erase final image }
+  FrameRect(rect2);
+  FrameRect(rect3);
+  PenNormal;
+  SetPort(savePort);
+END;

@@ -1,0 +1,132 @@
+3. "6F^5D!$^p~!~!
+; File: PackMacs.Text
+;_______________________________________________________________________
+;
+; PackMacs.Text - macros for the packages
+;
+; created by RS   5-30-84
+;
+;
+;macro for package invocation
+;
+;   first arg is routine selector, second is the trap
+
+        .MACRO  _PackCall
+        MOVE.W    %1,-(SP)
+        %2
+        .ENDM
+
+
+;_______________________________________________________________________
+;
+; Disk Initialization
+;
+;_______________________________________________________________________
+
+
+          .MACRO _DILoad
+          _PackCall #DILoad,_Pack2
+          .ENDM
+
+          .MACRO _DIUnLoad
+          _PackCall #DIUnLoad,_Pack2
+          .ENDM
+
+          .MACRO _DIBadMount
+          _PackCall #DIBadMount,_Pack2
+          .ENDM
+
+          .MACRO _DIFormat
+          _PackCall #DIFormat,_Pack2
+          .ENDM
+
+          .MACRO _DIVerify
+          _PackCall #DIVerify,_Pack2
+          .ENDM
+
+          .MACRO _DIZero
+          _PackCall #DIZero,_Pack2
+          .ENDM
+
+;_______________________________________________________________________
+;
+; Standard File
+;
+;_______________________________________________________________________
+
+          .MACRO _SFPutFile
+          _PackCall #SFPutFile,_Pack3
+          .ENDM
+
+          .MACRO _SFPPutFile
+          _PackCall #SFPPutFile,_Pack3
+          .ENDM
+
+          .MACRO _SFGetFile
+          _PackCall #SFGetFile,_Pack3
+          .ENDM
+
+          .MACRO _SFPGetFile
+          _PackCall #SFPGetFile,_Pack3
+          .ENDM
+
+
+;_______________________________________________________________________
+;
+; Interational Utilities
+;
+;_______________________________________________________________________
+
+          .MACRO _IUGetIntl
+          _PackCall #IUGetIntl,_Pack6
+          .ENDM
+
+          .MACRO _IUSetIntl
+          _PackCall #IUSetIntl,_Pack6
+          .ENDM
+
+          .MACRO _IUDateString
+          _PackCall #IUDateString,_Pack6
+          .ENDM
+
+          .MACRO _IUDatePString
+          _PackCall #IUDatePString,_Pack6
+          .ENDM
+
+          .MACRO _IUTimeString
+          _PackCall #IUTimeString,_Pack6
+          .ENDM
+
+          .MACRO _IUTimePString
+          _PackCall #IUTimePString,_Pack6
+          .ENDM
+
+          .MACRO _IUMetric
+          _PackCall #IUMetric,_Pack6
+          .ENDM
+
+          .MACRO _IUMagString
+          _PackCall #IUMagString,_Pack6
+          .ENDM
+
+          .MACRO _IUMagIDString
+          _PackCall #IUMagIDString,_Pack6
+          .ENDM
+
+
+;_______________________________________________________________________
+;
+; Binary-Decimal Conversion
+;_______________________________________________________________________
+
+
+          .MACRO _StringToNum
+          _PackCall #StringToNum,_Pack7
+          .ENDM
+
+          .MACRO _NumToString
+          _PackCall #NumToString,_Pack7
+          .ENDM
+
+
+

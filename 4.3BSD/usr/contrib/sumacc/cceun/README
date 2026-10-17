@@ -1,0 +1,211 @@
+[Below are some notes from Van Jacobson on his experiences installing
+SUMacC under Eunice.  I have done some editing and added some comments 
+in brackets.  --Bill Croft]
+
+
+
+Eunice SUMACC
+-------------
+
+This directory contains the changes necessary to run SUMACC under VMS
+Eunice.  It was prepared by Van Jacobson, Real Time Systems Group,
+Lawrence Berkeley Laboratory, University of California.  Please let me
+know if you have problems, or find bugs in the Eunice part of SUMACC.
+If you send me mail saying you've got the Eunice Sumacc, I'll send you
+mail whenever there are bug fixes, upgrades, etc.  My mail address is:
+
+	van@lbl-csam.arpa or
+	ucbvax!lbl-csam!van
+
+Good luck!
+
+  -Van Jacobson, August, 1984
+
+
+Installation
+------------
+Do all of the installation in Eunice, not from dcl.
+
+-- Decide on a permanent home for this package.  In the description
+   that follows, I'll assume you've picked the name "/usr/macintosh".
+   All of the Sumacc package will go into directories under
+   "/usr/macintosh".  
+
+   [I know of other Eunice sites that have placed the various binary, include
+   and library files in the 'standard' Eunice places.  This may require more
+   work however].
+
+-- Create the Mac root directory & copy the distribution tar file into it.
+   Then extract the tar file.
+
+	mkdir /usr/macintosh
+	cp esumac.tar /usr/macintosh
+	cd /usr/macintosh
+	tar xf esumac.tar
+	rm esumac.tar
+
+   [You've probably already done this, or you couldn't be reading this file!
+   You may want to reextract it though, to put it in its 'final home'].
+
+-- Edit the top level makefile to define MACROOT as the name of the
+   root directory;  comment out the UNIX defines for DI DL and DP, and
+   'uncomment' the Eunice lines.
+
+-- CHDIR back to this (cceun) directory and type 'make MACROOT=/usr/macintosh'
+   This will install the C compiler under Eunice.
+
+	cd cceun
+	make MACROOT=/usr/macintosh
+
+-- [Now you should do whatever Eunice magic is necessary so that your
+   executable 'search path' includes /usr/macintosh/bin.  This is so the
+   makefiles in the other directories can access the cc68 stuff without
+   any Eunice specific prefixes].
+
+-- CHDIR to top level and type 'make'.
+
+	cd ..
+	make
+
+-- You should now have a working Sumacc.  The last thing done by the
+   "make" is the generation of a bunch of example programs so, if you
+   get through the "make" with no errors it's at least 90% operational.
+   If you get any errors during the "make", find a local Unix wizard or
+   try to reach me on the telephone (415-486-6411, I wish you luck).
+
+-- When things are working, tell anyone who wants to use Sumacc to include
+   "/usr/macintosh/bin" in their shell search path.  Unix-phobes can
+   run things from dcl in the usual Eunice way.  E.g.,
+     $ cc68 :== $dra0:[usr.macintosh]cc68. cc68
+     $ rmaker :== $dra0:[usr.macintosh]rmaker. rmaker
+     etc.
+
+-- Sumacc only uses things in the sub-directories "bin", "lib" and "include".
+   Once it's been installed, you're free to remove any of the others.  
+
+----------
+
+[And here are some notes from another Eunice site, at Stanford:]
+
+From: CALVIN TEAGUE <cal@su-star>
+Subject: New sumacc release
+
+Bill, I got the new tar file transferred and started the installation.
+I didn't really understand the "MACROOT" stuff in the makefile, so I left
+the original definitions for DL, DP, and DI and started the installation.
+I don't see any problem in doing that under our Eunice.  So far, I have
+found the following problems:
+
+1.  At least for my version of Eunice, I changed  ttyfd = fileno(stdin)  to
+	ttyfd(stdout) for both  macput.c  and  macget.c.
+
+2.  In  macget.c,  I added   #define NO_RENAME   at the top; I'm not sure
+	how to pass the  -DNO_RENAME  flag through the various levels of make.
+
+By the way, I have a few changes to the  paintimp  program which you may want
+to include.  These consist of a couple of Impress commands (EOF,
+@document(language impress), etc.) and trapping of totally blank lines and
+putting out just a CRLF character in that case.  (This resulted in almost a
+factor of 3 reduction in the size of the DVI files that I tried.)  Also, one
+of our users is working (tonight, I think) on a change for macput and macget
+which would make those programs happier with VMS-style text files.  (Right
+now, we have to convert VMS text files to Unix-style text files for the file
+length to come out right).  I'll pass these on to you as soon as they're ready.
+The  mwdvi  program from info-mac worked fine without any changes.
+(Is anyone working on a MacDraw->Impress program yet?)
+
+Cal
+------
+
+Date: 15 Nov 84 18:33:00 PST
+From: CALVIN TEAGUE <cal@su-star>
+Subject: new sumacc release installed
+To: croft <croft@safe>
+
+I decided to go back to the "standard" placements; also, it's
+compatable with the other machines here on campus.  The installation
+seemed to complete without any problems.  I recompiled my editor
+program, and the program performed as it did on the earlier compiler
+(not to say that it worked right!).  The  .b  files were the same size,
+but the  .rsrc  file was 19106 bytes vs. 20898 bytes for the previous
+rmaker.  The new one must be a little smarter.
+
+The Eunice procedure isn't quite as straightforward as it first appears.
+Here is a summary of what I had to do.  You might want to include some of
+this in the installation documentation.
+
+1.  Restore the tar file to a convenient location.  I used  /usr/local/mac.
+
+2.  Edit files for site-specific changes.
+
+	In my case, the changes were:
+
+	a.  In  cmd/macget.c,  insert   #define NO_RENAME 1   at the top
+		(for 4.1 rename).
+
+	b.  In both  cmd/macget.c  &  cmd/macput.c,  change
+		ttyfd=fileno(stdin)  to  ttyfd=fileno(stdout)
+		(for Eunice I/O).
+
+3.  Change  cceun/cc68.hdr  to reflect the "standard" file placements.
+	In my case, the file became:
+
+	----------
+	#ifndef MAXNAMLEN
+	#define MAXNAMLEN 255
+	#endif
+
+	# define LucasKludge ""
+	# define BinDirectory "/usr/stanford/bin/"
+	/* run-time start-up */
+	char	*crt0 = "/usr/sun/lib/crtsun.b";
+	char	*maccrt0 = "/usr/sun/lib/crt0.b";
+	char	*profcrt0 = "/usr/sun/lib/mcrt0.b";
+	char	*macroot = "/usr/sun/lib/crtmac.b";
+	char	*teamroot = "/usr/sun/lib/teamroot.b";
+	char	*xteamroot = "/usr/sun/xlib/teamroot.b";
+	char	*sunincludes = "-I/usr/sun/include";
+	char	*sunxincludes = "-I/usr/sun/xinclude";
+	char	*localincludes = "-I/usr/stanford/include";
+	char	*dmincludes = "-I/usr/sun/dm/include";
+	char	*asheader = "/usr/sun/lib/a68.hdr";	/* assembler h file */
+	char	*libmac = "/usr/sun/lib/libmac.a";
+	char	*libc68 = "/usr/sun/lib/libc68.a";
+	char	*libv68 = "/usr/sun/lib/libv68.a";
+	char	*libg68 = "/usr/sun/lib/libg68.a";
+	char	*defines = "-DMC68000";	/* tell cpp this is a 68000 */
+	----------
+
+4.  Change  cceun/makefile  to reflect the "standard" file placements.
+	In my case, the file became:
+
+----------
+	PRGS=cc68 as68 c268 ccom68 ld68 lorder68 nm68 pr68 rl68 size68
+	LIBS=a68.hdr libc68.a
+	CFLAGS= -noshare -O 
+
+	install: newh cc68
+		-mkdir /usr/stanford/bin
+		-mkdir /usr/sun/lib
+		-mv $(PRGS) /usr/stanford/bin
+		-mv $(LIBS) /usr/sun/lib
+
+	... etc
+----------
+
+5.  In  cceun/cc68.c,  comment out the   #define BSD42 1   line. (for 4.1
+	Eunice).
+
+6.  In  lib/Makefile,  use   mk41lint   instead of   lint   (4.1, Eunice).
+	Leave the original Unix definitions for DP, DL, DI.
+
+7.  Change   lib/mk41lint   to a VMS text file by using    unixtovms.
+	This file was originally a 512-byte fixed-length file, which
+	Eunice tries to load as an executable image, encountering a
+	bad header.
+
+8.  cd to  cceun,  and issue   make.  (MACROOT no longer used).
+
+9.  cd back to the mac root (/usr/local/mac) and issue   make.
+------
+

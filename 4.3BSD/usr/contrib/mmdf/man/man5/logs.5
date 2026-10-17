@@ -1,0 +1,122 @@
+.TH LOGS 5
+'ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.SH NAME
+MMDF Logs \- Overview
+.SH SYNOPSIS
+System status, error, and statistics logging for MMDF
+.SH DESCRIPTION
+.PP
+MMDF maintains run-time logs at several levels of activity.
+The primary distinction is among message-level, channel-level,
+and link-level information.
+A standard package is used to perform all logging; it is documented in
+llog(3).
+The location
+for logs is specified by the ll_file member of the ll_log structure definition in
+.I conf.c.
+All logging settings can be overridden by entries in the runtime tailor file
+also.
+In MMDF, that member is merged with logdfldir[] to determine the full
+pathname to the log.
+Logs
+should be protected so that any process may write into them, but
+only MMDF may read them (i.e., 0622).
+.PP
+The logging files may be the source of some confusion, since
+the
+llog
+package entails some complexity.  Its three critical
+factors are coordinated access, restricted file length, and
+restricted verbosity.
+.PP
+The length of a logging file can be limited to 25-block
+units.  This is extremely important since files can grow VERY
+long over a period of time, especially if there are many long
+messages sent or very verbose logging.
+.PP
+Restricted verbosity is a way of easily tuning the amount of
+text entered into the log.  This is probably the one parameter
+you need most to worry about.  Set to full tilt (LLOGFTR), MMDF
+get noticeably slower and i/o bound.  It also does a pretty good
+job of showing what it is doing and hence helping you figure out
+the source of errors.  When you get to trust the code, setting
+the logging level down is highly recommended.  The lowest would
+be LLOGTMP or LLOGFAT, for temporary or fatal errors.  LLOGGEN
+will log errors and general information.  LLOGFST logs errors,
+general and statistics information.
+.PP
+By the same token, there are enough calls to
+llog
+that the
+debugging ones are conditionally compiled.  When you no longer
+feel need of them, comment-out the -DDEBUG in 
+.I Makefile.com.
+.ne 10
+.SS "SPECIFIC LOGS"
+.PP
+Even with the listed divisions, the logs contain a variety of
+information.  Only the message-level log's format will be explained
+in significant detail.
+.IP msg.log 15
+records enqueue and dequeue transitions, by
+.I submit
+and
+.I deliver.
+Entries by a background
+.I deliver
+process are noted with a "BG-xxxx" tag, where the x's contain the
+4 least-significant decimal digits of the daemon's process id.  This
+is to allow distinguishing different daemons.  When
+.I deliver
+is invoked, by
+.I submit,
+for an immediate attempt, the tag begins with "DL" rather than "BG".
+Entries by
+.I submit
+begin with "SB".
+
+Every major entry will indicate the name of the message involved.
+Entries from
+.I submit
+will show "lin" if the submission is from a user on the local machine.
+In this case, the end of the entry will show the login name of the
+sender.  If the entry is labelled "rin", then the mail is being relayed.
+The channel name, source host, and sender address are shown.  Within
+parentheses, the number of addressees and the byte-length of the message
+are listed.
+
+Entries from
+.I deliver
+show final disposition of a message/addressee.  These are indicated
+by "end".  The
+.I mmdf.h
+final status value is shown in parentheses.  Then, there is the
+destination channel and mailbox name.  In brackets, the queue latency
+for the address is shown in hours, seconds, and minutes.
+.IP chan.log 15
+records activity by the channel programs, in
+chndfldir[].
+The channel programs use the 
+.I phs_note()
+facility (see phs(3)) to make phase entries in chan.log.
+Entries have a tag indicating the type of channel making the entry.
+Different channels record different sorts of information.  For example, the 
+.I local
+channel shows when a
+.I rcvmail
+private reception program is invoked.  
+.IP ph.log 15
+is used by the telephone link-level (packet) code.
+.IP ph.trn 15
+is the one file that is
+.I not
+size-limited.  It records a transcript of every character sent and
+received on a telephone channel.  It is reset to zero length at the
+beginning of every phone session.  It is kept verbose, in order to
+facilitate checking the status of any telephone channel which is
+active.  Hence, just watching for the ph.trn file to get larger
+can indicate that there is progress.  Each telephone channel
+may have its own transcript file specified in the channel definition
+in
+.I chan.c
+or the runtime tailor file.

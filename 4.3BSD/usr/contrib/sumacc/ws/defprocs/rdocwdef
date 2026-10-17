@@ -1,0 +1,536 @@
+W^5H rd^&"!"!M;
+;File RDocProc.TEXT
+;-------------------------------------------------------
+;
+;  Rounded Corner Window Definition Routine "RDocProc"
+;
+;  written by Andy Hertzfeld  Aug 4, 1982
+;
+;  (c) 1982 by Apple Computer, Inc.  All rights reserved.
+;
+;    This file contains the window definition procedure
+;  "RDocProc", a standard Mac window type similar to the
+;  "DocumentProc" included in the ROM.  It is indentical if
+;  the refCon is zero, otherwise the roundness of the corners
+;  is specified using the high 2 bytes of the window
+;  refCon.  It is intended to be linked with applications or
+;  desk ornaments.
+;
+;  Modification History:
+;
+;   16-OCt-82  AJH  Converted to QuickDraw Trap Interface
+;   15-Nov-82  AJH  Added GoAway button, made content rectangular
+;   02-Jan-83  AJH  Made it a "WDEF" resource
+;   07-Mar-83  AJH  Made it dispose the title region (bug fix)
+;   17-Mar-83  AJH  Fixed D4 trash bug
+;   27-Apr-83  AJH  only plot, hit-test goAway if window is active
+;   20-Aug-83  AJH  made it get roundness from selector instead of refCon
+;   18-Oct-83  AJH  made it ignore unwanted messages; new hiliting
+;
+;------------------------------------------------------------------
+;
+                .INCLUDE  TlAsm/SysEqu.Text
+                .INCLUDE  TlAsm/TOOLEQU.TEXT
+                .INCLUDE  TlAsm/GRAFTYPES.TEXT
+                .INCLUDE  TlAsm/QuickMacs.TEXT
+
+                .FUNC   RDocPRoc,4
+;
+;  FUNCTION   RDocProc(    selector: INTEGER
+;                          window: WindowPtr,
+;                          message: INTEGER;
+;                          parameter: LongInt): LongInt
+;
+                BRA.S   @0
+
+; standard header
+
+                .WORD   0                       ;flags word
+                .ASCII  'WDEF'                  ;type
+                .WORD   1                       ;ID
+                .WORD   1                       ;version
+
+@0
+                LINK    A6,#0                   ;set up a stack frame to address parameters
+                MOVEM.L D3-D5/A3-A4,-(SP)       ;save work registers
+;
+; fetch the parameters into registers
+;
+                LEA     8(A6),A0                ;get ptr to first parameter
+                MOVE.L  (A0)+,D3                ;get param in D3
+                MOVE.W  (A0)+,D0                ;get message
+                MOVE.L  (A0)+,A3                ;get the window pointer
+                MOVE.W  (A0)+,D5                ;get the selector
+                LSR     #1,D5                   ;only use 8 alternatives
+                ASL     #2,D5                   ;quadruple for long index
+                CLR.L   (A0)                    ;clear out function result
+;
+; case out on the message number
+;
+                CMP     #3,D0                   ;is it one we deal with?
+                BGE.S   @1                      ;if not, skip
+
+                ASL     #2,D0                   ;quadruple for long index
+                JSR     GODOCPROC(D0)           ;dispatch to appropriate routine
+;
+; we're done -- restore registers and return to caller
+;
+
+@1              MOVEM.L (SP)+,D3-D5/A3-A4       ;restore work registers
+                UNLK    A6                      ;unlink stack frame
+                MOVE.L  (SP)+,A0
+                ADD     #12,SP                  ;strip parameters
+                JMP     (A0)                    ;return to caller
+;
+; DocumentProc dispatch table -- entries must be long branches!
+;
+GODOCPROC
+                BRA     DRAWDOC                 ;draw is message 0
+                BRA     HITDOC                  ;hit test is message 1
+                BRA     CALCDOC                 ;calc test is message 2
+
+DoneDoc         RTS                             ;nor does it need dispose call
+;
+;  DrawDoc -- draw the document window.   The windowPtr is in A3
+;
+DrawDoc
+                TST.B   WVISIBLE(A3)             ;is it visible?
+                BEQ.S   DoneDoc                  ;if not, don't do anything
+;
+; see if its a EORGoAway call and special case it
+;
+                CMP     #wInGoAway,D3            ;is it a goAway call?
+                BEQ     EorGoAway                ;if so, go handle it
+;
+;
+; derive the titleBar rectangle from the structRgn and keep it in TempRect
+;
+                LEA     TEMPRECT,A0             ;get pointer to tempRect
+                MOVE.L  STRUCTRGN(A3),A1        ;get structure region handle
+                MOVE.L  (A1),A1                 ;get strucRgn pointer
+                ADDQ    #RGNBBOX,A1             ;point A1 at the bounding box
+                MOVE.L  (A1)+,(A0)+             ;copy bounding box into tempRect
+                MOVE.L  (A1),(A0)
+;
+;  make bottom := top + 20
+;
+                MOVE    -4(A0),D0               ;get top
+                ADD     #20,D0                  ;compute top+20
+                MOVE    D0,(A0)                 ;update bottom
+;
+;
+; handle the case of non-rectangular titleBar -- we must allocate a region
+;
+                CLR.L   -(SP)                   ;make space for function result
+                _NewRgn                         ;allocate a region
+
+                MOVE.L  (SP),A4                 ;keep it in A4 -- and don't pop it off
+                PEA     TEMPRECT                ;tempRect defines the bounding rect
+                BSR     GetRadPoint             ;get the radius point in D0
+                MOVE.L  D0,-(SP)                ;push the radius factor
+                ST      -(SP)                   ;topRound is true
+                CLR     -(SP)                   ;botRound is false
+                BSR     MakeRoundRgn            ;make the region
+;
+                MOVE.L  A4,-(SP)                ;push the region
+                _FrameRgn                       ;frame it
+                MOVE.L  A4,-(SP)                ;push it again
+                MOVE.L  OneOne,-(SP)            ;inset by 1
+                _InsetRgn                       ;inset it
+                MOVE.L  A4,-(SP)                ;push for erase
+                _EraseRgn                       ;erase it
+;
+; hilite the title bar by filling it with specified pattern
+;
+DrawTheTitle
+                BSR     DoTitleString           ;draw the centered Title
+;
+; plot the goAway button, if necessary
+;
+                TST.B   WGoAway(A3)             ;is the a goaway button?
+                BEQ.S   DoHilite                ;if not, skip
+;
+                TST.B   WHilited(A3)            ;only plot goAway if hilited
+                BEQ.S   DoHilite                ;if not, don't plot goAway
+
+                BSR.S   BuildTBarRect
+                LEA     GoAwaySymbol,A1         ;get the goAway symbol
+
+@1              MOVEQ   #0,D1                   ;plot in srcCopy mode
+                BSR     PlotGoAway
+DoHilite
+                TST.B   WHILITED(A3)            ;is it hilited?
+                BEQ.S   DisposIt                ;if not, skip
+
+                SUBQ    #1,TempRect+Bottom      ;adjust bottom
+                PEA     TEMPRECT                ;push the title rect
+                _InverRect
+DisposIt
+                MOVE.L  A4,-(SP)                ;push the region handle
+                _DisposRgn                      ;deallocate it
+;
+; frame the body of the window
+;
+DrawFrame
+                MOVE.L  STRUCTRGN(A3),-(SP)     ;push the structure
+                _FrameRgn                       ;frame the body
+                RTS
+
+;
+; BuildTBarRect builds a rectangle enclosing the titleBar in TempRect
+;
+BuildTBarRect
+                LEA     TEMPRECT,A0             ;get pointer to tempRect
+                MOVE.L  STRUCTRGN(A3),A1        ;get structure region handle
+                MOVE.L  (A1),A1                 ;get strucRgn pointer
+                ADDQ    #RGNBBOX,A1             ;point A1 at the bounding box
+                MOVE.L  (A1)+,(A0)              ;copy bounding box into tempRect
+                MOVE.L  (A1),4(A0)
+;
+;  make bottom := top + 20
+;
+                MOVE    Top(A0),D0              ;get top
+                ADD     #20,D0                  ;compute top+20
+                MOVE    D0,Bottom(A0)           ;update bottom
+                SUBQ    #1,Right(A0)            ;inset right
+                RTS                             ;return to caller
+;
+; EORGoAway hilites/unhilites the goAway button.  It falls through into PlotGoAway
+;
+EorGoAway
+                BSR.S   BuildTBarRect           ;build the bounding rect
+                LEA     GoAwaySymbol,A1         ;get the bitMap
+                ADD.W   #32,A1                  ;bump to the EOR Mask
+                MOVEQ   #2,D1                   ;set EOR as the plot mode
+;
+; PlotGoAway plots the goAway button.  A1 holds the symbol, D1 the plotting mode
+;
+PlotGoAway
+                LEA     TempRect,A0             ;get pointer to tempRect
+                MOVE    Left(A0),D0             ;get left edge
+                ADDQ    #8,D0                   ;leave some margin
+                MOVE    D0,Left(A0)             ;update left
+                ADD     #16,D0
+                MOVE    D0,Right(A0)            ;update right
+;
+                MOVE    D1,D0                   ;set plotting mode
+                ADDQ    #2,TempRect+Top         ;adjust for 16 by 16
+                SUBQ    #2,TempRect+Bottom      ;fix bottom, too
+                MOVE.L  #$00100010,D1
+                BSR     PlotSymbol              ;plot it in tempRect
+                BSR.S   BuildTBarRect           ;rebuild tempRect
+                RTS
+
+;
+;  PlotSymbol -- plot the little 16 by 16 symbol bitmap pointed to by A1 into the rectangle
+;  pointed held in TempRect. D0 holds the mode.
+;
+PlotSymbol
+                LEA     IconBitMap,A0           ;get pointer to source bitmap
+                MOVE.L  A1,(A0)                 ;update base address of bitMap
+                MOVE    #2,4(A0)                ;update rowBytes
+                MOVE.L  #$00100010,10(A0)       ;adjust boundsRect
+;
+; push parameters for CopyBits call to transfer arrow bitMap
+;
+                MOVE.L  A0,-(SP)                ;push pointer source bitmap
+                MOVE.L  LGLOBALS(A5),A1         ;get lisaGraf global baseaddress
+                MOVE.L  THEPORT(A1),A1          ;get thePort
+                PEA     PORTBITS(A1)            ;that's the destination bitmap
+;
+                PEA     BOUNDS(A0)              ;boundsRect of bitmap is source
+                PEA     TempRect                ;tempRect is the destination
+                MOVE.W  D0,-(SP)                ;theMode is in D0
+                CLR.L   -(SP)                   ;no mask region
+;
+; transfer the bitMap (stretching as necessary...)
+;
+                _CopyBits                       ;let Bill stretch those bits
+                RTS                             ;return to caller
+;
+; DoTitleString is the common code that draws the title centered in tempRect
+;
+DoTitleString
+                BSR     BuildTBarRect           ;calculate title bar rect
+;
+; compute indent factor based on GoAwayButton state
+;
+@1              MOVE.W  TempRect+Right,D3       ;get right
+                SUB.W   TempRect+Left,D3        ;compute width
+
+                SUB.W   WTITLEWIDTH(A3),D3      ;compute extra x
+                ASR.W   #1,D3                   ;divide by 2
+;
+; if there's a goAway button, make sure the margin is at least 28 pixels
+;
+                TST.B   WGoAway(A3)             ;is there a go away button
+                BEQ.S   @2                      ;skip if there's not
+
+                TST     D3                      ;is it negative?
+                BMI.S   @3                      ;if so, pin at 28
+                CMP.W   #28,D3                  ;if goAway button, must have some margin
+                BGT.S   @2
+@3              MOVEQ   #28,D3
+
+@2              ADD     TempRect+Left,D3        ;compute x position
+                MOVE.W  D3,-(SP)                ;and push for MoveTo
+
+                MOVE    TempRect+Bottom,-(SP)   ;push bottom
+                SUBQ    #6,(SP)                 ;leave room for descenders
+                _MoveTo
+
+; draw the string
+
+                MOVE.L  WTITLEHANDLE(A3),A0     ;get titleHandle
+                MOVE.L  (A0),-(SP)              ;push title pointer
+                _DrawString                     ;draw it
+DoneDString
+                RTS                             ;all done drawing title...
+
+;
+;  GetRadPoint returns the radius in D0 of the round rect parameter defined
+; by the selector parameter
+;
+GetRadPoint
+                MOVE.L  RadiusTable(D5),D0
+                RTS
+
+RadiusTable
+                .LONG   $00100010               ;(16,16)
+                .LONG   $00040004               ;(4,4)
+                .LONG   $00060006               ;(6,6)
+                .LONG   $00080008               ;(8,8)
+                .LONG   $000A000A               ;(10,10)
+                .LONG   $000C000C               ;(12,12)
+                .LONG   $00140014               ;(20,20)
+                .LONG   $00180018               ;(24,24)
+;
+;  MakeRoundRegion -- makes a round region given a bounding rectandle and a radius
+;  value.  Also, half round regions (top round, bottom square) are supported
+;  by the topRound,botRound booleans
+;
+;     MakeRoundRegion( theRgn:RegionHandle
+;                     theRect:           Rect
+;                     xRad,yRad:         INTEGER
+;                     topRound,botRound: BOOLEAN)
+;
+MakeRoundRgn
+                LINK    A6,#0                   ;set up stack frame
+                MOVE.L  A3,-(SP)                ;save work registers
+                TST.L   8(A6)                   ;are flags both false?
+                BEQ.S   PlainRect               ;if so, its just a rectangle
+                TST.L   12(A6)                  ;is radius factor 0?
+                BNE.S   ComplexRect             ;if not, its a round one
+;
+; optimize for the rectangular case
+;
+PlainRect
+                MOVE.L  20(A6),-(SP)            ;push region handle
+                MOVE.L  16(A6),-(SP)            ;push  rectangle pointer
+                _RectRgn                        ;make a rectangular region
+                BRA.S   MMRDone                 ;all done!
+;
+; make a region with top and bottom corners rounded
+;
+ComplexRect
+                _HidePen                        ;hide the pen
+                _OpenRgn                        ;start recording the region
+;
+                MOVE.L  16(A6),-(SP)            ;push the rectangle pointer
+                MOVE.L  12(A6),-(SP)            ;push the radius point
+                _FrameRoundRect                 ;define the region
+                MOVE.L  20(A6),-(SP)            ;push region handle
+                _CloseRgn                       ;assign roundRect region
+;
+                _ShowPen                        ;enable drawing again
+;
+; now square up either the top or bottom of the region (or neither)
+;
+                MOVE.L  16(A6),A0               ;get rectangle pointer
+                TST.W   8(A6)                   ;examine 'botRound' flag
+                BNE.S   CheckTRound             ;if true, see if top needs squaring
+                MOVE    BOTTOM(A0),D1           ;get bottom y coordinate
+                MOVE    D1,D0
+                SUBQ    #8,D0                   ;compute top
+                BRA.S   SquareIt
+;
+CheckTRound
+                TST.W   10(A6)                  ;examine 'topRound' flag
+                BNE.S   MMRDone                 ;if that true, we're done
+                MOVE    Top(A0),D0              ;get top y coordinate
+                MOVE    D0,D1
+                ADDQ    #8,D1                   ;get bottom
+;
+; here we build a rect in ToolScratch that has the same X as tempRect, but centered
+; around the top or bottom
+;
+SquareIt
+                LEA     ToolScratch,A1            ;get pointer to dest Rect
+                MOVE    D0,(A1)+                  ;update top
+                MOVE    Left(A0),(A1)+            ;copy left
+                MOVE    D1,(A1)+                  ;update bottom
+                MOVE    Right(A0),(A1)            ;copy right
+;
+; now make a region out of that rectangle
+;
+                CLR.L   -(SP)                   ;make space for result
+                _NewRgn                         ;allocate a new region
+                MOVE.L  (SP),A3                 ;keep a copy in A3
+                PEA     ToolScratch             ;push the rectangle pointer
+                _RectRgn                        ;make the rectangular region
+;
+; now union with the parameter region to square up the edges
+;
+                MOVE.L  20(A6),-(SP)            ;push destination region
+                MOVE.L  A3,-(SP)                ;push square region
+                MOVE.L  20(A6),-(SP)            ;dest gets the result
+                _UnionRgn
+;
+; all done -- deallocate the temporary region
+;
+                MOVE.L  A3,-(SP)
+                _DisposRgn
+;
+MMRDone
+                MOVE.L  (SP)+,A3                ;restore work reg
+                UNLK    A6                      ;unlink stack frame
+                MOVE.L  (SP)+,A0                ;get return address
+                ADD     #16,SP                  ;strip parameters
+                JMP     (A0)                    ;all done!
+
+; HitDoc -- perform a hit test on the document.  On entry, D3 contains the mousePoint
+; in global coordinates while A3 holds the window pointer
+;
+HitDoc
+                MOVEQ   #16,D4                  ;keep 16 in a register to save code
+                CLR.W   -(SP)                   ;make room for function result
+                MOVE.L  D3,-(SP)                ;push the mouse point
+                MOVE.L  CONTRGN(A3),-(SP)       ;push content region handle
+                _PtInRgn                        ;is the point in the content region?
+                TST.B   (SP)+                   ;well, is it?
+                BEQ.S   NotInContent            ;if not, go check out drag region
+
+; the point is in the content region so return a '1'
+
+justContent
+                MOVEQ   #wInContent,D0          ;return in content
+                BRA.S   DoneHitDoc              ;go store function result and return
+
+; its not in the content -- see if its in the dragRgn (content extended by titleBar)
+
+NotInContent
+
+                CLR.W   -(SP)
+                MOVE.L  D3,-(SP)
+                MOVE.L  StructRgn(A3),-(SP)
+                _PtInRgn
+                TST.B   (SP)+
+                BEQ.S   DoneHit1
+
+                CLR.W   -(SP)                   ;make room for function result
+                MOVE.L  D3,-(SP)                ;push the mouse point
+                MOVE.L  ContRgn(A3),A4          ;get content region handle
+                MOVE.L  (A4),A4                 ;get region ptr
+                ADDQ    #RgnBBox,A4             ;get bounding box ptr
+                SUB     #20,Top(A4)             ;make it 20 higher
+                MOVE.L  A4,-(SP)                ;push the rect
+                _PtInRect                       ;is the point in the title bar?
+                ADD     #20,Top(A4)             ;fix up content bounds
+
+                TST.B   (SP)+                   ;examine result
+                BEQ.S   DoneHit1                ;if not, return 0 (do nothing)
+
+; see if its in leftmost 16 of drag, which is the goAway button
+
+                TST.B   WGoAway(A3)             ;is there a goAway button?
+                BEQ.S   ItsInDrag               ;if not, skip
+                TST.B   WHilited(A3)            ;only draw it for the active one
+                BEQ.S   ItsInDrag
+
+                MOVE    D3,D0                   ;get mousePt
+                ADD     PortBounds+Left(A3),D0  ;convert to local
+                SUB     PortRect+Left(A3),D0    ;compensate for origin
+                CMP     #18,D0                  ;is it too far right?
+                BGT.S   ItsInDrag               ;if so, its in drag
+                SUBQ    #8,D0                   ;it must be at least 8
+                BMI.S   ItsInDrag
+
+; its in the goAway button so signal it
+
+                MOVEQ   #wInGoAway,D0
+                BRA.S   DoneHitDoc
+
+ItsInDrag
+                MOVEQ   #wInDrag,D0             ;flag in drag region
+DoneHitDoc
+                MOVE.L  D0,20(A6)               ;update function result
+DoneHit1        RTS
+
+
+; CalcDoc  -- calculate the structure and content regions for the window pointed
+; to by A3.
+
+CalcDoc
+                LEA     TEMPRECT,A0             ;get a pointer to the work rectangle
+                MOVE.L  A0,-(SP)                ;push for later offset
+                MOVE.L  PORTRECT(A3),(A0)+      ;copy topLeft of portRect
+                MOVE.L  PORTRECT+4(A3),(A0)     ;copy botLeft of portRect
+
+; offset it to global coordinates
+
+                MOVE.L  PORTBOUNDS(A3),-(SP)    ;push topLeft of port.portBits.bounds
+                NEG     2(SP)                   ;negate offset
+                NEG     (SP)
+                _OffsetRect                     ;offset tempRect to global coordinates
+
+; make the content region square for fast updating
+
+                MOVE.L  CONTRGN(A3),A0          ;A0 holds the content region
+                CLR     D1                      ;topround is false
+                BSR.S   GOMAKERGN               ;go make the region into content region
+
+
+; now do the structure region.  First correct the bounding rectangle (tempRect) for
+; structure instead of content
+
+                PEA     TEMPRECT                ;push a pointer to the rect
+                MOVE.L  MinusOne,-(SP)          ;make 1 pixel bigger, all around
+                _InsetRect                      ;make it bigger
+                SUB     #19,TempRect+Top        ;make top 19 pixels higher
+                MOVEQ   #1,D1                   ;topRound is true
+                MOVE.L  STRUCTRGN(A3),A0        ;A0 holds the structRgn pointer
+
+GoMakeRgn
+                MOVE.L  A0,-(SP)                ;push the region handle
+                PEA     TEMPRECT                ;push bounding rectangle pointer
+                BSR     GETRADPOINT             ;get the radius factor
+                MOVE.L  D0,-(SP)                ;push it
+                MOVE.W  D1,-(SP)                ;topRound is in D1
+                ST      -(SP)                   ;so is botRound
+                BSR     MakeRoundRegion         ;go make the region
+
+; all done with CalcDocRgns
+
+                RTS
+
+;
+; BitMap for default GoAway button
+
+GoAwaySymbol
+                .WORD   $0000,$0000,$7FF0,$4010
+                .WORD   $4010,$4010,$4010,$4010
+                .WORD   $4010,$4010,$4010,$4010
+                .WORD   $7FF0,$0000,$0000,$0000
+
+;  Mask for goAway button
+
+                .WORD   $0000,$0000,$7FF0,$4110
+                .WORD   $4930,$4550,$4010,$5C60
+                .WORD   $4010,$4550,$4930,$4110
+                .WORD   $7FF0,$0000,$0000,$0000
+;
+
+                .END
+;
+
+

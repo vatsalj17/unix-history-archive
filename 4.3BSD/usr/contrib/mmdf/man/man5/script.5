@@ -1,0 +1,543 @@
+.TH SCRIPT 5
+.SH NAME
+script \- PhoneNet connection script
+.SH SYNOPSIS
+script
+.SH DESCRIPTION
+The PhoneNet link-level protocol
+package establishes connections to a remote system
+under control of a file called a ``script file'' or ``dialing script''.  This 
+file gives procedures for dialing,
+negotiating any login procedure on the remote system
+and starting a related PhoneNet protocol module on the remote
+system.  The file also contains settings for various connection parameters.
+.PP
+Script files consist of a series of lines,
+each of which contains a command word and zero or more arguments.  
+The list of commands below shows which
+arguments are required for each command:
+.TP
+\fB#\fR \fIcomment...\fR
+Any blank line or line beginning with ``#'' is treated as a comment and is
+ignored. 
+.PP
+.nf
+.B { 
+   \fBalternate\fR
+       # commands
+   .
+   .
+   .
+   \fBalternate\fR
+       # commands
+.fi
+.TP
+\fB}\fR
+A sequence of commands enclosed by curly-braces is called a ``select block''.
+The curly-braces must appear by themselves on separate lines.  A
+``select block'' is composed of one or more ``alternate blocks''.  An
+``alternate block''
+consists of a line containing the command name, \fBalternate\fR,
+and then some lines containing script commands.  An ``alternate block'' is
+delimited
+by the start of another ``alternate block'' at the same level
+(``select blocks'' can be nested) or by the end of the current ``select block''.
+.sp
+The order of command execution within a ``select block'' follows some special
+rules.  Control begins with the first command in the first ``alternate block''.
+If that ``alternate block'' terminates successfully, then control jumps to the
+command following the ``select block''.  If any
+.B recv
+command in the ``alternate block'' times out, then control passes to the next
+``alternate block'' in sequence.  Successive ``alternate blocks'' are executed
+until one completes successfully (i.e. no timeouts).
+If no more ``alternate blocks'' are available, processing terminates with a
+FATAL error.  For example, the following script excerpt uses a ``select block''
+to send a ``break'' if no ``login'' prompt appears within 30 seconds:
+.sp
+.nf
+	xmit "\\r\\r"
+	{
+	alternate
+		recv "login" 30
+	alternate
+		xmit "\\#"
+		recv "login" 30
+	}
+	xmit "accountname\\r"
+.fi 
+.TP
+.B abort
+This command causes processing of the script file to cease.  A FATAL
+error is returned.
+.TP
+.B alternate
+This command marks the start of an ``alternate block'' (see the \fB{ ... }\fR
+command above).
+.TP
+\fBdial\fR \fIphone-number-spec\fR [, \fIphone-number-spec\fR... ]
+This command causes the number(s) given by the \fIphone-number-spec\fR's
+to be dialed or a connection via a direct line to be made.
+More than one
+.I phone-number-spec
+may be given, separated by commas.
+Each \fIphone-number-spec\fR has the general form:
+.sp
+.ti +.5i
+.IR speed |< type > phone-number
+.sp
+The 
+.I speed
+parameter is the baud rate
+at which the connection should be made
+(from the set: 50, 75, 110, 134.5, 150, 200, 300, 600, 1200, 1800, 2400, 4800,
+9600).
+The baud rate is separated from the rest of the 
+.I phone-number-spec
+by a vertical bar, `|'.
+.sp
+The optional
+.RI < type >
+specifies the line-type to use.  If 
+.RI < type >
+is omitted, it defaults to ``LOCAL''.  Note that the angle-brackets are
+part of the syntax and must surround the
+.I type
+to separate it from the rest of the 
+.I phone-number-spec.
+.sp
+A 
+.I phone-number
+is composed of a series of digits,
+in addition to the characters `(', `)', `-', and `:'.
+Parentheses and dashes are ignored,
+and may be used freely to enhance readability.
+The colon indicates that the dialer should await a secondary
+dial tone before proceeding with the dialing.
+This is used with phone systems that use preliminary
+digits to access outgoing lines, tie lines, etc.
+.sp
+If the
+.I phone-number-spec
+begins with a letter,
+it is taken to be the name of a direct connect line.
+The names and speeds of these lines are predefined.  See the "Installing and
+Operating MMDFII" document for information about defining these lines.
+.sp
+Up to five \fIphone-number-spec\fR's can be given on a single
+.B dial
+command.  If
+a connection cannot be made using the first number,
+succeeding \fIphone-number-spec\fR's will be tried
+in the order given before a failure is indicated.
+For example, the following command:
+
+.ti +.5i
+dial 1200|738-2928, 300|738-8003
+
+would initiate a call to the first number (738-2928) at 1200 baud.  If
+the connection failed, it would try the second number (738-8003) at
+300 baud.
+.sp
+The
+.B dial
+command also clears the input buffer to prevent rewinding by the
+.B replay
+command.  See the explanation of the 
+.B replay
+command below.
+.TP
+.B end
+This command causes the terminal line to close
+and interpretation of the script file to cease.
+.TP
+.B go
+This command is a synonym for the
+.B start
+command (see description below).
+.TP
+\fBlog\fR \fImessage\fR
+This command causes
+.I message
+to be written into the ph.log file.
+.I Message
+should be a quoted string if it contains spaces.
+.TP
+.B mark
+As data is read from the remote system, it is collected into a buffer.  This
+buffer can be rewound and examined by the 
+.B replay
+command (see below).  Executing the
+.B mark
+command clears this input buffer.
+The
+.B dial
+command also clears the input buffer.
+.TP 
+\fBnrexmit\fR \fIretries\fR
+This command sets the maximum number of times to retransmit
+a given packet to the remote system in the event of failure to receive an
+acknowledgement within the timeout period (set with the \fBwaitack\fR command).
+.I Retries
+must be greater than zero; five is the default.
+.TP
+\fBprompt\fR \fIpromptvalue\fR
+This command sets the character expected as the prompt to wait for before
+transmitting data to the dial-out or direct-connect line.  
+.I Promptvalue
+is a decimal number giving the ASCII value of the prompt.  If the prompt
+hasn't appeared within 10 seconds of a transmission attempt, the connection
+will be dropped.  This command is used when running on
+half-duplex lines where the prompt indicates that writing is enabled.
+.TP
+.B replay
+This command causes the input buffer to be rewound to the time of the
+most recent
+.B dial
+or
+.B mark
+command.  The next 
+.B recv
+command will then look at data which may have already been examined by 
+previous 
+.B recv
+commands.  The ability to replay the input stream is useful for adapting
+intelligently to a selection of messages from the remote system.  For example,
+the following script segment will connect to either line "A" or line "B"
+in a simple terminal switch:
+.sp
+.nf
+	recv "Request"
+	mark
+	{
+	alternate
+		xmit "A\\r"
+		recv "A\-Connected" 30
+	alternate
+		replay
+		recv "A\-Busy" 1
+		log "A was busy\-trying B"
+		xmit "B\\r"
+		recv "B\-Connected" 30
+	alternate
+		log "Both A and B were busy"
+		abort
+	}
+.fi
+.sp
+Note that a small
+.I timeout
+value was given on the
+.B recv
+command which followed the
+.B replay
+command.  A small value is adequate since the ``A\-busy''
+string, if received, will already be present in the input buffer.
+.TP
+\fBrecv\fR \fIquoted-string\fR \fItimeout\fR
+This command causes the interpretation of the script file
+commands to pause until \fIquoted-string\fR is received from
+the remote system.
+The
+.I timeout
+specifies the maximum number of seconds to
+wait for
+.I quoted-string
+before aborting with an error.
+This argument must be present and must be greater than zero seconds.
+\fIQuoted-string\fR is a string of characters
+surrounded by double-quotes and possibly containing any of these
+escape sequences:
+.sp
+.in +.5i
+.nf
+\\b	\-	 backspace (ASCII 8)
+\\f	\-	 form feed (ASCII 12)
+\\n	\-	 newline or line feed (ASCII 10)
+\\r	\-	 carriage return (ASCII 13)
+\\t	\-	 tab (ASCII 9)
+\\ddd	\-	 ASCII value ddd (in octal)	 
+.fi
+.in -.5i
+.sp
+If the \fBrecv\fR command appears in a ``select block'', instead of causing
+the script to abort, a timeout causes control to be passed to the next
+``alternate block'' (see the \fB{ ... }\fR command above).
+.TP
+\fBrecvill\fR \fIillegal-character-codes\fR
+This command is used to specify the characters which cannot be
+received by the local system.
+\fIIllegal-character-codes\fR is a quoted string of the octal
+values of characters preceded by a backslash.
+For example,
+the following command would declare all the codes between 0 and 017
+to be illegal:
+.sp
+.nf
+	recvill "\\0\\1\\2\\3\\4\\5\\6\\7\\10\\11\\12\\13\\14\\15\\16\\17"
+.fi
+.sp
+Any number of
+.B recvill
+commands can be given in a script file;
+the resulting illegal-character set will be the union
+of the codes given in each command.
+All
+.B recvill
+commands must come before the
+.B start
+command in the script file,
+so that the illegal character set has been completely specified
+before the protocol is started.  The default illegal-character
+set is zeroed by the first
+.B recvill
+command to appear in the script.  The default set is: the control characters
+(\\0 through \\37) and delete (\\177).
+.TP
+\fBrecvsize\fR \fIsize\fR
+this command specifies the maximum length packet that can be received
+by the local system,
+not including the carriage return.
+The number \fIsize\fR is decimal, with a value:
+
+.ti +.5i
+40 <= \fIsize\fR <= 255
+.TP
+\fBstart\fR
+This is placed in the script file at the
+point in the login sequence where
+the PhoneNet protocol module on the remote
+system has been started.  The
+.B start
+command starts the corresponding PhoneNet 
+protocol module on the local system.
+When the protocol has completed,
+interpretation of the script file resumes with the line
+following the
+.B start
+command.  This allows a clean logout procedure to be executed, if necessary.
+.TP 
+\fBstty-pr\fR \fIproto-set\fR \fIproto-clear\fR
+This command sets the terminal mode of the dial-out line when the dial
+package is in protocol mode (as opposed to script mode).  Protocol mode is
+initiated by the
+.B start
+command and is the mode in which PhoneNet messages are exchanged.
+.I Proto-set
+is an octal number which determines which options should be set when protocol
+mode is entered.
+.I Proto-clear
+is an octal number which determines which options should be cleared when
+protocol mode is entered.  The octal numbers are defined in <sgtty.h> and
+are documented in tty(4).  The default value for 
+.I proto-set
+is 0000300 (EVENP|ODDP).  The default value for
+.I proto-clear
+is 0177474 (ALLDELAY|CRMOD|ECHO|RAW|LCASE).
+.TP 
+\fBstty-sc\fR \fIscript-set\fR \fIscript-clear\fR
+This command sets the terminal mode of the dial-out line when the dial
+package is in script mode (as opposed to protocol mode).  Script mode is
+the mode during which the script file commands such as 
+.B recv
+and 
+.B xmit
+are used.  Script mode is the initial mode and it is also re-entered when
+control returns from a 
+.B start  
+command.
+.I Script-set
+is an octal number which determines which options should be set when script
+mode is entered.
+.I Script-clear
+is an octal number which determines which options should be cleared when
+script mode is entered.  The octal numbers are defined in <sgtty.h> and
+are documented in tty(4).  The default value for 
+.I script-set
+is 0000340 (EVENP|ODDP|RAW).  The default value for
+.I script-clear
+is 0177434 (ALLDELAY|CRMOD|ECHO|LCASE).
+.TP
+\fBuse\fR \fIscriptfile\fR [\fIarguments\fR]
+This command passes control to the named 
+.I scriptfile.
+If the 
+.I scriptfile
+doesn't abort, then control is returned to the line following the
+.B use
+command in the original script file.  There is no limit to the depth of nesting
+available with the
+.B use
+command.  However, a failure at any level is passed back to the top and all
+script processing ceases.  The optional arguments are made available in the
+named script as $1 $2 $3....  Arguments containing spaces should be quoted
+with double-quotes.  To get a dollar sign within a script, use $$.
+.TP
+\fBwaitack\fR \fItimeout\fR
+This command sets the length of time to wait for data packet acknowledgements
+from the
+remote system.  If no acknowledgment has been received within 
+.I timeout
+seconds, the packet will be retransmitted.  The 
+.B nrexmit
+command sets the maximum number of times to retransmit the packet before
+dropping the connection.  
+.I Timeout
+must be greater than zero; the default value is 10 seconds.
+.TP
+\fBwaitdata\fR \fItimeout\fR
+This command sets the length of time to wait for data packets
+from the
+remote system.  If no data has been received within 
+.I timeout
+seconds, the connection is dropped.  
+.I Timeout
+must be greater than zero; the default value is 180 seconds.  Occasionally, a
+heavily loaded system will take longer than 180 seconds to respond (perhaps
+while sorting the message queue).
+If the remote system cannot be made to respond faster by, 
+say, subdividing its queue to reduce the sort time, then the
+.I timeout
+value will need to be increased.
+.TP 
+\fBwindow\fR \fIwindowsize\fR \fIsendwindow\fR
+This command sets the link-level 
+.I windowsize
+to use when sending data to
+the remote system.  Allowable \fIwindowsize\fR's are `1' (the default) and `2'.
+A
+.I windowsize
+of `1' causes the link-level to pause for acknowledgment from the remote
+system after sending one data packet.  A 
+.I windowsize
+of `2' causes the
+link-level to pause for acknowledgment only after sending two data packets.
+Normally, the remote system will have acknowledged the first data packet while
+the second was being transmitted.  Therefore, setting a window size of two can
+greatly increase throughput by eliminating most pausing for acknowledgments.
+The 
+.I sendwindow
+flag indicates whether a special ``windowsize packet'' should be sent to the
+remote system during protocol initialization.  If 
+.I sendwindow
+is 0, the packet is not sent.  If 
+.I sendwindow
+is 1, the packet is sent.  This packet, if sent, sets the
+.I windowsize
+that the remote system should use in sending data back to the local
+system.  Normally, implementations of the link-level package default to a
+.I windowsize
+of `1' and require the master side to set
+.I sendwindow
+to change the default setting.
+.TP
+\fBxmit\fR \fIquoted-string\fR
+This command cause the characters in \fIquoted-string\fR to be sent to
+the remote system.  
+The format of
+.I quoted-string
+is identical to that for the
+.B recv
+command (see above) except that two additional escapes apply:
+.sp
+.in +.5i
+.nf
+\\x	\-	 delay one second
+\\#	\-	 send a break
+.fi
+.in -.5i
+.sp
+.TP
+\fBxmitill\fR \fIillegal-character-codes\fR
+This command specifies the character codes which the local system
+is incapable of transmitting.  The 
+.B xmitill
+command behaves exactly the same as the
+.B recvill
+command (described above).
+.TP
+\fBxmitsize\fR \fIsize\fR
+This command specifies the maximum length
+(not including the carriage return)
+of packets that should be transmitted by the local system
+The number \fIsize\fR is decimal, with a value:
+
+.ti +.5i
+40 <= \fIsize\fR <= 255
+.SH EXAMPLES
+.PP
+Suppose you wanted to set up a script file to perform 
+the following phone call and login dialog using a standalone autodialing modem,
+a Vadic 3451PA, configured on direct line "vadic1200":
+.sp
+.in +.5i
+..PP
+.if t .ta 1.4i 2.0i
+.if n .ta 1.7i 2.5i 
+.nf
+^E	<-----	user types ^E to enter auto-dial mode
+HELLO: I'M READY	<-----	modem responds with message and prompt
+*D	<-----	user types dial command
+NUMBER?	<-----	modem prompts for phone number
+	<-----	user enters number and hits return
+12225551000	<-----	user types <cr> to verify echo of number
+DIALING: ON LINE	<-----	dials and reports when carrier
+		is detected.
+Welcome to the 11/70
+Name: szurko	<-----	user types login name
+Password:	<-----	user types password
+channel: elec70	<-----	remote PhoneNet "slave" program
+		prompts for MMDF channel name
+	<-----	PhoneNet protocol startup
+.sp            
+.in -.5i
+A script to perform this login sequence might be:
+.sp
+.in +.5i
+.nf
+window 2 1
+xmitpack 130
+recvpack 130
+dial vadic1200
+xmit "\\5\\x\\x\\r"
+recv "*" 20
+xmit "D\\x\\r"
+recv "NUMBER?\\r\\n" 30
+xmit "12225551000\\x\\r"
+recv "12225551000\\r\\n" 20
+xmit "\\r"
+recv "ON LINE\\r\\n" 60
+xmit "\\x\\x\\r"
+recv "Name:" 30
+xmit "szurko\\r"
+recv "Password:" 30
+xmit "secret\\r"
+recv "channel:" 45
+xmit "elec70\\r"
+recv "elec70" 15
+start
+end
+.in -.5i
+.sp
+.fi
+An example script for establishing this connection using a dialport
+(separate ACU and modem devices) would be:
+.nf
+.sp
+.in +.5i
+window 2 1
+xmitpack 130
+recvpack 130
+dial 1200|<wats>12225551000
+xmit "\\x\\x\\r"
+recv "Name:" 45
+xmit "szurko\\r"
+recv "Password:" 15
+xmit "secret\\r"
+recv "channel:" 45
+xmit "elec70\\r"
+recv "elec70" 15
+start
+end
+.SH SEE ALSO
+``MMDF Dial-up Link Protocol'',  ``Installing and Operating MMDFII''

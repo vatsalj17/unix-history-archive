@@ -1,0 +1,39 @@
+.TH NEWSSEND 8 "28 January 1986"
+.SH NAME
+newssend \- feed news into mail system
+.SH SYNOPSIS
+.B newssend
+[
+.B \-r
+.I replyto
+]
+.I faketo
+.I realto
+[
+.I more-realto's
+]
+.SH DESCRIPTION
+.I Newssend
+is responsible for feeding USENET news articles into
+the Internet mail system, typically to Internet
+mailing lists.
+It strips out many of the USENET header lines that are
+not necessary or wanted on the Internet.
+.PP
+The values of the submit options (including the input
+channel name) and the header lines to be deleted are
+hardcoded in the program but may want to be tailored
+on a per-site basis, particularly the channel value.
+The following arguments are used:
+.IP "\-r replyto"
+This specifies the return address (\fIreplyto\fR)
+to be used for this message.  Depending on the submit
+option used by newssend, this may be ignored.
+.IP faketo
+Since most USENET articles lack a ``To:'' field, the argument
+is used to generate a ``To:'' field for the message.
+\fIfaketo\fR should point to an alias that which feeds the message
+back into the news system.
+.IP "realto \.\.\."
+This is the actual address(es) that the article should be
+mailed to.  This is typically something like ``info-something-outbound''.

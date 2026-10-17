@@ -1,0 +1,50 @@
+xmitpack 130
+recvpack 130
+xmitill "\0\1\2\3\4\5\6\7\10\11\13\14\16\17"
+xmitill "\20\21\22\23\24\25\26\27\30\31\32\33\34\35\36\37"
+xmitill "\177"
+recvill "\0\1\2\3\4\5\6\7\10\11\13\14\16\17"
+recvill "\20\21\22\23\24\25\26\27\30\31\32\33\34\35\36\37"
+recvill "\177"
+{
+alternate
+	dial net-1200
+	xmit "\x\r"
+	recv "NETWORK" 60
+	xmit "EEVAX\r"
+	recv "COM" 60
+	xmit "\x\r\x\r\x\r"
+	recv "name:" 60
+	xmit "FOO\r"
+	recv "ssword:" 60
+	xmit "BAR\r"
+	recv "annel: " 120
+	xmit "pobox\r"
+alternate
+	dial modem-1200
+	xmit "ATDT,7352\r"
+	recv "CONNECT" 60
+	xmit "\r\x\r\x\r\x\r"
+	recv "name:" 60
+	xmit "FOO\r"
+	recv "ssword:" 60
+	xmit "BAR\r"
+	recv "annel: " 120
+	xmit "pobox\r"
+alternate
+	dial modem-1200
+	xmit "ATDT,7580\r"
+	recv "CONNECT" 60
+	xmit "\r\x\r\x\r\x\r"
+	recv "name:" 60
+	xmit "FOO\r"
+	recv "ssword:" 60
+	xmit "BAR\r"
+	recv "annel: " 120
+	xmit "pobox\r"
+alternate
+	log "We tried, but we couldn't do it!"
+	abort
+}
+start
+end

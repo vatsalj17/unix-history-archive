@@ -1,0 +1,99 @@
+3. "6F^5D!$^N^'^'                                                                            ;    Example/FileAsm
+;    an example of how to call assembly from Pascal, and Pascal from assembly
+;
+;  MODIFICATION HISTORY
+;
+;     06-Feb-84  CRC  New Today
+;     26-Jun-84  CRC  Changed to use AutoScroll to use Pascal proc TrackScroll
+;                     NewPtrClear stolen from Rony Sebok's "NewPtr" in OSTraps
+;
+;-----------------------------------------------------------------------------------
+;
+;     Procedure AutoScroll;
+;
+; The location of this procedure is passed to TextEdit in the clikLoop field.
+; It is called by TextEdit when the user drags a selection range outside of the
+; viewrect.  This calls the pascal procedures TrackScroll to cause the screen to
+; scroll, if possible, and the selection range to be extended.
+;
+;-----------------------------------------------------------------------------------
+;
+                .NOLIST
+                .INCLUDE TlAsm/GrafTypes.Text
+                .INCLUDE TlAsm/QuickMacs.Text
+                .INCLUDE TlAsm/SysEqu.Text
+                .INCLUDE TlAsm/SysMacs.Text
+                .INCLUDE TlAsm/ToolEqu.Text
+                .INCLUDE TlAsm/ToolMacs.Text
+                .LIST
+
+                .PROC    AutoScroll,0
+
+;offsets for Pascal globals
+
+MyWindow        .EQU     -4                       ;offset for current application window
+VScroll         .EQU     -20                      ;the window's vertical scroll bar
+whichPart       .EQU     -22                      ;the last button pushed
+                .REF     TrackScroll
+
+;Get the mouse location to see if scrolling is required
+                PEA     temppoint
+                _GetMouse                         ;get local mouse point to D0
+                MOVE.W  temppoint,D0
+
+;Check if we're in the text rect.  TextEdit passes the currently edited record in A3.
+                LEA     Condition,A0              ;a place to store the condition code
+                CMP.W   TEViewRect+Top(A3),D0     ;compare with the viewrect top
+                BLT.S   OutOfRect                 ;branch if mouse moves above top
+                CMP.W   TEViewRect+Bottom(A3),D0  ;is mouse below the bottom?
+                BLE.S   NoMove                    ;no, don't scroll.
+
+;TextEdit sets the clip region to the viewrect.  To allow the scrollbar to be redrawn,
+;the clip is set to the entire window.
+OutOfRect       MOVE    SR,(A0)                   ;save whether outside top, bottom
+                MOVE.L  MyWindow(A5),A0           ;global MyWindowPtr
+                PEA     PortRect(A0)              ;global MyWindowPtr^.portrect
+                _ClipRect                         ;set the application's clip
+                MOVE.L  VScroll(A5),-(SP)         ;push handle for scroll, below
+;now scroll up or down
+                MOVE    Condition,CCR             ;get back top or bottom condition
+                BLT.S   OffTop
+
+;We're off the bottom.  Act as if the user is pressing scrollbar's down arrow
+                MOVE.W  #inDownButton,-(SP)       ;scroll down.
+                BRA.S   OT2                       ;go scroll it
+
+;We're off the top.  Do a scroll Up.
+OffTop          MOVE.W  #inUpButton,-(SP)         ;Scroll up.
+OT2             MOVE.W  (SP), whichPart(A5)       ;satisfy TrackScroll condition
+                JSR     TrackScroll               ;Pascal routine.
+                PEA     TEViewRect(A3)
+                _ClipRect                         ;restore TextEdit's clip region
+
+;a non-zero code returned in DO tells TextEdit to stay in the TEClick routine.
+NoMove          MOVEQ   #-1,D0                    ;return non-zero to stay in TEClick
+                RTS
+
+Condition
+temppoint       .LONG   0
+
+;-----------------------------------------------------------------------------------
+;
+; Function NewPtrClear(byteCount: Size): Ptr;
+;
+; Returns a pointer to a newly allocated non-relocatable block of memory byteCount
+; bytes long.  NewPtr will set the area of memory reserved by it to zero if the
+; 'clear' bit in the NewPtr trap is set.  NewHandle has a 'clear' bit as well.
+;
+;-----------------------------------------------------------------------------------
+
+                .FUNC   NewPtrClear
+                .REF    SaveRetA1
+
+                Move.L  (SP)+,A1        ;get return address
+                Move.L  (SP)+,D0        ;get the byte count
+                _NewPtr ,CLEAR          ;ask OS to do request
+                Move.L  A0,(SP)         ;return result ptr on stack
+                JMP     SaveRetA1       ;save result code and return via A1
+
+                .END

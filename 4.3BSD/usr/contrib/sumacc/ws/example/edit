@@ -1,0 +1,162 @@
+5^))9{$X-}
+PROGRAM Edit;
+
+  { Edit -- A small sample application written in Pascal }
+  {         by Macintosh Technical Support       }
+  {SK 6/18 Added Memtypes, if GetNextEvent, EraseRect in update event,
+   fixed for new Edit menu  }
+
+  {This program is a sample.  Don't use it as a skeleton or template; instead,
+   understand each line and redo it yourself, only better!}
+
+   USES {$U-}
+      {$U Obj/Memtypes    } Memtypes,
+      {$U Obj/QuickDraw   } QuickDraw,
+      {$U Obj/OSIntf      } OSIntf,
+      {$U Obj/ToolIntf    } ToolIntf;
+
+   CONST
+      lastMenu = 3; { number of menus }
+      appleMenu = 1; { menu ID for desk accessory menu }
+      fileMenu = 256; { menu ID for File menu }
+      editMenu = 257; { menu ID for Edit menu }
+
+   VAR
+      myMenus: ARRAY [1..lastMenu] OF MenuHandle;
+      screenRect,dragRect,pRect: Rect;
+      doneFlag,temp: BOOLEAN;
+      myEvent: EventRecord;
+      code,refNum: INTEGER;
+      wRecord: WindowRecord;
+      myWindow,whichWindow: WindowPtr;
+      theMenu,theItem: INTEGER;
+      hTE: TEHandle;
+
+   PROCEDURE SetUpMenus;
+   { Once-only initialization for menus }
+
+      VAR
+         i: INTEGER;
+
+      BEGIN
+         InitMenus; { initialize Menu Manager }
+         myMenus[1] := GetMenu(appleMenu);
+         AddResMenu(myMenus[1],'DRVR'); { desk accessories }
+         myMenus[2] := GetMenu(fileMenu);
+         myMenus[3] := GetMenu(editMenu);
+         FOR i := 1 TO lastMenu DO InsertMenu(myMenus[i],0);
+         DrawMenuBar;
+      END; { of SetUpMenus }
+
+   PROCEDURE DoCommand(mResult: LongInt);
+
+      VAR
+         name: STR255;
+
+      BEGIN
+         theMenu := HiWord(mResult); theItem := LoWord(mResult);
+         CASE theMenu OF
+
+            appleMenu:
+               BEGIN
+               GetItem(myMenus[1],theItem,name);
+               refNum := OpenDeskAcc(name);
+               END;
+
+            fileMenu: doneFlag := TRUE; { Quit }
+
+            editMenu:
+               IF NOT SystemEdit(theItem-1) THEN
+                  BEGIN
+                  SetPort(myWindow);
+                  CASE theItem OF
+
+                     3: TECut(hTE);
+
+                     4: TECopy(hTE);
+
+                     5: TEPaste(hTE);
+
+                  END; { of item case }
+               END; { of editMenu }
+
+         END; { of menu case }
+         HiliteMenu(0);
+
+      END; { of DoCommand }
+
+   BEGIN { main program }
+      InitGraf(@thePort);
+      InitFonts;
+      FlushEvents(everyEvent,0);
+      InitWindows;
+      SetUpMenus;
+      TEInit;
+      InitDialogs(NIL);
+      InitCursor;
+
+      screenRect := screenBits.bounds;
+      SetRect(dragRect,4,24,screenRect.right-4,screenRect.bottom-4);
+      doneFlag := FALSE;
+
+      myWindow := GetNewWindow(256,@wRecord,POINTER(-1));
+      SetPort(myWindow);
+
+      pRect := thePort^.portRect;
+      InsetRect(pRect,4,0);
+      hTE := TENew(pRect,pRect);
+      REPEAT
+         SystemTask;
+         TEIdle(hTE);
+         if GetNextEvent(everyEvent,myEvent) then
+         CASE myEvent.what OF
+
+            mouseDown:
+               BEGIN
+               code := FindWindow(myEvent.where,whichWindow);
+               CASE code OF
+
+                  inMenuBar: DoCommand(MenuSelect(myEvent.where));
+
+                  inSysWindow: SystemClick(myEvent,whichWindow);
+
+                  inDrag: DragWindow(whichWindow,myEvent.where,dragRect);
+
+                  inGrow,inContent:
+                     BEGIN
+                     IF whichWindow<>FrontWindow THEN
+                        SelectWindow(whichWindow)
+                     ELSE
+                        BEGIN
+                        GlobalToLocal(myEvent.where);
+                        TEClick(myEvent.where,(BitAnd (myEvent.modifiers,512) <> 0)
+                                ,hTE);
+                        END;
+                     END;
+
+               END; { of code case }
+               END; { of mouseDown }
+
+            keyDown,autoKey:
+                TEKey(CHR(myEvent.message MOD 256),hTE);
+
+            activateEvt:
+               IF ODD(myEvent.modifiers) { window is becoming active }
+                  THEN
+                     TEActivate(hTE)
+                  ELSE
+                     TEDeactivate(hTE);
+
+            updateEvt:
+               BEGIN
+               SetPort(myWindow);
+               BeginUpdate(myWindow);
+               EraseRect (thePort^.visRgn^^.rgnBBox);
+               TEUpdate(thePort^.portRect,hTE);
+               EndUpdate(myWindow);
+               END; { of updateEvt }
+
+         END; { of event case }
+
+      UNTIL doneFlag;
+   END.

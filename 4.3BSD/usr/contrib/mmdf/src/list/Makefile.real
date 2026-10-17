@@ -1,0 +1,49 @@
+#
+#  List Channel
+#
+
+MODULES =	ch_list qu2ls_send
+
+OBJECTS =	ch_list.o qu2ls_send.o
+
+SOURCES =	ch_list.c qu2ls_send.c
+
+real-default:	list
+
+install:	$(CHANDIR)/list
+
+$(CHANDIR)/list  :   xlist
+	     cp xlist $(CHANDIR)/list
+	    -$(CHOWN) $(MMDFLOGIN) $(CHANDIR)/list
+	    -chmod 0$(PGMPROT) $(CHANDIR)/list
+	    -@ls -ls $(CHANDIR)/list
+	    -@echo "list channel installed normally"; echo ""
+
+list:	xlist
+xlist:	$(OBJECTS) $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(MMDFLIBS) $(SYSLIBS)
+
+lint:   ;  $(LINT) $(LFLAGS) $(SOURCES) $(LLIBS)
+
+clean:
+	-rm -f xlist *.o x.c makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+ch_list.o: ch_list.c
+ch_list.o: ch_list.c
+ch_list.o: ../../h/util.h
+ch_list.o: ../../h/mmdf.h
+ch_list.o: /usr/include/signal.h
+ch_list.o: ../../h/phs.h
+ch_list.o: ../../h/ch.h
+qu2ls_send.o: qu2ls_send.c
+qu2ls_send.o: ../../h/util.h
+qu2ls_send.o: ../../h/mmdf.h
+qu2ls_send.o: ../../h/phs.h
+qu2ls_send.o: ../../h/ch.h
+qu2ls_send.o: ../../h/ap.h
+qu2ls_send.o: /usr/include/pwd.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

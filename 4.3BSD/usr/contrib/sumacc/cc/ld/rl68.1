@@ -1,0 +1,29 @@
+.TH RL68 1 
+.SU
+.SH NAME
+rl68 \- print relocation commands in a .b file for the 68000
+.SH SYNOPSIS
+.B rl68 infile
+.SH DESCRIPTION
+.I Rl68
+prints the relocation commands in a 68000 .b file.  The format for each command
+is:
+.PP
+AREA SEGMENT SIZE   Displacement  Symbol
+.PP
+The AREA is one of T or D according to whether the command acts on Text or
+Data.  The SEGMENT is one of T, D, B, or E, according to whether the object
+linked to is in Text, Data, or Bss, or is External.  The SIZE is one of B, W,
+or L, according to whether the object linked to is of size Byte, Word, or Long.
+The Displacement indicates where in the AREA the command is to be applied.  The
+Symbol is the symbolic name of the object linked to if any.
+.PP
+The correspondence with struct reloc (defined in /usr/sun/ld68/b.out.h) is as
+follows.  SEGMENT is rsegment and SIZE is rsize.  Displacement is rdisp.
+Symbol is determined from rsymbol, a short which is the symbol id.  AREA is
+determined by the area in which the relocation command is found, there being
+two such areas.
+.SH RELATED
+nm68, size68, pr68, lorder68
+.SH AUTHOR
+C.J. Terman

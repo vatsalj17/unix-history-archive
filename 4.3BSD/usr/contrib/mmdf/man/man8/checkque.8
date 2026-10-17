@@ -1,0 +1,74 @@
+.TH CHECKQUE 8
+'ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.SH NAME
+checkque \- MMDF queue status report generator
+.SH SYNOPSIS
+checkque [\-fpsz] [\-t<age>[m]] [\-c \fIchannel channel ...\fR]
+.SH DESCRIPTION
+.PP
+.I Checkque
+reports on the amount of mail waiting in the MMDF distribution
+queue.  It indicates the total number of messages and the
+size of the queue directory.  It then lists the number of
+messages waiting for each transmission channel.
+.PP
+The \-\fBc\fR option allows one or more channel names to be specified.
+If present, \fIcheckque\fR restricts it's report to the named channels.
+.PP
+The \-\fBf\fR option causes \fIcheckque\fR to print the
+name of the oldest queued message for each channel.
+\-\fBp\fR causes only channels with "problems" to be listed.
+Problems are defined as channels which have have mail waiting for over
+some "problem threshold".  The default "problem threshold" is 24 hours.
+The \-\fBt\fR option is used to change the "problem threshold".  A number
+of hours (or minutes, if "m" is appended) should appear without a space
+after the \-\fBt\fR.
+\-\fBs\fR forces an abbreviated summary listing instead of the
+normal multi-line report.
+\-\fBz\fR causes channels with no messages queued to be skipped in
+the report.
+.PP
+Since the mail queue usually is protected from access by any uid,
+except MMDF's, 
+.I checkque
+should be run under root or MMDF's uid.  It should not be made
+\fIsetuid\fR() to mmdf unless you want to allow non-staff members
+to see the queue status.
+.PP
+Most configurations
+will have only two channels.  One is for local delivery and
+the second is for off-machine relaying, such as by calling out
+or by being called up, or by attaching to ArpaNet hosts.
+Local delivery usually happens at the time of submission, so it
+is rare that any mail is waiting in it.
+Mail in other outbound queues is processed by
+.I deliver
+according to your site parameters, either by running
+.I deliver
+as a background daemon or by periodically firing it up via
+.I cron.
+.PP
+A word about the size of the queue directory (aquedir[] under
+quedfldir[]):  Under versions of Unix other than BSD4.2, this 
+only grows in size; there is no retrieval of space as messages
+are processed out of the queue.  Since queues are searched 
+linearly, this can lead to extra processing for
+.I deliver.
+Hence, it can be useful to know the density of the queue (how
+many messages are actually waiting, compared with the number of
+slots open in the queuing directory) in order to decide whether
+to compress the directory.  This is a messy process, but can
+be worthwhile in some cases.  Under BSD4.2, however, directories are 
+automatically compressed when files are deleted.
+.SH FILES
+quedfldir[]/addr
+.br
+quedfldir[]/msg
+.br
+quedfldir[]/q.*
+.br
+<phase-directory>/<channel>/*
+.SH "SEE ALSO"
+phs(3), deliver(8)
+.SH AUTHOR
+Dave Crocker, Dept. of E.E., Univ. of Delaware

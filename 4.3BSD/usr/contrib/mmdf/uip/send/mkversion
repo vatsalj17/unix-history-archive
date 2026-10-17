@@ -1,0 +1,6 @@
+p=`cat version.number`
+c=`echo 0 2 $p +p | dc`
+d=`date | awk '{ print $3 " " $2 " " $(NF) }'`
+echo "char	*verdate = \"$d #$c\";" > version.c
+cc -c version.c
+echo $c > version.number

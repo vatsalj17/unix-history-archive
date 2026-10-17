@@ -1,0 +1,110 @@
+.TH FILES 5 "21 January 86"
+'ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.SH NAME
+MMDF FILES -- overview
+.SH SYNOPSIS
+Names, locations, and file modes for MMDF programs and files
+.SH DESCRIPTION
+.PP
+MMDF files separate into documentation, source code,
+mail queue, channel host name tables, programs, and logs.
+.PP
+Pathnames to constructed files (i.e., everything other than source code
+and documentation) are derived as a function of a default directory
+specification and the specific filename.  The default directory
+can be overridden, for a specific file, by having the filename
+be a fully-specified path (starting with a slash).  The default
+directories are defined in
+.I conf.c.
+.SS Documentation
+.PP
+Documentation is located in the MMDF distribution tape directories
+.I doc
+and
+.I man.
+The manuals are subdivided by directories for each part of mail software,
+according to the V7 manual sections.  
+.SS "Source Code"
+.PP
+The layout and contents of the source directories are described
+in the document ``Installing and Operating MMDFII'' (normally
+in doc/administrators/* in the MMDF source directories.
+.SS Queue
+.PP
+The queue, for storing mail in transit, is described in
+.I queue(5).
+.SS Tables
+.PP
+The tables, for listing extensions to the list of local mailbox names
+and names of known hosts, are described in
+.I tables(5).
+.SS Logs
+.PP
+MMDF system logs are described in
+.I logs(5).
+.SS Programs
+.PP
+It is assumed that a login and uid have been assigned to MMDF.  
+The default assumption, throughout the distribution tape, is that
+the login name is `mmdf'.  The default location for MMDF programs
+is specified in cmddfldir[], for MMDF ``commands'' and in chndfldir[],
+for MMDF channel programs which are invoked by 
+.I deliver.
+Both variables are specified in
+.I conf.c.
+.RS
+.IP submit
+Enqueues mail.  Its location is specified by pathsubmit[].
+Its protection
+modes should be 04711, and it should be owned by MMDF, so that it can
+.I chdir(2)
+past the quedfldir[] locking directory for the queue.
+.IP deliver
+Manages message transmission.  Its location is specified by pathmailer[].
+Its protection
+modes should be 04711, and it should be owned by root.
+.IP slave
+Runs as the server process, when other sites call over a phone
+channel.  Protection should be 0711, since it needs no special
+privileges.
+.IP "channel programs"
+These perform actual data transfers, at the invocation of
+.I deliver.
+
+They are named to reflect their actual task
+Their locations are specified by the channel
+definitions in
+.I conf_chan.c
+and default to the chndfdir[] directory.
+It is very important that the directory containing the channel
+programs be accessible only by MMDF processes, or else anyone could
+invoke one and send unverified mail; hence make the "chans" directory
+have protection 0700 and be owned by MMDF.
+The ownership and protection modes of the channel programs
+depend upon the resources they
+consume.  For example, the program which delivers mail to the local
+machine,
+.I ch_local,
+must be 04711 and owned by root, so that it can manipulate recipient's
+protected mailboxes.  At some sites, telephone dial-out may be a protected
+resource, so that
+.I ch_phone
+should be 04711 and owned by the same user as owns the dial-out.
+.IP cleanque
+Garbage-collects the queue.  It should be run regularly,
+such as overnight by
+.I cron.
+Its protection
+modes should be 04711, and it should be owned by root.
+.IP setlogs
+Resets the logs and may save message and channel statistics.  It is
+a shell file and should be run as MMDF.  It should be run regularly,
+such as daily, by
+.I cron,
+unless system performance needs close monitoring.
+In this case, the logs should be retained longer.
+.RE
+.SH "SEE ALSO"
+logs(5), queue(5), tables(5), cleanque(8), deliver(8), submit(8)
+.br
+\fIInstalling and Operating MMDF II\fR

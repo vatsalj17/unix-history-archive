@@ -1,0 +1,169 @@
+
+RESOURCES                        C Interface                          RESOURCES
+
+NAME
+      resources -- resource manager
+
+SYNOPSIS
+      #include "c/include/types.h"
+      #include "c/include/resources.h"
+
+
+      /* Resource Attributes */
+
+      #define resSysRef        128        /* Reference to system resource? */
+      #define resSysHeap        64        /* System or application heap?   */
+      #define resPurgeable      32        /* Purgeable resource?           */
+      #define resLocked         16        /* Load it in locked?            */
+      #define resProtected       8        /* Protected?                    */
+      #define resPreload         4        /* Load in on OpenResFile?       */
+      #define resChanged         2        /* Resource changed?             */
+      #define resUser            1        /* User-definable attribute      */
+      
+      /* Resource File Attributes */
+
+      #define mapReadOnly      128        /* Resource file read-only       */
+      #define mapCompact        64        /* Compact resource file         */
+      #define mapChanged        32        /* Write map out at update       */
+               
+      /* Error Numbers */
+    
+      #define resNotFound    (-192)       /* Resource not found            */
+      #define resFNotFound   (-193)       /* Resource file not found       */
+      #define addResFailed   (-194)       /* AddResource failed            */
+      #define addRefFailed   (-195)       /* AddReference failed           */
+      #define rmvResFailed   (-196)       /* RmveResource failed           */
+      #define rmvRefFailed   (-197)       /* RmveReference failed          */
+       
+      typedef int ResType;
+
+      
+      /* Initialization */
+
+      pascal short InitResources()
+      pascal void RsrcZoneInit()
+
+
+      /* Opening and Closing Resource Files */
+
+      CreateResFile(fileName)
+         char *fileName;
+      short OpenResFile(fileName)
+         char *fileName;
+      pascal void CloseResFile(refNum)
+         short refNum;
+
+      
+      /* Errors */
+
+      pascal short ResError()
+
+
+      /* Setting the Current Resource File */
+
+      pascal short CurResFile()
+      pascal short HomeResFile(theResource)
+         Handle theResource;
+      pascal void UseResFile(refNum)
+         short refNum;
+
+
+      /*  Getting Resource Types */
+
+      pascal short CountTypes()
+      pascal void GetIndType(theType,index)
+         ResType *theType;
+         short index;
+
+
+      /* Getting and Displosing of Resources */
+
+      pascal void SetResLoad(autoLoad)
+         Boolean autoLoad;
+      pascal short CountResources(theType)
+         ResType theType;
+      pascal Handle GetIndResource(theType,index)
+         ResType theType;
+         short index;
+      pascal Handle GetResource(theType,theId)
+         ResType theType;
+         short theId;
+      Handle GetNamedResource(theType,name)
+         ResType theType;
+         char *name;
+      pascal void LoadResource(theResource)
+         Handle theResource;
+      pascal void ReleaseResource(theResource) 
+         Handle theResource;
+      pascal void DetachResource(theResource)
+         Handle theResource;
+
+
+      /* Getting Resource Information */
+
+      pascal short UniqueId(theType)
+         ResType theType;
+      GetResInfo(theResource,theId,theType,name)
+         Handle theResource;
+         short *theId;
+         ResType *theType;
+         char *name;
+      pascal short GetResAttrs(theResource)
+         Handle theResource;
+      pascal int SizeResource(theResource)
+         Handle theResource;
+  
+
+      /* Modifing Resources */
+
+      SetResInfo(theResource,theId,name)
+         Handle theResource;
+         short theId;
+         char *name;
+      pascal void SetResAttrs(theResource,attrs)
+         Handle theResource;
+         short attrs;
+      pascal void ChangedResource(theResource)
+         Handle theResource;
+      AddResource(theResource,theType,theId,name)
+         Handle theResource;
+         ResType theType;
+         short theId;
+         char *name;
+      pascal void RmveResource(theResource)
+         Handle theResource;
+      AddReference(theResource,theId,name)
+         Handle theResource;
+         short theId;
+         char *name;
+      pascal void RmveReference(theResource)
+         Handle theResource;
+      pascal void UpdateResFile(refNum)
+         short refNum;
+      pascal void WriteResource(theResource)
+         Handle theResource;
+      pascal void SetResPurge(install)
+         Boolean install;
+
+      /* Advanced Routines */
+
+      pascal short GetResFileAttrs(refNum)
+         short refNum;
+      pascal void SetResFileAttrs(refNum,attrs)
+         short refNum;
+         short attrs;
+      
+
+DESCRIPTION
+      The resource manager provides access to Macintosh resource files.
+      Note that ResType may be specified as a character literal (e.g. 'MENU').
+
+      For more detailed information see the "Resource Manager" section of the
+      "Inside Macintosh" documentation.
+
+AUTHOR
+      C Interface by Rick Meyers
+      Copyright 1984 Apple Computer Inc.
+
+BUGS 
+

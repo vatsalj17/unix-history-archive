@@ -1,0 +1,86 @@
+#
+#   prog:   prog (direct) delivery channel transmission
+#
+MODULES	= ch_prog qu2pr_send pr_wtmail pr2mm_send pr_errmsg
+
+SOURCES	= ch_prog.c qu2pr_send.c pr_wtmail.c pr2mm_send.c pr_errmsg.c
+
+real-default:	sendprog recvprog
+
+install:	inst-sendprog inst-recvprog
+
+lint:		l-sendprog l-recvprog
+
+sendprog:	xsendprog
+xsendprog:	ch_prog.o qu2pr_send.o pr_wtmail.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ ch_prog.o qu2pr_send.o pr_wtmail.o $(MMDFLIBS) $(SYSLIBS)
+
+l-sendprog:
+	$(LINT) $(LFLAGS) ch_prog.c qu2pr_send.c pr_wtmail.c $(LLIBS)
+
+inst-sendprog:	$(CHANDIR)/sendprog
+$(CHANDIR)/sendprog:	xsendprog
+	cp xsendprog $(CHANDIR)/sendprog
+	-$(CHOWN) $(MMDFLOGIN) $(CHANDIR)/sendprog
+	-chmod $(PGMPROT) $(CHANDIR)/sendprog
+	-@ls -ls $(CHANDIR)/sendprog
+	-@echo "sendprog installed normally"; echo ""
+
+recvprog:	xrecvprog
+xrecvprog:	pr2mm_send.o pr_errmsg.o
+	$(CC) $(LDFLAGS) -o $@ pr2mm_send.o pr_errmsg.o $(MMDFLIBS) $(SYSLIBS)
+
+
+l-recvprog:
+	$(LINT) $(LFLAGS) pr2mm_send.c pr_errmsg.c $(LLIBS)
+
+inst-recvprog:	$(CHANDIR)/recvprog
+$(CHANDIR)/recvprog:	xrecvprog
+	cp xrecvprog $(CHANDIR)/recvprog
+	-$(CHOWN) $(MMDFLOGIN) $(CHANDIR)/recvprog
+	-chmod $(PGMPROT) $(CHANDIR)/recvprog
+	-@ls -ls $(CHANDIR)/recvprog
+	-@echo "recvprog installed normally"; echo ""
+
+clean:
+	-rm -f xsendprog xrecvprog *.o x.c core makedep eddep make.log 
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+ch_prog.o: ch_prog.c
+ch_prog.o: ../../h/util.h
+ch_prog.o: ../../h/mmdf.h
+ch_prog.o: ../../h/ch.h
+ch_prog.o: ../../h/phs.h
+ch_prog.o: /usr/include/signal.h
+qu2pr_send.o: qu2pr_send.c
+qu2pr_send.o: ../../h/util.h
+qu2pr_send.o: ../../h/mmdf.h
+qu2pr_send.o: ../../h/ch.h
+qu2pr_send.o: /usr/include/signal.h
+qu2pr_send.o: ../../h/ap.h
+qu2pr_send.o: ../../h/phs.h
+pr_wtmail.o: pr_wtmail.c
+pr_wtmail.o: ../../h/util.h
+pr_wtmail.o: ../../h/mmdf.h
+pr_wtmail.o: ../../h/ch.h
+pr_wtmail.o: ../../h/ap.h
+pr2mm_send.o: pr2mm_send.c
+pr2mm_send.o: /usr/include/stdio.h
+pr2mm_send.o: /usr/include/errno.h
+pr2mm_send.o: /usr/include/sys/wait.h
+pr2mm_send.o: /usr/include/sys/file.h
+pr2mm_send.o: /usr/include/signal.h
+pr2mm_send.o: ../../h/util.h
+pr2mm_send.o: ../../h/mmdf.h
+pr2mm_send.o: ../../h/ch.h
+pr2mm_send.o: ../../h/ap.h
+pr_errmsg.o: pr_errmsg.c
+pr_errmsg.o: /usr/include/stdio.h
+pr_errmsg.o: /usr/include/sys/file.h
+pr_errmsg.o: ../../h/util.h
+pr_errmsg.o: ../../h/mmdf.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

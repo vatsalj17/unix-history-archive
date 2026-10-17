@@ -1,0 +1,238 @@
+#
+#	Makefile for dial package portion of libmmdf.a
+#
+#  Just the prefix of the name should be given (i.e. "foo" for "foo.c")
+MODULES = d_master d_slave d_path d_quit d_escape \
+	  d_sndstream d_rcvdata d_data d_init d_pglobals \
+	  d_script d_connect d_pstty d_numbers d_utils \
+	  d_clog d_script2 d_dial2 d_parse d_packet \
+	  d_port d_checksum d_coding d_dglobals \
+	  d_tai d_tscript d_log d_io d_setbuff \
+	  d_control d_assign d_lock d_getnbuff mktran test
+
+#
+#  The following are put into libmmdf.a
+#
+OBJECTS = d_master.o d_slave.o d_path.o d_quit.o d_escape.o \
+	  d_sndstream.o d_rcvdata.o d_data.o d_init.o d_pglobals.o \
+	  d_script.o d_connect.o d_pstty.o d_numbers.o d_utils.o \
+	  d_clog.o d_script2.o d_dial2.o d_parse.o d_packet.o \
+	  d_port.o d_checksum.o d_coding.o d_dglobals.o \
+	  d_tai.o d_tscript.o d_log.o d_io.o d_setbuff.o \
+	  d_control.o d_assign.o d_lock.o d_getnbuff.o conf_dial.o
+
+#
+#  The following are linted
+#
+COBJECTS = d_master.c d_slave.c d_path.c d_quit.c d_escape.c \
+	  d_sndstream.c d_rcvdata.c d_data.c d_init.c d_pglobals.c \
+	  d_script.c d_connect.c d_pstty.c d_numbers.c d_utils.c \
+	  d_clog.c d_script2.c d_dial2.c d_parse.c d_packet.c \
+	  d_port.c d_checksum.c d_coding.c d_dglobals.c \
+	  d_tai.c d_tscript.c d_log.c d_io.c d_setbuff.c \
+	  d_control.c d_assign.c d_lock.c d_getnbuff.c
+
+real-default: ../dial-made
+../dial-made:    $(OBJECTS)
+	$(AR) r ../libmmdf.a $(OBJECTS)
+	-touch ../dial-made
+	-@echo "dial package routines built normally"
+
+#
+#  Special case dependencies
+#
+conf_dial.o: ../../conf/$(HOST)/conf_dial.c ../../h/util.h \
+		../../h/d_proto.h ../../h/d_structs.h
+	$(CC) -c $(CFLAGS) ../../conf/$(HOST)/conf_dial.c
+
+mktran: mktran.o $(MMDFLIBS)
+	$(CC) -o mktran $(LDFLAGS) mktran.o $(MMDFLIBS) $(SYSLIBS)
+
+test:   test.o $(MMDFLIBS)
+	$(CC) -o test $(LDFLAGS) test.o $(MMDFLIBS) $(SYSLIBS)
+
+lint:
+	$(LINT) -Cdial $(LFLAGS) $(COBJECTS) ../../conf/$(HOST)/conf_dial.c
+
+clean:
+	-rm -f mktran test *.o x.c makedep eddep make.out errs llib-ldial*
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+d_master.o: d_master.c
+d_master.o: ../../h/util.h
+d_master.o: ../../h/d_proto.h
+d_master.o: ../../h/d_returns.h
+d_master.o: /usr/include/signal.h
+d_master.o: ../../h/d_syscodes.h
+d_master.o: ../../h/d_clogcodes.h
+d_master.o: ../../h/ll_log.h
+d_slave.o: d_slave.c
+d_slave.o: ../../h/util.h
+d_slave.o: ../../h/ll_log.h
+d_slave.o: ../../h/d_proto.h
+d_slave.o: ../../h/d_returns.h
+d_slave.o: ../../h/d_structs.h
+d_path.o: d_path.c
+d_path.o: ../../h/d_proto.h
+d_path.o: ../../h/d_returns.h
+d_path.o: /usr/include/signal.h
+d_path.o: ../../h/d_syscodes.h
+d_quit.o: d_quit.c
+d_quit.o: ../../h/d_proto.h
+d_quit.o: ../../h/d_returns.h
+d_escape.o: d_escape.c
+d_escape.o: ../../h/d_proto.h
+d_escape.o: /usr/include/signal.h
+d_escape.o: ../../h/d_syscodes.h
+d_escape.o: ../../h/d_returns.h
+d_sndstream.o: d_sndstream.c
+d_sndstream.o: ../../h/d_returns.h
+d_rcvdata.o: d_rcvdata.c
+d_rcvdata.o: ../../h/d_returns.h
+d_data.o: d_data.c
+d_data.o: ../../h/d_proto.h
+d_data.o: ../../h/d_returns.h
+d_data.o: /usr/include/signal.h
+d_data.o: ../../h/d_syscodes.h
+d_init.o: d_init.c
+d_init.o: ../../h/d_returns.h
+d_pglobals.o: d_pglobals.c
+d_pglobals.o: ../../h/d_proto.h
+d_script.o: d_script.c
+d_script.o: ../../h/util.h
+d_script.o: /usr/include/signal.h
+d_script.o: ../../h/d_syscodes.h
+d_script.o: ../../h/d_proto.h
+d_script.o: ../../h/d_returns.h
+d_script.o: /usr/include/stdio.h
+d_script.o: ../../h/d_structs.h
+d_script.o: ../../h/d_script.h
+d_connect.o: d_connect.c
+d_connect.o: ../../h/util.h
+d_connect.o: /usr/include/signal.h
+d_connect.o: ../../h/d_syscodes.h
+d_connect.o: ../../h/d_clogcodes.h
+d_connect.o: ../../h/d_proto.h
+d_connect.o: ../../h/d_returns.h
+d_connect.o: ../../h/d_structs.h
+d_connect.o: /usr/include/sgtty.h
+d_connect.o: /usr/include/sys/stat.h
+d_connect.o: /usr/include/sys/file.h
+d_pstty.o: d_pstty.c
+d_pstty.o: ../../h/util.h
+d_pstty.o: /usr/include/sgtty.h
+d_pstty.o: /usr/include/sys/stat.h
+d_pstty.o: ../../h/d_proto.h
+d_pstty.o: ../../h/d_returns.h
+d_pstty.o: ../../h/d_structs.h
+d_numbers.o: d_numbers.c
+d_numbers.o: ../../h/util.h
+d_numbers.o: ../../h/d_returns.h
+d_numbers.o: ../../h/d_proto.h
+d_numbers.o: /usr/include/stdio.h
+d_numbers.o: ../../h/d_structs.h
+d_utils.o: d_utils.c
+d_utils.o: ../../h/util.h
+d_utils.o: ../../h/d_returns.h
+d_utils.o: /usr/include/pwd.h
+d_utils.o: /usr/include/stdio.h
+d_utils.o: ../../h/d_proto.h
+d_utils.o: ../../h/d_structs.h
+d_clog.o: d_clog.c
+d_clog.o: ../../h/util.h
+d_clog.o: ../../h/d_clogcodes.h
+d_clog.o: ../../h/d_returns.h
+d_clog.o: /usr/include/stdio.h
+d_clog.o: ../../h/d_proto.h
+d_clog.o: ../../h/d_structs.h
+d_script2.o: d_script2.c
+d_script2.o: /usr/include/stdio.h
+d_script2.o: ../../h/d_proto.h
+d_script2.o: ../../h/d_returns.h
+d_script2.o: ../../h/d_structs.h
+d_dial2.o: d_dial2.c
+d_dial2.o: /usr/include/stdio.h
+d_dial2.o: ../../h/d_returns.h
+d_parse.o: d_parse.c
+d_parse.o: ../../h/d_returns.h
+d_packet.o: d_packet.c
+d_packet.o: ../../h/d_proto.h
+d_packet.o: ../../h/d_returns.h
+d_packet.o: /usr/include/signal.h
+d_packet.o: /usr/include/stdio.h
+d_packet.o: ../../h/d_structs.h
+d_packet.o: ../../h/d_syscodes.h
+d_port.o: d_port.c
+d_port.o: ../../h/util.h
+d_port.o: ../../h/d_proto.h
+d_port.o: ../../h/d_returns.h
+d_port.o: /usr/include/signal.h
+d_port.o: ../../h/d_syscodes.h
+d_port.o: /usr/include/stdio.h
+d_port.o: ../../h/d_structs.h
+d_port.o: /usr/include/sys/ioctl.h
+d_port.o: /usr/include/sgtty.h
+d_checksum.o: d_checksum.c
+d_checksum.o: ../../h/d_returns.h
+d_coding.o: d_coding.c
+d_coding.o: ../../h/util.h
+d_coding.o: ../../h/d_proto.h
+d_coding.o: ../../h/d_returns.h
+d_dglobals.o: d_dglobals.c
+d_dglobals.o: ../../h/util.h
+d_dglobals.o: /usr/include/sgtty.h
+d_dglobals.o: ../../h/d_proto.h
+d_dglobals.o: /usr/include/stdio.h
+d_dglobals.o: ../../h/d_structs.h
+d_tai.o: d_tai.c
+d_tai.o: ../../h/util.h
+d_tai.o: ../../h/ll_log.h
+d_tai.o: ../../h/d_proto.h
+d_tai.o: ../../h/d_structs.h
+d_tai.o: ../../h/cmd.h
+d_tscript.o: d_tscript.c
+d_tscript.o: /usr/include/stdio.h
+d_tscript.o: ../../h/d_returns.h
+d_log.o: d_log.c
+d_log.o: ../../h/util.h
+d_log.o: ../../h/d_returns.h
+d_log.o: /usr/include/stdio.h
+d_log.o: ../../h/d_proto.h
+d_log.o: ../../h/d_structs.h
+d_log.o: ../../h/ll_log.h
+d_io.o: d_io.c
+d_io.o: /usr/include/stdio.h
+d_setbuff.o: d_setbuff.c
+d_setbuff.o: ../../h/d_proto.h
+d_setbuff.o: ../../h/d_returns.h
+d_setbuff.o: /usr/include/stdio.h
+d_setbuff.o: ../../h/d_structs.h
+d_control.o: d_control.c
+d_control.o: ../../h/d_proto.h
+d_control.o: ../../h/d_returns.h
+d_assign.o: d_assign.c
+d_assign.o: ../../h/d_returns.h
+d_lock.o: d_lock.c
+d_lock.o: ../../h/util.h
+d_lock.o: /usr/include/sys/stat.h
+d_lock.o: /usr/include/sys/file.h
+d_lock.o: ../../h/d_returns.h
+d_getnbuff.o: d_getnbuff.c
+d_getnbuff.o: ../../h/d_proto.h
+d_getnbuff.o: /usr/include/signal.h
+d_getnbuff.o: ../../h/d_syscodes.h
+d_getnbuff.o: ../../h/d_returns.h
+mktran.o: mktran.c
+mktran.o: /usr/include/stdio.h
+mktran.o: ../../h/d_returns.h
+mktran.o: ../../h/ll_log.h
+mktran.o: ../../h/d_proto.h
+mktran.o: ../../h/d_script.h
+test.o: test.c
+test.o: /usr/include/stdio.h
+test.o: ../../h/ll_log.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

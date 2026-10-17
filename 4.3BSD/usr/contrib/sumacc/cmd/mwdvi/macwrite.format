@@ -1,0 +1,125 @@
+24-Jul-84 16:57:23-PDT,4168;000000000001
+Mail-From: PATTERMANN created at 24-Jul-84 16:57:01
+Return-Path: <winkler@harvard.ARPA>
+Received: from harvard.ARPA by SUMEX-AIM.ARPA with TCP; Tue 24 Jul 84 09:19:57-PDT
+Received: by harvard.ARPA (4.12/4.27)
+	id AA14325; Tue, 24 Jul 84 12:22:12 edt
+Date: Tue, 24 Jul 84 12:22:12 edt
+From: winkler@harvard.ARPA (Dan Winkler)
+Message-Id: <8407241622.AA14325@harvard.ARPA>
+To: patterman@sumex
+Subject: MacWrite Document Format
+Cc: info-mac@sumex
+ReSent-date: Tue 24 Jul 84 16:57:01-PDT
+ReSent-From: Ed Pattermann <PATTERMANN@SUMEX-AIM.ARPA>
+ReSent-To: info-mac: ;
+
+		MacWrite Disk File Format
+
+A MacWrite file starts off with global data concerning the state of the 
+program when the file is saved.  After this comes information about each
+window, i.e. the main document, header, and footer.  Then follows the
+actual paragraph data for each of the windows.
+
+Global Variables - 20 bytes total
+---------------------------------
+
+Version Number - A word containing the version number of the file
+	format.  (Should be 3)
+
+Paragraph Offset - A word containing the file position of the start of
+	paragraph data in the file.
+
+Main Document Paragraph Count - A word.
+
+Header Paragraph Count - A word.
+
+Footer Paragraph Count - A word.
+
+Title Page Flag - 1 byte set true if the first page header is not to be
+	drawn.
+
+Scrap Show Flag - 1 byte set true if the scrap is to be displayed.
+
+Footer Displayed Flag - 1 byte true if the footer is displayed.
+
+Header Displayed Flag - 1 byte true if the header is displayed.
+
+Rulers Showing Flag - 1 byte true if rulers are hidden.
+
+Spare Byte.
+
+Active Document Number - A word telling which window was activated at
+	the time of the save (0=main, 1=header, 2=footer).
+
+Starting Page Number - A word containing the page number of the first
+	page.
+
+
+Printing Variables - 120 bytes
+------------------------------
+
+
+Document Variables - 34 bytes for each document
+-----------------------------------------------
+
+Start of Selection - 2 words, 1 for paragraph number and 1 for character
+	position.
+
+End of Selection - 2 words same as above.
+
+Vertical Offset - A word for the position of the top of the page at the
+	time of the save.  Always negative or 0.
+
+Need to Redraw - A word telling which paragraph to redraw the document
+	from when loaded.
+
+Page Number Position - 2 words for the position of the top left point of
+	the page number icon. (Vertical, Horizontal)
+
+Date Position - 2 words for the position of the top left point of the
+	date icon.
+
+Time Position - 2 words for the position of the top left point of the
+	time icon rectangle.
+
+Time Coordinates - 2 words for the position the time string was actually
+	drawn.
+
+Icon Redraw - 1 byte true if the icons have to be redrawn.
+
+Icon Flag - 1 byte true if the rulers were showing when the icons were
+	last updated.
+
+Active Font Number - A word for the font that was active at the time of
+	the save.
+
+Active Style Number - A word for the face that was active.
+
+The main document variables are stored first, followed by the header and
+	then the footer.
+
+Info Arrays
+-----------
+
+One array for each document, with 8 bytes per paragraph in the document.
+Each array element contains a word for the height of the paragraph, a
+word for the position, 1 byte for the pagenumber (zero based), and 3
+unused bytes.  The arrays are stored main document first, then header
+and footer.
+
+Paragraph Data
+--------------
+
+The main document paragraphs are stored first, then those of the header
+and footer.  Each paragraph starts with a word for the type (0=ruler,
+1=text, 2=picture) and a word for the length of the actual data.  Then
+follows the data for the paragraph.  Each text paragraph starts with a
+word for the text length.  Then the ASCII data follows.  On the even
+word boundary following the text there is a word for the format run
+length.  Each format consists of six bytes: the first word is the
+character position that this format change starts on.  Next comes one
+byte for the point size, on byte for the style, an unused byte, and then
+a word for the font number.
+
+

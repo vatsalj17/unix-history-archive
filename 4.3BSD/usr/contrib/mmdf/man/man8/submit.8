@@ -1,0 +1,463 @@
+.ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.TH SUBMIT 8 "20 October 84"
+.SH NAME
+submit \- MMDF mail enqueuer
+.SH SYNOPSIS
+submit [\-L...*V...*Wbcdf...*g...*hi...*jk...*lmnqrstuvwxyz]
+.SH DESCRIPTION
+.PP
+All mail is entered into the MMDF mail transport environment
+through the
+.I submit
+program.
+This document is intended to provide the specific information
+needed to control
+.I submit.
+While it can be called directly from a user's terminal,
+access to
+.I submit
+is most
+conveniently done through a program such as mail(1) or send(1).
+The MMDF library also has subroutine package
+for invoking
+.I submit.
+See the
+.I mm_
+package, documented in
+mmdf(3) for more information.
+It has a set of procedures which make this process much easier.
+Before proceeding, familiarity with the
+channels(7)
+document is recommended, since
+.I mm
+is a member of the family of channel modules.  It also will be useful
+to read
+replies(5),
+which describes reply values.
+.SS BASIC MODES
+.PP
+.I Submit
+permits considerable flexibility with respect to
+batching multiple submissions, response and error handling, and
+address source specification.
+.SS Multiple Submissions
+.IP "1."
+Terminate after one submission, such as is done by the mail command, or
+.IP "2."
+Permit multiple message submissions, as is done by the
+SMTP channel and the MMDF telephone
+.I slave.
+.PP
+The first mode is specified by passing any initialization
+information in the submit invocation line (i.e., the
+.IR exec (2)
+call).  In the second mode, the initialization information is
+given as the first input line, for each submission.  The format
+of this information is the same for both modes.
+.SS Response & Error Handling
+.IP "1."
+Accept input until error or end of message, but
+terminate on any error, or
+.IP "2."
+Notify result for each
+.B segment
+and continue.
+.PP
+Response mode #1 is mandatory with Multiple mode #1.
+Response mode #2 is called \fIprotocol mode\fR.  During it, each
+address produces a status reply and the message text produces a
+reply.  The domain of the term
+.B segment
+depends on the error.
+Simple addressing errors cause rejection only of the erroneous
+address.  Other errors may cause rejection of the entire message,
+but permit submission of following messages.
+.ne 5
+.SS Addresses
+.IP "1."
+Extracted from components of the message text,
+.IP "2."
+Explicit list given, ahead of message text, or
+.IP "3."
+Both of the above (extracted and explicit addresses)
+.PP
+The first mode is common when mode #1 (non-protocol)
+is also in force for
+the Interaction and the Verification option.
+The second mode
+is commonly in force when the second modes apply for the other
+options (protocol mode).
+The third mode is of unclear benefit, but was easy to provide
+and originally looked like a good idea.
+.ne 5
+.SS INITIALIZATION
+.PP
+A message's initialization information is specified through a
+single string, passed either in the process-invocation argument
+list or in the first line of
+.I submit's
+input.  Hence, the string
+may be terminated either by a null or newline.  Spaces and tabs
+in the line are ignored, unless part of a literal.  Specification
+is only required for non-defaults.
+.sp
+.TS
+center;
+l l l l.
+	Option	Value	Literal
+
+1.	Relay source	a. none	(\fIdefault\fR)
+	for the ``Via'' or	b. source channel	i...*
+	``Received'' field	c. source host	h...*
+
+2.	From/Sender	a. reject on error	(\fIdefault\fR)
+	authentication	b. trust	t
+		c. no trust (disclaim)	u
+
+3.	Source-Info Field	a. not included	(\fIdefault\fR)
+		b. disclaim author	u
+		c. user text	f...*
+
+4.	Address list source	a. explicit list	(\fIdefault\fR)
+		b. extract from components	x...*
+		c. both (extract and explicit)	g...*
+
+5.	Address verification	a. abort on invalid	(\fIdefault\fR)
+		b. report on each address	v
+
+6.	Delivery destination	a. mailbox	m (\fIdefault\fR)
+		b. user's tty	y
+		c. mailbox and tty	b
+
+7.	Delivery attempt	a. leave for daemon	(\fIdefault\fR)
+	(combinable)	b. deliver local now	l
+		c. deliver netmail now	n
+
+8.	Observation of	a. none	(\fIdefault\fR)
+	immediate attempts	b. user will watch	w
+
+9.	Return address	a. send to submittor	r
+		b. send to ``Sender:''	s
+		c. do not return	q 
+		d. as specified	(\fInext line\fR)
+
+10.	Returned mail	a. entire original	(\fIdefault\fR)
+	contents	b. citation only	c
+
+11.	Warnings	a. send warnings	(\fIdefault\fR)
+		b. do not send warnings	z
+
+12.	Delay channel	a. enable delay channel	(\fIdefault\fR)
+	usage	b. don't use delay	d
+
+13.	Delay channel	a. not delay channel	(\fIdefault\fR)
+	indicator	b. delay channel	j
+
+14.	Nameserver	a. short timeouts	 (\fIdefault\fR)
+	timeouts	b. as specified	k...*
+
+15.	Submission	a. not shown	(\fIdefault\fR)
+	tracing	b. watch submission	W
+
+16.	Logging file	a. as per msglog	(\fIdefault\fR)
+		b. as specified	L...*
+
+17.	Logging level	a. as per msglog	(\fIdefault\fR)
+		b. as specified	V...*
+.TE
+.RE
+.ne 5
+.SS Comments
+.IP General
+Literals shown as characters, followed by an ellipsis,
+followed by an asterisk (e.g. x...*), represent a string.  The first
+character specifies the nature of the setting.  The value
+for the setting is placed between that character and the
+asterisk.  Settings \fBi\fR, \fBh\fR, and \fBf\fR may contain any string
+not containing an asterisk, null, or newline.  Settings
+\fBx\fR and and \fBg\fR are lists with members comprising strings
+as for \fBi\fR, \fBh\fR and \fBf\fR, but further prohibited from containing
+commas.  Commas separate members of the list.
+.ne 5
+.IP Specific
+.IP "1. Relaying"
+This is used when the calling program is interfacing with
+another distribution system, effecting relaying.  The literal
+after the \fBi\fR specifies the channel the
+message is coming from.
+The \fB\h\fR may be used, in conjunction with \fB\i\fR, to
+specify the source host.  The literal is the name of the host.
+.ne 5
+.IP "2. Authentication"
+Normally, the message must correctly identify its sender.
+Anyone may send "anonymous" (unsigned) mail, but they
+must use the \fBu\fR setting which bypasses authentication.
+However, it also causes MMDF to include, in the Source-Info:
+component, a statement noting the absence of
+authentication.  Only root or relays may use the \fBt\fR
+setting, which bypasses authentication and does not add a
+disclaimer.  Others requesting it get \fBu\fR treatment.
+.ne 5
+.IP "3. Source-Info"
+In addition to the action explained above, Source-Info:
+can directly receive text, from the user, through the \fBf\fR
+setting.  The value string is replicated on a separate
+line in the field.
+.ne 5
+.IP "4. Address lists"
+An explicit list has one address per line.  When \fBx\fR or
+\fBg\fR are specified, they list the names of message
+components, such as ``To:'' and ``CC:'', which are to be
+searched for addresses.
+.ne 5
+.IP "5. Verification"
+Normally, any illegal address will cause the entire
+message to be rejected.  In \fBv\fR (verify) mode, the
+acceptability of each message is reported and
+encountering an illegal address does not abort
+submission.
+.ne 5
+.IP "6. Delivery type"
+Mail may be delivered to a recipient's mailbox (file),
+online terminal (if the recipient is logged in), or a
+combination of the two.  There is no default.  For each
+message, its delivery mode must be specified.
+(Delivery to online terminals is likely to be removed
+in the near future.)
+.ne 5
+.IP "7. Attempt"
+An immediate attempt causes a special
+.I deliver
+process to be forked and it will attempt to process the indicated
+mail immediately.  (The \fBn\fR setting does not allow more
+granularity, for historical reasons.) Otherwise, the
+system's background daemon will get to it eventually.
+The daemon also handles mail that initially could not be
+delivered/relayed.  A channel's descriptor structure (in
+.I chan.c
+or the runtime tailor file)
+specifies a channel as being Active, Passive,
+or Background.  Only the first is processed by any request
+for immediate delivery.  The second indicates a Post
+Office Box-style channel.  The third limits the channel
+to processing by the background
+.I deliver
+daemon, which may be necessary for restricting access to special channels,
+such as dial-out telephones.
+.ne 5
+.IP "8. Observation"
+If an immediate attempt is requested, the user may elect
+to watch its progress.
+.I Deliver
+and its children will report assorted aspects of their activity.  If a quiet
+attempt is requested, 
+.I submit
+returns as soon as
+submission is completed.  That is, a quiet attempt is
+performed detached.
+.ne 5
+.IP "9. Return address"
+If the invoker of
+.I submit
+is not to receive return mail
+(e.g., notification of delivery failure) then the next
+input line (the first, if settings are specified in the
+.IR exec (2)
+call), contains an address that should receive the
+notification.  It is not validated.  If either the \fBr\fR 
+or the \fBs\fR switch is given, 
+.I submit
+will not read a line for the return address.  If no return mail should be
+sent, the return address line should be empty (i.e., consist
+of a newline, only.)  If the \fBq\fR switch is given, a return address is read
+from the next line of input but the local system will not return mail if
+delivery problems are encountered.  The return address given may be used
+by other systems (if there are mail relays between the local system and the
+recipient).
+.ne 5
+.IP "10. Return contents"
+Normally, a copy of the entire message is sent with a
+delivery-failure notice.  Using the \fBc\fR switch causes a
+citation, comprising the message header and first three
+lines of non-blank lines of the body, to be sent.
+If more than 12 addresses are specified, for a message,
+citation-only is automatically set.  In addition, no warning
+message will be sent for addresses which take a long time to process
+(a site dependent value); the final failure notice will always
+be sent, if there are addresses that are never fully processed.
+.ne 5
+.IP "11. Warnings"
+Normally MMDF will send a non-delivery warning if a message has
+been undelivered after a small period (typically 12 to 72 hours,
+depending on the site).  Deliver attempts continue until a
+timeout period is reached.  This is typically after 3 to 10 days,
+depending on the site.
+.ne 5
+.IP "12. Disable delay channel"
+The delay channel is used to process mail submissions that could not
+queued because necessary nameserver information was unavailable
+and therefore an authoritative decision on the validity of the address
+was not possible.
+If the \fBd\fR option is specified, use of the delay channel is
+prohibited.  If the nameserver fails, a error is returned, rather
+than a conditional OK.
+.ne 4
+.IP "13. Delay channel indicator"
+This option is intended only to be used by the delay channel itself
+to indicate to submit that the invoking process IS the delay channel.
+This option implies the \fBd\fR option above.
+.ne 5
+.IP "14. Nameserver timeouts"
+By default, MMDF uses a short timeout algorithm.  This is suitable for
+user interface programs which don't want to wait a long time for dead
+nameservers.  The \fBk\fR option allows a different timeout to be set.
+The value given is the number of seconds to wait for the nameserver
+lookup to complete.  
+.ne 5
+.IP "15. Submission tracing"
+The \fBW\fR option causes submit to print a detailed
+description of its activities
+on file descriptor 2.  It will indicate for each
+addressee, the channel and addresses queued.
+This can generate a great deal of output if a mailing list is
+encountered, so it should be used with caution.
+.ne 5
+.IP "16. Logging file"
+The \fBL\fR option allows the specification of an alternate logging file
+at runtime.
+The string following the \fBL\fR should be the name of the logfile
+to be used.
+It can be terminated by a * or the end of the arguments.
+This option is only available to the Superuser or MMDF.
+.ne 5
+.IP "17. Logging level"
+The \fBV\fR option allows the setting of the logging level at runtime.
+The string following the \fBV\fR should be one of the valid MMDF
+logging level strings such as FTR or BST.
+It can be terminated by a * or the end of the arguments.
+This option is only available to the Superuser or MMDF.
+.RE
+.ne 16
+.SS INPUT STREAM
+.PP
+The following augmented BNF characterizes submit's input
+(file descriptor zero) format:
+.RS
+.IP  stream: 14
+*(init-seq '\\n' msg-info null) [null]
+.IP  init-seq: 14
+*{ switches listed above }
+.IP  msg-info: 14
+[ret-addr] '\\n'
+.br
+[addr-seq '!' '\\n']
+.br
+{ rfc822-format message }
+.IP  ret-addr: 14
+{ rfc822-format (return) address }
+.IP  addr-seq: 14
+*{ rfc822-address }
+.RE
+.SS ADDRESS FORMAT
+.PP
+Addresses are expected to conform to the ARPANET mail standard
+known as RFC-822, available from the Network Information Center
+at SRI International.
+Submit (and MMDF in general) also continues to support RFC-733 style
+mail for compatibility with earlier mail systems.
+.PP
+Also, addresses may be indirectly referenced, through a file
+specification of the form:
+.PP
+  ``<filename'' or ``:include:filename''
+.PP
+where the angle-bracket must be the first non-blank character of
+the specification (to distinguish it from the ``<...>'' usage, above).
+
+Addresses in the file may be separated by commas or newlines.
+.bp
+.SS EXAMPLE INTERACTIONS
+.PP
+Phases involve Invocation (Invoke), data sent into
+.I submit
+via
+its file descriptor zero (To), data returned from
+.I submit
+via its
+file descriptor one (From), iteration back to the specified phase
+(Loop), and process exit value (Exit).
+.IP "1."
+Simple, single-message, as with the \fIv6mail\fR command:
+.RS
+.IP "a. Invoke:" 15
+Parameters, ``-mlrxto,cc*'', indicate that the
+message is to be sent to recipients' mailboxes,
+local mail should be sent immediately, return
+mail goes to the submittor, and addresses are to
+be extracted from the ``To:'' and ``cc:``
+components.
+.IP "b. To:" 15
+The entire message
+.IP "c. From:" 15
+Error messages
+.IP "d. Exit:" 15
+Process return value, in wait(&val), taken from
+.I mmdf.h,
+indicating submission status.
+.RE
+.IP 2.
+Standard, multi-message protocol:
+.RS
+.IP "a. Invoke:" 15
+No parameters
+.IP "b. To:" 15
+Initialization information line.  A typical
+user program might have "mlrv", indicating the
+message is to be sent to mailboxes, local mail
+sent immediately, return mail goes to the
+sender, and each address verification is to be
+reported.  A relay program might have
+"mlntviVGR.BRL.MIL*", with "mlv" as above and the
+other settings indicating that mail for non-local
+channels is to be sent immediately, the
+author information is to be trusted, and the
+"Received:  " component should cite the mail as being
+relayed via Internet host VGR.BRL.MIL.
+.IP "c. To:" 15
+One address, terminated by a newline ('\\n').
+.IP "d. From:" 15
+Status character, from
+.I mmdf.h,
+plus human-oriented
+text plus newline.
+.IP "e. Loop:" 15
+Back to (c).  Terminate with address line having
+only an exclamation mark (\fB!\fR), with newline.
+.IP "f. To:" 15
+Message text, in Internet RFC #822 format.
+Multi-line, terminated by null ('\\0').
+.IP "g. From:" 15
+Status character, text, newline.
+.IP "h. Loop:" 15
+Back to (b).  Terminate with initialization line
+having only a null, without newline.
+.SH CHANNELS
+.PP
+When MMDF is used in conjunction with the DARPA domain nameserver
+system, a ``delay'' channel should be configured to allow
+queuing of addresses that fail verification temporarily due
+to nameserver failures (unavailability).
+Two other special channels that can be configured are
+the ``badusers'' and ``badhosts'' channels.
+Mail to unknown users or unknown hosts will be queued to
+these channels if they are configured.
+The bad channels have no special code associated with them.
+The channel configuration should reference whatever table and
+program is necessary to reach a smarter host which can deliver
+or forward the mail.  The channel should have the ``host=''
+parameter set to this host name.
+The channel names given above are reserved.
+.SH FILES
+Numerous.  Generally under the MMDF login directory.
+.SH "SEE ALSO"
+send(1), mmdf(3), deliver(8)

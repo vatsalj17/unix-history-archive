@@ -1,0 +1,73 @@
+.TH "RECVPROG" 8 "28 December 85"
+.SH NAME
+recvprog \- MMDF inbound generalized program channel
+.SH SYNOPSIS
+.B recvprog
+[
+.B -D
+] [
+.B \-c
+.I channel
+] [
+.B \-{hv}
+.I host
+] [
+.B \-s
+.I sender
+] [
+.B \-M?
+] [
+.I addresses
+]
+.SH DESCRIPTION
+The generalized program inbound channel
+is part of the MMDF mail system.
+\fIRecvprog\fR is called by the transport layer trying
+to be interface to MMDF.  For example, the ACSNET system
+might call \fIrecvprog\fR to give mail to the MMDF system.
+It in turn calls the MMDF program submit.
+Since the program sets the trustme flag when calling submit,
+it must be called by a process whose UID is that
+of trusted mail submitter (generally only root and mmdf).
+.PP
+The options available are:
+.TP
+.B \-D
+places the program in debugging mode.
+The message is written to stdout
+instead of handed to the mail system (mmdf/submit)
+and many debugging printfs are turned on.
+.TP
+.B \-c
+can be used to specify the channel into which the mail is being
+submitted.
+The following argument must be the name of a valid MMDF channel.
+.TP
+.B \-h
+followed by a host name specifies the host from which the message originated.
+.B \-v
+is like
+.B \-h,
+but assumes the host name is in reverse domain order
+as in the UK JNTMAIL protocol.
+.TP
+.B \-s
+specifies the sender of the message.  The sender string must follow
+in the next argument.
+.TP
+.B \-M?
+indicates the mode for the program to allow it to accept
+different input formats.
+.B \-Mj
+indicates the input will be in in JNT mail file format with
+the addresses at the head of the file.  If this is not specified,
+then the addresses must be given as the last arguments on the command
+line.
+.B \-Ms
+is reserved for specifying Batch-SMTP input format.
+.SH "SEE ALSO"
+deliver(8), submit(8), sendprog(8)
+.SH BUGS
+This is a new channel and has not been widely tested, but will continue
+to be supported in future versions.
+Documentation of this channel is sparse at this time.

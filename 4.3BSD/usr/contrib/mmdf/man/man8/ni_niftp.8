@@ -1,0 +1,65 @@
+.TH NI_NIFTP 8 MMDF
+.SH NAME
+JNT Mail File Submission process
+.SH SYNOPSIS
+.B ni_niftp
+Net File TSaddress
+.SH DESCRIPTION
+.PP
+.I Ni_niftp
+is invoked by a File Transfer Protocol server to interpret a
+JNT Mail File (see
+.IR jntmail (8)
+) sent to it.
+.I Ni_niftp
+queues the message using
+.IR submit (8)
+and returns error messages relating to bad addresses in the JNT
+Mail file.
+.I Ni_niftp
+must be invoked with a privileged real uid (root, daemon, or
+mmdf).
+.PP
+.I File
+is the JNT Mail file to be submitted.
+.I Net
+is the network which the JNT Mail File has come from.  A table
+niftp.nets must exist in the tailor file (see the MMDF installation document)
+which has legal values of net on the LHS and the associated
+MMDF channel on the RHS.   An example tailor entry is:
+.ne 3
+.nf
+
+MTBL  name="niftp.nets", file="niftp.nets",
+        display="NIFTP net to channel map"
+
+.fi
+This indirection allows the NIFTP to have different
+channel nomenclature to MMDF,  and gives a measure of security
+by preventing JNT Mail on spurious channels.
+.I TSaddress
+should correspond to the LHS of the associated channel table,
+but may be in reverse domain ordering (on the basis that many
+NIFTP implementations may only understand NRS ordering).  This
+will be used in the message trace information.  If it is not in
+the tables, it will be treated as a domain literal.
+Any "," or "*" characters in the string will be mapped to "?"
+for compatibility with
+.IR submit (8).
+.PP
+The exit values of 
+.I ni_niftp 
+are standard mmdf exit values
+as defined in h/mmdf.h.  RP_NDEL is given special
+significance, as a JNT Mail File with no valid destination
+address, where no return address could be determined.
+.I Ni_niftp
+will unlink the JNT Mail file, except in cases of permanent
+failure, when the file will be left to assist debugging.
+.ne 7
+.SH FILES
+<mmdflib>/ni_niftp
+.br
+<mmdfsource>/h/mmdf.h
+.SH "SEE ALSO"
+jntmail(8), york-inst(8), york-inst(8)

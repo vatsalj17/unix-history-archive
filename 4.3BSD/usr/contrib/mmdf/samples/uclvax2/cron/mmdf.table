@@ -1,0 +1,16 @@
+#
+set dir="/common/mmdftable"
+set  ht="$dir/hosts.txt"
+cd "$dir"
+rm -f arpa
+rm -f smtp.names
+cp arpa.head arpa
+cp smtp.head smtp.names
+cd /common/bin/mmdf
+dmtable $ht -t tcp -d arpa  >>& "$dir/arpa"
+hstable $ht -t tcp >>& "$dir/smtp.names"
+rm -f "$dir/all.names"
+cp "$dir/all.head" "$dir/all.names"
+fulltable >>& "$dir/all.names"
+(/bin/sh mmdf.al.check) | mail mail-check -s "Alias file consistency check"
+exit

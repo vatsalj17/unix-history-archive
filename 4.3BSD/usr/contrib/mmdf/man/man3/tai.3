@@ -1,0 +1,184 @@
+.TH TAI 3
+.SH NAME
+tai_init, tai_get, tai_end \- get site tailoring information
+.SH SYNOPSIS
+.nf
+tai_init (file)
+    char file[];
+
+tai_get (maxargs, argv)
+    int maxargs;
+    char *argv[];
+
+tai_end ()
+.fi
+.SH DESCRIPTION
+The
+.I tai
+package is designed to acquire site-dependent information, from
+an external, clear-text file.  It supports a simple file syntax.
+.ne 4
+.SS "File Format"
+.PP
+Tailoring information comprises a set of lines.  Lines comprise
+a set of fields.  It is usual for the first field on the line to
+be treated as the name of the line.
+Fields may be separated by space, horizontal
+tab, comma, semi-colon, colon, or equal sign.  These separators
+are treated similarly.  However, space and tab are skipped, at
+the beginning of a field.  Also,
+if two fields are separated by an equal sign, they are assumed
+to be a key/value pair and are treated somewhat differently by
+.I tai_get().
+.PP
+Fields are formed according to a syntax that is similar to C programs.
+A sequence
+of printable, non-special characters is a field.  To include
+a special character, such as space or comma, the character
+must be preceded by a back-slash.  The sequence backslash, octal-string
+specifies a single eight-bit character (e.g, \\040 indicates space).
+If a field is surrounded by quotation marks, only quotation mark
+and backslash are treated as special.
+.PP
+The following shows how different argument lines are parsed.  A file,
+.ne 6
+containing:
+.RS
+
+.nf
+loc UDel-Relay
+que /usr/mmdf/que/home
+chan a,, arpa\\040net\\ foo=bar
+chan b backup blat="gelp,blat=boop"
+.fi
+.RE
+
+is parsed into the follow four sets of argument
+.ne 6
+lists:
+.RS
+
+.nf
+\'loc' 'UDel-Relay'
+\'que' '/usr/mmdf/que/home'
+\'chan' 'a' '' '=' 'arpa net foo' 'bar'
+\'chan' 'b' 'backup' '=' 'blat' 'gelp,blat=boop'
+.fi
+.RE
+.PP
+The formal syntax for a tailoring file is given below, in modified
+BNF.  Asterisk indicates repetition zero or more times.
+Parentheses surround
+.ne 10
+alternatives.
+.RS
+
+.nf
+file     =  *line
+line     =  *field "\\n"
+field    =  *(SPACE / TAB) value *value SPECIAL
+value    =   CHAR / echar / qstring
+qstring  =   '"' *qvalue '"'
+qvalue   =   CHAR / DELIM / echar
+echar    =   "\\" (SPECIAL / FORMAT / octal)
+SPECIAL  =   DELIM / '"' / "\\"
+DELIM    =   SPACE / TAB / "," / ";" / ":"
+CHAR     =  {Any ASCII character not a SPECIAL}
+FORMAT   =  'n' / 'r' / 'f' / 'b'
+octal    =   ochar [ochar [ochar]]
+ochar    =  {Digit 0-7}
+
+.fi
+.RE
+.ne 5
+.SS "Procedure Calls"
+.PP
+.I tai_init()
+initializes the tailoring package.  Its argument is the name of
+the file that contains tailoring information.  Since the name is
+not built into the package, it is possible to have several different
+tailoring files.  It returns 0 on normal termination.
+.PP
+.I tai_get()
+acquires and parses the next line of the tailoring file.  The first
+argument to the procedure is the maximum number of
+tailoring arguments (fields) that can be accepted from the line.
+The second procedure argument is an array which will hold character
+pointers to the tailoring arguments.  The list of pointers is terminated
+by a zero-valued pointer.
+.PP
+.I tai_get()
+returns the actual number of arguments that were parsed and returns
+0 when it has reached then end of the file.
+The data are in permanent storage, so that they do not have to be copied
+before the next call to
+.I tai_get().
+.PP
+The argument list is built in the same sequence as the fields are
+listed in the argument line.  Separator characters are not
+returned, except for equal-sign.  When an equal-sign is used,
+three entries are consumed in the argument pointer array.  The first
+points to the string "=", the second is
+for the key and the third is for the value.
+(I.e., equal-sign is treated as an infix operator, but the parsed
+fields are stored in prefix form.)
+.PP
+When initialization is complete, call
+.I tai_end()
+for cleanup.  It returns 0 on normal termination.
+.ne 4
+.SS "Usage"
+.PP
+The user program should call
+.I tai_init()
+and then should iteratively call
+.I tai_get()
+until all of the tailoring information has been processed.
+If there are several different software modules that need to
+be initialized, then the information returned by
+.I tai_get()
+can be passed consecutively to the modules' initialization
+routines, until one of them returns a value indicating that
+it has "consumed" the information.  The following code demonstrates
+the use of this package:
+.RS
+
+.nf
+.ne 30
+#include "util.h"
+
+main ()
+{
+    char *taiargs[20];
+    int nargs;
+    register int ind;
+
+    if (tai_init ("init.tai") < OK)
+    {                       /* initialize               */
+	perror ("tai_init");
+	exit (-1);
+    }
+
+    while ((nargs = tai_get (20, taiargs)) > 0)
+	for (ind = 0; ind < nargs; ind++)
+	{                   /* who uses it? */
+	    if (user_init (taiargs))
+		continue;   /* user-level information   */
+	    if (util_init (taiargs))
+		continue;   /* the utilities package    */
+	    /* was not consumed; ignore it              */
+	}
+
+    if (nargs < 0)          /* we had some problem      */
+	perror ("tai_get");
+    tai_end ();
+    exit ((nargs < 0) ? -1 : 0);
+}
+.fi
+.RE
+.SH  DIAGNOSTICS
+All routines return -1 on error.
+.SH  AUTHOR
+Dave Crocker (DCrocker@UDel)
+.br
+ 7 Jul 82  Initial version

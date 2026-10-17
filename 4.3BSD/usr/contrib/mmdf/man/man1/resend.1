@@ -1,0 +1,49 @@
+.TH RESEND 1 "27 December 1986"
+.SH NAME
+resend \- redistribute mail using the Resent- notation.
+.SH SYNOPSIS
+.B resend
+[\-rw] [\-\-subargs] addresses [\-t addresses] [\-c addresses]
+.SH DESCRIPTION
+.I Resend
+is responsible for taking as input a standard mail message,
+adding the various Resent- components to it, and then handing
+it over to \fIsubmit\fR.
+.PP
+The usual method of operation is to pipe a message into
+.I resend
+and supply on the command line the addresses to resend the message
+to.  Aliases defined through the personal alias mechanism in
+.I send,
+may also be used with
+.I resend.
+See \fIsend\fR(1).
+The default behavior can be changed by using the following
+flags:
+.IP \-r
+This specifies that error returns for this message are not
+wanted, if the message gets into problems with delivery, you
+couldn't care less.
+.IP \-w
+This flag enables you to follow the delivery attempt. Submit
+and its children will print out what they are doing.
+.IP \-\-
+Any argument starting in this manner is passed directly
+to submit after losing the \-\-. You had better know what you are
+doing!
+.PP
+After the flags have been processed, the address lists for
+the message are built up. Normally all addresses are put onto
+one Resent-To: line, but they can be broken up onto
+several Resent-To: lines by prefixing a block of addresses
+with the \-t flag. Alternatively the \-c flag will start
+building up a list of Resent-Cc: addresses.
+.I Resend
+looks after all the other headers, such as Resent-Date, Resent-From
+etc.
+.SH FILES
+<login directory>/.signature
+.br
+<login directory>/.sendrc
+.SH "SEE ALSO"
+send(1), v6mail(1), submit(8)

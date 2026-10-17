@@ -1,0 +1,71 @@
+#       Makefile for name-table lookup-routines
+#           Use ch_tbseq if sequential name tables, only, are available
+#           Use ch_tbdbm if you have Unix dbm() subroutines available
+#
+
+MODULES	= dm_struct dm_table ch_tbdbm ch_tbseq \
+	  tb_io tb_ns.$(TB_NS) tb_struct
+
+OBJECTS  =  dm_struct.o dm_table.o $(CH_TB).o \
+	    tb_io.o tb_ns.$(TB_NS).o tb_struct.o
+
+COBJECTS =  dm_struct.c dm_table.c $(CH_TB).c \
+	    tb_io.c tb_ns.$(TB_NS).c tb_struct.c
+
+real-default: ../table-made
+../table-made:	$(OBJECTS)
+	-ar r ../libmmdf.a $(OBJECTS)
+	-touch ../table-made
+	-@echo "table routines built normally"
+
+lint:
+	$(LINT) -Ctable $(LFLAGS) $(COBJECTS)
+
+clean:
+	-rm -f *.o *.a x.c makedep eddep make.out errs llib-ltable*
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+dm_struct.o: dm_struct.c
+dm_struct.o: ../../h/util.h
+dm_struct.o: ../../h/mmdf.h
+dm_struct.o: ../../h/ch.h
+dm_struct.o: ../../h/dm.h
+dm_table.o: dm_table.c
+dm_table.o: ../../h/util.h
+dm_table.o: ../../h/mmdf.h
+dm_table.o: ../../h/ch.h
+dm_table.o: ../../h/dm.h
+dm_table.o: ../../h/chdbm.h
+ch_tbdbm.o: ch_tbdbm.c
+ch_tbdbm.o: ../../h/util.h
+ch_tbdbm.o: ../../h/mmdf.h
+ch_tbdbm.o: ../../h/ch.h
+ch_tbdbm.o: ../../h/dm.h
+ch_tbdbm.o: ../../h/chdbm.h
+ch_tbseq.o: ch_tbseq.c
+ch_tbseq.o: ../../h/util.h
+ch_tbseq.o: ../../h/mmdf.h
+ch_tbseq.o: ../../h/ch.h
+ch_tbseq.o: ../../h/dm.h
+tb_io.o: tb_io.c
+tb_io.o: ../../h/util.h
+tb_io.o: ../../h/mmdf.h
+tb_io.o: ../../h/ch.h
+tb_ns.4.2.o: tb_ns.4.2.c
+tb_ns.4.2.o: ../../h/util.h
+tb_ns.4.2.o: ../../h/mmdf.h
+tb_ns.4.2.o: ../../h/ch.h
+tb_ns.4.2.o: ../../h/ns.h
+tb_ns.4.2.o: /usr/include/netdb.h
+tb_ns.4.2.o: /usr/include/sys/socket.h
+tb_ns.4.2.o: /usr/include/netinet/in.h
+tb_ns.4.2.o: /usr/include/arpa/nameser.h
+tb_ns.4.2.o: /usr/include/arpa/resolv.h
+tb_struct.o: tb_struct.c
+tb_struct.o: ../../h/util.h
+tb_struct.o: ../../h/mmdf.h
+tb_struct.o: ../../h/ch.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

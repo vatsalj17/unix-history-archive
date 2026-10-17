@@ -1,0 +1,44 @@
+(Message inbox:50)
+Return-Path: <@SUMEX-AIM.ARPA:SY.BILL%CU20B@COLUMBIA>
+Received: from SUMEX-AIM.ARPA by safe with TCP; Tue, 13 Nov 84 18:08:59 pst
+Received: from columbia.arpa by SUMEX-AIM.ARPA with TCP; Tue 13 Nov 84 18:08:36-PST
+Received: from CU20B.ARPA by columbia.arpa; Tue, 13 Nov 84 21:07:55 est
+Date: Tue 13 Nov 84 21:08:56-EST
+From: Bill Schilit <Sy.Bill%CU20B@COLUMBIA.ARPA>
+Subject: New SUMACC
+To: croft@SUMEX-AIM.ARPA
+
+
+Just finished installing the new sumacc tar tape and here are a few
+comments:
+
+	
+ In hangman "DocumentProc" should be "documentProc."
+
+ You mention "gw" and "info" in the top-level read me file but they don't
+ exist.
+
+ In your ramdisk driver there is a problem in the rdinit.s stuff.  When you
+ allocate the drive queue element it should be 2 bytes larger to include
+ the field containing the number of 512 byte blocks on the drive.  These
+ bytes aren't present for the sony drives (1&2) but cause all sorts of
+ problems for other drives.  This is one thing that prevents you from
+ dragging one disk on top of the ram disk to entirely replace its contents.
+
+ Chris Maio and I made a small change to rmaker which might be worth
+ preserving... When compiling type "DRVR" if the name starts with a "."
+ then suppress the null which is usually inserted.  This NULL stuff is
+ really a pain when you are installing a device driver, it makes apparently
+ ramdom things happen since the driver can't be found and then appears in
+ the apple window!  The source is in CU20B::PS:<SY.BILL>RMAKER.C.
+
+ If you are going to keep a bugs file or something like that, then it would
+ be nice to mention the problem with "SET FILE" -- if you are trying to set
+ an author name of less than 4 characters it never works.  This appears to
+ be a pascal fixed array of char [1..4] bogosity.  Best ALWAYS to keep
+ those names four chars.  This has causes me hours of grief when trying
+ to make an ICON come up which was keyed on "SBL"
+
+- Bill
+-------
+

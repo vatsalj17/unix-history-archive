@@ -1,0 +1,188 @@
+#
+#   Makefile for general MMDF utility routines
+#
+MODULES =   phs_note aliasfetch \
+	    ml_send qu_rdmail qu_io qu_fakrply \
+	    hd_format amp_hdr rtn_proc \
+	    mq_rdmail mm_rdmail mm_wtmail mm_io \
+	    ch_struct getmailid getpwmid \
+	    interrupt fnput \
+	    mmdf_init mmdf_fdinit mm_tai uip_tai post_tai \
+	    err_abrt rp_valstr logptr cache ch_llinit alias
+
+OBJECTS =   phs_note.o aliasfetch.o \
+	    ml_send.o qu_rdmail.o qu_io.o qu_fakrply.o \
+	    hd_format.o amp_hdr.o rtn_proc.o \
+	    mq_rdmail.o mm_rdmail.o mm_wtmail.o mm_io.o \
+	    ch_struct.o getmailid.o getpwmid.o \
+	    interrupt.o fnput.o \
+	    mmdf_init.o mmdf_fdinit.o mm_tai.o uip_tai.o post_tai.o \
+	    err_abrt.o rp_valstr.o logptr.o cache.o \
+	    ch_llinit.o conf.o chan.o alias.o
+
+COBJECTS =  phs_note.c aliasfetch.c \
+	    ml_send.c qu_rdmail.c qu_io.c qu_fakrply.c \
+	    hd_format.c amp_hdr.c rtn_proc.c \
+	    mq_rdmail.c mm_rdmail.c mm_wtmail.c mm_io.c \
+	    ch_struct.c getmailid.c getpwmid.c \
+	    interrupt.c fnput.c \
+	    mmdf_init.c mmdf_fdinit.c mm_tai.c uip_tai.c post_tai.c \
+	    err_abrt.c rp_valstr.c logptr.c cache.c \
+	    ch_llinit.c ../../conf/$(HOST)/conf.c ../../conf/$(HOST)/chan.c \
+	    alias.c
+
+real-default: ../mmdf-made
+../mmdf-made:	$(OBJECTS)
+	$(AR) r ../libmmdf.a $(OBJECTS)
+	-touch ../mmdf-made
+	-@echo "mmdf routines built normally"
+
+#
+#  Special case dependencies
+#
+conf.o: ../../conf/$(HOST)/conf.c ../../h/util.h ../../h/mmdf.h \
+			   ../../h/ap_norm.h
+	$(CC) -c $(CFLAGS) ../../conf/$(HOST)/conf.c
+
+chan.o: ../../conf/$(HOST)/chan.c ../../h/util.h ../../h/mmdf.h \
+			   ../../h/ch.h ../../h/dm.h
+	$(CC) -c $(CFLAGS) ../../conf/$(HOST)/chan.c
+
+
+lint:
+	$(LINT) -Cmmdf $(LFLAGS) $(COBJECTS)
+
+clean:
+	-rm -f *.o x.c makedep eddep make.out errs cachetest llib-lmmdf*
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+phs_note.o: phs_note.c
+phs_note.o: ../../h/util.h
+phs_note.o: ../../h/mmdf.h
+phs_note.o: /usr/include/sys/stat.h
+phs_note.o: ../../h/ch.h
+phs_note.o: ../../h/phs.h
+aliasfetch.o: aliasfetch.c
+aliasfetch.o: ../../h/util.h
+aliasfetch.o: ../../h/mmdf.h
+aliasfetch.o: ../../h/ch.h
+ml_send.o: ml_send.c
+ml_send.o: ../../h/util.h
+ml_send.o: ../../h/mmdf.h
+ml_send.o: /usr/include/signal.h
+qu_rdmail.o: qu_rdmail.c
+qu_rdmail.o: ../../h/util.h
+qu_rdmail.o: ../../h/mmdf.h
+qu_rdmail.o: ../../h/adr_queue.h
+qu_io.o: qu_io.c
+qu_io.o: ../../h/util.h
+qu_io.o: ../../h/mmdf.h
+qu_io.o: /usr/include/sys/stat.h
+qu_io.o: ../../h/adr_queue.h
+qu_io.o: ../../h/ch.h
+qu_io.o: ../../h/phs.h
+qu_io.o: ../../h/ap.h
+qu_fakrply.o: qu_fakrply.c
+qu_fakrply.o: ../../h/util.h
+qu_fakrply.o: ../../h/mmdf.h
+qu_fakrply.o: ../../h/chan.h
+hd_format.o: hd_format.c
+hd_format.o: ../../h/util.h
+hd_format.o: ../../h/mmdf.h
+hd_format.o: ../../h/ch.h
+amp_hdr.o: amp_hdr.c
+amp_hdr.o: ../../h/util.h
+amp_hdr.o: ../../h/mmdf.h
+amp_hdr.o: ../../h/ap.h
+amp_hdr.o: ../../h/ap_lex.h
+amp_hdr.o: ../../h/ch.h
+rtn_proc.o: rtn_proc.c
+rtn_proc.o: ../../h/util.h
+rtn_proc.o: ../../h/mmdf.h
+rtn_proc.o: ../../h/msg.h
+rtn_proc.o: ../../h/adr_queue.h
+mq_rdmail.o: mq_rdmail.c
+mq_rdmail.o: ../../h/util.h
+mq_rdmail.o: ../../h/mmdf.h
+mq_rdmail.o: /usr/include/signal.h
+mq_rdmail.o: /usr/include/sys/stat.h
+mq_rdmail.o: ../../h/ch.h
+mq_rdmail.o: ../../h/msg.h
+mq_rdmail.o: ../../h/adr_queue.h
+mm_rdmail.o: mm_rdmail.c
+mm_rdmail.o: ../../h/util.h
+mm_rdmail.o: ../../h/mmdf.h
+mm_wtmail.o: mm_wtmail.c
+mm_wtmail.o: ../../h/util.h
+mm_wtmail.o: ../../h/mmdf.h
+mm_io.o: mm_io.c
+mm_io.o: ../../h/nexec.h
+mm_io.o: ../../h/util.h
+mm_io.o: ../../h/mmdf.h
+ch_struct.o: ch_struct.c
+ch_struct.o: ../../h/util.h
+ch_struct.o: ../../h/mmdf.h
+ch_struct.o: ../../h/ch.h
+getmailid.o: getmailid.c
+getmailid.o: ../../h/util.h
+getmailid.o: ../../h/mmdf.h
+getmailid.o: ../../h/ch.h
+getmailid.o: /usr/include/pwd.h
+getpwmid.o: getpwmid.c
+getpwmid.o: ../../h/util.h
+getpwmid.o: ../../h/mmdf.h
+getpwmid.o: ../../h/ch.h
+getpwmid.o: /usr/include/pwd.h
+interrupt.o: interrupt.c
+interrupt.o: ../../h/util.h
+interrupt.o: ../../h/mmdf.h
+interrupt.o: /usr/include/signal.h
+fnput.o: fnput.c
+fnput.o: ../../h/util.h
+fnput.o: ../../h/mmdf.h
+mmdf_init.o: mmdf_init.c
+mmdf_init.o: ../../h/util.h
+mmdf_init.o: ../../h/mmdf.h
+mmdf_init.o: ../../h/ch.h
+mmdf_fdinit.o: mmdf_fdinit.c
+mmdf_fdinit.o: ../../h/util.h
+mmdf_fdinit.o: ../../h/mmdf.h
+mm_tai.o: mm_tai.c
+mm_tai.o: ../../h/util.h
+mm_tai.o: ../../h/mmdf.h
+mm_tai.o: ../../h/cmd.h
+mm_tai.o: ../../h/ch.h
+mm_tai.o: ../../h/ap.h
+mm_tai.o: ../../h/dm.h
+uip_tai.o: uip_tai.c
+uip_tai.o: ../../h/util.h
+uip_tai.o: ../../h/mmdf.h
+post_tai.o: post_tai.c
+post_tai.o: ../../h/util.h
+post_tai.o: ../../h/mmdf.h
+err_abrt.o: err_abrt.c
+err_abrt.o: ../../h/util.h
+err_abrt.o: ../../h/mmdf.h
+rp_valstr.o: rp_valstr.c
+rp_valstr.o: ../../h/util.h
+rp_valstr.o: ../../h/mmdf.h
+logptr.o: logptr.c
+logptr.o: ../../h/util.h
+logptr.o: ../../h/mmdf.h
+cache.o: cache.c
+cache.o: ../../h/util.h
+cache.o: ../../h/mmdf.h
+cache.o: ../../h/ch.h
+ch_llinit.o: ch_llinit.c
+ch_llinit.o: ../../h/util.h
+ch_llinit.o: ../../h/mmdf.h
+ch_llinit.o: ../../h/ch.h
+alias.o: alias.c
+alias.o: /usr/include/stdio.h
+alias.o: ../../h/util.h
+alias.o: ../../h/mmdf.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

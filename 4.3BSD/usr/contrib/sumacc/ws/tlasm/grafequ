@@ -1,0 +1,91 @@
+W^I'4PH r^FTTEn;-----------------------------------------------------------------
+; File GRAFEQU.TEXT - Macintosh graphics equates file.
+;
+; Written by Bud Tribble        26-May-81
+;
+; All system graphic routines include this equate file.
+;
+;   MODIFICATION HISTORY:
+;
+;   BLT  2-Oct-81    For new LisaGraf
+;   AJH  31-Oct-81   Moved variables down to make room for driver variables
+;   alo  05-Feb-82   Lisagraf vars moved down to $800 for more system globals
+;   AJH  06-Jul-82   Added stuff for ObscureCursor
+;   LAK  26-Jul-82   Added JUPDATEPROC pointer to update event generator
+;   LAK  05-Sep-82   Added MaxX and MaxY equates
+;   AJH  15-Sep-82   Modified for new cursor interface
+;   LAK  16-Oct-82   updated for 512 dots
+;   AJH  20-Nov-82   added JournalFlag, font manager jump vectors
+;   AJH  02-Jan-83   added JournalHook
+;   SC   21-Jan-83   font scaling/coupling stuff
+;   SC   02-Jun-83   Added 3 vars for jerky cursors
+;   SC   23-Jan-83   changed JournalHook to journalRef
+;   AJH  11-Aug-83   added MScaleThresh, MScaleFactor
+;   LAK  13-Aug-83   changed above two to MScaleTbl, added MScaleOld
+;   LAK  18-Aug-83   changed above two to CrsrThresh and CrsrQuad.
+;                    moved JCrsrTask here from Sysequ.
+;   LAK  20-Aug-83   Removed CrsrQuad.
+;-----------------------------------------------------------------
+
+;-----------------------------------------------------------------
+; System Constants
+;-----------------------------------------------------------------
+
+SCRNROWB        .EQU    64
+MaxX            .EQU    512
+MaxY            .EQU    342
+SCRNBYTES       .EQU    SCRNROWB*MaxY
+
+;-----------------------------------------------------------------
+;
+; System Graphic Jump Vectors - Long pointers to
+;                    system routine entry points.
+;
+GRAFBEGIN       .EQU    $800                    ;GRAF GLOBAL AREA
+;
+JHIDECURSOR     .EQU    GRAFBEGIN
+JSHOWCURSOR     .EQU    JHIDECURSOR+4
+JSHIELDCURSOR   .EQU    JSHOWCURSOR+4
+JSCRNADDR       .EQU    JSHIELDCURSOR+4
+JSCRNSIZE       .EQU    JSCRNADDR+4
+JINITCRSR       .EQU    JSCRNSIZE+4
+JSETCRSR        .EQU    JINITCRSR+4
+JCRSROBSCURE    .EQU    JSETCRSR+4
+JUPDATEPROC     .EQU    JCRSROBSCURE+4
+LGRAFJUMP       .EQU    JUPDATEPROC+4          ;LAST VECTOR LOCATION
+;
+; System Graphic variables
+;
+GRAFVAR         .EQU    LGRAFJUMP       ;SYSTEM GRAPHIC VARIABLE AREA
+SCRNBASE        .EQU    GRAFVAR         ;POINTER TO BASE OF SCREEN
+MTEMP           .EQU    SCRNBASE+4      ;POINT, TEMPORARY MOUSE COORDS
+RawMouse        .EQU    MTEMP+4         ; raw mouse coordinates (un-jerked)
+MOUSE           .EQU    RawMouse+4      ;POINT, MOUSE COORDS USED BY CURSOR
+CRSRPIN         .EQU    MOUSE+4         ;RECT, CURSOR PIN LIMITS
+CRSRRECT        .EQU    CRSRPIN+8       ;RECT, CURSOR HIT RECTANGLE
+THECRSR         .EQU    CRSRRECT+8      ;68 BYTES. CURSOR DATA, MASK, HOTSPOT
+CRSRADDR        .EQU    THECRSR+68      ;LONG, ADDR OF DATA UNDER CURSOR
+CRSRSAVE        .EQU    CRSRADDR+4      ;16 LONGS, DATA UNDER CURSOR
+CRSRVIS         .EQU    CRSRSAVE+64     ;BYTE, CURSOR VISIBLE FLAG
+CRSRBUSY        .EQU    CRSRVIS+1       ;BYTE, CURSOR LOCK-OUT FLAG
+CRSRNEW         .EQU    CRSRBUSY+1      ;BYTE, CURSOR CHANGED FLAG
+CRSRCOUPLE      .EQU    CRSRNEW+1       ;BYTE, CURSOR coupled flag
+CRSRSTATE       .EQU    CRSRCOUPLE+1    ;WORD, FOR NESTED CURSOR CALLS
+CRSROBSCURE     .EQU    CRSRSTATE+2     ;byte semaphore for obscure cursor
+CRSRSCALE       .EQU    CRSROBSCURE+1   ;byte cursor scale flag
+
+MouseMask       .EQU    CRSRSCALE+3     ; V-H mask for ANDing with mouse coordinates
+MouseOffset     .EQU    MouseMask+4     ; V-H offset for adding after anding above
+
+JournalFlag     .EQU    MouseOffset+4   ;flag for journaling
+JSwapFont       .EQU    JournalFlag+2   ;jump entry for FMSwapFont
+JFontInfo       .EQU    JSwapFont+4     ;jump entry for FMFontMetrics
+JournalRef      .EQU    JFontInfo+4     ;hook for journalling
+
+CrsrThresh      .EQU    JournalRef+4    ;threshold for mouse scaling
+JCrsrTask       .EQU    CrsrThresh+2    ;address of CrsrVBLTask
+
+; NOTE -- JCrsrTask and CrsrThresh must be right before GrafEnd!
+
+GRAFEND         .EQU    JCrsrTask+4     ;end of graphics globals
+

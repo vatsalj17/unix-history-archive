@@ -1,0 +1,22 @@
+window 2 0
+xmitpack 130
+recvpack 130
+dial 1200|<local>5550000
+xmit "\r\x\r"
+{
+  alternate
+	recv "ogin: " 15
+  alternate
+	replay
+	recv "xx" 5
+	log "ERROR: Phone answered at 300 baud--breaking"
+	xmit "\#"
+	recv "ogin: " 15
+}
+xmit "ACCOUNT\r"
+recv "assword:" 30
+xmit "PASSWORD\r"
+recv "annel: " 60
+xmit "pobox\n"
+start
+end

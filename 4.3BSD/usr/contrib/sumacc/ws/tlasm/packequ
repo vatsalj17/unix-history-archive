@@ -1,0 +1,161 @@
+3. "6F^5D!$^x; File: PackEqu
+;
+;    This file contains all the equates needed for packages
+;_______________________________________________________________________
+;
+;
+; Modification History:
+;  3 Mar 84  RS  Created on this date
+;_______________________________________________________________________
+
+; (c) 1983 Apple Computer, Inc.
+;
+;  Package Equates
+;
+
+dskInit   .EQU      2         ;Disk Initialization
+stdFile   .EQU      3         ;Standard File
+flPoint   .EQU      4         ;Floating-Point Arithmetic
+trFunc    .EQU      5         ;Transcendental Functions
+intUtil   .EQU      6         ;International Utilities
+bdConv    .EQU      7         ;Binary/Decimal Conversion
+
+;equates for STANDARD FILE PACKAGE
+putDlgID  .EQU      -3999     ;SFPutFile dialog template ID
+
+putSave   .EQU      1         ;save button
+putCancel .EQU      2         ;cancel button
+putEject  .EQU      5         ;eject button
+putDrive  .EQU      6         ;drive button
+putName   .EQU      7         ;editTExt item for file name
+
+getDlgID  .EQU      -4000     ;SFGetFile dialog template ID
+
+getOpen   .EQU      1         ;open button
+getCancel .EQU      3         ;cancel button
+getEject  .EQU      5         ;eject button
+getDrive  .EQU      6         ;drive button
+getNmList .EQU      7         ;userItem for file name list
+getScroll .EQU      8         ;userItem for scroll bar
+
+;reply record data structure
+rGood     .EQU      0         ;ignore command if FALSE
+rType     .EQU      2         ;file type
+rVolume   .EQU      6         ;volume reference number
+rVersion  .EQU      8         ;file's version number
+rName     .EQU      10        ;file name
+
+;routine selectors
+SFPutFile      .EQU      1
+SFPPutFile     .EQU      3
+SFGetFile      .EQU      2
+SFPGetFile     .EQU      4
+
+;equates for DISK INITIALIZATION PACKAGE
+
+;routine selectors
+DILoad         .EQU      2
+DIUnload       .EQU      4
+DIBadMount     .EQU      0
+DIFormat       .EQU      6
+DIVerify       .EQU      8
+DIZero         .EQU      10
+
+;result codes are defined in sysequ
+
+;equates for INTERNATIONAL PACKAGE
+
+;routine selectors
+IUGetIntl      .EQU      6
+IUSetIntl      .EQU      8
+IUDateString   .EQU      0
+IUDatePString  .EQU      14
+IUTimeString   .EQU      2
+IUTimePString  .EQU      16
+IUMetric       .EQU      4
+IUMagString    .EQU      10
+IUMagIDString  .EQU      12
+
+
+;data structures for International Utilities
+;international 0 record
+
+decimalPt .EQU 0              ;ASCII character for decimal point
+thousSep  .EQU 1              ;ASCII character for thousand separator
+listSep   .EQU 2              ;ASCII character for list separator
+currSym   .EQU 3              ;ASCII for currency symbol (3 bytes long)
+currFmt   .EQU 6              ;currency format flags
+dateOrder .EQU 7              ;short date form - DMY,YMD, or MDY
+shrtDateFmt .EQU 8            ;date elements format flag
+dateSep   .EQU 9              ;ASCII for date separator
+timecycle .EQU 10             ;indicates 12 or 24 hr cycle
+timeFmt   .EQU 11             ;time elements format flags
+mornStr   .EQU 12             ;ASCII for trailing string from 0:00 to 11:59
+eveStr    .EQU 16             ;ASCII for trailing string from 12:00 to 23:59
+timeSep   .EQU 20             ;ASCII for the time separator
+timeSuff  .EQU 21             ;suffix string used in 24 hr mode
+metricSys .EQU 29             ;indicates metric or English system
+intl0Vers .EQU 30             ;version: high byte = country. low byte = vers
+
+
+;International 1 record
+days           .EQU 0
+months         .EQU 112
+suppressDay    .EQU 304
+lngDateFmt     .EQU 305
+dayLeading0    .EQU 306
+abbrLen        .EQU 307
+st0            .EQU 308
+st1            .EQU 312
+st2            .EQU 316
+st3            .EQU 320
+st4            .EQU 324
+intl1Vers      .EQU 328
+localRtn       .EQU 330
+
+
+;constants for manipulation of international resources}
+;way to specify desired date format
+shortDate      .EQU 0
+longDate       .EQU 1
+abbrevDate     .EQU 2
+
+;masks used for setting and testing currency format flags
+currLeadingZ   .EQU 128       ;set if leading zero
+currTrailingZ  .EQU 64        ;set if trailing zero
+currNegSym     .EQU 32        ;set if minus sign for negative num, reset if parentheses}
+currSymLead    .EQU 16        ;set if currency symbol leads, reset if trails}
+
+;constants specifying absolute value of short date form
+MDY       .EQU 0              ;month,day,year
+DMY       .EQU 1              ;day,month,year
+YMD       .EQU 2              ;year,month,day
+
+;masks used for date element format flags
+century      .EQU 128       ;set if century, reset if no century
+mntLdingZ    .EQU 64        ;set if leading 0 for month
+dayLdingZ    .EQU 32        ;set if leading zero for day
+
+;masks used for time element format flags
+hrLeadingZ     .EQU 128     ;set if leading zero for hours
+minLeadingZ    .EQU 64      ;set if leading zero for minutes
+secLeadingZ    .EQU 32      ;set if leading zero for seconds
+
+;country codes for version numbers
+verUS          .EQU 0
+verFrance      .EQU 1
+verBritain     .EQU 2
+verGermany     .EQU 3
+verItaly       .EQU 4
+
+
+
+;equates for BINARY-DECIMAL CONVERSION PACKAGE
+
+;routine selectors
+NumToString    .EQU      0
+StringToNum    .EQU      1
+
+
+
+

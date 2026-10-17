@@ -1,0 +1,194 @@
+.TH V6MAIL 1 "7 Nov 84"
+.SH NAME
+v6mail \- send mail to designated user(s)
+.SH SYNOPSIS
+.B v6mail 
+[-yn ] 
+.br
+.B v6mail 
+to-addressees ... [\-c cc-addressees ...] [\-f from] [\-g signature] [\-i] [\-r] 
+.br
+	[\-s subject-text] [\-t more-to-addressees ...] [\-\-submit-args]
+.sp
+(Sometimes installed as "mail" instead of "v6mail")
+.SH DESCRIPTION
+This document describes a program which is intended to
+be upwards compatible with the original Unix Version 6
+.I mail
+command
+from Bell Labs.  This program uses the MMDF system to perform
+distribution.  Differences that are visible to the user lie in
+the treatment of individual messages during the display
+function, the creation of messages which conform with Arpanet
+message format (syntax), and the availability of
+additional switches during message creation.
+
+The first form of the
+.I v6mail
+command (no arguments or exactly one which is a switch "\-y" or
+"\-n") shows you any new mail which is in your
+MMDF mailbox.  The original Bell Labs
+.I mail
+command lists the contents of the entire mailbox and
+then asks if you want it all saved.  If you indicate yes,
+then it is added (pre-pended) to the file "mbox" in your
+login directory. The
+.I v6mail
+command behaves similarly,
+except that it queries you about the handling of
+.I each
+message, rather than all of them together, and the messages
+are appended to the
+.I end
+of mbox.  If a switch "\-y" or "\-n" is
+specified, then it is taken to be the response to the "Save?"
+queries.  To delete a message, you must answer the query
+with a wording starting with "n".  Any other response (including
+an emply line) will cause the message to be saved in mbox.
+Aborting the command will leave your mailbox and mbox untouched.
+
+The second form of the
+.I v6mail
+command creates and sends a
+message to the indicated recipient(s).  Headers for the
+message are created automatically and, optionally, as
+indicated by certain command arguments as explained below.
+These headers are created in the order implied by the
+parameter list.  (Note that this can cause multiple 
+header-components of the
+same name to be created, separated by other components.)  A
+"Date:" component is always created, containing the creation
+date and time of the message.  The text body of the message
+is read from standard input.  The message which is sent
+conforms to current Arpanet standards and can be manipulated by
+systems such as \fImsg\fR and MH.  
+No draft message is created; so the message may
+not be edited after initial creation and before it is sent.
+
+When parameters are not preceded by a switch parameter (i.e.,
+one with a dash as its first character) they are taken to be
+primary addressees for the mail.  These addressees are then
+listed in the message's "To:" component(s).  These parameters
+must precede any switch parameters.
+
+A recipient address may consist of the login name of a local
+user (e.g., "Joe" or "Smith"), an alias which is
+contained in the aliases file (e.g., Project-Leaders) or a full
+network name (e.g., "Smith@Umn-CS.CSNET" or "Farber@UDel-EE.ARPA").
+Obviously, use of network addresses requires the
+availability of a network, although reference to the local
+host (the one you are using) is always allowed.
+
+.I V6mail
+looks for an optional file called ".signature" in the user's home directory
+and fills in the signature in the "From:" or "Sender:" component that 
+corresponds to the user.  (Make sure that ".signature" contains
+one line and that the contents are in double quotes if they contain
+non-alphanumeric characters.)  
+
+The "\-t" switch causes following parameters to (again) be
+used as addressees in the "To:" header.  Normally, therefore,
+the switch is not needed.
+
+The "\-c" switch causes following parameters to be used as
+addressees and listed in a "cc:" (carbon copy) header.  This
+is in effect until the next switch parameter is encountered.
+
+The "\-s" switch causes the next single parameter to be used
+as the text of a "Subject:" component of the message.  Note
+that to include more than one word as text, the text must be
+surrounded by quotation marks.
+
+The "\-g" switch causes the next single parameter to be used
+as the text of the signature in the "From:" component of
+the message.  Note that to include more than one word as text, 
+the text must be surrounded by quotation marks.
+Only the first occurence of either "\-f" or "\-g" is used.  
+
+The "\-f" switch causes the next single parameter to be used
+as the text of a "From:" component of the message.  If this
+is used, then a "Sender:" component will automatically be
+created and contain the address of the user who is actually
+running the 
+.I v6mail
+program.  This is necessary to guarantee
+authentication of mail.  This switch is useful when an agent,
+such as a daemon process or a secretary, is logged in under
+your name and wants to indicate that the agent, rather than you,
+issued the note.  Only the first occurence of either "\-f" or "\-g"
+is used.
+
+The "\-i" switch instructs 
+.I v6mail
+to include a "Message-Id:"
+component, containing a unique message identification string.
+For current usage, this is not normally needed.
+
+The "\-r" switch instructs
+.I v6mail
+to ignore any problems with delivery.  Normally, the "\-r" switch
+is omitted and the sender is notified of any delays or failures
+in the delivery process.
+
+The "\-\-" switch can be used to pass arguments on to MMDF's \fIsubmit\fR
+program which is responsible for actually processing
+(sending) mail.  Only one "\-\-" switch setting may be used and
+it may contain several values to be passed to \fIsubmit\fR.  If
+more than one "\-\-" switch is specified, the last one will be
+used.  It is generally unlikely that you will need to use
+this feature; however, two switches might prove useful: "\-\-y"
+causes the message to be sent to the user's terminal, if the
+user is logged in and the user's screen is writable.  "\-\-w" lets
+you watch the delivery process, allowing you to verify that
+delivery actually occurs.  This switch, therefore, is useful
+when the mail is important and you are not adequately certain
+that the mail system can be trusted, such as when it is newly
+installed on the system.  To use both switches, simply
+specify "\-\-yw".
+.SH EXAMPLES
+.nf
+
+
+"v6mail Farber" gives a message with the following headers:
+
+.RS
+Date: Sun, 24 Feb 84 12:43:11 EST
+From: Dcrocker@UDEE
+To: Farber@UDEE
+.RE
+
+
+"v6mail whittake farber \-c dcrocker" gives:
+
+.RS
+Date: Sun, 24 Feb 84 12:43:11 EST
+From: Dcrocker@UDEE
+To: whittake@UDEE, farber@UDEE
+cc: dcrocker@UDEE
+.RE
+
+
+"v6mail farber \-c dcrocker \-t sincos@xerox.com \-g 'Dave Crocker' \-s 'test message'" gives:
+
+.RS
+Date: Sun, 24 Feb 84 12:43:11 EST
+From: Dave Crocker <Dcrocker@UDEE>
+Subject: test message
+To: Farber@UDEE
+To: sincos@xerox.com
+cc: dcrocker@UDEE
+.RE
+.fi
+.SH "SEE ALSO"
+msg(1), send(1), submit(8)
+.SH BUGS
+.I V6mail
+cannot be run on a mailbox that is being read with
+\fImsg\fR(1).  It will print an error message and exit if a binary
+file exists for a mailbox to prevent trashing the mailbox later
+with \fImsg\fR.
+.I V6mail
+should be rewritten to maintain the binary file.
+.PP
+.I V6mail
+doesn't like empty .signature files.

@@ -1,0 +1,104 @@
+*
+* Input for resource compiler to create "Alert Test Program"
+*
+* history
+* 06/18/84	Schilit	Created.
+* 07/05/84	Croft	Added DLOG test.
+*
+
+* output file is:
+alert.rsrc
+
+Type CCOM = STR
+  ,0
+Alert Test Program Version 1.0 -- June 15, 1984
+
+* An "alert" box defined here by the resource id = (ALRT,257) the
+* coordinates for the rectangle, the dialog item list ID (DITL,258) 
+* and the "stages word."  See the Dialog Manager section of inside
+* mac.  Here our stages word (5555) says use sound 1 (beep), draw
+* the box, and item #1 in the DITL is the default, so outline it.
+
+Type ALRT
+  ,257
+  60 81 180 431
+  258
+  5555
+
+* A sample dialog box with all possible types.
+
+Type DLOG
+  ,7
+  40 40 300 340
+  Visible 1 NoGoAway 0
+  8
+  Title?
+
+* DITL for the ALRT
+* First the ID (DITL,258), then the number of items which follow.  
+* For each item include the control bits
+* and the coordinates of the box.  Some items take text as the third 
+* argument, some take a resource ID.
+
+Type DITL
+ ,258
+  3
+* These buttons are 20 hi by 70 wide
+    BtnItem Enabled
+    90 13 110 83
+OK
+
+    BtnItem Enabled
+    90 267 110 337
+Cancel
+
+    StatText Disabled
+    10 60 70 350
+^0^1^2Are you sure you want to proceed with this program?
+
+* DITL for the DLOG
+
+Type DITL
+  ,8
+  9
+* These buttons are 20 hi by 70 wide
+  BtnItem
+  20 20 40 90
+  OK
+
+  BtnItem
+  60 20 80 90
+  Cancel
+
+  IconItem Disabled
+  20 180 60 220
+  -6047
+
+  PicItem
+  100 180 160 240
+  -15805
+
+* chk/rad ctrls are 20 hi by any width
+  CtrlItem ChkCtrl
+  120 20 140 160
+  Check this
+
+  CtrlItem RadCtrl
+  160 20 180 160
+  Tune in
+
+* text items are 15 hi by any width
+  EditText
+  220 20 235 80
+  edit
+
+  EditText
+  220 100 235 160
+  these
+
+  EditText
+  220 180 235 240
+  words
+
+Type CODE
+  b.out,0

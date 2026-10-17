@@ -1,0 +1,150 @@
+.TH LLOG 3
+'ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.SH NAME
+llog \- library logging package
+.SH SYNOPSIS
+.nf
+ll_open  (loginfo)
+    struct ll_struct *loginfo;
+ll_hdinit (loginfo, pref)
+    struct ll_struct *loginfo;
+    char *pref;
+ll_init  (lloginfo)
+    struct ll_struct *loginfo;
+ll_log   (loginfo, verbosity, printf args...)
+    struct ll_struct *loginfo;
+    char verbosity;
+ll_err   (loginfo, verbosity, printf args...)
+    char verbosity;
+    struct ll_struct *loginfo;
+ll_close (loginfo)
+    struct ll_struct *loginfo;
+
+struct  ll_struct
+{
+ char *ll_file;  /* path name to logging file        */
+ char *ll_hdr;   /* text to put in opening line      */
+ char  ll_level; /* max verbosity level              */
+	LLOGFAT  /* Fatal error                      */
+	LLOGTMP  /* Temporary (minor?) error         */
+	LLOGGEN  /* General information              */
+	LLOGBST  /* Basic statistics                 */
+	LLOGFST  /* Full statistics                  */
+	LLOGPTR  /* Trace of program phases          */
+	LLOGBTR  /* Trace of more basic activities   */
+	LLOGFTR  /* Full program trace               */
+	LLOGMAX  /* Maximum possible value           */
+ char  ll_msize; /* max log size, in 100's of blocks */
+ char  ll_stat;  /* assorted switches                */
+	LLOGCLS  /* Close after each write           */
+	LLOGCYC  /* Cycle to beginning when log full */
+	LLOGWAT  /* Wait, if log locked and LLOGCLS  */
+	LLOGSOME /* Occasional logging               */
+ char  ll_fd;    /* * CHAR * holds file descriptor   */
+ FILE *ll_stream;/* Standard IO stream pointer       */
+};
+.fi
+.SH DESCRIPTION
+.PP
+This package is intended to perform standardized information
+logging for programs.  The time of an entry is recorded in
+addition to its text.
+.SS Format of Entries
+.PP
+Depending on the mode of logging (whether the
+log is left open between ll_log() calls or is re-opened to make each
+entry, as indicated by the LLOGCLS flag) the date, hour and
+loginfo.llhdr string are recorded on a header line when the log is
+opened (if LLOGCLS is off) or on the logging line (if LLOGCLS is
+on).  In addition, the current minute and second are recorded,
+followed by the actual log text.  Each log entry is started on a
+new line.  The text of the entry is entered with a printf(), called
+with parameters passed to the ll_log() function.
+.SS Access to Log Files
+.PP
+Multiple logs can be accessed simultaneously
+by the same process, since all of the state information for a
+single log is kept in the user-maintained structure, llogstruct,
+which is included as a parameter when calling llog functions.
+While opened by one process, a single log cannot be shared with
+another process, since logging files are opened with exclusive
+access (the specific locking mechanism depends on the version of
+Unix you are running).
+The LLOGCLS flag is intended to help circumvent
+this protection.  Also, the LLOGWAT flag may be used to cause
+ll_open() to repeatedly retry opening the log, if the failure to
+open it was due to its being used by another process.  Ll_open()
+will try up to sixty times, waiting two seconds between tries;
+after that, it will return.  The failure is treated as temporary
+if LLOGCLS is used, implying infrequent logging expected;
+otherwise the failure is treated as permanent.
+.SS Limiting Size of Log Files
+.PP
+The package can impose a size limit
+to log files.  If lloginfo.llmsize is zero, size-limiting is NOT
+imposed, otherwise llog will not allow a log to grow larger (25 *
+lloginfo.llmsize) blocks.  If the log is being held open between
+entries and cycling is allowed (i.e., LLOGCYC is set and LLOGCLS
+is not) then when ll_init() is called (by ll_open() or by the user)
+during successive uses, entries will be made starting from the
+beginning of the file.  If the LLOGCLS bit is set or if the
+LLOGCYC bit is not set, then the log is marked as unusable.
+
+Ll_open() attempts to open the logging file.  It returns the return
+value from its open() call.  It does NOT attempt to create the file
+if the file does not exist.  The result of the open() call is placed
+in the ll_fd member of the llogstruct structure.  The using
+program should ensure that ll_fd initially has the value zero.
+Llog will simply return, if ll_fd is -1; therefore the caller can
+ignore failures to open the log.  Also, the existence of the
+logging file can be used as a convenient external switch for
+turning logging on and off.
+
+Entries are appended to the end of any old entries in the file,
+except when cycling occurs.  If the LLOGCLS bit is set in the
+loginfo.llstat field, then the file is opened only long enough to
+make an entry; this makes it more reasonable for multiple
+processes to share a log into which relatively few entries are
+made, such as when only error messages are recorded.
+
+Ll_init() is to be used when the logging file is already opened
+(e.g., when the file descriptor has been inherited from a parent
+process) instead of calling ll_open().
+
+Ll_log() actually makes the log entries.  If the log is not already
+opened and lloginfo.llogfd is 0, ll_log() will call ll_open().  (Note
+that this means that the calling program usually does not need to
+call ll_open(), unless there is a concern about locking the file.)
+The ll_level value indicates how much logging the caller desires.
+When called, ll_log() will not make the log entry if the value of the
+verbosity argument is GREATER than than the value of ll_level.  This
+allows, for example, distinction between mandatory and debugging
+information, with many levels of (256) information possible.  As a
+guide, the list shown in the synopsis can be used.
+
+Ll_log() uses printf() to make the entries.  There is a limit of ten
+(10) arguments that may be passed to it.  The third argument to
+ll_log() becomes the first argument to printf().  Flush() is then called
+so that the log is always up-to-date; this is deemed more
+important than fully minimizing write calls, and in any event, is
+required to allow ll_log() to use the printf() mechanism in a way that
+does not interfere with its use elsewhere in the process.
+
+Ll_close() closes the logging file and marks ll_fd as clear (i.e.,
+resets it to be zero).  Note that this normally need not be
+called, since the file will automatically be closed when the
+process exits.  However, it is necessary to close the log, during
+execution, if a child or some other process is expected to
+open the same log independently.  Calling ll_close() also always
+clears the file descriptor, making it possible for a a new try at
+opening the log, if it failed previously.
+.SH DIAGNOSTICS
+.PP
+Ll_open() returns the value of its open call, if that fails;
+otherwise it returns the value of its call to ll_init().  Ll_log() returns
+the value of its flush() call, or zero if ll_fd is -1; if flush()
+returns less than zero, then ll_log() closes the log.  Ll_close()
+returns the value of its close() call.
+.SH AUTHOR
+.IP "Dave Crocker" 20
+Dept. of E.E., Univ. of Delaware

@@ -1,0 +1,1940 @@
+3. "6F^5D!$^**{ File -- Example code for printing, reading and writing files, and Text Edit }
+{      -- by Cary Clark, Macintosh Technical Support }
+
+PROGRAM MyFile;
+{ Please read 'more about File,' included on the MacStuff 1 disk. }
+
+{$DECL BUG}
+{$SETC BUG := 0}
+{One good way of debugging code is to write status information to one of the
+ serial ports.  Even while debugging code which uses one of the ports, the other
+ can be used for transmitting information to an external terminal.
+
+ In this program, the compile time variable BUG is set to either -1, 0 or 1
+ according to the extent of the debugging information required.  Since compile
+ time variables or constants are used, setting a single flag should cause the
+ resulting program to have no more code than is required by the debugging level
+ requested.
+
+ If BUG is set equal to -1, then no debugging information appears;  this is as you
+ would want the end user to see your product.
+
+ BUG set to 0 provides an additional menu bar called 'debug' that can display the
+ amount of memory available, compact memory, and discard segments and resources
+ resident in memory.  You can do something similar to display some debugging
+ information on the Mac itself if you do not have a terminal, but the penalty here
+ is that you may spend much of your time debugging the code which is intended to
+ debug some other part of the program.  Obviously, creating and maintaining a
+ window on a screen full of other windows in untested code is a difficult thing to
+ do.
+
+ BUG set to 1 adds an additional item to the 'debug' menu that writes various runtime
+ information to an external terminal.  This is the preferred method of debugging,
+ since it does not interfere with the Macintosh display.  Even if you do not have
+ a separate terminal, you can use the LISA terminal program to act as one.  Since
+ writing a lot of debugging information to a serial port can slow the program down,
+ I would recommend a way of turning the information on and off.  In this program,
+ the variable DEBUG is set to true or false in the beginning of one of the first
+ procedures executed, SETUP, to provide debugging information.  The DEBUG variable
+ may also be set by the bottom item on the rightmost menu.}
+
+{$U-} {Turn off the Lisa Libraries.  This is required by Workshop.}
+{$X-} {Turn off stack expansion.  This is a Lisa concept, not needed on Mac.}
+{$R-} {Turn off range checking.}
+
+{$IFC BUG > -1}
+   {$D+} {Put the procedures name just after it in the code, to help in debugging}
+{$ELSEC}
+   {$D-} {Do not include the procedure name in the 'production' code}
+{$ENDC}
+{$L-} {don't list the interfaces}
+USES
+   {$U Obj/MemTypes    } MemTypes,
+   {$U Obj/QuickDraw   } QuickDraw,
+   {$U Obj/OSIntf      } OSIntf,
+   {$U Obj/ToolIntf    } ToolIntf,
+   {$U Obj/PackIntf    } PackIntf,
+   {$U Obj/MacPrint    } MacPrint;
+{$L+} {just list the program}
+
+CONST
+   appleMenu = 1;
+   FileMenu = 2;
+   EditMenu = 3;
+   DebugMenu = 4;
+
+{These constants are declared for this application to distinguish between the
+ various types of windows that it can create.  The number is stored in the window
+ field windowkind.}
+   MyDocument = 8;
+   Clipboard = 9;
+   FreeMemory = 10;
+
+{$IFC BUG = -1}
+   lastMenu = 3;      { number of menus w/o debug}
+{$ELSEC}
+   lastMenu = 4;      { number of menus w/ debug}
+{$ENDC}
+   lf = CHR(10);      { At present, information written to the external terminal
+                        needs its own linefeed.}
+{$IFC BUG < 1}
+   debug = FALSE;     { compiler will discard code after 'If debug ...'}
+{$ENDC}
+
+TYPE
+   ProcOrFunc = (proc, func, neither);
+   edset = set of 1..9;
+   LomemPtr = ^LongInt;
+   MyData = RECORD {each document window keeps a handle to this in WRefCon}
+              TERecord: TEHandle;     {the text associated with this document}
+              FileVolume: INTEGER;    {which volume, if loaded from disk}
+              changed: BOOLEAN;       {the document is 'dirty'}
+              titled:  BOOLEAN;       {the document has never been saved to disk}
+            END;
+   MyDataPtr = ^MyData;
+   MyDataHandle = ^MyDataPtr;
+
+{ <<< this little beauty does a form feed when you print this out.
+       Copy and Paste it to move it to your source code}
+{Here are a ton of global variables.  This is not a good programming example.
+ You professionals, of course, will keep the number of globals in your own
+ programs to a much smaller number than shown here.}
+
+{these first six values are changed as windows are activated}
+VAR
+   MyWindow: WindowPtr;
+   MyPeek: WindowPeek;            {MyPeek is the same as MyWindow}
+   WindowData: MyDataHandle;      {this record is pointed to by the WRefCon.}
+   hTE:  TEHandle;                {The active text edit handle}
+   vScroll:  ControlHandle;       {The active vertical scroll bar.}
+   whichpart: INTEGER;            {The last button pressed}
+   topline:  INTEGER;             {the value of VScroll, also the visible top line.}
+
+   printhdl: THPrint;             {initialized in SetUp, used by MyPrint}
+   myMenus: ARRAY
+     [1..lastMenu] OF MenuHandle; {Handles to all of the menus}
+   growRect,                      {contains how big and small the window can grow}
+   dragRect:  Rect;               {contains where the window can be dragged}
+   tempwindow: WindowPtr;         {window referenced by GetNextEvent (bad pgmming.)}
+   theChar:  CHAR;                {keyboard input goes here}
+   myPoint: Point;                {the point where an event took place}
+   lastCount: INTEGER;            {last scrap count, to see if it has changed}
+   lastPaste: INTEGER;            {the scrap value when the last paste was made}
+   doneFlag:  BOOLEAN;            {set when the user quits the program}
+   myEvent:  EventRecord;         {returned by GetNextEvent}
+   scrapwind:  WindowPtr;         {the ClipBoard window, which contains the scrap}
+   iBeamHdl:  CursHandle;         {the text editing cursor}
+   watchHdl:  CursHandle;         {the wait cursor}
+   windownum: LongInt;            {the # of untitled windows opened}
+   windowpos: LongInt;            {the # of windows opened}
+   MyFileTypes: SFTypeList;       {same as txtfile, in a format for Standard File}
+   firstchar: INTEGER;            {position of first character on top visible line}
+   printflag: BOOLEAN;            {the user selected 'Print' from the File menu}
+   finderprint: BOOLEAN;          {the user selected 'Print' from the Finder}
+   Dlogptr: DialogPtr;            {the dialog box used when printing from Finder}
+   printing: BOOLEAN;             {printing is currently in progress}
+   printport: grafptr;            {port preserved during background printing}
+   numfiles: INTEGER;             {number of files selected in finder}
+   applLimit,                     {a pointer to the bottom of the stack area}
+   heapend: LomemPtr;             {a pointer to the end of the application heap}
+   dummy: Handle;                 {a temporary handle used to grow the heap}
+ {$IFC BUG > -1}
+   FreeWind:  WindowPtr;          {the free memory window}
+   oldmem: LongInt;               {the last amount of free memory}
+ {$ENDC}
+
+ {$IFC BUG = 1}
+   debug: BOOLEAN;
+ {$ENDC}
+   debugger: text;                {the external terminal file}
+
+{------------------------------------------------------------------------------------}
+PROCEDURE AutoScroll;                          EXTERNAL;
+{This assembly routine is called by the innerds of TextEdit when the user drags
+ a selection range outside of the current window.}
+
+FUNCTION NewPtrClear (byteCount: Size): Ptr;   EXTERNAL;
+{The NewPtr and NewHandle traps have a bit that clears the memory reserved
+ by the call when set.  This assembly sets that bit for the NewPtr trap.}
+
+
+PROCEDURE MainEventLoop;                       FORWARD;
+{This is declared forward so the printing can take the main event loop as a procedure
+ to execute while it is idleing}
+
+FUNCTION MyGrowZone (cbNeeded: Size) : Size;   FORWARD;
+{This is declared forward so that it can be resident in the blank segment, which is
+ always loaded, and still be referenced by the SetUp procedure}
+
+{$S Utilities}
+{------------------------------------------------------------------------------------}
+PROCEDURE DebugInProc (prockind: ProcOrFunc; where: str255; location: ptr);
+{This procedure writes the executing routine's name and location in memory on the
+ external terminal.  The location is especially important in a program like this
+ that has segments.}
+BEGIN
+{$IFC BUG = 1}
+  Write (debugger, 'in ');
+  IF prockind = proc THEN Write (debugger, 'Procedure ');
+  IF prockind = func THEN Write (debugger, 'Function ');
+  Writeln (debugger, where, ' @ ', ORD4(location), lf)
+{$ENDC}
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE SetScrollMax;
+Var cr : INTEGER;
+    return : char;
+    max: INTEGER;
+BEGIN
+{This adjusts the scroll value so that the scroll bar range is not allowed to exceed
+ the end of the text.  Also, the scroll bar is disabled if the max is set equal to
+ the min, which is zero.  The formula for determining the range is somewhat complex.
+ Sorry.}
+  IF debug THEN debuginproc (proc, 'SetScrollMax', @SetScrollMax);
+  WITH hTE^^, hTE^^.viewrect DO
+  BEGIN
+    cr := 0;
+    return := CHR(13);
+    IF teLength > 0 THEN
+      IF Munger (htext, teLength-1, Pointer(ORD4(@return)+1), 1, NIL, 1) > 0
+      THEN cr := 1;
+    max := nLines + cr - (bottom - top+1) DIV lineHeight;
+    IF max < 0 THEN max := 0;
+    SetCtlMax (VScroll, max);
+    IF debug THEN Writeln (debugger, 'vscrollmax =', max,lf);
+    topline := -destrect.top DIV lineheight;
+    SetCtlValue (vscroll, topline);
+    IF debug THEN Writeln (debugger, 'topline =',topline,lf)
+  END;
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE ScrollText (showcaret: BOOLEAN);
+{called to either show the caret after an action like 'Copy';
+ also called to adjust the text within the window after the window is resized.  The
+ same formula used in SetScrollMax is used here as well.  Don't worry about how this
+ works, too much.  This possibly could be made much simpler.}
+Var bottomline, viewlines, SelLine, scrlAmount, numlines, blanklines, newtop
+     ,return: INTEGER;
+BEGIN
+  IF debug THEN DebugInProc (proc, 'ScrollText', @ScrollText);
+  WITH hTE^^ DO
+  BEGIN
+    scrlAmount := 0;
+    numlines := nlines;  {if the last character is a carriage return, add 1 to numlines}
+    return := $0D00;
+    IF teLength > 0 THEN
+      IF Munger (htext, teLength-1, @return, 1, NIL, 1) > 0
+      THEN numlines := numlines + 1;
+    WITH HTE^^.viewrect DO
+     viewlines := (bottom - top+1) DIV lineHeight;  {don't count partial lines}
+    topline := -destrect.top DIV lineheight;
+    bottomline := topline + viewlines - 1;
+    IF showcaret
+    THEN
+    BEGIN
+      selLine := 0;
+      WHILE (selLine+1 < nlines) AND (selstart >=linestarts[selLine+1]) DO
+       selLine := selLine + 1;
+     {if selstart = selend is @ a cr, then add 1 to selstline}
+      IF (selstart = selend) AND (selstart > 0) THEN
+      IF Munger (htext, selstart-1, Pointer(ORD4(@return)+1), 1, NIL, 1) = selstart-1
+      THEN selLine := selLine + 1;
+      IF debug THEN
+      BEGIN
+        Write (debugger, 'selstart=',selstart:5,'; selLine=',selLine:5);
+        IF selstart > 0 THEN
+      END;
+      IF SelLine > bottomline THEN
+      BEGIN
+        scrlAmount :=  bottomline - SelLine;
+        IF numlines - SelLine > viewlines DIV 2
+        THEN scrlAmount := scrlAmount - viewlines DIV 2
+        ELSE ScrlAMount := ScrlAmount - numlines + SelLine + 1
+      END;
+      IF SelLine < topline THEN
+      BEGIN
+        scrlAmount := topline - SelLine;
+        IF selLine  > viewlines DIV 2
+        THEN scrlAmount := scrlAmount + viewlines DIV 2
+        ELSE ScrlAMount := ScrlAmount + selLine
+      END
+    END;
+    IF scrlAmount = 0 THEN
+    BEGIN
+      blanklines := viewlines - numlines + topline;
+      IF blanklines < 0 THEN blanklines := 0;
+      IF (blanklines > 0) AND (topline > 0) THEN
+      BEGIN
+        scrlAmount := blanklines;
+        IF scrlAmount > topline THEN scrlAmount := topline
+      END;
+      IF NOT showcaret THEN
+      BEGIN
+        newtop := 0;
+        WHILE (newtop+1 < nlines) AND (firstchar >= linestarts[newtop+1]) DO
+         newtop := newtop + 1;
+        IF (newtop <> topline) AND (ABS(newtop - topline) > ABS(scrlAmount)) THEN
+         scrlAmount := topline - newtop
+      END
+    END;
+    IF debug THEN
+    BEGIN
+      Write (debugger, 'newtop=',newtop:4,'; blanklines=',blanklines:4);
+      Writeln (debugger, '; newtop - topline=',newtop - topline,lf)
+    END;
+    IF scrlamount <> 0 THEN
+    BEGIN
+      IF selstart = selend THEN TEDeactivate (hTE);
+      TEScroll (0, scrlAmount * lineheight, hTE);
+      IF selstart = selend THEN TEActivate (hTE)
+    END;
+    IF debug THEN Writeln (debugger, 'scrlAmount=',scrlAmount:4,lf);
+    SetScrollMax
+  END
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE ToggleScrap;
+Var temppeek: windowPeek;
+    getwhich: INTEGER;
+    showhidestr: Str255;
+BEGIN
+{The clipboard comes and goes, here.  The last item in the editmenu is alternately
+ made to read, 'Show Clipboard' and 'Hide Clipboard'.}
+  IF debug THEN DebugInProc (proc, 'ToggleScrap', @ToggleScrap);
+  IF ScrapWind = NIL THEN {make it appear}
+  BEGIN
+    scrapwind := GetNewWindow (257, NIL, Pointer (-1));
+    Temppeek := windowPeek (scrapwind);
+    Temppeek^.windowkind := Clipboard;
+    SetPort (scrapwind);
+    InvalRect (scrapwind^.Portrect);
+    GetWhich := 5 {hide clipboard}
+  END
+  ELSE    {make it disappear}
+  BEGIN
+    DisposeWindow (scrapwind);
+    Scrapwind := NIL;
+    GetWhich := 4 {show clipboard}
+  END;
+  GetIndString (showhidestr, 256, getwhich);
+  SetItem (myMenus[EditMenu], 9, showhidestr);
+END;
+
+{$IFC BUG > -1}
+{------------------------------------------------------------------------------------}
+PROCEDURE ToggleFree;
+Var temppeek: windowpeek;
+    getwhich: INTEGER;
+    showhidestr: Str255;
+BEGIN
+{just about the same as ToggleClipboard, above.  This is just for debugging fun.}
+  IF debug THEN DebugInProc (proc, 'ToggleFree', @ToggleFree);
+  IF FreeWind = NIL THEN {make it appear}
+  BEGIN
+    Freewind := GetNewWindow (258, NIL, Pointer (-1));
+    Temppeek := windowPeek (Freewind);
+    Temppeek^.windowkind := FreeMemory;
+    SetPort (Freewind);
+    InvalRect (Freewind^.Portrect);
+    GetWhich := 3;
+  END
+  ELSE    {make it disappear}
+  BEGIN
+    DisposeWindow (Freewind);
+    Freewind := NIL;
+    GetWhich := 2
+  END;
+  GetIndString (showhidestr, 257, getwhich);
+  SetItem (myMenus[DebugMenu], 1, showhidestr);
+END;
+{$ENDC}
+
+{------------------------------------------------------------------------------------}
+PROCEDURE SetViewRect;
+BEGIN
+{text edit's view rect is inset in the content of the window, to prevent it from
+ running into the lefthand side or the scroll bar.}
+  IF debug THEN DebugInProc (proc, 'SetViewRect', @SetViewRect);
+  WITH hTE^^.viewrect DO
+  BEGIN
+    hTE^^.viewrect := MyWindow^.portRect;
+    left  :=  left +4;
+    right := right -15
+  END
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE MoveScrollBar;
+BEGIN
+{When the window is resized, the scroll bar needs to be stretched to fit.}
+  IF debug THEN DebugInProc (proc, 'MoveScrollBar', @MoveScrollBar);
+  WITH MyWindow^.portRect DO
+  BEGIN
+    HideControl(vScroll);
+    MoveControl(vScroll,right-15,top-1);
+    SizeControl(vScroll,16,bottom-top-13);
+    ShowControl(vScroll)
+  END
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE GrowWnd;
+{ Handles growing and sizing the window and manipulating the update region. }
+VAR longStuff: RECORD CASE INTEGER OF
+      1 : (longResult : LONGINT);        {Information returned by MenuSelect}
+      2 : (height,                       {Which menu was selected}
+           width : INTEGER)              {Which item within the menu}
+    END;
+    height, width, newvert, oldstart:  INTEGER;
+    tRect, oldportrect: Rect;
+BEGIN
+  IF debug THEN DebugInProc (proc, 'GrowWnd', @GrowWnd);
+  WITH longStuff DO
+  BEGIN
+    longResult := GrowWindow(MyWindow,myEvent.where,growRect);
+    IF longResult = 0 THEN EXIT(GrowWnd);
+    Setcursor (watchhdl^^); {because the word wrap could take a second or two}
+    SizeWindow(MyWindow,width,height,TRUE);  { Now draw the newly sized window. }
+    InvalRect (MyWindow^.portrect);
+    IF MyPeek^.windowkind = MyDocument THEN {it's not the clipboard}
+    BEGIN
+      MoveScrollBar;
+      WITH MyWindow^.portRect DO
+      BEGIN
+        width := right-left-19;
+        height := bottom-top
+      END;
+      WITH HTE^^ DO
+      BEGIN
+        destrect.right := destrect.left + width;
+        viewrect.right := viewrect.left + width;
+        viewrect.bottom := viewrect.top + height;
+        firstchar := hTE^^.linestarts [topline];
+        TECalText (hTE); {re-wrap the text to fit the new screen.}
+        {if the rectangle is grown such that there is now blank space on the bottom
+        of the screen, backpedal the screen to fill it back up, if there is enough
+        scrolled off the screen to do so.  Otherwise, the first character in the top line on
+        the screen should continue to be somewhere on the top line after resizing}
+        ScrollText (FALSE);
+      END
+    END
+  END
+END;     { of GrowWnd }
+
+{------------------------------------------------------------------------------------}
+PROCEDURE MyActivate;
+VAR tRect : rect;
+BEGIN
+{activate events occur when one window appears in front of another.  This takes care
+ of hiliting the scroll bar and deactivating the insertion caret or the text
+ selection.}
+  IF debug THEN DebugInProc (proc, 'MyActivate', @MyActivate);
+  MyWindow := windowPtr (MyEvent.message);
+  MyPeek := windowPeek (MyWindow);
+  IF MyPeek^.windowkind in [MyDocument,Clipboard] THEN
+  BEGIN {redraw the scrollbar area, if a document or the clipboard}
+    SetPort (MyWindow);
+    tRect := MyWindow^.portRect;
+    tRect.left := tRect.right-16;
+    InvalRect(tRect)
+  END;
+  IF MyPeek^.windowkind = MyDocument THEN
+  BEGIN {make global variables point to the information associated with this window}
+    WindowData := MyDataHandle (GetWRefCon (MyWindow));
+    VScroll := ControlHandle (MyPeek^.ControlList);
+    hTE := WindowData^^.TERecord;
+    IF ODD (myEvent.modifiers)
+    THEN
+    BEGIN {this window is now top most}
+      TEActivate(hTE);
+      ShowControl (VScroll);
+      topline := GetCtlValue (VScroll)
+    END
+    ELSE
+    BEGIN {this window is no longer top most}
+      HideControl (VScroll);
+      TEDeactivate(hTE);
+      hTE := NIL {a document is no longer on top}
+    END
+  END
+END;    { of activateEvt }
+
+{------------------------------------------------------------------------------------}
+PROCEDURE DialogueDeactivate;
+var temprect: rect;
+BEGIN
+{This routine takes care of cases where, for instance, a modal dialog is about to
+ pop up in front of all the other windows.  Since the Dialog Manager handles all
+ activate events for you, you do not get a chance to 'turn off' the controls associated
+ with the window.  This routine is called just before the dialog box makes its
+ appearance, and takes care of the hiliting as if an activate event had occured.}
+  IF debug THEN DebugInProc (proc, 'DialogueDeactivate', @DialogueDeactivate);
+  IF hTE <> NIL THEN {for documents, only}
+  BEGIN
+    TEDeactivate(hTE);
+    HideControl (VScroll);
+    SetCursor (arrow)
+  END;
+  IF (frontwindow <> NIL) AND (Mypeek^.windowkind IN [MyDocument, Clipboard]) THEN
+  BEGIN {this is a little kludgy, but it works.}
+    Mypeek^.hilited := FALSE; {DrawGrowIcon will now unhilite.}
+    temprect := MyWindow^.PortRect;
+    temprect.left := temprect.right - 15;
+    Cliprect (temprect); {clipaway the horizontal scrollbar part}
+    DrawGrowIcon (MyWindow);
+    Cliprect (MyWindow^.PortRect);
+    Mypeek^.hilited := TRUE {fix things back}
+  END
+END;
+
+{$S READFILE}
+{------------------------------------------------------------------------------------}
+Function ReadFile (VrefNo: INTEGER; FName : str255) : BOOLEAN;
+Var refNo, io : INTEGER;
+    logEOF: LongInt;
+    errin: str255;
+
+{------------------------------------------------------------------------------------}
+  Procedure DiskRErr (io : INTEGER);
+  Var str: str255;
+      readfromstr, loadedstr, str1: Str255;
+      dummy: INTEGER;
+  BEGIN
+{A generic error is reported to the user if something goes wrong.  Amazingly little can
+ go wrong, since the user does not get the chance to do things like type file names,
+ remove the disk himself, and so on.  About the only error that could happen is:
+
+ an error occured while reading the disk (damaged media or hardware)
+
+ Can you think of anything else?  A similar routine further down handles
+ writing to disk.  Note that in both reading and writing, the entire file is handled
+ by a single read/write call, and no 'disk buffer' needs to be specified by the
+ programmer.}
+
+    IF debug THEN
+    BEGIN
+      DebugInProc (func, 'DiskRErr', @DiskRErr);
+      Writeln (debugger, errin, ' err = ', io, lf)
+    END;
+    GetIndString (readfromstr, 256, 9); {this says 'reading from'}
+    GetIndString (loadedstr ,256, 11); {this says 'loaded'}
+    IF io = IOErr
+    THEN GetIndString (str, 256, 21)  {this says 'IO error'}
+    ELSE
+    BEGIN
+      NumToString (io, str1);
+      GetIndString (str, 256, 22); {this is the generic 'ID ='}
+      str := Concat (str, str1)
+    END;
+    Paramtext (readfromstr, FName, loadedstr, str);
+    SetCursor (arrow);
+    dummy := StopAlert (256, NIL); {discribe error to user in generic way.}
+    Exit (readfile)
+  END;
+
+BEGIN
+  IF debug THEN
+  BEGIN
+    DebugInProc (func, 'ReadFile', @ReadFile);
+    writeln (debugger, 'volume = ', vrefno, '; file = ', fname, lf)
+  END;
+  SetCursor (watchHdl^^);
+  ReadFile := FALSE;
+  io := FSOpen (Fname, VRefNo, RefNo);
+{$IFC BUG = 1} {these debugging statements are for the external terminal, only}
+  errin := 'FSOpen';
+{$ENDC}
+  IF io <> 0 THEN DiskRErr (io);
+  io := GetEOF (RefNo, logEOF);
+{$IFC BUG = 1}
+  errin := 'GetEOF';
+{$ENDC}
+  IF io <> 0 THEN DiskRErr (io);
+  {add code here:  if file is too large, then notify user and truncate}
+  SetHandleSize (hTE^^.hText, logEOF);
+  IF debug THEN IF memerror<>0 THEN Writeln (debugger, 'memerr = ',memerror:4);
+  io := FSRead (refNo, logEOF, hTE^^.hText^);
+{$IFC BUG = 1}
+  errin := 'FSRead';
+{$ENDC}
+  IF io <> 0 THEN DiskRErr (io);
+  io := FSClose (refNo);
+{$IFC BUG = 1}
+    errin := 'FSClose';
+{$ENDC}
+  IF io <> 0 THEN DiskRErr (io);
+  hTE^^.teLength := logEOF;
+  IF NOT finderprint THEN {if printing from the finder, no window or editing
+   information is needed}
+  BEGIN
+    TESetSelect (0,0,hTE);
+    TECalText (hTE);
+    Invalrect (hTE^^.viewrect);
+    SetScrollMax;
+    WindowData^^.titled := TRUE;
+    WindowData^^.changed := FALSE;
+    WindowData^^.FileVolume := VRefNo
+  END;
+  ReadFile := TRUE {everything worked out OK}
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE MakeAWindow (str : str255; disk : BOOLEAN);
+Var bounds: rect;
+BEGIN
+{A window is created here, and all associated data structures are linked to it}
+  IF debug THEN DebugInProc (proc, 'MakeAWindow', @MakeAWindow);
+  windowpos := windowpos + 1; {this position it is created to on the screen}
+  bounds.left := windowpos MOD 16 * 20 + 5;
+  bounds.top := windowpos MOD 11 * 20 + 45;
+  bounds.right := bounds.left + 200;
+  bounds.bottom := bounds.top + 100;
+  MyWindow := NewWindow(NIL, bounds, str, TRUE, 0, Pointer(-1), TRUE, 0);
+  SetPort (MyWindow);
+  Mypeek := windowPeek (MyWindow);
+  TextFont (applFont);
+  DrawChar (' '); SetFontLock (TRUE);
+  Mypeek^.windowkind := MyDocument; {a number > 8 identifies the type of window}
+  hTE := TENew(MyWindow^.portRect, MyWindow^.portRect);
+  WindowData := MyDataHandle (NewHandle (8)); {1 handle, an integer, and 2 booleans}
+  SetWRefCon (MyWindow, ORD(WindowData));
+  WindowData^^.TERecord := hTE;
+  SetViewRect;
+  hTE^^.destrect := hTE^^.viewrect;
+  WindowData^^.changed := FALSE;
+  WindowData^^.titled := FALSE;
+  vScroll := GetNewControl(256,MyWindow);
+  MoveScrollBar;
+  topline := 0;
+  hTE^^.clikLoop := ORD(@AutoScroll)
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE MyGetFile;
+Var reply: SFReply;
+    wher: point;
+    temprect: rect;
+    tempport:grafptr;
+    copyIt, foundIt : BOOLEAN;    {if the name is already in use, this will be true}
+    temppeek: Windowpeek;
+    tempstr, oldfname: str255;
+    str: str255;
+    tempdata: MyDataHandle;
+BEGIN
+{This calls Standard File to allow the user to choose the document on disk that she
+ wishes to edit.}
+  IF debug THEN DebugInProc (proc, 'MyGetFile', @MyGetFile);
+  wher.h := 90;
+  wher.v := 100;
+  DialogueDeactivate;
+  SFGetFile (wher, '', NIL, 1, MyFileTypes, NIL, reply);
+  WITH Reply DO
+  IF good THEN
+  BEGIN
+    {check to see if this name already resides on a document window.  If so, change
+     the title to 'Copy of ' and remember to check it as untitled? after the readfile}
+    foundit := FALSE;
+    oldfname := fname;
+    REPEAT
+      temppeek := windowPeek(Frontwindow);
+      copyIt := FALSE;
+      IF temppeek <> NIL THEN
+      REPEAT
+        GetWTitle (windowPtr (temppeek), tempstr);
+        IF tempstr = fname THEN
+        BEGIN
+          tempdata := MyDataHandle(temppeek^.refCon);
+          IF tempdata^^.FileVolume = vrefnum THEN
+          BEGIN
+            copyIt := TRUE;
+            foundIt := TRUE
+          END
+        END;
+        temppeek := temppeek^.nextwindow
+      UNTIL (temppeek = NIL) OR copyIt;
+      GetIndString (str, 256, 16);{copy of}
+      IF copyIt THEN fname := Concat (str,fname);
+    UNTIL NOT copyIt;
+    IF foundIt THEN
+    BEGIN
+      Paramtext (fname,'','','');
+      copyIt := (NoteAlert (258, NIL) = OK)
+    END;
+    IF NOT foundIt OR copyIt THEN
+    BEGIN
+      MakeAWindow (fname, TRUE);
+      IF ReadFile (vrefnum, oldfname)
+      THEN
+      BEGIN
+        IF foundIt THEN windowdata^^.titled := FALSE
+      END
+      ELSE
+      BEGIN
+        TEDispose (hTE);
+        hTE := NIL;
+        DisposHandle (Handle (WindowData));
+        IF debug THEN Writeln (debugger, 'dispose WindowData; memerr = ', MemError, lf);
+        DisposeWindow (MyWindow)
+      END
+    END
+  END
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE OpenAWindow;
+VAR s: str255;
+    untitled: Str255;
+BEGIN
+{this creates a new window that is untitled and empty.}
+  IF debug THEN DebugInProc (proc, 'OpenAWindow', @OpenAWindow);
+  {see if enough mem exists to open a window}
+  NumToString(windownum, s);
+  windownum := windownum + 1;
+  GetIndStr (untitled, 256, 1);
+  MakeAWindow (Concat (untitled, s), FALSE);
+END;
+
+{$S WRITFILE}
+{------------------------------------------------------------------------------------}
+FUNCTION WriteFile (vRefNo: INTEGER; fName : str255) : BOOLEAN;
+var refNo, io : INTEGER;
+    txtlength : longint;
+    errin : str255;
+
+{------------------------------------------------------------------------------------}
+  PROCEDURE DiskWErr (io : INTEGER);
+  Var str:str255;
+      writetostr, savedstr, str1: Str255;
+      dummy, errstr: INTEGER;
+  BEGIN
+  {This is just about the same as DiskRErr (read).  Since a few more errors can
+   happen during a write, the structure is just a little different}
+    IF debug THEN
+    BEGIN
+      DebugInProc (proc, 'DiskWErr', @DiskWErr);
+      Writeln (debugger, errin, ' err = ', io, lf)
+    END;
+    GetIndString (writetostr,256,10);{read resource for writeto}
+    GetIndString (savedstr,256,12);{read resource for saved}
+    errstr := 0;
+    Case io of
+      DskFulErr : errstr := 17;
+      DirFulErr : errstr := 18;
+      FLckdErr : errstr := 19;
+      VLckdErr, WPrErr : errstr := 20;
+      IOErr : errstr := 21;
+      OTHERWISE
+      BEGIN
+        NumToString (io, str);
+        GetIndStr (str1,256,22);{ID = }
+        str := Concat (str1,str)
+      END
+    END;
+    IF errstr <> 0 THEN GetIndStr (str,256,errstr);
+    Paramtext (writetostr,FName,savedstr,str);
+    SetCursor (arrow);
+    dummy := StopAlert (256, NIL);
+    io := FSClose (refNo);
+    Exit (writefile)
+  END;
+
+BEGIN
+{this isn't very different from read file.  The only complication is finding out
+ if the file exists.  If it doesn't, create it.  Also, assign the information that
+ the finder needs to properly associate it with this application.}
+  IF debug THEN DebugInProc (proc, 'WriteFile', @WriteFile);
+  SetCursor (watchHdl^^);
+  WriteFile := FALSE;
+  io := FSOpen(FName, VRefNo, refNo);
+{$IFC BUG = 1}
+  errin := 'FSOpen'; {once again, these only benefit the external debugger.}
+{$ENDC}
+  IF debug THEN Writeln (debugger, 'file RefNum =', refNo, lf);
+  IF io = {file not found Err} -43 THEN
+  BEGIN
+    io := Create (FName,VRefNo,'CARY','TEXT');
+{$IFC BUG = 1}
+    errin := 'Create';
+{$ENDC}
+    IF io <> 0 THEN DiskWErr (io);
+    io := FSOpen(FName, VRefNo, refNo);
+{$IFC BUG = 1}
+    errin := 'FSOpen';
+{$ENDC}
+    IF debug THEN Writeln (debugger, 'file RefNum = ', refNo, lf);
+    IF io <> 0 THEN DiskWErr (io)
+  END {Create}
+  ELSE IF io <> 0 THEN DiskWErr (io);
+  WITH hTE^^ DO
+  BEGIN
+    txtLength := teLength;
+    io := FSWrite (refNo, txtLength, hText^);
+  END;
+{$IFC BUG = 1}
+  errin := 'FSWrite';
+{$ENDC}
+  IF io <> 0 THEN DiskWErr (io);
+  io := SetEOF (refNo, txtlength);
+{$IFC BUG = 1}
+  errin := 'SetEOF';
+{$ENDC}
+ IF io <> 0 THEN DiskWErr (io);
+  io := FSClose (refNo);
+{$IFC BUG = 1}
+  errin := 'FSClose';
+{$ENDC}
+  IF io <> 0 THEN DiskWErr (io);
+  io := FlushVol (NIL, VrefNo); {this is important; without it, if the program died
+  (not possible as a result of a programming mistake, of course), the directory
+   information on the disk would not be accurate.}
+{$IFC BUG = 1}
+  errin := 'FlushVol';
+{$ENDC}
+  IF io <> 0 THEN DiskWErr (io);
+  IF not windowdata^^.titled THEN
+  BEGIN
+    SetWTitle(MyWindow, FName);
+    WindowData^^.filevolume := VRefNo
+  END;
+  WindowData^^.titled := TRUE;
+  WindowData^^.changed := FALSE;
+  WriteFile := TRUE {everything is OK.}
+END;
+
+{------------------------------------------------------------------------------------}
+FUNCTION MyPutFile (Filename: str255): BOOLEAN;
+Var reply: SFReply;
+    wher: point;
+    Namestr: Str255;
+    temprect: rect;
+    tempport:grafptr;
+BEGIN
+{The user can select the name of the file that they wish to save the document with.}
+  IF debug THEN DebugInProc (func, 'MyPutFile', @MyPutFile);
+  MyPutFile := FALSE;
+  GetIndStrList (namestr,256,2);
+  wher.h := 100;
+  wher.v := 100;
+  DialogueDeactivate;
+  SFPutFile (wher, Namestr, Filename, NIL, reply);
+  WITH Reply DO
+  BEGIN
+    IF debug THEN Writeln (debugger, 'reply.good = ', good, lf);
+    IF good THEN MyPutFile := WriteFile (vrefnum, fname)
+  END;
+  IF debug THEN Writeln (debugger, 'release reserror = ', reserror, lf)
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE CloseAWindow;
+VAR itemhit: INTEGER;
+    DBoxPtr: DialogPtr;
+    str,str1: str255;
+    Goodwrite: BOOLEAN;
+    temprect: rect;
+    NamePtr: ^Str255;
+    typ: INTEGER;
+    itemhdl: handle;
+    box:rect;
+BEGIN
+{All sorts of windows can be closed through this single routine, which is accessed
+ by the user through the go-away box on the window, or the Close item in the File
+ menu, or by quitting the program.}
+  IF debug THEN DebugInProc (proc, 'CloseAWindow', @CloseAWindow);
+  MyPeek := windowPeek (FrontWindow);
+  Case Mypeek^.windowkind of
+  MyDocument :
+  BEGIN
+    GetWTitle (MyWindow, str);
+    itemhit := 0;
+    IF WindowData^^.changed THEN {give the user the chance to save his data before
+     you throw it away.}
+    BEGIN
+      DialogueDeactivate;
+      IF doneflag THEN
+      BEGIN
+        GetIndStr (str1,256,8);
+        IF debug THEN Writeln (debugger, 'err = ', Reserror, lf);
+      END
+      ELSE str1 := '';
+      Paramtext (str,str1,'','');
+      ItemHit := CautionAlert (259, NIL)
+    END;
+    IF debug THEN Writeln (debugger, 'itemhit = ', itemhit, lf);
+    Goodwrite := FALSE;
+    IF NOT windowdata^^.titled THEN str := '';
+    IF itemhit = OK {save} THEN
+      IF WindowData^^.titled
+      THEN GoodWrite := WriteFile (WindowData^^.FileVolume, str)
+      ELSE Goodwrite := MyPutFile (str);
+    IF GoodWrite OR (itemhit IN [0, 3] {discard}) THEN
+    BEGIN
+      TEDispose (hTE);
+      hTE := NIL;
+      DisposHandle (Handle (WindowData));
+      DisposeWindow (MyWindow)
+    END;
+    IF itemhit = Cancel THEN doneflag := FALSE
+  END;
+  Clipboard : ToggleScrap;
+{$IFC BUG > -1}
+  FreeMemory: ToggleFree;
+{$ENDC}
+    OTHERWISE CloseDeskAcc (MyPeek^.windowkind) {can't be anything else}
+  END {Case}
+END;
+
+{$S AboutMyPgm}
+{------------------------------------------------------------------------------------}
+PROCEDURE AboutMyEditor;
+const mousekey = mDownMask+keyDownMask;
+var str1hdl: stringHandle;
+    str2: Str255;
+    MyWindow:  WindowPtr;
+    width, height, counter, strwidth, strdepth, factor, remainder, adjust: INTEGER;
+    newcount: longint;
+    txtinfo: fontinfo;
+    temprect, trect1: rect;
+    offscreen, tempbits: bitmap;
+    sz: size;
+BEGIN
+{this bit of fluff shows an inadequate method of telling the user something about
+ my program, but it was fun to do.}
+  IF debug THEN DebugInProc (proc, 'AboutMyEditor', @AboutMyEditor);
+  DialogueDeactivate;
+  str1hdl := stringHandle(GetResource('CARY',0)); IF debug THEN Writeln (debugger, 'err = ', Reserror, lf);
+  GetIndStr (str2,256,3); IF debug THEN Writeln (debugger, 'err = ', Reserror, lf);
+  HLock (Handle(str1hdl));
+  MyWindow := GetNewWindow (256, NIL, Pointer (-1));
+  SetPort (MyWindow);
+  TextFont (NewYork);
+  TextSize (12);
+  GetFontInfo (TxtInfo);
+  width := MyWindow^.portrect.right - MyWindow^.portrect.left;
+  height := MyWindow^.portrect.bottom - MyWindow^.portrect.top;
+  strwidth := StringWidth (str1hdl^^);
+  IF StringWidth (str2) > strwidth THEN strwidth := StringWidth (str2);
+  WITH TxtInfo DO
+  BEGIN
+    strdepth := ascent*2+descent*2+leading+1;
+    WITH offscreen DO
+    BEGIN
+      rowbytes := (strwidth + 15) DIV 16 * 2;{rowbytes needs to be even}
+      SetRect (bounds, 0,0,strwidth,strdepth);
+      baseaddr := NewPtrClear (rowbytes * strdepth);
+      IF debug THEN Writeln (debugger, 'err = ', Memerror, lf);
+    END;
+    tempbits := MyWindow^.portbits;
+    SetPortBits (offscreen);
+    MoveTo ((strwidth - StringWidth (str1hdl^^)) DIV 2, ascent);
+    DrawString (str1hdl^^);
+    MoveTo ((strwidth - StringWidth (str2)) DIV 2, strdepth-descent);
+    DrawString (str2)
+  END;
+  HUnlock (Handle (str1hdl));
+  SetPortBits (tempbits);
+  factor := strwidth DIV strdepth;
+  remainder := strwidth MOD strdepth;
+  SetRect (trect1, (width - remainder) DIV 2 - factor, height DIV 2 - 1,
+    (width + remainder) DIV 2 + factor, height DIV 2 + 1);
+  counter := 1;
+  REPEAT
+    SystemTask;
+    CopyBits (offscreen, MyWindow^.portbits, offscreen.bounds, trect1, srcCopy, NIL);
+    InsetRect (trect1, -factor, -1);
+    counter := counter + 2;
+  UNTIL EventAvail (mousekey, MyEvent) OR (counter >= strdepth);
+
+  newcount := TickCount + 300; {5 seconds}
+  REPEAT
+    SystemTask
+  UNTIL EventAvail (mousekey, MyEvent) OR (TickCount > newcount);
+
+  temprect := offscreen.bounds;
+  OffsetRect (temprect, (width-strwidth) DIV 2, (height-strdepth) DIV 2);
+  trect1 := offscreen.bounds;
+  WITH MyWindow^, temprect DO
+  WHILE NOT EventAvail(mousekey,MyEvent) AND
+    (trect1.right-factor * 2> trect1.left) DO
+  BEGIN
+    SystemTask; {the clock still ticks!}
+    factor := trect1.right DIV strdepth;
+    IF left > 0 THEN InsetRect (temprect, -factor, -2)
+    ELSE IF top > 0 THEN
+    BEGIN
+      InsetRect (trect1, factor, 0);
+      InsetRect (temprect, 0, -2)
+    END ELSE InsetRect (trect1, factor, 2);
+    CopyBits (offscreen, portbits, trect1, temprect, srcCopy, NIL);
+  END;
+  DisposPtr(offscreen.baseaddr);
+  IF debug THEN Writeln (debugger, 'err = ', Memerror, lf);
+  DisposeWindow (MyWindow)
+END;
+
+{$S MyPrint }
+{------------------------------------------------------------------------------------}
+PROCEDURE CheckButton;
+var bool : BOOLEAN;
+    item : INTEGER;
+BEGIN
+  bool := GetNextEvent (mDownMask+keyDownMask, MyEvent);
+  item := 0;
+  IF (myEvent.what = keydown) AND (BitAnd (myEvent.message, 255) = 13)
+  THEN item := 1
+  ELSE
+  IF IsDialogEvent (myEvent) THEN bool := DialogSelect (myEvent, dlogptr, item);
+  IF item = 1 THEN PrSetError (iPrAbort);
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE MyPrint(finderFile:INTEGER; filename: str255);
+Const bottommargin = 20;      {amount of space on the margins of the page in pixels}
+      leftmargin = 30;
+      rightmargin = 10;
+
+Var MyPPort: TPPrPort;
+    txt: handle;
+    txtptr: ptr;
+    pglen,  start, finish, counter, count2, loop, io, numpages: INTEGER;
+    temprect, tmprect2, pagerect: rect;
+    status: TPrStatus;
+    userOK, canceldialog: BOOLEAN;
+    s: string[1];
+    str: str255;
+    numToGo, numdone: str255;
+    temp: str255;
+    MyLngth: array [1..99] of INTEGER;
+BEGIN
+{For heavyweight programmers only. All modes of printing are handled by Macprint.  The
+ only things you have to do are:
+   image each page, using QuickDraw (or something that uses QuickDraw);
+   Do it once for the number of copies the user specified in draft mode only.
+
+   You do not have to worry with:
+     copies in normal or high res.
+     which pages the user chose to print.
+     tall, wide, etc.
+
+  Remember, these Page Setup dialog is printer specific.  It will not always be the
+  same, so don't write any code around it.
+
+  The reason this program is heavily segmented is that printing normal or high-res
+  on line takes gobs of memory (in this example, up to 25K.)  You may minimize the
+  by omitting 1 line below and creating a spooled file instead.
+
+  The finderprint boolean determines whether printing is has been selected while the
+  user is running the application, or whether it was selected from the finder.  In the
+  application, printing is done in the background.  From the finder, a simple dialog
+  is presented instead.  Because printing takes a large amount of memory, up to 25K,
+  background printing is only possible if the memory required by the foreground
+  process can be kept to a minimum.  Since this program does not yet have strong
+  memory full checking, you should set the debugging compile time variable DEBUG
+  to -1, and remove MacsBug from the Mac disk, to give the program a realistic amount
+  of free memory.  MacsBug, when active, can use up to 16K.
+
+  Printing is not re-entrant.  If your main program loop is the print idle proc,
+  as below, disable the Page Setup item and change 'Print' to 'Stop Printing'
+  in the File menu.}
+
+  IF debug THEN DebugInProc (proc, 'MyPrint', @MyPrint);
+  printflag := FALSE;
+  IF debug THEN
+   writeln (debugger, 'finderPrint =', finderprint, '; finderFile =', finderfile, lf);
+  userOK := TRUE;
+  IF finderfile = 1 THEN
+  BEGIN
+    SetCursor (arrow);
+    userOK :=  PrJobDialog (PrintHdl)
+  END;
+  IF userOK THEN
+  BEGIN
+    {try to see if enough memory exists to
+          1) duplicate the text portion of the te record
+          2) allow the printing pieces to be resident
+          3) allow the largest possible segment to be loaded by the main event loop
+          if so, allow the printing to go on in the background.
+          Otherwise, put up the 'press a button to cancel' dialog}
+    SetCursor (watchhdl^^);
+    IF NOT finderprint THEN numfiles := 1;
+    canceldialog := finderprint;
+    IF NOT canceldialog THEN
+    BEGIN
+      txt := NewHandle (hte^^.telength+16000);
+      {this calculation should be made considering:
+          the current font size
+          the printing mode (draft, normal, hires)
+          the textstyle overhead, if any
+          blank segment overhead
+          largest segment + largest local data
+          global data overhead ---  16000 is a crude, unprofessional approximation}
+      IF txt = NIL THEN canceldialog := TRUE
+      ELSE
+      BEGIN
+        disposHandle (txt);
+        txt := hte^^.hText;
+        ResrvMem (hte^^.teLength);
+        io := HandToHand (txt);
+      END
+    END;
+    IF canceldialog THEN
+    BEGIN
+      NumToString (finderFile, numToGo);
+      NumToString (numfiles, numdone);
+      Paramtext (filename,numToGo,numdone,'');
+      dlogptr := GetNewDialog (257, NIL, Pointer(-1));
+      DrawDialog (dlogptr);
+      printHdl^^.prJob.pIdleProc := @CheckButton;
+      txt := hte^^.hText
+    END
+    ELSE
+    BEGIN
+      GetIndStr (temp,256,15); {change to 'Stop Printing'}
+      SetItem (myMenus[fileMenu], 8, temp);
+      printing := TRUE;
+      printHdl^^.prJob.pIdleProc := @MainEventLoop;
+      GetPort (printport); {get the port to be restored at the top of the
+       main event loop}
+    END;
+    {for now, approximate a full page}
+    MyPPort := PrOpenDoc (PrintHdl, NIL, NIL);
+    WITH hTE^^, printhdl^^.prinfo DO
+    BEGIN
+      pagerect := rpage;
+      pagerect.left := pagerect.left + leftmargin;
+      pagerect.right := pagerect.right - rightmargin;
+      pagerect.bottom := pagerect.bottom - bottommargin
+      - (pagerect.bottom - bottommargin) MOD lineheight {get rid of partial line};
+      temprect := destrect;
+      destrect := pagerect;
+      TECalText (hTE)
+    END;  {TECalText could cause the memory manager to move the hTE and PrintHdl
+     handles.  So, the 'WITH' statement is required below; the alternative would
+     be to use 1 'WITH' and 'HLock' the handles.  Note that 'WITH' is much more
+     than a lexical convenience.  It actually causes the compiler to optimize code
+     about the fields of hTE^^ and printhdl^^.prinfo}
+    WITH hTE^^, printhdl^^.prinfo DO
+    BEGIN
+      tmprect2 := viewrect;
+      pglen := (rpage.bottom - rpage.top - bottommargin) DIV lineheight;
+      finish := nlines;
+      start := 0;
+      counter := 1;
+      WHILE start < finish DO
+      BEGIN
+        IF finish - start > pglen
+        THEN MyLngth[counter] := linestarts[start + pglen] - linestarts[start]
+        ELSE MyLngth[counter] := teLength - linestarts[start];
+IF debug THEN
+BEGIN
+  Writeln (debugger,'MyLngth[',counter:1,'] = ', MyLngth[counter]:5, '; start = ', start:5, '; pglen = ', pglen:5, lf);
+  Writeln (debugger, 'finish = ', finish:5, '; teLength = ', teLength:5, '; ORD(txt) = ', ord4(txt),lf)
+END;
+        start := start + pglen;
+        counter := counter + 1;
+      END; {While start < finish}
+      numpages := counter - 1;
+      IF NOT finderprint THEN
+      BEGIN
+        destrect := temprect;
+        TECalText (hTE)
+      END
+    END;
+    IF debug THEN Writeln (debugger,'BJDocLoop = ', PrintHdl^^.prjob.BJDocLoop,lf);
+    IF PrintHdl^^.prjob.BJDocLoop = BSpoolLoop
+    THEN loop := 1
+    ELSE loop := PrintHdl^^.prjob.iCopies;
+    SetPort (GrafPtr(MyPPort));
+    TextFont (applFont);
+    DrawChar (' '); SetFontLock (TRUE);
+    IF PrintHdl^^.prjob.BJDocLoop <> BSpoolLoop THEN SetCursor (arrow);
+    FOR counter := 1 to loop DO
+    BEGIN
+      Hlock (txt);
+      txtptr := txt^;
+      FOR count2 := 1 to numpages DO
+      BEGIN {if background printing, duplicate txt handle before starting}
+        PrOpenPage (MyPPort, NIL);
+        TextBox (txtptr, MyLngth[count2], pagerect, teJustLeft);
+        PrClosePage (MyPPort);
+        txtptr := Pointer (ORD4(txtptr) + MyLngth[count2]);
+        start := start + pglen
+      END; {For count2}
+      HUnlock (txt);
+    END; {For counter}
+    PrCloseDoc (MyPPort);
+    IF PrintHdl^^.prjob.BJDocLoop = BSpoolLoop THEN
+    BEGIN
+       SetCursor (arrow);
+       PRPicFile (Printhdl, NIL, NIL, NIL, status) {omit this for spooled files.}
+    END;
+    IF canceldialog THEN DisposDialog (dlogptr)
+    ELSE
+    BEGIN
+      disposHandle (txt);
+      printing := FALSE;
+      GetIndString (temp,256,14); {change to 'Print'}
+      SetItem (myMenus[fileMenu], 8, temp);
+      SetPort (printport)
+    END
+  END
+END;
+
+{$S EditMenu}
+{------------------------------------------------------------------------------------}
+Procedure EditMain (theItem: INTEGER; commandkey : BOOLEAN);
+const undo = 1;
+      cut = 3;
+      kopy = 4;     {'Copy' is a Pascal string function}
+      paste = 5;
+      clear = 6;
+      selectAll = 7;
+      clipbored = 9; {'ClipBoard' is already used as a windowkind constant}
+
+VAR DeskAccUp , dummy: BOOLEAN;
+    Dscrap: PScrapStuff;
+    off: LongInt;
+    ticks: LongInt;
+    tempport: grafptr;
+    box: rect;
+    itemhdl, hdl: handle;
+    typ, io, tempstart, tempend: INTEGER;
+    tempptr: ptr;
+    TextLength: INTEGER;
+    Ptr2ScrapLength: LomemPtr;
+    topwindow: WindowPeek;
+BEGIN
+{Since the Edit menu does so much, it has been broken up into a separate procedure.
+ It does not yet support undo, but does support Cutting, Copying and Pasting between
+ the Desk Scrap and the TextEdit Scrap.}
+  DeskAccUp := FALSE;
+  IF (theItem < selectAll) and NOT CommandKey THEN DeskAccUp := SystemEdit(theItem-1);
+  topwindow := WindowPeek(FrontWindow);
+  IF (theItem > Clear) OR NOT DeskAccUp THEN
+  BEGIN
+    IF theItem in [cut, kopy] THEN
+    BEGIN
+       tempend := hTE^^.selend;
+       tempstart := hte^^.selstart
+    END;
+    IF debug THEN Writeln (debugger, 'not system edit', lf);
+    { Delay so menu title will stay lit a little only if Command key }
+    { equivalent was typed. }
+    IF commandkey THEN
+    BEGIN
+      ticks := TickCount + 10;
+      REPEAT UNTIL ticks <= TickCount
+    END;
+{** see if enough memory exists for move}
+    CASE theItem OF
+    undo:  ; { no Undo/Z in this example }
+    cut:  TECut(hTE);                    { Cut/X }
+    kopy:  TECopy(hTE);                  { Copy/C }
+    paste:
+      BEGIN                        { Paste/V }
+        DScrap := InfoScrap;
+        IF DScrap^.scrapState <> LastPaste THEN
+        BEGIN
+          LastPaste := DScrap^.scrapState;
+          io := GetScrap (NIL, 'TEXT', off);
+          IF debug THEN Writeln (debugger, 'io = ', io);
+          IF io > 0 THEN {**?? enough space to paste}
+          BEGIN
+            io := GetScrap (TEScrapHandle, 'TEXT', off);
+            Ptr2ScrapLength := LomemPtr ($AB0);
+            Ptr2ScrapLength^ := BitShift (io, 16);{***???***}
+          END
+        END;
+        TEPaste(hTE);
+      END;
+    clear:  TEDelete(hTE);                    { Clear }
+    selectall:  TeSetSelect(0,65535,hTE);     { Select All/A }
+    clipbored:  ToggleScrap                   { Show, Hide Clipboard }
+    END;    { of item case }
+    IF theItem in [cut,kopy] THEN
+    BEGIN
+      io := ZeroScrap;
+      IF debug THEN Writeln (debugger, 'zero scrap err =', io, lf);
+      TextLength := GetHandleSize (TEScrapHandle);
+      IF debug THEN
+Writeln (debugger, 'TEScrapHandle @',ORD4(TEScrapHandle^),'; TextLength = ',textlength,lf);
+      Hlock (TEScrapHandle);
+      io := PutScrap (TextLength, 'TEXT', TEScrapHandle^);
+      IF debug THEN Writeln (debugger, 'put scrap err =', io, lf);
+      HUnlock (TEScrapHandle)
+    END;
+    IF theItem in [cut,clear,paste] THEN Windowdata^^.changed := TRUE;
+    IF (theItem in [cut..clear]) THEN ScrollText (TRUE)
+  END {not systemedit}
+END;  { of editMain }
+
+{$S Command }
+{------------------------------------------------------------------------------------}
+PROCEDURE MyDisable;
+  const newitem = 1;
+        openitem = 2;
+        closeitem = 3;
+        saveitem = 4;
+        saveasitem = 5;
+        revertitem = 6;
+        pagesetupitem = 7;
+        printitem = 8;
+        quititem = 9;
+
+        undoitem = 1;
+        cutitem = 3;
+        copyitem = 4;
+        pasteitem = 5;
+        clearitem = 6;
+        selectallitem = 7;
+        clipboreditem = 9;
+
+var counter: INTEGER;
+    DScrap: PScrapStuff;
+    temppeek: windowpeek;
+    stycount: styleitem;
+    off : LongInt;
+
+{------------------------------------------------------------------------------------}
+  PROCEDURE KillFE (fileitems, edititems : edset);
+  var counter : INTEGER;
+  BEGIN
+{This guy disables the items in the File and Edit menus.  This approach has a real
+ disadvantage:  If an entire menu should be disabled at some given time, there is
+ no convenient way to do a DrawMenuBar here to disable the item in the bar itself.}
+    IF debug THEN
+    BEGIN
+      DebugInProc (proc, 'KillFE', @KillFE);
+      Write (debugger, 'file:');
+      FOR counter := newitem to quititem DO
+       IF counter in fileitems THEN Write (debugger, counter:2, ',');
+      Write (debugger, ';  edit:');
+      FOR counter := undoitem to clipboreditem DO
+       IF counter in edititems THEN Write (debugger, counter:2, ',');
+      Writeln (debugger, lf)
+    END;
+    FOR counter := 1 to 9 DO
+    BEGIN
+      IF counter in fileitems THEN DisableItem (myMenus[FileMenu], counter);
+      IF counter in edititems THEN DisableItem (myMenus[EditMenu], counter);
+    END
+  END;
+
+BEGIN
+{This part goes through all of the applicable elements of the frontmost window, if any
+ and from that decides what operations are allowable at this time.}
+  IF debug THEN DebugInProc (proc, 'MyDisable', @MyDisable);
+  FOR counter := 1 to 9 DO
+  BEGIN
+    EnableItem (myMenus[FileMenu], counter);
+    IF counter in [UndoItem,CutItem..SelectAllItem,ClipboredItem]
+      THEN EnableItem (myMenus[EditMenu], counter)
+  END;
+  IF printing THEN KillFE ([PageSetupItem],[]); {page setup, if printing}
+  IF Frontwindow = Nil
+  THEN KillFE ([CloseItem..PrintItem],[UndoItem..SelectAllItem])
+  ELSE
+  BEGIN
+    Mypeek := windowPeek (FrontWindow);
+    Case Mypeek^.windowkind of
+    MyDocument:  BEGIN
+          KillFE ([], [UndoItem]);
+          IF NOT WindowData^^.titled THEN KillFE ([SaveItem,RevertItem], []);
+          IF NOT WindowData^^.changed THEN KillFE ([SaveItem,RevertItem], []);
+          IF hTE^^.teLength = 0 THEN
+            KillFE ([SaveItem,SaveAsItem,PageSetupItem,PrintItem], [SelectAllItem]);
+          IF hTE^^.selstart = hTE^^.selend THEN
+            KillFE ([], [CutItem,CopyItem,ClearItem]);
+          IF GetScrap (NIL, 'TEXT', off) = noTypeErr THEN KillFE ([], [PasteItem]);
+        END;
+    Clipboard,FreeMemory:  KillFE ([SaveItem..PrintItem], [UndoItem, CutItem..SelectAllItem]);
+      OTHERWISE KillFE ([SaveItem..PrintItem], [SelectAllItem]) {system window}
+    END {Case}
+  END;
+  IF printing THEN EnableItem (MyMenus[filemenu], PrintItem) {stop printing}
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE DoCommand (commandkey: BOOLEAN);
+VAR name, s, str: str255;
+    bstr: string[5];
+    dummy: size;
+    err : BOOLEAN;
+    num, refnum, theMenu, theItem: INTEGER;
+    tempPeek: WindowPeek;
+    mresult, ticks: longint;
+    dipeek: DialogPeek;
+    box: rect;
+    itemhdl: handle;
+    typ: INTEGER;
+    menuStuff: RECORD CASE INTEGER OF
+      1 : (menuResult : LONGINT);        {Information returned by MenuSelect}
+      2 : (theMenu,                      {Which menu was selected}
+           theItem : INTEGER)            {Which item within the menu}
+    END;
+BEGIN
+{This handles the actions that are initiated through the Menu Manager}
+  IF debug THEN DebugInProc (proc, 'DoCommand', @DoCommand);
+  MyDisable;
+  WITH menuStuff DO
+  BEGIN
+    IF Commandkey
+    THEN menuResult := MenuKey(theChar)
+    ELSE menuResult := MenuSelect (myEvent.where);
+    CASE theMenu OF
+      appleMenu:  {enough memory to allow desk accessory to open}
+      BEGIN
+        IF theItem = 1
+        THEN AboutMyEditor
+        ELSE
+        BEGIN
+          GetItem(myMenus[appleMenu],theItem,name);
+          refNum := OpenDeskAcc(name)
+        END
+      END;
+      FileMenu:
+      BEGIN
+        IF FrontWindow <> NIL THEN
+         IF MyPeek^.WindowKind = MyDocument THEN
+           IF windowdata^^.titled
+           THEN GetWTitle (FrontWindow, str)
+           ELSE str := '';
+        Case TheItem of
+          1:  OpenAWindow;                { New }
+          2:  MyGetFile;                  { Open }
+          3:  CloseAWindow;               { Close }
+          4:  err :=                      { Save }
+                WriteFile (windowdata^^.FileVolume, str);
+          5:  err := MyPutFile (str);     { Save As }
+          6:  BEGIN                       { Revert to Saved }
+                IF CautionAlert(257, NIL)=OK THEN
+                  err := ReadFile (windowdata^^.FileVolume, str);
+                ScrollText (FALSE)  {which is the user interfacy thing to do?
+                                     display the top of the file, or display
+                                     the position in the file the user was looking @
+                                     when he said revert.  Should I also maintain the
+                                     flashing caret position?}
+              END;
+          7:  BEGIN
+                PrOpen;
+                IF PrStlDialog (PrintHdl)   { Page Setup }
+                THEN ;
+                PrClose
+              END;
+                {eventually, store info in document resource fork}
+          8:  IF NOT printing             { Print }
+              THEN Printflag := TRUE
+              ELSE PrSetError(iPrAbort);
+          9:  doneFlag := TRUE;           { Quit }
+        END
+      END;
+    EditMenu: EditMain (theItem, commandkey);
+
+  {$IFC BUG > -1}
+    100:
+      Case theItem OF
+      1:  ToggleFree;
+      2:  dummy := MaxMem (dummy);
+  {$IFC BUG = 1}
+      3:  BEGIN
+            debug := NOT debug;
+            CheckItem (MyMenus[DebugMenu], 3, debug)
+          END
+  {$ENDC}
+      END  { of debug }
+  {$ENDC}
+
+    END;    { of menu case }
+    HiliteMenu(0)
+  END
+END;  { of DoCommand }
+
+{------------------------------------------------------------------------------------}
+PROCEDURE DrawWindow;
+VAR tempPort : GrafPtr;
+    tempscrap: handle;
+    scraplength, off: longint;
+    temprect, rectToErase: rect;
+    str: str255;
+    tempPeek: WindowPeek;
+    whichwindow: windowptr;
+    temphTE: TEHandle;
+    tempdata: mydatahandle;
+BEGIN
+{ Draws the content region of the given window, after erasing whatever
+  was there before. }
+  IF debug THEN DebugInProc (proc, 'DrawWindow', @DrawWindow);
+  WhichWindow := WindowPtr (MyEvent.message);
+  BeginUpdate(WhichWindow);
+  GetPort (tempPort);
+  SetPort (WhichWindow);
+  tempPeek := WindowPeek (WhichWindow);
+  Case tempPeek^.windowkind of
+  MyDocument :
+    BEGIN
+      temprect := WhichWindow^.portrect;
+      tempData := MyDataHandle (GetWRefCon (WhichWindow));
+      temphTE := tempData^^.TERecord;
+      IF tempPeek^.hilited THEN temprect.top := temprect.bottom - 15;
+      temprect.left := temprect.right - 15;
+      ClipRect (temprect);
+      DrawGrowIcon(WhichWindow);
+      Cliprect (WhichWindow^.portrect);
+      DrawControls (WhichWindow);
+      {this only erases the window past the end of text, if any}
+      WITH temphTE^^ DO
+      IF nlines - topline < (viewrect.bottom - viewrect.top + lineheight)
+       DIV lineheight THEN
+      BEGIN
+        rectToErase := viewrect;
+        rectToErase.top := (nlines - topline) * lineheight;
+        EraseRect (rectToErase)
+      END;
+      TEUpdate(WhichWindow^.visRgn^^.rgnBBox, temphTE)
+    END;
+  ClipBoard :
+  BEGIN
+    tempscrap := NewHandle (0);
+    ScrapLength := GetScrap (tempscrap, 'TEXT', off);
+    EraseRect (WhichWindow^.portrect);
+    temprect := Whichwindow^.portrect;
+    temprect.left := temprect.left + 4;
+    temprect.right := temprect.right-15;
+    IF ScrapLength > 0 THEN
+    BEGIN
+      HLock (tempScrap);
+      Textbox (tempscrap^, scrapLength, temprect, teJustLeft);
+      HUnlock (tempScrap)
+    END;
+    DisposHandle (tempscrap);
+    temprect := WhichWindow^.portrect;
+    temprect.left := temprect.right - 15;
+    ClipRect (temprect);
+    DrawGrowIcon (WhichWindow);
+    ClipRect (whichwindow^.portrect)
+  END;
+{$IFC BUG > -1}
+  FreeMemory:
+    BEGIN
+      EraseRect(whichwindow^.portrect);
+      MoveTo (5, 12);
+      Write (FreeMem);
+    END;
+{$ENDC}
+  END; {Case}
+  SetPort (tempPort);
+  EndUpdate(WhichWindow)
+END;    { of DrawWindow }
+
+{$S CONTROL}
+{------------------------------------------------------------------------------------}
+PROCEDURE ScrollBits;
+VAR oldvert: INTEGER;
+BEGIN
+{If the visible information has changed, scroll the window here.}
+  IF debug THEN DebugInProc (proc, 'ScrollBits', @ScrollBits);
+  oldvert := topline;
+  topline := GetCtlValue(vScroll);
+  TEScroll (0, (oldvert - topline)*hTE^^.lineheight, hTE)
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE TrackScroll(theControl: ControlHandle; partCode: INTEGER);
+{This routine adjusts the value of the scrollbar.}
+Var amount, StartValue : INTEGER;
+    up : BOOLEAN;
+BEGIN
+  up := partcode IN [inUpButton, inPageUp]; {TRUE if scrolling page up}
+  StartValue := GetCtlValue (theControl);  {the initial control value}
+  IF {the scrollbar value is decreased, and it is not already at the minimum}
+     ((up AND (StartValue > GetCtlMin (theControl)))
+  OR {the scrollbar value is increased, and it is not already at the maximum}
+     ((NOT up) AND (StartValue < GetCtlMax (theControl))))
+  AND {to prevent tracking as the page up or down area disappears}
+     (whichpart = partCode)
+  THEN
+  BEGIN
+    IF up THEN amount := -1 ELSE amount := 1;  {set the direction}
+    IF partCode IN [inPageUp, inPageDown] THEN {change the movement to a full page}
+    WITH HTE^^.viewrect DO
+      amount := amount * (bottom - top) DIV hTE^^.lineheight;
+    SetCtlValue(theControl, StartValue+amount);
+    ScrollBits
+  END
+END; {of TrackScroll}
+
+{------------------------------------------------------------------------------------}
+PROCEDURE MyControls;
+Var t, code: INTEGER;
+    AControl: ControlHandle;
+    dummy: INTEGER;
+BEGIN  {controls}
+{This routine handles the scrollbar}
+  IF debug THEN DebugInProc (proc, 'MyControls', @MyControls);
+  whichPart := FindControl (MyPoint, MyWindow, AControl);
+IF debug THEN Writeln (debugger, 'whichpart = ', whichpart, lf);
+IF debug THEN Writeln (debugger, 'ORD( AControl = ', ORD ( AControl), lf);
+  {adjust scrollbar range}
+  IF AControl <> NIL THEN
+  BEGIN
+    VScroll := AControl;
+    IF whichPart = inThumb THEN
+    BEGIN
+      dummy := TrackControl (VScroll, MyPoint, NIL);
+      ScrollBits
+    END {of whichpart}
+    ELSE dummy := TrackControl (VScroll, MyPoint, @TrackScroll)
+  END {AControl <> NIL}
+END; {controls}
+
+{$S Initial }
+{------------------------------------------------------------------------------------}
+PROCEDURE SetUp;
+VAR counter, vRefNum : INTEGER;
+    DScrap : PScrapStuff;
+    hdl, hAppparms : handle;
+    off : longint;
+    apName : Str255;
+    NameHdl : Handle;
+    strhdl : StringHandle;
+    dummyrect : rect;
+    dummy : BOOLEAN;
+    FinderFile : INTEGER;
+    myport : GrafPtr;
+    message : INTEGER;
+    document : appFile;
+    temprgn: rgnhandle;
+    extdebug: Str255;
+
+BEGIN
+{Initialization for a variety of things is done here.  This code is 'discarded'
+ after it is executed by an UnLoadSeg.  Another good way of initializing a large
+ number of variables would be to create a custom resource which contains initial
+ values for all globals.  Then, if the globals are fields in a handle, a single
+ 'GetResource' would initialize all fields.}
+  InitFonts;                  {I need fonts}
+  FlushEvents(everyEvent,0);  {start with a clean slate}
+  TEInit;                     {I need TextEdit}
+  InitDialogs(NIL);           {and I need dialogs, even when printing from Finder}
+  PrintHdl := THPrint (NewHandle (SizeOf(TPrint)));
+  PrOpen;
+  PrintDefault (PrintHdl);
+  getAppParms(apName,vRefNum,hAppParms);
+  {** one day, get file info for apName, to use folder info as appropriate}
+  iBeamHdl := GetCursor(IBeamCursor);
+  HNoPurge (Handle(iBeamHdl));{???}
+  watchHdl := GetCursor(WatchCursor);
+  HNoPurge (Handle(watchHdl));{???}
+  CountAppFiles(message, numfiles);
+  IF debug THEN Writeln (debugger, 'numfiles=',numfiles,lf);
+  finderprint := (message = 1);
+  IF finderprint {User selected 'print' from the Finder} THEN
+  BEGIN
+    GetWMgrPort (myPort);
+    SetPort (myPort);
+    temprgn := NewRgn;
+    GetClip (temprgn);
+    dummyrect := screenbits.bounds;
+    dummyrect.bottom := dummyrect.top + 16;
+    ClipRect (dummyrect);
+    TextBox (pointer(ORD(@apName)+1),ORD(Length(apName)),dummyrect,teJustCenter);
+    SetClip (temprgn);
+    DisposeRgn (temprgn);
+    FOR FinderFile := 1 to numfiles DO
+    BEGIN
+      GetAppFiles(FinderFile, document);
+      WITH document DO
+      IF ftype = 'TEXT' THEN
+      BEGIN
+        dummyrect := screenbits.bounds;
+        dummyrect.bottom := dummyrect.top + 16;
+        InsetRect (dummyrect,10,2);
+        SetPort (myPort);                   {to allow text measure in TeCalText}
+        hTE := TENew(dummyrect, dummyrect);
+        dummy := ReadFile (vRefNum, fName); {assume that page setup is read in as well}
+        Unloadseg (@ReadFile);
+        MyPrint(FinderFile, fName);
+        SetCursor (watchhdl^^);
+        TEDispose (hTE); {dispose of text edit stuff}
+        ClrAppFiles (FinderFile)
+      END
+    END;
+    hTE := NIL;
+    PrClose
+  END
+  ELSE
+  BEGIN
+    PrClose;
+    InitMenus;   { initialize Menu Manager }
+    myMenus[appleMenu] := GetMenu(appleMenu);
+    AddResMenu(myMenus[1],'DRVR');    { desk accessories }
+    FOR counter := FileMenu to EditMenu DO myMenus[counter] := GetMenu(counter);
+  {$IFC BUG > -1}
+    myMenus[DebugMenu] := GetMenu(100);       { temporary debug menu }
+  {$ENDC}
+  {$IFC BUG = 1}
+    GetIndStr (extdebug,257,1);
+    AppendMenu (myMenus[DebugMenu], extdebug);
+    CheckItem (MyMenus[DebugMenu], 3, debug);
+  {$ENDC}
+    FOR counter:=1 TO lastMenu DO InsertMenu(myMenus[counter],0);
+    DrawMenuBar;
+    dragRect := screenbits.bounds;
+    dragrect.top := dragrect.top + 20; {leave room for menu bar}
+    growRect := dragRect;
+    InsetRect (dragrect, 4, 4); {leave some of dragged rectangle on screen}
+    growrect.left := {replace this with the max font width + constant} 80;
+    growrect.top := 80 {18 + 16*3 + slop?};
+    doneFlag := FALSE;
+    printflag := FALSE;
+    printing := FALSE;
+    windownum := 1;
+    windowpos := 0;
+    MyFileTypes[0] := 'TEXT';
+    DScrap := InfoScrap;
+    LastCount := DScrap^.scrapCount - 1;
+    LastPaste := LastCount;
+    Scrapwind := NIL;
+    FOR counter := 1 to numfiles DO
+    BEGIN
+      GetAppFiles (counter, document);
+      WITH document DO
+      IF ftype = 'TEXT' THEN
+      BEGIN
+        MakeAWindow (fName, TRUE); {**could async open while this is going on}
+        IF counter < numfiles THEN DialogueDeactivate;
+        IF NOT ReadFile (vRefNum, fName) THEN
+        BEGIN
+          TEDispose (hTE);
+          hTE := NIL;
+          DisposHandle (Handle (WindowData));
+          DisposeWindow (MyWindow)
+        END
+      END
+    END;
+    IF Frontwindow = NIL THEN OpenaWindow;
+  {$IFC BUG > -1}
+    Freewind := NIL
+  {$ENDC}
+  END
+END;    { of SetUp}
+
+{$S          }
+{------------------------------------------------------------------------------------}
+PROCEDURE CursorAdjust;
+VAR mousePt:  Point;
+    tempport: grafptr;
+    temppeek: Windowpeek;
+BEGIN
+{ Take care of application tasks which should be executed when the machine has
+  nothing else to do, like changing the cursor from an arrow to an I-Beam when it
+  is over text that can be edited. }
+{$IFC BUG >-1}
+{ If the amount of free memory is being displayed in its own window, and if it has
+  changed, then create an update event so that the correct value will be displayed.}
+  IF (FreeWind <> NIL)
+  AND (FreeMem <> OldMem) THEN
+  BEGIN
+    OldMem := FreeMem;
+    GetPort (tempport);
+    SetPort (FreeWind);
+    InvalRect (FreeWind^.portrect);
+    SetPort (tempport)
+  END;
+{$ENDC}
+  GetMouse(mousePt); {where the cursor is, currently (local to the topmost window)}
+  IF hTE <> NIL {if text edit is currently active, (document window is topmost)}
+  THEN
+  BEGIN
+    TEIdle (hTE);
+    IF (PtInRect(mousePt, hTE^^.viewrect)) {In the text edit viewrect area,}
+    THEN SetCursor(iBeamHdl^^)             { make the cursor an I-beam.}
+    ELSE SetCursor(arrow)
+  END
+  ELSE
+  BEGIN
+    {let desk accessories set their own?}
+    temppeek := windowPeek(FrontWindow);
+    IF temppeek = NIL THEN SetCursor (arrow)
+    ELSE IF temppeek^.windowkind > 1 THEN SetCursor (Arrow)
+  END
+END;
+
+{------------------------------------------------------------------------------------}
+FUNCTION MyGrowZone;
+BEGIN
+{This function is called by the memory manager whenever more memory is requested than
+ available.  The only time you'll see it in this program is when it initally runs
+ (which is normal) and when it is not checking memory availability when it should.
+ Your program should not rely on resolving memory problems here, because it could be
+ called by the ROM, where, at present, insufficient memory cases are not always
+ handled gracefully.}
+  IF GZCritical THEN
+  BEGIN
+    IF debug THEN Writeln (debugger, 'myGrow cbneeded = ', cbneeded, lf);
+    {Make all data stuctures, including user data, that can be safely released,
+     purgable.  If the user has data in memory that has not yet been saved, and if
+     you were not expecting this routine to be called, then the call came from ROM
+     and is important to give the user the chance to save their work.  Even if
+     their data is successfully saved, it is likely that the program will have to
+     restart or quit to the Finder.}
+    {could unload segment EditMain and others?  Zero scrap?}
+    SetFontLock (FALSE); {at least let go of the application font}
+  END;
+  MyGrowZone := 0 {for now, the memory requests fails unconditionally}
+END;
+
+{------------------------------------------------------------------------------------}
+PROCEDURE MainEventLoop;
+Var code: INTEGER;                 {the type of mousedown event}
+    dummy: BOOLEAN;
+    str : str255;
+    tempport : Grafptr;
+    DScrap: PScrapstuff;
+BEGIN
+{This event loop handles most of the communications between this program and events
+taking place in the outside world.  This procedure is also called as the printer
+idle procedure so that the program appears to be doing background printing.}
+
+  IF printing THEN
+  BEGIN
+    getport (tempport);
+    setport (printport)
+  END;
+  REPEAT
+    CursorAdjust;
+    SystemTask;
+{See if a desk accessory has changed the scrap.  If so, create an update event to
+ redraw the clipboard.}
+    DScrap := InfoScrap;
+    IF (DScrap^.scrapCount <> LastCount) AND (ScrapWind <> NIL) THEN
+    BEGIN
+      LastCount := DScrap^.scrapCount;
+      Getport (tempport);
+      Setport (scrapwind);
+      InvalRect (scrapwind^.portrect);
+      Setport (tempport)
+    END;
+    IF printflag THEN
+    BEGIN
+      GetWTitle (MyWindow, str);
+      PrOpen;
+      Myprint(1, str); {number of files to print, what to call it}
+      PrClose
+    END;
+    IF GetNextEvent(everyEvent,myEvent) THEN
+    CASE myEvent.what OF
+    mouseDown:
+      BEGIN
+        code := FindWindow(myEvent.where,tempWindow);
+
+        CASE code OF
+          inMenuBar: DoCommand(FALSE);
+          inSysWindow: SystemClick(myEvent,tempWindow);
+          inDrag: DragWindow(tempWindow,myEvent.where,dragRect);
+          inGoAway: IF TrackGoAway(tempWindow,myEvent.where) THEN CloseAWindow;
+          inGrow: IF Mypeek^.windowkind in [MyDocument,Clipboard] THEN GrowWnd;
+
+          inContent:
+            BEGIN
+              IF tempWindow <> FrontWindow
+              THEN  SelectWindow (tempWindow)
+              ELSE
+              IF hTE <> NIL THEN
+              BEGIN
+                MyPoint := MyEvent.where;
+                GlobalToLocal (MyPoint);
+                IF PtInRect (MyPoint, hTE^^.viewrect)
+                THEN
+                BEGIN
+                  IF debug THEN Writeln (debugger, 'point in HTE viewrect', lf);
+                  IF (BitAnd (myEvent.modifiers, ShiftKey) <> 0 ) { Shift key pressed }
+                  THEN TEClick (MyPoint, TRUE, hTE)
+                  ELSE TEClick (MyPoint, FALSE, hTE);
+                END
+                ELSE MyControls
+              END { hTE <> NIL }
+            END { in Content }
+          END { of code case }
+        END; { of mouseDown }
+
+      keyDown, autoKey:
+        BEGIN
+          theChar := CHR(BitAnd(myEvent.message,255)); { Mac characters use 8 bits }
+          IF BitAnd(myEvent.modifiers,CmdKey) <> 0     { Command key pressed }
+          THEN DoCommand(TRUE)
+          ELSE IF hTE <> NIL THEN
+          BEGIN
+            TEKey(theChar,hTE);
+            windowdata^^.changed := TRUE;
+            ScrollText (TRUE);
+          END
+        END;    { of keyDown }
+
+      activateEvt: MyActivate;
+      updateEvt: DrawWindow;
+    END         { of event case }
+    ELSE
+      IF (Myevent.what = nullEvent) AND doneflag AND (FrontWindow <> NIL)
+      THEN CloseAWindow;
+    UnloadSeg (@ScrollText);     {segment Utilities}
+    UnloadSeg (@ReadFile);       {segment ReadFile}
+    UnloadSeg (@WriteFile);      {segment WritFile}
+    UnloadSeg (@AboutMyEditor);  {segment AboutMyPgm}
+    UnloadSeg (@DoCommand);      {segment DoCommand}
+    UnloadSeg (@EditMain);       {segment EditMenu}
+    UnloadSeg (@MyControls);     {segment Control}
+    IF NOT printing THEN UnloadSeg (@MyPrint);
+  UNTIL (doneFlag AND (FrontWindow = NIL)) OR Printing;
+  IF doneFlag AND (FrontWindow = NIL) THEN
+  BEGIN
+    ClearMenuBar;  {prevent the user from doing anything until printing is through}
+    DrawMenuBar;
+    SetCursor (watchhdl^^)
+  END;
+  IF printing THEN
+  BEGIN
+    getport (printport);
+    setport (tempport)
+  END
+END;
+
+BEGIN    { main program }
+{Some things need to be set up outside of the initialization segment, to allow the
+ nonrelocatable objects that they create to be located as low in memory as possible.}
+{$IFC BUG = 1}   {This code is only included for external terminal debugging}
+  debug := FALSE;{if you want debugging on as soon as the program starts, set it here}
+  Reset (debugger, '.BOUT'); {the serial port not used for downloading from Lisa}
+{$ENDC}
+
+  IF debug THEN
+  BEGIN
+    Writeln (debugger, lf, lf);
+    DebugInProc (proc, 'SetUp', @Setup)
+  END;
+
+{The program only executes the code when it is first run, but it could have gotten
+ here in two ways.  The user may have opened the application or one of its
+ documents, or the user may have chosen to print a document.  In any case, some
+ common initialization is needed.}
+
+  SetGrowZone (@MyGrowZone);  {just in case something goes wrong..}
+{The application needs to grow the heap to the maximum size, but does not want to
+ purge any of the preloaded resources.  This also is an example of how to
+ examine low memory locations from Pascal.}
+  applLimit := LomemPtr($130);
+  heapEnd := LomemPtr($114);
+  dummy := NewHandle (applLimit^-heapEnd^-1024);
+  DisposHandle (dummy);
+  MoreMasters; MoreMasters; MoreMasters;
+  InitGraf(@thePort);         {I need QuickDraw}
+  InitWindows;                {I need windows}
+
+  SetUp;
+  UnloadSeg (@Setup);
+  IF NOT finderprint THEN MainEventLoop;
+  SetCursor (watchHdl^^);
+END.

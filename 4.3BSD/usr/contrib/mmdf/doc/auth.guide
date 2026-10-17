@@ -1,0 +1,635 @@
+.\" ***************************************************
+.\"  indra.me   - Steve Kille - Jan 84
+.\"
+.\"  /vax2/staff/steve/doc/indra/in.me
+.\"
+.\"     based on
+.\"
+.\"  tmac.pl.in  -  internal/departmental-specific macros
+.\"
+.\" ***************************************************
+.\"
+.\"
+.\"
+.\"       INTERNAL NOTE HEADER
+.\"
+.\"       called as .IN "Internal Note number" "date" "other id"
+.\"
+.de IN
+.ec
+.ls 1P          \" will be reset at top of next page to \n(LS
+.sp 4
+.in +5
+.tl ~Internal Note \\$1~~Internal~
+.ie \\w~\\$3~ .tl ~\\$3~~Working \&~
+.el .tl ~~~Working \&~
+.ie \\w~\\$3~ \\{  .tl ~~~Paper   \&~
+.                   tl ~\\$2~~~     \\}
+.el .tl ~\\$2~~Paper   \&~
+..
+.\"
+.\" ***************************************************
+.\"
+.\"       TECHNICAL REPORT HEADER
+.\"       called as .TR "Technical Report number" "date" "other id"
+.\"
+.de TR
+.ec
+.ls 1P          \" will be reset at top of next page to \n(LS
+.sp 4
+.tl ~TECHNICAL REPORT \\$1~~UCL-CS TR \\$1    \&~
+.ie \\w~\\$3~ .tl ~\\$3~~~
+.el .tl ~~~~
+.ie \\w~\\$3~ \\{  .tl ~~~~
+.                   tl ~\\$2~~~     \\}
+.el .tl ~\\$2~~~
+..
+.\"
+.\" ***************************************************
+.\"
+.\"       TITLE & AUTHOR(S)
+.\"
+.\"       called as .TA "title" "subtitle" "author(s)" "co-author(s)"
+.\"
+.de TA
+.sp |3i
+.rb
+.tl ~~\\$1~~
+.if \\w~\\$2~ \\{\
+.       sp
+.       tl ~~\\$2~~   \\}
+.sp 3
+.tl ~~\\$3~~
+.sp
+.if \\w~\\$4~ .tl ~~\\$4~~
+.r
+..
+.\"
+.\" ***************************************************
+.\"
+.\"       ABSTRACT START
+.\"
+.de AB
+.sp |5..5i
+.ds AS ABSTRACT:
+.ll -(\\w~\\*(AS~u-1m)
+.in +(\\w~\\*(AS~u+4m)
+.ti -(\\w~\\*(AS~u+1m)
+\\*(AS \\c
+..
+.\"
+.\" ***************************************************
+.\"
+.\"       ABSTRACT END
+.\"
+.de AE
+.wh -6 UC
+.ls
+.ll
+.bp 1
+..
+.\"
+.\" ***************************************************
+.\"
+.\"       UCL LOGO
+.\"
+.de UC
+.tl ~~Department of Computer Science~~
+.sp
+.tl ~~University College London \&~~
+.wh -6
+..
+.de AP
+.nr $A +1
+.sh 1 _ \\n($A
+.af $A A
+.af $1 A
+.bp
+.ce 2
+.uh "Appendix \\n($A"
+
+.rb "\\$1"
+..
+.IN 1724 "April 1985"
+.TA "Configuring MMDF Authorisation" \
+"Steve Kille"
+.he  '[MMDF Authorisation]''[Indra Note 1724]'
+.fo  '[Kille]''[Page %]'
+.AB
+This note describes how access control is applied in MMDF.
+It explains how to configure host based controls and user
+based control, and gives examples.
+.AE
+.ae
+.sh 1 "Introduction"
+.lp
+This is intended as a pragmatic document, explaining how to set
+up MMDF to apply these controls.
+A more general description of the aims, and a discussion of the
+UCL usage in conjunction with a full management system is given
+in \*([.Brink85a\*(.].
+A more theoretical discussion of the considerations involved is given in \*([.Kille85a\*(.].
+.pp
+A few concepts are needed to understand this document:
+.np
+User: A mailbox.  Senders and recipients are two specific types
+of user.
+.np
+Normalised address.  An address / source route in RFC 822
+syntax with all domains fully qualified.
+Local addresses will simply be a local login name or alias.
+.np
+Channel: A grouping of hosts, all talking the same protocol.
+Channels are also divided on a network basis at UCL.  They
+might also be divided on a logical/administrative basis.
+For authorisation purposes, many authorisation constraints are
+applied to channels, rather than to individual hosts.
+.np
+Host: Domains directly connected to (or connected to by a
+channel with a specific relay host).  Distinguish from a general
+domain, which may be accessed indirectly.
+.np
+Message transfer: A message coming from a sender on a channel,
+and being transferred to one recipient on a channel.  Multiple
+recipients are not considered from the standpoint of
+authorisation.
+.np
+Configuration file:  the file which dynamically tailors the
+channel and authorisation configuration of a local system.
+This is constructed manually.
+.sh 1 General
+.lp
+All table formats are considered to be as follows.
+The LHS is terminated with tab or space or colon.
+Backslash is used as a single character quote.
+The RHS is a sequence, as defined in mm_tai(3.mmdf).
+.pp
+A message is considered to arrive over an inbound channel, and to depart
+over an outbound channel.
+The outbound channel may be selected from several
+possibilities.
+Each channel has a parameter "auth" which can be set  to
+provide the following controls in each direction for a given
+channel.
+The following modes are identified for
+user access in each direction, with the appropriate values for
+"auth" in braces:
+.np
+FREE: (default) no controls.
+.np
+LOG.  (inlog/outlog) Just note (and log) authorised / unauthorised access.
+.np
+WARN.  (inwarn/outwarn) Like
+log, but send a warning note (from a standard file - see
+tailoring section of the installatin guide)
+to the sender of the message.
+This is intended to allow for gradual introduction of authorisation.
+.np
+BLOCK.  (inblock/outblock) Reject the message.
+.pp
+This mechanism may be used in a straight forward manner to
+provide control over routes used  to a given destination.
+.sh 1 "Host based Controls"
+.lp
+Some controls are applied on the basis of just the channels and
+hosts involved.  This mechanism may be used to control
+bilateral relaying agreements, or to apply specific relaying
+policy controls in conjunction with user authorisation.  If a
+host based criterion is identified, this is used to validate
+both inbound and outbound channel.
+There are four tables associated with each channel,
+which are now described.
+Each table is defined with the appropriate channel parameter
+(e.g. to use table "insrc", define and MTBL entry, say MTBL
+foo, and then use channel parameter insrc=foo).
+The items on the LHS and RHS of the table are then described.
+If a match is found, the message is deemed to be authorised.
+It is noted that host and not domain values are used in all of
+these tables.
+.ip outdest
+Used when the associated channel is a (potential) outbound channel.
+.sp
+LHS: outbound host.
+.sp
+RHS: NULL (LHS valid for all inbound hosts/channels), or list of valid inbound
+channels and inbound hosts.
+.ip insrc
+Used when the associated channel is the inbound channel.
+Will be the same as outdest if symmetrical controls are applied.
+.sp
+LHS: inbound host.
+.sp
+RHS: NULL (LHS valid for all outbound hosts/channels), or list of valid
+outbund channels and outbound hosts.
+.ip outsrc
+Used when the associated channel is a (potential) outbound channel.
+.sp
+LHS: inbound host or channel
+.sp
+RHS: NULL (LHS valid for all outbound hosts/channels),
+or list of valid outbound hosts.
+.ip indest
+Used when the associated channel is the inbound channel.
+Will be the same as outsrc if symmetrical controls are applied.
+.sp
+LHS: outbound host or channel
+.sp
+RHS: NULL (LHS valid for all inbound hosts/channels),
+or list of valid inbound hosts.
+.lp
+Some examples of this are given in the appendices.
+.pp
+Instead of using the connect host, it is also possible to use
+the full route to/from the originator's host.
+This has intrinsically more security holes than the other
+approaches.  However, it should be satisfactory in most cases.
+.pp
+This is done by setting "auth=dho" \**
+.(f
+\n($f. DHO used to mean Direct Host Only, a relic from when this function
+was less general.
+.)f
+in the channel concerned.
+Then, all of the controls above apply, except that the host is
+replaced by a route specification.
+The route specification \&'knows' about "!" and "%" formats.
+Routes are specified by use of mailboxes of the form that are
+associted with the route, with the username replaces by the
+string "username".
+For example: "username@rlgb" "wcwvax!username@ucl"
+"xx!username%b@c".
+The string, including the sequence "username" is used in the
+tables.
+An example is given in the appendices.
+.sh 1 "User based controls"
+.pp
+A message may be authorised in terms of its sender and
+recipient.
+This is done by having a file (the authorisation file), to look
+up authorised mailboxes.
+The file has RFC 822 route format mailboxes on the LHS, and
+control information on the RHS.
+These controls are applied both on the incoming and
+outgoing channels.
+.pp
+Controls are applied in terms of a user database.  An example
+of this is given in an appendix.  Essentially, a user, with a
+given mode of access, is given a number of allowed channels.
+The following user modes of access are identified (one per
+user):
+.np
+SEND:  send only.
+.np
+RECV: receive only (for aliases).
+.np
+BOTH: send and receive  (normal mode).
+.np
+LIST: special access for UCL expanded mailing lists.
+.np
+EXPIRE.  Note that authorisation has lapsed
+in any error message sent.
+.np
+Any other value will be treated as EXPIRE, and the text of the
+reason passed back in any failure message.
+.pp
+In most cases, a messages is authorised by EITHER host controls
+OR user controls.
+For some channels, it may be desirable to have both host AND
+user controls (e.g. to perform policy control on top of user
+based controls).
+This is done by setting auth=hau (Host And User) in the
+channel.
+.sh 1 "Logging"
+.pp
+Logging information relative to these controls is logged in a
+special log.  This will be interpreted and loaded into the
+database.
+Attempted illegal accesses are also noted, with similar format.
+.pp
+All logging entries contain the message number and the date.
+There is a special entry containing the message size, and
+length, logged when the message is accepted by the system.
+Other logging entries contain: the incoming channel, outgoing
+channel, receiver address, authorisation reason, and any
+relevant host names.
+The following reasons are identified.
+It is expected to define specific encoding for the log:
+with the following set, only one reason is given, covering both
+inbound and outbound authorisation.
+The inbound and outbound host/route value is given.
+.np
+OH - outbound host/route
+.np
+HC - outbound host/route + inbound channel
+.np
+HH - inbound host/route + outbound host/route
+.np
+CC - inbound channel + outbound channel
+.np
+CH - inbound channel + outbound host/route
+.np
+IH - inbound host/route
+.lp
+In the second set, there are two reasons, one for the inbound
+channel, and one for the outbound.
+If there is no authorisation required for one of the channels,
+the reason is left NULL.
+.np
+IL - inbound channel,  outbound = LIST
+.np
+OL - outbound channel, dest = LIST
+.np
+IS - inbound channel by sender
+.np
+OS - outbound channel by sender
+.np
+IR - inbound channel by receiver
+.np
+OR - outbound channel by receiver
+.np
+*I - inbound channel, logged unauthorised access
+.np
+*O - outbound channel, logged unauthorised access
+.sp
+.]<
+.\"Brink.D.H.-1985-1
+.ds [F Brink85a
+.]-
+.ds [A D.H. Brink
+.as [A " and S.E. Kille
+.ds [T Authorisation and Accounting in Store and Forward Messaging systems
+.ds [D June 1985
+.ds [J Networks 85, Wembley
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.\"Kille.S.E.-1985-2
+.ds [F Kille85a
+.]-
+.ds [A S.E. Kille
+.as [A " and D.H. Brink
+.ds [T A Model of Message Flow Control
+.ds [D Sepetmber 1985
+.ds [J Submitted to IFIP WG 6.5 Congress, Washington
+.nr [T 0
+.nr [A 0
+.nr [O 0
+.][ 1 journal-article
+.]>
+.AP "Tailor file parameter summary"
+.pp
+The basic configuration file opertaion is described in the
+manual page New.tailor (5.mmdf).  This appendix details
+specific values associated with authorisation.
+The following channel parms and values are identified:
+.nf
+
+                /* Various tables for channels  */
+insrc
+outsrc
+indest
+outdest
+
+
+auth            /* channel auth parms  */
+        = free          /* default */
+        = inlog         /* log inbound */
+        = inwarn        /* warn inbound */
+        = inblock       /* block inbound */
+        = outlog
+        = outwarn
+        = outblock
+        = hau           /* host AND user checks */
+                        /* host OR user is default */
+        = dho           /* use routes instead of hosts */
+.fi
+.AP "Sample Log"
+.lp
+This is a small section of real authorisation log.
+It should be self explanatory if the information given so far
+has been digested.
+Logging entries will usually be in one
+line, but have been split here for readability.
+.nf
+
+4/29  9:02:15 AU-0000:  msg.a000427: i='local' o='niserc'
+    a='cpuc08@interactive-computing-facility.engineering.cambridge.ac.uk'
+    r='' r='OS'
+4/29  9:02:19 AU-0000:  msg.a000427:
+    END size='2573', sender='steve'
+
+4/29  9:16:53 AU-0000:  msg.a000493:
+    i='local' o='satnet' a='nsc!idi!kiessig@seismo.arpa' r='' r='OS'
+4/29  9:16:54 AU-0000:  msg.a000493: END size='1654', sender='steve'
+
+4/29  9:18:13 AU-0000:  msg.a000507: i='local' o='niserc'
+    a='sjl@ukc.ac.uk' r='' r='OS'
+4/29  9:18:14 AU-0000:  msg.a000507: END size='640', sender='steve'
+
+4/29  9:44:54 AU-0000:  msg.a000561: i='local' o='nipss'
+    a='neil@rsre.AC.UK' r='CH' hi='' ho='username@rsre.ac.uk'
+4/29  9:44:54 AU-0000:  msg.a000561: i='local' o='nipss'
+    a='laws@rsre.AC.UK' r='CH' hi='' ho='username@rsre.ac.uk'
+4/29  9:44:55 AU-0000:  msg.a000561: END size='2102', sender='robert'
+
+4/29  9:50:25 AU-0000:  msg.a000629: i='local' o='satnet'
+    a='robinson@dmc-crc.arpa' r='' r='OS'
+4/29  9:50:26 AU-0000:  msg.a000629: END size='559', sender='robert'
+
+4/29  9:53:09 AU-0000:  msg.a000653: i='local' o='niserc'
+    a='map@edxa.ac.uk' r='' r='OS'
+4/29  9:53:10 AU-0000:  msg.a000653: END size='197', sender='phil'
+
+4/29  9:56:12 AU-0000:  msg.a000658: i='local' o='satnet'
+    a='zsu@sri-tsc.arpa' r='' r='OS'
+4/29  9:56:13 AU-0000:  msg.a000658: i='local' o='satnet'
+    a='mathis@sri-tsc.arpa' r='' r='OS'
+4/29  9:56:13 AU-0000:  msg.a000658: i='local' o='satnet'
+    a='zsu@sri-tsc.arpa' r='' r='OS'
+4/29  9:56:14 AU-0000:  msg.a000658: END size='570', sender='robert'
+
+4/29 10:46:11 AU-0000:  msg.a001076: BAD AUTH i='niserc' o='tunnel'
+    s='@gec-m.rutherford.ac.uk:nhpq03@alvey.ac.uk'
+    r='@csnet-relay.arpa:posty@upenn.csnet'
+    msg='(%s)  no  authorization for address
+               '@csnet-relay.arpa:posty@upenn.csnet''
+
+4/29  9:58:27 AU-0000:  msg.a000669: i='local' o='niserc'
+    a='cpuc08@interactive-computing-facility.engineering.cambridge.ac.uk'
+    r='' r='OS'
+4/29  9:58:28 AU-0000:  msg.a000669: END size='2180', sender='phil'
+.fi
+.AP "Sample Authorisation file"
+.pp
+This is a sample (dummy) auth file.  Note that local users should have
+no doamin reference.  Others should be in normalised 822 form.
+.nf
+
+
+#
+#       Authorisation file
+#
+# Mailing  lists
+# foo-outbound  should have acceptable source channels
+# foo-request should have acceptable dest channels
+academic-outbound:list list,niserc,local,sring
+academic-request:send niserc,local,sring
+mailgroup-outbound:list list,isatnet,niserc,nipss
+mailgroup-request:send satnet,niserc,nipss,niipss
+#
+# Users
+brink:both satnet,niserc,nipss,niipss
+colin:both satnet,niserc,nipss,niipss
+eileen:both satnet,niserc,nipss,niipss
+eliza:both satnet,niserc,nipss,niipss
+francis:both satnet,niserc,nipss,niipss
+#
+# routed over tunnel
+robert:both tunnel,niserc,nipss,niipss
+steve:both tunnel,niserc,nipss,niipss
+tom:both tunnel,niserc,nipss,niipss
+#
+#  Expired
+kirstein:"Text justifying reason for lapsed authorisation"
+#
+# remote users
+pfl@gec-d.rutherford.ac.uk:both niserc,tunnel
+@gec-m.rutherford.ac.uk:joe@alvey.uk:both niserc,tunnel
+.fi
+.AP "Configuration for local User Control"
+.lp
+To have basic control for local users, all remote channels
+might have:
+.nf
+AUTHLOG level=FST
+
+MCHN local auth=inlog,auth=outlog
+
+MCHN uucp auth=inblock,auth=outblock
+
+MCHN smtp auth=inblock,auth=outblock
+
+MTBL auth file="auth"
+
+The file auth might have:
+#
+# SMTP only users
+joe:both smtp
+#
+# SMTP and UUCP users
+fred:both smtp,uucp
+
+.fi
+Non-priviliged users (e.g. students) would not be in the auth
+file.
+Local usage is logged in the auth log.
+.AP "Basic channel control"
+.lp
+The following is designed to allow free local access to all
+channels, but to prevent relaying between phone and uucp, or
+uucp/uucp  or phone/phone.
+.nf
+AUTHLOG level=FST
+
+MTBL control file="control"
+
+MCHN local auth=inlog,auth=outlog
+
+MCHN uucp auth=inblock,auth=outblock,indest=control,outsrc=control
+
+MCHN phone auth=inblock,auth=outblock,indest=control,outsrc=control
+
+The file "control" would be simply:
+local:
+
+.fi
+It can be seen, that if this is the entire set of channels,
+this is slightly redundant.
+The following explaination of indest for the uucp channel may be
+of help: if UUCP is the INbound (INdest) channel, valid
+DESTination channels (inDEST) are given by the control file.
+In this case, the channel local is valid for all hosts.
+The authorization on the phone channel is the same as that on the
+UUCP channel.
+.AP "Basic route control"
+.lp
+This example is where a number of routes are authorised through
+one channel (xxx).
+The basic tailor file would be:
+.nf
+
+MTBL yyy file="yyy"
+MTBL zzz file="zzz"
+
+MCHN xxx auth=inblock,auth=outblock,auth=dho,outsrc=yyy,indest=yyy
+        outdest=zzz,insrc=zzz
+
+File yyy:
+# Routes not on channel xxx
+#
+#  Local is all valid
+local:
+#  JNT sites - direct
+username@cs.ucl.ac.uk:
+username@gec-b.rutherford.ac.uk:
+@gec-m.rutherford.ac.uk:username@alvey.uk:
+# UUCP sites
+username@kcl-cs.uucp
+mxpoly!username@kcl-cs.uucp
+wizzo!yuck!username%yerq@vile.uucp
+
+File zzz:
+# Routes on channel xxx
+#
+# all traffic between unido and channel niserc is valid
+username@unido.uucp:niserc
+telebox!username@unido.uucp:niserc
+
+.fi
+The routes are assumed to be symmetrical.
+If not, all four tables would need to be different.
+.AP "Complex case"
+.lp
+An extraction from the UCL tailor file is given.
+.nf
+
+MTBL  name=auth, file=auth, display="Authorisation file"
+
+MTBL  name=mod-auth, file=mod.auth, display="Mod host control"
+
+; SMTP channel stuff (two routes to USA)
+MCHN  tunnel      show="via IPSS-Tunnel (outbound) with SMTP"
+        auth=outblock
+MCHN  satnet    show="via Satnet (outbound) with SMTP",
+        auth=outblock
+
+; No blockin (US -> UK) ..... YET
+MCHN  isatnet     show="via Satnet with SMTP",
+        auth=inlog,auth=outblock
+MCHN  itunnel    show="via IPSS-Tunnel with SMTP"
+        auth=inlog,auth=outblock
+
+MCHN  niserc    show="via Janet with NIFTP"
+        auth=inlog,auth=outlog
+
+; Host AND user control on PSS
+MCHN  nipss    show="via PSS with NIFTP"
+        auth=inlog,auth=outlog,insrc=mod-auth,outdest=mod-auth
+
+MCHN  niipss    show="via IPSS with NIFTP"
+        auth=inlog,auth=outblock
+
+MCHN  uucp show="with UUCP"
+        auth=inlog,auth=outlog
+
+
+The file "mod.auth":
+rsre:isatnet,satnet,local,sring,list
+are-pn:isatnet,satnet,local,sring,list
+
+If nipss had been auth=dho (as it is on one machine at UCL),
+the file would be:
+username@rsre.ac.uk:isatnet,satnet,local,sring,list
+username@are-pn.ac.uk:isatnet,satnet,local,sring,list
+.fi

@@ -1,0 +1,92 @@
+#
+#       ean  --  EAN X.400 Mail system to MMDF channel
+#
+MODULES =       ch_ean qu2en_send eanlog
+
+OBJECTS =       ch_ean.o qu2en_send.o en_wtmail.o eanlog.o
+
+SOURCES =       ch_ean.c qu2en_send.c eanlog.c
+
+EANDIR = /usr/src/ean
+
+UTILOBJ         = ${EANDIR}/src/util/interface.a
+CCITTOBJ        = ${EANDIR}/src/ccitt/interface.a
+MTAOBJ          = ${EANDIR}/src/mta/interface.a
+UAOBJ           = ${EANDIR}/src/ua/interface.a
+MTAMAINTOBJ     = ${EANDIR}/src/mta/maint/interface.a
+HOSTLIB         = ${EANDIR}/src/host/host/interface.a
+FOOLIB          = ${EANDIR}/src/nsg/interface.a
+
+EANLIBS = ${FOOLIB} ${UAOBJ} ${MTAOBJ} \
+	${CCITTOBJ} ${UTILOBJ} ${HOSTLIB} /usr/lib/libtermcap.a
+
+
+real-default:   ean2mmdf ean
+
+install:        $(LIBDIR)/$(MMPREF)ean2mmdf $(CHANDIR)/$(MMPREF)ean
+
+
+$(LIBDIR)/$(MMPREF)ean2mmdf:      xean2mmdf
+	cp xean2mmdf $(LIBDIR)/$(MMPREF)ean2mmdf
+	-$(CHOWN) root $(LIBDIR)/$(MMPREF)ean2mmdf
+	-chmod 04$(PGMPROT) $(LIBDIR)/$(MMPREF)ean2mmdf
+	-@ls -ls $(LIBDIR)/$(MMPREF)ean2mmdf
+	-@echo "ean2mmdf installed normally"; echo ""
+
+ean2mmdf:  xean2mmdf
+xean2mmdf: ean2mmdf.o $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ ean2mmdf.o $(MMDFLIBS) \
+			$(HOSTLIBS) $(SYSLIBS)
+
+
+
+$(CHANDIR)/$(MMPREF)ean:      xean
+	cp xean $(CHANDIR)/$(MMPREF)ean
+	-$(CHOWN) root $(CHANDIR)/$(MMPREF)ean
+	-chmod 04$(PGMPROT) $(CHANDIR)/$(MMPREF)ean
+	-@ls -ls $(CHANDIR)/$(MMPREF)ean
+	-@echo "ean installed normally"; echo ""
+
+ean:  xean
+xean: $(OBJECTS) $(MMDFLIBS) $(EANLIBS)
+	    $(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(EANLIBS) \
+		$(MMDFLIBS) $(HOSTLIBS) $(SYSLIBS)
+
+en_wtmail.o:  en_wtmail.c
+	cc -c -O -I$(EANDIR)/src en_wtmail.c
+
+en_wtmail.o: en_wtmail.c
+en_wtmail.o: ../../h/util.h
+en_wtmail.o: ../../h/mmdf.h
+
+
+lint:
+	$(LINT) $(LFLAGS) $(SOURCES) $(LLIBS)
+
+clean:
+	-rm -f core xean xean2mmdf *.o x.c makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+deliver.o: deliver.c
+ch_ean.o: ch_ean.c
+ch_ean.o: ../../h/util.h
+ch_ean.o: ../../h/mmdf.h
+ch_ean.o: /usr/include/signal.h
+ch_ean.o: ../../h/ch.h
+ch_ean.o: ../../h/phs.h
+qu2en_send.o: qu2en_send.c
+qu2en_send.o: ../../h/util.h
+qu2en_send.o: ../../h/mmdf.h
+qu2en_send.o: ../../h/phs.h
+qu2en_send.o: ../../h/ap.h
+qu2en_send.o: ../../h/ch.h
+qu2en_send.o: /usr/include/pwd.h
+qu2en_send.o: /usr/include/sys/stat.h
+qu2en_send.o: ../../h/adr_queue.h
+eanlog.o: eanlog.c
+eanlog.o: ../../h/util.h
+eanlog.o: ../../h/mmdf.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

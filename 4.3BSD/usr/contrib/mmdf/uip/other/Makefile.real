@@ -1,0 +1,298 @@
+#
+#		User Interface Processes (UIP)
+#
+#   Instructions to Make, for compilation of UIP processes
+#
+# C programs that live in the current directory and do not need
+# explicit make lines.
+#
+PROGS	= xcheckmail xmalias xmlist xnewssend xrcvalert xrcvfile \
+	  xrcvprint xrcvtrip xresend xsendmail xv6mail
+
+MODULES = checkmail malias mlist newssend rcvalert rcvfile \
+	  rcvprint rcvtrip resend sendmail v6mail
+
+INSTALLS = inst-xcheckmail inst-xmalias inst-xmlist inst-xnewssend \
+	   inst-xrcvalert inst-xrcvfile inst-xrcvprint inst-xrcvtrip \
+	   inst-xresend inst-xsendmail inst-xv6mail
+
+real-default:	${PROGS}
+
+install: ${INSTALLS}
+
+lint:	l-checkmail l-malias l-mlist l-newssend l-rcvalert l-rcvfile \
+	l-rcvprint l-rcvtrip l-resend l-sendmail l-v6mail
+
+clean:
+	-rm -f x* *.o core make.out
+
+
+###########################################################
+#
+#   checkmail:   what messages are in queue
+#
+inst-xcheckmail:  $(BINDIR)/checkmail
+
+$(BINDIR)/checkmail:  xcheckmail
+	cp xcheckmail $@
+	-$(CHOWN) mmdf $@
+	-chmod 04$(PGMPROT) $@
+
+xcheckmail :   checkmail.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ checkmail.o $(MMDFLIBS) $(SYSLIBS)
+
+l-checkmail:
+	lint $(LFLAGS) checkmail.c $(LLIBS)
+
+###########################################################
+#
+#   malias: alias checkup routine
+#
+inst-xmalias: $(LIBDIR)/$(PREF)malias
+
+$(LIBDIR)/$(PREF)malias: xmalias
+	cp xmalias $@
+	-chmod $(PGMPROT) $@
+
+xmalias:	malias.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ malias.o $(MMDFLIBS) $(SYSLIBS) $(DBM)
+
+l-malias:
+	lint $(LFLAGS) malias.c $(LLIBS)
+
+###########################################################
+#
+#   mlist: mailing list maintainer
+#
+inst-xmlist: $(BINDIR)/$(PREF)mlist
+
+$(BINDIR)/$(PREF)mlist: xmlist
+	cp xmlist $@
+	-$(CHOWN) mmdf $@
+	-chmod 04$(PGMPROT) $@
+
+xmlist:	mlist.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ mlist.o $(MMDFLIBS) $(SYSLIBS) $(DBM)
+
+l-mlist:
+	lint $(LFLAGS) mlist.c $(LLIBS)
+
+###########################################################
+#
+#   v6mail:   v6mail command replacement
+#
+
+inst-xv6mail:  $(LIBDIR)/$(PREF)v6mail
+
+$(LIBDIR)/$(PREF)v6mail:  xv6mail
+	cp xv6mail $@
+	-$(CHOWN) mmdf $@
+	-chmod $(PGMPROT) $@
+
+xv6mail:	v6mail.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ v6mail.o $(MMDFLIBS) $(SYSLIBS)
+
+l-v6mail:
+	lint $(LFLAGS) v6mail.c $(LLIBS)
+
+###########################################################
+#
+#   rcvalert:   Alert user of incoming new mail
+#
+
+inst-xrcvalert:  $(RCVDIR)/$(PREF)rcvalert
+
+$(RCVDIR)/$(PREF)rcvalert:  xrcvalert
+	cp xrcvalert $@
+	-$(CHOWN) mmdf $@
+	-chmod $(PGMPROT) $@
+
+xrcvalert:	rcvalert.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ rcvalert.o $(MMDFLIBS) $(SYSLIBS)
+
+l-rcvalert:
+	lint $(LFLAGS) rcvalert.c $(LLIBS)
+
+#############################################################
+#
+#   rcvfile: archive body of incoming mail into file named in subject
+#
+
+inst-xrcvfile:  $(RCVDIR)/$(PREF)rcvfile
+
+$(RCVDIR)/$(PREF)rcvfile: xrcvfile
+	cp xrcvfile $@
+	-$(CHOWN) mmdf $@
+	-chmod $(PGMPROT) $@
+
+xrcvfile:	rcvfile.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ rcvfile.o $(MMDFLIBS) $(SYSLIBS)
+
+l-rcvfile:
+	lint $(LFLAGS) rcvfile.c $(LLIBS)
+
+############################################################
+#
+#   resend:  resend a message using RESEND-xxx notation
+#
+
+inst-xresend:  $(BINDIR)/resend
+
+$(BINDIR)/$(PREF)resend: xresend
+	cp xresend $@
+	-$(CHOWN) mmdf $@
+	-chmod $(PGMPROT) $@
+
+xresend:	resend.o
+	$(CC) $(LDFLAGS) -o $@ resend.o $(MMDFLIBS) $(SYSLIBS)
+
+l-resend:
+	lint $(LFLAGS) resend.c $(LLIBS)
+
+############################################################
+#
+#   newssend:  Program to repost Netnews (USENET) news articles
+#	       into an RFC822 mail world.  (based on resend)
+#
+
+inst-xnewssend:  $(LIBDIR)/$(PREF)newssend
+
+$(LIBDIR)/$(PREF)newssend: xnewssend
+	cp xnewssend $@
+	-$(CHOWN) mmdf $@
+	-chmod $(PGMPROT) $@
+
+xnewssend:	newssend.o
+	$(CC) $(LDFLAGS) -o $@ newssend.o $(MMDFLIBS) $(SYSLIBS)
+
+l-newssend:
+	lint $(LFLAGS) newssend.c $(LLIBS)
+
+############################################################
+#
+#   rcvprint: send a copy of the body of the message to opr
+#
+
+inst-xrcvprint:  $(RCVDIR)/$(PREF)rcvprint
+
+$(RCVDIR)/$(PREF)rcvprint: xrcvprint
+	cp xrcvprint $@
+	-$(CHOWN) mmdf $@
+	-chmod $(PGMPROT) $@
+
+xrcvprint:	rcvprint.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ rcvprint.o $(MMDFLIBS) $(SYSLIBS)
+
+l-rcvprint:
+	lint $(LFLAGS) rcvprint.c $(LLIBS)
+
+##########################################################
+#
+#   rcvtrip: tell message senders of recipient unavailability
+#
+
+inst-xrcvtrip:  $(RCVDIR)/rcvtrip
+
+$(RCVDIR)/$(PREF)rcvtrip: xrcvtrip
+	cp xrcvtrip $@
+	-$(CHOWN) mmdf $@
+	-chmod $(PGMPROT) $@
+
+xrcvtrip:	rcvtrip.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ rcvtrip.o $(MMDFLIBS) $(SYSLIBS)
+
+l-rcvtrip:
+	lint $(LFLAGS) rcvtrip.c $(LLIBS)
+
+###########################################################
+#
+#   sendmail:   A fake for the Berkeley /usr/lib/sendmail
+#
+inst-xsendmail:  /usr/lib/sendmail
+
+/usr/lib/sendmail:  xsendmail
+	-if test ! -f $@.orig; then cp $@ $@.orig; fi
+	cp xsendmail $@
+	-$(CHOWN) mmdf $@
+	-chmod 04$(PGMPROT) $@
+
+xsendmail :   sendmail.o $(MMDFLIBS)
+	$(CC) $(LDFLAGS) -o $@ sendmail.o $(MMDFLIBS) $(SYSLIBS)
+
+l-sendmail:
+	lint $(LFLAGS) sendmail.c $(LLIBS)
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+checkmail.o: checkmail.c
+checkmail.o: ../../h/util.h
+checkmail.o: ../../h/mmdf.h
+checkmail.o: /usr/include/sys/stat.h
+checkmail.o: /usr/include/pwd.h
+checkmail.o: ../../h/ch.h
+checkmail.o: ../../h/msg.h
+checkmail.o: ../../h/adr_queue.h
+malias.o: malias.c
+malias.o: ../../h/util.h
+malias.o: ../../h/mmdf.h
+malias.o: ../../h/ch.h
+malias.o: ../../h/dm.h
+malias.o: /usr/include/pwd.h
+mlist.o: mlist.c
+mlist.o: ../../h/util.h
+mlist.o: ../../h/mmdf.h
+mlist.o: ../../h/ch.h
+mlist.o: /usr/include/pwd.h
+mlist.o: /usr/include/sys/stat.h
+mlist.o: /usr/include/signal.h
+mlist.o: /usr/include/stdio.h
+newssend.o: newssend.c
+newssend.o: ../../h/util.h
+newssend.o: ../../h/mmdf.h
+newssend.o: ../../h/cnvtdate.h
+newssend.o: /usr/include/signal.h
+newssend.o: /usr/include/sys/stat.h
+rcvalert.o: rcvalert.c
+rcvalert.o: ../../h/util.h
+rcvalert.o: ../../h/mmdf.h
+rcvalert.o: /usr/include/pwd.h
+rcvalert.o: /usr/include/sys/stat.h
+rcvfile.o: rcvfile.c
+rcvfile.o: ../../h/util.h
+rcvfile.o: ../../h/mmdf.h
+rcvfile.o: /usr/include/pwd.h
+rcvfile.o: /usr/include/sys/stat.h
+rcvprint.o: rcvprint.c
+rcvprint.o: ../../h/util.h
+rcvprint.o: ../../h/mmdf.h
+rcvtrip.o: rcvtrip.c
+rcvtrip.o: ../../h/util.h
+rcvtrip.o: ../../h/mmdf.h
+rcvtrip.o: ../../h/ap.h
+rcvtrip.o: ../../h/ch.h
+rcvtrip.o: ../../h/hdr.h
+rcvtrip.o: /usr/include/pwd.h
+resend.o: resend.c
+resend.o: ../../h/util.h
+resend.o: ../../h/mmdf.h
+resend.o: ../../h/cnvtdate.h
+resend.o: /usr/include/pwd.h
+resend.o: /usr/include/signal.h
+resend.o: /usr/include/sys/stat.h
+sendmail.o: sendmail.c
+sendmail.o: /usr/include/signal.h
+sendmail.o: /usr/include/pwd.h
+sendmail.o: ../../h/util.h
+sendmail.o: ../../h/mmdf.h
+sendmail.o: ../../h/cnvtdate.h
+v6mail.o: v6mail.c
+v6mail.o: ../../h/util.h
+v6mail.o: ../../h/mmdf.h
+v6mail.o: ../../h/cnvtdate.h
+v6mail.o: /usr/include/pwd.h
+v6mail.o: /usr/include/signal.h
+v6mail.o: /usr/include/sys/stat.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

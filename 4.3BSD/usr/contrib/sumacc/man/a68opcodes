@@ -1,0 +1,134 @@
+				AS68 Summary
+
+				V.R. Pratt
+				Feb., 1981
+
+The following are all the instruction opcodes recognized by as68.  Their usage
+agrees closely with that of the 68000 User's Manual.
+
+
+abcd	      clrb	    lsll	  smi
+addb	      clrw	    lsrb	  sne
+addw	      clrl	    lsrw	  spl
+addl	      cmpb	    lsrl	  st
+addqb	      cmpw	    movb	  stop
+addqw	      cmpl	    movw	  subb
+addql	      cmpmb	    movl	  subw
+addxb	      cmpmw	    movemw	  subl
+addxw	      cmpml	    moveml	  subqb
+addxl	      dbcc	    movepw	  subqw
+andb	      dbcs	    movepl	  subql
+andw	      dbeq	    moveq	  subxb
+andl	      dbf	    muls	  subxw
+aslb	      dbra	    mulu	  subxl
+aslw	      dbge	    nbcd	  svc
+asll	      dbgt	    negb	  svs
+asrb	      dbhi	    negw	  swap
+asrw	      dble	    negl	  tas
+asrl	      dbls	    negxb	  trap
+bcc	      dblt	    negxw	  trapv
+bccs	      dbmi	    negxl	  tstb
+bchg	      dbne	    nop		  tstw
+bclr	      dbpl	    notb	  tstl
+bcs	      dbt	    notw	  unlk
+bcss	      dbvc	    notl
+beq	      dbvs	    orb
+beqs	      divs	    orw
+bge	      divu	    orl
+bges	      eorb	    pea
+bgt	      eorw	    reset
+bgts	      eorl	    rolb
+bhi	      exg	    rolw
+bhis	      extw	    roll
+ble	      extl	    rorb
+bles	      jbsr	    rorw
+bls	      jcc	    rorl
+blss	      jcs	    roxlb
+blt	      jeq	    roxlw
+blts	      jge	    roxll
+bmi	      jgt	    roxrb
+bmis	      jhi	    roxrw
+bne	      jle	    roxrl
+bnes	      jls	    rte
+bpl	      jlt	    rtr
+bpls	      jmi	    rts
+bra	      jmp	    sbcd
+bras	      jne	    scc
+bset	      jpl	    scs
+bsr	      jra	    seq
+bsrs	      jsr	    sf
+btst	      jvc	    sge
+bvc	      jvs	    sgt
+bvcs	      lea	    shi
+bvs	      link	    sle
+bvss	      lslb	    sls
+chk	      lslw	    slt
+
+
+
+				Pseudo-ops
+
+=		direct assignment
+.end		end of file (optional)
+.long		long datum
+.word		word datum
+.byte		byte datum
+.macro		define macro
+.rept		repeat following
+.ascii
+.asciz
+.blkb
+.blkw
+.blkl
+.list
+.nlist
+.insrt
+.text		following goes in text area
+.data		following goes in data area
+.bss		following goes in bss area
+.globl		argument is global symbol
+.comm		argument 1 is bss symbol; set aside arg 2 bytes for it
+.radix		set input radix (default decimal)
+.typef
+.printf		print arg in listing
+.error		announce error
+.page		listing skips to new page
+.defrs
+.even		align to word boundary
+.if		conditional
+.ift		if true
+.iff		if false
+
+				Expression Syntax
+
+Expressions are parenthesized with [ ] and may use any of the following  C
+operators, 
++ - * / & ! ^ << >> %
+Association is left to right and there is no precedence.
+
+Hexadecimal constants are preceded with '/', decimal are followed with '.'
+(redundant unless the pseudo-op '.radix' is used since the default radix for
+integers is decimal).  We plan to convert soon to an MIT revision of the
+assembler in which all constants are written using C conventions; thus /f00d
+becomes 0xf00d.
+
+A vertical bar (|) begins a comment, which continues to the end of the line.
+
+Legal address forms are as follows.  N stands for any expression, I for an
+integer from 0 to 7, all other characters stand for themselves. sp may be used
+in place of a7.
+
+N			Absolute address
+dI			Data register direct
+aI			Address register direct
+aI@			Indirect
+aI@(N)			Indirect with Displacement
+aI@+			Indirect with Postincrement
+aI@-			Indirect with Predecrement
+aI@(N,rI:s)		Indirect with Index (reg r = d or a, size s = w or l)
+pc@(N)			Program Counter with Displacement
+pc@(N,rI:s)		Prog Ctr with Index (reg r = d or a, size s = w or l)
+sr			status register
+cc			condition code register (right half of sr)
+usp			user stack pointer (can only move to and from aI)
+#N			immediate data

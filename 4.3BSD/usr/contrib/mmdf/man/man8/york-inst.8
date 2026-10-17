@@ -1,0 +1,234 @@
+.\" Let MMDF stand up and be counted
+.ds M \fIMMDF\fP
+.ds M2 \*M(II)
+.de Ds
+.nf
+.sp
+.in +6
+..
+.de De
+.fi
+.sp
+.in -6
+..
+.de XX
+.br
+.ft R
+.IP "\(rh\ \ \ [\ ]\ \ " 11n
+..
+.TH YORK-INST 8 MMDF
+.SH NAME
+MMDF - York NIFTP interface guide (release 2.1)
+.SH SYNOPSIS
+How to go about connecting the York NIFTP code into \*(M2
+.SH DESCRIPTION
+.PP
+This document attempts to step through the process of
+adding the York University
+NIFTP interface to the current (II) version of the Delaware,
+Multichannel Memo Distribution Facility.
+This version of the document describes how to connected up
+release 2.1 YORKBOX code to \*(M2. There is an accompanying document that
+describes the changes needed for release 2.0, which is rather
+primitive.
+.PP
+As may be guessed, this comes in two parts, the transmission
+and reception of mail.
+You should have already the relevant code in the directory
+.Ds
+\&.../src/niftp
+.De
+which will handle the format conversion and the actual \*M
+interface.
+This should be compiled and will produce two programs.
+.Ds
+niftp \- the outbound channel
+ni_niftp \- the inbound channel
+.De
+The
+.I niftp
+program should be installed with the other channel programs.
+The
+.I ni_niftp
+program can be put in various places, as long as hhQ can
+find it. We keep ours in the x25 directory /usr/lib/x25 but
+it can be put anywhere so long as the relevant pathname is
+changed to fit.
+.PP
+.B IMPORTANT
+.br
+Take a copy of the following programs in case you have to
+put them back in a hurry :-
+.Ds
+hhP
+hhQ
+mhhcp
+hhmail
+.De
+.XX
+Compile and install
+.I niftp
+and
+.IR ni_niftp .
+.SH "OUTBOUND MAIL"
+First of all, a channel has to be set up in the tailor file,
+it is presumed that you can do this, if
+not then there should be some relevant documentation
+somewhere. The important part about the tailor entry, is the
+.I confstr
+entry.
+This is what \*M uses to exec the York transport system.
+This should be something like
+.Ds
+.ne 5
+MTBL niftp file="niftp.names"
+MCHN niftp name="niftp", que=niftp, tbl=niftp,
+.in +8
+show="via Janet with NIFTP",
+pgm=niftp, poll=0, mod=reg, ap=jnt,
+confstr="/usr/lib/x25/mhhcp mhhcp $(FILE) $(ADR) $(SENDER)"
+.in -8
+.De
+The
+.I Make
+like variables will be substituted for by the
+outbound NIFTP channel so that the first one contains the
+filename of the file containing the message, and the second
+one the symbolic address of the host that the message
+is being aimed at.
+One thing to be sure of, the niftp outbound channel must be
+able to exec the mhhcp program, mhhcp is often installed
+with restrictive modes. So its important to check what
+effective and real user id's niftp runs with to ensure
+that things work.
+Another point to note is the access permissions on 
+/usr/spool/hhcp, the mhhcp program attempts to create a file in this
+directory and will obviously fail if the permissions are wrong.
+.PP
+The first change is to the program mhhcp, this is the interface
+between
+.I niftp
+and the
+.I hhP
+programs. This has been almost completely rewritten to do things
+in a cleaner way and to take a different set of arguments.
+It is now called in the following way.
+.Ds
+mhhcp [-s] filename TSaddress sender
+.De
+The optional \-s flag causes queueing of the file in the hhcp directory
+without starting up the hhP program. This may be a saving if
+your outgoing mail usage has sharp peaks or is very high.
+The next two arguments are as usual, the sender is the return
+address in case of failure. This is stored in the PA file as part
+of the structure.
+.PP
+The exit codes of mhhcp are also changed to reflect the following.
+This means that modifications to hhmail are necessary as before
+these changes an exit code of 0 meant failure.
+.Ds
+JNT_OK  	- everything ok
+JNT_TEMP	- a temporary error, retry may work
+JNT_PERM	- a fatal error, reject this message
+.De
+.PP
+Other changes are made to hhP so that when a mail transfer is
+rejected, either for staying in the queue too long or being
+rejected by the target host, the rejected item is sent back
+to the sender address as supplied by mhhcp rather than to the
+controlling UID.
+.XX
+Change and compile mhhcp, hhP, hhmail and install.
+.SH "INBOUND MAIL"
+.PP
+The changes made here are to link directly the \*M
+system with the hhQ program.
+Essentially, \*M requires a bit more knowledge about
+the incoming message. In the York mail system, this is taken
+care of by the program
+.I mailer
+however as there is only minimal processing to be done, the
+role can be taken over by hhQ.c. This does make it
+incompatible with the York inbound traffic however, unless
+appropriate changes are made to mailer, so as far as incoming
+traffic is concerned, its either got to be handled by \*M or
+by the york mail interface. They can't coexist.
+.PP
+The changes to hhQ are fairly small, they consist of
+forking an instance of
+.I ni_niftp
+to pass the message onto \*M, and then wait for the exit
+status to see if the message is acceptable to \*M. If not,
+hhQ will send back a STOPACK indicating that the message was
+fatally rejected by the receiver.
+.SS CAVEAT
+This is not the best solution. A better solution is to pass
+this information back at the ER stage. This would mean far more
+changes necessary to the hhQ program and would probably result
+in a complete rewrite. This would make fitting to later versions
+of hhQ difficult. It does mean that temporary failures communicated
+by \*M are not handled gracefully.
+.br
+End of CAVEAT
+.PP
+The ni_niftp will decide what channel its coming in from
+by using the information in the network field (first
+argument) and the mapping table found in niftp.nets.
+This table should have the format
+.Ds
+Network-name-passed-by-hhQ:channel-name
+e.g.
+serc:niftp
+janet:niftp
+pss:nipss
+\&...
+.De
+.XX
+Compile amd install hhQ.
+Generate the table niftp.nets and run dbmbuild.
+After recompiling hhQ and installing, all that remains is ....
+.SH DEBUGGING
+After this, things should work. As a test, the hhmail program
+that comes with the York release should be able to send
+messages outbound, provided the necessary changes have been
+made to it, so try bouncing a few messages sent by
+hhmail off a friendly local host that you know can relay JNT
+mail (ucl-cs will do).
+.Ds
+e.g.
+hhmail mmdf%ourname@friendly-host
+hello world
+EOF
+.De
+This should test the hhQ and ni_niftp interface.
+.PP
+The outbound side is fairly easy, the main problems comes
+with the exec of mhhcp. Other than that, the hhP will leave
+around logging files to show whats going on.
+Also try turning up the logging on channels to
+.I FTR
+which should reveal the exec command.
+.SH FILES
+various files in /usr/spool/hhcp
+and in the NIFTP queue directory, although at the moment
+they only reside there for a few seconds unless something
+goes wrong.
+.SH BUGS
+see Caveat above.
+.PP
+Any problems then contact me (Julian Onions) at the
+one of the following address
+.nf
+.sp 2
+jpo@uk.ac.nott.cs
+.sp
+jpo%nott.cs@ucl-cs
+.sp
+or
+.sp
+Computer Science Group
+University of Nottingham
+Nottingham
+NG7 2RD
+(ENGLAND)
+(0602) 506101 x 3595

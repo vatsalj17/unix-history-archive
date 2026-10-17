@@ -1,0 +1,111 @@
+MCHANLOG   level=GEN, size=400, stat=SOME
+MMSGLOG    level=GEN, size=40, stat=SOME
+PHLOG      level=GEN, size=40, stat=SOME
+MIPCSLEVEL 0
+
+; special strings
+MLOCMACHINE     vax1
+MLNAME    Cs
+MLDOMAIN  "Ucl.AC.UK"
+MSIG      "Memo Service (mmdf.1.86)"
+
+; special directories
+MTBLDIR    "/usr/mmdf/mmdftable"
+MQUEDIR    "/usr/spool/mmdflock/que"
+
+;  general tables
+MTBL  name=aliases, file=aliases, show="User & list aliases"
+MTBL  name=auth, file=auth, show="Authorisation file"
+
+; flow tables
+MTBL  name=mod-auth, file=mod.auth, show="MOD Host control"
+
+; Domain tables
+MTBL    "Cs",file="ucl-cs",show="Cs.Ucl.AC.UK domain table"
+MDMN    "Cs.Ucl.AC.UK",show="Cs.Ucl.AC.UK domain",table="Cs"
+MTBL    "Ucl-AC-UK",file="uk-ac-ucl",show="Ucl.AC.UK domain table"
+MDMN    "Ucl.AC.UK",show="Ucl.AC.UK domain",table="Ucl-AC-UK"
+MTBL    "AC-UK",file="uk-ac",show="AC.UK Domain"
+MDMN    "AC.UK",show="AC.UK Domain",table="AC-UK"
+MTBL    "CO-UK",file="uk-co",show="CO.UK Domain"
+MDMN    "CO.UK",show="CO.UK Domain",table="CO-UK"
+MTBL    "MOD-UK",file="uk-mod",show="MOD.UK Domain"
+MDMN    "MOD.UK",show="MOD.UK Domain",table="MOD-UK"
+MTBL    "UK",file="uk",show="UK Domain"
+MDMN    "UK",show="UK Domain",table="UK"
+MDMN    "UCL",show="UCL.AC.UK Domain (UCL)",table="Ucl-AC-UK",name="Ucl",dmn="UCL.AC.UK"
+MTBL    "UUCP",file="uucp",show="Usenet Domain"
+MDMN    "UUCP",show="Usenet Domain",table="UUCP",lname="ucl-cs"
+;  Note flags=ns and flags=domain
+MTBL    "ARPA",show="ARPA Domain",flags=ns,flags=domain
+MDMN    "ARPA",show="ARPA Domain",table="ARPA",lname="ucl-cs"
+MTBL    "EDU",show="EDU Domain",flags=ns,flags=domain
+MDMN    "EDU",show="EDU Domain",table="EDU"
+MTBL    "COM",show="COM Domain",flags=ns,flags=domain
+MDMN    "COM",show="COM Domain",table="COM"
+MTBL    "GOV",show="GOV Domain",flags=ns,flags=domain
+MDMN    "GOV",show="GOV Domain",table="GOV"
+MTBL    "ORG",show="ORG Domain",flags=ns,flags=domain
+MDMN    "ORG",show="ORG Domain",table="ORG"
+MTBL    "MIL",show="MIL Domain",flags=ns,flags=domain
+MDMN    "MIL",show="MIL Domain",table="MIL"
+MTBL    "NET",show="NET Domain",flags=ns,flags=domain
+MDMN    "NET",show="NET Domain",table="NET"
+MTBL    "US",show="US Domain",flags=ns,flags=domain
+MDMN    "US",show="US Domain",table="US"
+MDMN    "AC",show="AC.UK Domain (AC)",table="AC-UK",name="AC",dmn="AC.UK"
+MDMN    "CO",show="CO.UK Domain (CO)",table="CO-UK",name="CO",dmn="CO.UK"
+MTBL    "Top-Level",file="top",show="Top Level Domain"
+MDMN    "Top-Level",show="Top level Domain",table="Top-Level",name="",dmn=""
+
+
+;  channel definitions
+MTBL  local     file="vax1.names"
+MCHN  local    name=local,que=local,tbl=local,show="Local (vax1)",pgm=local,poll=0,mod=reg,ap=733,ap=big,level=BST
+
+MTBL  list     file="vax1-list.names"
+MCHN  list    name=list,que=list,tbl=list,show="via List-Channel",pgm=list,poll=0,mod=reg,host=Cs.Ucl.AC.UK,level=FST
+
+MTBL  ean file="ean.names"
+MCHN  ean name=ean,que=ean,tbl=ean,show="via EAN",pgm=ean,poll=0,mod=reg,host="EAN.VAX2.CS.UCL.AC.UK",ap=733,auth=inlog,auth=outlog,level=FST
+
+MTBL  ether file="ether.names"
+MCHN  ether name=ether,que=ether,tbl=ether,show="via Ethernet with SMTP",pgm=smtp,poll=0,mod=reg,level=FST
+
+MTBL  sring    file="sring.names"
+MCHN  sring name=sring,que=sring,tbl=sring,show="with SMTP",pgm=uclsmtp,poll=0,mod=reg,confstr="%s/",level=FST
+
+MTBL  niserc    file="janet.names"
+MCHN  niserc    name=niserc,que=niserc,tbl=niserc,show="via Janet with NIFTP",pgm=niftp,poll=0,mod=reg,ap=jnt,confstr="/usr/bin/cpf cpf -t -f\"$(SENDER)\" $(FILE) @$(ADR)",auth=inlog,auth=outlog,level=PTR
+
+MTBL  nipss    file="pss.names"
+MCHN  nipss    name=nipss,que=nipss,tbl=nipss,show="via PSS with NIFTP",pgm=niftp,poll=0,mod=reg,ap=jnt,confstr="/usr/bin/cpf cpf -t -f\"$(SENDER)\" $(FILE) @$(ADR)",auth=inlog,auth=outlog,level=PTR
+
+MTBL  xuucp     file="vax1.uucp.names"
+MCHN  uucp      name=uucp,que=uucp,tbl=xuucp,show="with UUCP",pgm=dmuucp,poll=0,mod=reg,ap=733,lname=ucl-cs,ldomain=uucp,level=FTR
+
+; SMTP channel stuff
+MTBL  smtp      flags=ns,flags=channel
+
+; (going over Satnet)
+MCHN  satnet     name=satnet,que=satnet,tbl=smtp,show="via Satnet with SMTP",pgm=uclsmtp,poll=0,mod=reg,confstr="tcpx/128.16.9.3,X;%s.25,B,200:",ap=822,auth=inlog,auth=outblock,level=PTR
+
+; (going through tunnel)
+MCHN  tunnel      name=tunnel,que=tunnel,tbl=smtp,show="via IPSS-Tunnel with SMTP",pgm=uclsmtp,poll=0,mod=reg,confstr="tcpx/14.0.0.9,X;%s.25,B,200:",ap=822,known=smtp,auth=inlog,auth=outblock,level=PTR
+
+;  Table delay must have a file
+;  'host' must be set otherwise auth/submit screws up
+MTBL  delay    file="vax1-list.names"
+MCHN  delay    name=delay,que=delay,show="via Delay-Channel",pgm=delay,poll=0,mod=reg,level=FAT,host="Cs.ucl.ac.uk"
+
+; Deliver tailoring
+MWARNTIME  72
+MFAILTIME  144
+MSLEEP     300 ; daemon sleep time
+
+MTBL  name="niftp.nets", file="niftp.nets", show="NIFTP net to channel map"
+
+PHLOG      level=FST
+MCHANLOG   level=FST
+MMSGLOG    level=FST
+AUTHLOG    level=FST, size=40, stat=SOME

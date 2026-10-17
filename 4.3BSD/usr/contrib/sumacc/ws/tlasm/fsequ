@@ -1,0 +1,192 @@
+O5PH r^OO; File: FSEqu.Text
+;_______________________________________________________________________
+;
+; External Routines:    none
+;
+; Internal Routines:    none
+;
+; Function:     This file contains all file system equates.  Currently
+;               contains equates which will go into SYSEQU.TEXT
+;
+; Modification History:
+;  22 Dec 82  LAK  I modify this file every day.
+;  08 Feb 83  LAK  Pared down RgSvArea to 56 bytes from 64; added FSTemp4
+;                   for Rename.
+;  14 Feb 83  LAK  Changed VCB dir wr prot to attributes word.
+;  30 May 83  LAK  Added FrcSync flag, DiskSwitch, ExtFS, FSQueue, CmdDone
+;                   hook vectors.
+;  05 Jan 83  LAK  Switched equates for BufFlags and BufFBlk to correspond
+;                   with reality as perceived by the ROM.
+;  10 Jan 83  LAK  Added FSClrWdLen -- length of fs globals cleared by boot blocks
+;                  since DiskSwitched hook will eventually be installed by ROM
+;_______________________________________________________________________
+
+; (c) 1983 Apple Computer, Inc.
+;
+;  File System Equates
+;
+;  General system equates:
+
+BtsPrBlk    .EQU    12          ; twelve bits per block in the volume map.
+StrtDir     .EQU    2           ; directory master block is block 2
+BufSiz      .EQU    512         ; standard file system buffer size in bytes
+HdrSiz      .EQU    10          ; size of header prefixed to buffer
+BufModBit   .EQU    7           ; dirty bit in high byte of buf tag word
+BufFNum     .EQU    -10         ; offset from buf start to file number longword
+BufFlags    .EQU    -6          ; offset from buf start to file flags word
+BufFBlk     .EQU    -4          ; offset from buf start to file block word
+BufTag      .EQU    -2          ; offset from buf start to tag word
+
+SigWord     .EQU    $D2D7       ; signature bytes expected on start block
+
+; fixed location labels: (equivalent of zero page)
+
+CkdDB       .EQU    FileVars        ; (2) used when searching the directory
+NxtDB       .EQU    CkdDB+2
+MaxDB       .EQU    NxtDB+2
+FlushOnly   .EQU    MaxDB+2         ; (1) flag used by UnMountVol,FlushVol,
+RegRsrc     .EQU    FlushOnly+1     ; (1) flag used by OpenRF, FileOpen
+FLckUnlck   .EQU    RegRsrc+1       ; (1) flag used by SetFilLock,RstFilLock
+FrcSync     .EQU    FLckUnlck+1     ; (1) when set, all fs calls are sync'ed
+NewMount    .EQU    FrcSync+1       ; (1) used by MountVol to flag new mounts
+
+DrMstrBlk   .EQU    NewMount+2      ; master directory block in a volume
+FCBSPtr     .EQU    DrMstrBlk+2     ; ptr to FCBs
+DefVCBPtr   .EQU    FCBSPtr+4       ; pointer to default VCB
+VCBQHdr     .EQU    DefVCBPtr+4     ; VCB queue header
+
+FSQHdr      .EQU    VCBQHdr+QHeadSize ; file system queue header (10 bytes)
+FSBusy      .EQU    FSQHdr+QFlags   ; non-zero when the file system is busy
+FSQHead     .EQU    FSQHdr+QHead    ; ptr to 1st queued cmd: 0 when queue empty
+FSQTail     .EQU    FSQHdr+QTail    ; ptr to last queue element
+
+RgSvArea    .EQU    FSQHdr+QHeadSize ; reg save during async calls.
+ErCode      .EQU    RgSvArea+56     ; use this loc to report errors during async
+                                    ;  routines
+Params      .EQU    ErCode+2        ; 50 bytes long. For I/O parameter blocks.
+FSTemp8     .EQU    Params+IOQElSize; used by rename
+FSTemp4     .EQU    FSTemp8+8       ; used by rename, ckfilmod
+
+FSQueueHook .EQU    FSTemp4+4       ; hook to capture all FS calls
+ExtFSHook   .EQU    FSQueueHook+4   ; command done hook
+DskSwtchHook .EQU   ExtFSHook+4     ; hook for disk-switch dialog
+ReqstVol    .EQU    DskSwtchHook+4  ; ptr to VCB of off-line or ext fs volume
+
+toExtFS     .EQU    ReqstVol+4      ; hook for external file systems
+FSVarEnd    .EQU    toExtFS+4       ; end of file system variables
+FSVarLth    .EQU    FSVarEnd-FileVars
+FSClrWDLen  .EQU    FSQueueHook-FileVars ;length to clear in boot blocks
+
+;  Directory master block entries: (Prefix DR)
+
+DrSigWord   .EQU    0           ; signature word
+DrCrDate    .EQU    2           ; Creation date.
+DrLsBkUp    .EQU    6           ; last backup date
+DrAtrb      .EQU    10          ; volume attributes. bit 15=write(locked=1)
+DrNmFls     .EQU    12          ; number files in directory
+DrDirSt     .EQU    14          ; start dir (512-byte) block on diskette
+DrBlLn      .EQU    16          ; length of dir in (512-byte) blocks
+DrNmAlBlks  .EQU    18          ; number of blocks (of alloc size) this volume
+DrAlBlkSiz  .EQU    20          ; min num of bytes to allocate (must be 512 mult)
+DrClpSiz    .EQU    24          ; num of bytes to try to alloc as a clump
+DrAlBlSt    .EQU    28          ; starting diskette (512-byte) block in block map
+DrNxtFNum   .EQU    30          ; next free file number
+DrFreeBks   .EQU    34          ; number of free blocks on this volume
+DrVN        .EQU    36          ; volume name (including name length)
+MPTblStr    .EQU    64          ; byte start position of map table within
+                                ;  master dir block
+
+; Volume Control Block equates: (prefix: VCB)
+
+VCBDirty    .EQU    15          ; flags dirty bit (tst.w tests,clr.b clears)
+VCBWrProt   .EQU    7           ; attrib write-protected bit (tst.b ATRB+1 tests)
+VCBFlags    .EQU    6           ; flags word is first word after header
+
+; first 66 bytes of VCB come directly from the directory master block
+
+VCBDInfoSt  .EQU    8           ; leave room for 6-byte queue header
+VCBDILen    .EQU    64          ; len of VCB data from master directory
+
+VCBSigWord  .EQU    8           ; signature word
+VCBCrDate   .EQU    10          ; Creation date.
+VCBLsBkUp   .EQU    14          ; last backup date
+VCBAtrb     .EQU    18          ; volume attributes. bit 15 = vol lock (1=locked)
+                                ;                    bit 7 = wr protect
+                                ;                    bit 6 = busy (1=busy)
+                                ;                    bits 0-2 = consistency prob
+VCBNmFls    .EQU    20          ; number files in dir  (low byte)
+VCBDirSt    .EQU    22          ; start dir (512-byte) block on diskette
+VCBBlLn     .EQU    24          ; length of dir in (512-byte) blocks
+VCBNmBlks   .EQU    26          ; number of blocks (of alloc size) this device
+VCBNmAlBlks .EQU    26          ; (alternate label for a while)
+VCBAlBlkSiz .EQU    28          ; num of bytes in an allocation block
+VCBClpSiz   .EQU    32          ; num of bytes to try to alloc as a clump
+VCBAlBlSt   .EQU    36          ; starting diskette (512-byte) block in block map
+VCBNxtFNum  .EQU    38          ; next free file number
+VCBFreeBks  .EQU    42          ; number of free blocks on this volume
+VCBVN       .EQU    44          ; volume name (including name length byte)
+VCBMaxNam   .EQU    27          ; 27 byte max name length
+
+; next 6 fields should be kept together
+
+VCBDrvNum   .EQU    72          ; drive number for this VCB
+VCBDRefNum  .EQU    74          ; driver refnum for this VCB
+VCBFSID     .EQU    76          ; ID of file system handling this volume
+VCBVRefNum  .EQU    78          ; unique refnum for this VCB
+VCBMAdr     .EQU    80          ; volume map address
+VCBBufAdr   .EQU    84          ; volume buffer address
+VCBMLen     .EQU    88          ; length of volume map
+
+VCBDirIndex .EQU    90          ; directory index, block number used for
+VCBDirBlk   .EQU    92          ;  GetFileInfo searches by index
+
+VCBLength   .EQU    94          ; VCB byte length
+
+;  File Entry equates: (prefix: Fl)
+; (delete indication may be needed; for now just check VCB del fnum . . .)
+
+FlWrtFlag   .EQU    0           ; write-allowed bit in flags byte (0 if allowed)
+FlTypMask   .EQU    $FE         ; (user file-type in bits 1-7)
+
+FlFlags     .EQU    0           ; bit 7=1 (used), bit 0=file lock flag
+FlTyp       .EQU    1           ; file type (used as a name extension)
+FlUsrWds    .EQU    2           ; user words for file. (16 bytes)
+FlFlNum     .EQU    18          ; file number
+
+FlStBlk     .EQU    22          ; Start file block (alloc blk size)(0000 if none)
+FlLgLen     .EQU    24          ; File logical length in bytes (EOF)
+FlPyLen     .EQU    28          ; File physical length in bytes
+
+FlRStBlk    .EQU    32          ; Start file block, resource fork (0000 if none)
+FlRLgLen    .EQU    34          ; File logical length (EOF), resource fork
+FlRPyLen    .EQU    38          ; File physical length, resource fork
+
+FlCrDat     .EQU    42          ; File creation date & time (32 bits in seconds)
+FlMdDat     .EQU    46          ; last modification date & time (32 bits in seconds)
+FlNam       .EQU    50          ; file name, starting with length byte
+FlNTLen     .EQU    50          ; length of each file entry, excluding name
+
+; File Control Block equates: (prefix: FCB)
+
+FCBModBit   .EQU    7           ; dirty bit for FCB entry in FCBMdRByt
+FCBRscBit   .EQU    1           ; 1 if this is resource part (in FCBMdRByt)
+FCBFlgRBit  .EQU    9           ; resource bit in FCBFlags (word)
+FCBFlgWBit  .EQU    8           ; write permissions bit in FCBFlags (word)
+FCBWrtBit   .EQU    0           ; write permissions bit in FCBTypByt (1 if ok)
+WrRsMask    .EQU    $0300       ; rsrc/reg, write permissions mask
+
+FCBFlNm     .EQU    0           ; FCB file number. Non-zero marks FCB used.
+FCBFlags    .EQU    4           ; FCB flags
+FCBMdRByt   .EQU    4           ;  mod, write permissions, resource byte
+FCBTypByt   .EQU    5           ;  type byte
+
+FCBSBlk     .EQU    6           ; File start block (in alloc size blks)
+FCBEOF      .EQU    8           ; logical length or EOF in bytes
+FCBPLen     .EQU    12          ; Physical file length in bytes
+FCBCrPs     .EQU    16          ; current position within file.
+FCBVPtr     .EQU    20          ; Absolute pointer to the corresponding VCB
+FCBBfAdr    .EQU    24          ; file's buffer address.
+FCBFlPos    .EQU    28          ; directory block this file is in
+FCBEntLen   .EQU    30          ; each FCB is this long.
+
+

@@ -1,0 +1,142 @@
+
+EVENTS                           C Interface                             EVENTS
+
+NAME
+      events -- event manager
+
+SYNOPSIS
+      #include "c/include/types.h"
+      #include "c/include/quickdraw.h"
+      #include "c/include/events.h"
+
+      /* Event Types */
+      
+      #define  everyEvent      (-1)
+      #define  nullEvent         0
+      #define  mouseDown         1
+      #define  mouseUp           2
+      #define  keyDown           3
+      #define  keyUp             4
+      #define  autoKey           5
+      #define  updateEvt         6
+      #define  diskEvt           7
+      #define  activateEvt       8
+      #define  abortEvt          9
+      #define  reserveEvt       10
+      #define  driverEvt        11
+      #define  app1Evt          12
+      #define  app2Evt          13
+      #define  app3Evt          14
+      #define  app4Evt          15
+      
+      /* Event Masks */
+      
+      #define  nullMask          1
+      #define  mDownMask         2
+      #define  mUpMask           4
+      #define  keyDownMask       8
+      #define  keyUpMask        16
+      #define  autoKeyMask      32
+      #define  updateMask       64
+      #define  diskMask        128
+      #define  activMask       256
+      #define  abortMask       512
+      #define  reserveMask    1024
+      #define  driverMask     2048
+      #define  app1Mask       4096
+      #define  app2Mask       8192
+      #define  app3Mask      16384
+      #define  app4Mask    (-32768)
+                                   
+      /* Modifiers */
+
+      #define  optionKey      2048
+      #define  alphaLock      1024
+      #define  shiftKey        512
+      #define  cmdKey          256
+      #define  btnState        128
+      
+      #define  charCodeMask  0x000000FF
+      #define  keyCodeMask   0x0000FF00
+
+      #define  activeFlag        1 
+      #define  changeFlag        2 
+
+      
+      typedef struct {
+         short what;
+         int   message;
+         int   when;
+         Point where;
+         short modifiers;
+         } EventRecord;
+
+      typedef int KeyMap[4];
+
+
+      /* Accessing Events */
+      
+      pascal Boolean GetNextEvent(eventMask,theEvent)
+         short eventMask;
+         EventRecord *theEvent;
+      pascal Boolean EventAvail(eventMask,theEvent)
+         short eventMask;
+         EventRecord *theEvent;
+      
+      
+      /* Posting and Removing Events */
+      
+      short PostEvent(eventCode,eventMsg)
+         short eventCode;
+         int eventMsg;
+      FlushEvents(eventMask,stopMask)
+         short eventMask;
+         short stopMask;
+      
+      
+      /* Reading the Mouse */
+      
+      pascal void GetMouse(mouseLoc)
+         Point *mouseLoc;
+      pascal Boolean Button()
+      pascal Boolean StillDown()
+      pascal Boolean WaitMouseUp()
+      
+      
+      /* Reading the Keyboard and Keypad */
+      
+      pascal void GetKeys(theKeys)
+         KeyMap *theKeys;
+      
+
+      /* Miscellaneous Utilities */
+      
+      SetEventMask(theMask)
+         short theMask;
+      pascal int TickCount()
+                        
+      
+      /* OS Events */
+  
+      Boolean OSEventAvail(mask,theEvent)
+         short mask;
+         EventRecord *theEvent;
+      Boolean GetOSEvent(mask,theEvent)
+         short mask;
+         EventRecord *theEvent;
+
+
+DESCRIPTION
+      The event manager provides access to the Macintosh keyboard, keypad and
+      mouse.
+
+      For more detailed information see the "Event Manager" section of the
+      "Inside Macintosh" documentation.
+
+AUTHOR
+      C Interface by Rick Meyers
+      Copyright 1984 Apple Computer Inc.
+
+BUGS  
+      The bit positions within KeyMap aren't obvious and should be documented.
+      No trap number for SetEventMask.

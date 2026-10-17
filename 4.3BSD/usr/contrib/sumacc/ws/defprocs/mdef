@@ -1,0 +1,483 @@
+3. "6F^5PH r^!!N/;File mDefProc.Text
+;------------------------------------------------------------
+;
+;  Standard Menu Definition Procedure for Text Menus
+;
+;       written by Andy Hertzfeld   July 1982
+;
+;     Here is the default menu definition procedure for text menus.  It knows how to
+;  draw a text menu, or select from within a text menu.  It is always called from the
+;  window manager port with clipping set to the menuRect.
+;
+;  MODIFICATION HISTORY:
+;
+;    27-Dec-82  AJH  Broke off into separate file for resources
+;    28-Jan-83  AJH  made "GrayRect" use FillRect and a hardwired gray
+;    17-Mar-83  AJH  Fixed 4 pixel choosing offset
+;    17-Mar-83  AJH  no more forcing bold
+;    28-Apr-83  AJH  added "calcMenuSize" message
+;    30-Oct-83  AJH  changed disabling
+;    06-Nov-83  AJH  back to old disabling; special-cased "-" item
+;    13-Feb-84  AJH  speeded up CalcMenuSize message (linear instead of N squared)
+;
+;---------------------------------------------------------------
+
+
+                .INCLUDE  TlAsm/SYSEQU.TEXT
+                .INCLUDE  TlAsm/SYSMACS.TEXT
+                .INCLUDE  TlAsm/GrafTypes.TEXT
+                .INCLUDE  TlAsm/ToolEqu.TEXT
+                .INCLUDE  TlAsm/ResEqu.Text
+                .INCLUDE  TlAsm/QuickMacs.TEXT
+                .INCLUDE  TlAsm/ToolMacs.TEXT
+
+                .PROC   MDEF,0
+
+;
+; PROCEDURE TextMenuProc(message: INTEGER,menuHandle,menuRect,point,VAR whichItem:INTEGER);
+;
+
+;
+; Stack Frame Definition for TextMenuProc
+;
+MWHICHITEM      .EQU    8
+MPOINT          .EQU    MWHICHITEM+4
+MMENURECT       .EQU    MPOINT+4
+MMENUHANDLE     .EQU    MMENURECT+4
+MMESSAGE        .EQU    MMENUHANDLE+4
+;
+                BRA.S    @0
+
+; standard header
+
+               .WORD    0                       ;flags word
+               .ASCII   'MDEF'                  ;type
+               .WORD    0                       ;ID
+               .WORD    2                       ;version
+
+@0
+                LINK    A6,#0                   ;set up a stack frame
+                MOVEM.L D3-D7/A2-A4,-(SP)       ;save a whole bunch of work registers
+                MOVE.L  MMENUHANDLE(A6),A3      ;keep menuHandle in A3
+;
+                MOVE    MMESSAGE(A6),D0         ;draw or choose or calc?
+                BEQ     DRAWMPROC               ;if zero, go draw it
+                SUBQ    #1,D0                   ;is it choose?
+                BNE     DoCalcMsg               ;if not, go calculate its size
+;
+; the message was "choose" so examine the mouse position and hilite the appropriate item
+;
+                MOVE.L  MWHICHITEM(A6),A4       ;get pointer to whichItem
+                MOVE.W  (A4),D3                 ;remember oldWhichItem
+                CLR     (A4)                    ;set whichItem to zero
+;
+; if the point isn't in the menuRect, things are easy so test it
+;
+                CLR.W   -(SP)                   ;make from for PtInRect result
+                MOVE.L  MPOINT(A6),-(SP)        ;push the point
+                MOVE.L  MMENURECT(A6),-(SP)     ;push the rect
+                _PtInRect                       ;test if the point is in the rect
+                TST.B   (SP)+                   ;was it?
+                BEQ.S   NOITEMSEL               ;if not, don't bother checking for the item
+;
+; the point is in the menu, so waltz through the itemList keeping track of vertical
+; position seeing which item its in.  In the following loop, D4 holds the item number
+; while D2 has the cumulative vertical space
+;
+                MOVEQ   #1,D4                   ;start with 1st item
+                MOVEQ   #20,D2                  ;menuBar ends at 19, so start at 20
+;
+MSELOOP         MOVE.L  (A3),A0                 ;get menuPtr
+                MOVE    D4,D0                   ;get item number
+                BSR     GETITEMRECORD           ;look it up
+                BEQ.S   NOITEMSEL               ;if so, nothing selected
+;
+                ADD     #16,D2                  ;bump vertical by itemSize
+                TST.B   ITEMICON(A1)            ;does it have an icon?
+                BEQ.S   @1                      ;skip if it doesn't
+                ADD     #20,D2                  ;icon entries 36 high
+@1              CMP     MPOINT+V(A6),D2         ;compare with mouse point
+                BGT.S   GOTSEL                  ;when D2 is bigger, we found it
+;
+; we didn't reach it yet, so keep stepping down till we do
+;
+NEXTMSEL        ADDQ    #1,D4                   ;bump to next item
+                BRA.S   MSELOOP                 ;loop till we find it
+;
+; we found it so update whichItem.  First we better make sure its enabled
+;
+GOTSEL          BSR.S   ENABLETEST              ;make sure whole menu is enabled
+                BEQ.S   NOITEMSEL               ;if not, no selection
+;
+                MOVE    D4,(A4)
+;
+; see if whichItem changed; if it has, unselect the old item and select the new one
+;
+NOITEMSEL       CMP     (A4),D3                 ;have they changed?
+                BEQ.S   DONEMPROC               ;if not, we're all done
+;
+                MOVE    D3,D0                   ;unhilite old item
+                BSR.S   INVERTITEM              ;do it
+                MOVE    (A4),D0                 ;hilite new item
+                BSR.S   INVERTITEM              ;do it
+;
+DONEMPROC       MOVEM.L (SP)+,D3-D7/A2-A4       ;restore work registers
+                UNLK    A6                      ;unbuild the stack frame
+;
+                MOVE.L  (SP)+,A0
+                ADD     #18,SP                  ;strip parameters
+                JMP     (A0)                    ;return to caller
+;
+; EnableTest is a utility which tests if an item is enabled.  It expects a menuHandle
+; in A3 and the item number in D4.  It returns the result in the Z-flag
+;
+ENABLETEST      MOVE.L  (A3),A0                 ;get menu pointer
+                MOVE.L  MENUENABLE(A0),D0       ;get enable flags
+                BTST    D4,D0                   ;is item enabled?
+                BEQ.S   ETDONE                  ;if not, return 0
+                BTST    #0,D0                   ;test menu bit
+ETDONE          RTS                             ;return to caller
+
+;
+; InvertItem is an internal utility that hilites/unHilites an item.  The item number is
+; passed in D0.  It also assumes A3 has the menuHandle.  If the high bit of D0
+; is set, bit-clear with gray instead of inverting the item.
+;
+INVERTITEM      MOVEM.L D3-D4,-(SP)             ;save work registers
+                MOVE    D0,D3                   ;keep item number in safe place
+                BEQ.S   INVERTDONE              ;if zero, ignore
+                MOVEQ   #20,D2                  ;D2 hold the vertical position
+                MOVEQ   #1,D4                   ;D4 hold item index
+;
+IILOOP          MOVE    D4,D0                   ;get item
+                MOVE.L  (A3),A0                 ;get menuPtr
+                BSR     GETITEMRECORD           ;look it up
+                MOVEQ    #16,D0                 ;its at least 16 long
+                TST.B   ITEMICON(A1)            ;does it have an icon?
+                BEQ.S   @1                      ;skip if it doesn't
+                MOVEQ   #36,D0                  ;icon items are 36 high
+;
+@1              CMP.B   D3,D4                   ;found the item we want yet?
+                BEQ.S   GOINVERT                ;if so, go invert it
+                ADD     D0,D2                   ;add total to cumulative v position
+                ADDQ    #1,D4                   ;bump to next position
+                BRA.S   IILOOP                  ;loop till we find it
+;
+; its time to invert the item.  The menuRect contains the horizontal bounds, D2 contains
+; the top of the vertical, D0 has the vertical size
+;
+GOINVERT        MOVE.B  1(A0),D1                ;remember 1st char of item
+                LEA     TEMPRECT,A0             ;get pointer to temporary rectangle
+                MOVE.L  MMENURECT(A6),A1        ;point to menuRect
+                MOVE.L  (A1)+,(A0)              ;copy menuRect into tempRect
+                MOVE.L  (A1),4(A0)
+                MOVE    D2,TOP(A0)              ;D2 has the top coordinate
+                ADD     D0,D2                   ;add in the height
+                MOVE    D2,BOTTOM(A0)           ;set up the bottom
+;
+                TST.W   D3                      ;invert or bit clear?
+                BMI.S   GOBITCLEAR              ;hi bit set so go bit clear
+;
+                MOVE.L  A0,-(SP)                ;push a pointer to the rectangle
+                _InverRect                      ;invert it
+
+INVERTDONE      MOVEM.L (SP)+,D3-D4             ;recover work regs
+                RTS
+;
+GOBITCLEAR      CMP.B    #$2D,D1                ;is it the dash?
+                BEQ.S     InvertDone            ;if so, don't hilite
+
+                BSR     GRAYRECT                ;bit clear tempRect with gray
+                BRA.S   INVERTDONE              ;all done!
+;
+; here is the part of the TextMenuProc that draws the menu.  For most of this routine,
+; A3 holds the menuHandle, D4 is the item counter and D3 holds the cumulative
+; vertical position
+;
+DRAWMPROC       MOVEQ   #1,D4                   ;start with item 1
+                MOVEQ   #32,D3                  ;baseline of 1st item is 12 + 20
+                MOVE.L  MMENURECT(A6),A0        ;get menuRect pointer
+                MOVE.W  LEFT(A0),D5             ;get left edge
+                MOVE.W  RIGHT(A0),D6            ;get right edge, too
+;
+DRAW1MLOOP      MOVE    D4,D0                   ;get item number in D0
+                MOVE.L  (A3),A0                 ;get menu pointer
+                BSR     GETITEMRECORD           ;look it up
+                BEQ.S   DONEMPROC               ;if null item, all done
+                MOVE.L  A0,A2                   ;keep string pointer in A2
+                MOVE.L  A1,A4                   ;keep properties in A4
+;
+; draw the mark
+;
+                TST.B   ITEMMARK(A4)            ;does it have a mark?
+                BEQ.S   CHKDRAWICON             ;if not, skip
+;
+                MOVE    D5,-(SP)                ;push menuRect.left
+                ADDQ    #2,(SP)                 ;move in two pixels
+                MOVE    D3,-(SP)                ;push v position
+                TST.B   ITEMICON(A4)            ;does it have an icon
+                BEQ.S   @1                      ;if not, skip
+                ADDQ    #8,(SP)                 ;offset checkmark position
+@1              _MoveTo                         ;position pen
+                CLR     D0                      ;clear out high part
+                MOVE.B  ITEMMARK(A4),D0         ;get the mark character
+                MOVE.W  D0,-(SP)                ;push it
+                _DrawChar
+;
+; if its an icon item, bump baseLine by 8 and draw the icon
+;
+CHKDRAWICON     MOVE.W   #$0100,D0              ;menu icons are 256-511
+                MOVE.B  ITEMICON(A4),D0         ;does it have an icon?
+                BEQ.S   DRAWITEXT               ;if not, skip
+;
+                ADDQ    #8,D3                   ;bump baseLine
+;
+; draw the icon
+;
+                LEA     TEMPRECT,A0             ;get pointer to rectangle
+                MOVE.L  A0,-(SP)                ;push rect for plotIcon call
+                MOVE    D3,(A0)                 ;push top
+                SUB     #18,(A0)+               ;adjust top
+                MOVE    D5,(A0)                 ;push left
+                ADD     #12,(A0)+               ;dont forget indent
+                MOVE.L  -4(A0),(A0)             ;copy bottom right
+                ADD     #32,(A0)+               ;bottom := top + 32
+                ADD     #32,(A0)                ;right  := left + 32
+
+;
+                CLR.L   -(SP)                   ;make room for function result
+                MOVE.L  #IconRType,-(SP)        ;push the resource type
+                MOVE    D0,-(SP)                ;push icon number
+                _GetResource                    ;get the icon handle
+                _PlotIcon                       ;plot the icon
+                ADD     #40,D5                  ;indent past icon
+;
+; draw the text of the item
+;
+DRAWITEXT       CLR     D0                      ;clear it out
+                MOVE.B  ITEMSTYLE(A4),D0        ;push the style parameter
+                MOVE.W  D0,-(SP)                ;push style parameter
+
+@1              _TextFace                       ;get into that face
+
+                CMP.B    #$2D,1(A2)             ;first char a dash?
+                BEQ.S    DrawDash               ;if so, handle specially
+
+                MOVE    D5,-(SP)                ;push the x position
+                ADD     #12,(SP)                ;don't forget indent
+                MOVE    D3,-(SP)                ;push y position
+                _MoveTo                         ;position pen
+
+                MOVE.L  A2,-(SP)                ;push string pointer
+                _DrawString                     ;draw it
+
+                CLR     -(SP)                   ;push empty set
+                _TextFace                       ;restore textface to normal
+;
+; draw apple character
+;
+                TST.B   ITEMCMD(A4)             ;is there one?
+                BEQ.S   NXTDRAWITEM             ;if not, skip
+
+@4              MOVE    D6,-(SP)                ;push right edge
+                SUB     #24,(SP)                ;leave some room
+                MOVE.W  D3,-(SP)                ;push vertical position
+                _MoveTo                         ;position pen
+                MOVE.W  #APPLEMARK,-(SP)        ;push apple character
+                _DrawChar                       ;draw the character
+                CLR     D0                      ;clear high part
+                MOVE.B  ITEMCMD(A4),D0          ;get command character
+                MOVE.W  D0,-(SP)                ;push command char
+                _DrawChar                       ;draw it
+
+                CLR.W     -(SP)                  ;push normal style
+                _TextFace                        ;restore normal textFace
+;
+; if the item is disabled, gray it out
+;
+NXTDRAWITEM     BSR     ENABLETEST              ;is it enabled?
+                BNE.S   NXTDRAW1                ;branch if it is
+                MOVE    D4,D0                   ;get item
+                OR      #$8000,D0               ;set high bit
+                BSR     INVERTITEM              ;bit clear item with gray
+;
+; we're done with this item so bump to the next one
+;
+NXTDRAW1        TST.B   ITEMICON(A4)            ;does it have an icon?
+                BEQ.S   @1                      ;skip if it doesnt
+                SUB     #40,D5                  ;re-adjust D5
+                ADD     #12,D3                  ;bump an extra 12 (36 total) for icon
+;
+@1              ADD     #16,D3                  ;bump 16 for item
+                ADDQ    #1,D4                   ;bump to next item
+                BRA.S   DRAW1MLOOP              ;loop till done
+
+; handle the case of a dash item by drawing a line
+
+DrawDash
+                MOVE.L   (A5),A0                  ;get QuickDraw globals
+                PEA      Gray(A0)                 ;set pattern to gray
+                _PenPat
+
+                MOVE.W   D5,-(SP)                 ;push x position
+                MOVE.W   D3,-(SP)                 ;push y position
+                SUBQ     #6,(SP)                  ;center it
+                _MoveTo
+
+                MOVE.W   D6,-(SP)                 ;push right edge
+                MOVE     D3,-(SP)                 ;push y
+                SUBQ     #6,(SP)                  ;center it
+                _LineTo                           ;draw the line
+
+                _PenNormal                        ;pen back to normal
+                BRA.S    NxtDraw1                 ;dive back into mainstream
+
+;
+;  GetItemRecord is the main utility used for accessing the menu item data structure.
+;  It has a register interface to save code.  On entry, A0 points to a menuInfo block,
+;  while D0 has the item number of interest.  On exit, A0 points to the item string
+;  of interest while A1 points to that item's attribute byte list.  If the item can't
+;  be found, A0 and A1 both return NIL.
+;
+GETITEMRECORD   TST     D0                      ;make sure item number is valid
+                BLE.S   NOITEM                  ;if its not, don't bother
+;
+                MOVEQ   #0,D1                   ;clear D1 for byte arithmetic
+                LEA     MENUDATA(A0),A1         ;get menuData handle
+                MOVE.B  (A1)+,D1                ;get title length
+                ADD     D1,A1                   ;skip over title string
+;
+; here is the item search loop.  A1 points to the beginning of the next item.
+;
+GETILOOP        SUBQ    #1,D0                   ;is this the one we're looking for?
+                BEQ.S   GOTITEM                 ;if so, we got it
+                MOVE.B  (A1)+,D1                ;get length of current item
+                BEQ.S   NOITEM                  ;length zero marks end of list
+;
+                ADDQ    #4,D1                   ;there are 4 bytes of item properties
+                ADD     D1,A1                   ;bump to next item
+                BRA.S   GETILOOP                ;loop till done
+;
+;  the item couldn't be found so return NIL
+;
+NOITEM          SUB.L   A0,A0                   ;zero A0
+                MOVE.L  A0,A1                   ;and A1 too
+                MOVE.L  A0,D0                   ;and set the z-flag
+                RTS                             ;return to caller
+;
+; we found the item so return a pointer to it in A0 and a pointer to the item properties
+; in A1
+;
+GOTITEM         TST.B   (A1)                    ;is this the NIL item?
+                BEQ.S   NOITEM                  ;if so, we really didn't get one
+;
+                MOVE.L  A1,A0                   ;A0 points to item string
+                MOVE.B  (A1)+,D1                ;get length
+                ADD     D1,A1                   ;bump to item properties
+                RTS                             ;return to caller
+
+; Calculate the menu size for the given text menu.  The handle is in A3.
+
+DoCalcMsg
+                SUBQ     #4,SP
+                MOVE.L   SP,-(SP)               ;point to top of stack
+                _GetPort                        ;get the current port
+
+                MOVE.L   WmgrPort,-(SP)         ;push the wmgr port
+                _SetPort                        ;set it
+
+;
+                MOVEQ   #0,D6                   ;set initial <height,width> to 0
+                MOVEQ   #1,D0                   ;find item 1
+                MOVE.L  (A3),A0                 ;point to the menuRecord
+                BSR.S   GetItemRecord           ;point to first item
+                MOVE.L  A0,A4                   ;keep pointer in A4
+;
+; here is the main loop of calcMenuSize.  Process each item one at a time, keeping the
+; height and maximum width in D6
+;
+CMLOOP
+                MOVEQ   #0,D7                   ;set "extra" width to zero
+
+                MOVE.L  (A3),A0                 ;handle -> pointer
+                MOVEQ   #0,D0                   ;clear out high part
+                MOVE.B  (A4),D0                 ;get length of item
+                BEQ.S   CMDONE                  ;if zero, we're done with this menu
+                LEA     1(A4,D0),A1             ;point A1 at the properties
+;
+; handle the vertical
+;
+                MOVEQ   #16,D0                  ;most of the time the item is 16 tall
+                TST.B   ITEMICON(A1)            ;is there an icon for this item?
+                BEQ.S   @1                      ;if not, don't adjust height
+
+                MOVEQ   #40,D7                  ;add 40 to width for icons
+                MOVEQ   #36,D0                  ;icon entries are 36 tall
+
+@1              SWAP    D0                      ;get vertical into high word
+                ADD.L   D0,D6                   ;increment vertical height
+;
+; handle the horizontal
+;
+                TST.B   ITEMCMD(A1)             ;is there a mark?
+                BEQ.S   @2                      ;if not, skip
+                ADD     #32,D7                  ;add 32 dots extra for commandChar
+;
+@2
+                MOVEQ   #0,D1                   ;clear out high byte
+                MOVE.B  ITEMSTYLE(A1),D1        ;get style setting
+
+@3              MOVE.W  D1,-(SP)                ;push the style
+                _TextFace                       ;tell LisaGraf about new style
+                CLR     -(SP)                   ;make room for stringWidth result
+                MOVE.L  A4,-(SP)                ;move string pointer
+                _StringWidth                    ;find out the width
+                ADD.W    (SP)+,D7               ;add width to extra
+                CMP     D7,D6                   ;compare with maxWidth
+                BGE.S   CALCNEXT                ;if max is bigger, go process next one
+                MOVE    D7,D6                   ;this one was the biggest
+;
+; go process next item; loop till we get a null one
+;
+CALCNEXT
+                MOVEQ   #0,D0                   ;zero high part
+                MOVE.B  (A4),D0                 ;get the length of current item
+                LEA     5(A4,D0),A4             ;point to the next item
+                BRA.S   CMLOOP                  ;loop till done
+;
+;  we've scanned all the items update menuHeight and menuWidth
+;
+CMDONE          ADD.W   #16,D6                  ;leave left and right margin
+
+                MOVE.L  (A3),A0                 ;get menu pointer
+                MOVE.W  D6,MENUWIDTH(A0)        ;update menu width
+                SWAP    D6
+                MOVE.W  D6,MENUHEIGHT(A0)       ;update menu height
+;
+                CLR.W   -(SP)                   ;better restore style to normal
+                _TextFace                       ;set the style
+
+                _SetPort                        ;restore original grafPort
+
+                BRA     DoneMProc               ;all done!
+
+;
+;  GrayRect is a utility that bit-clears the current "tempRect" with gray
+;
+GRAYRECT
+                MOVE.L   A0,-(SP)
+                MOVE.L   (A5),A0                ;get QuickDraw globals
+                PEA      Gray(A0)               ;psuh gray
+                _PenPat                         ;set pen to it
+                MOVE    #PatBIC,-(SP)           ;push patBIC penMode
+                _PenMode                        ;set penMode
+                _PaintRect                      ;or on the dim pattern
+
+                _PenNormal
+
+                RTS
+
+
+               .END
+
+

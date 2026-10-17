@@ -1,0 +1,665 @@
+Date: Tue 19 Jun 84 12:43:24-PDT
+From: Joseph I. Pallas <PALLAS@SU-SCORE.ARPA>
+Subject: QD and QDVar
+To: croft@SUMEX-AIM.ARPA
+cc: sumacc@SUMEX-AIM.ARPA
+
+The pascal programs don't explicitly allocate a struct QDVar and
+assign QD to point at it.  Is there some reason that you don't have a
+statically allocated struct QDVar and statically initialized global
+QD pointing at it in the library?
+
+Such a scheme would still allow you to modify QD if you wanted to, and
+save one extra step that's VERY easy to forget.
+
+joe
+-------
+21-Jun-84 12:18:10-PDT,3333;000000000000
+Return-Path: <croft@safe>
+Received: from safe by SUMEX-AIM.ARPA with TCP; Thu 21 Jun 84 12:18:01-PDT
+Date: Thu, 21 Jun 84 12:20:55 pdt
+From: Bill Croft <croft@safe>
+To: info-mac@sumex
+Subject: using MACSBUG with SUMACC
+Cc: croft, sumacc@sumex
+
+----
+	Date: 20 Jun 1984 20:27-EST
+	From: David.Anderson@CMU-CS-G.ARPA
+	
+	I picked up my copy of the SUMacC disk today, and it included MacsBug
+	and Disassembler.  I can't figure out what they do -- can someone
+	enlighten me?  They sound terribly useful.
+	
+----
+David,
+
+Your SUMACC disk as distributed has MACSBUG named xMACSBUG, this prevents
+it from being loaded at boot time.  If you want to debug something you
+should follow these steps:
+
+Ensure that Macsbug is NOT loaded;  i.e. the name in the system
+folder should read "xMACSBUG".  If this is not true, then rename it,
+attempt eject (to flush), and reboot.  MacTerminal and the Finder don't
+work well when the large MACSBUG and DISASSEMBLER are loaded;  Finder
+runs out of space and MacTerminal crashes.
+
+AFTER you have downloaded and/or converted your program, then
+rename "xMACSBUG" to "MACSBUG", eject, and reboot.  This will load
+the debugger/disassembler at the top of memory.
+
+Make sure that you have an ASCII terminal connected to the
+"printer" port at 9600 baud.
+
+Double click your program, pause a half-second, then hold down
+the mouse button.  When you hear a beep, release the mouse button.
+What this does is:  (1) load your program,  (2) tells the "C runtime
+startoff" (lib/crtmac.s, the first part of your program to
+get control after loading) to "pause" before entering your main
+program.  This will give you time to set breakpoints or alter
+memory before your program starts.
+
+The "beep" means crtmac is waiting in a tight loop for register
+D0 to become zero.  It will just sit there forever.  Now on
+the side of your Mac, carefully press the "INTERRUPT" (not the
+"RESET") button once.  The debugger should print out a register
+dump on your terminal.
+
+I assume you have read the section "ROM 7.0 MacsBug Summary" in
+your Inside Macintosh.  This is located somewhat behind the "Misc"
+tab in my copy.  Other sections that are helpful are "Pascal Program
+Debug Strategy" and "Toolbox Names";  the latter is useful for setting
+breakpoints on toolbox calls.
+
+To MACSBUG, type "d0 0";  this clears register D0 and will allow
+the program to proceed.  Now you might want to set a breakpoint on
+a location or a trap;  use the appropriate "br" or "at" command.
+You will probably want to have an assembler listing of your
+program;  use the "-S" switch of cc68.  After you are ready to
+proceed, type "g" or "t".  This will go to the next breakpoint
+or trace each instruction before execution.
+
+When finished debugging you will (unfortunately) need to rename
+MACSBUG back to xMACSBUG and reboot if you want to use MacTerminal.
+
+BETTER DEBUGGERS:  Soon Apple will be releasing their two-Mac debugger/
+assembler system.  Instead of an ascii terminal on the printer port, you
+use another Mac with a nice window based debugging package.  And instead
+of MACSBUG/DISASSEMBLER there is just a tiny "stub" that lives on the
+system heap which interfaces to the "remote" window debugger.  This idea
+is very similar to David Bogg's old "TeleSwat" protocol on the Alto.
+21-Jun-84 12:38:44-PDT,1064;000000000000
+Return-Path: <croft@safe>
+Received: from safe by SUMEX-AIM.ARPA with TCP; Thu 21 Jun 84 12:38:41-PDT
+Date: Thu, 21 Jun 84 12:41:47 pdt
+From: Bill Croft <croft@safe>
+To: info-mac@sumex
+Subject: utilities on SUMACC disk
+Cc: sumacc@sumex
+
+	Date: Wed 20 Jun 84 00:37:38-EDT
+	From: BERGER@CMU-CS-C.ARPA
+	Subject: SetFile and resource mover questions
+	
+	I can't get SetFile to set the creator field of a file. Am I
+	doing something wrong, or is it just broken?
+	
+	Also, how do you get the Resource Mover to do anything?
+	
+	Robert Berger
+	Berger@CMU-CS-C
+
+Somewhere in the Monitor/Workshop/Inside Mac document set was a "hint"
+on how to use SETFILE.  There is a bug in SETFILE and you have to use
+the "tab" key (rather than the mouse) to select the text field(s) that you
+want to edit.  After changing all the stuff you are interested in, then
+you mouse "SET IT" and exit.
+
+For a discussion of the Resource Mover, see the section "Working with
+Resource Files on the Macintosh" in the "Putting Together an Application"
+document dated 1/13/84.
+22-Jun-84 16:49:10-PDT,1566;000000000000
+Return-Path: <croft@safe>
+Received: from safe by SUMEX-AIM.ARPA with TCP; Fri 22 Jun 84 16:49:06-PDT
+Date: Fri, 22 Jun 84 16:51:41 pdt
+From: Bill Croft <croft@safe>
+To: info-mac@sumex
+Subject: debugging new icons
+Cc: croft, mikes@cit-vax, sumacc@sumex
+
+The finder has a "cache" of the icon information that it gleans
+from your application resource file when it is installed for the first
+time.  This means that the finder runs faster, but there is also
+a finder bug here:  there is currently no way to tell the finder
+to refresh his cached icon pictures.  
+
+This situation where this is most painful is when you are debugging
+the icon for your application.  Even though you change the icon in
+your program's resource file, the finder won't see the change.
+Currently the only solution is to force the finder to rebuild his
+DeskTop file by rebooting with command-option held down.  (Since this
+cache is indexed by filetype/creator, you should also ensure that
+ALL your applications on the disk have the new definition in their
+resource file's because you don't know which one the finder will 
+encounter first to make his cache entry).
+
+One solution might be to have the finder compare the date when he
+made his cache entry to the "modified" date of the file being
+considered.  If the file is newer than the cache, that entry in
+the cache should be rebuilt.
+
+When I mentioned this to Bruce Horn, he said that he had once 
+considered checking the (SETFILE) "init" bit for this purpose, but
+didn't have time at the moment to implement it.
+
+
+Date:     1 Jul 84 (Sun) 11:59:06 EDT
+From:     Dave Johnson <ddj%Brown@csnet-relay.arpa>
+To:       Bruce.Lucas@cmu-cs-ius.arpa, info-mac@sumex-aim.arpa
+Subject:  Re: debugging icons
+
+I tried using the Resource Mover to edit bad icons out of the Desk Top,
+as was suggested, with only partial success.  At first I was using a new
+author-identifier for each new try at an icon, but this seems wasteful
+and would probably require eventually building a new desktop when it
+becomes too full.
+
+My original strategy for using rmover was to throw away the application with
+the old icon, or turn off the bundle bit using Set File if the application
+already had the new icon (but was showing the previous version), then go
+into rmover on the Desk Top, and cut out the resource named by the author
+string (ie, CCOM, or safer, TEST).  When the bundle bit was turned back on,
+the new icon did appear, but unfortunately the previous mask was still there.
+
+I believe removing one of the ICN# resources would solve the problem, but
+don't have any idea which one to remove (there were about 16 ICN# resources
+on the disk I was playing with).  I did try cutting out all of them (pasting
+them in a handy MacTerminal document), but this resulted it a "Ghost Disk"
+where all of the fancy icons had vanished, and I couldn't get them to come
+back using the usual Bundle Bit trick.  They did return when I pasted the
+resources back into the desk top, but it still gave me the bad mask . . .
+back where I started.  (the folder, generic document, and generic application
+or "hand" icons are probably in the System file -- only they survived without
+any ICN# resources in the DeskTop).  The disk was also in bad shape after this 
+ordeal; with a messed up free list, it eventually had to be erased.
+
+Until someone figures out how the Finder maps reference idents, the best way
+might be to debug icons on a scratch disk with no folders and only MacTerm,
+SetFile, and the application being worked on, so you could blow away the
+DeskTop any time without much pain.  Then once the icon is finished, move it
+to a more stable disk.
+
+Nicer would be a version of the icon editor that could install the icon
+directly into the application's resource (and the finder?), so we don't
+have to muck about sending the icon to the VAX, installing it in the .rc
+file, rebuilding the application, and sending it back to the Mac again.
+Even a utility that would do nothing but install icons into applications
+would be better than the current situation.
+
+	Dave Johnson
+-------
+ 3-Jul-84 15:47:10-PDT,1282;000000000000
+Return-Path: <croft@safe>
+Received: from safe by SUMEX-AIM.ARPA with TCP; Tue 3 Jul 84 15:46:56-PDT
+Date: Tue, 3 Jul 84 15:49:34 pdt
+From: Bill Croft <croft@safe>
+To: info-mac@sumex
+Subject: new macsbug uses window instead of tty
+Cc: sumacc@sumex
+
+Apple has given us a new version of Macsbug that interacts through a
+window at the bottom of the screen.  As you recall, the Macsbug distributed
+with the Workshop 2.0 requires an external tty on the line printer port.
+
+The new Macsbug is archived on SUMEX (FTP login: anonymous) on
+<info-mac>macsbug.data.  You must retrieve it with "tenex" or "type l 8"
+FTP mode, since it is an 8 bit file.  After transfering it to your local
+UNIX, download it with "macput -d macsbug".  Note that this is a program,
+but it's in the data fork (not resource fork).  I assume you have read the
+previous note on info-mac concerning use of Macsbug.
+
+After downloading, you should remove or rename any older debuggers ("xMacsbug"
+or "Disassembler") that you had on your disk.  The new Macsbug has the
+disassembler built in, so it is wasteful to load Disassembler twice.
+The new Macsbug is probably slightly larger than the old Macsbug+Disassembler,
+and it can't be split off from the disassembler if you're really tight on space.
+ 3-Jul-84 15:58:43-PDT,1077;000000000000
+Return-Path: <croft@safe>
+Received: from safe by SUMEX-AIM.ARPA with TCP; Tue 3 Jul 84 15:58:26-PDT
+Date: Tue, 3 Jul 84 16:01:05 pdt
+From: Bill Croft <croft@safe>
+To: info-mac@sumex
+Subject: StartupScreen and ScreenMaker
+Cc: sumacc@sumex
+
+Apple has also given us their ScreenMaker program.  This program reads
+the upper left corner of a MacPaint document and converts it to a 20K byte
+file called StartupScreen.  If this file is present at boot time, it is
+displayed instead of the "Welcome to Macintosh" message you normally
+see.  (If you are using Macsbug AND StartupScreen, a tiny line lights up
+at the top of screen, in place of the "Macsbug loaded" message).
+A disadvantage of StartupScreen:  it takes up space on your disk and
+causes startup to be about a half-second longer than normal.
+
+The ScreenMaker is archived on SUMEX (FTP login: anonymous) on
+<info-mac>screenmaker.rsrc.  You must retrieve it with "tenex" or "type l 8"
+FTP mode, since it is an 8 bit file.  After transfering it to your local
+UNIX, download it with "macput -r screenmaker".
+10-Jul-84 11:27:08-PDT,3543;000000000000
+Mail-From: CROFT created at 10-Jul-84 11:27:04
+Date: Tue 10 Jul 84 11:27:04-PDT
+From: Bill Croft <CROFT@SUMEX-AIM.ARPA>
+Subject: [Mike Schuster <MIKES@CIT-20.ARPA>: Hacking the Text Edit scrap]
+To: sumacc@SUMEX-AIM.ARPA, croft@SUMEX-AIM.ARPA
+
+Return-Path: <MIKES@CIT-20>
+Received: from CIT-20.ARPA by SUMEX-AIM.ARPA with TCP; Tue 10 Jul 84 11:03:21-PDT
+Date: 10 Jul 1984 1104-PDT
+Subject: Hacking the Text Edit scrap
+From: Mike Schuster <MIKES@CIT-20.ARPA>
+To: info-mac@SUMEX-AIM.ARPA
+
+The Text Edit routines use a scrap whose length and handle are located
+in the low memory global area.  The length of the scrap is a short at
+absolute 2736.  The handle to the scrap is a long at absolute 2740.
+Here is a useful C structure:
+
+  typedef struct
+     {
+     short length;	/* length of text edit scrap */
+     short filler;	/* what is this for? seems to be -1 always */
+     Handle handle;	/* handle to text edit scrap */
+     } TEGloRec;
+  typedef TEGloRec *TEGloPtr;
+  TEGloPtr TEGlo;
+
+The variable TEGlo is initialized via
+
+  TEGlo = (TEGloPtr) 2736;
+
+The routine TEInit initializes TEGlo.length to 0 and TEGlo.handle to
+NewHandle(0).  The routines TECut and TECopy set TEGlo.length to the
+length of the selected text and set TEGlo.handle to point to a copy of
+the selected text.
+
+If you are using the TE scrap as a private scrap, here are some things
+to remember:
+   1) Be sure to squirrel away a copy of the TE scrap before opening a
+      dialog box containing editable text, since the scrap might be
+      modified (for example, SFPutFile).
+   2) Be sure to establish a convention on the location of the 'true'
+      clipboard.  Here is one that seems to work:
+         When an application window is active, the clipboard is contained
+         in TE scrap.  When a system desk accessory window is active, or
+         when no windows are open, the clipboard is contained in the 
+         Scrap Manager scrap.
+      With this convention, I perform the following TE scrap -- SM scrap 
+      transfers:
+         a) when no windows are open, and an application window is opened
+	    (SM scrap -> TE scrap).
+         b) when an application window is closed leaving no opened windows
+	    (TE scrap -> SM scrap).
+         c) when an application window is deactivated or closed and a desk 
+            accessory window is activated or opened (TE scrap -> SM scrap).
+         d) when a desk accessory window is deactivated or closed and an 
+	    application window is activated or opened (SM scrap -> TE scrap).
+         e) when an application window is active upon ExitToShell
+	    (TE scrap -> SM scrap)
+      You can use the changeFlag in the modifiers field of the next
+      event to catch some of the cases c) and d).  Be aware that no 
+      deactivation event, and hence no changeFlag occurs when a window is 
+      closed.  I have been forcing the clipboard scrap to disk to avoid 
+      multiple copied during these operations.  Be sure to check for
+      SM errors (such as disk locked or write protected, etc).
+   3) Be careful with cutting and pasting long selections.  I have seen
+      cases where a TERecord was left in an inconsistent state after a
+      TEPaste.  I suspect that TE routines fail to handle MemError
+      conditions.  On the other hand, it maybe a bug in my program.
+      I'm currently reverse engineering TE to find out whats going on.
+      Preliminary results support my conjecture.
+
+Mike
+(mikes@cit-20, mikes@cit-vax)
+-------
+-------
+11-Jul-84 10:28:48-PDT,1778;000000000000
+Mail-From: CROFT created at 11-Jul-84 10:28:45
+Date: Wed 11 Jul 84 10:28:45-PDT
+From: Bill Croft <CROFT@SUMEX-AIM.ARPA>
+Subject: [Mike Schuster <MIKES@CIT-20.ARPA>: Optimizing the TextBox routine]
+To: sumacc@SUMEX-AIM.ARPA, croft@SUMEX-AIM.ARPA
+
+Return-Path: <MIKES@CIT-20>
+Received: from CIT-20.ARPA by SUMEX-AIM.ARPA with TCP; Wed 11 Jul 84 10:07:58-PDT
+Date: 11 Jul 1984 1008-PDT
+Subject: Optimizing the TextBox routine
+From: Mike Schuster <MIKES@CIT-20.ARPA>
+To: info-mac@SUMEX-AIM.ARPA
+
+The TextBox(text, length, box, j) routine evidently operates by first
+calling EraseRect to erase the box, then calling TENew to allocate a
+TERecord, then calling TESetText to stuff the text into the TERecord,
+then calling TEUpdate to draw the text, and finally calling TEDispose
+to deallocate everything.  Unfortunately, TESetText creates a copy of
+the text.  
+
+So, TextBox should not be used as is to draw your private scrap into a
+'clipboard' window, especially if your scrap is long.  As an alternative,
+you can write your own TextBox that first stuffs the handle to your
+private scrap into the hText field of the TERecord, then stuffs the
+length of the handle into the TELength field, and finally calls
+TECalText to recalculate the lineStarts array, as suggested in Inside
+Mac.
+
+The problem with this alternative is that the lineStarts array can get
+long.  As a second alternative, you might figure out how many lines will
+fit into the box by using information returned by GetFontInfo, and then
+scan down your private scrap to find an upper bound on the number of 
+characters that will be drawn, by counting end-of-line characters.
+Finally, you supply this upper bound as the TElength field.
+
+Mike
+(mikes@cit-20,mikes@cit-vax)
+-------
+-------
+13-Jul-84 10:17:22-PDT,623;000000000000
+Return-Path: <croft@safe>
+Received: from safe by SUMEX-AIM.ARPA with TCP; Fri 13 Jul 84 10:17:16-PDT
+Date: Fri, 13 Jul 84 10:21:09 pdt
+From: Bill Croft <croft@safe>
+To: info-mac@sumex
+Subject: disk spinning during macsbug
+Cc: croft, sumacc@sumex
+
+Since the disk drive motor is shut off with a software timeout,
+it can remain on "forever" if you hit a breakpoint in macsbug
+while it's spinning.  Bruce Horn offers this advice:
+
+	Yep, you're right, it's timed in software.  
+	The address to kill the motor is the IWM, DFF1FF.  
+	Just do a DM DFF1FF in the debugger and it should turn the thing off.
+	
+	Bruce
+13-Jul-84 10:28:28-PDT,1645;000000000001
+Mail-From: CROFT created at 13-Jul-84 10:28:25
+Date: Fri 13 Jul 84 10:28:24-PDT
+From: Bill Croft <CROFT@SUMEX-AIM.ARPA>
+Subject: [Mike Schuster <MIKES@CIT-20.ARPA>: wordBreak hook in Text Edit]
+To: croft@SUMEX-AIM.ARPA, sumacc@SUMEX-AIM.ARPA
+
+Mail-From: PATTERMANN created at 13-Jul-84 08:51:16
+Return-Path: <MIKES@CIT-20>
+Received: from CIT-20.ARPA by SUMEX-AIM.ARPA with TCP; Thu 12 Jul 84 22:56:22-PDT
+Date: 12 Jul 1984 2256-PDT
+Subject: wordBreak hook in Text Edit
+From: Mike Schuster <MIKES@CIT-20.ARPA>
+To: info-mac@SUMEX-AIM.ARPA
+ReSent-date: Fri 13 Jul 84 08:51:16-PDT
+ReSent-From: Ed Pattermann <PATTERMANN@SUMEX-AIM.ARPA>
+ReSent-To: info-mac: ;
+
+You can change the set of word delimiting characters used by the Text
+Edit routines for word wrap calculations and double click selections
+by installing a non-zero address of a routine in the field 'wordBreak'
+of a TERecord.  The default set of delimiting characters is /00 thru
+/20, inclusive.  The routine is passed the address of the first
+character of the text in a0, and an offset to the character in
+question in d0.  The routine returns with d0 nonzero if the character
+is a delimiter.  Also, the status register should be set reflecting
+the value in d0.  As a sample, this routine defines delimiters to be
+/00 thru /2f, inclusive.
+
+	.text
+	.globl	wdbreak
+wdbreak:
+	cmpb	#/2f,a0@(0,d0:w)
+	sls	d0
+	tstb	d0
+	rts
+
+One thing to remember: defining a period '.' to be a delimiter might
+be great for editing C programs, but lousy when word wrapping causes a
+period at the end of a sentence to appear on the next line all by
+itself.
+-------
+-------
+17-Jul-84 00:42:22-PDT,2537;000000000001
+Return-Path: <croft@safe>
+Received: from safe by SUMEX-AIM.ARPA with TCP; Tue 17 Jul 84 00:42:07-PDT
+Date: Tue, 17 Jul 84 00:46:01 pdt
+From: Bill Croft <croft@safe>
+To: info-mac@sumex
+Subject: additional macsbug commands
+Cc: croft, sumacc@sumex
+
+The "new" macsbug (that uses a window at the bottom of the Mac screen)
+that was posted to info-mac a few weeks ago, has some new command syntax.
+Here is a note from Bruce Horn explaining the new commands:
+----
+
+Here's a summary of the new Macsbug commands:
+
+CL a -- clears the breakpoint at location a.  If a is omitted, all breakpoints
+are cleared.
+
+BR a c -- sets a breakpoint at location a for count c.  This allows you to say
+"Stop after this location is hit 6 times."
+
+GT a -- is Go Till a. (i.e. sets temporary breakpoint at a and goes.)
+
+T n -- Traces n instructions.
+
+S n -- Steps through n instructions  This is just like the old trace, where
+it will actually step into the dispatcher.  Now T, the previous command, will
+step OVER a trap.  No more tracing through the dispatcher when you just want
+to get back to the main procedure.
+
+MR n -- Looks n bytes down the stack and replaces the longword there (usually
+a return address) with a magic address in the debugger.  Instead of returning
+normally, this returns control to the debugger which puts back in the real
+address.  This is a good way to step across subroutines which you know are
+good--just trace one instruction into the routine and type MR.
+
+WH x -- if x<512, prints out the address corresponding to the A-Trap numbered
+x.  If >=512, the A-Trap "nearest" the address X will be printed.  This is
+useful for finding out what trap was executing when an error occurred.
+
+RX -- Toggles the display mode so that the registers are or are not dumped
+during a trace command.  The disassembly at PC will always occur.
+
+I think that's all of the new or changed routines in the improved Macsbug.
+
+Parsing is slightly different, however.  Gone is the DH command, replaced by
+the prefix @ for indirect.  So the command DH 4200 is replaced by DM @4200.
+An additional symbol, TP (thePort) is also supported.  This is useful for
+looking at the Quickdraw globals.
+
+You can reference addresses relative to a given location just by using the +
+operator.  You can also use ".", last address referenced, to temporarily have
+an anchor from which to reference relative addresses.  For example, DM 14000
+will set . to 14000, and then you can say DM .+200, DM .+400, etc.
+
+Bruce
+-------
+
+18-Jul-84 20:02:41-PDT,1457;000000000001
+Return-Path: <croft@safe>
+Received: from safe by SUMEX-AIM.ARPA with TCP; Wed 18 Jul 84 20:02:37-PDT
+Date: Wed, 18 Jul 84 20:06:31 pdt
+From: Bill Croft <croft@safe>
+To: info-mac@sumex
+Subject: non local returns in SUMacC using setjmp/longjmp
+Cc: sumacc@sumex
+
+The "libc.a" provided on the SUMacC distribution contains a setjmp/longjmp.
+The calling sequence is the same as for 4.2BSD (and most other UNIXes).
+Your program must declare a "type" jmp_buf:
+	
+	typedef int jmp_buf[13];
+	jmp_buf environ;
+	...
+	if (setjmp(&environ) != 0) { /* abort */ }
+	...
+	longjmp(&environ,1);	/* return to toplevel */
+
+Here's the assembler in case you're curious:
+
+|setjmp, longjmp
+|
+|	longjmp(a, v)
+|causes a "return(v)" from the
+|last call to
+|
+|	setjmp(v)
+|by restoring all the registers and
+|adjusting the stack
+|
+|jmp_buf is set up as:
+|
+|	_________________
+|	|	pc	|
+|	-----------------
+|	|	d2	|
+|	-----------------
+|	|	...	|
+|	-----------------
+|	|	d7	|
+|	-----------------
+|	|	a2	|
+|	-----------------
+|	|	...	|
+|	-----------------
+|	|	a7	|
+|	-----------------
+
+	.globl setjmp, longjmp
+	.text
+
+setjmp:
+	movl	sp@(4.),a0	|pointer to jmp_buf
+	movl	sp@,a0@		|pc
+	moveml	#/FCFC,a0@(4.)	|d2-d7, a2-a7
+	clrl	d0		|return 0
+	rts
+
+longjmp:
+	movl	sp@(4.),a0	|pointer to jmp_buf
+	movl	sp@(8.),d0	|value returned
+	moveml	a0@(4.),#/FCFC	|restore d2-d7, a2-a7
+	movl	a0@,sp@		|restore pc of call to setjmp to stack
+	rts
+20-Jul-84 21:04:44-PDT,1700;000000000001
+Mail-From: CROFT created at 20-Jul-84 21:04:36
+Date: Fri 20 Jul 84 21:04:35-PDT
+From: Bill Croft <CROFT@SUMEX-AIM.ARPA>
+Subject: [INTMET@BBNA.ARPA: Update events]
+To: sumacc@SUMEX-AIM.ARPA
+
+Mail-From: PATTERMANN created at 20-Jul-84 18:47:00
+Return-Path: <INTMET@BBNA.ARPA>
+Received: from BBNA.ARPA by SUMEX-AIM.ARPA with TCP; Thu 19 Jul 84 12:52:51-PDT
+Date: Thu 19 Jul 84 15:53:28-EDT
+From: INTMET@BBNA.ARPA
+Subject: Update events
+To: info-mac@SUMEX-AIM.ARPA
+ReSent-date: Fri 20 Jul 84 18:47:00-PDT
+ReSent-From: Ed Pattermann <PATTERMANN@SUMEX-AIM.ARPA>
+ReSent-To: info-mac: ;
+
+It seems that the window manager does not generate an update event for the
+desk top.  Since the desk top isn't realy a window it isn't clear how it
+would refer to it.  A comment in the work shop pascal sources that were
+included in sumacc annotates a check if the update is on a window who's
+pointer is null says "Whats this for?"  And the awnser seems to be... if
+it was ever decided to generate update events for the desk top then it
+might be reffered to by using a null pointer in the event message.
+  I presume that finder updates its "desk top" by slipping a real window
+over the entire desk, sort of a table cloth I guess.  
+  The manual suggests that if you recieve an update event for a desk
+accessory that you ignore it, it also says that it should neve happen.
+It realy isn't a good idea ever to ignore an update event, the event
+manager checks for windows which need updating often, if you don't call
+BeginUpdate and EndUpdate on the window once you get the update event then
+the event manager will keep throwing the event at you with a passion.
+			Ben Hyde
+-------
+-------
+23-Jul-84 13:41:09-PDT,808;000000000001
+Return-Path: <croft@safe>
+Received: from safe by SUMEX-AIM.ARPA with TCP; Mon 23 Jul 84 13:41:03-PDT
+Date: Mon, 23 Jul 84 13:45:16 pdt
+From: Bill Croft <croft@safe>
+To: info-mac@sumex
+Subject: GetCursor
+Cc: sumacc@sumex
+
+	Date: Sun, 22 Jul 84 22:45:24 edt
+	From: chavez@harvard.ARPA (R. Martin Chavez)
+	Subject: Cursors
+	
+		Does anyone out there have rmaker.c definitions for
+	the watch and shadow-"+" cursors?  If not, I'll just paste in
+	some cursor resources from the system file.
+		Thanks,
+		R. Martin Chavez
+	
+Actually, look at the "file" example program, the normal way to pick
+up these other cursors IS from the system resource:
+
+	CursHandle watchH;
+	watchH = GetCursor(4);	/* Apple should put these magic numbers
+				   in an interface file somewhere */
+	SetCursor(*watchH);
+23-Jul-84 18:17:46-PDT,1043;000000000001
+Return-Path: <croft@safe>
+Received: from safe by SUMEX-AIM.ARPA with TCP; Mon 23 Jul 84 18:17:42-PDT
+Date: Mon, 23 Jul 84 18:22:01 pdt
+From: Bill Croft <croft@safe>
+To: info-mac@sumex
+Subject: decoding uploaded lisa sources
+Cc: sumacc@sumex
+
+By using maccom to write Lisa .text files onto a Mac disk, you can
+upload these sources quickly to your UNIX using "macget -u".
+At this point the files still contain some funny Lisa control
+sequences.  You can use the program below (unlisa.c) to deconvert
+the compressed spaces.  (Even after conversion you may need to delete
+some funny characters from the beginning of the file, these are
+probably Lisa Editor cookies).
+----
+#include <stdio.h>
+/* Lisa format to normal format converter */
+main ()
+{
+   int c;
+
+   while ( (c=getchar()) != EOF) {
+     if (c == 16) {
+      
+       for (c=getchar(); c>32; c--) 
+         putc(' ',stdout);
+     }
+     else
+       if (c != 0) putc((char) c, stdout);
+   }
+}
+----
+Program above is from jw-peterson@utah-20;  thanks, John.
+17-Sep-84 14:52:15-PDT,865;000000000001
+Return-Path: <Douglass.GENCOM@MIT-MULTICS.ARPA>
+Received: from MIT-MULTICS.ARPA by SUMEX-AIM.ARPA with TCP; Mon 17 Sep 84 14:52:04-PDT
+Posted-Date:  17 Sep 84 17:43 EDT
+Date:  Mon, 17 Sep 84 17:42 EDT
+From:  Douglass@MIT-MULTICS.ARPA
+Subject:  SUMacC MountVol and Offline question
+To:  info-mac@SUMEX-AIM.ARPA
+cc:  sumacc@SUMEX-AIM.ARPA
+Message-ID:  <840917214208.883700@MIT-MULTICS.ARPA>
+
+I am using SUMacC and have encountered a problem trying to use the routines
+MountVol and Offline.  They are defined using the routines _mountvol and
+_offline which (except that _mountvol is called _mountvo) are in the file
+/usr/sumaccs/lib/io.s (on my system) but are commented out.  _offline has the
+additional notation "removed 12 apr 84".  Does anyone know why they are
+commented out and if they would work?  Thanks.
+                              --scott

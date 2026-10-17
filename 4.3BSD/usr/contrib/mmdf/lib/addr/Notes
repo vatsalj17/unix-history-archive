@@ -1,0 +1,252 @@
+.TH ADDRESS 3.mmdf
+'ta .8i 1.6i 2.4i 3.2i 4.0i 4.8i 5.6i 6.3i
+.SH NAME
+RFC733 Address Parser (ap_)
+.SH SYNOPSIS
+
+.nf
+#include "util.h"
+#include "ap.h"
+
+struct ap_node
+{
+  char  ap_obtype,    /* parse-type of object          */
+	  APV_NIL
+	  APV_NAME    /* personal name                 */
+	  APV_MBOX    /* mailbox-part of addr          */
+	  APV_NODE    /* host-part of address          */
+	  APV_DTYP    /* "data-type"                   */
+	  APV_CMNT    /* comment (...)                 */
+	  APV_WORD    /* generic word                  */
+	  APV_PRSN    /* start of personal list <...>  */
+	  APV_NPER    /* name of person                */
+	  APV_EPER    /* end of personal list          */
+	  APV_GRUP    /* start of group list x:..;     */
+	  APV_NGRP    /* name of group                 */
+	  APV_EGRP    /* end of group list             */
+	ap_ptrtype;   /* "role" of the next node       */
+	  APP_NIL     /* no next node                  */
+	  APP_ETC     /* part of this address          */
+	  APP_NXT     /* start of new address          */
+  char *ap_obvalue;   /* string value of object        */
+  struct ap_node *ap_chain;
+		      /* pointer to next node          */
+};
+typedef AP_ptr struct ap_node *
+.fi
+
+.PD 0
+.SS "NODE PRIMITIVES"
+
+.IP "ap_alloc() -> AP_ptr" 25
+Allocate a list node element
+.IP "ap_free(AP_ptr)" 25
+Free a list node elelment
+.IP "ap_fllnode(AP_ptr, obtype, obval)" 25
+Fill-in node's data fields
+.IP "ap_new(obtype, obval) -> AP_ptr" 25
+Alloc and fill
+
+.SS "LIST MANIPULATION"
+
+.IP "ap_insert(cur-AP_ptr, new-AP_ptr)" 25
+Add new node after current one
+.IP "ap_delete(AP_ptr)" 25
+Remove node after current one
+.IP "ap_append(AP_ptr, obtype, obvalue) -> AP_ptr" 25
+Alloc, fill, and insert after current node
+.IP "ap_add(AP_ptr, obtype, obvalue) -> AP_ptr" 25
+Try to add to data field of current node, else append
+.IP "ap_sqdelete(strt-AP_ptr, end-AP_ptr)" 25
+Remove sequence of nodes from one after starting node through ending one,
+or until end of chain.
+.IP "ap_1delete(strt-AP_ptr)" 25
+Remove sequence of nodes from one after starting node until end of current
+address (ptrtype==APP_NXT) or until end of chain.
+.IP "ap_sqtfix(strt-AP_ptr, end-AP_ptr, obtype)" 25
+Fix object type of sequence of nodes from starting node to ending one
+
+.SS "PARSE STATE"
+
+.IP "AP_ptr ap_pstrt" 25
+Pointer to first parse node
+.IP "AP_ptr ap_pcur" 25
+Pointer to current(last) node
+
+.IP "ap_init(gfunc)" 25
+Context initialization
+
+.IP "ap_ppush(gfunc)" 25
+Save parse context, init
+.IP "char (*gfunc) ()" 25
+.IP "ap_ppop()" 25
+Restore parse context
+.IP "ap_fpush(filename) -> NOTOK/OK" 25
+Ppush, init for new input file
+.IP "ap_fpop()" 25
+Close file and ppop
+
+.SS "PARSE LIST"
+.PP
+.RS
+These echo the List Manipulation primitives, always relative to
+ap_pcur; any insert updates ap_pcur.
+.RE
+
+.IP "ap_palloc()" 25
+Alloc, insert at end of chain
+.IP "ap_pfill()" 25
+Fill-in values at end of chain
+.IP "ap_pnsrt(new-AP_ptr)" 25
+Insert at end of chain
+.IP "ap_pappend(obtype, obvalue)" 25
+.IP "ap_padd(obtype, obvalue)" 25
+.br
+
+.SS "PARSING FUNCTIONS"
+
+.IP "ap_pinit(&getc()) -> AP_ptr" 25
+Init, set for input from function getc(), alloc initial node,
+and store address in ap_pstrt and ap_pcur
+.IP "ap_1adr() -> NOTOK/OK/DONE"
+Parse next address, through host reference
+.PD
+.bp
+.SH DESCRIPTION
+.PP
+This package provides routines for parsing text address strings and
+producing an in-core linked list of the parsed elements.  Routines
+also are provided for manipulation of the list.
+.PP
+The syntax of addresses is a superset of the official syntax used
+for ArpaNet mail, specified in
+"Standard for the Format of ARPA Network Text Messages", D.  Crocker,
+J. Vittal, K. Pogran & D. Henderson, in ARPANET PROTOCOL HANDBOOK, E.
+Feinler & J. Postel (eds), NIC-7104-REV-1, Network Information Center,
+SRI International:  Menlo Park, Ca.  (1978) (NTIS AD-A0038901).
+.PP
+The parser does not interpret the data values, such as the validity
+of a local mailbox.  Nor does it act on specific values.  For example,
+the syntax permits referring to addresses which are in another file.
+The parser detects the specification, but does not retrieve the
+contents of the file.  However,
+.I ap_fpush(filename)
+and
+.I ap_fpop()
+are provided for handling most of the overhead for this.
+.SS List Manipulation
+.PP
+The routines for manipulating the address linked-list are loosely
+divided into five groups.  The first performs dynamic storage
+management for list nodes, having allocate, free, and data value fill-in
+calls.
+.I ap_new()
+simply combines allocate and fill-in.
+.PP
+The second group performs standard linked-list operations of
+insertion and deletion.  The list is singly-linked, with
+all operations performed relative to a leading node.
+Hence, the deletion call specifies the node which
+.I precedes
+the one that is to be removed.
+For convenience,
+.I ap_append()
+will create, fill-in, and insert a node.
+As an efficiency mechanism, it often
+is possible to combine the data values of contiguous parse nodes,
+if the nodes are of the same object
+type.
+.I ap_add()
+performs the necessary data concatenation, if
+possible; if the node types are not the same, then it will just
+do an append of a new node.
+.PP
+Also within this group are three routines for manipulating a sequence
+of list nodes.
+.I ap_sqdelete()
+performs a series of list deletions,
+from the node immediately following the start node, until an
+ending node (or until the list is exhausted).
+.I ap_1delete()
+is identical to
+.I ap_sqdelete(),
+except that it terminates at the
+end of a completed address, much like
+.I ap_1adr().
+That is, it
+terminates when it has deleted the last element before a new
+address begins, as indicated by a APP_NXT pointer.  The routine
+.I ap_sqtfix()
+will scan a list sub-sequence and modify the
+ap_obtype field.  This is primarily used by the parser, since the
+syntax does not resolve the type of some parse elements
+until an indeterminate amount of parsing has been done (e.g., personal
+name or group name fields, versus mailbox string of an unnamed address).
+.PP
+The third group keeps track of the parse state.
+The two global variables, ap_pstrt and ap_pcur, point
+to the beginning and end (current) of the linked list.
+.I ap_init()
+initializes these context variables and set the pointer for a
+character-input function.  The push and pop calls are used to
+start a new parse context (e.g., to expand a mailing list) and
+then return to the old one.  Two extra push and pop calls are used
+for acquiring file input; the push call requires the name of the
+input file, rather than a pointer to a input function.
+.PP
+The fourth group of functions are used by the parser to build the linked list.
+They are essentially the same as the primitives in the first group, but
+their actions are relative to ap_pcur and will update ap_pcur, when
+an insertion is done.  Also,
+.I ap_palloc()
+differs by automatically
+inserting the new node at the end of the list.
+.SS Parsing Routines
+.PP
+The final group performs the actual parsing.
+The routine
+.I ap_pinit(gfunc)
+is used to initialize the system for
+input parsing; this includes allocating and setting ap_pstrt and
+ap_pcur to point to a first list node.
+Its argument is the address of the function which
+acquires address characters, one at a time, and should return -1 on end
+of input.
+.I ap_1adr()
+performs the basic parsing, building a
+parse tree, relative to the global pointer, ap_pcur.  As it scans the
+input, it adds nodes after ap_pcur and updates it.  The
+routine returns a status value to indicate its termination condition.
+NOTOK means there was a parsing error;
+OK means a full address was acquired; and DONE signals end of input.
+.PP
+.I ap_1adr()
+returns on encountering an end of input or a comma which
+separates addresses.  Fully parsing the input, before
+returning, would tend to overflow storage.
+.I ap_1adr()
+therefore tries
+to reduce the storage requirement by returning when it has parsed
+enough to be a complete unit for most applications.  The caller has
+the option of simply repeating the call to the routine, until an
+end of input, thereby building a full in-core parse tree.
+(The directory containing the package's sources has a routine,
+called fullparse.c, which will parse an entire input stream and build
+the list for it.)   Elements of one address are linked with
+a ap_ptrtype of APP_ETC.  When a new address is started, the link
+is APP_NXT.
+.SH FILES
+.IP "addr/ap.h" 25
+Include file
+.SH AUTHORS
+.PD 0
+.IP "< 1978  B. Borden" 25
+Wrote initial version of parser code
+.IP "78-80   D. Crocker" 25
+Reworked parser into current form
+.IP "Apr 81  K. Harrenstein" 25
+Hacked for SRI
+.IP "Jun 81  D. Crocker" 25
+Back in the fold.  Finished V7 conversion, minor cleanups, and
+repackaging of list primitives.  Documentation.
+.PD

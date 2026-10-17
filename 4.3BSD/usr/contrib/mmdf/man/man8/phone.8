@@ -1,0 +1,88 @@
+.TH PHONE 8
+.SH NAME
+phone \- MMDF PhoneNet Phone Channel
+.SH SYNOPSIS
+phone
+.SH DESCRIPTION
+.PP
+The \fIphone\fR channel is the active (or master) component of the
+PhoneNet protocol
+package.  The passive component is the \fIslave\fR program (see \fIslave\fR(8)).
+\fIPhone\fR establishes a connection to a remote machine's \fIslave\fR
+by following
+the instructions contained in a dialing script.  The dialing script is
+specified in the channel's definition in the runtime tailoring file by the scr=
+parameter.  Scripts reside, by default, in the table directory.  See script(5)
+for information about how to construct a dialing script.
+.PP
+Once a connection has been established, the ``start'' command initiates
+the PhoneNet link-level (dial) protocol.  Several dial package parameters are
+set by commands in the dialing script.  The default illegal character sets are
+typically compiled into conf_dial.c but those defaults may be overridden by 
+using the DBADIN, DBADOUT, or DBAD specifications in the
+runtime tailoring file (see section 3.13 of the ``Installing and Operating
+MMDF II'' document).  The defaults may be further superseded by specifying
+replacement illegal character sets in the dialing script.
+The dial package defaults to a packet window size of 1.  It is the master's
+responsibility to override that default if desired (see the ``window'' command
+documented in script(5)).
+.PP
+\fIPhone\fR is a two-way channel; mail queued on the local machine is delivered
+to the remote machine and mail queued on the remote machine is picked up.
+If \fIdeliver\fR is called on a \fIphone\fR channel and mail is queued
+for that channel, a connection is attempted immediately.
+If no messages are waiting, then deliver decides whether to invoke the channel
+to do a pickup of mail from the remote machine.  Such a pickup is called a
+"poll".  \fIDeliver\fR looks at the value of the poll= parameter in the 
+\fIphone\fR 
+channel's runtime tailoring file definition to decide whether to initiate a
+poll.  If the value of poll is 0, polls are never performed.  If the value is
+-1, polls are always performed.  Otherwise, the value of poll 
+represents the number of 15-minute intervals to wait before doing a poll.  For
+example, if poll=3 and no messages are queued to be sent out, then any
+\fIdeliver\fR's attempted within 45 minutes of the last successful pickup will 
+return immediately without attempting connection to the remote machine.
+.PP
+Once a connection is made with the remote \fIslave\fR, \fIphone\fR sends
+one of three commands to the \fIslave\fR: submit, pickup, and end.
+If there are messages waiting to be sent to the remote machine
+(and if mod=send has been selected
+on this channel), then the first command
+\fIphone\fR sends is ``submit''.  While submitting messages to the 
+remote \fIslave\fR, \fIphone\fR manages the interface between the dial 
+package and \fIdeliver\fR (i.e. the mail queue).
+.PP
+When all waiting messages have been sent, \fIphone\fR sends the ``pickup''
+command (if mod=pick has been selected on this channel).  While picking up
+messages from the remote \fIslave\fR, \fIphone\fR
+passes messages to the local \fIsubmit\fR program
+which queues messages on the local machine.  The messages are submitted just as
+if a submit were being done with the \fIslave\fR program.  The source channel
+and host are set according to the values defined for this \fIphone\fR channel.
+.PP
+When the remote \fIslave\fR indicates that all messages have been picked up,
+\fIphone\fR sends the ``end'' command and resumes processing the dialing script
+on the line following the ``start'' command.
+.SH "TROUBLESHOOTING"
+If a connection to a remote \fIslave\fR cannot be made, check the PHLOG
+(usually ph.log) for information about why the connection is failing.  If
+possible, try to connect to the remote \fIslave\fR by hand.  If the manual
+attempt fails, you know to go check the modem (or direct line) and the remote
+machine for problems.
+.PP
+Often a connection will be made with the remote machine but
+there will be a problem getting to the point where the \fIslave\fR begins the
+link-level protocol.  A common error message to see in PHLOG is: 
+``Timeout while processing script''.  This message indicates that a string
+expected by a ``recv'' command was not matched within the specified
+number of seconds.  Look in the transcript file (specified by the trn= channel
+parameter which defaults to DEFTRAN, usually ph.trn) to see why the ``recv''
+string was not matched.  
+.PP
+Often, noise characters can prevent transmitted
+strings from being received correctly by the remote host.  One trick to reduce
+the possibility of interference is to precede transmitted lines with the remote
+machine's line-erase character (e.g. xmit ``@username\\r'').
+.SH "SEE ALSO"
+script(5), \fIslave\fR(8), \fIdeliver\fR(8), \fIsubmit\fR(8)
+

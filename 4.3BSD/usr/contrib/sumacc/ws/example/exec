@@ -1,0 +1,142 @@
+3. "6F^56D!$^huu4$EXEC
+${ This single exec file can generate a Macintosh resource file from most of the    }
+${ example source files.  The source can be Pascal, or assembly, or both.  The      }
+${ naming convention is that assembly files have 'ASM' appended to the file name,   }
+${ and resource files have an added 'R', although this can easily be changed below. }
+${
+${ The exec file is run by typing 'R' from the command line, then typing a line of  }
+${ of the form:                                                                     }
+$
+${         <Sample/Exec[([pascal_source], [assembler_source], [resource_file],      }
+${                       [source_volume], [library_volume])]                        }
+$
+${ Each of the elements in the square brackets are optional.  The default values are}
+$
+${ Defaults:    pascal_source    =   'example/file'                                                    }
+${              assembler_source =   pascal_source'ASM'                                             }
+${              resource_file    =   pascal_source'R'                                                }
+${              source_volume    =   prefix volume                                                 }
+${              library_volume   =   prefix volume                                                }
+$
+${ This will work for Edit, File, Grow and most other examples.           }
+${ It will not work for RAM Disk, Boxes, and ADeskAcc               }
+${ (Use Ramdisk/exec, example/boxesx)                    }
+$
+$DEFAULT %0 TO 'Example/File'       {Set the file name defaults.}
+$DEFAULT %1 TO CONCAT(%0, 'Asm')
+$DEFAULT %2 TO CONCAT(%0, 'R')
+$
+$IF %3 <> '' THEN                   {If a source volume is specified, }
+    $SET %8 TO CONCAT('-', %3, '-') {set '%8' to the name of the source volume}
+$ELSE
+    $SET %8 TO ''                   {otherwise use the prefix volume }
+$ENDIF
+$IF %4 <> '' THEN                   {If a library volume is specified, }
+    $SET %7 TO CONCAT('-', %4, '-') {set '%7' to the name of the library volume}
+$ELSE
+    $SET %7 TO ''
+$ENDIF
+$
+$
+$SET %9 TO 'F'                      {Start out assuming there is no file to assemble}
+$IF EXISTS(CONCAT(%8, %1, '.TEXT')) THEN            {If a text ASM file exists, }
+    $IF NOT(EXISTS(CONCAT(%8, %1, '.OBJ'))) THEN    {and if no code file exists,}
+        $SET %9 TO 'T'                              {then assemble it           }
+    $ELSEIF NEWER(CONCAT(%8, %1, '.TEXT'), CONCAT(%8, %1, '.OBJ')) THEN
+        $SET %9 TO 'T'     {Otherwise assemble if the text is newer than the code  }
+    $ENDIF
+$ENDIF
+$
+$IF %9 = 'T' THEN                   {Assemble if the assembly file is true}
+    $WRITELN CONCAT('Assemble: ', %8, %1, '.TEXT')   {a debugging statement}
+A{ssemble}%8%1                      {&8 is the volume prefix, and &1 is the file name}
+                                    {this blank line is for the listing file}
+                                    {this blank line is for the default output file}
+$ENDIF
+$
+$
+$SET %9 TO 'F'                      {Assume there is no Pascal program}
+$IF EXISTS(CONCAT(%8, %0, '.TEXT')) THEN
+    $IF NOT(EXISTS(CONCAT(%8, %0, '.OBJ'))) THEN
+        $SET %9 TO 'T'
+    $ELSEIF NEWER(CONCAT(%8, %0, '.TEXT'), CONCAT(%8, %0, '.OBJ')) THEN
+        $SET %9 TO 'T'
+    $ENDIF
+$ENDIF
+$
+$IF %9 = 'T' THEN
+$WRITELN CONCAT('Compile: ', %8, %0, '.TEXT')
+P{ascal}%8%0
+
+reuse
+G{enerate}$M+
+reuse
+%8%0
+$ENDIF
+$
+$
+$SET %6 TO ''
+$SET %9 TO 'F'
+$IF EXISTS(CONCAT(%8, %0, '.TEXT')) THEN
+    $SET %6 TO CONCAT(%8, %0, '.OBJ')
+    $IF EXISTS(CONCAT(%8, %0, 'L.OBJ')) THEN
+        $IF NEWER(CONCAT(%8, %0, '.TEXT'), CONCAT(%8, %0, 'L.OBJ')) THEN
+            $SET %9 TO 'T'
+        $ENDIF
+    $ELSE
+        $SET %9 TO 'T'
+    $ENDIF
+$ENDIF
+$
+$IF %9 = 'F' THEN
+    $IF EXISTS(CONCAT(%8, %1, '.TEXT')) THEN
+        $IF %6 = '' THEN
+            $SET %6 TO CONCAT(%8, %1, '.OBJ')
+        $ENDIF
+        $IF EXISTS(CONCAT(%8, %0, 'L.OBJ')) THEN
+            $IF NEWER(CONCAT(%8, %1, '.TEXT'), CONCAT(%8, %0, 'L.OBJ')) THEN
+                $SET %9 TO 'T'
+            $ENDIF
+        $ELSE
+            $SET %9 TO 'T'
+        $ENDIF
+    $ENDIF
+$ENDIF
+$
+$
+$IF %9 = 'T' THEN
+L{ink}%6
+%7obj/quickDraw
+%7obj/tooltraps
+%7obj/ostraps
+%7obj/prlink
+%7obj/packtraps
+%7obj/macpaslib
+%7obj/sane
+%7obj/saneasm
+%7obj/elems
+%7obj/elemsasm
+    $IF EXISTS(CONCAT(%8, %1, '.TEXT')) THEN
+        $IF CONCAT(%8, %1, '.OBJ') <> %6 THEN
+%8%1.obj
+        $ENDIF
+    $ENDIF
+
+
+%8%0L.OBJ
+$ENDIF
+$
+$
+R{un}%7RMaker
+%8%2
+$
+$
+R{un}%7MacCom
+R{emove example/}Y
+FYL%8%0.RSRC
+%0.RSRC
+APPL{set type to APPL}
+{set creator to ????}
+N{o bundle bit}E{ject}QF{iler}D{elete}reuse.I
+Y{es}Q{uit}
+$ENDEXEC

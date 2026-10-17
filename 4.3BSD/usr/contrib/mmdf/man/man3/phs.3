@@ -1,0 +1,73 @@
+.TH PHS 3
+.SH NAME
+Note the MMDF transmission phase (phs_)
+.SH SYNOPSIS
+.nf
+#include "util.h"
+#include "mmdf.h"
+#include "ch.h"
+#include "phs.h"
+
+phs_note (thechan, phase)
+    Chan *thechan;
+    int phase;
+phs_msg  (thechan, naddrs, len)
+    Chan *thechan;
+    int nardr;
+    long len;
+time_t  phs_get (thechan, phase)
+    Chan *thechan;
+    int phase;
+
+phases:
+    PHS_CNSTRT  /* start connecting to site */
+    PHS_CNGOT   /* got connection to site */
+    PHS_CNEND   /* end connection to site */
+    PHS_RESTRT  /* start reading (sending) mail from site */
+    PHS_REEND   /* end reading (sending) mail from site */
+    PHS_WRSTRT  /* start writing (picking up) mail to site */
+    PHS_WREND   /* end writing (picking up) mail to site */
+.fi
+
+.SH DESCRIPTION
+.PP
+These routines are used to record the progress made during a
+connection between MMDF and another mail system.  Sessions
+are divided into the phases indicated above.  External
+time-stamps are maintained, for each channel, for each phase.
+The stamps are primarily used by the
+\fIcheckque\fR(8)
+program, but notations also are made in the channel log
+(see logs(5)).  The time-stamps are maintained by setting the modified
+time of files in channel subdirectories of the "phsdfldir" directory specified
+in the MMDF configuration.
+One file is kept per time-stamp (see FILES below).
+.PP
+Phs_note()
+records the indicated event.
+Phs_msg() is a special case; it records the transmission of
+one message, noting the number of addresses for it and the
+number of characters.  This is recorded only in the channel
+log and is not given any external time-stamps.  Phs_get() returns
+the time-stamp of the specified channel and phase.  If no time-stamp
+exists for the specified channel and phase, phs_get() returns zero.
+.SH "FILES"
+.IP "<phsdfldir>/<channel>/cstrt" 30
+PSH_CNSTRT time-stamp file
+.IP "<phsdfldir>/<channel>/cgot" 30
+PSH_CNGOT time-stamp file
+.IP "<phsdfldir>/<channel>/cend" 30
+PSH_CNEND time-stamp file
+.IP "<phsdfldir>/<channel>/rstrt" 30
+PSH_RESTRT time-stamp file
+.IP "<phsdfldir>/<channel>/rmsg" 30
+PSH_REMSG time-stamp file
+.IP "<phsdfldir>/<channel>/rend" 30
+PSH_REEND time-stamp file
+.IP "<phsdfldir>/<channel>/wstrt" 30
+PSH_WRSTRT time-stamp file
+.IP "<phsdfldir>/<channel>/wmsg" 30
+PSH_WRMSG time-stamp file
+.IP "<phsdfldir>/<channel>/wend" 30
+PSH_WREND time-stamp file
+

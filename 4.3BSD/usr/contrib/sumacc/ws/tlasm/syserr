@@ -1,0 +1,219 @@
+3. "6F^4P:H r^33X; File SysErr.Text - Macintosh system error equates file.
+;_________________________________________________________________
+;
+;
+; All system routines reporting errors include this equate file.
+;
+; Modification History:
+; 16 Feb 83  LAK  Broke out from SysEqu.Text
+; 22 Feb 83  LAK  Added equates from SysUtil and Events.
+; 10 May 83  MPH  Added new memory manager error codes.
+; 07 Jun 83  LAK  Adjusted error codes for file system
+; 15 Jun 83  AJH  Added Deep Shit Error Definitions
+; 23 Jun 83  LAK  Added initIWMErr for sony driver.
+; 18 Jul 83  LAK  Added more memory manager deep shit errors.
+; 11 Aug 83  LAK  Added more disk driver error codes.
+; 17 Aug 83  LAK  Added file system deep shit error code.
+; 18 Aug 83  SC   Added scrap manager error codes.
+; 19 Aug 83  LAK  Added stackinheap deep shit code.
+; 21 Aug 83  LAK  Added SpdAdjErr, SeekErr, and SectNFErr for disk driver.
+;                 Removed BadNybErr; moved clock/pram error codes up by 4.
+; 23 Aug 83  LAK  Added NotOpenErr for drivers.
+; 27 Aug 83  AJH  added memFull deep shit alert
+; 06 Sep 83  AJH  added DSBadLaunch
+; 22 Sep 83  BLH  Added Resource Mgr errors
+; 10 Oct 83  LAK  Added NoErr equate
+; 13 Oct 83  LAK  added NoErr, DSReInsert equates, DSNotThe1
+;_________________________________________________________________
+
+; General System Errors (VBL Mgr, Queueing, Etc.)
+
+NoErr       .EQU     0      ; success is absence of errors
+QErr        .EQU    -1      ; queue element not found during deletion
+VTypErr     .EQU    -2      ; invalid queue element
+CorErr      .EQU    -3      ; core routine number out of range
+UnimpErr    .EQU    -4      ; unimplemented core routine
+
+; I/O System Errors
+
+ControlErr  .EQU    -17
+StatusErr   .EQU    -18
+ReadErr     .EQU    -19
+WritErr     .EQU    -20
+BadUnitErr  .EQU    -21
+UnitEmptyErr .EQU   -22
+OpenErr     .EQU    -23
+ClosErr     .EQU    -24
+DRemovErr   .EQU    -25     ; tried to remove an open driver
+DInstErr    .EQU    -26     ; DrvrInstall couldn't find driver in resources
+AbortErr    .EQU    -27     ; IO call aborted by KillIO
+NotOpenErr  .EQU    -28     ; Couldn't rd/wr/ctl/sts cause driver not opened
+
+;  File System error codes:
+
+DirFulErr   .EQU    -33     ; Directory full
+DskFulErr   .EQU    -34     ; disk full
+NSVErr      .EQU    -35     ; no such volume
+IOErr       .EQU    -36     ; I/O error (bummers)
+BdNamErr    .EQU    -37     ; there may be no bad names in the final system!
+FNOpnErr    .EQU    -38     ; File not open
+EOFErr      .EQU    -39     ; End of file
+PosErr      .EQU    -40     ; tried to position to before start of file (r/w)
+MFulErr     .EQU    -41     ; memory full(open) or file won't fit (load)
+TMFOErr     .EQU    -42     ; too many files open
+FNFErr      .EQU    -43     ; File not found
+
+WPrErr      .EQU    -44     ; diskette is write protected
+FLckdErr    .EQU    -45     ; file is locked
+VLckdErr    .EQU    -46     ; volume is locked
+FBsyErr     .EQU    -47     ; File is busy (delete)
+DupFNErr    .EQU    -48     ; duplicate filename (rename)
+OpWrErr     .EQU    -49     ; file already open with with write permission
+ParamErr    .EQU    -50     ; error in user parameter list
+RFNumErr    .EQU    -51     ; refnum error
+GFPErr      .EQU    -52     ; get file position error
+VolOffLinErr .EQU   -53     ; volume not on line error (was Ejected)
+PermErr     .EQU    -54     ; permissions error (on file open)
+VolOnLinErr .EQU    -55     ; drive volume already on-line at MountVol
+NSDrvErr    .EQU    -56     ; no such drive (tried to mount a bad drive num)
+NoMacDskErr .EQU    -57     ; not a mac diskette (sig bytes are wrong)
+ExtFSErr    .EQU    -58     ; volume in question belongs to an external fs
+FSDSErr     .EQU    -59     ; file system deep s--t error:
+                            ;  during rename the old entry was deleted but could
+                            ;   not be restored . . .
+BadMDBErr   .EQU    -60     ; bad master directory block
+WrPermErr   .EQU    -61     ; write permissions error
+
+; Disk, Serial Ports, Clock Specific Errors
+
+NoDriveErr  .EQU    -64     ; drive not installed
+OffLinErr   .EQU    -65     ; r/w requested for an off-line drive
+
+NoNybErr    .EQU    -66     ; couldn't find 5 nybbles in 200 tries
+NoAdrMkErr  .EQU    -67     ; couldn't find valid addr mark
+DataVerErr  .EQU    -68     ; read verify compare failed
+BadCkSmErr  .EQU    -69     ; addr mark checksum didn't check
+BadBtSlpErr .EQU    -70     ; bad addr mark bit slip nibbles
+NoDtaMkErr  .EQU    -71     ; couldn't find a data mark header
+BadDCkSum   .EQU    -72     ; bad data mark checksum
+BadDBtSlp   .EQU    -73     ; bad data mark bit slip nibbles
+WrUnderRun  .EQU    -74     ; write underrun occurred
+
+CantStepErr .EQU    -75     ; step handshake failed
+Tk0BadErr   .EQU    -76     ; track 0 detect doesn't change
+InitIWMErr  .EQU    -77     ; unable to initialize IWM
+TwoSideErr  .EQU    -78     ; tried to read 2nd side on a 1-sided drive
+SpdAdjErr   .EQU    -79     ; unable to correctly adjust disk speed
+SeekErr     .EQU    -80     ; track number wrong on address mark
+SectNFErr   .EQU    -81     ; sector number never found on a track
+
+ClkRdErr    .EQU    -85     ; unable to read same clock value twice
+ClkWrErr    .EQU    -86     ; time written did not verify
+PRWrErr     .EQU    -87     ; parameter ram written didn't read-verify
+PRInitErr   .EQU    -88     ; InitUtil found the parameter ram uninitialized
+
+RcvrErr     .EQU    -89     ; SCC receiver error (framing, parity, OR)
+BreakRecd   .EQU    -90     ; Break received (SCC)
+
+; Storage allocator error codes
+
+MemFullErr  .EQU    -108    ; Not enough room in heap zone
+NilHandleErr .EQU   -109    ; Handle was NIL in HandleZone or other;
+memWZErr    .EQU    -111    ; WhichZone failed (applied to free block);
+memPurErr   .EQU    -112    ; trying to purge a locked or non-purgable block;
+
+memAdrErr   .EQU    -110    ; address was odd, or out of range;
+memAZErr    .EQU    -113    ; Address in zone check failed;
+memPCErr    .EQU    -114    ; Pointer Check failed;
+memBCErr    .EQU    -115    ; Block Check failed;
+memSCErr    .EQU    -116    ; Size Check failed;
+
+; Resource Manager error codes (other than I/O errors)
+
+ResNotFound     .EQU    -192            ; Resource not found
+ResFNotFound    .EQU    -193            ; Resource file not found
+AddResFailed    .EQU    -194            ; AddResource failed
+AddRefFailed    .EQU    -195            ; AddReference failed
+RmvResFailed    .EQU    -196            ; RmveResource failed
+RmvRefFailed    .EQU    -197            ; RmveReference failed
+
+; Scrap Manager error codes
+
+noScrapErr  .EQU    -100    ; No scrap exists error
+noTypeErr   .EQU    -102    ; No object of that type in scrap
+
+
+; Application Error Codes
+;
+;  errors -1024 to -4095 are reserved for use by the current application
+
+
+;  Deep Shit Alert ID definitions
+
+DSSysErr     .EQU   32767   ; general system error
+DSBusError   .EQU   1       ; bus error
+DSAddressErr .EQU   2       ; address error
+DSIllInstErr .EQU   3       ; illegal instruction error
+DSZeroDivErr .EQU   4       ; zero divide error
+DSChkErr     .EQU   5       ; check trap error
+DSOvFlowErr  .EQU   6       ; overflow trap error
+DSPrivErr    .EQU   7       ; privelege violation error
+DSTraceErr   .EQU   8       ; trace mode error
+DSLineAErr   .EQU   9       ; line 1010 trap error
+DSLineFErr   .EQU  10       ; line 1111 trap error
+DSMiscErr    .EQU  11       ; miscellaneous hardware exception error
+DSCoreErr    .EQU  12       ; unimplemented core routine error
+DSIrqErr     .EQU  13       ; uninstalled interrupt error
+
+DSIOCoreErr  .EQU  14       ; IO Core Error
+DSLoadErr    .EQU  15       ; Segment Loader Error
+DSFPErr      .EQU  16       ; Floating point error
+
+DSNoPackErr  .EQU  17       ; package 0 not present
+DSNoPk1      .EQU  18       ; package 1 not present
+DSNoPk2      .EQU  19       ; package 2 not present
+DSNoPk3      .EQU  20       ; package 3 not present
+DSNoPk4      .EQU  21       ; package 4 not present
+DSNoPk5      .EQU  22       ; package 5 not present
+DSNoPk6      .EQU  23       ; package 6 not present
+DSNoPk7      .EQU  24       ; package 7 not present
+
+DSMemFullErr .EQU  25       ; out of memory!
+DSBadLaunch  .EQU  26       ; can't launch file
+
+DSStknHeap   .EQU  28       ; stack has moved into application heap
+DSFSErr      .EQU  27       ; file system map has been trashed
+DSReInsert   .EQU  30       ; request user to reinsert off-line volume
+DSNotThe1    .EQU  31       ; not the disk I wanted
+
+; Storage allocator trouble codes (deep shit IDs)
+
+MemTrbBase  .EQU    32              ; Memory Manager Trouble Code base.
+mtSetLog    .EQU    MemTrbBase      ; Set Logical Size Error.
+mtAdjFre    .EQU    MemTrbBase+1    ; Adjust Free Error.
+mtAdjCnt    .EQU    MemTrbBase+2    ; Adjust Counters Error.
+mtMkeBkf    .EQU    MemTrbBase+3    ; Make Block Free Error.
+mtSetSiz    .EQU    MemTrbBase+4    ; Set Size Error.
+mtInitMem   .EQU    MemTrbBase+5    ; Initialize Memory Manager Error.
+mtBCerr     .EQU    MemTrbBase+6    ;
+mtCZerr     .EQU    MemTrbBase+7    ;
+mtCZ1err    .EQU    MemTrbBase+8    ;
+mtCZ2err    .EQU    MemTrbBase+9    ;
+mtCZ3err    .EQU    MemTrbBase+10   ;
+mtEqCerr    .EQU    MemTrbBase+11   ;
+mtEvCerr    .EQU    MemTrbBase+12   ;
+mtHCerr     .EQU    MemTrbBase+13   ;
+mtPCerr     .EQU    MemTrbBase+14   ;
+mtSCerr     .EQU    MemTrbBase+15   ;
+mtRC1err    .EQU    MemTrbBase+16   ;
+mtRC2err    .EQU    MemTrbBase+17   ;
+mtSABerr    .EQU    MemTrbBase+18   ;
+mtACerr     .EQU    MemTrbBase+19   ;
+mtIZCerr    .EQU    MemTrbBase+20   ;
+mtPrCerr    .EQU    MemTrbBase+21   ;
+
+; some miscellaneous result codes
+
+EvtNotEnb   .EQU      1     ; event not enabled at PostEvent
+NoEvtAvail  .EQU     -1     ; no event available (GetOSEvent,OSEventAvail)
+

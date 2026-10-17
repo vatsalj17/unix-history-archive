@@ -1,0 +1,64 @@
+#
+#   local:   local (direct) delivery channel transmission
+#
+MODULES =	ch_local qu2lo_send lo_wtmail
+
+OBJECTS =	ch_local.o qu2lo_send.o lo_wtmail.o
+
+SOURCES =	ch_local.c qu2lo_send.c lo_wtmail.c
+
+real-default:	local
+
+install:	$(CHANDIR)/$(MMPREF)local
+
+$(CHANDIR)/$(MMPREF)local:	xlocal
+	cp xlocal $(CHANDIR)/$(MMPREF)local
+	-$(CHOWN) root $(CHANDIR)/$(MMPREF)local
+	-chmod 04$(PGMPROT) $(CHANDIR)/$(MMPREF)local
+	-@ls -ls $(CHANDIR)/$(MMPREF)local
+	-@echo "local installed normally"; echo ""
+
+local:	xlocal
+xlocal:	$(OBJECTS) $(MMDFLIBS)
+	    $(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(MMDFLIBS) $(SYSLIBS)
+
+lint:	;  $(LINT) $(LFLAGS) $(SOURCES) $(LLIBS)
+
+clean:
+	-rm -f xlocal *.o x.c makedep eddep make.out errs
+
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+deliver.o: deliver.c
+ch_local.o: ch_local.c
+ch_local.o: ../../h/util.h
+ch_local.o: ../../h/mmdf.h
+ch_local.o: /usr/include/signal.h
+ch_local.o: ../../h/ch.h
+ch_local.o: ../../h/phs.h
+qu2lo_send.o: qu2lo_send.c
+qu2lo_send.o: ../../h/util.h
+qu2lo_send.o: ../../h/mmdf.h
+qu2lo_send.o: ../../h/phs.h
+qu2lo_send.o: ../../h/ap.h
+qu2lo_send.o: ../../h/ch.h
+qu2lo_send.o: /usr/include/pwd.h
+qu2lo_send.o: /usr/include/sys/stat.h
+qu2lo_send.o: /usr/include/signal.h
+qu2lo_send.o: /usr/include/sgtty.h
+qu2lo_send.o: ../../h/adr_queue.h
+lo_wtmail.o: lo_wtmail.c
+lo_wtmail.o: ../../h/util.h
+lo_wtmail.o: ../../h/mmdf.h
+lo_wtmail.o: ../../h/phs.h
+lo_wtmail.o: ../../h/ap.h
+lo_wtmail.o: ../../h/ch.h
+lo_wtmail.o: /usr/include/pwd.h
+lo_wtmail.o: /usr/include/sys/stat.h
+lo_wtmail.o: /usr/include/signal.h
+lo_wtmail.o: /usr/include/sgtty.h
+lo_wtmail.o: ../../h/adr_queue.h
+lo_wtmail.o: ../../h/hdr.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

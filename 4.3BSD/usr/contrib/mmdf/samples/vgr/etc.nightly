@@ -1,0 +1,78 @@
+#! /bin/sh
+#
+# This shell file is to be run on the MASTER BRL Mail machine only, and
+# causes automatic nightly updates on all BRL-maintained
+# UNIX systems.
+#
+# Procedure:
+#	1) Get a new table from the NIC
+#	2) Update local MMDF tables
+#	3) For all BRL hosts, transmit a copy of nic-table and alias.global,
+#	   then update their host tables and MMDF tables.
+#
+# Mike Muuss, BRL, 09/10/83.
+#
+umask 002
+PATH=/bin:/usr/bin:/usr/brl/bin:/usr/brl/sbin:/usr/ucb:/etc
+export PATH
+
+echo "/etc/nightly started at `date`" >/dev/console
+
+if test `hostname` != brl-tgr
+then
+	echo "This shell file is to run on BRL-TGR only!"
+	exit
+fi
+
+# Because this will print on the console, make it readable
+stty cooked echo -nl
+
+# First, update our (Bldg 394) PACX tables
+update-pacx brl-tgr brl-vgr amsaa brl-vld brl-mis
+
+# Get a fresh host table, and update local hashed tables.
+/etc/fetch-nic-table	# If it fails, will leave old table intact.
+
+cd /usr/mmdf/table
+sh -x doit
+
+#
+# Update all "supported" VAXen
+#
+cd /etc
+for i in brl-vgr brl-voc hel-ace amsaa brl-aos brl-vat hel-cpx brl-tbd
+do
+	echo -n -------------------------------------------- $i --\ 
+	date
+	rcp /etc/nic-table $i:/etc/nic-table
+
+	# If the RCP failed (host down, probably), do not delay further.
+	if test $? = 0
+	then
+rcp /usr/mmdf/table/alias.global $i:/usr/mmdf/table/alias.global
+rcp /usr/mmdf/table/brlnet $i:/usr/mmdf/table/brlnet
+rsh $i 'umask 2;cd /etc; /etc/htable /etc/nic-table; /etc/mkhosts /etc/hosts'
+rsh $i 'cd /usr/mmdf/table; doit; echo NIGHTLY done `date` >/dev/console'
+	fi
+done
+
+#
+# Update all "supported" PDP-11s
+#
+cd /etc
+for i in brl-bmd brl-vld brl-mis
+do
+	echo -n -------------------------------------------- $i --\ 
+	date
+	rcp /usr/mmdf/table/alias.global $i:/usr/mmdf/table/alias.global
+
+	# If the RCP failed (host down, probably), do not delay further.
+	if test $? = 0
+	then
+		rcp /usr/mmdf/table/brlnet $i:/usr/mmdf/table/brlnet
+		rsh $i "umask 2;cd /usr/mmdf/table; doit; echo NIGHTLY done '`date`' >/dev/console"
+	fi
+done
+
+echo -------------- All Done at `date`
+stty raw -echo nl >/dev/console
