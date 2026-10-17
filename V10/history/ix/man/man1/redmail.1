@@ -1,0 +1,48 @@
+.TH REDMAIL 1 
+.CT 1 mail
+.SH NAME
+redmail, blackmail \- multilevel mail
+.SH SYNOPSIS
+.B redmail
+.PP
+.B blackmail
+.I maildir
+.SH DESCRIPTION
+These commands arrange for the delivery and receipt of
+mail with varying security labels.
+.PP
+.I Redmail
+simulates
+.IR mail (1)
+for reading multilevel mail.
+.PP
+To receive timely notification of multilevel mail, set the shell variable
+.B MAIL
+to
+.IB maildir /FLAG .
+.PP
+.I Blackmail
+delivers multilevel mail to the private mail directory
+.I maildir.
+To arrange for incoming mail to be handled by
+.I blackmail,
+provide a directory 
+.I maildir
+(conventionally
+.F .mail
+in your home directory) and edit a single line like
+.IP
+.EX
+Pipe to blackmail $HOME/.mail
+.EE
+.LP
+into your regular mailbox,
+.BI /usr/spool/mail/ logname.
+Thereafter a separate 
+.I blackmail
+process runs for each letter.
+Letters receive the security label of their source.
+.SH FILES
+.F $HOME/.mail/*
+.SH SEE ALSO
+.IR mail (1)

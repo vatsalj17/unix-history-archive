@@ -1,0 +1,42 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH SETLED 3L "630 MTG"
+.XE "setLEDcap()"
+.XE "setLEDscr()"
+.SH NAME
+setled: setLEDcap, setLEDscr \- set the caps lock and scroll lock LEDs
+.SH SYNOPSIS
+.ft B
+void setLEDcap (n)
+.sp
+void setLEDscr (n)
+.sp
+\f3int n;\f1
+.ft R
+.SH DESCRIPTION
+The
+.I setLEDcap
+and
+.I setLEDscr
+functions
+turn on and off the caps lock and scroll lock LEDs, respectively.
+If
+.I n
+is 1, the LED is turned on.
+If
+.I n
+is 0, the LED is turned off.
+.PP
+If the window is not current when the function is called,
+the state of the LED is remembered and automatically changed
+when the window is made current.
+.P
+These functions also update the label area to reflect the status
+of the LEDs if the label is being used. The
+.I setLEDscr
+function will update the SCR_LOCK bit of P->state.
+.P
+These functions should not be used unless the program is using the
+keyboard in NOTRANSLATE mode. Otherwise, the LEDs may not match
+the actual state of the caps lock and scroll lock keys.
+.SH SEE ALSO
+keyboard(3R).

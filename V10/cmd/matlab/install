@@ -1,0 +1,1188 @@
+
+
+11/6/83
+
+
+
+
+
+
+
+                    MATLAB Installation Guide
+                         November, 1983
+
+
+                           Cleve Moler
+                 Department of Computer Science
+                    University of New Mexico
+
+
+
+     The MATLAB tape is usually in one of two formats --  a  UNIX
+"tar" tape, or a "generic" tape with the following parameters:
+
+          9 track
+          1600 bits per inch
+          no label
+          80 characters per record
+          1600 characters per block
+          18 files in ASCII, followed by 18 files in EBCDIC
+
+     There are 36 files on the generic tape.  The  names  of  the
+first 18, and their approximate sizes, are:
+
+          1.  INSTALL       1100 lines
+          2.  MAT           3900 lines
+          3.  LIB           3339 lines
+          4.  HELPER.66       75 lines
+          5.  HELPER.77      120 lines
+          6.  HELP           750 lines
+          7.  SYS.UNIX       900 lines
+          8.  SYS.VMS        260 lines
+          9.  SYS.TSO        200 lines
+         10.  SYS.CMS        350 lines
+         11.  SYS.DEC10      250 lines
+         12.  SYS.CDC        200 lines
+         13.  SYS.PRIME      350 lines
+         14.  DOC           3960 lines
+         15.  DEMO            21 lines
+         16.  DOC.NROFF     3250 lines
+         17.  MAT.SNGL      3850 lines
+         18.  LIB.SNGL      3339 lines
+
+where a line is one 80 character record.
+
+     The first 18 files are  in  the  ASCII  character  set.  The
+remaining 18 files are copies of the first 18 in EBCDIC.
+
+     INSTALL is this document.  You can skip over it if you  have
+this hard copy.
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 2
+
+
+
+     MAT, LIB, one of the versions  of  HELPER  and  one  of  the
+versions  of SYS together constitute the complete source code for
+the double precision version of MATLAB.
+
+     The subroutines in MAT make up the parser  and  interpreter.
+They  include  a  COMMON statement which can be changed to change
+the amount of memory allocated to variables.
+
+     The subroutines in LIB  include  modified  versions  of  the
+necessary  routines from LINPACK, EISPACK and the BLAS.  These do
+not contain any COMMON statements and do not have to  be  changed
+if the size of the stack is changed.
+
+     There are two  versions  of  HELPER,  the  subroutine  which
+manages  the  help facility.  The version in HELPER.66 is written
+in Fortran 66 and uses sequential i/o. The version  in  HELPER.77
+is  written in Fortran 77 and uses character variables and direct
+access i/o. If your  system  supports  both  versions,  you  will
+probably  want  to  choose  the direct access one -- it should be
+much faster. If you choose the direct access  version,  you  will
+have  to  run a preprocessor named HELPSET, which is also in file
+HELPER.77.
+
+     HELP is the source text for the help facility.  It  is  read
+by  the  sequential version of HELPER, or preprocessed by HELPSET
+into two files which are then read by the direct  access  version
+of  HELPER.   HELP  is also included as an appendix in the User's
+Guide.
+
+     The subroutines in one of the versions of SYS may have to be
+modified for your particular operating system.  They involve file
+access and floating point word format.  I have included  versions
+that  should  work  on several different operating systems.  Pick
+the version that is closest to  your  own  system  and  make  any
+changes you need.  There are no machine dependent constants.
+
+     DOC is a report entitled "MATLAB Users' Guide".   It  should
+be printed on a nice printer with upper and lower case; there are
+66 lines per page.  Make as many copies as  you  need,  or  order
+copies from us at New Mexico.
+
+     DEMO  contains  a  demonstration  exec  file  which  can  be
+accessed by the exec command in MATLAB. On most systems, all that
+is required is EXEC('DEMO') or EXEC('DEMO',7).  On some  systems,
+like  TSO  and  NOS,  it will be necessary to attach file DEMO to
+unit 2 and then EXEC(2) or EXEC(2,7).
+
+     DOC.NROFF is the input to the UNIX  text  processing  system
+that  was used to produce DOC.  This may be useful if you want to
+print the users' guide in a different format.
+
+     MAT.SNGL and LIB.SNGL are the single precision  versions  of
+MAT  and LIB.  It is suggested that these be used only on systems
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 3
+
+
+
+with long  words  (48  bit  floating  point  fraction)  or  small
+memories.
+
+     The first thing to worry about is the character set. The use
+of an upper-lower case character set is highly desirable, but not
+essential.  Read the tape and look at the first 50 or so lines of
+MAT.  This  is  the  subroutine  MATLAB,  a  listing  of which is
+included in this document. Check the comments near the  beginning
+to  see  if  the special characters are ok.  The ones we have had
+trouble with include:
+        SEMI ;   BSLASH \   COLON :   LESS <   GREAT >
+Any characters which are not ok should be changed in the  comment
+and  in the data statement which follows. The alternate character
+set includes the lower case letters as well  as  substitutes  for
+some of the special characters, such as \ and :, which are not on
+some terminals.  Do  not  worry  too  much  about  the  alternate
+character  set  now.   These data statements in subroutine MATLAB
+are  the  only  place  in  the  source  code  where  the  special
+characters  occur.   (If  you  want to get fancy, there is a data
+statement involving BEL in subroutine ERROR near the end of  file
+MAT.   Change  1H-blank  to  1H-control G to get your terminal to
+ring its bell for any error.)
+
+     The files DOC and  HELP  are  full  of  special  characters,
+including
+          <   >   [   ]   :   ;   \   |
+If they are not ok, I hope it is not too difficult  to  fix  them
+up.
+
+     I have used several FORTRAN  constructions  which  are  only
+semi-standard, and which may have to be changed for some systems:
+  Single quote (') in FORMATS instead of a tribute to Hollerith.
+  Entire arrays initialized in DATA statements.
+  Use of END= in READ statements.
+I have not asked PFORT to tell me what else is non-standard.
+
+     Some interactive FORTRAN systems use column 1  for  carriage
+control and others don't.  If your system does not, edit file MAT
+and delete all "1X," .  There are 131 occurrences.
+
+     The main program in file SYS simply  calls  MATLAB.  It  may
+have  to  be  modified  to  control the printing of underflow and
+overflow  messages.   The  ground  rules  are:   Underflows   are
+possible,  but  are  harmless  if  they  are quietly set to zero.
+Overflows are error conditions.  It would  be  nice  to  print  a
+message and continue.
+
+     A listing of a typical version of SYS, using some Fortran 77
+for  clarity,  is included in this document.  I hope it is fairly
+easy to see what the various subroutines do and how they have  to
+be  revised  for  your  system. Please send me copies of versions
+appropriate for your system.
+
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 4
+
+
+
+     The amount of memory required can be  altered  by  a  global
+text  edit  on  MAT which changes the matrix element stack length
+from 5005 to something else.  Be sure to get the statement
+          VSIZE = 5005
+in the subroutine MATLAB.  With this setting of the stack length,
+MATLAB  requires  about  a 300K byte region on an IBM system. The
+length has to be reduced somewhat to get MATLAB to fit into a 64K
+word  region on a CDC system.  Since each matrix element occupies
+two double or single precision words, an increase of 1000 in  the
+stack length requires an additional 16K bytes or 2000 words.
+
+     It is possible to  get  by  with  less  memory  if  you  use
+overlays.  The simplest way to do this is the following.
+
+                   ROOT
+                     |
+      -------------------------------
+      |     |     |     |     |     |
+     S0    S1    S2    S3    S4    S5
+
+Only ROOT plus one of the segments  S0  through  S5  need  be  in
+memory at any one time.  The segments do not call each other, but
+return to the root.  All the relevant calls are near the  end  of
+subroutine  MATLAB  in  the  root.  There are five labeled COMMON
+blocks which are shared by the root and all  the  segments.   The
+various segments consist of:
+
+      ROOT:
+        MAIN        MATLAB      STACK1
+        PRINT       PRNTID      FUNS
+        STACKP      ERROR       FILES
+        HELPER      PYTHAG      FORMZ
+        FLOP        PROMPT
+        Plus everything in file LIB not mentioned below.
+
+      S0:
+        PARSE       COMAND      CLAUSE
+        EXPR        TERM        FACTOR
+        STACKG      STACK2      GETSYM
+        GETLIN      GETCH       GETVAL
+        EDIT        XCHAR
+
+      S1:
+        MATFN1      WGECO       WGEFA
+        WGESL       WGEDI       WPOFA
+        RREF        HILBER
+
+      S2:
+        MATFN2      CORTH       COMQR3
+        HTRIDI      HTRIBK      IMTQL2
+
+      S3:
+        MATFN3      WSVDC
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 5
+
+
+
+      S4:
+        MATFN4      WQRDC       WQRSL
+
+      S5:
+        MATFN5      MATFN6      MAGIC
+        SAVLOD      RAT         USER
+        PLOT
+
+If you have enough room, combine ROOT and S0.   With  more  room,
+combine  ROOT,  S0  and  S5.   If you use some overlay structure,
+please send me a description of how it is done on your system.
+
+     In  case  anybody  needs  to  know,  here  are  the  changes
+necessary  to  convert from double to single precision.  They can
+all be safely accomplished by simple global text changes in  MAT,
+LIB and an appropriate version of SYS.
+
+      DOUBLE PRECISION   REAL
+      DOUBLE-            REAL-
+      DSQRT              SQRT
+      DLOG               ALOG
+      DEXP               EXP
+      DSIN               SIN
+      DCOS               COS
+      DATAN              ATAN
+      DABS               ABS
+      DMAX1              AMAX1
+      DMIN1              AMIN1
+      IDINT              IFIX
+      DSIGN              SIGN
+      DMOD               AMOD
+      D0                 E0
+      D1                 E1
+      D2                 E2
+      D9                 E9
+
+
+     Here are some additional comments that apply  to  individual
+systems.
+
+
+VAX UNIX.
+
+     If you have read the "tar" format tape, see file README  and
+the makefile.  Ignore the rest of this section.
+
+     It is essential to change the single backslash \ in the data
+statement  near  the  beginning of file MAT to a double backslash
+\\.  If this is not done, the F77 compiler  produces  an  obscure
+error message about "dataalpha" being too long.
+
+     Increase the size of the stack  to  take  advantage  of  the
+virtual  memory.  Eliminate  all the "1X," in formats. Change the
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 6
+
+
+
+statement CASE = 0 in MATLAB to CASE = 1 to get lower  case  file
+names.   All  these  changes  can be accomplished by applying the
+following ed or vi commands to file MAT.
+
+        1,$s/\/\\/g
+        1,$s/5005/50005/g
+        1,$s/1X,/0X,/g
+        1,$s/CASE = 0/CASE = 1/
+        1,$s/BEL/1H /BEL/1H^G/
+        1,$s/LCT(2) = 25/LCT(2) = 25000/
+
+     The compilation should suppress warnings about  initializing
+non-character   variables  with  Hollerith  and  should  use  the
+Berkeley version of  the  i/o  support  routines.   This  can  be
+accomplished with:
+
+      % f77 -w66 mat.f lib.f helper.f sys.f -lI77uc
+
+     Gary Klimowicz and Lee Ward of UNM have developed a overflow
+fault  handler  for use with VAX UNIX.  A copy of their C program
+in included in SYS.UNIX and on the "tar" tape.
+
+
+
+VAX VMS
+
+     SYS.VMS contains an extra subroutine for proper handling  of
+floating point overflow.  The main program includes a call to the
+system which initializes this handling.
+
+     Integer overflow is expected in the the print routine and in
+random  number  generator.   The integer overflow messages can be
+turned off by
+
+     FORTRAN/NOCHECK  MAT.FOR,LIB.FOR
+
+
+
+IBM (TSO)
+(Thanks to Jack Dongarra at Argonne.)
+
+     The main program in SYS.TSO includes the  appropriate  calls
+to the IBM system utility ERRSET that turns off verbose underflow
+and overflow messages.
+
+     Unfortunately, TSO does not have  a  mechanism  for  opening
+files during execution.  It is necessary to use file numbers with
+SAVE, LOAD and EXEC.
+
+     We have to specify LRECL=80 for terminal input on unit 5  to
+get  blanks  added to input lines.  It is a good idea to set up a
+clist something like the following.
+
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 7
+
+
+
+      FREE FILE(FT05F001 FT06F001 FT09F001 FT01F001 FT02F001)
+      FREE ATTRLIST(AT80)
+      ATTR  AT80 LRECL(80) BLKSIZE(80) RECFM(F)
+      ALLOC FILE(FT05F001) DA(*) USING(AT80)
+      ALLOC FILE(FT06F001) DA(*)
+      ALLOC FILE(FT09F001) DA('MATLAB.HELP.DATA')
+      ALLOC FILE(FT01F001) DA(SAVLOD.DATA)
+      ALLOC FILE(FT02F001) DA('MATLAB.DEMO.DATA')
+      CALL 'MATLAB.LOAD(MATMOD)'
+
+With this arrangement, the DEMO file can be executed by  exec(2).
+
+
+
+IBM (CMS)
+(Thanks to Jack Dongarra at Argonne and David Gay at MIT.)
+
+     Entering a blank line  in  response  to  the  MATLAB  prompt
+generates  an  end-of-file  from  terminal  input  (Fortran  unit
+FT05F001). This results in a call from GETLIN to FILES with LUNIT
+=  -5.  The terminal is "rewound" and control eventually returned
+to PARSE which prints another prompt.  I hope this works.
+
+     An assembly language routine used to attach files with names
+generated  by  MATLAB  to  Fortran  unit  numbers  is included in
+SYS.CMS.
+
+
+
+DEC-10
+(Thanks to Stan Eisenstat and Craig Douglas at Yale.)
+
+     The  hyperbolic  trig  functions  SINH  and  COSH  are   not
+available on the DEC system.  Fortran subroutines are included in
+the SYS.DEC10 file.
+
+
+
+PRIME 400
+(Thanks to Richard Franke and Drexel University.)
+
+     The terminal is  Fortran  I/O  unit  number  1.   Subroutine
+MATLAB has to be changed so that
+      RTE = 5  becomes  RTE = 1
+      WTE = 6  becomes  WTE = 1
+Subroutine MATFN5 has to be changed so that
+      WIO = 1  becomes  WIO = 8
+      LUNIT = 1  becomes  LUNIT = 8  (in two places).
+
+
+
+CDC
+
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 8
+
+
+
+     CDC systems offer exciting challenges as far as  portability
+is  concerned.  The first question is: which character set should
+be used?  An easy  approach  is  to  convert  everything  to  the
+venerable  6-bit  character  set.   Even so, you may have trouble
+with the colon, which is a pretty important MATLAB character.  It
+is  far  more  fun to try to use upper and lower case and all the
+special symbols.  I have succeeded in doing this with  the  6/12-
+bit  setup  used  on  the NOS system at Sandia, but have given up
+with the 6/18-bit coding on LTSS at Los Alamos.
+
+     In  "ASCII"  mode  on  NOS,  lower   case   characters   are
+represented  by  12 bits -- the first 6 bits are octal 76 and the
+last 6 are the corresponding upper case character.  They count as
+two  characters.   So, the following changes are required in file
+MAT.  Several of the mixed  case  strings  in  FORMAT  statements
+extend  beyond column 72.  You might as well convert these to all
+upper case.  All the 80A1's  in  FORMATS  should  be  changed  to
+132A1's  and all the DATA statements initializing LRECL should be
+changed from  80  to  132.   The  DATA  statement  for  ALPHB  in
+subroutine   MATLAB  can  be  changed  to  have  all  upper  case
+alphabetic characters because subroutine  XCHAR  will  catch  the
+prefix octal 76.
+
+     An important change involves our  friend  the  colon,  which
+becomes  a  12-bit  octal 7404.  In the DATA statement for ALPHA,
+make the element just before 1H+ into a 1H(percent  sign).   And,
+in  the  DATA statement for ALPHB, make the corresponding element
+into a 2H(colon).  Then read the comments in subroutine XCHAR  in
+file  SYS.CDC  and  make  sure that the DATA statements there are
+correct.
+
+     The FTN5 compiler should take MATLAB pretty much is  it  is.
+The  older  FTN  compiler  requires  two  familiar changes to the
+entire source code.  First, the END= in the READ statements  have
+to be replaced by IF (EOF) GO TO ... .  Second, the single quotes
+in FORMATS have to be replaced with asterisks.
+
+
+
+Good luck.  Please let me know what difficulties  you  have,  and
+what I have left out of this guide.  You can call me at:
+         505-268-8631  (home)
+         505-277-3112  (office)
+
+------------
+
+     The support of the National Science Foundation and  the  use
+of facilities at Argonne National Laboratory, Los Alamos National
+Laboratory and Stanford Linear Accelerator Center  is  gratefully
+acknowledged.   So  is the assistance of the many people who have
+installed early versions of MATLAB.
+
+
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 9
+
+
+
+Contents of file MAT:
+
+      SUBROUTINE MATLAB(INIT)
+      SUBROUTINE PARSE
+      SUBROUTINE COMAND(ID)
+      SUBROUTINE CLAUSE
+      SUBROUTINE EXPR
+      SUBROUTINE TERM
+      SUBROUTINE FACTOR
+      SUBROUTINE FUNS(ID)
+      SUBROUTINE STACKP(ID)
+      SUBROUTINE STACKG(ID)
+      SUBROUTINE STACK1(OP)
+      SUBROUTINE STACK2(OP)
+      SUBROUTINE PRINT(ID,K)
+      SUBROUTINE PRNTID(ID,ARGCNT)
+      SUBROUTINE GETSYM
+      SUBROUTINE GETLIN
+      SUBROUTINE GETCH
+      SUBROUTINE GETVAL(S)
+      SUBROUTINE MATFN1
+      SUBROUTINE MATFN2
+      SUBROUTINE MATFN3
+      SUBROUTINE MATFN4
+      SUBROUTINE MATFN5
+      SUBROUTINE MATFN6
+      SUBROUTINE ERROR(N)
+      DOUBLE PRECISION FUNCTION PYTHAG(A,B)
+      SUBROUTINE RAT(X,LEN,MAXD,D)
+
+Contents of file HELPER.66:
+
+      SUBROUTINE HELPER(H) -- Sequential version
+
+Contents of file HELPER.77:
+
+      PROGRAM HLPSET       -- Direct access setup
+      SUBROUTINE HELPER(H) -- Direct access version
+
+Contents of file SYS:
+
+      PROGRAM MAIN
+      SUBROUTINE FILES(LUNIT,NAME)
+      SUBROUTINE SAVLOD(LUNIT,ID,M,N,IMG,JOB,XREAL,XIMAG)
+      SUBROUTINE FORMZ(LUNIT,X,Y)
+      DOUBLE PRECISION FUNCTION FLOP(X)
+      SUBROUTINE XCHAR(BUF,K)
+      SUBROUTINE USER(A,M,N,S,T)
+      SUBROUTINE PROMPT(PAUSE)
+      SUBROUTINE PLOT(LUNIT,X,Y,N,P,K,BUF)
+      SUBROUTINE EDIT(BUF,N)
+
+
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 10
+
+
+
+Contents of file LIB:
+
+      SUBROUTINE WGECO(AR,AI,LDA,N,IPVT,RCOND,ZR,ZI)
+      SUBROUTINE WGEFA(AR,AI,LDA,N,IPVT,INFO)
+      SUBROUTINE WGESL(AR,AI,LDA,N,IPVT,BR,BI,JOB)
+      SUBROUTINE WGEDI(AR,AI,LDA,N,IPVT,DETR,DETI,WORKR,WORKI,JOB)
+      SUBROUTINE WPOFA(AR,AI,LDA,N,INFO)
+      SUBROUTINE RREF(AR,AI,LDA,M,N,EPS)
+      SUBROUTINE HILBER(A,LDA,N)
+      SUBROUTINE HTRIDI(NM,N,AR,AI,D,E,E2,TAU)
+      SUBROUTINE HTRIBK(NM,N,AR,AI,TAU,M,ZR,ZI)
+      SUBROUTINE IMTQL2(NM,N,D,E,Z,IERR,JOB)
+      SUBROUTINE CORTH(NM,N,LOW,IGH,AR,AI,ORTR,ORTI)
+      SUBROUTINE COMQR3(NM,N,LOW,IGH,ORTR,ORTI,HR,HI,WR,WI,ZR,ZI,IERR
+      SUBROUTINE WSVDC(XR,XI,LDX,N,P,SR,SI,ER,EI,UR,UI,LDU,VR,VI,LDV,
+      SUBROUTINE WQRDC(XR,XI,LDX,N,P,QRAUXR,QRAUXI,JPVT,WORKR,WORKI,
+      SUBROUTINE WQRSL(XR,XI,LDX,N,K,QRAUXR,QRAUXI,YR,YI,QYR,QYI,QTYR,
+      SUBROUTINE MAGIC(A,LDA,N)
+      SUBROUTINE BASE(X,B,EPS,S,N)
+      DOUBLE PRECISION FUNCTION URAND(IY)
+      SUBROUTINE WMUL(AR,AI,BR,BI,CR,CI)
+      SUBROUTINE WDIV(AR,AI,BR,BI,CR,CI)
+      SUBROUTINE WSIGN(XR,XI,YR,YI,ZR,ZI)
+      SUBROUTINE WSQRT(XR,XI,YR,YI)
+      SUBROUTINE WLOG(XR,XI,YR,YI)
+      SUBROUTINE WATAN(XR,XI,YR,YI)
+      DOUBLE PRECISION FUNCTION WNRM2(N,XR,XI,INCX)
+      DOUBLE PRECISION FUNCTION WASUM(N,XR,XI,INCX)
+      INTEGER FUNCTION IWAMAX(N,XR,XI,INCX)
+      SUBROUTINE WRSCAL(N,S,XR,XI,INCX)
+      SUBROUTINE WSCAL(N,SR,SI,XR,XI,INCX)
+      SUBROUTINE WAXPY(N,SR,SI,XR,XI,INCX,YR,YI,INCY)
+      DOUBLE PRECISION FUNCTION WDOTUR(N,XR,XI,INCX,YR,YI,INCY)
+      DOUBLE PRECISION FUNCTION WDOTUI(N,XR,XI,INCX,YR,YI,INCY)
+      DOUBLE PRECISION FUNCTION WDOTCR(N,XR,XI,INCX,YR,YI,INCY)
+      DOUBLE PRECISION FUNCTION WDOTCI(N,XR,XI,INCX,YR,YI,INCY)
+      SUBROUTINE WCOPY(N,XR,XI,INCX,YR,YI,INCY)
+      SUBROUTINE WSET(N,XR,XI,YR,YI,INCY)
+      SUBROUTINE WSWAP(N,XR,XI,INCX,YR,YI,INCY)
+      SUBROUTINE RSET(N,DX,DY,INCY)
+      SUBROUTINE RSWAP(N,X,INCX,Y,INCY)
+      SUBROUTINE RROT(N,DX,INCX,DY,INCY,C,S)
+      SUBROUTINE RROTG(DA,DB,C,S)
+      LOGICAL FUNCTION EQID(X,Y)
+      SUBROUTINE PUTID(X,Y)
+      DOUBLE PRECISION FUNCTION ROUND(X)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 11
+
+
+
+First subroutine in file MAT:
+
+      SUBROUTINE MATLAB(INIT)
+C     INIT = 0 FOR ORDINARY FIRST ENTRY
+C          = POSITIVE FOR SUBSEQUENT ENTRIES
+C          = NEGATIVE FOR SILENT INITIALIZATION (SEE MATZ)
+C
+      DOUBLE PRECISION STKR(5005),STKI(5005)
+      INTEGER IDSTK(4,48),LSTK(48),MSTK(48),NSTK(48),VSIZE,LSIZE,BOT,TOP
+      INTEGER ALFA(52),ALFB(52),ALFL,CASE
+      INTEGER IDS(4,32),PSTK(32),RSTK(32),PSIZE,PT,PTZ
+      INTEGER DDT,ERR,FMT,LCT(4),LIN(1024),LPT(6),RIO,WIO,RTE,WTE,HIO
+      INTEGER SYM,SYN(4),BUF(256),CHAR,FLP(2),FIN,FUN,LHS,RHS,RAN(2)
+      COMMON /VSTK/ STKR,STKI,IDSTK,LSTK,MSTK,NSTK,VSIZE,LSIZE,BOT,TOP
+      COMMON /ALFS/ ALFA,ALFB,ALFL,CASE
+      COMMON /RECU/ IDS,PSTK,RSTK,PSIZE,PT,PTZ
+      COMMON /IOP/ DDT,ERR,FMT,LCT,LIN,LPT,RIO,WIO,RTE,WTE,HIO
+      COMMON /COM/ SYM,SYN,BUF,CHAR,FLP,FIN,FUN,LHS,RHS,RAN
+C
+      DOUBLE PRECISION S,T
+      INTEGER EPS(4),FLOPS(4),EYE(4),RAND(4)
+C
+C     CHARACTER SET
+C            0       10       20       30       40       50
+C
+C     0      0        A        K        U   COLON  :  LESS   <
+C     1      1        B        L        V   PLUS   +  GREAT  >
+C     2      2        C        M        W   MINUS  -
+C     3      3        D        N        X   STAR   *
+C     4      4        E        O        Y   SLASH  /
+C     5      5        F        P        Z   BSLASH \
+C     6      6        G        Q  BLANK     EQUAL  =
+C     7      7        H        R  LPAREN (  DOT    .
+C     8      8        I        S  RPAREN )  COMMA  ,
+C     9      9        J        T  SEMI   ;  QUOTE  '
+C
+      INTEGER ALPHA(52),ALPHB(52)
+      DATA ALPHA /1H0,1H1,1H2,1H3,1H4,1H5,1H6,1H7,1H8,1H9,
+     $    1HA,1HB,1HC,1HD,1HE,1HF,1HG,1HH,1HI,1HJ,
+     $    1HK,1HL,1HM,1HN,1HO,1HP,1HQ,1HR,1HS,1HT,
+     $    1HU,1HV,1HW,1HX,1HY,1HZ,1H ,1H(,1H),1H;,
+     $    1H:,1H+,1H-,1H*,1H/,1H\,1H=,1H.,1H,,1H',
+     $    1H<,1H>/
+C
+C     ALTERNATE CHARACTER SET
+C
+      DATA ALPHB /1H0,1H1,1H2,1H3,1H4,1H5,1H6,1H7,1H8,1H9,
+     $    1Ha,1Hb,1Hc,1Hd,1He,1Hf,1Hg,1Hh,1Hi,1Hj,
+     $    1Hk,1Hl,1Hm,1Hn,1Ho,1Hp,1Hq,1Hr,1Hs,1Ht,
+     $    1Hu,1Hv,1Hw,1Hx,1Hy,1Hz,1H ,1H(,1H),1H;,
+     $    1H|,1H+,1H-,1H*,1H/,1H$,1H=,1H.,1H,,1H",
+     $    1H[,1H]/
+C
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 12
+
+
+
+      DATA EPS/14,25,28,36/,FLOPS/15,21,24,25/
+      DATA EYE/14,34,14,36/,RAND/27,10,23,13/
+C
+      IF (INIT .GT. 0) GO TO 90
+C
+C     RTE = UNIT NUMBER FOR TERMINAL INPUT
+C     WTE = UNIT NUMBER FOR TERMINAL OUTPUT
+C     HIO = UNIT NUMBER FOR HELP FILE
+      RTE = 5
+      WTE = 6
+      HIO = 9
+C
+      IF (INIT .GE. 0) WRITE(WTE,100)
+  100 FORMAT(//1X,'     < M A T L A B >'
+     $  /1X,'   Version of --/--/--')
+C
+C     ASK HELPER TO OPEN HELP FILE
+      BUF(1) = 0
+      CALL HELPER(BUF)
+C
+C     RANDOM NUMBER SEED
+      RAN(1) = 0
+C
+C     INITIAL LINE LIMIT
+      LCT(2) = 25
+C
+      ALFL = 52
+      CASE = 1
+C     CASE = 1 for file names in lower case
+      DO 20 I = 1, ALFL
+         ALFA(I) = ALPHA(I)
+         ALFB(I) = ALPHB(I)
+   20 CONTINUE
+C
+      VSIZE = 50005
+      LSIZE = 48
+      PSIZE = 32
+      BOT = LSIZE-3
+      CALL WSET(5,0.0D0,0.0D0,STKR(VSIZE-4),STKI(VSIZE-4),1)
+      CALL PUTID(IDSTK(1,LSIZE-3),EPS)
+      LSTK(LSIZE-3) = VSIZE-4
+      MSTK(LSIZE-3) = 1
+      NSTK(LSIZE-3) = 1
+      S = 1.0D0
+   30 S = S/2.0D0
+      T = 1.0D0 + S
+      IF (T .GT. 1.0D0) GO TO 30
+      STKR(VSIZE-4) = 2.0D0*S
+      CALL PUTID(IDSTK(1,LSIZE-2),FLOPS)
+      LSTK(LSIZE-2) = VSIZE-3
+      MSTK(LSIZE-2) = 1
+      NSTK(LSIZE-2) = 2
+      CALL PUTID(IDSTK(1,LSIZE-1), EYE)
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 13
+
+
+
+      LSTK(LSIZE-1) = VSIZE-1
+      MSTK(LSIZE-1) = -1
+      NSTK(LSIZE-1) = -1
+      STKR(VSIZE-1) = 1.0D0
+      CALL PUTID(IDSTK(1,LSIZE), RAND)
+      LSTK(LSIZE) = VSIZE
+      MSTK(LSIZE) = 1
+      NSTK(LSIZE) = 1
+      FMT = 1
+      FLP(1) = 0
+      FLP(2) = 0
+      DDT = 0
+      RAN(2) = 0
+      PTZ = 0
+      PT = PTZ
+      ERR = 0
+      RIO = RTE
+      WIO = 0
+      IF (INIT .LT. 0) RETURN
+C
+   90 CALL PARSE
+      IF (FUN .EQ. 1) CALL MATFN1
+      IF (FUN .EQ. 2) CALL MATFN2
+      IF (FUN .EQ. 3) CALL MATFN3
+      IF (FUN .EQ. 4) CALL MATFN4
+      IF (FUN .EQ. 5) CALL MATFN5
+      IF (FUN .EQ. 6) CALL MATFN6
+      IF (FUN .EQ. 21) CALL MATFN1
+      IF (FUN .NE. 99) GO TO 90
+      RETURN
+      END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 14
+
+
+
+Typical file SYS (Nonstandard stuff in lower case):
+
+C     PROGRAM MAIN
+      call overflow-control
+      CALL MATLAB(0)
+      STOP
+      END
+
+
+      SUBROUTINE FILES(LUNIT,NAME)
+      INTEGER LUNIT,NAME(32)
+C
+C     SYSTEM DEPENDENT ROUTINE TO ALLOCATE FILES
+C     LUNIT = LOGICAL UNIT NUMBER
+C     NAME = FILE NAME, 1 CHARACTER PER WORD
+C
+      character*32 nam
+c
+c     close exec, save, load and print files
+      if (lunit .lt. 0) then
+         close(unit=-lunit)
+         return
+      end if
+c
+c     Fortran 77 internal file conversion from 32a1 to character*32
+      write(nam,'(32a1)') name
+c
+c     formatted i/o for exec and print
+      if (lunit .gt. 2) open(unit=lunit,file=nam)
+c
+c     unformatted i/o for save and load
+      if (lunit .le. 2) open(unit=lunit,file=nam,form='unformatted')
+c
+c     rewind all except diary
+      if (lunit .ne. 8) rewind lunit
+c
+      RETURN
+      END
+
+
+      SUBROUTINE SAVLOD(LUNIT,ID,M,N,IMG,JOB,XREAL,XIMAG)
+      INTEGER LUNIT,ID(4),M,N,IMG,JOB
+      DOUBLE PRECISION XREAL(1),XIMAG(1)
+C
+C     IMPLEMENT SAVE AND LOAD
+C     LUNIT = LOGICAL UNIT NUMBER
+C     ID = NAME, FORMAT 4A1
+C     M, N = DIMENSIONS
+C     IMG = NONZERO IF XIMAG IS NONZERO
+C     JOB = 0     FOR SAVE
+C         = SPACE AVAILABLE FOR LOAD
+C     XREAL, XIMAG = REAL AND OPTIONAL IMAGINARY PARTS
+C
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 15
+
+
+
+C     THIS VERSION USES UNFORMATTED READ AND WRITE
+C
+      IF (JOB .GT. 0) GO TO 20
+C
+C     SAVE
+   10 WRITE(LUNIT) ID,M,N,IMG
+      DO 15 J = 1, N
+         K = (J-1)*M+1
+         L = J*M
+         WRITE(LUNIT) (XREAL(I),I=K,L)
+         IF (IMG .NE. 0) WRITE(LUNIT) (XIMAG(I),I=K,L)
+   15 CONTINUE
+      RETURN
+C
+C     LOAD
+   20 READ(LUNIT,END=30) ID,M,N,IMG
+      IF (M*N .GT. JOB) GO TO 30
+      DO 25 J = 1, N
+         K = (J-1)*M+1
+         L = J*M
+         READ(LUNIT,END=30) (XREAL(I),I=K,L)
+         IF (IMG .NE. 0) READ(LUNIT,END=30) (XIMAG(I),I=K,L)
+   25 CONTINUE
+      RETURN
+C
+C     END OF FILE
+   30 M = 0
+      N = 0
+      RETURN
+      END
+
+
+      SUBROUTINE FORMZ(LUNIT,X,Y)
+      DOUBLE PRECISION X,Y
+C
+C     SYSTEM DEPENDENT ROUTINE TO PRINT WITH Z FORMAT
+C
+      IF (Y .NE. 0.0D0) WRITE(LUNIT,10) X,Y
+      IF (Y .EQ. 0.0D0) WRITE(LUNIT,10) X
+   10 format(2z18)
+      RETURN
+      END
+
+
+      DOUBLE PRECISION FUNCTION FLOP(X)
+      DOUBLE PRECISION X
+C     SYSTEM DEPENDENT FUNCTION
+C     COUNT AND POSSIBLY CHOP EACH FLOATING POINT OPERATION
+C     FLP(1) IS FLOP COUNTER
+C     FLP(2) IS NUMBER OF PLACES TO BE CHOPPED
+C
+      INTEGER SYM,SYN(4),BUF(256),CHAR,FLP(2),FIN,FUN,LHS,RHS,RAN(2)
+      COMMON /COM/ SYM,SYN,BUF,CHAR,FLP,FIN,FUN,LHS,RHS,RAN
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 16
+
+
+
+C
+      double precision mask(14),xx,mm
+      real mas(2,14)
+      logical lx(2),lm(2)
+      equivalence (lx(1),xx),(lm(1),mm)
+      equivalence (mask(1),mas(1))
+      data mas/
+     $ z'ffffffff',z'fff0ffff',
+     $ z'ffffffff',z'ff00ffff',
+     $ z'ffffffff',z'f000ffff',
+     $ z'ffffffff',z'0000ffff',
+     $ z'ffffffff',z'0000fff0',
+     $ z'ffffffff',z'0000ff00',
+     $ z'ffffffff',z'0000f000',
+     $ z'ffffffff',z'00000000',
+     $ z'fff0ffff',z'00000000',
+     $ z'ff00ffff',z'00000000',
+     $ z'f000ffff',z'00000000',
+     $ z'0000ffff',z'00000000',
+     $ z'0000fff0',z'00000000',
+     $ z'0000ff80',z'00000000'/
+C
+      FLP(1) = FLP(1) + 1
+      K = FLP(2)
+      FLOP = X
+      IF (K .LE. 0) RETURN
+      FLOP = 0.0D0
+      IF (K .GE. 15) RETURN
+      XX = X
+      MM = MASK(K)
+      LX(1) = and(LX(1),LM(1))
+      LX(2) = and(LX(2),LM(2))
+      FLOP = XX
+      RETURN
+      END
+
+
+      SUBROUTINE XCHAR(BUF,K)
+      INTEGER BUF(1),K
+C
+C     SYSTEM DEPENDENT ROUTINE TO HANDLE SPECIAL CHARACTERS
+C
+      INTEGER DDT,ERR,FMT,LCT(4),LIN(1024),LPT(6),RIO,WIO,RTE,WTE
+      COMMON /IOP/ DDT,ERR,FMT,LCT,LIN,LPT,RIO,WIO,RTE,WTE
+      write(WTE,10) buf(1)
+   10 format(A1,' is not a MATLAB character.')
+      RETURN
+      END
+
+
+      SUBROUTINE USER(A,M,N,S,T)
+      DOUBLE PRECISION A(M,N),S,T
+C
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 17
+
+
+
+      INTEGER A3(9)
+      DATA A3 /-149,537,-27,-50,180,-9,-154,546,-25/
+      IF (A(1,1) .NE. 3.0D0) RETURN
+      DO 10 I = 1, 9
+         A(I,1) = A3(I)
+   10 CONTINUE
+      M = 3
+      N = 3
+      RETURN
+      END
+
+
+      SUBROUTINE PROMPT(PAUSE)
+      INTEGER PAUSE
+C
+C     ISSUE MATLAB PROMPT WITH OPTIONAL PAUSE
+C
+      INTEGER DDT,ERR,FMT,LCT(4),LIN(1024),LPT(6),RIO,WIO,RTE,WTE
+      COMMON /IOP/ DDT,ERR,FMT,LCT,LIN,LPT,RIO,WIO,RTE,WTE
+      WRITE(WTE,10)
+      IF (WIO .NE. 0) WRITE(WIO,10)
+   10 FORMAT(1X,/'<>')
+      IF (PAUSE .EQ. 1) READ(RTE,20) DUMMY
+   20 FORMAT(A1)
+      RETURN
+      END
+
+
+      SUBROUTINE PLOT(LUNIT,X,Y,N,P,K,BUF)
+      DOUBLE PRECISION X(N),Y(N),P(1)
+      INTEGER BUF(79)
+C
+C     PLOT X VS. Y ON LUNIT
+C     IF K IS NONZERO, THEN P(1),...,P(K) ARE EXTRA PARAMETERS
+C     BUF IS WORK SPACE
+C
+      DOUBLE PRECISION XMIN,YMIN,XMAX,YMAX,DY,DX,Y1,Y0
+      INTEGER AST,BLANK,H,W
+      DATA AST/1H*/,BLANK/1H /,H/20/,W/79/
+C
+C     H = HEIGHT, W = WIDTH
+C
+      XMIN = X(1)
+      XMAX = X(1)
+      YMIN = Y(1)
+      YMAX = Y(1)
+      DO 10 I = 1, N
+         XMIN = DMIN1(XMIN,X(I))
+         XMAX = DMAX1(XMAX,X(I))
+         YMIN = DMIN1(YMIN,Y(I))
+         YMAX = DMAX1(YMAX,Y(I))
+   10 CONTINUE
+      DX = XMAX - XMIN
+
+
+
+
+
+
+
+
+
+MATLAB Installation, page 18
+
+
+
+      IF (DX .EQ. 0.0D0) DX = 1.0D0
+      DY = YMAX - YMIN
+      WRITE(LUNIT,35)
+      DO 40 L = 1, H
+         DO 20 J = 1, W
+            BUF(J) = BLANK
+   20    CONTINUE
+         Y1 = YMIN + (H-L+1)*DY/H
+         Y0 = YMIN + (H-L)*DY/H
+         JMAX = 1
+         DO 30 I = 1, N
+            IF (Y(I) .GT. Y1) GO TO 30
+            IF (L.NE.H .AND. Y(I).LE.Y0) GO TO 30
+            J = 1 + (W-1)*(X(I) - XMIN)/DX
+            BUF(J) = AST
+            JMAX = MAX0(JMAX,J)
+   30    CONTINUE
+         WRITE(LUNIT,35) (BUF(J),J=1,JMAX)
+   35    FORMAT(1X,79A1)
+   40 CONTINUE
+      RETURN
+      END
+
+
+      SUBROUTINE EDIT(BUF,N)
+      INTEGER BUF(N)
+C
+C     CALLED AFTER INPUT OF A SINGLE BACKSLASH
+C     BUF CONTAINS PREVIOUS INPUT LINE, ONE CHAR PER WORD
+C     ENTER LOCAL EDITOR IF POSSIBLE
+C
+      character*256 s
+      open(7,file='----')
+      write(7,10) (buf(i),i=1,n)
+   10 format(256a1)
+      close(7)
+      call system('edit  ----')
+      open(7,file='----')
+      rewind 7
+      read(7,'(a)') s
+      close(7)
+      call system('remove ----')
+      n = 0
+      do 20 i = 1, 256
+         if (s(i:i) .ne. ' ') n = i
+   20 continue
+      read(s,10) (buf(i),i=1,n)
+      RETURN
+      END
+
+
+
+
+
+
+
+
+
+
+

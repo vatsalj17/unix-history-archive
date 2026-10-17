@@ -1,0 +1,96 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH WINDOW 3L "630 MTG"
+.XE "reshape()"
+.XE "move()"
+.XE "top()"
+.XE "bottom()"
+.XE "current()"
+.XE "delete()"
+.SH NAME
+window: reshape, move, top, bottom, current, delete \- window operations
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B int reshape (r)
+.sp
+.B int move (p)
+.sp
+.B void top ( )
+.sp
+.B void bottom ( )
+.sp
+.B void current ( )
+.sp
+.B void delete ( )
+.sp
+.B Rectangle r;
+.br
+.B Point p;
+.SH DESCRIPTION
+The
+.I reshape
+function
+changes the size and/or position of the window
+in which the process is running.
+This will change the value of
+.I Drect
+and
+.IR display .
+The
+.I reshape
+function will fail and do nothing if the given rectangle lies
+outside of
+the screen
+or is smaller than 32x32.
+It may also fail because of insufficient memory.
+On failure, \f2reshape\f1 will reshape the window back to its
+original size or to 32x32.
+When successful,
+.I P->state
+is updated,
+and 1 is returned.
+Otherwise, 0 is returned.
+.P
+The
+.I move
+function
+moves the process's window so that
+.I display.origin
+lies at the given point.
+It will fail and do nothing if
+.I p
+lies outside of
+the screen
+or there isn't enough memory.
+When successful,
+.I P->state
+is updated, and 1 is returned.
+Otherwise, 0 is returned.
+.PP
+The
+.I top
+function
+brings the window to the top so that it is not obscured
+by any other window.
+As its opposite, the
+.I bottom
+function
+puts the window on the bottom so that every window it overlapped
+will now obscure it.
+.PP
+The
+.I current
+function
+makes the process's window current. This directs the keyboard
+and mouse input to the process.
+.PP
+The
+.I delete
+function
+deletes the process and its window. This is the same as exit,
+only the window is also removed.
+The
+.I delete
+function will fail if the window is the last one connected to a host.
+.SH SEE ALSO
+exit(3R), globals(3R), state(3R).

@@ -1,0 +1,31 @@
+> A suggested rule of thumb: every inline member function must
+> be defined in the header file that carries the corresponding
+> class declaration.
+> 
+> A more general rule: every inline function must be defined in
+> every file that declares it.
+
+Pretty draconian.  By analogy, the same thing should be true
+of static functions.  This trivial program would then be wrong:
+
+	static f();
+	main() { }
+To: C++ language issues mailing list
+From: bs
+
+Both 2.0 and 2.1 accepts this:
+
+	class A { public: f(); };
+	class B : public virtual A {};
+	class C : public A { g(); };
+
+	C::g() { f(); }
+
+calling the A::f() in the non-virtual base.
+
+yet the manual states that a virtual class is an immediate base of ever
+class directly or indirectly derived from it (or words to that effect).
+
+Should cfront be brought into line with the manual or should the manual
+be brought into line with cfront? In the former case, do we break code?
+in the latter, how?

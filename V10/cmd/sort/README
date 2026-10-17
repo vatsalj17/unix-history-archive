@@ -1,0 +1,72 @@
+Posix P1003.2 sort utility from Unix research v10 system.
+
+To build it:
+	make sort
+To test it:
+	make test
+
+On many systems, you may be able to make a faster sort:
+	make fast
+	make test
+
+File sort.1 is a manual page.
+
+---------------------------------------------------------
+
+Extensions to POSIX:
+	Obsolescent features:
+		+pos -pos field specifications
+		-o recognized among file names
+	Traditional features not in POSIX:
+		-M for sorting by month
+		-T for setting temp directory
+		-y for setting memory size
+		-z (ignored)
+		-t may be combined with other options, e.g. -ct:
+	New features:
+		-g like -n, but allows e-format numbers
+		-s stable sort; break ties by original order,
+		   not by raw bytes
+
+Algorithm: distribution sort, with preconditioning of difficult keys
+	to make them into simple strings.
+	Overlong data spills to intermediate files, where it is
+	sorted by merging.
+
+Language: ANSI C.
+
+Testing: passes the accompanying sorttest suite, which exercises
+	every line of code, except for
+		option -T
+		some instances of -y
+		error comments
+		interrupt handling
+		excessive exponents (>~1000) in -g
+
+Typical problems:
+	On some systems the ANSI standard functions memmove.c
+	and strtoul.c are slow or absent.  Code for these
+	functions is included; use it if you have to
+	(see Makefile).
+
+	The sorttest suite uses awk as described in the
+	Aho/Kernighan/Weinberger book.  Older versions of awk
+	may not be adequate.
+
+	ANSI header files are assumed, but because headers
+	vary among systems, you may have to do some clever
+	rearrangement of #include directives.
+
+Notes on "make fast":
+	In extreme cases (very long records in nearly sorted
+	order) the "make fast" sort can run 40% faster than the
+	"make sort" version.  It uses a private addition to
+	classic System V stdio, not universally portable.
+	However, if the new function cgets() will compile, it
+	will almost certainly work.
+
+Report troubles to:
+	Doug McIlroy
+	908 582 6050
+	research!doug
+	doug@research.att.com

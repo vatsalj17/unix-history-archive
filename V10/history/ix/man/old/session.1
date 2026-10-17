@@ -1,0 +1,160 @@
+.TH SESSION 1
+.CT 1 sa_nonmortals secur
+.SH NAME
+session \- substitute labels temporarily
+.SH SYNOPSIS
+.B /bin/session
+[ 
+.I option ...
+]
+.SH DESCRIPTION
+.I Session
+runs a subshell with a temporary security label.
+It
+first calculates the intended label and ceiling of the subshell
+from the argument list.
+If process licenses, or label or ceiling above the current ceiling
+are sought,
+.I session
+obtains authorization by demanding a password.
+If the authorization is sufficient for the intended label
+and ceiling,
+the labels of the subshell and of the file associated with
+file descriptor 0 are set accordingly.
+Descriptor 0 is restored to its original label when the
+subshell terminates.
+.LP
+The options are
+.TP
+.BI -l " label
+Set the label to the given value, specified as in
+.IR atolab (3).
+If the value does not dominate the process label,
+clear the environment.
+.TP
+.B -p gumnlp
+Set the process licenses, one or more of the letters
+.B umnlp 
+as described in
+.IR atolab (3).
+Implies option
+.BR -n .
+.TP
+.B -n 
+Use
+.IR nosh (8)
+rather than
+.IR sh(1)
+as the subshell.
+.TP
+.B -x
+Suppress the restoration of file descriptor labels.
+.TP
+.BI -f " file
+Change the label of
+.I file
+(a full pathname) as well as file descriptor 0;
+restore the label when done.
+A special password for
+.I file
+will be demanded,
+and the subshell labels will be set to a value listed
+in the password file
+.BR /etc/pwfile .
+Implies option
+.BR -n ;
+precludes option
+.BR -u .
+.TP
+.BI -u " user
+A special password for
+.I user
+will be demanded,
+and the subshell ceiling will be set to the value listed
+for
+.I user
+in
+.BR /etc/pwfile .
+Precludes option
+.BR -f .
+.LP
+The following arguments are meant for
+.IR login (8):
+.TP
+.B -Q
+Ask for bottom, untrusted values of process and ceiling labels.
+Suppress error messages on standard error output.
+.TP
+.BI -c " file
+Execute
+.I file
+as the subshell instead of
+.IR sh (1)
+or
+.IR nosh (8).
+All subsequent arguments are used to form the argument list of the subshell.
+.LP
+If a password is needed for authorization and neither the
+.B -f
+or
+.B -u
+options were given,
+.I session
+will ask for the password listed under the current login name,
+as revealed by
+.IR getlogname (2).
+In the absence of option
+.B -p 
+all licenses are relinquished.
+.PP
+.I Session
+requires a `trusted path' for password negotiations.
+Thus privileged work cannot be initiated from an
+untrusted computer or from a terminal into which
+untrusted code has been downloaded.
+.SH EXAMPLES
+.TP
+.B session -l ffff...
+Enter a top-label interactive terminal subsession.
+.LP
+.EX
+session -l 0
+HOME=/usr/yourname
+\&. $HOME/.profile
+.EE
+.ns
+.IP
+Enter a bottom-label subsession within a higher-label subsession.
+Restore the environment.
+.LP
+.ne3
+.EX
+/bin/session -f /dev/ra00
+lmask n /etc/fsck /dev/ra00
+.EE
+.ns
+.IP
+Enter a disk-repair session, using
+.IR nosh(8).
+.TP
+.B "session -Qx -u ken -c /bin/sh -sh"
+How 
+.IR login (8)
+sets up a session for a
+.L tlogin
+service request.
+.TP
+.B session -Qx -c /bin/sh -sh
+How
+.I login
+sets up a remote session for
+.IR con (1).
+.SH SEE ALSO
+.IR sh (1),
+.IR getflab (2),
+.IR getplab (2),
+.IR pwfile (5),
+.IR login (8),
+.IR nosh (8)
+.SH DIAGNOSTICS
+`Sorry', instead of asking for a password: untrusted path.

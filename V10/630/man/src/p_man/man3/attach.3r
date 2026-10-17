@@ -1,0 +1,53 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH ATTACH 3R "630 MTG"
+.XE "attach()"
+.SH NAME
+attach \- connect process to host
+.SH SYNOPSIS
+.B int attach (host)
+.br
+.B int host;
+.SH DESCRIPTION
+A process that is already local may connect itself to a
+host by calling the function \fIattach\fP.  It takes a
+single argument indicating the host to be connected to. 
+There are currently only two valid values, 0 and 1, that
+refer to logical Host 1
+and Host 2, respectively.  When a process is successfully
+attached, the border for the window of that process becomes solid.
+.PP
+The resources owned by the process remain unchanged except for
+the addition of a host connection.  The \fIattach\fP function operates
+correctly independent of whether the host is already in \fBlayers\fR
+mode or not.
+.PP
+The function can fail if the host has not been configured in the
+set-up options; if there are not any available connections for the
+specified host; if the process is already connected;
+or if the host argument is invalid.  A failure
+is indicated to the calling process by a return value of zero.
+
+.SH EXAMPLE
+This example shows how the \fIattach\fP function may be used in
+a process that wishes to be connected
+to the logical Host 2.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+
+switchhost ()
+{
+	if (local())
+		attach(1);
+	
+}
+\fR
+.fi
+.RE
+.SH SEE ALSO
+local(3R), peel(3R).
+.SH WARNING
+The host values may change in meaning and/or be expanded in the future.

@@ -1,0 +1,272 @@
+.TH STREAM 4
+.CT 2 comm_proc
+.SH NAME
+stream \- I/O control for streams
+.SH SYNOPSIS
+.B #include <sys/filio.h>
+.br
+.B #include <sys/ttyio.h>
+.PP
+.B ioctl(fd, code, param)
+.br
+.B void *param;
+.SH DESCRIPTION
+A stream is a connection between two processes, or between a process
+and a device.
+It is referred to by a file descriptor, and ordinary read and write
+calls apply.
+When a
+.IR write (2)
+call is given on a stream whose other end has disappeared,
+for example because the process at other end of a pipe has terminated,
+or a device has hung up, signal 
+.B SIGPIPE
+is generated; if the signal is ignored,
+the write call returns error
+.BR EPIPE .
+The first several (currently 64)
+.IR read (2)
+calls on such a disconnected streams
+return 0;
+subsequent calls generate
+.B SIGPIPE
+signals.
+.PP
+Processing modules may be inserted into streams.
+These
+.IR ioctl (2)
+calls insert, delete, inspect, and perform operations for stream
+I/O modules.
+They apply to the file descriptor of any open stream object:
+terminal, network connection, pipe.
+The
+.I param
+argument is a general pointer which, for these calls, is often
+null, a pointer to
+.BR int .
+The codes are
+.TF FIOPUSHLD
+.TP
+.B FIOPUSHLD
+Insert, at the near end of the stream, the line discipline named by
+the integer to which
+.I param
+points.
+A census of line discipline modules is given below.
+.PD
+.TP
+.B FIOINSLD
+Insert a named line discipline at a given level in a stack
+of such modules on the stream.
+.I Param
+points to a structure containing two short integers
+respectively naming the line discipline and the level.
+A level of 0 could be accomplished by
+.BR FIOPUSHLD .
+.TP
+.B FIOPOPLD
+Pop (removes) the nearest line discipline module, if
+.I param
+is 0 (null).
+If
+.I param
+points to an integer, the line discipline at that level is removed.
+The integer 0 is the same as a null
+.IR param .
+.TP
+.B FIOLOOKLD
+Return the number of the topmost line discipline in the stack.
+If
+.I param
+is not 0 but instead points to an integer, the line discipline at that
+level is returned in the same integer.
+.TP
+.B FIOSNDFD
+Send the integer file descriptor pointed to by
+.IR param
+to the process on the other end of pipe
+.IR fd .
+The code is transmitted directly to the other end of
+the pipe, untransformed by line disciplines.
+It cannot be forged by the message line discipline,
+.IR mesgld (4).
+The call returns immediately; it does not rendezvous with
+the matching
+.BR FIORCVFD .
+.TP
+.B FIORCVFD
+Deliver a structure pointed to by
+.IR param :
+.EX
+struct passfd {
+	int	fd;
+	short	uid;
+	short	gid;
+	short	nice;
+	char	logname[8];
+	char	cap;
+};
+.EE
+.IP
+The call blocks until there is something in the stream.
+If data is present, it returns
+.BR EIO .
+If a file descriptor has been sent from the other
+end of the pipe by
+.BR FIOSNDFD ,
+.B FIORCVFD
+fills in the user and group ID of the sending process,
+its niceness (see
+.IR nice (2)),
+its login name, its capabilities in the form of the field
+.B lb_t
+(see
+.IR getflab (2)),
+and a file descriptor for the file
+being sent; the file is now open in the receiving process.
+Another use of
+.B FIORCVFD
+is described in
+.IR connld (4).
+.TP
+.B FIONREAD
+Store, in the integer pointed to by
+.IR param ,
+the number of characters that may be read from this stream
+without possible blocking.
+.TP
+.B FIOGSRC
+Copy the stream identifier to the
+.BR SSRCSIZ -byte
+string pointed to by
+.IR param.
+.TP
+.B FIOSSRC
+Copy the
+.BR SSRCSIZ -byte
+string pointed to by
+.I param
+into the stream identifier.
+Capability
+.B T_EXTERN
+is required; see
+.IR getplab (2).
+Empty by default, the stream identifier is customarily
+set on network connections to identify the source.
+Successful password demands may also be recorded
+in the stream identifier for the benefit of
+.IR pwserv (8);
+see
+.IR session (1).
+.TP
+.B TIOCSPGRP
+Make this process the head of a process group and makes this stream
+its control stream.
+When signals, such as hangup, interrupt, and quit, arrive at
+a control stream, they are sent to its process group.
+Child processes inherit the process group of their parent.
+Process groups are created only by explicit use of this call,
+and not implicitly by opening certain devices.
+.I Param
+must be 0.
+.TP
+.B TIOCGPGRP
+Store through
+.I param
+a
+.B short
+naming the process group associated with the stream.
+.TP
+.B TIOCEXCL
+Mark this stream as inaccessible except by the super-user
+or by processes in the group associated with this stream.
+.TP
+.B TIOCNXCL
+Remove the inaccessibility of the stream.
+.TP
+.B TIOCSBRK
+Generate a message requesting
+a line break.
+The message is understood by devices capable of generating it
+(such as asynchronous character devices) and ignored otherwise.
+.TP
+.B TIOCFLUSH
+Generate a message causing downstream modules to throw away any
+queued characters, if possible.
+It applies to both input and output queues.
+If the stream serves a device, the flush message may
+cause further action in the device driver.
+.TP
+.B TIOCXFLUSH
+Delete all data and messages from input and output queues.
+No flush message is passed down the stream or to a
+device driver.
+.LP
+Here is a list of available line discipline modules.
+Each is an external integer, defined in 
+.IR libc ;
+see
+.IR intro (3).
+.TF rmesg_ld
+.TP
+.B tty_ld
+Regular terminal processing; see
+.IR ttyld (4).
+.TP
+.B ntty_ld
+Terminal processing according to (modified) Berkeley `new tty' rules;
+see Berkeley Users Manual.
+.TP
+.B cdkp_ld
+Character-mode Datakit universal receiver protocol.
+.TP
+.B dkp_ld
+Block-mode Datakit universal receiver protocol.
+.TP
+.B rdk_ld
+.TP
+.B uxp_ld
+Special Datakit protocols used in connection setup.
+.TP
+.B buf_ld
+Buffering mechanism;
+see
+.IR bufld (4).
+.TP
+.B mesg_ld
+turns stream control blocks arriving in the read direction into
+data messages, and written messages into controls.
+See
+.IR mesgld (4).
+.TP 
+.B rmesg_ld
+inverse of
+.BR mesg_ld .
+.TP
+.B conn_ld
+For making unique connections to servers.
+See
+.IR connld (4).
+.TP
+.B ip_ld
+.TP
+.B tcp_ld
+.TP
+.B udp_ld
+.TP
+.B arp_ld
+Internet protocols;
+see
+.IR internet (3).
+.SH SEE ALSO
+.IR ioctl (2),
+.IR getstsrc (3)
+.br
+D. M. Ritchie,
+`A Stream I/O System'
+.I BLTJ,
+October, 1984
+.br
+.I
+UNIX Programmer's Manual, Seventh Edition, Virtual VAX-11 Version,
+1980 (Berkeley)

@@ -1,0 +1,107 @@
+.TH LPUTCHAR 3L "630 MTG"
+.SH NAME
+lputchar \- 630 MTG local putchar function
+.SH SYNOPSIS
+.ft B
+void lputchar (c)
+.br
+\f3char c; \f1
+.ft R
+.SH DESCRIPTION
+\fILputchar\fR is
+syntactically equivalent to the UNIX standard I/O putchar function.
+It can be called by downloaded application programs who
+want to display characters within their window on the 630 MTG screen.
+Where (within the applications window) characters are displayed can be
+affected with the \fImoveto\fR(3L) function.
+.I Lputchar
+calls the
+.I moveto
+routine to update the \fIcurrent screen point \fR after it
+displays the charcter \fIc\fR.
+.PP
+
+How characters are eventually
+displayed on a user's terminal when using the UNIX putchar function
+is affected by the UNIX host \fIstty\fR(1) settings
+and the user's terminal characteristics.
+Since \fIlputchar\fR displays directly onto the 630 MTG
+screen, assumptions were made about desired \fIstty\fR
+settings. In general, \fIlputchar\fR does as little processing on
+the output stream as practical. 
+If more extensive processing of control characters is needed, it can
+be accomplished as shown in the example program below.
+.P
+The following are the only control characters processed by \fIlputchar\fR.
+All other characters will be displayed as \fBASCII\fR characters:
+.TP
+.B \er
+Carriage Return. Move the current point to the left edge of the window.
+.TP
+.B \en
+Newline. Move the current point down one line and to the left edge of the 
+window. Scroll the window if necessary.
+.TP
+.B \et
+Horizontal tab. Tab characters are expanded to spaces with tab stops at every
+eighth space.
+.SH EXAMPLE
+.LP
+If an application program wanted to, for example, process bells and
+backspaces rather than display the \fBASCII\fR bell and backspace
+characters, it could define a function \fImylputchar\fR as follows:
+.PP
+.RS 3
+.ft CM
+.S -2
+.nf
+#include <dmd.h>
+#include <font.h>
+
+void lputchar();
+void moveto();
+void ringbell();
+Point sPtCurrent();
+
+mylputchar(c)
+char c;
+{
+	Point curpos;
+
+	switch( c ) {
+	case '\e007':
+		ringbell();
+		break;
+	case '\eb':
+		/* get the current position
+		** if( not already at the left edge of the
+		**	window ) {
+	 	** 	move back one character position
+		** 	lputchar a space to erase the last
+		** 	character and move back again
+		** }
+		*/
+		curpos = sPtCurrent();
+		if(curpos.x - FONTWIDTH(largefont)
+		    >= Drect.origin.x) {
+			curpos.x -= FONTWIDTH(largefont);
+			moveto(curpos);
+			lputchar(' ');
+			moveto(curpos);
+		}
+		break;
+	default:
+		lputchar(c);
+		break;
+	}
+}
+.fi
+.ft R
+.RE
+.S +2
+.SH SEE ALSO
+bputchar(3L), moveto(3L), printf(3L), structures(3R).
+.br
+stty(1) in the \fIUNIX System V User's Reference Manual\fR.
+.br
+putc(3S) in the \fIUNIX System V Programmer's Reference Manual\fR.

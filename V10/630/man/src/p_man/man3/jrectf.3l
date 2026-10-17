@@ -1,0 +1,61 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH JRECTF 3L "630 MTG"
+.XE "jrectf()"
+.SH NAME  
+jrectf \- rectangle function on display
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B void jrectf (r, f) 
+.br 
+.B Rectangle r;
+.br
+.B Code f;
+.SH DESCRIPTION
+The
+.I jrectf
+function
+performs the action specified by the Code
+.I f
+on the Rectangle
+.I r
+in the display bitmap.
+The Rectangle
+.I r
+is in window coordinates.
+.SH EXAMPLE
+The following subroutine will ``doodle'' on the screen using a Rectangle,
+whose coordinates are scaled to the window.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+Point add();
+
+rectdoodle()
+{
+     Rectangle r;
+     Point s;
+
+     s.x = 16;
+     s.y = 16;
+     request (MOUSE);
+     for (;;) {
+          wait(MOUSE)
+          r.origin = mouse.jxy;
+          r.corner = add (r.origin, s);
+          if ( button3() )
+             break;
+          if ( button1() )
+             jrectf (r, F_STORE);
+          if ( button2() )
+             jrectf (r, F_CLR);
+     }
+}
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+globals(3R), rectf(3R), structures(3R), transform(3R/3L).

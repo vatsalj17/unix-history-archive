@@ -1,0 +1,733 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH TMENUHIT 3R "630 MTG"
+.XE "tmenuhit()"
+.XE "tm_ret()"
+.SH NAME
+tmenuhit \- present user with menu and get selection
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.br
+#include <menu.h>
+.sp
+Titem \(**tmenuhit (m, n, flags [, p])
+.br
+Tmenu \(**m;  
+.br
+int n;
+.br
+int flags;
+.br
+Point p;
+.sp
+void tm_ret()
+.PP
+.nf
+\s-1
+.ft CM
+typedef struct Titem
+{
+    char *text;     /* string for menu */
+    struct {
+        unsigned short uval;    /* user field */
+        unsigned short grey;    /* grey this selection */
+    } ufield;
+    struct Tmenu *next;     /* ptr to sub-menu */
+    Bitmap *icon;           /* ptr to the icons bitmap */
+    struct Font *font;      /* font defined for this item */
+    void (*dfn)();  /* execute function before sub-menu */
+    void (*bfn)();  /* execute function after sub-menu */
+    void (*hfn)();  /* execute function on selection */
+} Titem;
+
+typedef struct Tmenu
+{
+    Titem *item;        /* Titem array */
+    short prevhit;      /* index to current item */
+    short prevtop;      /* index to top item */
+    Titem *(*generator)();      /* used if item == 0 */
+    short menumap;      /* bit definition of structure */
+} Tmenu;
+
+/* bit definitions in menumap */
+#define TM_TEXT     0x0001	/* defines the text field */
+#define TM_UFIELD   0x0002	/* defines the ufield field */
+#define TM_NEXT     0x0004	/* defines the next field */
+#define TM_ICON     0x0008	/* defines the icon field */
+#define TM_FONT     0x0010	/* defines the font field */
+#define TM_DFN      0x0020	/* defines the dfn field */
+#define TM_BFN      0x0040	/* defines the bfn field */
+#define TM_HFN      0x0080	/* defines the hfn field */
+.ft R
+.fi
+\s+1
+.SH DESCRIPTION
+The \fItmenuhit\fP function
+is an enhanced version of menuhit. It adds such features as 
+expanding menus, use of icons and various fonts within a menu item,
+greying non-selectable items, and extended control over invocation and
+specification of the menu facility.
+.SS "Menu Trees"
+Menu trees allow the presentation of several menus in a hierarchical
+format. Each menu is specified by a \fITmenu\fP structure. 
+Each \fITmenu\fP structure contains a array of one or more \fITitem\fP
+structures which specify the menu items. Each item of a menu may then,
+in turn, point to a submenu. Submenus appear to the right
+of the parent menu. The presence of a submenu for a menu item is indicated
+by an arrow icon pointing to the right. Moving the cursor to the 
+arrow icon allows the user to preview the submenu. Sliding further to the
+right moves the cursor into the submenu and allows the user to make a
+selection in this menu. Moving the cursor back to the left exits the 
+submenu and moves the cursor back into the parent menu.
+.SS Usage
+The \fItmenuhit\fP function
+presents the user with a menu tree specified by the root \fITmenu\fP pointer
+\fIm\fP
+and returns a pointer to a \fITitem\fP structure indicating which item was 
+selected. If no item was selected \fItmenuhit\fP returns a 0.
+The \fIn\fP argument is an integer which
+specifies the mouse button for user interaction: 1, 2, 3 or 0 for all
+the buttons..
+The \fIflags\fP
+argument is a bit vector which indicates various 
+modes of function in \fItmenuhit\fP.
+These flags include:
+.TP
+.B (flags & TM_EXPAND)
+If true, the menu tree will be expanded (according to the previous selection)
+down to the lowest leaf on invocation of \fItmenuhit\fP.
+.TP
+.B (flags & TM_NORET)
+If true, \fItmenuhit\fP will not return when a valid selection is made. This 
+feature is useful if a lot of selections are to be made from a large menu.
+.TP
+.B (flags & TM_STATIC)
+If true, \fItmenuhit\fP assumes that no button is depressed when it is called.
+In this case, the user makes a selection by depressing the button specified
+when the cursor points to the item desired. If this is false, 
+\fItmenuhit\fP assumes that the button is depressed when called. The user
+makes a selection by lifting the button when the cursor points to the 
+desired item.
+.TP
+.B (flags & TM_POINT)
+If true, the argument \fIp\fP must be present and the origin of the root 
+menu will appear at this point on the display.
+.P
+The user may define one or more of these flags by or'ing them together 
+within the function call (e.g. (TM_EXPAND|TM_POINT) ).
+.SS "Structure and Functional Description"
+This section describes the structure fields of the \fITmenu\fP and the
+\fITitem\fP structures and the functions of \fItmenuhit\fP they serve.
+.P
+The 
+.B Tmenu
+structure defines a menu. It has the following fields:
+.TP
+.B item
+This is an array of \fITitem\fP structures which defines each item in the 
+menu. The last item in the array must have its \fITitem\fP text
+field equal to 0.
+.TP
+.B prevhit
+\fIprevhit\fR is used to store the menu's previous selection.
+When \fItmenuhit\fP
+is called the menu is displayed such that, if possible, the mouse cursor
+will be displayed over the previous selection. This might not be possible
+if the menu is near the border of the screen.
+\fIPrevhit\fR holds the index from 
+the top of the displayed menu.
+The \fIprevhit\fR value is initialized to 0 and 
+normally does not need to be 
+manipulated by the application program.
+.TP
+.B prevtop
+\fIprevtop\fR is used to store the topmost item
+displayed in the menu when more
+than sixteen menu items are defined. The maximum number of items which
+may be displayed within a menu is sixteen. When there are more than sixteen
+the menu becomes a 
+.B scrolling menu.
+In this case, 
+the left portion of the menu contains a scroll bar that is
+used for scrolling quickly through the menu selections.
+The vertical size of the scroll bar is an indication of the size
+of the user's view of the menu (16 items) relative to the number
+of selections in the entire menu.
+.sp
+There are two ways to scroll through the menu items.
+The first is to move the mouse cursor to the left side of the menu
+into the scroll bar area.
+By moving the mouse cursor up or down within the scroll bar area, the menu 
+items will scroll accordingly.
+The second method used to scroll through the menu
+items is to place the mouse cursor on the top or bottom entry of the menu
+list.  The menu will scroll up or down by one item at a time if
+there are additional items to be displayed in that direction.
+.sp
+Like prevhit, the value of prevtop is initialized to 0 and 
+normally does not need to be manipulated by the application program.
+.TP
+.B generator
+Menu items may be generated dynamically from a program by specifying
+a generator function in the \fITmenu\fP structure.
+If the item field in the \fITmenu\fP data structure
+is 0 when a menu is entered,
+either by calling \fItmenuhit\fP or through the sub-menu mechanism,
+then the routine specified by \fIgenerator\fR
+is called with two parameters that are
+an integer index beginning at 0 and the address of the current \fITmenu\fP.
+The generator must return a pointer to a \fITitem\fP 
+structure containing the text for the corresponding menu item.
+This generator function is called repeatedly
+with the index increasing by 1 until the generator returns a \s-1NULL\s+1
+for the text field in the \fITitem\fP structure, 
+indicating the end of the menu selections.
+.TP
+.B menumap
+In applications where many menus are to be used,
+the programmer can re-define the \fITitem\fP structure to include
+only those fields that are actually used.
+This has the advantage of requiring less data initialization
+on the part of the programmer. It is done with a
+bit vector called \fImenumap\fP in the \fITmenu\fP structure.
+If used, the user defined structure replacing \fITitem\fP must contain
+the specified member variables in the same order.
+For example, if one wishes to use only the text, ufield, and next fields
+of a \fITitem\fP structure, he may define a \fITitem\fP structure with
+only those fields, and then set the menumap field of the \fITmenu\fP
+structure to the value of (TM_TEXT|TM_UFIELD|TMNEXT).
+Normally, this variable has the value zero when the standard \fITitem\fP
+structure is used.
+.PP
+Each menu item is defined by a structure of the type \fITitem\fP.
+The 
+.B Titem 
+structure has the following fields:
+.TP
+.B text
+The text field is a pointer to a NULL terminated character string. This
+is the character string that is displayed within the menu.
+.sp
+A facility provided by
+.I tmenuhit
+is that of a spread character.
+A spread character is any ascii character with the high-order bit set
+(e.g., an ascii space character defined as a spread character would have 
+the value of \'\\240\').
+The spread character acts somewhat like a spring pushing against
+the adjacent text and borders within a menu entry.
+The spread character can be placed at the beginning, middle, or end
+of the string defining the menu entry.
+If placed at the beginning of the string,
+the text in the menu item will be right-justified.
+If placed at the end of the string,
+the text will be left justified.
+If placed in the middle of the string, the text on each
+side of the spread character will be pushed against the corresponding
+menu border.  In each case,
+the space created by the spread character will be filled in with
+the ascii character contained in the spread character.
+For entries without a spread character,
+the default is to have the text centered.
+.TP
+.B uval
+This is an integer to be used for any purpose the user wishes.
+It is typically used to store a constant that is used by the application
+to identify \fITitem\fP structures.
+For instance, this field could be set to a unique value for each menu
+item in the menu tree.  In this way, a switch statement
+can easily determine the menu item selection regardless of the menu used
+and the difference in size of different \fITitem\fP structures.
+.TP
+.B grey
+If this field is set to 1, the item will be displayed in
+the menu with a grey background. This item is non-selectable and, if 
+selected, the value \fItmenuhit\fP returns is 0.
+.TP
+.B next
+The \fInext\fP variable points to another menu structure of type \fITmenu\fP
+which defines a submenu for this particular item.
+.TP
+.B icon
+The icon field is a pointer to a Bitmap structure that is
+displayed to the left of the menu item.	 The size of the bitmap is
+specified within the Bitmap structure and can vary from one menu item to
+the next.
+The icon can be displayed with or without a text string.
+However, if icons are to be used without text strings, the value of \fItext\fP
+field cannot be NULL, but must point to a NULL string.
+.sp
+When the icon field is used to display a bitmap,
+all \fITitem\fP structures for the specific menu are scanned to find the largest
+bitmap.	 This is used to determine the vertical spacing of all the menu
+items within that menu.	 Smaller bitmaps on other menu entries will be
+centered within the icon area.
+.TP
+.B font
+The font field is a pointer to a font to be used for the text
+is this menu item. Proportional
+characters and different point size fonts will be positioned appropriately.
+If a NULL value is specified, the 630 resident medium font is used.
+.TP
+.B dfn, bfn, hfn
+These three fields may be initialized to point to functions that will 
+be executed by \fItmenuhit\fP before entering
+a submenu (sliding \fIdown\fP), 
+after returning from a submenu (sliding \fIback\fP),
+and upon making a selection in the current menu (a \fIhit\fP), respectively.
+Each function is passed, as an argument,
+the address of the \fITitem\fP structure from which it is called.
+The hfn function provides an alternative method to using the return value of
+.I tmenuhit.
+.sp
+In the special case of (flags & TM_NORET),
+when a selection is made, the submenu the item
+was in will be erased. Then
+the hfn function
+will be called with the selected item. If there is a parent
+to this menu
+the bfn and dfn functions will also be called in that order (if they 
+are initialized) 
+after which the menu will be redrawn.
+This is due to the recursiveness of 
+.I tmenuhit.
+.sp
+If any of the dfn, bfn, or hfn functions execute calls to the 
+function 
+.I tmret(), tmenuhit
+will ignore the TM_NORET flag and will return the selection made.
+.SH EXAMPLE
+The following example is a comprehensive example of how one may use 
+.I tmenuhit.
+The example presents a menu tree when button 3 is depressed and,
+upon selection of a menu item, it 
+prints the text of that item at the bottom of the screen.
+The top level menu contains six items each pointing to a submenu. 
+They are 
+.I font, test, bttn3, icons, spread, 
+and
+.I scroll.
+The following is a brief explanation of each submenu and the functions it
+intends to demonstrate.
+.TP
+.I font
+The font submenu demonstrates the use of fonts and icons
+(within the menu item) and the use of the hfn and dfn functions.
+An hfn function called setfont is executed on selection and
+sets the font to the selected font.  Before the font submenu
+is displayed, a dfn function called setmark will place a checkmark icon
+next to the current font in use.
+.TP
+.I test
+This submenu contains various sized 
+strings to demonstrate how \fItmenuhit\fP alters its menu item size 
+according to the size of
+the string. 
+.TP
+.I bttn3
+This is a replica of the button3 menu
+on the 630MTG. It demonstrates the menu greying capability. This item also 
+demonstrates how one may use \fItmenuhit\fP to achieve the
+simple functionality of \fImenuhit\fP plus the added capability 
+of greying items. 
+.TP
+.I icons
+This submenu demonstrates the use
+of icons within menu items. 
+.TP
+.I spread
+This submenu 
+demonstrates the spread character facility. 
+.TP
+.I scroll
+This submenu
+demonstrates the use of generators and presents the scrolling menu.
+.P
+Another thing to notice is the use of the abbreviated \fITitem\fP
+structures. There are six different types of \fITitem\fP structures. Each
+one corresponds to a menumap vector which defines the fields being used.
+.PP
+.RS 0
+\s-1
+.nf
+.ft CM
+#include <dmd.h>
+#include <font.h>
+#include <menu.h>
+
+void setmark(), setfont();
+Titem *scrllist();
+extern Tmenu menu20, menu21, menu22, menu23, menu24, menu25;
+extern Tmenu menu30;
+
+Word strawberry[] = {
+0x0000,0x0000,0x0000,
+0x0000,0x0000,0x0000,
+0x0000,0x0000,0x0000,
+0x0000,0x1B80,0x0000,
+0x0000,0x3D80,0x0000,
+0x01F8,0x7E80,0x0000,
+0x03FE,0x7D80,0x0000,
+0x07AF,0xFB80,0x0000,
+0x0EF9,0xF780,0x0000,
+0x1F57,0xFFFE,0x0000,
+0x1FFB,0xFEAB,0x8000,
+0x1DAD,0xF77D,0xC000,
+0x3FFA,0x65B7,0x4000,
+0x3AAF,0x8FDE,0xE000,
+0x3FFD,0xFECB,0xA000,
+0x3BB7,0x5FEE,0xE000,
+0x3EFD,0xFAAB,0xA000,
+0x3FAF,0xAFEE,0xE000,
+0x3AFA,0xFD6B,0xA000,
+0x3FAF,0xD7DF,0xE000,
+0x3EFA,0xFED5,0x4000,
+0x1FAF,0xABBF,0xC000,
+0x1EFA,0xFFAA,0x8000,
+0x1FAF,0xD77F,0x8000,
+0x1FFD,0x7ED5,0x0000,
+0x0F57,0xD9FE,0x0000,
+0x0FFE,0xF754,0x0000,
+0x07AB,0xCDFC,0x0000,
+0x03FF,0x7EA8,0x0000,
+0x00F8,0x3BF0,0x0000,
+0x0000,0x1EE0,0x0000,
+0x0000,0x0F80,0x0000,
+0x0000,0x0000,0x0000,
+0x0000,0x0000,0x0000,
+};
+
+Word help_icon[] = {
+    0x0000, 0x0000, 0x0000, 0x0000,
+    0xE0E0, 0x6060, 0x7F7E, 0x7DFF,
+    0x6FFB, 0x6C7B, 0x6FFE, 0xFFF8,
+    0x003C, 0x0000, 0x0000, 0x0000,
+};
+
+
+/* initialize Bitmap structures */
+Bitmap bm_strawberry = {
+    (Word*) strawberry,	3, 2, 0, 36, 34, 0
+};
+Bitmap bm_help = {
+    (Word*) help_icon,   1, 0, 0, 16, 16, 0
+};
+
+/*******************************/
+/* definitions for menumap     */
+/*******************************/
+#define TYPE1	TM_TEXT | TM_NEXT | TM_DFN
+#define TYPE2	TM_TEXT
+#define TYPE3	TM_TEXT | TM_NEXT
+#define TYPE4	TM_TEXT | TM_UFIELD
+#define TYPE5	TM_TEXT | TM_ICON
+#define TYPE6	TM_TEXT | TM_ICON | TM_FONT | TM_HFN
+
+/*******************************/
+/*  define Titem typedef's     */
+/*******************************/
+
+/*
+ * define a Titem structure with only text, next, and dfn fields
+ */
+typedef struct Titem01
+{
+    char *text;     /* string for menu */
+    struct Tmenu *next;	    /* pointer to sub-menu */
+    void (*dfn)();  /* pointer function to execute on submenu */
+} Titem01;
+
+/*
+ * define a Titem structure with only text field
+ */
+typedef struct Titem2
+{
+    char *text;             /* string for menu */
+} Titem2;
+
+/*
+ * define a Titem structure with only text and next fields
+ */
+typedef struct Titem3
+{
+    char *text;             /* string for menu */
+    struct Tmenu *next;     /* pointer to sub-menu */
+} Titem3;
+
+/*
+ * define a Titem structure with only text and ufield fields
+ */
+typedef struct Titem4
+{
+    char *text;             /* string for menu */
+    struct {
+    	unsigned short uval;    /* user field */
+	unsigned short grey;    /* flag indicates invalid selection */
+    } ufield;
+} Titem4;
+
+
+/*
+ * define a Titem structure with only text and icon fields
+ */
+typedef struct Titem5
+{
+    char *text;     /* string for menu */
+    Bitmap *icon;   /* pointer to the icons bitmap */
+} Titem5;
+
+
+/*
+ * define a Titem structure with only text, icon, font and hfn fields
+ */
+typedef struct Titem6
+{
+    char *text;     /* string for menu */
+    Bitmap *icon;   /* pointer to the icons bitmap */
+    Font *font;     /* pointer to font structure */
+    void (*hfn)();  /* function to execute on selection */
+} Titem6;
+
+/*******************************/
+/* initialize Titem structures */
+/*******************************/
+
+/*
+ * initialize the Titem structure for the main menu
+ * has only text, next and dfn fields
+ */
+Titem01 L1_root[] =
+{
+    "font",         &menu20,        setmark,
+    "test",         &menu21,        0,
+    "bttn3",        &menu22,        0,
+    "icons",        &menu23,        0,
+    "spread",       &menu24,        0,
+    "scroll",       &menu25,        0,
+     0
+};
+
+
+/*
+ * initialize the Titem structure for menu20
+ * has only text, icon, font, hfn fields
+ */
+Titem6 L2_font[] =
+{
+    "smallfont",    0,        0,    setfont,
+    "mediumfont",   0,        0,    setfont,
+    "largefont",    0,        0,    setfont,
+     0
+};
+
+/*
+ * initialize the Titem structure for menu21
+ * has only text and next fields
+ */
+Titem3 L2_test[] =
+{
+    "A long test string so we can see what happens", 0,
+    "Short strings", &menu30,
+     0
+};
+
+/*
+ * initialize the Titem structure for menu22
+ * has only text and ufield fields
+ */
+Titem4 L2_bttn3[] =
+{
+    "New",          0, 1,
+    "Reshape",      0, 1,	
+    "Top",          0, 1,			
+    "Bottom",       0, 1,		
+    "Current",      0, 1,		
+    "Delete",       0, 1,		
+    "Exit",         0, 0,	
+     0
+};
+
+/*
+ * initialize the Titem structure for menu23
+ * has only text and icon fields
+ */
+Titem5 L2_icons[] =
+{
+    "strawberry", &bm_strawberry,
+    "help", &bm_help,
+     0
+};
+
+
+/*
+ * initialize the Titem structure for menu24
+ * has only text field
+ */
+Titem2 L2_spread[] =
+{
+    "left\\240",    /* space character with high bit set */
+    "\\256right",   /* . char with high bit set          */
+    "middle",
+    "left\\337right", /* _ char with high bit set */
+    "a very long string",
+     0
+};
+
+/*
+ * initialize the Titem structure for menu30
+ * has only text field
+ */
+Titem2 L3_shorts[] =
+{
+    "abc",
+    "xyz",
+    "123",
+    "XYZ",
+    "ABC",
+     0
+};
+
+
+/*******************************/
+/* initialize Tmenu structures */
+/*******************************/
+/*
+* menu(xy), where x is the level and y is the menu number
+*/
+Tmenu menu10	= { (Titem *) L1_root, 0, 0, 0, TYPE1 };
+Tmenu menu20	= { (Titem *) L2_font, 2, 0, 0, TYPE6 };
+Tmenu menu21	= { (Titem *) L2_test, 0, 0, 0, TYPE3 };
+Tmenu menu22	= { (Titem *) L2_bttn3, 0, 0, 0, TYPE4 };
+Tmenu menu23	= { (Titem *) L2_icons, 0, 0, 0, TYPE5 };
+Tmenu menu24	= { (Titem *) L2_spread, 0, 0, 0, TYPE2 };
+Tmenu menu25	= { (Titem *) 0, 0, 0, scrllist, 0 };
+Tmenu menu30	= { (Titem *) L3_shorts, 0, 0, 0, TYPE2 };
+
+char noselect[] = "no selection";
+Font *font;
+
+main()
+{
+    Titem *ret;
+
+    /* set the font and icon fields in the proper menu */
+    L2_font[0].font = &smallfont;
+    L2_font[1].font = &mediumfont;
+    L2_font[2].font = &largefont;
+    L2_font[1].icon = &B_checkmark;
+    font = &largefont	/* use the medium font to start with */
+    request(MOUSE);
+    while(wait(MOUSE)) {
+	if (button3()) {
+	    /* clear the text area for writing strings */
+	    cursinhibit();
+	    rectf(&display,
+		Rpt(Pt(Drect.origin.x, Drect.corner.y-18), Drect.corner),
+		F_CLR);
+	    cursallow();
+	    if(ret = tmenuhit (&menu10, 3, TM_EXPAND)) {
+		/* write the menu string in text area */
+		string(font, ret->text, &display,
+		   Pt(Drect.origin.x+5, Drect.corner.y-18),
+		   F_XOR);
+	    }
+	    else {  /* no selection was made */
+		string(font, noselect, &display,
+		   Pt(Drect.origin.x+5, Drect.corner.y-18),
+		   F_XOR);
+	    }
+	}
+	else if (button1()) 
+	    exit();
+    }
+}
+
+char digits[10];
+Titem scrlitem;
+char scrlstr[] = "scroll";
+
+/*
+ * generator for scroll menu
+ * generate 99 menu items
+ */
+Titem *scrllist(i, m)
+int i;
+Tmenu *m;
+{
+    int j;
+
+    if (i > 99) {	/* generator stopping condition */
+	scrlitem.text = 0;
+    }
+    else {		/* generate text for items (i.e. "scroll56") */
+	scrlitem.text = digits;
+	for (j=0; scrlstr[j] != '\\0'; j++) digits[j] = scrlstr[j];
+	digits[j++] = i/10 + '0';
+	digits[j++] = i - (i/10 * 10) + '0';
+	digits[j] = '\\0';
+    }
+    return ( &scrlitem );
+}
+
+/*
+ * a dfn function.
+ * This is executed before the font submenu is entered
+ * place the checkmark by the proper font
+ */
+void setmark(mi)
+Titem01 *mi;
+{
+    Tmenu *tm;
+    Titem6 *tmi;
+    int    index;
+    int    hit;
+
+    tm = mi->next;
+    hit = tm->prevhit + tm->prevtop;
+    for (index=0, tmi=(Titem6 *)tm->item; tmi->text; index++, tmi++) {
+	tmi->icon = (index == hit) ? &B_checkmark:0;
+    }
+}
+
+/*
+ * an hfn function
+ * this is executed after a selection is made
+ */
+void setfont(mi)
+Titem6 *mi;
+{
+    /* set the font to the selected font */
+    font = mi->font;
+}
+\fR
+.fi
+.RE
+\s+1
+.SH SEE ALSO
+menuhit(3L), structures(3R).
+.SH WARNINGS
+Common uses for user-provided functions in the \fITitem\fP structure
+include modifying the members of menu data structures 
+such as the \fIicon\fP
+and \fIgrey\fP fields.  The user must be careful that such menu structures are
+properly initialized.
+.PP
+Whenever a menu is displayed, the screen image obscured by the menu is
+saved in a bitmap and then later restored when the menu disappears.
+If the terminal is
+out of memory and therefore cannot save the screen image,
+then the menu will be displayed in \s-1XOR\s+1 (exclusive or)
+mode on top of the existing screen image.
+Menu items may still be selected in this mode but 
+may be difficult to read.
+To remedy this problem,
+memory may be freed up by either deleting or
+reshaping windows before the menu is displayed.
+.PP
+Because the \fItmenuhit\fR code is recursive, 
+an arbitrary limit to a depth of eight 
+menus is defined to avoid stack overflow. 
+.PP
+The user should be careful not to perform screen writes from within the
+dfn, bfn, or hfn functions.  Any writes to the screen from within these
+functions can corrupt the displayed menu.

@@ -1,0 +1,41 @@
+.TH BL 4
+.CT 2 file_io file_inq_creat
+.SH NAME
+bl \- blind directory file system
+.SH DESCRIPTION
+A directory, blinded by
+.IR blmount (8),
+is identical in most respects with an ordinary
+directory except that it cannot be examined by
+.I read 
+or
+.IR stat (2)
+and names of newly created entries in the directory are assigned randomly
+by the kernel, in response to
+.I creat,
+.I mknod,
+.I mkdir,
+.I symlink,
+and
+.IR link (2)
+system calls.
+In the case of
+.I creat,
+if the name requested by the user matches an already existing file
+in the directory, the name is not randomized.
+The randomized name of a newly created directory entry
+may be found with
+.IR bcreat ;
+see
+.IR creat (2).
+.LP
+Names are randomized in the blind directory only;
+names of files properly below the directory are not mangled.
+.LP
+User processes may put temporary files in a blind directory
+to avoid possible violations of security policy by
+observing file names.
+.SH SEE ALSO
+.IR creat (2), 
+.IR mkunique (3), 
+.IR blmount (8)

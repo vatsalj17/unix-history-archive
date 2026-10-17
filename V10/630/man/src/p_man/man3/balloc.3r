@@ -1,0 +1,85 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH BALLOC 3R "630 MTG"
+.XE "balloc()"
+.XE "bfree()"
+.SH NAME
+balloc, bfree \- bitmap allocation
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B Bitmap \(**balloc (r)
+.br
+.B Rectangle r;
+.br
+.PP
+.B void bfree (b)
+.br
+.B Bitmap \(**b;
+.br
+.SH DESCRIPTION
+The
+.I balloc
+function
+either
+returns a pointer to a Bitmap large enough to contain the Rectangle
+.IR r ,
+or a 0 (\s-1NULL\s+1) for failure. 
+The bitmap is allocated first by a call to \fIalloc(3R)\fR for the
+Bitmap data structure and then to \fIgcalloc(3R)\fR for the actual
+Bitmap storage.
+The coordinate system inside the Bitmap is set by
+.IR r .
+The origin and corner of the Bitmap are those of
+.I r
+which must itself be in screen coordinates.
+.PP
+The
+.I bfree
+frees the storage associated with a Bitmap allocated by
+.IR balloc .
+.PP
+The terminal
+automatically frees all memory \fIballoc\fR'ed by a process
+when the process terminates or when
+the window it is running in is deleted.
+However, it is recommended that a process free its \fIballoc\fR'ed
+memory when the storage is no longer needed so that other
+processes
+will be able to use it.
+
+.SH EXAMPLE
+The following example shows the use of
+.I balloc
+and
+.I bfree
+in dynamically allocating memory for a Bitmap.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+main()
+{
+    Bitmap *b;
+    Bitmap *balloc();
+    void bfree();
+
+    b = balloc (Rect (0, 0, 48, 48));
+    .
+    .
+    .
+    bfree (b);
+}
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+alloc(3R), gcalloc(3R), structures(3R).
+.bp
+.SH BUGS
+.P
+If the bitmap image requested needs over 7000000 bytes, \f2balloc\f1
+may produce a process exception. If this happens, \f2gcalloc\f1
+memory will be corrupted, and other programs running in the
+terminal may be damaged.

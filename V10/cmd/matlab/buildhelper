@@ -1,0 +1,21 @@
+cat > helper.77 << @
+To use the direct access version of the help facility, 
+the following main program should be modified to point to the correct 
+file locations and run once during the installation of MATLAB.  
+Then subroutine HELPER should be modified to point to the same files 
+and compiled with the rest of MATLAB.
+
+***********************************************************************
+
+@
+dd if=helpset.f conv=ucase >> helper.77
+cat >> helper.77 << @
+
+***********************************************************************
+
+@
+dd if=src/helper.f conv=ucase >> helper.77
+ex helper.77 << @
+g:PARAMETER:s:\\/.*\\/::
+wq
+@

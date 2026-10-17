@@ -1,0 +1,119 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH LABELON 3R "630 MTG"
+.XE "labelon()"
+.XE "labeloff()"
+.XE "labelicon()"
+.XE "labeltext()"
+.SH NAME
+labelon, labeloff, labelicon, labeltext \- window labeling
+.SH SYNOPSIS
+.B #include <dmd.h>
+.br
+.B #include <label.h>
+.sp
+.B void labelon ( )
+.sp
+.B void labeloff ( )
+.sp
+.B void labelicon (bp, pos)
+.br
+.B Bitmap \(**bp;
+.br
+.B int pos;
+.sp
+.B labeltext (s, n, f)
+.br
+.B char \(**s;
+.br
+.B int n;
+.br
+.B int f;
+.SH DESCRIPTION
+The
+.I labelon
+function puts a label at the top of the window.
+The label area is
+.B LABEL_HEIGHT
+pixels high and spans the full interior width of the window.
+The label area is automatically updated to indicate the window's current host
+and if that host is multiplexed.
+It also indicates if scroll lock or caps lock is active for that window
+and if the application running in the window has requested the printer.
+.B Drect
+is changed to the new smaller size of the interior of the window.
+.PP
+The
+.I labeloff
+function removes the label from the window and changes
+.B Drect
+to the new larger size.
+.PP
+The
+.I labelicon
+function draws the given bitmap into the label.
+The bitmap is clipped to 16 pixels high and 
+to the right edge of the label area.
+Its leftmost edge is aligned to position \f2pos\f1.
+Positions are 16 pixels
+apart, starting with position 1 (L_HOST_POSITION) at the left
+edge of the label area. The first 5 positions (1 to 5) are used
+by the terminal for the following default information:
+.RS 5
+.TP 25
+L_HOST_POSITION
+current host connection
+.TP 25
+L_MUX_POSITION
+current host environment
+.TP 25
+L_PRINT_POSITON
+printer request status
+.TP 25
+L_SCROLL_POSITION
+scroll lock key status
+.TP 25
+L_CAP_POSITION
+caps lock key status
+.PP
+.RE
+.bp
+It is not recommended for an application to override those
+fields with its own bitmaps. The first
+position index that an application should use is
+.B L_USER_POSITION
+which guarantees non-interference with the terminal.
+.PP
+Clipped portions of a label bitmap are not remembered by the
+terminal if the window is made larger.
+.PP
+The function 
+.I labeltext 
+displays the string \fIs\fR of \fIn\fR characters in the
+label area of the window based on the flag \fIf\fR. The possible values for
+f are:
+.RS 5
+.TP 19
+L_LEFT
+left justify the string from the L_USER_POSITION index position
+.TP 19
+L_RIGHT
+right justify the string in the label area
+.TP 19
+L_CENTER
+center the string in the full length label area
+.PP
+.RE
+The font used to display the string is the terminal's \fBmedium\fR font.
+The display mode is F_XOR; therefore, 
+.I labeltext
+will superimpose the new string over any existing label strings. 
+If there is not enough room in the label area for all characters to fit,
+the string will be clipped off.
+.PP
+When the window is reshaped, the terminal only redraws the label area
+with the default information. Any user supplied icons and strings must
+be redrawn by the application.
+.PP
+Any application that makes use of both \fIlabelicon\fR and \fIlabeltext\fR
+should make sure that they do not write to the same positions
+of the label area.

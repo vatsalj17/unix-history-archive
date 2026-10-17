@@ -1,0 +1,62 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH EXIT 3R "630 MTG"
+.XE "exit()"
+.SH NAME
+exit \- cease execution
+.SH SYNOPSIS
+.B void exit ( );
+.SH DESCRIPTION
+The
+.I exit
+function
+terminates a process.
+Calling
+.I exit
+replaces the running process with the default terminal program.
+When a process calls
+.IR exit ,
+all local resources [keyboard, mouse, storage, etc.]
+are deallocated automatically.
+Any associated \s-1UNIX\s+1 system process must
+be terminated separately.
+.PP
+Exit is called automatically when an application program
+returns from main( ).
+.PP
+When dmdio.h is included,
+.I exit
+acts differently.
+In addition to the above, it will terminate the host side of
+.IR jx .
+Therefore, exit must be called
+.br
+explicitly by a process downloaded with
+.I jx
+to terminate the host side.
+.SH EXAMPLE
+The following code fragment shows how a process can exit
+when a ``q'' is typed.
+
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+main()
+{
+     char c;
+ 
+     request (KBD);
+ 
+     .
+     .
+ 
+     if ( (c = kbdchar()) == 'q')
+             exit();
+     .
+     .
+
+}
+.fi
+.ft R
+.RE

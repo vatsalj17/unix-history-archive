@@ -1,0 +1,100 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH JELLIPSE 3L "630 MTG"
+.XE "jellipse()"
+.XE "jeldisc()"
+.XE "jelarc()"
+.SH NAME
+jellipse, jeldisc, jelarc \- draw ellipse on display
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B void jellipse (p, a, b, f)
+.PP
+.B void jeldisc (p, a, b, f)
+.PP
+\fBvoid jelarc (p, a, b, p1, p2, f)\fR
+.PP
+.B Point p, p1, p2;
+.br
+.B int a, b;
+.br
+.B Code f;
+.SH DESCRIPTION
+The
+.I jellipse
+function
+draws 
+an approximate ellipse centered at
+.IR p ,
+with horizontal semi-axis
+.I a
+and vertical semi-axis
+.I b
+with Code
+.IR  f 
+in the display bitmap.
+.PP
+The
+.I jeldisc
+function
+draws an elliptical disc centered at
+.IR p ,
+with horizontal semi-axis
+.I a
+and vertical semi-axis
+.I b
+with Code
+.IR f 
+in the display bitmap.
+.PP
+The
+.I jelarc
+function
+draws the corresponding elliptical arc,
+centered at
+.IR p ,
+counterclockwise from the ellipse point closest to
+.I p1
+to the ellipse point closest to
+.I p2
+with Code
+.IR f 
+in the display bitmap.
+.PP
+All coordinates and semi-axes are in window coordinates.
+.SH EXAMPLE
+The following routine draws a row of eight ellipses,
+a row of eight discs, and a row of eight arcs, scaled
+to the shape of the window.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+draw()
+{
+  Point p;
+  int i, r;
+
+  r = 50;
+  p.y = 200;
+  for ( p.x=100; p.x < XMAX-50; p.x+=120)
+       jellipse (p, r, r-25, F_XOR);
+  p.y = 600;
+  for ( p.x=100; p.x < XMAX-50; p.x+=120)
+       jeldisc (p, r-25, r, F_XOR);
+  p.y = 900;
+  for (p.x=100; p.x < XMAX-50; p.x+=120)
+       jelarc (p, r, r, Pt(p.x-r, p.y),
+               Pt(p.x+r, p.y), F_XOR);
+
+  request(KBD);
+  wait(KBD);
+}
+.fi
+.RE
+.ft R
+.SH SEE ALSO
+circle(3L), ellipse(3L), globals(3R), jcircle(3L),
+structures(3R), transform(3R/3L).

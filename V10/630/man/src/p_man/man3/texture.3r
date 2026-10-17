@@ -1,0 +1,76 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH TEXTURE 3R "630 MTG"
+.XE "texture()"
+.XE "T_grey"
+.XE "T_lightgrey"
+.XE "T_darkgrey"
+.XE "T_black"
+.XE "T_white"
+.XE "T_checks"
+.XE "T_background"
+.SH NAME  
+texture \- draw Texture16 in Rectangle in Bitmap
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+void texture (b, r, t, f)
+.br
+Bitmap \(**b; 
+.br 
+Rectangle r;
+.br 
+Texture16 \(**t; 
+.br 
+Code f;
+.sp
+Texture16 T_grey, T_lightgrey, T_darkgrey;
+.sp
+Texture16 T_black, T_white, T_background, T_checks;
+.SH DESCRIPTION
+The
+.I texture
+function
+draws the Texture16 specified by
+.I t
+with function Code
+.I f
+in the Rectangle
+.I r
+in the Bitmap
+.IR b .
+The Texture16s listed above are predefined.
+.SH EXAMPLE
+The following program allows doodling with a Texture16.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+main()
+{
+	Rectangle r;
+	Point s;
+	s.x = 16;
+	s.y = 16;
+	request (MOUSE);
+	for (;;)
+	{
+		wait(MOUSE);
+		r.origin = mouse.xy;
+		r.corner = add (r.origin, s);
+		if( button3() )
+			break;
+		if( button1() )
+			texture (&display, r,
+				&T_grey, F_STORE);
+		if( button2() )
+			texture (&display, r,
+				&T_grey, F_CLR);
+	}
+}
+\fR
+.fi
+.RE
+.SH SEE ALSO
+globals(3R), jtexture(3L), structures(3R).

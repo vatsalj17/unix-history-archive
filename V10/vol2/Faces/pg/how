@@ -1,0 +1,15 @@
+left ear:
+x new=(x>80 && x<160 && y>185 && y<300)?$2[xclamp(x-80), yclamp(y-185)]:$1
+right ear
+x new=(x>405 && x<470 && y>195 && y<305)?$3[xclamp(x-405), yclamp(y-195)]:old
+
+x { int r, a;
+	for (y = 0; y < Y; y++)
+	for (x = 0; x < X; x++)
+	{	r = r_polar(x,y)
+		a = A_polar(x,y)
+		a = a + (y*x)/4
+		a = a%36000
+		new[x,y] = $Pg[xclamp(X_cart(r, a)), yclamp(Y_cart(r,a))]
+	}
+}

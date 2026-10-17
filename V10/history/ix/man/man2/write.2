@@ -1,0 +1,54 @@
+.TH WRITE 2
+.CT 2 file_io comm_proc
+.SH NAME
+write \(mi write on a file
+.SH SYNOPSIS
+.nf
+.B int write(fildes, buffer, nbytes)
+.B char *buffer;
+.fi
+.SH DESCRIPTION
+.I Write
+writes
+.I nbytes
+bytes of data starting at
+.I buffer
+to the file associated with
+.I fildes
+at the file pointer location.
+The file pointer is advanced by the number of bytes written.
+.PP
+The number of characters actually written is returned.
+It should be regarded as an error
+if this is not the same as requested.
+.PP
+If 
+.IR fildes
+refers to an append-only file (see
+.IR stat (2)),
+the file pointer is set to the end of the
+file before writing.
+.PP
+Writes which are aligned with file system blocks
+are more efficient than others; see
+.IR filsys (5).
+.SH "SEE ALSO"
+.IR creat (2),
+.IR open (2), 
+.IR pipe (2), 
+.IR select (2)
+.SH DIAGNOSTICS
+.BR EBADF ,
+.BR EFAULT ,
+.BR EINTR ,
+.BR EINVAL ,
+.BR EIO ,
+.BR ELAB ,
+.BR ENXIO ,
+.BR EPIPE ,
+.BR EROFS
+.SH BUGS
+A
+.I write
+call may fail because of a prior call to
+.IR lseek .

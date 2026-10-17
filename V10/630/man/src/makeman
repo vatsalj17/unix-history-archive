@@ -1,0 +1,29 @@
+#
+# makeman - make and install individual manual pages specified as arguments
+#
+for i
+do
+	if test ! -r $i
+	then
+		echo cannot read $i
+		exit 1
+	fi
+	tbl an $i |eqn| nroff -T37 >tmp
+	if test `basename $i | wc -c` -le 12
+	then
+		pack tmp >/dev/null
+	fi
+	if test -f tmp.z
+	then
+		rm -f ../$i	# remove the old version if it wasn't packed
+		cp tmp.z ../$i.z
+		rm tmp.z
+		echo "$i.z added to catman directory"
+	else # error code - no savings from pack so file name
+	     # unchanged
+		rm -f ../$i.z	# remove the old version if it was packed
+		cp tmp ../$i
+		rm tmp
+		echo "$i added to catman directory"
+	fi
+done

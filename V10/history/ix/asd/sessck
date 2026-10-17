@@ -1,0 +1,12 @@
+drop stat `sed '
+	/^f.* /!d
+	s///
+' $1` |
+awk '
+function warn() { if(!once) print "SETPRIV NEEDED:"; once++; print f }
+BEGIN			{ X = "------" }
+/:$/			{ i = 0; f = $0 }
+!/:$/			{ i = i + 1 }
+/Security/		{ warn() }
+i==6 && ($1!~/->/) && ($1!~X||$2!~X)	{ warn() }
+'

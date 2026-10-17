@@ -1,0 +1,73 @@
+.TH IOCTL 2
+.CT 2 file_io file_inq_creat
+.SH NAME
+ioctl \(mi miscellaneous control operations
+.SH SYNOPSIS
+.nf
+.B #include <sgtty.h>
+.PP
+.B int ioctl(fildes, request, argp)
+.B struct sgttyb *argp;
+.fi
+.SH DESCRIPTION
+.I Ioctl
+performs a variety of functions
+on special files and streams.
+The writeups of various devices
+in section 4 discuss how
+.I ioctl
+applies to them.
+.PP
+Some calls, however, apply to any open file,
+including
+the process-exclusive calls
+.BR FIOPX,
+.BR FIONPX,
+and
+.BR FIOQX
+(see
+.IR pex (4)),
+as well as
+the following two standard calls,
+.IP
+.L
+ioctl(fildes, FIOCLEX, (void *)0);
+.br
+.L
+ioctl(fildes, FIONCLEX, (void *)0);
+.LP
+The first causes the file to be closed automatically upon
+a successful
+.IR exec (2);
+the second causes the file to be left open.
+.SH "SEE ALSO"
+.IR stty (1), 
+.IR exec (2),
+.IR proc (4),
+.IR ttyld (4)
+.SH DIAGNOSTICS
+.BR EBADF ,
+.BR EFAULT ,
+.BR EIO ,
+.BR ELAB ,
+.BR ENODEV ,
+.BR ENOTTY
+.SH BUGS
+Strictly speaking,
+since
+.I ioctl
+may be extended in different ways to devices with
+different properties,
+.I argp
+should have an open-ended declaration like
+.IP
+.L
+union { struct sgttyb ...; ... } *argp;
+.PP
+The important thing is that the size is at least
+.B sizeof(struct
+.BR sgttyb) .
+.br
+.I Ioctl
+requests vary among UNIX systems;
+undisciplined use is likely to compromise portability.

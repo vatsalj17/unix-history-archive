@@ -1,0 +1,118 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH JSEGMENT 3L "630 MTG"
+.XE "jline()"
+.XE "jlineto()"
+.XE "jsegment()"
+.SH NAME
+jsegment, jline, jlineto \- draw line on display
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B void jsegment (p, q, f) 
+.PP
+.B void jline (p, f)
+.PP
+.B void jlineto (p, f)
+.PP
+.B Point p, q;
+.br
+.B Code f;
+.SH DESCRIPTION
+The
+.I jline
+function
+draws a line in the display bitmap with Code
+.I f
+from the current window point (initially (0, 0) in window coordinates)
+along the relative vector
+.I p
+which is in window coordinates.
+.PP
+The
+.I jlineto
+function
+draws a line in the display bitmap from the current window point 
+to the absolute window coordinate
+.IR p 
+with Code 
+.I f.
+.PP
+The
+.I jsegment
+function
+draws a line in the diplay bitmap from the window coordinate
+.I p
+to the window coordinate
+.IR q 
+with Code
+.I f.
+.PP
+The
+line functions
+.IR jline ,
+.IR jlineto ,
+and
+.I jsegment
+leave the current window point at the end of the line.
+.PP
+.I PtCurrent
+is the global used to refer to the current window point.
+.SH EXAMPLE
+The following program draws three boxes on the screen 
+using three different methods.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+main()
+{
+   box(Rect(400,100,600,300));
+   rbox(Rect(0,0,200,200),Pt(0,300));
+   sbox(Rect(400,700,600,900));
+   request(KBD);
+   wait(KBD);
+}
+
+/* draw absolute */
+box(r)
+Rectangle r;
+{
+   jmoveto (r.origin);
+   jlineto (Pt (r.corner.x, r.origin.y), F_XOR);
+   jlineto (r.corner, F_XOR);
+   jlineto (Pt (r.origin.x, r.corner.y), F_XOR);
+   jlineto (r.origin, F_XOR);
+}
+
+/* draw relative */
+rbox(r, p)
+Rectangle r;
+Point p;
+{
+   jmove (p);
+   jline (Pt (r.corner.x - r.origin.x, 0), F_XOR);
+   jline (Pt (0, r.corner.y - r.origin.y), F_XOR);
+   jline (Pt (r.origin.x - r.corner.x, 0), F_XOR);
+   jline (Pt (0, r.origin.y - r.corner.y), F_XOR);
+}
+
+/* draw with segments */
+sbox(r)
+Rectangle r;
+{
+   jsegment (r.origin, Pt(r.corner.x,
+             r.origin.y), F_XOR);
+   jsegment (Pt(r.corner.x, r.origin.y),
+             r.corner, F_XOR);
+   jsegment (r.corner, Pt(r.origin.x,
+             r.corner.y), F_XOR);
+   jsegment (Pt(r.origin.x, r.corner.y),
+             r.origin, F_XOR);
+}
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+globals(3R), pt(3L), segment(3R), structures(3R), transform(3R/3L).

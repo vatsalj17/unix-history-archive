@@ -1,0 +1,100 @@
+.TH CL 8
+.CT 1 sa_nonmortals
+.SH NAME
+cl, integrity \- file system label check
+.SH SYNOPSIS
+.B /etc/cl
+[
+.IR specfile " | " dir
+] ...
+.PP
+.B /etc/integrity
+[
+.I rootdir
+]
+.SH DESCRIPTION
+.I Cl
+examines file trees for correctness of labels.
+Each 
+.I specfile
+argument names a file containing a description
+of the labels expected in a given subtree of a file system.
+Each line of a
+.I specfile
+has the form
+.IP
+.L
+filename uid,gid mode capabilities licenses label
+.LP
+User and group ids are specified in the style of
+.IR chown (8).
+The mode is specified in the style of
+.IR chmod (2);
+only the 07777 bits are significant.
+Capabilities and licenses are in the style of
+.IR atopriv  ;
+see
+.IR labtoa (3).
+The label is in the style of
+.IR atolab,
+without capabilities or licenses.
+.PP
+The first valid line names the root of the tree in question.
+Subsequent lines name particular files in the tree.
+A report is made for each `suspicious' file and for each
+particular file which does
+not match its description in 
+.IR specfile .
+.LP
+A suspicious file is a file that is not named in the 
+.I specfile
+for which one of the following holds:
+.IP
+The label has flag
+.B L_UNDEF
+or
+.BR L_YES .
+.br
+The file is a special file the label flag is
+.BR L_NO .
+.br
+The file is not a special file the label flag is not
+.BR L_NO .
+.br
+The lattice value of the label is not dominated by the
+label in the first line of
+.IR specfile .
+.br
+The capability or license is not dominated by the corresponding
+value in the first line of
+.IR specfile .
+.LP
+Each named directory argument
+.I dir
+is treated as if there were a 
+.I specfile
+argument
+consisting of just a single line
+.IP
+.EX
+\fIdir\fP bin,bin 666 ----- ----- 0000...
+.EE
+.I Integrity
+surveys the directory tree dependent from
+.I rootdir,
+or
+.L /
+if no
+.I rootdir
+is given.
+It reports non-bottom labels, which are possible signs
+of loss of integrity \- modification without privilege.
+The search cuts off at directories with non-bottom labels.
+.SH "SEE ALSO"
+.IR getflab (2),
+.IR ftw (3),
+.IR lcheck (8)
+.SH BUGS
+Extraneous diagnostics
+may be produced if this command is applied to
+active file systems.

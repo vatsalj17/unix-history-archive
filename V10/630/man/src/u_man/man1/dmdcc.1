@@ -1,0 +1,247 @@
+.TH DMDCC 1 "630 MTG"
+.SH NAME
+dmdcc \- 630 MTG C compiler
+.SH SYNOPSIS
+\f3dmdcc [\f1 options \f3]\f1 file ...
+.SH DESCRIPTION
+The
+.I dmdcc
+command is the 630 MTG C compiler. Any software to be downloaded
+into the 630 MTG must be compiled using this command.
+.PP
+\fIDmdcc\fR works in a similar manner to
+other compiler (cc) commands but is enhanced to call
+\fImc68cpp\fR and \fImc68ld\fR
+with special arguments for the 630 MTG development environment.
+In particular,
+the \fIdmdcc\fR command defines the variable \fBDMD630\fR,
+it sets the include search path
+to $DMD/include, it sets the library search path to $DMD/lib,
+it includes the standard 630 MTG libraries, it links in the 630
+MTG C
+run-time start-up routine crtm.o, and it tells \fImc68ld\fR
+to retain relocation information so the
+resulting executable file can be relocated before download into the
+630 MTG.
+.PP
+The exact arguments passed to \fImc68cpp\fR and \fImc68ld\fR
+can be viewed by including the \fI-#\fR debugging argument on the
+\fIdmdcc\fR command line.
+.PP
+The
+\fIdmdcc\fR utility
+accepts three types of arguments:
+.RS 8
+.B .c
+.br
+.B .s
+.br
+.B .o
+.RE
+.PP
+Arguments whose names end with
+.B .c
+are the C source programs, and those with
+.B .s
+are the assembly programs.
+They are compiled/assembled, and
+each object program 
+whose name is that of the source with
+.B .o
+substituted
+.RB "for " .c " or " .s
+is left in the file.
+The
+.B .o
+file is normally deleted if a single
+C program is compiled and link-edited all at one time.
+.PP
+The following flags are interpreted by
+.I dmdcc\c
+\&.
+See
+.IR mc68cpp (1),
+.IR mc68as (1)
+and
+.IR mc68ld (1)
+for other useful flags.
+.PP
+.TP 6
+\fB\-c\fR
+Suppress the link-editing phase of the compilation, and force
+an object file to be produced even if only one program is compiled.
+.PP
+.TP 6
+\fB\-g\fR
+Flag to the compiler to produce additional information needed for the
+use of
+.IR dmdpi (1).
+\}
+.PP
+.TP 6
+\fB\-O\fR
+Invoke an object-code optimizer.
+The optimizer will move, merge, and delete code; this option should not be
+used if it is expected that compiled code may be debugged with \fIdmdpi\fR(1).
+.PP
+.TP 6
+\fB\-W\fIc\fB,\fRarg1[\fB,\fRarg2...]
+Hand off the argument[s]
+to pass
+.I c
+where
+.I c
+is one of
+.RB [ p02al ]
+indicating preprocessor,
+compiler,
+optimizer,
+assembler,
+or link editor, respectively. For example:
+.RS 6
+.ce
+.B \-Wa,\-m
+.br
+invokes the \f2m4\f1 macro preprocessor on the input to the assembler.
+.RE
+.PP
+.TP 6
+\fB\-S\fR
+Compile the named C programs, and leave the
+assembler-language output on corresponding files suffixed
+.BR .s .
+.PP
+.TP 6
+\fB\-P\fR
+Run only the macro preprocessor
+on the named C programs, and leave the output on corresponding
+files suffixed
+.BR .i .
+.TP 6
+\fB\-E\fR
+Same as the
+.B \-P
+option except the output is directed to the standard output.
+This allows the preprocessor to be used as a filter for
+any other compiler.
+.PP
+.TP 6
+\fB\-#\fR
+Debug flag. Show the command lines passed to \fImc68cpp\fR,
+\fImc68ccom\fR, \fImc68as\fR and \fImc68ld\fR.
+.PP
+.TP 6
+\fB\-x\fR
+Turn off special processing for the 630 MTG environment. This argument should
+not be used when compiling programs to be downloaded into the 630
+MTG.
+.PP
+.TP 6
+\f3\-Z\f1 \f2n\f1
+Allocate \f2n\f1 bytes of stack for process. If not specified the
+default is 2048, Note that stack size can be overridden at
+download time with the \f2dmdld -Z\f1 option. If \f2n\f1 is
+specified smaller than 2048, it is defaulted to 2048.
+.PP
+.DT
+.br
+.DT
+.PP
+Other arguments
+are taken
+to be either C preprocessor or link-editor flag arguments, or C-compatible
+object programs, typically produced by an earlier
+.I dmdcc
+run,
+or perhaps libraries of C-compatible routines.
+These programs, together with the results of any
+compilations specified, are link-edited (in the order
+given) to produce an executable program with name
+.B dmda.out
+unless the
+.B \-o
+option of the link-editor is used.
+.PP
+The
+.I dmdcc
+command expects the \fBDMD\fR shell variable to be set and exported in
+the user's environment.
+This variable must point to the "root" directory of the 630 MTG software
+node.
+.PP
+\fIDmdcc\fR tags the downloadable ouput file with a
+programming envirionment identification number (PEID) which is
+used by \fIdmdld\fR prior to download to verify copatibility
+with terminal firmware. The PEID is determined by \fIdmdcc\fR
+from the firmware routine linkages included in the process.
+Every firmware routine called by the process causes a linkage
+to the routine to be retrieved from archive and included in
+the load module. Each of these linkage routines is tagged with
+a PEID related to the firmware version that supports the
+called firmware routine. The PEID associated with the latest
+level of firmware required to support those linkages retrieved
+from archive is tagged to the load module. Compatibility with
+earlier firmware releases is maintained as long as new
+firmware functions not supported by older firmware are not used
+in the program.
+.SH FILES
+.PD 0
+.TP 22
+file.c
+input file
+.TP 22
+file.o
+object file
+.TP 22
+file.s
+assembly language file
+.TP 22
+dmda.out
+link-edited output
+.TP 22
+/usr/tmp/mc68?
+temporary file
+.TP 22
+$DMD/lib/mc68cpp
+preprocessor
+.TP 22
+$DMD/lib/mc68ccom
+compiler
+.TP 22
+$DMD/lib/mc68optim
+optimizer
+.TP 22
+$DMD/bin/mc68as
+assembler
+.TP 22
+$DMD/bin/mc68ld
+link loader
+.DT
+.PD
+.br
+.SH SEE ALSO
+dmdpi(1),
+mc68as(1),
+mc68cpp(1),
+mc68ld(1).
+.br
+m4(1) in the
+\f2UNIX System V Programmer's Reference Manual\f1.
+.br
+.sp
+.IR "The C Programming Language",
+by Kernighan, B. W., and Ritchie, D. M.,
+Prentice-Hall, 1978.
+.br
+.I Programming in C\-A Tutorial
+by Kernighan, B. W.
+.br
+.I C Reference Manual
+by Ritchie, D. M.
+.br
+.br
+.SH DIAGNOSTICS
+The diagnostics produced by the C compiler are sometimes
+cryptic.
+Occasional messages may be produced by the assembler
+or link-editor.

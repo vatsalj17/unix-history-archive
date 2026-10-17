@@ -1,0 +1,41 @@
+#	LMAP
+#
+#	Map list
+#
+#	Ralph E. Griswold
+#
+#	Last modified 12/15/85
+#
+
+# This procedure is modeled after the built-in string mapping function.
+# The main difference is that the first argument is modified, rather
+# than constructing a new list. This is in the interests of efficiency
+# and likely uses, but is easily changed.
+#
+# Warning:  a2 and a3 are cached so that the table of correspondences
+# is not rebuilt if lmap is called successively with the same mapping
+# lists. Just because a2 and a3 are the same does not mean that they
+# have the same values on successive calls of lmap. Thus, the
+# equivalence of maps is taken from the value of a2 and a3, not their
+# respective elements. This is deliberate, but could result in
+# unexpected results.
+
+procedure lmap(a1,a2,a3)
+   static lmem2, lmem3, lmaptbl, tdefault
+   local i
+   initial tdefault := []
+   if not(type(a1) == type(a2) == type(a3) == "list")
+      then stop("illegal type in lmap")
+   if not(*a2 = *a3)
+      then stop("Run-time error:\nSecond and third arguments of lmap differ in length")
+   if not(lmem2 === a2 & lmem3 === a3) then {	# if an argument is new, rebuild
+      lmem2 := a2				# save for future reference
+      lmem3 := a3
+      lmaptbl := table(tdefault)		# new mapping table
+      every i := 1 to *a2 do			# build the map
+         lmaptbl[a2[i]] := a3[i]
+      }
+   every i := 1 to *a1 do			# map the values
+      a1[i] := (tdefault ~=== lmaptbl[a1[i]])
+   return a1
+end

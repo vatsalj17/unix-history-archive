@@ -1,0 +1,32 @@
+#	ZIPSORT
+#
+#	Sort formatted labels by zipcode
+#
+#	Ralph E. Griswold
+#
+#	Last modified 8/25/85
+#
+
+procedure main(x)
+   local t, a, label, zip, y, i, use, lsize
+   use := "usage: zipsort [-d]"
+   lsize := 9
+   i := 0
+   while y := x[i +:= 1] do
+      if y == "-d" then lsize := (0 < integer(x[i +:= 1])) | stop(use)
+      else stop(use)
+   t := table("")
+   repeat {
+      label := ""
+      every 1 to lsize do
+         label ||:= read() || "\n" | break break
+      label ? {
+         while tab(upto(' ')) do tab(many(' '))
+         zip := tab(upto('-') | 0)
+         zip := integer(zip) | write(&errout,"*** illegal zipcode:  ",label)
+         }
+      t[zip] ||:= label
+      }
+   a := sort(t)
+   every writes((!a)[2])
+end

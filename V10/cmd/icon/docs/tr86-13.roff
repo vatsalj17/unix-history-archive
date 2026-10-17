@@ -1,0 +1,3199 @@
+.ds l] /usr/lib/bmac
+'so \*(l]/bmac.std
+.de s[   \" start reference
+.nh
+.IP \\*([F. 5n
+..
+.\"	RT -  reset everything to normal state
+.de RT
+.if !\\n(1T .BG
+.if !\\n(IK .if !\\n(IF .if !\\n(IX .di
+.ce 0
+.ul 0
+.if \\n(NX=0 .if \\n(AJ=0 .ll \\n(LLu
+.ps \\n(PS
+.if \\n(VS>=40 .vs \\n(VSu
+.if \\n(VS<=39 .vs \\n(VSp
+.if \\n(IP .in -\\n(IQu
+.if !\\n(IP .nr IQ \\n(PIu
+.if \\n(IP .nr IP -1
+.ft 1
+.bd 1
+.ta 5n 10n 15n 20n 25n 30n 35n 40n 45n 50n 55n 60n 65n 70n 75n 80n
+.fi
+..
+.	\"IZ - initialization
+.de IZ
+.if \\n(FM=0 .nr FM 1i
+.nr YY -\\n(FMu
+.nr XX 0 1
+.nr IP 0
+.nr PI 3n
+.nr IQ \\n(PIu
+.nr PS 10
+.nr VS 12
+.if !\\n(PD .if n .nr PD 1v
+.if !\\n(PD .if t .nr PD 0.3v
+.nr ML 3v
+.ps \\n(PS
+.if \\n(VS>40 .vs \\n(VSu
+.if \\n(VS<=39 .vs \\n(VSp
+.if \\n(IR=0 .nr IR 5n
+.nr TB 0
+.nr SJ \\n(.j
+.nr LL 6.5i
+.ll \\n(LLu
+.nr LT \\n(.l
+.lt \\n(LTu
+.ev 1
+.nr FL \\n(LLu*11u/12u
+.ll \\n(FLu
+.ps 8
+.vs 10p
+.ev
+.if \\*(CF .ds CF "\(hy \\\\n(PN \(hy
+.wh 0 NP
+.wh -\\n(FMu FO
+.ch FO 16i
+.wh -\\n(FMu FX
+.ch FO -\\n(FMu
+.wh -\\n(FMu/2u BT
+..
+.de TR \" Tech Report
+.nr ST 2
+.pn 0
+.ds MN \\$1
+.rm SG
+.br
+..
+.de GR	\" Grant - full
+.ds GS *
+.de GX
+*This work was supported by the National Science Foundation under
+.if \\n(.$=1 Grant \\$1.
+.if \\n(.$=2 Grants \\$1 and \\$2.
+.if \\n(.$=3 Grants \\$1, \\$2, and \\$3.
+.if \\n(.$=4 Grants \\$1, \\$2, \\$3, and \\$4.
+\\..
+..
+.de GP	\" Grant - part
+.ds GS *
+.de GX
+*This work was supported in part by the National Science Foundation under
+.if \\n(.$=1 Grant \\$1.
+.if \\n(.$=2 Grants \\$1 and \\$2.
+.if \\n(.$=3 Grants \\$1, \\$2, and \\$3.
+.if \\n(.$=4 Grants \\$1, \\$2, \\$3, and \\$4.
+\\..
+..
+.	\"TL - title and initialization
+.de TL
+.br
+.nr TV 1
+.ME
+.rm ME
+.di WT
+.nr SJ \\n(.j
+.na
+.fi
+.ll 3.75i
+.ft 3
+.ps 10
+.hy 0
+..
+.de TX
+.rs
+.sp .5i
+.ce 1000
+.ps 12
+.ft 3
+.vs 15p
+.if n .vs 1P
+.ne 4
+.hy 0
+.WT
+.hy 14
+.ce 0
+..
+.de TY
+.di XT
+.ll 3.75i
+.fi
+.hy 0
+.WT
+\h'-\w' 'u'\\*(GS
+.hy 14
+.nf
+.di
+.ll \\n(LLu
+.ce 1000
+.ps 12
+.ft 3
+.if t .vs 15p
+.if n .vs 1P
+.ne 4
+.XT
+.ce 0
+..
+.	\"	AU - author(s)
+.de AU
+.nr AV 1
+.ad \\n(SJ
+.br
+.di
+.br
+.nf
+.nr NA +1
+.ds R\\n(NA \\$1
+.ds E\\n(NA \\$2
+.di A\\n(NA
+.ll \\n(LLu
+.if t .ft 2
+.if n .ft 1
+.ps 10
+..
+.de AX
+.ft 1
+.rs
+.ce 1000
+.ps 10
+.vs 12p
+.if n .sp 2
+.if t .sp
+.A1
+.if n .sp
+.if t .sp 0.5
+.ns
+.I1
+.if \\n(NA-1 .if n .sp 2
+.if \\n(NA-1 .if t .sp
+.A2
+.if \\n(NA-1 .if n .sp
+.if \\n(NA-1 .if t .sp 0.5
+.ns
+.I2
+.if \\n(NA-2 .if t .sp
+.if \\n(NA-2 .if n .sp 2
+.A3
+.if \\n(NA-2 .if t .sp 0.5
+.if \\n(NA-2 .if n .sp
+.ns
+.I3
+.if \\n(NA-3 .if t .sp
+.if \\n(NA-3 .if n .sp 2
+.A4
+.if \\n(NA-3 .if t .sp 0.5
+.if \\n(NA-3 .if n .sp
+.ns
+.I4
+.if \\n(NA-4 .if t .sp
+.if \\n(NA-4 .if n .sp 2
+.A5
+.if \\n(NA-4 .if n .sp
+.if \\n(NA-4 .if t .sp 0.5
+.ns
+.I5
+.if \\n(NA-5 .if t .sp
+.if \\n(NA-5 .if n .sp 2
+.A6
+.if \\n(NA-5 .if n .sp
+.if \\n(NA-5 .if t .sp 0.5
+.ns
+.I6
+.if \\n(NA-6 .if t .sp
+.if \\n(NA-6 .if n .sp 2
+.A7
+.if \\n(NA-6 .if n .sp
+.if \\n(NA-6 .if t .sp 0.5
+.ns
+.I7
+.if \\n(NA-7 .if t .sp
+.if \\n(NA-7 .if n .sp 2
+.A8
+.if \\n(NA-7 .if n .sp
+.if \\n(NA-7 .if t .sp 0.5
+.ns
+.I8
+.if \\n(NA-8 .if t .sp
+.if \\n(NA-8 .if n .sp 2
+.A9
+.if \\n(NA-8 .if n .sp
+.if \\n(NA-8 .if t .sp 0.5
+.ns
+.I9
+..
+.	\"AI - authors institution
+.de AI
+.br
+.ft 1
+.di
+.di I\\n(NA
+.nf
+..
+.	\"AB - begin an abstract
+.de AB
+.br
+.di
+.ul 0
+.ce 0
+.nr 1T 1
+.nr IK 1
+.nr KI 1
+.di WB
+.rs
+.nr AJ 1
+.ce 1
+.ft 2
+.if n .ul
+.ll \\n(LLu
+.if \\n(.$=0 ABSTRACT
+.if \\n(.$>0 .if !"\\$1"-" .if !"\\$1"no"  \\$1
+.if \\n(.$=0 .sp
+.if \\n(.$>0 .if !"\\$1"-" .if !"\\$1"no" .sp
+.hy 14
+.ul 0
+.ce 0
+.fi
+.ft 1
+.nr OJ \\n(.i
+.in +\\n(.lu/12u
+.ll -\\n(.lu/12u
+.br
+.ps \\n(PS
+.if \\n(VS>40 .vs \\n(VSu
+.if \\n(VS<=39 .vs \\n(VSp
+.ti +\\n(PIu
+..
+.	\"AE - end of an abstract
+.de AE
+.br
+.di
+.ll \\n(LLu
+.ps \\n(PS
+.if \\n(VS>40 .vs \\n(VSu
+.if \\n(VS<=39 .vs \\n(VSp
+.nr 1T 0
+.nr IK 0
+.in \\n(OJu
+.nr AJ 0
+.di
+.ce 0
+.if \\n(ST=2 .SY
+.if \\n(ST<3 .rm SY
+..
+.	\"S2 - tech report style
+.	\"SY - cover sheet of released paper
+.de SY
+.ch FO 16i
+.ch FX 16i
+.ll \\n(LLu
+.rs
+.sp |13P
+.ns
+.if \\n(TV .TY
+.if \\n(AV .AX
+.rs
+.sp |22P
+.if !'\\*(MN'' TR \\*(MN
+.ce 0
+.nf
+.sp |28P
+.ls 1
+.ll -\\n(.lu/12u
+.WB
+.ll \\n(LLu
+.ls
+.ce 1000
+.sp |8i
+\\*(DY
+.sp 2
+Department of Computer Science
+.sp 1
+The University of Arizona
+.sp 1
+Tucson, Arizona 85721
+.ce 0
+.sp |10i
+.na
+.fi
+.GX
+.br
+..
+.	\"S2 - first text page, released paper format
+.de S2
+.ce 0
+.br
+.SY
+.rm SY
+.bp 1
+.if \\n(TV .TX
+.rs
+.ce 0
+.ft 1
+.ad \\n(SJ
+..
+.	\"S0- mike lesk conserve paper style
+.de S0
+.ce 0
+.br
+.ll \\n(LLu
+.if \\n(TV+\\n(AV>0 .ns
+.if \\n(TV .TX
+.if \\n(AV .AX
+.if \\n(TV+\\n(AV>0 .rs
+.ce 0
+.nf
+.if \\n(TV>0 .sp 2
+.ls 1
+.WB
+.ls
+.fi
+.ad \\n(SJ
+..
+.	\"SG - signature
+.de SG
+.br
+.KS
+.in +2u*\\n(.lu/3u
+.sp 2
+.A1
+.if \\n(NA-1 .sp 2
+.A2
+.if \\n(NA-2 .sp 2
+.A3
+.if \\n(NA-3 .sp 2
+.A4
+.if \\n(NA-4 .sp 2
+.A5
+.if \\n(NA>5 .sp 2
+.A6
+.if \\n(NA>6 .sp 2
+.A7
+.if \\n(NA>7 .sp 2
+.A8
+.if \\n(NA>8 .sp 2
+.A9
+.in
+.nf
+.sp -1
+.if \\n(.$>=1 \\$1
+.if \\n(.$>=2 \\$2
+.if \\n(.$>=3 \\$3
+.if \\n(.$>=4 \\$4
+.if \\n(.$>=5 \\$5
+.if \\n(.$>=6 \\$6
+.if \\n(.$>=7 \\$7
+.if \\n(.$>=8 \\$8
+.if \\n(.$>=9 \\$9
+.fi
+.br
+.KE
+..
+.	\"Tables.  TS - table start, TE - table end
+.de TS
+.br
+.if !\\n(1T .RT
+.ul 0
+.ti \\n(.iu
+.if t .sp 0.5
+.if n .sp
+.if \\$1H .TQ
+.nr IX 1
+..
+.de TQ
+.di TT
+.nr IT 1
+..
+.de TH
+.if \\n(.d>0.5v .nr T. 0
+.if \\n(.d>0.5v .T# 0
+.di
+.nr TQ \\n(.i
+.nr HT 1
+.in 0
+.TT
+.in \\n(TQu
+.mk #T
+..
+.de TE
+.nr IX 0
+.if \\n(IT>0 .if \\n(HT=0 .di
+.if \\n(IT>0 .if \\n(HT=0 .nr EF \\n(.u
+.if \\n(IT>0 .if \\n(HT=0 .nf
+.if \\n(IT>0 .if \\n(HT=0 .TT
+.if \\n(IT>0 .if \\n(HT=0 .if \\n(EF>0 .fi
+.nr IT 0
+.nr HT 0
+.if n .sp 1
+.if t .sp 0.5
+..
+.	\"DS - display.  If .DS C, center; L, left-adjust; I, indent.
+.de DS
+.KS
+.\\$1D \\$2 \\$1
+..
+.de D
+.ID \\$1
+..
+.de CD
+.ce 1000
+.XD
+..
+.de ID
+.XD
+.if t .in +0.5i
+.if n .in +8
+.if \\n(.$ .if !"\\$1"I" .in \\n(OIu
+.if \\n(.$ .if !"\\$1"I" .in +\\$1n
+..
+.de LD
+.XD
+..
+.de XD
+.nf
+.nr OI \\n(.i
+.if t .sp 0.5
+.if n .sp 1
+..
+.de BD \" block display: save everything, then center it.
+.XD
+.nr BD 1
+.nr RD 2
+.di DD
+..
+.de RD \" right block display: save everything, then right adjust it.
+.XD
+.nr BD 1
+.nr RD 1
+.di DD
+..
+.	\"DE - display end
+.de DE
+.ce 0
+.in \\n(OIu
+.if t .sp 0.5
+.if n .sp 1
+.if \\n(BD>0 .DF
+.nr BD 0
+.KE
+.fi
+..
+.de DF \" finish a block display to be recentered.
+.di
+.if \\n(dl>\\n(BD .nr BD \\n(dl
+.if \\n(BD<\\n(.l .in (\\n(.lu-\\n(BDu)/\\n(RDu
+.ta \\n(.luR
+.DD
+.in \\n(OIu
+..
+.	\"KS keep - for keep release features. As in IFM
+.de KS
+.if \\n(IK=0 .if \\n(IF=0 .KQ
+.nr IK +1
+..
+.	\"KQ - real keep processor
+.de KQ
+.br
+.nr KI \\n(.i
+.ev 2
+.br
+.in \\n(KIu
+.ps \\n(PS
+.if \\n(VS>40 .vs \\n(VSu
+.if \\n(VS<=39 .vs \\n(VSp
+.ll \\n(LLu
+.lt \\n(LTu
+.if \\n(NX>0 .ll \\n(CWu
+.if \\n(NX>0 .lt \\n(CWu
+.di KK
+.nr TB 0
+..
+.	\"KF - floating keep
+.de KF
+.if !\\n(IK .FQ
+.nr IK +1
+..
+.	\"FQ real floating keep processor
+.de FQ
+.nr KI \\n(.i
+.ev 2
+.br
+.in \\n(KIu
+.ps \\n(PS
+.if \\n(VS>40 .vs \\n(VSu
+.if \\n(VS<=39 .vs \\n(VSp
+.ll \\n(LLu
+.lt \\n(LTu
+.if \\n(NX>0 .ll \\n(CWu
+.if \\n(NX>0 .lt \\n(CWu
+.di KK
+.nr TB 1
+..
+.	\"KE release - everything between keep and release is together
+.de KE
+.if \\n(IK .if !\\n(IK-1 .if \\n(IF=0 .RQ
+.if \\n(IK .nr IK -1
+..
+.	\"RQ real release
+.de RQ
+.br
+.di
+.nr NF 0
+.if \\n(dn-\\n(.t .nr NF 1
+.if \\n(TC .nr NF 1
+.if \\n(NF .if !\\n(TB .sp 200
+.if !\\n(NF .if \\n(TB .nr TB 0
+.nf
+.\".rs
+.nr TC 5
+.in 0
+.ls 1
+.if \\n(TB=0 .ev
+.if \\n(TB=0 .br
+.if \\n(TB=0 .ev 2
+.if \\n(TB=0 .KK
+.ls
+.ce 0
+.if \\n(TB=0 .rm KK
+.if \\n(TB .da KJ
+.if \\n(TB \!.KD \\n(dn
+.if \\n(TB .KK
+.if \\n(TB .di
+.nr TC \\n(TB
+.fi
+.in
+.ev
+..
+.de EQ	\"equation, breakout and display
+.nr EF \\n(.u
+.rm EE
+.nr LE 1	\" 1 is center
+.ds EL \\$1
+.if "\\$1"L" .ds EL \\$2
+.if "\\$1"L" .nr LE 0
+.if "\\$1"C" .ds EL \\$2
+.if "\\$1"I" .nr LE 0
+.if "\\$1"I" .ds EE \\h'|10n'
+.if "\\$1"I" .if !"\\$3"" .ds EE \\h'\\$3'
+.if "\\$1"I" .ds EL \\$2
+.if \\n(YE>0 .nf
+.di EZ
+..
+.de EN	\" end of a displayed equation
+.br
+.di
+.rm EZ
+.nr ZN \\n(dn
+.if \\n(ZN>0 .if \\n(YE=0 .LP
+.if \\n(ZN=0 .if !"\\*(EL"" .nr ZN 1
+.if "\\n(.z"" .if \\n(ZN>0 .if !\\n(nl=\\n(PE .if t .sp .5
+.if "\\n(.z"" .if \\n(ZN>0 .if !\\n(nl=\\n(PE .if n .sp 1
+.if !"\\n(.z"" .if \\n(ZN>0 .if !\\n(.d=\\n(PE .if t .sp .5
+.if !"\\n(.z"" .if \\n(ZN>0 .if !\\n(.d=\\n(PE .if n .sp 1
+.pc
+.if \\n(BD>0 .nr LE 0 \" can't mean centering in this case.
+.lt \\n(.lu
+.if \\n(EP=0 .if \\n(ZN>0 .if \\n(LE>0 .tl \(ts\(ts\\*(10\(ts\\*(EL\(ts
+.if \\n(EP=0 .if \\n(ZN>0 .if \\n(LE=0 .if \\n(BD=0 .tl \(ts\\*(EE\\*(10\(ts\(ts\\*(EL\(ts
+.if \\n(EP=0 .if \\n(ZN>0 .if \\n(LE=0 .if \\n(BD>0 .if \\n(BD<\\w\(ts\\*(10\(ts .nr BD \\w\(ts\\*(10\(ts
+.if \\n(EP=0 .if \\n(ZN>0 .if \\n(LE=0 .if \\n(BD>0 \!\\*(10\\\\t\\*(EL
+.if \\n(EP>0 .if \\n(ZN>0 .if \\n(LE>0 .tl \(ts\\*(EL\(ts\\*(10\(ts\(ts
+.if \\n(EP>0 .if \\n(ZN>0 .if \\n(LE=0 .if \\n(BD=0 .tl \(ts\\*(EL\\*(EE\\*(10\(ts\(ts\(ts
+.if \\n(EP>0 .if \\n(ZN>0 .if \\n(LE=0 .if \\n(BD>0 .if \\n(BD<\\w\(ts\\*(10\(ts .nr BD \\w\(ts\\*(10\(ts
+.if \\n(EP>0 .if \\n(ZN>0 .if \\n(LE=0 .if \\n(BD>0 \!\\h'-\\\\n(.iu'\\*(EL\\h'|0'\\*(10
+.\".di EZ \" GCOS patch
+.\"\\*(10 \" GCOS patch
+.\".br \" GCOS patch
+.\".di \" GCOS patch
+.\".rm EZ \" GCOS patch
+.lt \\n(LLu
+.pc %
+.if \\n(YE>0 .if \\n(EF>0 .fi
+.rm EL
+.rm 10
+.rm 11
+.rm 12
+.rm 13
+.rm 14
+.rm 15
+.rm 16
+.rm 17
+.rm 18
+.rm 19
+.rm 20
+.rm 21
+.rm 22
+.rm 23
+.if \\n(ZN>0 .if t .sp .5
+.if \\n(ZN>0 .if n .sp
+.if "\\n(.z"" .nr PE \\n(nl
+.if !"\\n(.z"" .nr PE \\n(.d
+..
+.de ME
+.nr SJ \\n(.j
+.if \\n(LL>0 .nr LT \\n(LL
+.nr YE 1
+.if \\n(PO=0 .nr PO \\n(.o
+..
+.	\"EM end up macro - process left over keep-release
+.de EM
+.br
+.if \\n(TB=0 .if t .if \\nd=0 .wh -1p CM
+.if \\n(TB \&\c
+.if \\n(TB 'bp
+.if \\n(TB .NP
+.if \\n(TB .ch CM 160
+..
+.	\"NP new page
+.de NP
+.if \\n(FM+\\n(HM>=\\n(.p .tm Margins bigger than page length.
+.if \\n(FM+\\n(HM>=\\n(.p .ab
+.if \\n(FM+\\n(HM>=\\n(.p .ex
+.nr PX \\n(.s
+.nr PF \\n(.f
+.if t .if \\nd=0 .CM
+.if \\n(HM=0 .nr HM 1i
+'sp \\n(HMu/2u
+.lt \\n(LTu
+.ps \\n(PS
+.ft 1
+.PT
+.ps \\n(PX
+.ft \\n(PF
+'sp |\\n(HMu
+.nr XX 0 1
+.nr YY 0-\\n(FMu
+.ch FO 16i
+.ch FX 17i
+.ch FO -\\n(FMu
+.ch FX -\\n(FMu
+.if \\n(MF .FV
+.nr MF 0
+.mk
+.os
+.ev 1
+.if \\n(TD=0 .if \\n(TC<5  .XK
+.nr TC 0
+.ns
+.ev
+.nr TQ \\n(.i
+.if \\n(IT>0 .in 0
+.if \\n(IT>0 .TT
+.if \\n(IT>0 .in \\n(TQu
+.mk #T
+.if \\n(PO>0 .po \\n(POu
+.if t .if \\n(.o+\\n(LL>7.75i .tm Offset + line length exceeds 7.75 inches, too wide
+..
+.de XK
+.nr TD 1
+.nf
+.ls 1
+.in 0
+.rn KJ KL
+.KL
+.rm KL
+.if "\\n(.z"KJ" .di
+.nr TB 0
+.if "\\n(.z"KJ" .nr TB 1
+.br
+.in
+.ls
+.fi
+.nr TD 0
+..
+.de KD
+.nr KM 0
+.if "\\n(.z"KJ" .nr KM 1 \" KM is 1 if in a rediversion of keeps
+.if \\n(KM>0 \!.KD \\$1
+.if \\n(KM=0 .if \\n(.t<\\$1 .di KJ
+..
+.de PT
+.lt \\n(LLu
+.pc %
+.nr PN \\n%
+.if \\n%-1 .tl '\\*(LH'\\*(CH'\\*(RH'
+.lt \\n(.lu
+..
+.	\"FO - footer of page
+.de FO
+.rn FO FZ
+.if \\n(K1>0 .tm This memo has a multi-page cover sheet.  You are
+.if \\n(K1>0 .tm rebuked in the name of the Committee on Technical Memoranda.
+.if \\n(IT>0 .nr T. 1
+.if \\n(IT>0 .if \\n(FC=0  .T# 1
+.if \\n(IT>0 .br
+.nr FC +1
+.if !\\n(NX .nr WF 0
+.nr dn 0
+.if \\n(FC<=1 .if \\n(XX .XF
+.rn FZ FO
+.nr MF 0
+.if \\n(dn  .nr MF 1
+.if !\\n(WF .nr YY 0-\\n(FMu
+.if !\\n(WF .ch FO \\n(YYu
+.if !\\n(dn .nr WF 0
+.if \\n(FC<=1 .if \\n(XX=0  .if \\n(NX>0 .RC
+.if \\n(FC<=1 .if \\n(XX=0  .if \\n(NX<=0 'bp
+.nr FC -1
+.if \\n(ML>0 .ne \\n(MLu
+..
+.	\"2C - begin double column
+.de 2C
+.if !\\n(1T .if n .sp 4
+.if !\\n(1T .if t .sp 2
+.RT
+.if \\n(NX=0 .mk
+.if \\n(NX=0 .nr NC 1
+.hy 12
+.if \\n(L1=0 .nr L1 \\n(.l
+.nr NX 1
+.if \\n(CW=0 .nr CW \\n(.l*7/15
+.ll \\n(CWu
+.nr FL \\n(CWu*11u/12u
+.if \\n(GW=0 .nr GW \\n(L1-(2*\\n(CW)
+.nr RO \\n(CW+\\n(GW
+.ns
+..
+.de RC
+.if \\n(NC>1 .C2
+.if \\n(NC<=1 .C1
+.nr NC \\n(ND
+..
+.de C1
+.rt
+.po +\\n(ROu
+.nr ND 2
+.nr XX 0 1
+.if \\n(MF .FV
+.ev 1
+.if \\n(TB .XK
+.nr TC 0
+.ev
+.ns
+..
+.ch FO \\n(YYu
+.de C2
+.po \\n(POu
+'bp
+.nr ND 1
+..
+.	\"1C - return to single column format
+.de 1C
+.br
+.RT
+.po \\n(POu
+.nr ND 1
+.if \\n(NX>0 .ll \\n(L1u
+.if \\n(NX>0 .bp
+.nr NX 0
+.hy 14
+..
+.	\".de R3
+.	\".pl 102
+.	\".nr LT \\n(.l
+.	\"..
+.de BT
+.nr PX \\n(.s
+.nr PF \\n(.f
+.ft 1
+.ps \\n(PS
+'lt \\n(LTu
+.if \\n%>0 .tl '\\*(LF'\\*(CF'\\*(RF'
+.ft \\n(PF
+.ps \\n(PX
+..
+.	\"PP - paragraph
+.de PP
+.RT
+.ne 1.1
+.if \\n(1T .sp \\n(PDu
+.ti +\\n(PIu
+..
+.	\"SH - (unnumbered) section heading
+.de SH
+.RT
+.if \\n(1T .sp 1
+.if !\\n(1T .BG
+.RT
+.ne 4
+.ft 3
+.if n .cu 1000
+..
+.	\"NH - numbered heading
+.de NH
+.RT
+.if \\n(1T .sp 1
+.if \\n(1T .if !\\n(.$ .sp 1
+.if !\\n(1T .BG
+.RT
+.ne 4
+.ft 3
+.if n .cu 1000
+.nr NS \\$1
+.if !\\n(.$ .nr NS 1
+.if !\\n(NS .nr NS 1
+.nr H\\n(NS +1
+.if !\\n(NS-4 .nr H5 0
+.if !\\n(NS-3 .nr H4 0
+.if !\\n(NS-2 .nr H3 0
+.if !\\n(NS-1 .nr H2 0
+.if !\\$1 .if \\n(.$ .nr H1 1
+.ds SN \\n(H1.
+.if \\n(NS-1 .as SN \\n(H2
+.if \\n(NS-2 .as SN .\\n(H3
+.if \\n(NS-3 .as SN .\\n(H4
+.if \\n(NS-4 .as SN .\\n(H5
+.nr IQ \w'\\*(SN\ \ '
+.nr IP +1
+.in +\\n(IQu
+.ti -\\n(IQu
+.nf
+\\*(SN\ \ \\c
+..
+.	\"BG - begin, execute at first PP
+.de BG
+.br
+.ME
+.rm ME
+.di
+.ce 0
+.nr KI 0
+.hy 14
+.nr 1T 1
+.S\\n(ST
+.rm S0
+.rm S2
+.rm TX
+.rm AX
+.rm WT
+.rm XT
+.rm GR
+.rm GP
+.rm GS
+.rm GX
+.rm I1
+.rm I2
+.rm I3
+.rm I4
+.rm I5
+.rm CB
+.rm E1
+.rm E2
+.de TL
+.ft 3
+.sp
+.ce 100
+.LG
+\\..
+.de AU
+.ft 2
+.ce 100
+.sp
+.NL
+\\..
+.de AI
+.ft 1
+.ce 100
+.if n .sp
+.if t .sp .5
+.NL
+\\..
+.RA
+.rm RA
+.rn FJ FS
+.rn FK FE
+.nf
+.if \\n(KG=0 .nr FP 0 \"KI should be new
+.nr KG 0 \"KI should be new
+.if \\n(FP>0 .FS
+.if \\n(FP>0 .FG
+.if \\n(FP>0 .FE
+.br
+.if \\n(TV>0 .if n .sp 2
+.if \\n(TV>0 .if t .sp 1
+.fi
+.ll \\n(LLu
+..
+.de RA \"redefine abstract macros
+.de AB
+.br
+.if !\\n(1T .BG
+.ce 1
+.sp 1
+ABSTRACT
+.sp 1
+.nr AJ 1
+.in +\\n(.lu/12u
+.ll -\\n(.lu/12u
+.RT
+\\..
+.de AE
+.nr AJ 0
+.br
+.in 0
+.ll \\n(LLu
+.if \\n(VS>40 .vs \\n(VSu
+.if \\n(VS<=39 .vs \\n(VSp
+\\..
+..
+.	\"IP - indented paragraph
+.de IP
+.RT
+.if !\\n(IP .nr IP +1
+.sp \\n(PDu
+.ne 3v
+.if \\n(.$-1 .nr IQ \\$2n
+.if \\n(.$ .LB "\\$1"
+.if !\\n(.$ .LB
+..
+.	\"LP - left aligned (block) paragraph
+.de LP
+.ti \\n(.iu
+.RT
+.if \\n(1T .sp \\n(PDu
+.ne 1.1
+.if \\n(.$ .LB \\$1
+..
+.	\"IE - synonym for .LP
+.de IE
+.LP
+..
+.	\"LB - label paragraph
+.de LB
+.in +\\n(IQu
+.ta \\n(IQu
+.if \\n(.$ .ti -\\n(IQu
+.if \\n(.$ \\$1\t\c
+..
+.	\"RS - prepare for double indenting
+.de RS
+.in +\\n(IRu
+..
+.	\"RE - retreat to the left
+.de RE
+.br
+.in -\\n(IRu
+..
+.	\"CM - cut mark
+.de CM
+.po 0
+.\"lt 7i
+.ft 1
+.ps 10
+.vs 4p
+.\"tl '--''--'
+.tl '---'''
+.po
+.vs
+.\"lt
+.ps
+.ft
+..
+.	\"B - bold font
+.de B
+.nr PQ \\n(.f
+.if n .if \\n(.$>2 \\&\\$3\\c
+.if "\\$1"" .if n .ul 1000
+.if !"\\$1"" .if n .ul 1
+.if t .if !"\\$1"" \\$3\\fB\\$1\\f\\n(PQ\\$2
+.if n .if \\n(.$=1 \\$1
+.if n .if \\n(.$>1 \\$1\\c
+.if n .if \\n(.$>1 \\&\\$2
+..
+.	\"R - Roman font
+.de R
+.if n .ul 0
+.ft 1
+..
+.	\"I - italic font
+.de I
+.nr PQ \\n(.f
+.if n .if \\n(.$>2 \\&\\$3\\c
+.if "\\$1"" .if n .ul 1000
+.if !"\\$1"" .if n .ul 1
+.if t .if !"\\$1"" \\$3\\fI\\$1\\f\\n(PQ\\$2
+.if n .if \\n(.$=1 \\$1
+.if n .if \\n(.$>1 \\$1\\c
+.if n .if \\n(.$>1 \\&\\$2
+..
+.	\"TA - tabs set in ens or chars
+.de TA
+.ta \\$1n \\$2n \\$3n \\$4n \\$5n \\$6n \\$7n \\$8n \\$9n
+..
+.	\"SM - make smaller size
+.de SM
+.ps -2
+..
+.	\"LG - make larger size
+.de LG
+.ps +2
+..
+.	\"NL - return to normal size
+.de NL
+.ps \\n(PS
+..
+.	\"DA - force date; ND - no date or new date.
+.de DA
+.ds DY \\$1
+..
+.if \n(mo-0 .ds MO January
+.if \n(mo-1 .ds MO February
+.if \n(mo-2 .ds MO March
+.if \n(mo-3 .ds MO April
+.if \n(mo-4 .ds MO May
+.if \n(mo-5 .ds MO June
+.if \n(mo-6 .ds MO July
+.if \n(mo-7 .ds MO August
+.if \n(mo-8 .ds MO September
+.if \n(mo-9 .ds MO October
+.if \n(mo-10 .ds MO November
+.if \n(mo-11 .ds MO December
+.if \n(dw-0 .ds DW Sunday
+.if \n(dw-1 .ds DW Monday
+.if \n(dw-2 .ds DW Tuesday
+.if \n(dw-3 .ds DW Wednesday
+.if \n(dw-4 .ds DW Thursday
+.if \n(dw-5 .ds DW Friday
+.if \n(dw-6 .ds DW Saturday
+.ds DY \*(MO \n(dy, 19\n(yr
+.IZ
+.rm IZ
+.rm MO
+.de FN
+.FS
+..
+.	\"FS - begin footnote
+.de FJ
+'ce 0
+.di
+.ev1
+.ll \\n(FLu
+.da FF
+.br
+.if \\n(IF>0 .tm Footnote within footnote-illegal.
+.nr IF 1
+.if !\\n+(XX-1 .FA
+..
+.	\"FE - footnote end
+.de FK
+.br
+.in 0
+.nr IF 0
+.di
+.ev
+.if !\\n(XX-1 .nr dn +\\n(.v
+.nr YY -\\n(dn
+.if \\n(NX=0 .nr WF 1
+.if \\n(dl>\\n(CW .nr WF 1
+.if (\\n(nl+\\n(.v)<=(\\n(.p+\\n(YY) .ch FO \\n(YYu
+.if (\\n(nl+\\n(.v)>(\\n(.p+\\n(YY) .if \\n(nl>(\\n(HM+1.5v) .ch FO \\n(nlu+\\n(.vu
+.if (\\n(nl+\\n(.v)>(\\n(.p+\\n(YY) .if \\n(nl>(\\n(HM+1.5v) .ch FX 16i
+.if (\\n(nl+\\n(.v)>(\\n(.p+\\n(YY) .if \\n(nl<=(\\n(HM+1.5v) .ch FO \\n(HMu+(4u*\\n(.vu)
+..
+.\"	First page footer.
+.de FS
+.ev1
+.br
+.ll \\n(FLu
+.da FG
+..
+.de FE
+.br
+.di
+.nr FP \\n(dn
+.if \\n(1T=0 .nr KG 1 \";not in abstract repeat next page. KI should be new
+.ev
+..
+.de FA
+.if n __________________________
+.if t \l'1i'
+.br
+..
+.de FV
+.FS
+.nf
+.ls 1
+.FY
+.ls
+.fi
+.FE
+..
+.de FX
+.if \\n(XX>0 .di FY
+.if \\n(XX>0 .ns
+..
+.de XF
+.if \\n(nlu+1v>(\\n(.pu-\\n(FMu) .ch FX \\n(nlu+1.9v
+.ev1
+.nf
+.ls 1
+.FF
+.rm FF
+.nr XX 0 1
+.br
+.ls
+.di
+.fi
+.ev
+..
+.de FL
+.ev1
+.nr FL \\$1n
+.ll \\$1
+.ev
+..
+.de UL \" underline argument, don't italicize
+.if t \\$1\l'|0\(ul'\\$2
+.if n .I \\$1 \\$2
+..
+.em EM
+. \"  ACCENTS  say \*'e or \*`e to get e acute or e grave
+.ds ' \h'\w'e'u*4/10'\z\(aa\h'-\w'e'u*4/10'
+.ds ` \h'\w'e'u*4/10'\z\(ga\h'-\w'e'u*4/10'
+. \"  UMLAUT  \*:u, etc.
+.ds : \v'-0.6m'\h'(1u-(\\n(.fu%2u))*0.13m+0.06m'\z.\h'0.2m'\z.\h'-((1u-(\\n(.fu%2u))*0.13m+0.26m)'\v'0.6m'
+. \" TILDE and CIRCUMFLEX
+.ds ^ \\k:\h'-\\n(.fu+1u/2u*2u+\\n(.fu-1u*0.13m+0.06m'\z^\h'|\\n:u'
+.ds ~ \\k:\h'-\\n(.fu+1u/2u*2u+\\n(.fu-1u*0.13m+0.06m'\z~\h'|\\n:u'
+.	\" czech v symbol
+.ds C \\k:\\h'+\\w'e'u/4u'\\v'-0.6m'\\s6v\\s0\\v'0.6m'\\h'|\\n:u'
+.		\" cedilla
+.ds , \\k:\\h'\\w'c'u*0.4u'\\z,\\h'|\\n:u'
+.if n .ds oq ""
+.if n .ds cq ""
+.if n .ds OQ '
+.if n .ds CQ '
+.if n .ds em --
+.if t .ds oq ``
+.if t .ds cq ''
+.if t .ds OQ `
+.if t .ds CQ '
+.if t .ds em \(em
+.if n .na
+.if t .if \nd=0 .ss 4
+.if t .if \nd=1 .ss 10
+.if t .if \nd=2 .ss 12
+.if n .po 1i
+.if t .if \\nd=3 .po 1.0625i
+.if t .if \\nd=3 .nr PO 1.0625i
+.ds Ag a\(ga
+.ds At a\(um
+.ds Cd \o'c,'
+.ds Ea e\(aa
+.ds Eg e\(ga
+.ds Ic i\(cf\h'-\w'.'u'\^\^\^
+.ds Na n\(aa
+.ds Ol o\(um
+.ds Oo \s-2\v'-8u'o\v'8u'\s+2
+.ds eA E\(aa
+.ds mi -
+.if t .if !\nd .nr T. 1
+.ie \n(T. .ds M \fM
+.el .ds M \fB
+.if \nd .ds v+ \v'.25m'
+.if \nd .ds v- \v'-.25m'
+.ds ra >\^
+.ds lS \\*(v-+\(mi\(mi\(mi\\*(v+
+.ds rS \\*(v-\(mi\(mi\(mi\\*(ra
+.ds rE \\*(v+
+.ds CF \s10\fR\- \\n(PN \-\s0\fP
+.de dU
+.sp -.65
+..
+.de dD
+.sp -.2
+..
+.de Nt
+.Ds
+.ta 2.7i
+icon-project.arizona@csnet-relay	\fR(CSNET or ARPANET)\fP
+arizona!icon-project	\fR(Usenet and uucpnet)
+.De
+There are currently uucp connections to Arizona through
+\*Mnoao\fR, \*Mmcnc\fR, \*Mihnp4\fR, and \*Mutah-cs\fR.
+..
+.ds U UNIX\u\s-2*\s0\d
+.de Un
+.FS
+\u\s-2*\s0\dUNIX is a trademark of AT&T Bell Laboratories.
+.FE
+..
+.if \nv .ss 10
+.hy 14
+.de Gr
+.GR DCR-8401831
+..
+.de Gi
+.GR DCR-8502015
+..
+.de Gs
+.GR DCR-8401831 DCR-8502015
+..
+.de Nh
+.sp -.8
+.NH
+..
+.de Wd
+.ll 7.8i
+.lt 7.8i
+.nr LL 7.8i
+.nr LT 7.8i
+..
+.de Pf
+.nr VS 20
+.vs 20
+..
+.de do
+.if '\\$1'' .in +.5i
+.if !'\\$1'' .in +\\$1
+.vs 6p
+\&.
+\&.\\$2
+\&.
+.vs
+.in
+..
+.de Ve
+.nf
+.sp -.5
+.do .74i
+..
+.de tR
+.de SY
+.ch FO 16i
+.ch FX 16i
+.ll \\n(LLu
+.rs
+.sp |13P
+.ns
+.if \\n(TV .TY
+.if \\n(AV .AX
+.rs
+.sp |22P
+.if !'\\*(MN'' \\*(MN
+.ce 0
+.nf
+.sp |28P
+.ls 1
+.ll -\\n(.lu/12u
+.WB
+.ll \\n(LLu
+.ls
+.ce 1000
+.sp |8i
+\\*(DY
+.sp 2
+Department of Computer Science
+.sp 1
+The University of Arizona
+.sp 1
+Tucson, Arizona 85721
+.ce 0
+.sp |10i
+.na
+.fi
+.GX
+.br
+..
+..
+.ds d \s+5\fR\&.\h'-1.5p'\fP\s-5
+.ds t 	
+.ds >= >=
+.ds >: >:
+.ds >> >>
+.ds <= <=
+.ds <: <:
+.ds << <<
+.ds <- <-
+.ds -> ->
+.ds <> <->
+.if n .fp 4 M c1
+.ds cf ^
+.ds fm '
+.ds sl /
+.ds v \fR|\fP
+.ds b \|
+.ds El \fR.\^.\^.\fP
+.ds sd \s8\v'.2m'\h'-0.4n'
+.ds su \v'-.2m'\s0
+.ds 0 \fIexpr\fP
+.ds 1 \fIexpr\*(sd1\*(su\fP
+.ds 2 \fIexpr\*(sd2\*(su\fP
+.ds 3 \fIexpr\*(sd3\*(su\fP
+.ds 4 \fIexpr\*(sd4\*(su\fP
+.ds 5 \fIexpr\*(sd5\*(su\fP
+.ds i \fIexpr\*(sdi\*(su\fP
+.ds n \fIexpr\*(sdn\*(su\fP
+.ds z \fIexpr\*(sd0\*(su\fP
+.de Ds
+.DS
+.tr -\\-'\\(fm/\\(sl
+.ie \n(T. .ss9
+.el .ss 20
+.Ta
+.In
+.if t \\*M\c
+..
+.de De
+.ie \n(T. .ss4
+.el .ss 10
+.DE
+.ft R
+.tr -\\*(mi'\\*(fm/\\*(sl
+..
+.de Dd
+.De
+.sp -.4
+.Ds
+..
+.de Ua
+Technical Report \\$1, Department of Computer Science, The University of Arizona.
+..
+.de
+.if \nv .ss 10
+.if \nv .rm CM
+.de Li
+.Sd
+.de Ta
+.ta 3i
+\\..
+.de Ti
+.ce 10
+\f3\\\\$1\f1
+.ce 0
+.sp 2
+.ds RF \s10\*(DY\s0
+.ds LF \s10\\\\$3\s0
+'so \\\\$2
+.bp
+\\..
+..
+.de Sd
+.am Ds
+.ps 8
+.vs 10
+.nr PS 8
+.nr VS 10
+\\..
+.am De
+.nr VS 12
+.nr PS 10
+.vs 12
+.ps 10
+\\..
+..
+.de Qs
+.br
+.ps -1p
+.vs -1p
+.in +5n
+.ll -5n
+.sp
+..
+.de Qe
+.br
+.ps +1p
+.vs +1p
+.in -5n
+.ll +5n
+.sp
+..
+.de Qd
+.Qe
+.sp -.7
+.Qs
+..
+.de Ap
+.bp
+.ce 10
+\f3\\$1\f1
+.ce 0
+.sp 2
+.if !''\\$2' .so \\$2
+..
+.if \nd=3 .po 1.0625i
+.if \nd=3 .nr PO 1.0625i
+.if \nd=3 .ds M \fH
+.de CS
+.cs H 22
+.ft H
+..
+.de CE
+.cs H
+.ft R
+..
+.DA "June 4, 1986"
+.TR 86-13a
+.Gr
+.TL
+The Icon Program Library; Version 6.0
+.AU
+Ralph E. Griswold
+.AE
+.tr *\(**
+.SH
+Introduction
+.PP
+This version of the Icon program library is intended for use with
+Version 6.0 of Icon.
+Basic documentation for Version 6 of Icon is contained in the Icon book\*([<\*([[1\*(]]\*(>]
+and a supplementary report\*([<\*([[2\*(]]\*(>].
+.PP
+The library contains both complete programs and collections
+of procedures. The programs range from demonstrations and games to
+text-processing utilities. The procedures range from straightforward
+extensions to Icon's function repertoire to such
+relatively esoteric subjects as programmer-defined control operations.
+This manual is divided into two main parts according to the
+composition of the library:
+complete programs and collections of procedures.
+.PP
+While the library provides some useful application programs and
+components that may be helpful in building other programs, it also
+provides examples of Icon programming techniques. In particular, persons
+who are new to Icon may find it helpful to read the source code for
+the library to see how experienced persons program in Icon. While
+not all of the code is the best possible \(em far from it \(em
+it illustrates useful idioms and a variety programming techniques.
+.PP
+In the descriptions that follow, there are pointers to interesting
+programming techniques as well as several suggestions for
+extensions and improvements to programs.
+Such extensions are good exercises
+persons who are just starting in Icon. Some of these extensions, however, will
+challenge the most experienced Icon programmer.
+.SH
+Library Format
+.PP
+The root directory of the library is \*Mipl\fR (``Icon program library'').
+There are four subdirectories: \*Msource\fR, \*Mprogs\fR, \*Mprocs\fR,
+and \*Mdata\fR.
+The subdirectory \*Msource\fR contains Icon source code for both
+programs and procedure libraries. Compiled programs are in \*Mprogs\fR
+and translated procedures are in \*Mprocs\fR.
+The subdirectory \*Mdata\fR contains sample input for programs in
+\*Mprogs\fR. The names of programs and data files generally
+coincide, with the extensions of data files providing some
+differentiating identification. For example, the data file
+\*Mcsgen.abc\fR is input to the program \*Mcsgen\fR. There are
+also several files with the extension \*M.txt\fR
+that contain English-language text
+that is suitable as input to any of the programs
+that process text files.
+.SH
+Disclaimer
+.PP
+The material contained in the Icon program library is provided on
+an as-is basis. No claim is made that the programs are free of error
+or that they will function properly.
+The responsibility for the use of library material resides entirely
+with the user.
+.PP
+Notes of errors will be appreciated and corrections will be incorporated
+in future releases of the library.
+.SH
+New Material
+.PP
+Additions are made to the Icon program library from time to time.
+New material
+is welcome. Such material should be sent to:
+.DS
+.ft R
+Icon Project
+Department of Computer Science
+The University of Arizona
+Tucson, AZ   87521
+.DE
+Documentation similar in form to that provided in this manual \fImust\fR
+be included and test data should be provided where appropriate.
+The final decision on inclusion of material in the library resides
+with the Icon Project.
+.SH
+Acknowledgements
+.PP
+Several persons have contributed programs and procedures to the
+Icon program library.
+In addition to the author of this manual, these persons include
+Allan Anderson, Ward Cunningham, Tom Hicks, William
+Malloy, Bill Mitchell, Mike Novak, Randal Schwartz,
+Steve Wampler, and George Yee. See the source files for specific attributions.
+.ds CH \s10Programs\s0
+.bp
+.SH
+Introduction
+.PP
+Most programs take input from standard input and write
+output to standard output.
+Input and output can be redirected and piped in the usual fashion.
+For example,
+.Ds
+csgen <..\edata\ecsgen.abc | more
+.De
+runs the program \*Mcsgen\fR\s-2\u1\d\s0 on the data file \*Mcsgen.abc\fR in the parallel
+.FS
+\s-2\u1\d\s0\^On some systems, including DOS\*([<\*([[3\*(]]\*(>] and VMS\*([<\*([[4\*(]]\*(>],
+compiled programs cannot be run directly, but must be executed using
+\*Miconx\fR. For DOS, the example above is done as follows:
+.Ds
+iconx csgen <..\edata\ecsgen.abc | more
+.De
+.FE
+subdirectory and pipes the output through \*Mmore\fR.
+.PP
+Many programs take
+command line arguments, which may be the names of files to
+process or options that select specific processing functions.
+An option is prefixed by a dash, sometimes followed by an
+argument. For example,
+.Ds
+deal -h 5
+.De
+runs the program \*Mdeal\fR with the option \*M\-h\fR and the
+argument \*M5\fR.
+.PP
+If a program is not called with the proper options or arguments,
+it generally terminates with an error message such as
+.Ds
+usage: [ -h n ] [ -s n ]
+.De
+which indicates the proper usage. Some programs provide
+more specific errors messages. Error messages are written
+to standard error output. Standard error output
+is always written to the console and cannot be
+redirected.  Consult the descriptions of the
+programs that follow for details.
+.PP
+The programs that follow are divided into categories by their function.
+.NH
+Demonstrations and Games
+.PP
+.NH 2
+Non-Attacking Queens: \*Mqueens\fR
+.PP
+This program displays the solutions to the non-attacking
+\fIn\fR-queens problem: the ways in which \fIn\fR queens can be
+placed on an \fIn\fR-by-\fIn\fR chessboard so that no queen can
+attack another. A positive integer can be given as a command line
+argument to specify the number of queens. For example,
+.Ds
+iconx queens 8
+.De
+displays the solutions for 8 queens on an 8-by-8 chessboard.
+The default value in the absence of an argument is 6.
+One solution for six queens is:
+.br
+.ne 1.8i
+.in .5i
+.CS
+  \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+  |   | Q |   |   |   |   |
+  \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+  |   |   |   | Q |   |   |
+  \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+  |   |   |   |   |   | Q |
+  \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+  | Q |   |   |   |   |   |
+  \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+  |   |   | Q |   |   |   |
+  \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+  |   |   |   |   | Q |   |
+  \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+.sp .1
+.CE
+.in 0
+.LP
+\fBComments:\fR
+There are many approaches to programming solutions to the \fIn\fR-queens problem.
+This library program is worth reading for its
+programming techniques. Other solutions may be found in
+\*([[1\*(]] and\*([<\*([[5\*(]]\*(>].
+.NH 2
+Word Intersections: \*Mcross\fR
+.PP
+This program takes a list of words and tries to arrange them
+in cross-word format so that they intersect. Uppercase letters
+are mapped into lowercase letters on input.
+For example, the input
+.Ds
+and
+eggplants
+elephants
+purple
+.De
+produces the output
+.ne 2i
+.CS
+.nf
+.in .5i
++\-\-\-\-\-\-\-\-\-+
+| p       |
+| u e     |
+| r g     |
+| p g     |
+|elephants|
+| e l     |
+|   and   |
+|   n     |
+|   t     |
+|   s     |
++\-\-\-\-\-\-\-\-\-+
+.in 0
+.CE
+.LP
+\fBDiagnostics:\fR
+The program objects if the input contains a nonalphabetic
+character.
+.LP
+\fBComments:\fR
+This program produces only one possible intersection and
+it does not attempt to produce the most compact result.
+The program is not very fast, either.
+There is a lot of room for improvement here. In particular,
+it is natural for Icon to generate a sequence of solutions.
+.NH 2
+Bridge Hands: \*Mdeal
+.PP
+This program shuffles, deals, and displays hands in the game of bridge.
+An example of the output of \*Mdeal\fR is
+.br
+.ne 2.2i
+.CS
+.in .5i
+.nf
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+
+          S: KQ987
+          H: 52
+          D: T94
+          C: T82
+
+S: 3                S: JT4
+H: T7               H: J9863
+D: AKQ762           D: J85
+C: QJ94             C: K7
+
+          S: A652
+          H: AKQ4
+          D: 3
+          C: A653
+
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+.in 0
+.CE
+.LP
+\fBOptions:\fR
+The following options are available:
+.RS
+.IP "\*M\-h\fI n\fR" .5i
+Produce \fIn\fR hands. The default is 1.
+.IP "\*M\-s\fI n\fR"
+Set the seed for random generation to \fIn\fR.
+Different seeds give different hands.
+The default seed is 0.
+.RE
+.NH 2
+Farberisms: \*Mfarb
+.PP
+Dave Farber, co-author of the original SNOBOL programming language,
+is noted for his creative use of the English language. Hence the
+terms ``farberisms'' and ``to farberate''.
+This program produces a randomly selected farberism.
+.LP
+\fBNotes:\fR Not all of the farberisms contained in this program were
+uttered by the master himself; others have learned to emulate him.
+A few of the farberisms may be objectionable to some persons.
+``I wouldn't marry her with a twenty-foot pole.''
+.NH
+Random Strings
+.PP
+The programs in this section involve the random generation of
+strings according to various criteria.
+These programs are only loosely related to each other.
+.NH 2
+Random Sentence Generation: \*Mrsg
+.PP
+This program generates randomly selected strings (``sentences'')
+from a grammar specified by
+the user.
+Grammars are basically context-free and resemble BNF in form, although
+there are a number of extensions.
+.PP
+The program works interactively, allowing the user to build, test, modify,
+and save grammars. Input to \*Mrsg\fR consists of various kinds of
+specifications, which can be intermixed:
+.PP
+\fIProductions\fR define nonterminal symbols in a syntax similar to 
+the rewriting rules of BNF with various alternatives consisting
+of the concatenation of nonterminal and terminal symbols.
+\fIGeneration specifications\fR cause the generation of a specified
+number of sentences from the language defined by a given nonterminal
+symbol.
+\fIGrammar output specifications\fR cause the definition of a
+specified nonterminal or the entire current grammar to be written
+to a given file.
+\fISource specifications\fR cause subsequent input to be read from
+a specified file.
+.PP
+In addition, any line beginning with \*M#\fR is considered to be
+a comment, while any line beginning with \*M=\fR causes the rest
+of that line to be used subsequently as a prompt to the user whenever \*Mrsg\fR
+is ready for input (there normally is no prompt). A line consisting
+of a single \*M=\fR stops prompting.
+.LP
+\fBProductions:\fR
+Examples of productions are:
+.Ds
+<expr>::=<term>|<term>+<expr>
+<term>::=<elem>|<elem>*<term>
+<elem>::=x|y|z|(<expr>)
+.De
+Productions may occur in any order. The definition for a nonterminal
+symbol can be changed by specifying a new production for it.
+.PP
+There are a number of special devices to facilitate the definition of
+grammars, including eight predefined, built-in nonterminal symbols:
+.nf
+.sp .5
+.ta .3i 1.2i
+	symbol	definition
+.sp .5
+	\*M<lb>	<
+	<rb>	>
+	<vb>	|
+	<nl>\fR	newline
+	\*M<>\fR	empty string
+	\*M<&lcase>\fR	any single lowercase letter
+	\*M<&ucase>\fR	any single uppercase letter
+	\*M<&digit>\fR	any single digit
+.sp 1
+.fi
+In addition, if the string between a \*M<\fR and a \*M>\fR
+begins and
+ends with a single quotation mark, it stands for
+any single character between the quotation marks. For example,
+.Ds
+<'xyz'>
+.De
+is equivalent to
+.Ds
+x|y|z
+.De
+Finally, if the name of a nonterminal symbol between the \*M<\fR and
+\*M>\fR begins with \*M?\fR, the user is queried during generation
+to supply a string for that nonterminal symbol. For example, in
+.Ds
+<expr>::=<?term>|<term>+<expr>
+.De
+if the first alternative is encountered during generation, the user is
+asked to provide a string for \*M<term>\fR.
+Note that this is a \fIstrongly\fR context-sensitive feature.
+.LP
+\fBGeneration Specifications:\fR
+A generation specification consists of a nonterminal symbol
+followed by a nonnegative integer. An example is
+.Ds
+<expr>10
+.De
+which specifies the generation of 10 \*M<expr>\fRs. If the
+integer is omitted, it is assumed to be 1. Generated sentences
+are written to standard output.
+.LP
+\fBGrammar Output Specifications:\fR
+A grammar output specification consists of a nonterminal symbol,
+followed by \*M\->\fR, followed by a file name. Such a specification
+causes the current definition of the nonterminal symbol to be
+written to the given file. If the file is omitted, standard output
+is assumed. If the nonterminal symbol is omitted, the entire grammar
+is written out. Thus,
+.Ds
+\->
+.De
+causes the entire grammar to be written to standard output.
+.LP
+\fBSource Specifications:\fR
+A source specification consists of \*M@\fR followed by a file name.
+Subsequent input is read from that file. When an end of file is encountered,
+input reverts to the previous file. Input files can be nested.
+.LP
+\fBOptions:\fR
+The following options are available:
+.RS
+.IP "\*M\-s\fI n\fR" .5i
+Set the seed for random generation to \fIn\fR.
+The default seed is 0.
+.IP "\*M\-l\fI n\fR"
+Terminate generation if the number of symbols remaining to be processed
+exceeds \fIn\fR. There is no default limit.
+.IP \*M\-t\fR
+Trace the generation of sentences. Trace output goes to standard error
+output.
+.RE
+.LP
+\fBDiagnostics:\fR
+Syntactically erroneous input lines are noted but are otherwise ignored.
+Specifications for a file that cannot be opened are noted and treated as
+erroneous.
+.PP
+If an undefined nonterminal symbol is encountered during generation,
+an error message that identifies the undefined symbol is produced,
+followed by the partial sentence generated to that point. Exceeding
+the limit of symbols remaining to be generated as specified by
+the \*M\-l\fR option is handled similarly.
+.LP
+\fBCaveats:\fR
+Generation may fail to terminate because of a loop in the rewriting
+rules or, more seriously, because of the progressive accumulation
+of nonterminal symbols. The latter problem can be identified
+by using the \*M\-t\fR option and controlled by using the \*M\-l\fR
+option. The problem often can be circumvented by duplicating alternatives
+that lead to fewer rather than more nonterminal symbols. For
+example, changing
+.Ds
+<term>::=<elem>|<elem>*<term>
+.De
+to
+.Ds
+<term>::=<elem>|<elem>|<elem>*<term>
+.De
+increases the probability of selecting \*M<elem>\fR from 1/2 to 2/3.
+See\*([<\*([[6\*(]]\*(>] for a discussion of the general
+problem.
+.LP
+\fBComments:\fR This program is an extension and elaboration of
+a program described in some detail in\*([<\*([[1\*(]]\*(>]. It illustrates
+many features of Icon, including a combination of string and
+list processing as well as extensive use of generators. The source
+code is worth studying.
+.PP
+There are many possible extensions to the program. One of the most
+useful would be a way to specify the probability of selecting
+an alternative.
+.NH 2
+Context-Sensitive Generation: \*Mcsgen
+.PP
+This program accepts a context-sensitive production grammar
+and generates randomly selected sentences from the corresponding
+language.
+See\*([<\*([[7\*(]]\*(>] for a discussion of such grammars.
+.PP
+Uppercase letters stand for nonterminal symbols and \*M\->\fR indicates the
+lefthand side can be rewritten by the righthand side. Other characters
+are considered to be terminal symbols. Lines beginning with \*M#\fR
+are considered to be comments and are ignored.
+A line consisting of a nonterminal symbol followed by a colon and
+a nonnegative integer \*Mi\fR is a generation specification for \fIi\fR
+instances of sentences for the language defined by the nonterminal
+(goal) symbol.
+An example of input to \*Mcsgen\fR is:
+.Ds
+#   a(n)b(n)c(n)
+#   Salomaa, p. 11.
+#   Attributed to M. Soittola.
+#
+X\->abc
+X\->aYbc
+Yb\->bY
+Yc\->Zbcc
+bZ\->Zb
+aZ\->aaY
+aZ\->aa
+X:10
+.De
+The output of \*Mcsgen\fR for this example is
+.Ds
+aaabbbccc
+aaaaaaaaabbbbbbbbbccccccccc
+abc
+aabbcc
+aabbcc
+aaabbbccc
+aabbcc
+abc
+aaaabbbbcccc
+aaabbbccc
+.De
+.PP
+A positive integer followed by a colon can be prefixed to a production
+to replicate that production, making its selection more likely. For
+example,
+.Ds
+3:X\->abc
+.De
+is equivalent to
+.Ds
+X\->abc
+X\->abc
+X\->abc
+.De
+.LP
+\fBOption:\fR
+The \*M\-t\fR option writes a trace of the derivations to standard 
+error output.
+.LP
+\fBLimitations\fR:
+Nonterminal symbols can only be represented by single uppercase letters,
+and there is no way to represent uppercase letters as terminal symbols.
+.PP
+There can be only one generation specification and it must appear as
+the last line of input.
+.LP
+\fBComments:\fR
+Generation of context-sensitive strings is a slow process. It may not
+terminate, either because of a loop in the rewriting rules
+or because of the progressive accumulation of nonterminal symbols.
+The program avoids deadlock, in which there are no possible rewrites for
+a string in the derivation.
+.PP
+This program would be improved if the specification of nonterminal
+symbols were more general, as in \*Mrsg\fR.
+.NH 2
+Parenthesis-Balanced Strings: \*Mparens
+.PP
+This program produces parenthesis-balanced strings in which the
+parentheses are randomly distributed.
+.LP
+\fBOptions:\fR
+The following options are available:
+.RS
+.IP \*M\-b\0\fIn\fR .5i
+Bound the length of the strings to \fIn\fR left and right parentheses each. The default is 10.
+.IP \*M\-n\0\fIn\fR
+Produce \fIn\fR strings. The default is 10.
+.IP \*M\-l\0\fIs\fR
+Use the string \fIs\fR for the left parenthesis. The default is \*M(\fR .
+.IP \*M\-r\0\fIs\fR
+Use the string \fIs\fR for the right parenthesis. The default is \*M)\fR .
+.IP \*M\-v\fR
+Randomly vary the length of the strings between 0 and the bound.
+In the absence of this option, all strings are the exactly as long
+as the specified bound.
+.RE
+.PP
+For example, the output for
+.Ds
+parens -v -b 4 -l "begin " -r "end " 
+.De
+is
+.Ds
+begin end 
+begin end begin end 
+begin begin end end begin end 
+begin end begin begin end end 
+begin end 
+begin begin end end 
+begin begin begin end end end 
+begin end begin begin end end 
+begin end begin end 
+begin begin end begin end begin end end 
+.De
+.LP
+\fBComments:\fR This program was motivated by the need for test
+data for error repair schemes for block-structured programming
+langauges. 
+See\*([<\*([[8\*(]]\*(>]. A useful
+extension to this program would be some way of generating other
+text among the parentheses.
+In addition to the intended use of the program, it can produce
+a variety of interesting patterns, depending on the strings
+specified by \*M\-l\fR and \*M\-r\fR.
+.NH 2
+Shuffled Files: \*Mshuffile
+.PP
+This program writes a version of the input file with
+the lines shuffled.
+For example, the result of shuffling
+.Ds
+         On the Future!-how it tells
+         Of the rapture that impells
+        To the swinging and the ringing
+         Of the bells, bells, bells-
+      Of the bells, bells, bells, bells,
+                Bells, bells, bells-
+  To the rhyming and the chiming of the bells!
+.De
+is
+.Ds
+  To the rhyming and the chiming of the bells!
+        To the swinging and the ringing
+                Bells, bells, bells-
+         Of the bells, bells, bells-
+         On the Future!-how it tells
+      Of the bells, bells, bells, bells,
+         Of the rapture that impells
+.De
+.LP
+\fBOption:\fR
+The option \*M\-s\fI n\fR sets the seed for random generation to \fIn\fR.
+The default seed is 0.
+.LP
+\fBLimitation:\fR
+This program stores the input file in memory and shuffles pointers to
+the lines; there must be enough memory available to store the entire
+file.
+.ig
+.NH
+Turing Machines
+.NH
+Indexes
+..
+.NH
+Text Tabulation
+.NH 2
+Character Tabulation:\*M tablc
+.PP
+This program tabulates characters and lists
+each character and the number of times it
+occurs. Characters are written using Icon's escape conventions.
+Line termination characters and other control characters are included in the tabulation.
+.LP
+\fBOptions:\fR
+The following options are available:
+.RS
+.IP \*M\-a\fP .5i
+Write the summary in alphabetical order of the characters. This is the
+default.
+.IP \*M\-n\fP
+Write the summary in numerical order of the counts.
+.IP \*M\-u\fP
+Write only the characters that occur just once.
+.RE
+.NH 2
+Word Tabulation: \*Mtablw
+.PP
+This program tabulates words and lists 
+number of times each word 
+occurs. A word is defined to be a string of consecutive
+upper- and lowercase letters with at most one interior occurrence
+of a dash or apostrophe.
+.LP
+\fBOptions:\fR
+The following options are available:
+.RS
+.IP \*M\-a\fP .5i
+Write the summary in alphabetical order of the words. This is the
+default.
+.IP \*M\-i\fR
+Ignore case distinctions among letters; uppercase letters are mapped into
+to corresponding lowercase letters on input. The default is to
+maintain case distinctions.
+.IP \*M\-n\fP
+Write the summary in numerical order of the counts.
+.IP "\*M\-l \fIn\fR"
+Tabulate only words longer than \fIn\fR characters. The default
+is to tabulate all words.
+.IP \*M\-u\fP
+Write only the words that occur just once.
+.RE
+.NH
+Mailing Labels
+.NH 2
+Produce Mailing Labels: \*Mlabels
+.PP
+This program produces labels using
+coded information taken from the input file.  In the input file, a line
+beginning with \*M#\fR is a label header.  Subsequent lines up to the
+next header or end-of-file are accumulated and output so as to be
+centered horizontally and vertically on 
+label forms.  Lines beginning with \*M*\fR are treated as comments
+and are ignored.
+.LP
+\fBOptions:\fR
+The following options are available:
+.RS
+.IP \*M\-c\ \fIn\fR .5i
+Print \fIn\fR copies of each label.
+.IP "\*M\-s\fP\0\fIs\fP"
+Select only those labels whose headers contain a character
+in \fIs\fP.
+.IP \*M\-t\fP
+Format for curved tape labels (the default is to format
+for rectangular mailing labels).
+.IP "\*M\-w\ \fIn\fR"
+Limit line width to \fIn\fR characters. The default width is 40.
+.IP "\*M\-l\ \fIn\fR"
+Limit the number of printed lines per label to \fIn\fR. The default
+is 8.
+.IP "\*M\-d\ \fIn\fR"
+Limit the depth of the label to \fIn\fR. The default is 9 for
+rectangular labels and 12 for tape labels (\*M\-t\fR).
+.IP \*M\-f\fR
+Print the first line of each selected entry instead of labels.
+.RE
+.PP
+Options are processed from left to right.
+If the number of printed lines is set to a value that exceeds the depth of the label, the
+depth is set to the number of lines.
+If the depth is set to a value that is less than the number of printed
+lines, the number of printed lines is set to the depth. Note that
+the order in which these options are specified may affect the
+results.
+.LP
+\fBPrinting Labels:\fR
+Label forms should be used with a pin-feed platen.  For mailing labels,
+the carriage
+should be adjusted so that the first character is printed at the
+leftmost position on the label and so that the first line of the
+output is printed on the topmost line of the label.
+For curved tape labels, some experimentation may be required
+to get the text positioned properly.
+.LP
+\fBDiagnostics:\fR
+If the limits on line width or the number of lines per label are exceeded,
+a label
+with an error message is written to standard error output.
+.NH 2
+Zip Code Sorting: \*Mzipsort
+.PP
+This program sorts labels produced by \*Mlabels\fR in ascending order of
+their postal zip codes.
+.LP
+\fBOption:\fR
+The option \*M\-d\ \fIn\fR sets the number of lines per label to \fIn\fR.
+The default is 9. This value must agree with the value used to format
+the labels.
+.LP
+\fBZip Codes:\fR
+The zip code must be the last nonblank string at the end of the label.
+It must consist of digits but may have an embedded dash for extended zip codes.
+If a label does not end with a legal zip code,
+it is placed after
+all labels with legal zip codes.
+In such a case, an error messages also is written to standard error
+output.
+.NH
+Laminated Files
+.NH 2
+Laminating Files: \*Mlam
+.PP
+This program laminates files named on the command line onto the standard output,
+producing a concatenation
+of corresponding lines from each file named.
+If the files are different lengths,
+empty lines are substituted for missing lines in the shorter files.
+A command line argument of the form
+\*M\- \fIs
+\fRcauses the string \fIs\fR to be inserted between the concatenated
+file lines.
+.PP
+Each command line
+argument is placed in the output line
+at the point that it appears in the argument list.
+For example, lines from \*Mfile1\fR and \*Mfile2\fR can be laminated
+with a colon between each line from \*Mfile1\fR and the corresponding
+line from \*Mfile2\fR by the command
+.Ds
+lam file1 \-: file2
+.De
+.PP
+File names and strings may appear in any order in the argument list.
+If
+\*M\-\fR
+is given for a file name,
+standard input is read at that point.
+If a file is named more than once,
+each of its lines will be duplicated on the output line,
+except that if standard input is named more than once,
+its lines will be read alternately.
+For example, each pair of lines from standard input can be
+joined onto one line with a space between them by the command
+.Ds
+lam \- "\-\0" \-
+.De
+.LP
+while the command
+.Ds
+lam file1 "\-\0" file1
+.De
+.LP
+replicates each line from \*Mfile1\fR.
+.NH 2
+Delaminating Files: \*Mdelam
+.PP
+This program delaminates standard input into several output files
+according to the specified fields.
+It writes the fields in each line to the
+corresponding output files as individual lines. If no data occurs in
+the specified position for a given input line an empty output line is
+written. This insures that all output files contain the same number of
+lines as the input file.
+.PP
+If \*M\-\fR is used for the input file, the standard input is read.
+If \*M\-\fR is used as an output file name, the corresponding field
+is written to the standard output.
+.PP
+The fields are defined by a list of field
+specifications, separated by commas, colons, or semicolons, of the
+following form:
+.Ds
+.ft I
+.ta .5i
+n	\fRthe character in column \fIn
+n\*M\-\fIm	\fRthe characters in columns \fIn\fR through \fIm
+n+m		m \fRcharacters beginning at column \fIn
+.ft R
+.De
+where the columns in a line are numbered from 1 to the length of the
+line.
+.PP
+The use of \*Mdelam\fR is illustrated by the following examples.
+The command
+.Ds
+delam 1\-10,5 x.txt y.txt
+.De
+reads standard input and writes characters 1 through 10 to file \*Mx.txt\fR and
+character 5 to file \*My.txt\fR.
+The command
+.Ds
+delam 10+5:1\-10:1\-10:80 mid x1 x2 end
+.De
+writes characters 10 through 14 to
+\*Mmid\fR, 1 through 10 to \*Mx1\fR and \*Mx2\fR, and character 80 to
+\*Mend\fR.
+The command
+.Ds
+delam 1\-80;1\-80 \- \-
+.De
+copies standard input to standard output, replicating the
+first eighty columns of each line twice.
+.NH 2
+Delaminating Files by Separators: \*Mdelamc
+.PP
+This program delaminates standard input into several output files
+according to the separator characters specified by the string
+following the \*M\-t\fR option.
+It writes the fields in each line to the
+corresponding output files as individual lines. If no data occurs in
+the specified position for a given input line an empty output line is
+written. This insures that all output files contain the same number of
+lines as the input file.
+.PP
+If \*M\-\fR is used as an output file name, the corresponding field
+is written to the standard output. If the \*M\-t\fR option is not used,
+an ascii horizontal tab character is assumed as the default
+field separator.
+.PP
+The use of \*Mdelamc\fR is illustrated by the following examples.
+The command
+.Ds
+delamc labels opcodes operands
+.De
+writes the fields of standard input, each of which
+is separated by a tab character, to the output files \*Mlabels\fR,
+\*Mopcodes\fR,
+and \*Moperands\fR.
+The command
+.Ds
+delamc \-t: scores names matric ps1 ps2 ps3
+.De
+writes the fields of standard input, each of which are separated
+by a colon, to the indicated output files.
+The command
+.Ds
+delamc \-t,: oldata f1 f2
+.De
+separates the fields using either a comma or a colon.
+.NH
+Icon Program Utilities
+.NH 2
+Icon Program Cross Reference: \*Mipxref
+.PP
+This program cross-references Icon programs. It lists
+the occurrences of each variable by line number. Variables are listed
+by procedure or separately as globals.
+The options specify the formatting of the
+output and whether or not to cross-reference quoted strings and
+non-alphanumerics. Variables that are followed by a left parenthesis
+are listed with an asterisk following the name.
+If a file is not specified, then standard input is cross-referenced.
+.LP
+\fBOptions:\fR
+The following options change the format defaults:
+.RS
+.IP "\*M\-c\fR \fIn\fR" 0.5i
+The column width per line number. The default is 4 columns wide.
+.IP "\*M\-l\fR \fIn\fR"
+The starting column (i.e. left margin) of the line numbers.
+The default is column 40.
+.IP "\*M\-w\fR \fIn\fR"
+The column width of the whole output line. The default is 80 columns wide.
+.RE
+.PP
+Normally only alphanumerics are cross-referenced. These options expand
+what is considered:
+.RS
+.IP \*M\-q\fR 0.5i
+Include quoted strings.
+.IP \*M\-x\fR
+Include all non-alphanumerics.
+.RE
+.LP
+\fBNote:\fR
+This program assumes the subject file is a valid Icon program. For example,
+quotes are expected to be matched.
+.NH 2
+Sort Icon Declarations: \*Mipsort
+.PP
+This program reads an Icon program and writes
+an equivalent program with the procedures
+sorted alphabetically. Global, link, and record declarations
+come first in the order they appear in the original program.
+The main procedure comes next followed by the remaining procedures
+in alphabetical order.
+.PP
+Comments and white space between declarations are attached to the next
+following declaration.
+.LP
+\fBLimitations:\fR
+This program only recognizes declarations that start at the beginning
+of a line.
+.PP
+Comments and interline white space between declarations may not come
+out as intended.
+.NH 2
+Icon Program Splitting: \*Mipsplit
+.PP
+This progam reads an Icon program and writes
+each procedure to a separate file. The output file names consist of
+the procedure name with \*M.icn\fR appended.
+If the \*M\-g\fR option is specified, any
+global, link, and record declarations
+are written to that file. Otherwise they are written in the file for
+the procedure that immediately follows them.
+.PP
+Comments and white space between declarations are attached to the next
+following declaration.
+.LP
+\fBNotes:\fR
+The program only recognizes declarations that start at the beginning
+of lines.
+Comments and interline white space between declarations may not come
+out as intended.
+.PP
+If the \*M\-g\fR option is not specified, any global, link, or
+record declarations that follow the last procedure are discarded.
+.NH
+Miscellaneous Utilities
+.NH 2
+Line Lengths: \*Mll
+.PP
+This program prints the lengths of the shortest and longest lines
+in files named on the command line.
+If there is no command line argument, the standard input is used.
+The argument \*M\-\fR may be used to explicitly specify the standard input.
+.NH 2
+Trimming Lines: \*Mtrim
+.PP
+This program copies lines from standard input to standard output, truncating
+the lines at \fIn\fR characters and removing any trailing blanks. The
+default value for \fIn\fR is 80.
+For example,
+.Ds
+trim 70 <grade.txt >grade.fix
+.De
+copies \*Mgrade.txt\fR to \*Mgrade.fix\fR, with lines longer than
+70 characters truncated to 70 characters and the trailing blanks removed from
+all lines.
+.PP
+The \*M\-f\fR option causes all lines to be \fIn\fR characters long
+by adding blanks to short lines;
+otherwise, short lines are left as is.
+.NH 2
+Sorting Groups of Lines: \*Mgrpsort
+.PP
+This program sorts input containing ``records'' defined to be
+groups of consecutive lines. Output is written to standard output.
+Each input record is separated by one or more repetitions of a 
+demarcation line (a line beginning with the separator string).
+The first line of each record is used as the key.
+.PP
+If no separator string is specified on the command line,
+the default is the empty string. Because all input lines
+are trimmed of whitespace (blanks and tabs), empty lines are default
+demarcation lines. The separator string specified can be an initial
+substring of the string used to demarcate lines, in which case the
+resulting partition of the input file may be different
+from a partition created using the entire demarcation string.
+.PP
+The \*M\-o\fP option sorts the input file but does not produce the sorted records.
+Instead it lists the keys (in sorted order) and line numbers defining the
+extent of the record associated with each key.
+.PP
+The use of \*Mgrpsort\fR is illustrated by the following examples.
+The command
+.Ds
+grpsort "catscats" <x >y
+.De
+sorts the file \*Mx\fR, whose records are separated by
+lines containing the
+string \*M"catscats"\fR, into the file \*My\fR placing a single line
+of \*M"catscats"\fR between each output record. Similarly, the
+command
+.Ds
+grpsort "cats" <x >y
+.De
+sorts the file \*Mx\fR as before but assumes that any line beginning with the
+string \*M"cats"\fR delimits a new record. This may or may not divide the
+lines of the input file into a number of records different from the previous
+example.
+In any case, the output records will be separated by a single line of \*M"cats"\fR.
+Another example is
+.Ds
+grpsort \-o <bibliography >bibkeys
+.De
+which sorts the file \*Mbibliography\fR and produces a sorted list of
+the keys and the extents of the associated records in \*Mbibkeys\fR.
+Each output key line is of the form:
+.ne 10
+.Ds
+[s\-e] key
+.De
+where
+.Ds
+.ta .6i
+.ss 4
+\*Ms\fR	is the line number of the key line
+\*Me\fR	is the line number of the last line
+\*Mkey\fR	is the actual key of the record
+.De
+.ds CH \s10Procedures\s0
+.bp
+.SH
+Introduction
+.PP
+Collections of translated procedures are in the distribution directory \*Mprocs\fR.
+These files can be linked into other programs.
+.PP
+For example, to include the procedures in \*Mgener.icn\fR in
+an Icon program, the following link declaration can be used\s-2\u2\d\s0:
+.Ds
+link "/ipl/procs/gener"
+.De
+.FS
+\s-2\u2\d\s0\^In DOS, backslashes can be used in place of slashes in such link
+declarations, but they must be escaped, as in
+.Ds
+link "\e\eipl\e\eprocs\e\egener"
+.De
+.FE
+.NH 0
+Math Procedures: \*Mmath
+.LP
+The following procedures compute standard trigonometric functions.
+The arguments are in radians.
+.RS
+.IP \*Msin(x)\fR 1i
+sine of \*Mx\fR
+.IP \*Mcos(x)\fR
+cosine of \*Mx\fR
+.IP \*Mtan(x)\fR
+tangent of \*Mx\fR
+.IP \*Masin(x)\fR
+arc sine of \*Mx\fR in the range \-\(*p/2 to \(*p/2
+.IP \*Macos(x)\fR
+arc cosine of \*Mx\fR in the range 0 to \(*p
+.IP \*Matan(x)\fR
+arc tangent of \*Mx\fR in the range \-\(*p/2 to \(*p/2
+.IP \*Matan2(y,x)\fR
+arc tangent of \*Mx/y\fR in the range \-\(*p to \(*p
+.RE
+.LP
+The following procedures convert from degrees to radians and conversely:
+.RS
+.IP \*Mdtor(d)\fR 1i
+radian equivalent of \*Md\fR
+.IP \*Mrtod(r)\fR
+degree equivalent of \*Mr\fR
+.RE
+.LP
+The following
+additional procedures are available:
+.RS
+.IP \*Msqrt(x)\fR 1i
+square root of \*Mx\fR
+.IP \*Mexp(x)\fR
+exponential function of \*Mx\fR
+.IP \*Mlog(x)\fR
+natural logarithm of \*Mx\fR
+.IP \*Mlog10(x)\fR
+base-10 logarithm of \*Mx\fR
+.IP \*Mfloor(x)\fR
+largest integer not greater than \*Mx\fR
+.IP \*Mceil(x)\fR
+smallest integer nor less than \*Mx\fR
+.RE
+.LP
+\fBFailure Conditions:\fR
+\*Masin(x)\fR and \*Macos(x)\fR fail if the absolute value of \*Mx\fR is
+greater than one. \*Msqrt(x)\fR, \*Mlog(x)\fR, and \*Mlog10(x)\fR
+fail if \*Mx\fR is less than zero.
+.NH
+Bit Operations: \*Mbitops
+.LP
+The following procedures perform operations on characters strings of zeros and
+ones (``bit strings'').
+.RS
+.IP \*Mand(b1,\*bb2)\fR 1i
+logical ``and'' of \*Mb1\fR and \*Mb2\fR
+.IP \*Mbitstring(i)\fR
+convert integer \*Mi\fR to bit string
+.IP \*Mbsum(b1,\*bb2)\fR
+arithmetic sum of \*Mb1\fR and \*Mb2\fR
+(used by other procedures)
+.IP \*Mdecimal(b)\fR
+convert \*Mb\fR to integer
+.IP \*Mexor(b1,\*bb2)\fR
+``exclusive-or'' of \*Mb1\fR and \*Mb2\fR
+.IP \*Mneg(b)\fR
+negation of \*Mb\fR
+.IP \*Mor(b1,\*bb2)\fR
+logical ``or'' of \*Mb1\fR and \*Mb2\fR
+.RE
+.LP
+\fBNote:\fR
+If \*Mi\fR in \*Mbitstring(i)\fR is negative, the value produced is
+the corresponding unsigned 32-bit bit string.
+.LP
+\fBBugs:\fR
+Integer values that exceed those allowable in Icon may produce bogus
+results or spurious diagnostics.
+.NH
+Radix Conversions: \*Mradcon
+.LP
+The following procedures convert numbers from one radix to another. The letters
+from \*Ma\fR to \*Mz\fR are used for ``digits'' greater than 9. All the
+conversion procedures fail if the conversion cannot be made.
+.RS
+.IP \*Mexbase10(i,\*bj)\fR 1i
+convert base-10 integer \*Mi\fR to base \*Mj\fR
+.IP \*Minbase10(s,\*bi)\fR
+convert base-\*Mi\fR integer \*Ms\fR to base 10
+.IP \*Mradcon(s,\*bi,\*bj)\fR
+convert base-\*Mi\fR integer \*Ms\fR to base \*Mj\fR
+.RE
+.LP
+\fBLimitation:\fR
+The maximum base allowed is 36.
+.ig
+.NH
+Formatting Numbers: \*Mnumbers
+..
+.NH
+Complex Arithmetic: \*Mcomplex
+.LP
+The following procedures perform operations on complex numbers.
+.RS
+.IP \*Mcomplex(r,\*bi)\fR 1i
+create complex number with real part \*Mr\fR
+and imaginary part \*Mi\fR
+.IP \*Mcpxadd(x1,\*bx2)\fR
+add complex numbers \*Mx1\fR and \*Mx2\fR
+.IP \*Mcpxdiv(x1,\*bx2)\fR
+divide complex number \*Mx1\fR by complex number \*Mx2\fR
+.IP \*Mcpxmul(x1,\*bx2)\fR
+multiply complex number \*Mx1\fR by complex number \*Mx2\fR
+.IP \*Mcpxsub(x1,\*bx2)\fR
+subtract complex number \*Mx2\fR from complex number \*Mx1\fR
+.IP \*Mcpxstr(x)\fR
+convert complex number \*Mx\fR to string representation
+.IP\*Mstrcpx(s)\fR
+convert string representation \*Ms\fR of complex number
+to complex number
+.RE
+.NH
+Collated Strings: \*Mcollate
+.LP
+These procedures collate (interleave) respective characters of two
+strings and decollate such strings by selecting every other character of a string.
+produce a string consisting of
+interleaved characters of \*Ms1\fR and \*Ms2\fR.
+.RS
+.IP \*Mcollate(s1,\*bs2)\fR 1i
+collate the characters of \*Ms1\fR and \*Ms2\fR.
+For example,
+.sp .5
+     \*Mcollate("abc",\*b"def")\fR
+.sp .5
+produces \*M"adbecf"\fR.
+.IP \*Mdecollate(s,\*bi)\fR
+produce a string consisting of
+every other character of \*Ms\fR. If \*Mi\fR
+is odd, the odd-numbered characters are selected, while if \*Mi\fR
+is even, the even-numbered characters are selected.
+.RE
+.LP
+\fBDiagnostics:\fR
+Run-time error 208 occurs if the arguments to \*Mcollate\fR are not
+of the same size.
+.NH
+Emphasized Text: \*Mbold
+.LP
+These procedures produce text with interspersed characters suitable for
+printing to produce the effect of boldface (by overstriking) and
+underscoring (using backspaces).
+.RS
+.IP \*Mbold(s)\fR 1i
+bold version of \*Ms
+.IP \*Muscore(s)\fR
+underscored version of \*Ms
+.RE
+.NH
+Shuffling: \*Mshuffle
+.LP
+The procedure \*Mshuffle(x)\fR shuffles a string or list. In the case
+that \*Mx\fR is a string, a corresponding string with the characters
+randomly rearranged is produced. In the case that \*Mx\fR is a list,
+the values in the list are randomly rearranged.
+.NH
+Segmented Strings: \*Msegment
+.LP
+The procedure \*Msegment(s,\*bc)\fR generates
+consecutive substrings of \*Ms\fR consisting of characters that
+respectively do/do not occur in \*Mc\fR.
+For example,
+.Ds
+segment("Not a sentence.",\*b&lcase ++ &ucase)
+.De
+generates
+.Ds
+"Not"
+" "
+"a"
+" "
+"sentence"
+"."
+.De
+.NH
+String Utilities: \*Mstrutil
+.LP
+These procedures perform simple operations on strings.
+.RS
+.IP \*Mcompress(s,\*bc)\fR 1i
+compress consecutive occurrences of characters in \*Mc\fR that occur in \*Ms\fR
+.IP \*Mdelete(s,\*bc)\fR
+delete all occurrences of characters in \*Mc\fR that occur in \*Ms\fR
+.IP \*Mrotate(s,\*bi)\fR
+rotate \*Ms\fR \*Mi\fR characters to the left (negative \*Mi\fR produces
+rotation to the right); the default value of \*Mi\fR is 1
+.RE
+.NH
+Structure Utilities: \*Mstructs
+.LP
+These procedures manipulate trees and acyclic graphs (dags).
+The structures are represented with lists.
+See\*([<\*([[1\*(]]\*(>].
+.RS
+.IP \*Mdepth(t)\fR 1i
+compute maximum depth of tree \*Mt\fR
+.IP \*Meq(x,\*by)\fR
+compare list structures \*Mx\fR and \*My\fR
+.IP \*Mldag(s)\fR
+construct a dag from the string \*Ms\fR
+.IP \*Mltree(s)\fR
+construct a tree from the string \*Ms\fR
+.IP \*Mstree(t)\fR
+construct a string from the tree \*Mt\fR
+.IP \*Mtcopy(t)\fR
+copy tree \*Mt\fR
+.IP \*Mteq(t1,\*bt2)\fR
+compare trees \*Mt1\fR and \*Mt2\fR
+.IP \*Mvisit(t)\fR
+visit, in preorder, the nodes of the tree \*Mt\fR
+.RE
+.LP
+\fBNote:\fR
+The procedure \*Mldag\fR has a second argument that is used on internal
+recursive calls; a second argument must not be supplied by the user.
+.NH
+Icon Literal Escapes: \*Mescape
+.LP
+The procedure \*Mescape(s)\fR produces a string in which Icon
+quoted literal escape conventions in \*Ms\fR are replaced by the corresponding
+characters.
+For example, \*Mescape("\e\e143\e\e141\e\e164")\fR produces the string \*M"cat"\fR.
+.NH
+Images of Icon Values: \*Mimage
+.LP
+The procedure \*MImage(x)\fR produces a string
+image of the value \*Mx\fR. The value produced is a generalization of
+the value produced by the Icon function \*Mimage(x)\fR, providing detailed
+information about structures.
+.PP
+Tags are used to uniquely identify
+structures. A tag consists of a letter identifying the type followed
+by an integer. The tag letters are \*ML\fR for lists, \*MR\fR for
+records, \*MS\fR for sets, and \*MT\fR for tables. The first time a structure is encountered,
+it is imaged as the tag followed by a colon, followed by a representation
+of the structure. If the same structure is encountered again, only the
+tag is given.
+.PP
+An example is
+.de In
+.in 3n
+..
+.Ds
+a := \^["x"]
+push(a,\*ba)
+t := table()
+push(a,\*bt)
+t\^[a] := t
+t\^["x"] := \^[\^]
+t\^[t] := a
+write(Image(t))
+.De
+which produces
+.Ds
+T1:\^["x"\->L1:\^[\^],\*bL2:\^[T1,\*bL2,\*b"x"]\^\->T1,\*bT1\->L2]
+.De
+Note that a table is represented as a list of entry and assigned
+values separated by \*M\->\fR.
+.NH
+List Mapping: \*Mlmap
+.LP
+The procedure
+\*Mlmap(a1,\*ba2,\*ba3)\fR maps elements of \*Ma1\fR according to \*Ma2\fR and \*Ma3\fR.
+This procedure is the analog for lists of the built-in string-mapping
+function \*Mmap(s1,\*bs2,\*bs3)\fR. Elements in \*Ma1\fR that are the
+same as elements in \*Ma2\fR are mapped into the corresponding
+elements of \*Ma3\fR. For example, given the lists
+.Ds
+a1 := [1,\*b2,\*b3,\*b4]
+a2 := [4,\*b3,\*b2,\*b1]
+a3 := ["a",\*b"b",\*b"c",\*b"d"]
+.De
+then
+.Ds
+lmap(a1,\*ba2,\*ba3)
+.De
+changes \*Ma1\fR to
+.Ds
+["d",\*b"c",\*b"b",\*b"a"]
+.De
+Note that the value of \*Ma1\fR is modified.
+.PP
+Lists that are mapped can have any kinds of elements. The operation
+.Ds
+x =\^=\^= y
+.De
+is used to determine if elements \*Mx\fR and \*My\fR are equivalent.
+.PP
+All cases in \*Mlmap\fR are handled as they are in \*Mmap\fR,
+except that no defaults are provided for omitted arguments. As with
+\*Mmap\fR, \*Mlmap\fR can be used for transposition as well as
+substitution.
+.LP
+\fBWarning:\fR
+If \*Mlmap\fR is called with the same lists \*Ma2\fR and \*Ma3\fR
+as in the immediately preceding call, the same mapping is performed,
+even if the values in \*Ma2\fR and \*Ma3\fR have been changed. This
+improves performance, but it may cause unexpected effects.
+.LP
+\fBComments:\fR
+It is easy to change \*Mlmap\fR to produce a new list instead of
+modifying \*Ma1\fR; this is a good exercise for beginning Icon
+programmers. The ``caching'' of the mapping table based on
+\*Ma2\fR and \*Ma3\fR also can be removed easily to avoid
+the potential problem mentioned in the warning above.
+.NH
+Snapshots of Scanning: \*Msnapshot
+.LP
+The procedure \*Msnapshot()\fR writes a snapshot of the state of string
+scanning, showing the value of \*M&subject\fR and \*M&pos\fR. For
+example,
+.Ds
+"((a+b)\-delta)/(c*d))" ? {
+   tab(bal('+\-/*'))
+   snapshot()
+   }
+.De
+produces
+.nf
+.CS
+.in .5i
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+|                                   |
+| &subject = "((a+b)\-delta)/(c*d))" |
+|                          |        |
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+.in 0
+.CE
+.LP
+Note that the bar showing the \*M&pos\fR is positioned under the
+\*M&pos\fRth character (actual positions are between characters).
+If \*M&pos\fR is at the end of \*M&subject\fR, the bar is positioned
+under the quotation mark delimiting the subject. For example,
+.Ds
+"abcdefgh" ? (tab(0) & snapshot())
+.De
+produces
+.nf
+.CS
+.in .5i
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+|                       |
+| &subject = "abcdefgh" |
+|                     | |
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+.in 0
+.CE
+.LP
+Escape sequences are handled properly. For example,
+.Ds
+"abc\etdef\enghi" ? (tab(upto('\en')) & snapshot())
+.De
+produces
+.nf
+.CS
+.in .5i
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+|                            |
+| &subject = "abc\etdef\enghi" |
+|                     |      |
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+.in 0
+.CE
+.LP
+.NH
+Miscellaneous Generators: \*Mgener
+.LP
+These procedures generate sequences of results.
+.RS
+.IP \*Mhex()\fR 1i
+sequence of hexadecimal codes for numbers from 0 to 255
+.IP \*Mlabel(s,\*bi)\fR
+sequence of labels with prefix \*Ms\fR starting at \*Mi\fR
+.IP \*Moctal()\fR
+sequence of octal codes for numbers from 0 to 255
+.IP \*Mstar(s)\fR
+sequence consisting of the closure of \*Ms\fR starting with the
+empty string and continuing in lexical order as given in \*Ms\fR
+.RE
+.NH
+Result Sequences: \*Mseqimage
+.LP
+The procedure \*MSeqimage\^{e,\*bi,\*bj}\fR produces a string image
+of the result sequence for the expression \*Me\fR. The first \*Mi\fR
+results are printed. If \*Mi\fR is omitted,
+there is no limit. If there are more than \*Mi\fR results for
+\*Me\fR, ellipses are provided in the image after the first \*Mi\fR.
+If \*Mj\fR is specified, at most \*Mj\fR results from the end
+of the sequence are printed after
+the ellipses.
+If \*Mj\fR is omitted, only the first \*Mi\fR results are produced.
+.LP
+For example, the expressions
+.Ds
+Seqimage\^{1 to 12}
+Seqimage\^{1 to 12\*b,10}
+Seqimage\^{1 to 12\*b,6\*b,3}
+.De
+produce, respectively,
+.Ds
+{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, ...}
+{1, 2, 3, 4, 5, 6, ..., 10, 11, 12}
+.De
+.LP
+\fBWarning:\fR
+If \*Mj\fR is not omitted and \*Me\fR has a infinite result
+sequence, \*MSeqimage\fR does not terminate.
+.NH
+SNOBOL4 Pattern Matching: \*Mpatterns
+.LP
+These procedures
+provide procedural equivalents for most SNOBOL4 patterns and
+some extensions. See\*([<\*([[9\*(]-11\*(]]\*(>].
+Procedures and their pattern equivalents are:
+.RS
+.IP \*MAny(s)\fR 1i
+\*MANY(S)\fR
+.IP \*MArb()\fR
+\*MARB\fR
+.IP \*MArbno(p)\fR
+\*MARBNO(P)\fR
+.IP \*MArbx(i)\fR
+\*MARB(I)\fR
+.IP \*MBal()\fR
+\*MBAL\*M
+.IP \*MBreak(s)\*M
+\*MBREAK(S)\fR
+.IP \*MBreakx(s)\fR
+\*MBREAKX(S)\fR
+.IP \*MCat(p1,\*bp2)\fR
+\*MP1 P2\fR
+.IP \*MDiscard(p)\fR
+\*M/P\fR
+.IP \*MExog(s)\fR
+\*M\eS\fR
+.IP \*MFind(s)\*M
+\*MFIND(S)\fR
+.IP \*MLen(i)\fR
+\*MLEN(I)\fR
+.IP \*MLimit(p,\*bi)\fR
+\*MP \e i\fR
+.IP \*MLocate(p)\fR
+\*MLOCATE(P)\fR
+.IP \*MMarb()\fR
+\*M\fRlongest-first\*M ARB\fR
+.IP \*MNotany(s)\fR
+\*MNOTANY(S)\fR
+.IP \*MPos(i)\fR
+\*MPOS(I)\fR
+.IP \*MReplace(p,\*bs)\fR
+\*MP \(== S\fR
+.IP \*MRpos(i)\fR
+\*MRPOS(I)\fR
+.IP \*MRtab(i)\fR
+\*MRTAB(I)\fR
+.IP \*MSpan(s)\*M
+\*MSPAN(S)\fR
+.IP \*MString(s)\fR
+\*MS\fR
+.IP \*MSucceed()\*M
+\*MSUCCEED\fR
+.IP \*MTab(i)\fR
+\*MTAB(I)\fR
+.IP \*MXform(f,\*bp)\*M
+\*MF(P)\fR
+.RE
+.PP
+The following procedures relate to the application and control of
+pattern matching:
+.RS
+.IP \*MApply(s,\*bp)\fR 1i
+\*MS ? P\fR
+.IP \*MMode()\fR
+\fRanchored or unanchored matching (see \*MAnchor\fR and \*MFloat\fR)
+.IP \*MAnchor()\fR
+\*M&ANCHOR = 1 \fR if \*MMode := Anchor
+.IP \*MFloat()\*M
+\*M&ANCHOR = 0 \fR if \*MMode := Float\fR
+.RE
+.LP
+In addition to the procedures above, the following expressions can be
+used:
+.RS
+.IP \*Mp1()\ |\ p2()\fR 1i
+\*MP1 | P2\fR
+.IP \*Mv\ <\-\ p()\fR
+\*MP . V \fR (approximate)
+.IP \*Mv\ :=\ p()\fR
+\*MP $ V \fR (approximate)
+.IP \*Mfail\fR
+\*MFAIL\fR
+.IP \*M=s\fR
+\*MS\fR  (in place of \*MString(s)\fR)
+.IP \*Mp1()\ ||\ p2()\fR
+\*MP1 P2 \fR (in place of \*MCat(p1,\*bp2)\fR)
+.RE
+.LP
+Using this system, most SNOBOL4 patterns can be satisfactorily transliterated
+into Icon procedures and expressions. For example, the pattern
+.Ds
+SPAN("0123456789") $ N "H" LEN(*N) $ LIT
+.De
+can be transliterated into
+.Ds
+(n <\- Span('0123456789')) || ="H" ||
+   (lit <\- Len(n))
+.De
+Concatenation of components is necessary to preserve the pattern-matching properties
+of SNOBOL4.
+See the documents referenced above for details and limitations.
+.LP
+\fBCaveats\fR:
+Simulating SNOBOL4 pattern matching using the procedures above
+is inefficient.
+.NH
+Defined Control Operations: \*Mpdco
+LPP
+These procedures
+use co-expressions to used to model the built-in control
+structures of Icon and also provide new ones. See\*([<\*([[12\*(]]\*(>].
+.RS
+.IP \*MAlt\^{e1,\*be2}\fR 1.5i
+models \*Me1 | e2\fR
+.IP \*MColseq\^{e1,\\*be2,\ \*(El}\fR
+produces results of \*Me1\fR, \*Me2\fR, \*(El alternately
+.IP \*MComseq\^{e1,\*be2}\fR
+compares result sequences of \*Me1\fR and \*Me2\fR
+.IP \*MCond\^{e1,\*be2,\ \*(El}\fR
+models the generalized Lisp conditional
+.IP \*MEvery\^{e1,\*be2}\fR
+models \*Mevery e1 do e2\fR
+.IP \*MGalt\^{e1,\*be2,\ \*(El}\fR
+models generalized alternation: \*Me1 | e2 | \*(El\fR
+.IP \*MLcond\^{e1,\*be2,\ \*(El}\fR
+models the Lisp conditional
+.IP \*MLimit\^{e1,\*be2}\fR
+models \*Me1 \e e2\fR
+.IP \*MRanseq\^{e1,\*be2,\ \*(El}\fR
+produces results of \*Me1\fR, \*Me2\fR, \*(El at random
+.IP \*MRepalt\^{e}\fR
+models \*M|e\fR
+.IP \*MResume\^{e1,\*be2,\*be3}\fR
+models \*Mevery e1 \e e2 do e3\fR
+.IP \*MSelect\^{e1,\*be2}\fR
+produces results from \*Me1\fR by position according to \*Me2\fR
+.RE
+.LP
+\fBComments\fR:
+Because of the handling of the scope of local identifiers in co-expressions,
+expressions in programmer-defined control operations cannot communicate
+through local identifiers.
+Some constructions, such
+as \*Mbreak\fR and \*Mreturn\fR, cannot be used in arguments to programmer-defined
+control operations.
+.NH
+Defined Control Regimes: \*Mpdae
+.LP
+These procedures
+use co-expressions to model the built-in argument
+evaluation regime of Icon and also provide new ones.
+See\*([<\*([[13\*(]]\*(>].
+.RS
+.IP \*MAllpar\^{e1,\*be2,\ \*(El}\fR 1.5i
+parallel evaluation with last result used for short sequences
+.IP \*MExtract\^{e1,\*be2,\ \*(El}\fR
+extract results of even-numbered arguments according to
+odd-numbered values
+.IP \*MLifo\^{e1,\*be2,\ \*(El}\fR
+models standard Icon ``lifo'' evaluation
+.IP \*MParallel\^{e1,\*be2,\ \*(El}\fR
+parallel evaluation terminating on shortest sequence
+.IP \*MReverse\^{e1,\*be2,\ \*(El}\fR
+left-to-right reversal of lifo evaluation
+.IP \*MRotate\^{e1,\*be2,\ \*(El}\fR
+parallel evaluation with shorter sequences re-evaluated
+.IP \*MSimple\^{e1,\*be2,\ \*(El}\fR
+simple evaluation with only success or failure
+.RE
+.LP
+\fBComments:\fR
+Because of the handling of the scope of local identifiers in co-expressions,
+expressions in programmer-defined argument evaluation regimes cannot communicate
+through local identifiers.
+Some constructions, such
+as \*Mbreak\fR and \*Mreturn\fR, cannot be used in arguments to programmer-defined
+argument evaluation regimes.
+.LP
+At most 10 arguments can be used in the invocation of a programmer-defined
+argument evaluation regime. This limit can be increased by
+modifying \*MCall\fR, a utility procedure that is included.
+.rm CH
+.bp
+.[]
+.[-
+.ds [F 1
+.ds [A R\*(p]\*(a]E\*(p] Griswold
+.as [A \*(n]M\*(p]\*(a]T\*(p] Griswold
+.ds [T The Icon Programming Language
+.ds [I Prentice-Hall, Inc.
+.ds [C Englewood Cliffs, NJ
+.ds [D 1983
+.][
+.[-
+.ds [F 2
+.ds [A R\*(p]\*(a]E\*(p] Griswold
+.as [A \*(c]W\*(p]\*(a]H\*(p] Mitchell
+.as [A \*(m]J\*(p] O'Bagy
+.ds [T \fIVersion 6.0 of Icon\fR
+.ds [R The Univ. of Arizona Tech. Rep. 86-10
+.ds [D May 1986
+.][
+.[-
+.ds [F 3
+.ds [A R\*(p]\*(a]E\*(p] Griswold
+.ds [T \fIThe Translation and Execution of Icon Programs under MS-DOS\fR
+.ds [R The Univ. of Arizona Tech. Rep.
+.ds [D Dec. 1985
+.][
+.[-
+.ds [F 4
+.ds [A G\*(p]\*(a]M\*(p] Townsend
+.ds [T \fIUsing Version 6.0 of Icon Under VMS\fR
+.ds [R The Univ. of Arizona Tech. Rep.
+.ds [D May 1986
+.][
+.[-
+.ds [F 5
+.ds [A R\*(p]\*(a]E\*(p] Griswold
+.ds [T \fIProgramming in Icon; Problems and Solutions from the Icon Newsletter\fR
+.ds [R The Univ. of Arizona Tech. Rep. 86-2
+.ds [D Jan. 1986
+.][
+.[-
+.ds [F 6
+.ds [A C\*(p]\*(a]S\*(p] Wetherwell
+.ds [T ``Probablistic Languages: A Review and Some Open Questions''
+.ds [J Computing Surveys
+.ds [V 12
+.ds [N 4
+.nr [P 1
+.ds [P 362-379
+.ds [D 1980
+.][
+.[-
+.ds [F 7
+.ds [A A\*(p] Salomaa
+.ds [T Formal Languages
+.ds [I Academic Press
+.ds [D 1973
+.][
+.[-
+.ds [F 8
+.ds [A D\*(p]\*(a]B\*(p] Anderson
+.as [A \*(n]M\*(p]\*(a]R\*(p] Sleep
+.ds [T ``Uniform Random Generation of Balanced Parenthesis Strings''
+.ds [J ACM Trans. Prog. Lang. and Systems
+.ds [V 2
+.ds [N 1
+.nr [P 1
+.ds [P 122-128
+.ds [D 1980
+.][
+.[-
+.ds [F 9
+.ds [A R\*(p]\*(a]E\*(p] Griswold
+.ds [T \fIPattern Matching in Icon\fR
+.ds [R The Univ. of Arizona Tech. Rep. 80-25
+.ds [d Oct. 1980
+.][
+.[-
+.ds [F 10
+.ds [A R\*(p]\*(a]E\*(p] Griswold
+.ds [T \fIModels of String Pattern Matching\fR
+.ds [R The Univ. of Arizona Tech. Rep. 81-6
+.ds [D May 1981
+.][
+.[-
+.ds [F 11
+.ds [A A\*(p]\*(a]C\*(p] Fleck
+.ds [T ``Formal Models for String Patterns''
+.ds [B Current Trends in Programming Methodology; Data Structuring
+.ds [I Prentice-Hall, Inc.
+.ds [C Englewood Cliffs, NJ
+.ds [V IV
+.ds [D 1978
+.nr [P 1
+.ds [P 216-240
+.][
+.[-
+.ds [F 12
+.ds [A R\*(p]\*(a]E\*(p] Griswold
+.as [A \*(n]M\*(p] Novak
+.ds [T ``Programmer-Defined Control Operations''
+.ds [J Computer J.
+.ds [V 26
+.ds [N 2
+.ds [D May 1983
+.nr [P 1
+.ds [P 175-183
+.][
+.[-
+.ds [F 13
+.ds [A M\*(p] Novak
+.as [A \*(n]R\*(p]\*(a]E\*(p] Griswold
+.ds [T \fIProgrammer-Defined Argument Evaluation Regimes\fR
+.ds [R The Univ. of Arizona Tech. Rep. 82-16
+.ds [D Dec. 1982
+.][

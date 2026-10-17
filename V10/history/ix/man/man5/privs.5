@@ -1,0 +1,282 @@
+.TH PRIVS 5
+.SH NAME
+privs \- privilege file
+.SH DESCRIPTION
+The file
+.F /etc/privs
+expresses the rules whereby
+.IR priv (1)
+grants privilege.
+It consists of a list of statements,
+each terminated by a semicolon.
+One or more comments, each extending from
+.L #
+to newline, may precede each statement.
+.SS Rights
+Rights are defined thus:
+.IP
+.BI DEFINE " rights-list" ;
+.LP
+Each right in the comma-separated rights-list
+has a name, and optionally a parenthesized parameter type.
+The types are
+.TP
+.B LAB
+Label, ordered by lattice value.
+.TP
+.B RE
+Regular expression ordered by language inclusion.
+Regular expressions are in the form of
+.IR regexp (3),
+with enclosing
+.L ^(
+and
+.L )$
+understood.
+.TP
+.B PRIV
+Set of privileges in 
+.I atopriv 
+form, ordered by inclusion; see
+.IR labtoa (3).
+.LP
+Examples:
+.IP
+.L
+DEFINE ceiling(LAB), filename(RE), privinstall;
+.PP
+Rights are identifiers
+used solely by
+.IR priv ;
+they have no other manifestation in the system.
+In the example, the
+.L ceiling
+right involves label comparisons, but has no necessary
+connection to process ceilings.
+The name could be changed globally to, say,
+.L floor
+without affecting the interpretation of 
+.FR /etc/privs .
+.SS Authorization
+Authorization is expressed by a tree.
+Nodes of the authorization tree are named, like
+files in the file system, by full pathnames starting
+from the root,
+.LR / .
+Associated with each node are statements to grant rights,
+and statements to admit access to the node.
+Rights are monotone in the tree:
+the rights at a node must be a subset of the rights at its
+parent.
+Access to a node implies access to its children.
+.PP
+Right-granting statements have the form
+.IP
+.BI RIGHTS " nodename rights-list" ;
+.LP
+A
+.I rights-list
+is as in a rights
+definition, but with explicit values for parameters.
+White space or one of the metacharacters
+.L ;,()
+may be included in a value by placing double
+quotes around it.
+Examples:
+.IP
+.EX
+.ta \w'RIGHTS 'u +\w'/admin/operations 'u
+RIGHTS	/admin	priv(upxnl), ceiling(ffff...);
+RIGHTS	/admin/security	priv(p), ceiling("ffff ...");
+RIGHTS	/admin/operations	priv(xn)
+.EE 
+.DT
+.PP
+Access statements have the form
+.IP
+.BI ACCESS " nodename pred-list" ;
+.LP
+Access to the named node is granted when the comma-separated
+.I pred-list
+is nonempty and all the predicates in the list are satisfied.
+A node may have more than one 
+.B ACCESS
+statement.
+Legal predicates are
+.TP
+.BI ID( lognames )
+A regular expression for login names
+that have access to this node.
+.TP
+.BI PW( name\ ... )
+The password associated with one of the
+.I names
+in
+.IR pwfile (5)
+must be presented.
+.TP
+.BI SRC( source )
+A regular expression for the stream identifier of 
+the standard input.
+.SS Rules
+Rules give patterns for
+requests and show the prerequisite rights for
+and the actions to carry out each request:
+.IP
+.BI REQUEST( arguments ") NEEDS"  " rights " DOES " actions \fB;"
+.LP
+The request part shows
+.I arguments
+supplied to
+.IR priv (1);
+normally the arguments spell out the prefix of a
+.SM UNIX
+command.
+The
+.B NEEDS
+part tells what rights are needed to perform the request.
+The rights are as in a rights statement, with substituted parameters;
+see `Parameter values'.
+.PP
+If the process has access to a node that grants
+the needed rights (with the parameter in each grant dominating
+the parameter of the corresponding need), then the
+.I actions
+for the request are performed.
+Otherwise the request is denied.
+Legal actions are
+.TP
+.B PRIV(gunxlp)
+Set one or more process licenses, abbreviated as in
+.IR labtoa (3).
+.TP
+.BI EXEC( args )
+Execute a program given by the
+.I args.
+Members of the
+.I args
+list are separated by white space and may specify
+substitutions; see `Parameter values'.
+.B EXEC
+does not do a 
+.IR sh (1)-like
+.B $PATH
+search.
+.TP
+.BI DAEMON( args )
+Same as
+.BR EXEC ,
+but do not wait for the command to complete.
+.TP
+.BI CEILING( label )
+Set the process ceiling.
+.TP
+.BI PRIVEDIT( "node file" )
+Read editing commands from the named
+.IR file .
+Only the subtree at
+.I node
+is editable; nodes closer to the root cannot be touched.
+.TP
+.B ANYSRC
+Skip the normal check for a trusted source; see
+.IR priv (1).
+.PP
+The order in which nodes of the authorization tree are
+visited in evaluating a
+.B NEEDS
+clause is undefined, however at each node the predicates of the
+request are evaluated in order.
+The actions of a granted request are also performed in order,
+with effects such as privilege settings persisting
+until the end of the 
+.I priv
+command or until overridden by a later action.
+.SS Parameter values
+Parameter values appear in members of 
+.B NEEDS
+and
+.B DOES
+lists.
+A value may be surrounded by double quotes, in which case the
+value may contain white space or one of the metacharacters
+.LR ,;() .
+A value may contain substitution marks,
+.BR $0 ,
+.BR $1 ,
+\&...
+Each such mark is replaced from the 
+.I priv
+invocation,
+.B $0
+standing for the match to the first
+.I argument 
+of the 
+.B REQUEST
+and so on.
+If a star is appended to the mark (e.g.
+.BR $0* ,
+.BR $1* ),
+the argument and all following ones are copied
+into the parameter list.
+Nothing can follow a star mark in a parameter.
+.SS Editing
+Statements of the above forms may be used with action
+.B PRIVEDIT
+to augment a
+.I privs 
+file.
+Further types of statements exist for editing only:
+.TP
+.BI RMDEFINE " rights-list " ;
+Remove all occurrences of the listed rights from the file.
+.TP
+.BI RMACCESS " nodename pred-list " ;
+.PD 0
+.TP
+.BI RMRIGHTS " nodename rights-list " ;
+Remove the given access list or the given rights
+from the named node.
+If the list is empty, remove all access lists or rights.
+.PD
+.TP
+.BI RMREQUEST( arguments ) ;
+Remove the
+.B REQUEST
+with identical
+.I arguments.
+.TP
+.BI RMNODE " path-list" ;
+Remove the listed subtrees.
+.PP
+.BR DEFINE ,
+.BR RMDEFINE ,
+.BR REQUEST ,
+and
+.BR RMREQUEST
+are understood to modify the root.
+.SH EXAMPLES
+.EX
+REQUEST(session -l)
+	NEEDS ceiling($2)
+	DOES PRIV(nx) EXEC(/bin/session -l $2);
+REQUEST(/etc/downgrade -l)
+	NEEDS downgrade($2)
+	DOES PRIV(nx) EXEC($*);
+.EE
+.SH FILES
+.F /etc/privs
+.SH SEE ALSO
+.IR priv (1),
+.IR privserv (8)
+.SH BUGS
+There is no way to quote a newline or an initial
+double quote in parameters.
+.br
+If an
+.B ACCESS
+or
+.B RMACCESS
+statement contains duplicate predicates,
+.B RMACCESS
+may remove an unintended list.

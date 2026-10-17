@@ -1,0 +1,1043 @@
+.so tmac.tr
+.ds M \fC
+.de Ta
+.ta .8i +.8i +.8i +.8i +.8i +.8i +.8i
+..
+.de Px
+.ta 3.5i
+..
+.ds CF \s10- \\n(PN - \s0
+.de Ap
+.bp
+.ce 10
+\f3\\$1\f1
+.ce 0
+.sp 2
+.if !''\\$2' 'so \\$2
+..
+.TR 86-11b
+.DA "June 30, 1986"
+.Gi
+.TL
+Installation Guide for Version 6.0 of Icon on UNIX Systems
+.AU
+Ralph E. Griswold
+.AE
+.tr *\(**
+.NH
+Introduction
+.PP
+If you are installing Version 6.0 of Icon on a computer with a version
+of \*U
+for which configuration information already
+.Un
+has been developed \(em a ``supported system'' \(em the installation may be as simple as
+issuing a few \*Mmake\fR commands.
+The presently supported systems are Amdahl 580 (UTS), the AT&T 3B series,
+the HP 9000 (HP-UX), personal computers running PC/IX and XENIX,
+the PDP-11 (Version 7 UNIX), the Pyramid 90x,
+the Ridge 32, the Sun Workstation, and the VAX-11 (Berkeley and System V UNIX).
+.PP
+If you are installing Version 6.0 on a supported system, start with the next section.
+Otherwise, skip to Section 7.
+.PP
+If you are installing Version 6.0 on a system that is running an earlier
+version of Icon, be sure to read Section 6 concerning possible impacts
+of Version 6.0 on present users.
+.NH
+Standard Installation
+.PP
+The standard installation uses configuration information that is
+included with the distribution. This configuration information
+should be correct for most sites. If you want to check it out
+before proceeding, read Section 7.
+.PP
+For the standard installation, all files, including executable binaries,
+are placed
+in the directory \*M/usr/icon/v6\fR\s-2\u\(dg\d\s0. If you want executable binary files
+.FS
+.sp .5
+\s-2\u\(dg\d\s0\^For HP-UX, the standard location is \*M/users/icon/v6\fR.
+.FE
+in some other location,
+you must edit a file before proceeding. Think twice about this.
+Icon executable binary files are referenced by full path names; they
+cannot be moved, so it is important to select the correct paths at the start.
+See Appendix A if you want to change the location of binary files.
+.PP
+The Icon distribution is rooted in \*Mv6\fR.
+Unload the distribution files
+into the installation directory (the standard installation directory
+is \*M/usr/icon\fR).
+See Appendix B, if necessary, for information on unloading
+the distribution files.
+See Appendix C for a listing of the distribution hierarchy.
+.PP
+In the description that follows, paths are relative to \*Mv6\fR.
+For example, \*MMakefile\fR refers to the \*MMakefile\fR in the
+top level of the distribution hierarchy.
+.PP
+There are four phases of the installation: setup, compilation,
+installation,
+and testing.
+All are done using \*MMakefile\fR in \*Mv6\fR.
+.PP
+Setup is based on the name of the system being installed,
+as shown in the right column of the following
+table:
+.DS
+.ft R
+.ta 2i 3.7i
+.sp .5
+\fIcomputer	UNIX system	name\fR
+.sp .5
+Amdahl 580	UTS	\*Mamdahl_uts\fR
+AT&T 3B2/5/15	System V	\*Matt3b5\fR
+AT&T 3B20	System V	\*Matt3b20\fR
+HP 9000	HP-UX	\*Mhp9000\fR
+IBM PC/XT/AT	PC/IX	\*Mpc_pcix\fR
+IBM AT	XENIX	\*Mpc_xenix_smm\fR
+PDP-11 (separate I & D spaces)	Version 7	\*Mpdp11_v7\fR
+Pyramid 90x	Berkeley 4.2bsd	\*Mpyramid_bsd\fR
+Ridge 32	ROS	\*Mridge\fR
+Sun Workstation	UNIX 4.2	\*Msun\fR
+VAX-11	Berkeley 4.1bsd	\*Mvax_4.1bsd\fR
+VAX-11	Berkeley 4.2bsd & 4.3bsd	\*Mvax_bsd\fR
+VAX-11	System V	\*Mvax_sysv\fR
+.DE
+Before proceeding, check the status of the system you plan to install.
+In \*Mv6\fR
+.Ds
+make Status name=\fIname\fR
+.De
+where \fIname\fR is one of those given above. For example,
+.Ds
+make Status name=sun
+.De
+lists the status of Version 6.0 on the Sun Workstation.
+.PP
+There are some supported systems for which not all features of Version
+6.0 are implemented. If this is the case for your system,
+proceed with the installation, but you may wish to implement the
+missing features later. For this, see Section 7.
+.PP
+Start the installation with
+.Ds
+make Setup name=\fIname\fR
+.De
+where \fIname\fR is the name of your system as described above.
+For example,
+.Ds
+make Setup name=vax_bsd
+.De
+configures Version 6.0 of Icon for a VAX running Berkeley 4.\fIn\fRbsd.
+.PP
+Compilation and installation are done by
+.Ds
+make Icon Install
+.De
+This takes a while. There may be warning messages on some systems,
+but there should be no fatal errors.
+.PP
+For a standard installation, a few simple tests are sufficient to
+check that Icon is running properly. The following does the job:
+.Ds
+make Test-icon
+.De
+This test compares local program output with the expected output.
+There should be no differences.
+.PP
+If all is well, you may wish to copy the manual page \*Micont.1\fR in
+\*Mv6/docs\fR to your local public manual area.
+That's all there is to a standard installation.
+.NH
+Personalized Interpreters
+.PP
+Version 6.0 contains a ``personalized interpreter'' facility
+[1] that allows an individual to modify and
+extend a private copy of Icon's run-time system. To install this optional
+component of Icon,
+.Ds
+make PI
+.De
+For testing, do
+.Ds
+make Test-pi
+.De
+Expect some differences in this test, since one function checks local
+environment variables.
+.PP
+You may want to copy
+the shell script \*Micon_pi\fR, which makes personalized interpreters,
+from \*Mv6\fR to a public area for general use. You also may want to copy
+the manual page
+\*Micon_pi.1\fR in \*Mv6/docs\fR to the public manual area.
+.NH
+Icon Program Library
+.PP
+The Icon program library [2] contains a variety of programs
+and procedures. To install this optional component of the Version 6.0
+distribution,
+.Ds
+make Ipl
+.De
+This puts compiled programs in \*Mv6/ipl/progs\fR and translated
+procedures in \*Mv6/ipl/procs\fR. To test the library,
+.Ds
+make Test-ipl
+.De
+You can copy
+the programs in \*Mv6/ipl/progs\fR and the translated procedures
+in \*Mv6/ipl/procs\fR to other locations if you want.
+.NH
+Cleaning Up
+.PP
+After Icon and any optional components have be installed, you
+can remove non-source files and test results by
+.Ds
+make Clean
+.De
+You also can remove source files, but think twice about this,
+since source files may be useful to persons using personalized
+interpreters.
+.NH
+User Impacts
+.PP
+The language features of Version 6.0 are very similar to those of
+preceding Versions 5.9 and 5.10. Therefore, most user programs
+that run properly under versions 5.9 and 5.10 should run properly
+under Version 6.0.
+However, users should be encouraged to read the Version 6.0 description
+[3].
+There are two possible sources of operational problems: version checking
+and link path specifications.
+.PP
+Prior to  Version 6.0, there was no check that ucode files produced by the
+Icon translator and executable icode files produced by the Icon linker 
+were compatible with the Icon run-time system.
+Incompatible files simply caused mysterious program malfunction.
+Version 6.0 produces
+version-numbered files and checks compatibility. An attempt
+to use a file produced by an earlier version results in a error
+message from Version 6.0 (\*Mucode file has no version identification\fR).
+.PP
+Since executable files contain the full path name of the run-time
+system (\*Miconx\fR), proper installation should avoid problems with
+version numbers in icode files.
+Ucode files, which are typically used in libraries included by
+the \*Mlink\fR declaration, are more troublesome.
+Incompatible versions may be confusing,
+since the source of the
+problem may be hidden.
+Users should be advised to re-translate all ucode files when Version 6.0
+is installed.
+Similarly, if an earlier version of the Icon program library is in
+use, it should be replaced by the Version 6.0 library, built under
+Version 6.0 as described in Section 4. (Some earlier Icon program
+library material has been deleted in Version 6.0; if such material is
+in use, it can be added to the Version 6.0 library.)
+.PP
+The syntax of the \*MIPATH\fR environment variable, which is used
+by the linker to search for files given in \*Mlink\fR declarations,
+has changed in Version 6.0. Previously the separator was a colon;
+in Version 6.0 it is a blank. Problems with \*MIPATH\fR usually
+are indicated by the linker error message \*MCan't resolve referernce to file
+\&\*(El \fR.
+.NH
+Configuring Version 6.0 for a New System
+.PP
+Version 6.0 of Icon makes two assumptions about sizes:
+.RS
+.IP 1. 4n
+C \fIint\fRs are either 16 or 32 bits long.
+.IP 2.
+The sizes of C \fIint\fRs and C pointers are the same.
+.RE
+.LP
+If your system violates either of these assumptions, don't try to
+go on \(em but check back with us, since we are working on
+removing these restrictions.
+.PP
+To install Icon on a system that is not supported in the
+distribution, you must create a directory to hold files
+containing configuration information. In the description
+that follows, this directory is referred to as your
+configuration directory.
+.PP
+First you need to select a name for your system.
+The name should consist of a mnemonic for the computer, which may be followed
+by an underscore and a mnemonic for the operating system,
+in case there may be more than one operating system for the
+computer.
+Examples are \*Mvax_bsd\fR and \*Mvax_sysv\fR.
+You may want to append an additional
+underscore and a qualification if there is more than more likely
+implementation for a given computer and operating system. An
+example is \*Mpc_xenix_smm\fR for the small memory model
+implementation of Icon on XENIX.
+.PP
+To build and initialize a new configuration directory,
+.Ds
+make System name=\fIname\fR
+.De
+where \fIname\fR is the name of your system.
+.PP
+Now
+.Ds
+cd v6/setup/\fIname\fR
+.De
+where you need to edit some files. The files that may need editing are
+.Ds
+.ta 1.2i
+paths.h	\fRpaths for executable binary files\*M
+header.hdr	\fRsizing for a bootstrap header file\*M
+icont.hdr	\fRflags for command processor \*MMakefile
+iconx.hdr	\fRflags and other definitions for the run-time system \*MMakefile
+link.hdr	\fRflags for the linker \*MMakefile
+tran.hdr	\fRflags for the translator \*MMakefile
+pi.hdr	\fRflags for the personalized interpreter \*MMakefile
+config.trl	\fRother configuration definitions\*M
+rswitch.c	\fRco-expression context switch\*M
+rover.c	\fRarithmetic overflow checks\*M
+Ranlib	\fRlibrary randomizer for personalized interpreters\*M
+.De
+.NH 2
+\*Mpaths.h\fR
+.PP
+If \*M/usr/icon/v6\fR is acceptable as a location for all Icon
+files, you don't have to change \*Mpaths.h\fR.
+Otherwise, handle the file \*Mpaths.h\fR as described in Appendix A.
+.NH 2
+\*Mheader.hdr\fR
+.PP
+The file \*Mheader.hdr\fR contains a definition for \*MMaxHdr\fR,
+which determines the amount of space that is reserved for \*Miconx.hdr\fR,
+the bootstrapping program that gets Icon programs into execution.
+You cannot determine the most appropriate value of \*MMaxHdr\fR until
+after Icon has been compiled.
+An overly large value just wastes file space in compiled Icon programs,
+but a value that is not large enough prevents compiled Icon
+programs from executing.
+.PP
+The value provided, 4096, is more than enough for most systems
+and you can wait to change it until later. Remember, however,
+that if Icon programs fail to execute, this value may be
+too small.
+.PP
+After all else has been done and Icon has been compiled and
+tested, come back to this file and change the value of \*MMaxHdr\fR
+to the size of \*Mv6/src/icont/iconx.hdr\fR. You may need to
+round the size up on some systems.
+In any event, make \*MMaxHdr\fR a hundred or so larger than the
+size of \*Miconx.hdr\fR to allow for a somewhat larger size
+that may be needed for personalized interpreters.
+.PP
+On some systems, particularly UNIX emulators, many routines may be
+included by the loader regardless of need. In this case, the size
+of \*Miconx.hdr\fR may be impractically large. If this is the case
+on your system, the header file can be eliminated altogether by
+adding
+.Ds
+#define NoHeader
+.De
+to \*Mconfig.trl\fR (see Section 7.4). The effect of this definition
+is to render Icon programs non-executable. Instead, they must be
+run by using the \*M\-x\fR option after the program name when
+\*Micont\fR is used, as in
+.Ds
+icont prog.icn -x
+.De
+Such a program also can be run as an argument of \*Miconx\fR, as in
+.Ds
+iconx prog
+.De
+where \*Mprog\fR is the result of translating and linking \*Mprog.icn\fR
+as in the previous example.
+.PP
+If \*MNoHeader\fR is defined, the value of \*MMaxHdr\fR is irrelevant.
+.NH 2
+\*MMakefile\fR headers
+.PP
+The files \*Micont.hdr\fR, \*Miconx.hdr\fR, \*Mlink.hdr\fR, and \*Mtran.hdr\fR
+provide headers for \*MMakefile\fRs in \*Mv6/src/icont\fR, \*Mv6/src/iconx\fR,
+and so on. These headers are prepended to the standard bodies for the
+\*MMakefile\fRs during setup.
+.PP
+Except for \*Miconx.hdr\fR, these headers serve only to specify flags for
+\fIcc(1)\fR and \fIld(1)\fR via \*MCFLAGS\fR and \*MLDFLAGS\fR.
+If your C optimizer is robust, you may wish to start with
+.Ds
+CFLAGS= -O
+.De
+in all these headers. In fact, if you are installing Icon on a computer
+with a small address space, this flag (as well as others) may be necessary
+to obtain modules small enough to load. However, if you encounter
+problems during testing, suspect your optimizer first and try compiling
+Version 6.0 without the \*M\-O\fR flag.
+.PP
+Other \fIcc\fR and \fIld\fR flags vary considerably from system to system.
+You may want to review your local manual pages for these processors and
+look at the header files in the other configuration areas.
+.PP
+There are two other definitions in \*Miconx.hdr\fR: \*MRSWITCH\fR and
+\*MROVER\fR, which depend on whether the local co-expression
+context switch and arithmetic overflow checks are written in
+C or assembly language. The initial values of these definitions
+are \*Mrswitch.c\fR and \*Mrover.c\fR, and dummy C routines
+are provided. To start out, leave these definitions as they are;
+the default routines can be replaced later. See Sections 7.7 and 7.8.
+.PP
+The file \*Mpi.hdr\fR provides a header for the personalized interpreter
+\*MMakefile\fR, which is in \*Mv6/Pimakefile\fR. In addition to the usual
+\fIcc\fR and \fIld\fR flags, you should provide definitions for
+\*MXCFLAGS\fR and \*MXLDFLAGS\fR that are the same as those for
+\*MCFLAGS\fR and \*MLDFLAGS\fR in \*Micont.hdr\fR. This assures that
+the header file in the personalized interpreter is the same size as
+the one in the regular version of Icon.
+.NH 2
+\*Mconfig.trl\fR
+.PP
+The remaining configuration information is contained in \*Mconfig.trl\fR.
+The definitions in this file as provided by \*MSetup\fR are for
+a ``vanilla'' 32-bit computer. Changes may be needed as follows:
+.SH
+\*MFork\fR
+.PP
+If your system supports \fIvfork(2)\fR, change the definition of
+\*MFork\fR from \*Mfork\fR to \*Mvfork\fR.
+.SH
+\*MHostStr\fR
+.PP
+Change the definition of \*MHostStr\fR, which provides the value
+of the Icon keyword \*M&host\fR, to some string that adequately
+identifies your installation. If you want to use a local system
+routine to provide the host name automatically, read Appendix D.
+.SH
+\*MHz\fR
+.PP
+If you are running in a 50-hz environment, change the
+definition of \*MHz\fR from \*M60\fR to \*M50\fR.
+.SH
+\*MIntSize\fR, \*MLongSize\fR, and \*MPtrSize\fR
+.PP
+Define these constants to the the sizes, in bits, of you C \*Mint\fRs,
+\*Mlong\fRs and pointers, respectively.
+These values normally are 16 or 32.
+\*MNoOver\fR
+.PP
+Initially, \*Mconfig.trl\fR contains
+.Ds
+#define NoOver
+.De
+This definition disables arithmetic overflow checks, which must be
+written in assembly language. Leave this definition in for the
+first round, although you may want to remove it later (see Section 7.8).
+.SH
+\*MSysTime\fR
+.PP
+The system \*Minclude\fR file \*Mtime.h\fR is in different locations on
+different systems \(em either \*M<time.h>\fR or \*M<sys/time.h>\fR.
+Define \*MSysTime\fR accordingly.
+.PP
+If you give the incorrect location,
+a fatal error will occur during the compilation of \*Mv6/src/iconx/lmisc.c\fR.
+The use of this definition also depends on your C preprocessor
+making macro substitutions in \*M#include\fR directives. Most preprocessors
+do, but if yours does not, edit \*M/v6/src/iconx/lmisc.c\fR and
+replace \*MSysTime\fR there by the appropriate value. If you have to
+do this, make a note to come back later and place the definition under
+the control of conditional compilation as described in Section 7.5.
+.SH
+Names of Indexing Routines
+.PP
+Different versions of UNIX use different names for the routines for
+locating substrings within strings. Version 6.0 of Icon uses
+\*Mindex\fR and \*Mrindex\fR. The other possibilities are \*Mstrchr\fR
+and \*Mstrrchr\fR. If your system uses the latter names, add
+.Ds
+#define index strchr
+#define rindex strrchr
+.De
+to \*Mconfig.trl\fR.
+.SH
+Other Definitions
+.PP
+There are several other configuration details that are needed for
+a few systems. Most of these can be handled by optionally defined
+symbols.
+.PP
+If your system needs a specific check for division by floating-point
+zero, as opposed to relying on a signal, add
+.Ds
+#define ZeroDivide
+.De
+to your \*Mconfig.trl\fR file.
+.PP
+If your system requires C \fIdouble\fRs to be aligned at double-word
+boundaries, add
+.Ds
+#define Double
+.De
+to your \*Mconfig.trl\fR file.
+.PP
+Most computers have down-growing C stacks, for which stack addresses
+decrease as values are pushed. If you have an up-growing stack, for
+which stack addresses increase as values are pushed, add
+.Ds
+#define UpStack
+.De
+to your \*Mconfig.trl\fR file.
+.PP
+Icon includes its own versions of \*Mmalloc\fR and \*Mfree\fR, so that
+it can manage its storage region without interference from allocation
+by the operating system. Normally, Icon's \*Mmalloc\fR and \*Mfree\fR
+are loaded instead of the system library routines. If your system
+insists on loading its own library routines, multiple definitions will
+occur as a result of the \fIld\fR in \*M/v6/src/iconx\fR.
+.PP
+If multiple definitions occur in \*Miconx\fR, go back and add
+.Ds
+#define IconAlloc
+.De
+to \*Mconfig.trl\fR. This definition
+causes Icon's routines to be named differently to avoid collision
+with the system routine names.
+.PP
+One possible effect of this definition is to interfere with Icon's
+expansion of its memory region in case the initial values for allocated
+storage are not large enough to accommodate a program that produces a
+lot of data.
+This problem appears in the form of run-time error 304 or 305 and can
+be circumvented on a case-by-case basis by increasing the
+initial values for allocated storage by setting environment variables [4].
+.NH 2
+Modifications to the Distributed Source Code
+.PP
+The configuration system is designed to avoid modifications to
+the distributed source code for Version 6.0.  However, on some
+systems, it may be necessary to modify the source code.
+.PP
+If you need to modify the source code, do it under the control of
+conditional compilation keyed to the name of your system. Add
+.Ds
+#define \fINAME\fR
+.De
+where \fINAME\fR is an all-uppercase name that identifies your system.
+For example, the \*Mconfig.trl\fR for Sun Workstations contains
+.Ds
+#define SUN
+.De
+.LP
+Then use
+.Ds
+#ifdef \fINAME\*M
+.do
+#endif \fINAME\*M
+.De
+or similar constructions where you need local source-code modifications.
+For example, this technique can be used to handle the problem that
+may arise with \*MSysTime\fR, described in Section 7.4. Note
+that nested \*M#ifdef\fRs may be needed in places where there are several
+different local modifications.
+.PP
+It is important to be consistent and careful about the use of such
+conditional compilations; if done properly, your modifications can be
+backed into the central version of the source code at the University
+of Arizona and will be in place for you when subsequent
+versions are released.
+See Section 8.
+.NH 2
+Initial Installation of a New System
+.PP
+Once you have edited the configuration files as described in the
+previous sections, proceed with setup, compilation, and installation
+as described in Section 2. You may need to iterate.
+If you make a change in a configuration file after a compilation, be
+sure to perform the setup again; some aspects of the setup are
+far-reaching and not obvious.
+.PP
+More testing is recommended for a new installation than for one
+that has been successfully installed elsewhere.
+As a start, do
+.Ds
+make Test-icon
+.De
+If that works,
+.Ds
+make Test-large
+.De
+or
+.Ds
+make Test-small
+.De
+depending on whether you defined \*MPtrSize\fR to be 32 or 16 earlier.
+These tests are quite extensive and contain some real grinders;
+be prepared to wait a while. See \*Mv6/tests/Makefile\fR for more
+information.
+.PP
+There will be some differences between local and standard results
+in \*Mcheck\fR, since
+it contains site and time-dependent tests. Other minor discrepancies
+may occur because of differences in the handling of floating-point
+arithmetic on different systems.
+.PP
+Do \fInot\fR run any other tests until you have implemented the
+co-expression context switch (see Section 7.7) and decided what to
+do about arithmetic overflow checking (see Section 7.8).
+.NH 2
+Co-Expressions
+.PP
+All aspects of co-expression creation and activation are written
+in C in Version 6.0 except for a routine, \*Mcoswitch\fR, that is needed for
+context switching. This routine requires assembly
+language, since it must manipulate hardware registers.
+It can either be written as a C routine with \*Masm\fR directives
+or as an assembly language routine.
+.PP
+When a new configuration directory is set up, a file \*Mrswitch.c\fR is
+provided with
+a version of \*Mcoswitch\fR that results in error termination if an Icon
+program attempts to activate a co-expression.
+.PP
+Calls to the context switch have the form \*Mcoswitch(old_cs,new_cs,first)\fR,
+where \*Mold_cs\fR is a pointer to an array of words that contain C state
+information for the current co-expression, \*Mnew_cs\fR is a pointer to
+an array of words that hold C state information for a co-expression to
+be activated, and \*Mfirst\fR is 1 or 0, depending on whether or not
+the new co-expression has or has not been activated before.
+The zeroth element of a C state array always contains the stack pointer
+(\fIsp\fR) for that co-expression. The other elements (15 are provided)
+can be used to save any C frame pointers and any
+other registers your C compiler expects to be preserved across calls.
+.PP
+The first thing \*Mcoswitch\fR does is to save the current pointers
+and registers in the \*Mold_cs\fR array. Then it tests \*Mfirst\fR.
+If \*Mfirst\fR is zero, \*Mcoswitch\fR sets \fIsp\fR from
+\*Mnew_cs[0]\fR, clears the C frame pointers, and \fIcalls\fR
+\*Minterp\fR. If \*Mfirst\fR is not zero, it loads the (previously saved)
+\fIsp\fR, C frame pointers, and registers from \*Mnew_cs\fR and
+returns.
+.PP
+Written in C, \*Mcoswitch\fR has the form:
+.DS
+.ta 1i
+.ft C
+/*
+ * coswitch
+ */
+coswitch(old_cs, new_cs, first)
+int *old_cs, *new_cs;
+int first;
+{
+.do 2i
+            /* save sp, frame pointers, and other registers in old_cs */
+.do 2i
+   if (first == 0) {	/* this is first activation */
+.do 2i
+            /* load sp from new_cs[0] and clear frame pointers */
+.do 2i
+      interp(0, 0);
+      syserr("interp() returned in coswitch");
+      }
+   else {
+.do 2i
+            /* load sp, frame pointers, and other registers from new_cs */
+.do 2i
+      }
+}
+.DE
+Appendix E contains \*Mcoswitch\fR for the VAX.
+Other examples are contained in the configuration directories in
+\*Mv6/setup\fR.
+.PP
+If you do not want to implement the context switch, the only effect will
+be that Icon programs that attempt to activate a co-expression will
+terminate with an error message. If you chose to implement the context
+switch, replace \*Mrswitch.c\fR in your configuration directory
+by either a new \*Mrswitch.c\fR or an assembly language file named
+\*Mrswitch.s\fR. The setup process will copy your file to the
+appropriate place prior to compilation. If you use \*Mrswitch.s\fR,
+change the definition of \*MRSWITCH\fR in \*Miconx.hdr\fR in your
+configuration area to
+.Ds
+RSWITCH=rswitch.s
+.De
+If your assembler requires special flags, add an appropriate
+definition for \*MOFLAGS\fR to \*Miconx.hdr\fR.
+.PP
+To test your context switch,
+.Ds
+make Test-lcoexpr
+.De
+or
+.Ds
+make Test-scoexpr
+.De
+depending on whether you defined \*MPtrSize\fR to be 32 or 16 earlier.
+There should be no differences in the comparison of outputs.
+.PP
+If you have trouble with your context switch, the first thing to do
+is double-check the registers that your C compiler expects to
+be preserved across calls \(em different C compilers on the same
+computer may have different requirements.
+.PP
+Another possible source of problems is built-in stack checking.
+Co-expressions rely on being able to specify an arbitrary region
+of memory for the C stack. If your C compiler generates code for
+stack probes that expects the C stack to be at a specific location,
+you may need to disable this code or replace it with something
+more appropriate.
+.PP
+If your system does not allow the C stack to be at an arbitrary
+place in memory, there is probably little hope of implementing
+co-expressions.
+.NH 2
+Arithmetic Overflow Checks
+.PP
+C does not provide overflow checking for integer addition, subtraction,
+or multiplication. Icon, on the other hand, is supposed to check for
+overflow. This requires assembly-language code.
+.PP
+The \*Mconfig.trl\fR file provided when a new configuration area is
+set up provides the definition
+.Ds
+#define NoOver
+.De
+which causes overflow checking to be bypassed.
+.PP
+If you do not want to implement overflow checking, you need do nothing.
+If you want to implement overflow checking, remove the definition
+of \*MNoOver\fR from your \*Mconfig.trl\fR and write routines
+\*Mckadd\fR, \*Mcksub\fR, and \*Mckmul\fR that call \*Mrunerr(203,0)\fR
+in the case of overflow. Appendix F contains the overflow checking
+routine for the VAX.
+Other examples are contained in the configuration directories in
+\*Mv6/setup\fR.
+.PP
+If you supply overflow checking routines, put them in the file
+\*Mrover.s\fR in your configuration directory. The setup will copy
+this file to the appropriate place prior to compilation.
+.PP
+To test overflow checking,
+.Ds
+make Test-over
+.De
+There should be no differences in the comparison of outputs if overflow
+checking is working properly.
+.PP
+You should also rerun previous tests at this point to make sure
+that arithmetic still works properly.
+.NH 2
+Personalized Interpreters
+.PP
+The personalized interpreter system uses \fIar(1)\fR. On most
+UNIX systems, it is necessary to use \fIranlib(1)\fR so that the
+loader can access the archive. The script \*MRanlib\fR that is
+provided when a new configuration directory is initialized contains
+calls of \fIranlib\fR for this purpose.
+.PP
+Some UNIX systems, notably System V, handle this problem directly
+in \fIar(1)\fR and do not have \fIranlib(1)\fR. If your system does
+not use \fIranlib(1)\fR, change \*MRanlib\fR to an empty script by
+.Ds
+echo "" >Ranlib
+.De
+in your configuration directory.
+.
+.a
+.PP
+Test your personalized interpreter system as described in Section
+3. If the test programs fail to execute, suspect the size of
+\*Mv6/tests/pi/piconx.hdr\fR, the personalized interpreter
+version of \*Miconx.hdr\fR. If it is larger than \*MMaxHdr\fR,
+something is wrong. Check the file \*Mpi.hdr\fR in your
+configuration directory as described in Section 7.3.
+.NH
+Trouble Reports and Feedback
+.PP
+If you run into problems, contact the Icon Project:
+.DS
+.ft R
+Icon Project
+Department of Computer Science
+The University of Arizona
+Tucson, AZ   85721
+.sp .5
+(602) 621-6613
+.sp .5
+\*Micon\-project@arizona.edu
+{ihnp4,noao,mcnc,utah-cs}!arizona!icon-project
+.DE
+.PP
+Please also let us know of any suggestions for improvements to the
+installation process and corrections or refinements to configuration
+files for supported systems.
+.PP
+If you installed a previously unsupported system,
+send a copy of the files
+in your configuration directory and any files in \*Mv6/src\fR that
+you modified to
+so that we can back them in to the central version of the source.
+.SH
+Acknowledgement
+.PP
+Gregg Townsend made a number of helpful suggestions related to the
+process for installing Version 6.0.
+.SH
+References
+.LP
+1. Griswold, Ralph E. \fIPersonalized Interpreters for Version 6.0 of Icon\fR,
+Technical Report TR 86-12, Department of Computer Science, The University
+of Arizona. May 1986.
+.LP
+2. Griswold, Ralph E. \fIThe Icon Program Library; Version 6.0\fR,
+Technical Report TR 86-13, Department of Computer Science, The University
+of Arizona. May 1986.
+.LP
+3. Griswold, Ralph E., William H. Mitchell, and Janalee O'Bagy.
+\fIVersion 6.0 of Icon\fR, Technical Report TR 86-10, Department of
+Computer Science, The University of Arizona. May 1986.
+.LP
+4. Griswold, Ralph E. \fIICONT(1)\fR, manual page for \fIUNIX
+Programmer's Manual\fR, Department of Computer Science, The
+University of Arizona. May 1986.
+.Ap "Appendix A \(em Changing the Locations of Version 6.0 Files"
+.sp
+.PP
+As mentioned in Section 2, the distributed files are rooted in \*Mv6\fR.
+The standard location for this hierarchy is \*M/usr/icon/v6\fR\s-2\u1\d\s0.
+.FS
+\s-2\u1\d\s0\^For HP-UX, the standard location is \*M/users/icon/v6\fR.
+The location \*M/usr/icon/v6\fR is used here for convenience.
+.FE
+The hierarchy can be placed somewhere else if you desire, but
+before performing the setup, you must edit a file that
+specifies where the binary files are to be installed.
+.PP
+The directory \*Mv6/setup\fR contains a subdirectory for each
+supported system. For example, \*Mv6/setup/sun\fR contains the
+configuration information for the Sun Workstation. To get to the
+configuration information for your system,
+.Ds
+cd v6/setup/\fIname\fR
+.De
+where \fIname\fR is the name of your system.
+.PP
+The file \*Mpaths.h\fR,
+as distributed, is the same for all systems and contains
+.Ds
+.ta 1.8i
+#define RootPath	"/usr/icon/v6"
+#define IcontPath	"/usr/icon/v6/bin/icont"
+#define TranPath	"/usr/icon/v6/bin/itran"
+#define LinkPath	"/usr/icon/v6/bin/ilink"
+#define IconxPath	"/usr/icon/v6/bin/iconx"
+#define HeaderPath	"/usr/icon/v6/bin/iconx.hdr"
+.De
+\*MRootPath\fR gives the location of the \*Mv6\fR hierarchy.
+.PP
+The five binary files referenced are:
+.Ds
+.ta 1i
+icont	\fRIcon command processor \(em all the typical user knows about\*M
+itran	\fRIcon translator\*M
+ilink	\fRIcon linker\*M
+iconx	\fRIcon run-time system\*M
+iconx.hdr	\fRbootstrap program that gets Icon programs into execution
+.De
+The command processor \*Micont\fR calls the other programs.
+.PP
+There are two reasons for changing these paths:
+.RS
+.IP 1. 4n
+If \*Mv6\fR is
+unloaded in an area other than \*M/usr/icon/v6\fR,
+you probably want the binary files installed in that area instead of
+\*M/usr/icon/v6\fR.
+.IP 2.
+You may want to install some or all of the binary files in a public
+area.
+.RE
+.LP
+For example, if you want to unload Icon in \*M/usr/irving/v6\fR,
+edit \*Mpaths.h\fR to be
+.Ds
+.ta 1.8i
+#define RootPath	"/usr/irving/v6"
+#define IcontPath	"/usr/irving/v6/bin/icont"
+#define TranPath	"/usr/irving/v6/bin/itran"
+#define LinkPath	"/usr/irving/v6/bin/ilink"
+#define IconxPath	"/usr/irving/v6/bin/iconx"
+#define HeaderPath	"/usr/irving/v6/bin/iconx.hdr"
+.De
+Similarly, if you want \*Micont\fR to reside in \*M/usr/local/icont\fR,
+edit the line for \*Micont\fR to be
+.Ds
+.ta 1i 2i
+#define IcontPath "/usr/local/icont"
+.De
+\fICaution:\fR If you have a previously installed version of Icon, do not
+put \*Miconx\fR at that place \(em
+\*Miconx\fR for Version 6.0 is incompatible with \*Miconx\fR for
+previous versions and replacing a previous \*Miconx\fR by Version 6.0
+\*Miconx\fR will invalidate all previously compiled Icon programs.
+.Ap "Appendix B \(em Unloading the Distribution Files"
+.sp 2
+.PP
+The Icon distribution files are distributed in a variety of ways.
+The usual distribution is magnetic tape, although
+it is available on 5-\(14\(fm\(fm diskettes in DOS and
+PC/IX formats. The directions that follow refer to magnetic tape
+distribution only.
+.PP
+The Icon system is provided on tape in \fItar\fR or \fIcpio\fR format, recorded
+at 1600 or 6250 bpi as specified when Version 6.0 is ordered.
+Tapes are written in \fItar\fR format at 1600 bpi if no specification
+is given.
+The format and recording density are marked on the label on the tape.
+.PP
+To unload the tape,
+do a \fIcd\fR to the directory that is to hold
+the Icon hierarchy (that is, the directory in which \*Mv6\fR is to be
+created) and mount the tape.
+The precise
+\fItar\fR or \fIcpio\fR command to unload the distribution
+tape depends on the local environment.
+On a VAX running 4.\fIn\fRbsd, use
+the following command for a 1600 bpi \fItar\fR distribution tape:
+.Ds
+tar x
+.De
+Similarly, on a VAX running System V with a 6250 bpi \fIcpio\fR tape,
+use:
+.Ds
+cpio -icdB </dev/rmt/0h
+.De
+.Ap "Appendix C \(em The Distribution Hierarchy"
+.sp 2
+.Ds
+.ta 1i +1i +1i +1i +1i +1i +1i +1i
+/v6		\fRroot of the Version 6.0 hierarchy\*M
+	/bin	\fRstandard location for binary files\*M
+	/book	\fRprograms from the Icon book\*M
+	/docs	\fRsource text for documents\*M
+	/ipl	\fRIcon program library\*M
+	/pi	\fRpersonalized interpreter system\*M
+	/setup	\fRsetup and configuration files\*M
+	/src	\fRsource code for the Icon system\*M
+	/tests	\fRtest programs\*M
+.De
+.Ap "Appendix D \(em Host Name"
+.sp 2
+.PP
+The default method for specifying the host name that determines the
+value of \*M&host\fR is the definition of \*MHostStr\fR in
+\*Mconfig.trl\fR in the configuration directory. There are three other
+ways of specifying the host; only one may be used.
+.SH
+\*MWhoHost\fR
+.PP
+On some versions of UNIX, notably Version 7 and 4.1bsd, the file
+\*M/usr/include/whoami.h\fR contains the host name. If your system has
+this file and you want to
+use this name,
+.Ds
+#define WhoHost
+.De
+.SH
+\*MGetHost\fR
+.PP
+Some versions of UNIX, notably 4.2bsd and 4.3bsd, provide the
+host name via the \fIgethostname(2)\fR system call. If your system supports
+this system call and you want
+to use this name,
+.Ds
+#define GetHost
+.De
+.SH
+\*MUtsName\fR
+.PP
+Some versions of UNIX, such as System V, provide the host name via
+the \fIuname(2)\fR system call. If your system supports this call
+and you want to use this name,
+.Ds
+#define UtsName
+.De
+.Ap "Appendix E \(em Sample Co-Expression Context Switch"
+.sp 2
+.SH
+\*Mrswitch.c\fR for the VAX under Berkeley UNIX:
+.LP
+.Ds
+.ta 2.5i
+coswitch(old_cs, new_cs, first)
+int *old_cs, *new_cs;
+int first;
+.Dd
+{
+   asm("  movl 4(ap),r0");
+   asm("  movl 8(ap),r1");
+   asm("  movl sp,0(r0)");
+   asm("  movl fp,4(r0)");
+   asm("  movl ap,8(r0)");
+   asm("  movl r11,16(r0)");
+   asm("  movl r10,20(r0)");
+   asm("  movl r9,24(r0)");
+   asm("  movl r8,28(r0)");
+   asm("  movl r7,32(r0)");
+   asm("  movl r6,36(r0)");
+.Dd
+   if (first == 0)	{ /* this is first activation */
+      asm("  movl 0(r1),sp");
+      asm("  clrl fp");
+      asm("  clrl ap");
+      interp(0, 0);
+      syserr("interp() returned in coswitch");
+      }
+.Dd
+   else {
+      asm(" movl 0(r1),sp");
+      asm(" movl 4(r1),fp");
+      asm(" movl 8(r1),ap");
+      asm(" movl 16(r1),r11");
+      asm(" movl 20(r1),r10");
+      asm(" movl 24(r1),r9");
+      asm(" movl 28(r1),r8");
+      asm(" movl 32(r1),r7");
+      asm(" movl 36(r1),r6");
+      }
+}
+.De
+.Ap "Appendix F \(em Sample Arithmetic Overflow Checking Routine"
+.sp 2
+.SH
+\*Mrover.s\fR for the VAX under Berkeley UNIX:
+.Ds
+.globl _ckadd
+.globl _cksub
+.globl _ckmul
+
+.text
+.align	1
+_ckadd:	.word	0
+	addl3	4(ap),8(ap),r0	# Perform addition
+	jvs	oflow		# Branch if overflow
+	ret			# Return result in r0
+
+.align	1
+_cksub: .word	0
+	subl3	8(ap),4(ap),r0	# Perform subtraction
+	jvs	oflow		# Branch if overflow
+	ret			# Return result in r0
+
+.align	1
+_ckmul:	.word	0
+	mull3	4(ap),8(ap),r0	# Perform multiplication
+	jvs	oflow		# Branch if overflow
+	ret			# Return result in r0
+
+oflow:				# Got overflow on an operation
+	pushl   $0
+	pushl	$203
+	calls	$1,_runerr	# runerr(203,0)
+.De

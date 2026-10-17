@@ -1,0 +1,46 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH JPOINT 3L "630 MTG"
+.XE "jpoint()"
+.SH NAME
+jpoint \- draw single pixel on display
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B void jpoint (p, f)
+.br
+.B Point p;
+.br
+.B Code f;
+.SH DESCRIPTION
+The
+.I jpoint
+function
+sets the pixel at location
+.I p
+(in window coordinates)
+in the display bitmap according to the Code
+.IR f .
+.SH EXAMPLE
+The following routine can be used to ``doodle'' on the screen.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+doodle()
+{
+      request (\s-1MOUSE\s+1);
+      for ( ;; ) {
+          wait (\s-1MOUSE\s+1)
+          if( button3() )
+             break;
+          if( button2() )
+             jpoint (mouse.jxy, \s-1F_STORE\s+1);
+      }
+}
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+globals(3R), point(3R), structures(3R), transform(3R/3L).

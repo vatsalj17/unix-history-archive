@@ -1,0 +1,157 @@
+.TH MOVETO 3L "630 MTG"
+.SH NAME
+moveto, sPtCurrent \- change and return the value current screen point
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+void moveto (p)
+.br
+Point p;
+.sp
+\f3Point sPtCurrent ( )\f1
+.sp
+\f3extern int didmoveto;\f1
+.ft R
+.SH DESCRIPTION
+These functions can be used to change or return the value 
+of the current screen point. The current screen point is simply a place holder
+that applications can use to manage current screen position. 
+For example, the \fIlputchar\fR function uses 
+.I sPtCurrent
+to find the point at which to print the next character and uses
+.I moveto
+to update the current screen point after it prints the character.
+
+The current screen point is similar to but distinct
+from \fIPtCurrent\fR (see \fIglobals\fR(3R)). The primary difference is that
+the current screen point is stored in screen coordinates, and
+the
+\fIPtCurrent\fR is stored in window coordinates (see \fItransform\fR(3R)). 
+This makes the 
+current screen point easier to deal with for applications that want to 
+work completely in screen coordinates.
+
+The \fImoveto\fR function will move the current screen
+point to the point \fIp\fR. The \fIsPtCurrent\fR
+function returns the value of the current screen point.
+
+The current screen point is actually stored in the variable
+P->scurpt. It is stored as an offset from Drect.origin
+(i.e., sub[p, Drect.origin]). Note that this refers only to internal
+representation. The functions \fImoveto\fR and \fIsPtCurrent\fR work in actual
+screen coordinates and translate the offset on each call.
+
+Storing the current screen point as
+an offset from Drect.origin has the advantage that successive calls to
+\fIsPtCurrent\fR will return the proper position within a window even if the
+window was moved between calls.
+
+.bp
+Reshapes of a window between successive calls to \fIsPtCurrent\fR are handled
+as follows. If the offset of the current screen point from Drect.origin is 
+still within the window
+after the reshape, \fIsPtCurrent\fR will
+return the current screen point within the new window at the same offset from 
+Drect.origin that existed in the old window. If the offset from Drect.origin 
+is no longer within the window (i.e., the window was reshaped smaller),
+\fIsPtCurrent\fR will return Drect.origin as the current screen point.
+If an application wants to handle reshape more
+elegantly, it can use the following code fragment after each call to the
+\fIwait\fR function. This
+code fragment will cause the current screen point to move to the upper
+left-hand corner of the window after a reshape.
+.PP
+.RS 3
+.ft CM
+.nf
+if(P->state&RESHAPED) {
+	if(!(P->state&MOVED))
+		moveto(Drect.origin);
+	P->state &= ~(MOVED|RESHAPED);
+}
+.fi
+.ft R
+.RE
+.PP
+The current screen point must be initialized with the
+\fImoveto\fR function before \fIsPtCurrent\fR is called the first time.
+Library routines which use this facility can check if initialization is
+necessary by looking at the global variable \fIdidmoveto\fR each time they
+are called. This variable will be set to 0 if \fImoveto\fR has not
+been called. An example below shows how the \fIdidmoveto\fR
+variable is used to determine if initialization is necessary within a
+simple putchar function.
+.SH EXAMPLES
+There are two types of users of the current screen point. The first
+type of user is calling existent library routines such as \fIlprintf\fR
+and \fIlputchar\fR, and is only interested in using the
+\fImoveto\fR function to control the library routines.
+The following code fragment illustrates how \fImoveto\fR can be used
+with \fIlprintf\fR to display a prompt at the bottom of the window.
+.PP
+.RS 3
+.ft CM
+.nf
+.S -2
+#include <dmd.h>
+#include <font.h>
+
+extern Point fPt();
+Point p;
+
+p = fPt( Drect.origin.x,
+    Drect.corner.y - FONTHEIGHT(largefont) );
+moveto(p);
+lprintf("Choose an Option> ");
+.fi
+.ft R
+.S +2
+.RE
+.bp
+.PP
+The second type of user of the current screen point is writing
+new library routines which use this facility. The following example
+shows how to accomplish this by implementing a simple putchar routine.
+In the example below, didmoveto is checked first
+to see if initialization of the current point is required. Then the code 
+obtains
+the value of the current screen point, prints a character, and updates
+the current screen point for the next call to myputchar.
+.PP
+.RS 3
+.ft CM
+.nf
+myputchar(c)
+char c;
+{
+	extern int didmoveto;
+	extern Point sPtCurrent();
+	extern Point string();
+	char s[2];
+	Point curpos;
+
+	s[0] = c;
+	s[1] = '\e0';
+
+	if(!didmoveto)
+                moveto(Drect.origin);
+
+	curpos = sPtCurrent();
+	curpos = string(&largefont, s, &display,
+			curpos, F_STORE);
+	moveto(curpos);
+
+}
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+globals(3R), jmove(3R), lprintf(3L), lputchar(3L),
+resources(3R), structures(3R), transform(3R/3L).
+.SH BUGS
+The \fBdidmoveto\fR initialization scheme will not work with
+shared text applications because \fIdidmoveto\fR is a global variable shared
+by all invocations of a shared text application. Shared text applications
+must explicitly initialize the current screen point by calling
+\fImoveto\fR.

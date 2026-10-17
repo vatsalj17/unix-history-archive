@@ -1,0 +1,63 @@
+.TH XS 8
+.CT 1 sa_nonmortals
+.SH NAME
+xs \- checksums
+.SH SYNOPSIS
+.B xs 
+[
+-s
+]
+[
+-k
+.I keystring
+]
+[
+-f
+.I official-list
+]
+.IR file ...
+.SH DESCRIPTION
+.I Xs
+computes and reports
+checksums of named files,
+one report per line, in the form
+.IP
+filename s1 s2 s3 s4
+.LP
+where the checksum comprises four groups of four hex digits each.
+The checksum algorithm may be perturbed by specifying a
+.I keystring
+argument.
+The
+.B -s
+argument causes the file's mode, label, owner and group
+to enter into the checksum calculation.
+.PP
+The 
+.B -f
+argument causes
+.I xs
+to verify checksums of files against
+values
+given
+in the 
+.I official-list
+file, which has the format of the output of an earlier 
+.I xs
+run:
+lines consisting of
+one file name followed by four groups of hex digits per line.
+Text after a
+.L #
+sign is ignored.
+.PP
+The checksum algorithm used is meant to be secure: to create a file
+whose checksum agrees with that of another given file is very difficult.
+.SH EXAMPLES
+.EX
+xs -s `find /bin -print` | xs /dev/stdin
+.EE
+.IP
+This should return a different value if 
+.B /bin
+changes in any way.

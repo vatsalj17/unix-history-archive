@@ -1,0 +1,59 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH ROL 3L "630 MTG"
+.XE "rol()"
+.XE "ror()"
+.SH NAME
+rol, ror \- rotate bits
+.SH SYNOPSIS
+.B int rol (x, n)
+.sp
+.B int ror (x, n)
+.sp
+.B int x, n; 
+.SH DESCRIPTION
+The
+.I rol
+function
+returns
+.I x
+logically bit-rotated left by
+.I n.
+.PP
+The
+.I ror
+function
+returns
+.I x
+logically bit-rotated right by
+.I n.
+.SH EXAMPLE
+The following subroutine can be used to determine whether a Point
+.I p
+in a Bitmap
+.I b
+is on or off (returning 1 or 0, respectively).
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+pixel (b, p)
+Bitmap *b;
+Point	p;
+{
+	Word *w;
+
+	w = addr (b, p);
+	return ( (rol (*w, p.x%\s-1WORDSIZE\s+1)
+		& \s-1FIRSTBIT\s+1)==\s-1FIRSTBIT\s+1);
+}
+\fR
+.fi
+.RE
+.PP
+This routine is implemented differently in
+.IR addr (3R).
+.SH SEE ALSO
+addr(3R).
+

@@ -1,0 +1,137 @@
+.TH GETPLAB 2
+.SH NAME
+getplab, setplab \- get or set process security
+label and privilege
+.SH SYNOPSIS
+.B #include <sys/label.h>
+.PP
+.B getplab(labp, ceilp)
+.br
+.B struct label *labp, *ceilp;
+.PP
+.B setplab(labp, ceilp)
+.br
+.B struct label *labp, *ceilp;
+.SH DESCRIPTION
+.I Getplab
+copies the security label and the ceiling label,
+usually simply called `the ceiling',
+of the current process
+into the structures pointed to by
+.IR labp
+and
+.IR ceilp.
+No copy happens for a zero pointer.
+The structure and meaning of labels are described in
+.IR getflab (2).
+The ceiling is a security lid;
+the process can only access files with labels dominated
+by the ceiling.
+.PP
+A process may have special security `capabilities', in which case
+it is called `trusted'.
+The capabilities are obtained from the file it is executing, usually
+as `licensed' from its parent process; see
+.IR exec (2).
+The capabilities and corresponding licenses
+are given by bits in the fields
+.IB labp ->lb_t
+and
+.IB labp ->lb_u
+respectively.
+The bits are defined by the masks
+.TF T_SETPRIV
+.PD
+.TP
+.B T_SETPRIV
+The process can change the privileges of files; see
+.IR getflab (2).
+.TP
+.B T_SETLIC
+The process can increase its own licenses; see below.
+.TP
+.B T_EXTERN
+The process can bring new data sources into
+view by mounting file systems or setting labels
+of (open) special files; see
+.IR getflab (2).
+.TP
+.B T_NOCHK
+Ordinary checks and changes of lattice values are not made
+when reading or writing files or inodes or when setting the
+process label.
+.TP
+.B T_UAREA
+The process can change certain information that
+may be accessed by descendent processes without label checks; see
+.IR setuid (2)
+and
+.IR stream (4).
+.TP
+.B T_LOG
+The process can change logging status; see
+.IR syslog (2).
+.PP
+.I Setplab
+copies the structures pointed to by
+.IR labp
+and
+.IR ceilp
+into the process label and the ceiling label.
+Unless the process has capability
+.BR T_NOCHK ,
+the new lattice value of the process label must dominate the
+old and the old lattice value of the ceiling must dominate the new.
+.PP
+The new label flag must be
+.BR L_BITS ,
+and the lattice value of the new ceiling label must dominate the 
+lattice value of the new process label.
+.PP
+Capabilities
+may not increase.
+Licenses
+may increase only if the process has capability
+.BR T_SETLIC .
+.PP
+The fixity,
+.BR lb_fix ,
+of a process may be set only to
+.B F_LOOSE
+or 
+.BR F_FROZEN .
+In the latter case the process label can not change
+as a side effect of label checking.
+.PP
+The bits of the ceiling pointer are themselves labeled as
+if they were a minifile.
+When the ceiling is set by
+.I setplab,
+the minifile label is set to the old value of the process label,
+unless the process has capability
+.BR T_SETLIC ,
+in which the minifile label is set to bottom.
+When the ceiling is read by
+.I getplab,
+the minifile label is checked as if read by
+.IR read (2).
+.SH DIAGNOSTICS
+.BR EFAULT ,
+.BR ELAB ,
+.BR EPRIV
+.br
+If
+.I getplab
+cannot raise the process label to dominate the minifile label, 
+the requested labels are filled in, with the ceiling being censored
+to flag
+.B L_NO ,
+and
+.B ELAB
+is returned.
+.SH SEE ALSO
+.IR getflab (2),
+.IR unsafe (2),
+.IR exec (2),
+.IR session (1),
+.IR setlab (8)

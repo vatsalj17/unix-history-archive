@@ -1,0 +1,56 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH RECTARITH 3R "630 MTG"
+.XE "raddp()"
+.XE "rsubp()"
+.SH NAME
+rectarith: raddp, rsubp \- arithmetic on Rectangles
+.SH SYNOPSIS
+\f3
+#include <dmd.h>
+.br
+Rectangle raddp (r, p)
+.sp
+Rectangle rsubp (r, p)
+.sp
+Rectangle r;
+.br
+Point p;
+\fR
+.SH DESCRIPTION
+The
+.I raddp
+function
+returns the Rectangle 
+defined by
+(\fBadd(r.origin, p)\fR, \fBadd(r.corner, p)\fR).
+.PP
+The
+.I rsubp
+function
+returns the Rectangle 
+defined by
+.RB ( "sub(r.origin, p)" ,
+.BR "sub(r.corner, p)" ).
+.SH EXAMPLE
+The following code will return a rectangle with the mouse coordinates
+at the center of the box.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+Rectangle 
+makebox()
+{
+return (raddp (Rect(-15, -15, 15, 15),
+          mouse.xy));
+
+}
+
+.ft R
+.fi
+.RE
+.SH SEE ALSO
+ptarith(3R), structures(3R).
+.RE

@@ -1,0 +1,113 @@
+.TH SYSLOG 2
+.CT 2 file_inq_creat dirs secur
+.SH NAME
+syslog \- security logging
+.SH SYNOPSIS
+.B #include <sys/log.h>
+.PP
+.B int syslog(command, arg2, arg3)
+.SH DESCRIPTION
+.I Syslog
+controls security logging.
+The
+.I command
+argument determines
+the meaning of the other arguments.
+.LP
+Logging is done by writing on special files, described in
+.IR log (4).
+One of these files is the `system log file' where
+the kernel records certain events automatically.
+Each process has an `audit mask' that determines which events
+cause logging records; mask items are 
+defined in
+.BR <sys/log.h> ;
+see
+.IR log (5).
+Each file has a `poison class'
+with value 0, 1, 2, or 3.
+The kernel has a table of four corresponding `poison masks'
+and a global audit mask.
+When a system call mentions a file in a pathname,
+the poison mask
+corresponding to the file's poison level
+is ORed into the process audit mask;
+when a process executes a file, the global log mask is
+ORed into the process audit mask.
+.LP
+The forms of the several
+.I syslog 
+commands follow.
+Arguments shown as
+.BR 0 
+are ignored.
+.TP
+.BI "syslog(LOGON, " " fd ", "  x )
+Turn logging on; nominate file descriptor
+.I fd
+as repository for log file with minor device number
+.I x.
+.I Fd
+must be open
+for writing.
+Logging will persist after
+.I fd
+is closed.
+.PD0
+.TP
+.BI "syslog(LOGOFF, 0, "x" )
+Turn logging off on minor device number
+.I x.
+.TP
+.BI "syslog(LOGGET, " n ", 0)
+Return the value of the
+.IR n th
+poison mask;
+.IR n =4
+designates the global audit mask.
+.TP
+.BI "syslog(LOGSET, " n ", " x )
+Set the
+.IR n th
+poison mask to 
+.I x.
+.TP
+.BI "syslog(LOGFGET, " fd ", 0)
+Return the poison level of the file associated with file descriptor
+.IR fd ,
+which may be open for reading or writing.
+.TP
+.BI "syslog(LOGFSET, " fd ", " x )
+Set the poison level of the file associated with file descriptor
+.IR fd ,
+(which may be open for reading or writing)
+to
+.I x.
+The poison level is stored in field
+.B di_label.lb_junk
+of the file's inode; see
+.IR inode (5).
+.TP
+.BI "syslog(LOGPGET, " pid ", 0)
+Return the audit mask of process
+.I pid.
+.TP
+.BI "syslog(LOGPSET, " pid ", " x )
+Set the audit mask of process
+.I pid
+to
+.I x.
+.PD
+.PP
+.I Syslog
+works only in processes with capability
+.BR T_LOG ;
+see
+.IR getplab (2).
+.SH "SEE ALSO"
+.IR log (4),
+.IR log (5),
+.IR syslog (8)
+.SH DIAGNOSTICS
+.L
+EBADF, EFAULT, EINVAL, EIO

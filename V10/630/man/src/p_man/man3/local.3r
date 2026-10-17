@@ -1,0 +1,40 @@
+.ds ZZ APPLICATION DEVELOPMENT PACKAGE
+.TH LOCAL 3R "630 MTG"
+.XE "local()"
+.SH NAME
+local \- make the calling process local
+.SH SYNOPSIS
+.ft B
+int local ( )
+.PP
+.SH DESCRIPTION
+The \fIlocal\fP function provides the application developer
+with the means to change the disposition of a process from the
+connected state (e.g. using a \f2layers\f1 connection and host resources)
+to a local state. 
+The host side processes are killed as if the process were
+deleted. However the terminal retains all local information and
+other resources that were requested through
+the \f2request(3R)\f1 function.  If the process does not own
+the KBD resource, typing on the keyboard will sound the
+bell.
+.PP
+When a process is made local, the border
+surrounding the process's window is changed to a checkered pattern
+to differentiate it with connected windows.  
+.PP
+The \fIlocal\fP function will fail if the process is
+already local or is the
+last process connected to the host. Therefore,
+the \fIlocal\fP function will always fail if the process is
+operating in the non-layers environment which, by definition,
+supports only one host connection. 
+A \fIlocal\fP function failure results in a zero value being returned. On success,
+a 1 is returned.
+
+.SH SEE ALSO
+attach(3R), peel(3R).
+.br
+layers(1) in \f2UNIX System V Release 3 User's Reference Manual\f1.
+.br
+layers(1) in \f25620 Dot-Mapped Display Reference Manual\f1.

@@ -1,0 +1,60 @@
+.TH PRIVSERV 8
+.SH NAME
+privserv \- privilege server
+.SH SYNOPSIS
+.B lmask nuxl /etc/privserv
+[
+.I option ...
+]
+.SH DESCRIPTION
+.I Privserv
+is the keeper and interpreter of the
+.IR privs (5)
+file.
+.I Priv (1)
+calls on
+.I privserv
+to hand out privileges in accordance with the rules given in
+.I privs.
+.I Privserv
+is a permanent process, normally started by the boot script
+.IR rc (8).
+It receives service requests through the mounted pipe
+.FR /cs/priv .
+The options are
+.TP
+.BI -p " name
+The file name of the server,
+.B /etc/privserv 
+by default
+(used to reinvoke the priv server when the
+.IR privs (5)
+file is modified by a
+.B PRIVEDIT
+request.)
+.TP
+.BI -m " mountpt
+The file system mount point for privilege service,
+.F /cs/priv
+by default.
+.TP
+.BI -l " logfile
+The file in which to record logging information,
+.F /usr/adm/privlog
+by default.
+.TP
+.BI -f " privs
+The data base of privileges,
+.F /etc/privs
+by default.
+Unless
+.I privs
+is itself a privileged file,
+.I privserv
+will not actually grant the privileges there specified.
+.SH FILES
+.F /etc/privs
+.br
+.F /cs/priv
+.SH SEE ALSO
+.IR priv (1)

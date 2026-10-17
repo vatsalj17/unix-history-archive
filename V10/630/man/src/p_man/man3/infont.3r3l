@@ -1,0 +1,105 @@
+.nr Hy 0
+.nh
+.ds ZZ DEVELOPMENT PACKAGE
+.TH INFONT 3R/3L "630 MTG"
+.XE "infont()"
+.XE "getfont()"
+.XE "outfont()"
+.XE "ffree()"
+.SH NAME
+infont, getfont, outfont, ffree \- read a font from the UNIX Operating system
+.SH SYNOPSIS
+.B #include <dmd.h>
+.br
+.B #include <font.h>
+.PP
+.B Font \(**infont (inch)
+.br
+.B int (\(**inch)( );  
+.PP
+.B Font \(**getfont (file) 
+.br
+.B char \(**file;
+.PP
+.B int outfont (f, ouch) 
+.br
+.B Font \(**f;
+.br
+.B int (\(**ouch)( );
+.PP
+.B void ffree (f)
+.br
+.B Font \(**f;
+.SH DESCRIPTION
+The
+.I infont
+function
+creates a Font by reading the byte-wise binary representation
+returned by successive calls to
+.IR inch .
+.I Inch
+must return successive bytes of the \s-1UNIX\s+1 system file representation
+of the font, and -1
+at end-of-file or on encountering an error.
+.I Infont
+will return 0 if memory to store the font cannot be allocated,
+or if the \fIinch\fR routine returns an error.
+.PP
+The
+.I getfont
+function is a higher level form of
+.I infont
+which can be used by programs running under
+.IR jx .
+.I Getfont
+returns a pointer to a Font read from the named UNIX
+.IR file .
+It accomplishes this by opening
+.IR file ,
+and then calling
+.I infont
+with the routine
+.I getc
+as an argument.
+The \fIgetfont\fR function also returns 0 on error.
+.PP
+The
+.I outfont
+function calls the routine
+.I ouch
+to write successive bytes of the binary representation of Font
+.IR \(**f .
+The
+.I outfont
+function
+returns
+a \-1
+on error, as must
+the routine
+.IR ouch .
+.PP
+Programs which use
+.I infont
+or
+.I getfont
+will normally want to cache the font with
+\f2fontcache\f1.
+.PP
+The
+.I ffree
+function
+frees the memory used by a Font allocated by
+.I infont
+or
+.I getfont
+if that font has not been added to the cache with
+.IR fontcache .
+Programs which add fonts to the font cache with
+.I fontcache
+should release the font with
+.IR fontrelease .
+.SH EXAMPLE
+See the example for
+.IR string (3R).
+.SH SEE ALSO
+jx(1), fontrequest(3R), fontsave(3L), structures(3R).

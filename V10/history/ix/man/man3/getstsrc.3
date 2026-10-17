@@ -1,0 +1,43 @@
+.TH GETSTSRC 3
+.CT 2 sa secur
+.SH NAME
+getstsrc, setstsrc \(mi read and write a stream identifier
+.SH SYNOPSIS
+.nf
+.B char *getstsrc(fd)
+.B setstsrc(fd, name)
+.B char *name;
+.fi
+.SH DESCRIPTION
+.I Setstsrc
+attaches a descriptive string to the indicated stream,
+and
+.I getstsrc
+returns a pointer to a static buffer containing the string.
+The string persists until final close of the stream.
+When a stream is first opened the string is trivial.
+.PP
+.I Setstsrc
+requires capability
+.BR T_EXTERN ;
+see 
+.IR getplab (2).
+The string conventionally names the off-machine source of the
+stream.
+Since only trusted processes may modify it,
+it may be relied on for security calculations.
+.PP
+.I Getstsrc
+returns 0 on error,
+.I setstsrc
+returns \-1 on error.
+.SH "SEE ALSO"
+.IR stream (4)
+.SH DIAGNOSTICS
+.BR EPERM ,
+.BR ENOTTY
+.SH BUGS
+The return value of
+.I getstsrc
+points to static data
+whose content is overwritten by each call.

@@ -1,0 +1,295 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH RESOURCES 3R "630 MTG"
+.XE "request()"
+.XE "own()"
+.XE "wait()"
+.XE "alarm()"
+.SH NAME
+resources: request, own, wait, alarm \- routines dealing with resources
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+int request (r)
+.sp
+int own ( )
+.sp
+int wait (r)
+.sp
+void alarm (t)
+.sp
+int r;
+.br
+unsigned t;
+.SH DESCRIPTION
+The above routines deal with the following 630 MTG resources:
+.PP
+.PD 0
+.TP 15
+.B KBD
+characters received from the 630 MTG keyboard
+.TP
+.B SEND
+send characters from the 630 MTG to the host 
+.TP
+.B MOUSE
+mouse buttons and cursor position
+.TP
+.B RCV  
+characters received by 630 MTG from host process
+.TP
+.B PSEND
+send characters to the printer
+.TP
+.B CPU  
+630 MTG cpu
+.TP
+.B ALARM
+alarm has "fired"
+.TP
+.B RESHAPED
+window has been reshaped or moved
+.TP
+.B DELETE
+application is being deleted
+.TP
+.B MSG
+state of message queues has changed
+.PD
+.PP
+.I Request
+announces a program's intent to use one or more resources
+and is usually called once early in the program.
+The
+.B r
+argument is a bit vector indicating which resources are being requested. 
+Compose 
+.B r
+by using the bitwise inclusive OR operator of the
+above resources (\&\s-1MOUSE\s+1\^|\^\s-1KBD\s+1 means
+you are referring to the mouse and keyboard resources).
+.I Request
+returns a bit vector that indicates those resources for which the request
+succeeded.
+.PP
+Note that if a program calls
+.I request
+several times,
+each \f2request\f1 overrides all previously
+.IR request ed
+resources.  This means that a resource previously
+.IR request ed,
+but not specified in the latest call to
+.I request ,
+will no longer be available to the application program.
+.PP
+If the keyboard is not requested,
+characters typed will be sent to the host.
+If the mouse is not requested,
+mouse events in the application's window will be interpreted by
+the terminal's control process (the terminal's control process is the
+process that displays
+the main button 3 menu and makes windows top and current when pointed
+to by button 1).
+\s-1SEND\s+1 and \s-1CPU\s+1 are always implicitly
+.IR request ed.  
+.PP
+A request of \s-1PSEND\s+1 will fail if
+another application program has already requested it.  Currently, \s-1PSEND\s+1
+is the only resource that may fail a request.
+\s-1PSEND\s+1 must be requested and owned before sending characters to the 
+printer.
+.PP
+Requesting the \s-1DELETE\s+1 resource tells the terminal's control process
+to not allow a user to delete the applications window from the main button 3
+menu. Rather, the control process sets a flag which causes
+\fIown()&\s-1DELETE\s+1\fR to be true. This is intended for
+use by applications which need to perform some type of cleanup before being
+deleted. When \fIown()&\s-1DELETE\s+1\fR becomes true, it is the responsibility
+of the application to perform its cleanup and delete itself (see example below).
+.PP
+The
+.I own
+function
+returns a bit vector indicating which resources are ready to be serviced.
+.SK
+.PP
+The
+.I wait
+function
+suspends the application, enabling others to run,
+until at least one of the resources in the bit vector \fIr\fR
+is ready for service.
+The return value is a bit vector indicating which resources are
+ready for service.
+Applications wishing to give up the processor to enable other applications to 
+run may call
+\f2wait\f3(\s-1CPU\s+1)\f1.
+In this case,
+.I wait
+will always return as soon as all other applications have had a chance to run.
+.PP
+The
+.I alarm
+function
+starts a timer which will ``fire''
+.B t
+ticks (60ths of a second) in the future.
+Calling
+.I alarm
+implicitly \fIrequest\fRs the
+.B \s-1ALARM\s+1 .
+The resource
+.B \s-1ALARM\s+1
+can be used to check the status of the timer.
+The
+\fIown\fR( ) \fB\s-1&ALARM\s+1\f1
+call
+will indicate whether or not the alarm timer has fired.
+A 
+\fIwait\fR(ALARM) call allows the application to give up the CPU
+until the specified number of ticks has elapsed.
+An
+\fIalarm\fR(0)
+call cancels a previous call to \fIalarm\fR.
+.PP
+An
+.I alarm
+call
+does not interfere with
+.I sleep
+and vice versa.
+.PP
+The call \fIwait\fR (RESHAPED) will suspend the application until the
+application's window has been either moved or reshaped.  The MOVED and
+RESHAPED bits of the application's state variable (\fIP->state\fR) can be read to determine
+which of the two has occurred.  If the window was moved, both the MOVED and
+RESHAPED bits are set; only the RESHAPED bit is set if the window was
+reshaped.  The application is responsible for
+clearing the state variable MOVED and RESHAPED bits regardless of whether
+they are read or not. Subsequent \fIwait\fR (RESHAPED) calls will return
+immediately if the application has not cleared the MOVED and RESHAPED bits.
+RESHAPED is always implicitly requested.
+.PP
+The call \fIwait\fR (MSG) will suspend the application until the state of
+any of the message queues associated with the application changes.  A list
+of message queue identifiers is maintained for each application.  A message
+queue identifier is entered into this list during a call by the
+application to the function msgget when either a message queue is 
+created or an identifier for an existing message queue is retrieved.
+Once added to this list, a message queue identifier is
+removed from the list only when the message queue is deleted.  The message
+queue can be deleted by any running application with a call to the function msgctl or
+is deleted automatically if it was created with the NO_SAVE option and the
+creating application is deleted or exits.
+.PP
+The function calls \fIown\fR(MSG) and \fIwait\fR(MSG) will return the MSG
+bit true in the returned bit vector
+after any of three state changes occur to any of the message queues
+associated with the application:  1) a message queue when
+added to the application's list already has one or more messages on it,
+2) a message is received at a message queue, or 3) a 
+message queue on the list is deleted.
+This condition remains true until cleared by a call to the function msgctl
+to examine a message queue or by a call to the function msgrcv to receive
+a message from a queue.
+Note that several applications may simultaneously be waiting for the same
+message queue.
+If a message arrives at the queue, all of the waiting applications will be
+restarted.
+If the first application that is restarted removes the arrived message from
+the queue and does not replace it back on the queue with a call to the function
+msgsnd, the other applications that were waiting will find no message when they
+are restarted.
+Similarly, an application may find no message queue when it is restarted if
+the queue was deleted by another application.
+If an application sends a message to a message queue that is on its
+own message queue list, the wait condition becomes true for it also.
+.SH EXAMPLE
+The following program fragment shows how an application
+can give up button 3 processing
+to the terminal's control process. This is how applications who request the
+mouse but do not use button 3 can let the main button 3 menu be displayed.
+.PP
+Note that the \f(CWsleep(2)\fR below is necessary because the terminal's
+control process
+runs only once every tick (60th of a second) of the realtime clock.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+main()
+{
+	int r;
+
+	r = request (\s-1MOUSE\s+1);
+	if (button3()){
+	   request (r & ~\s-1MOUSE\s+1);	/* release the mouse */
+	   sleep (2);/* sleep(2) because the control process */
+		/* only runs once every clock tick */
+	   request (r);
+	}
+}
+\fR
+.fi
+.RE
+.PP
+The following program shows how to use the \s-1DELETE\s+1 resource.
+This program will ring the terminals bell before it is deleted.
+Typically, rather than ringing the bell, some application specific
+cleanup would be performed.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+main()
+{
+	request(DELETE|MOUSE);
+
+	for(;;) {
+		wait(DELETE|MOUSE);
+		if(own()&DELETE) {
+			ringbell(); /* usually some cleanup */
+			delete();  /* delete me */
+		}
+	}
+}
+\fR
+.fi
+.RE
+.PP
+The following code fragment shows how to use the RESHAPED resource.  Upon
+return from \fIwait\fR it tests the state variable to determine if the
+window was moved or reshaped.  Depending on which occurred, an appropriate
+flag is set and the state variable is cleared.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+   .
+   .
+   int moved=0;
+   int reshaped=0;
+   .
+   .
+   wait(RESHAPED);
+   if (P->state&MOVED) {
+	moved++;
+	P->state &= ~(MOVED|RESHAPED); 
+   }
+   else if ((P->state&RESHAPED) && !(P->state&MOVED)) {
+	reshaped++;
+	P->state &= ~RESHAPED;
+   }
+   .
+   .
+\fR
+.fi
+.RE
+.SH SEE ALSO
+msgctl(3L), msgget(3L), msgop(3L), sleep(3R), state(3R).

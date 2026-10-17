@@ -1,0 +1,40 @@
+SRC=	priv.c symb.c display.c undo.c tact.c rewrite.c
+OBJ=	gram.o dfa.o priv.o symb.o display.o undo.o tact.o rewrite.o
+CXX=	$SRC gram.c dfa.c
+
+priv:	$OBJ
+	cc -o priv $OBJ -ly -lipc
+
+priv.o:  priv.h
+
+dfa.c:	dfa.y priv.h
+	yacc dfa.y
+	sed 's/yy/zz/g
+	     s/	printf(/	fprintf(stderr,/
+	' y.tab.c >dfa.c
+	rm y.tab.c
+
+dfa.o:	dfa.c
+	$CC $CFLAGS -c dfa.c
+
+$OBJ:	priv.h
+
+gram.c: gram.y priv.h
+	yacc gram.y
+	sed 's/	printf(/	fprintf(stderr,/' y.tab.c >gram.c
+	rm y.tab.c
+
+gram.o: gram.c
+	$CC $CFLAGS -c gram.c
+
+lint:V:	$CXX
+	lint $CXX
+
+cyntax:V: $CXX
+	cyntax -Verror:1 $CXX
+
+clean:V:
+	rm -f *.O $OBJ y.tab.* dfa.c gram.c
+
+pr:
+	pr priv.h $SRC gram.y dfa.y

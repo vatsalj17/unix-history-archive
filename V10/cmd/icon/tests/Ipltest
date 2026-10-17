@@ -1,0 +1,28 @@
+. ../Setpath
+echo running cross
+../ipl/progs/cross <../ipl/data/cross.egg >local/cross.out 2>&1
+rm -f cross
+echo checking cross
+diff local/cross.out stand/cross.out
+echo running csgen
+../ipl/progs/csgen <../ipl/data/csgen.abc >local/csgen.out 2>&1
+rm -f csgen
+echo checking csgen
+diff local/csgen.out stand/csgen.out
+echo running rsg
+../ipl/progs/rsg <../ipl/data/rsg.pet >local/rsg.out 2>&1
+rm -f rsg
+echo checking rsg
+diff local/rsg.out stand/rsg.out
+echo running bold
+cp ../ipl/procs/bold.u* .
+$Icont -s tbold.icn -x <../ipl/data/gilbert.txt >local/bold.out 2>&1
+echo checking bold
+diff local/bold.out stand/bold.out
+rm -f tbold bold.u*
+cp ../ipl/procs/gener.u* .
+echo running gener
+$Icont -s tgener.icn -x >local/gener.out 2>&1
+echo checking gener
+diff local/gener.out stand/gener.out
+rm -f tgener gener.u*

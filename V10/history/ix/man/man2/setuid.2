@@ -1,0 +1,50 @@
+.TH SETUID 2
+.CT 2 sa secur
+.SH NAME
+setuid, setgid, setruid, setlogname \(mi set userid and groupid
+.SH SYNOPSIS
+.nf
+.B int setuid(uid)
+.PP
+.B int setgid(gid)
+.PP
+.B int setruid(uid)
+.PP
+.B int setlogname(buf)
+.B char buf[8];
+.fi
+.SH DESCRIPTION
+.I Setuid
+.RI ( setgid )
+sets the effective and real userid (groupid) of the current process to
+.I uid
+.RI ( gid ).
+Both the effective and the real userid (groupid) are set.
+.I Setruid
+only sets the real userid.
+These calls are only permitted to the super-user
+or if the argument is the real or effective userid.
+.I Setruid
+may only be used by the super-user.
+.PP
+.I Setlogname
+sets the login name
+returned by
+.IR getlogname .
+Only the super-user may use this call.
+For all of these calls, capability
+.B T_UAREA
+is required whenever superuser status is required; see
+.IR getplab (2).
+.PP
+Certain ids have predefined uses:
+.IP
+uid 0	superuser
+.br
+gid \-1	automatically assigned to /proc files
+.SH "SEE ALSO"
+.IR getuid (2)
+.SH DIAGNOSTICS
+.B EFAULT
+.RI ( "setlogname " only),
+.B EPERM

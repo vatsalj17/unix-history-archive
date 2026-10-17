@@ -1,0 +1,54 @@
+/n/bowell/usr/src/cmd/cyntax/cem/Doug:
+My Xmas present to 1127:
+
+On bowell, do these (after whatever state-preservation you care to):
+
+	mv /usr/lib/cyntax/ncem		/usr/lib/cyntax/cem
+	mv /usr/lib/cyntax/nccom	/usr/lib/cyntax/ccom
+	mv /usr/lib/cyntax/ncyntax	/usr/bin/cyntax
+	mv /usr/lib/cyntax/lint.1	/usr/man/man1/lint.1
+	mv /usr/lib/cyntax/nlibc	/usr/lib/cyntax/libc
+	mv /usr/lib/cyntax/nlibj	/usr/lib/cyntax/libj
+	mv /usr/lib/cyntax/nlibipc	/usr/lib/cyntax/libipc
+
+I guess all of these files except for lint.1 should be shipped.
+
+I don't know how to make libg and libk.  Tom K. recently remade libg 
+without using the Makefile; he should be told to remake it.
+
+Jim.
+
+Here is a draft press release:
+
+New version of cyntax & libraries installed.  Send bugs to reeds.
+
+Cosmetic changes:
+A few undocumented flags removed from cyntax front end.  
+A few undocumented useful-seeming flags now documented.
+New -n flag added to suppress checking against standard
+library, a -d debugging flag added to amuse the curious.
+Errors in initializers are treated differently.
+
+Substantive changes:
+Name space logic changed to make cyntax react civily 
+(but sternly) to
+
+	struct alpha *x;
+	union alpha *y;
+	fred(){
+		y = (union alpha*)x;
+	}
+
+which it now regards as illegal C instead of excuse to core
+dump.
+
+Format of .O files changed, so that 
+	
+	enum{
+		Nenv=256,
+		EOL=-1,
+	};
+	int	envtab[Nenv];
+
+does not cause cem to freak out as it did.  Your .O files
+will have to be recreated.

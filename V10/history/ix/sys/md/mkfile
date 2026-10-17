@@ -1,0 +1,124 @@
+CFLAGS=-I.. -DKERNEL
+
+#
+# these vars just for brevity in dependency lists
+#
+LB=../lib/bvax.a
+LU=../lib/uvax.a
+LS=../lib/star.a
+LC=../lib/comet.a
+LN=../lib/naut.a
+LU2=../lib/mflow.a
+LU3=../lib/mfair.a
+
+All:V: $LB $LC
+all:V: $LB $LU $LS $LC $LN $LU2 $LU3
+
+$LB: $LB(machdep.x) $LB(mba.y) $LB(ubamap.y)
+$LB(%):N: %
+$LS: $LS(machstar.x) $LS(mchkstar.x) $LS(mcrstar.y) $LS(rststar.y) \
+	$LS(nexstar.x) $LS(ubastar.y) $LS(consstar.x) $LS(cdiskstar.x) \
+	$LS(staruddump.y)
+$LS(%):N: %
+$LC: $LC(machcomet.x) $LC(mchkcomet.x) $LC(mcrcomet.y) $LC(rstcomet.x) \
+	$LC(nexcomet.x) $LC(ubacomet.y) $LC(conscomet.x) $LC(ctapecomet.x) \
+	$LC(cometupdump.y) $LC(cometuddump.y)
+$LC(%):N: %
+$LN: $LN(machnaut.x) $LN(mchknaut.x) $LN(mcrnaut.y) $LN(rstnaut.x) \
+	$LN(nexnaut.x) $LN(ubanaut.y) $LN(consnaut.x) $LN(cdisknaut.x) \
+	$LN(nautbddump.y)
+$LN(%):N: %
+
+$LU: $LU(consuvax.x) $LU(ubauvax.y) $LU(uvaxuddump.y)
+$LU(%):N: %
+$LU2: $LU2(machmflow.y) $LU2(mchkmflow.y)
+$LU2(%):N: %
+$LU3: $LU3(machmfair.y) $LU3(mchkmfair.y) $LU3(mcrmfair.y)
+$LU3(%):N: %
+
+%.a:
+	names=`membername $newprereq`
+	ar r $target $names && rm $names
+	ranlib $target
+%.x: %.c
+	cc $CFLAGS -S $stem.c
+	/lib/c2 <$stem.s | sed -f ../lib/asm.sed | as -o $stem.x
+	rm $stem.s
+%.y: %.c
+	cc $CFLAGS -S $stem.c
+	/lib/c2 -i <$stem.s | sed -f ../lib/asm.sed | as -o $stem.y
+	rm $stem.s
+
+#
+
+
+
+S=../sys
+cometuddump.y: $S/param.h
+cometuddump.y: $S/mscp.h
+cometupdump.y: $S/param.h
+cometupdump.y: $S/up.h
+conscomet.x: $S/param.h
+conscomet.x: $S/stream.h
+conscomet.x: $S/ttyio.h
+conscomet.x: $S/cons.h
+conscomet.x: $S/mtpr.h
+conscomet.x: $S/conf.h
+ctapecomet.x: $S/buf.h
+ctapecomet.x: $S/conf.h
+ctapecomet.x: $S/param.h
+ctapecomet.x: $S/user.h
+machcomet.x: $S/mtpr.h
+machdep.x: $S/param.h
+machdep.x: $S/systm.h
+machdep.x: $S/user.h
+machdep.x: $S/proc.h
+machdep.x: $S/map.h
+machdep.x: $S/reg.h
+machdep.x: $S/mtpr.h
+machdep.x: $S/clock.h
+machdep.x: $S/pte.h
+machdep.x: $S/vm.h
+machdep.x: $S/psl.h
+machdep.x: $S/buf.h
+machdep.x: $S/reboot.h
+machdep.x: $S/conf.h
+machdep.x: $S/text.h
+machdep.x: $S/cmap.h
+machdep.x: $S/msgbuf.h
+mba.y: $S/param.h
+mba.y: $S/nxaddr.h
+mba.y: $S/mbaddr.h
+mba.y: $S/mba.h
+mba.y: $S/pte.h
+mba.y: $S/buf.h
+mchkcomet.x: $S/param.h
+mchkcomet.x: $S/systm.h
+mchkcomet.x: $S/user.h
+mchkcomet.x: $S/mtpr.h
+mchkcomet.x: $S/psl.h
+mcrcomet.y: $S/param.h
+mcrcomet.y: $S/systm.h
+mcrcomet.y: $S/nxaddr.h
+nexcomet.x: $S/param.h
+nexcomet.x: $S/nexus.h
+nexcomet.x: $S/nxaddr.h
+nexcomet.x: $S/pte.h
+rstcomet.x: $S/cons.h
+rstcomet.x: $S/mtpr.h
+ubacomet.y: $S/param.h
+ubacomet.y: $S/ubaddr.h
+ubacomet.y: $S/nexus.h
+ubacomet.y: $S/nxaddr.h
+ubacomet.y: $S/map.h
+ubacomet.y: $S/uba.h
+ubacomet.y: $S/pte.h
+ubacomet.y: $S/vmparam.h
+ubamap.y: $S/param.h
+ubamap.y: $S/ubaddr.h
+ubamap.y: $S/map.h
+ubamap.y: $S/uba.h
+ubamap.y: $S/buf.h
+ubamap.y: $S/stream.h
+ubamap.y: $S/vmmac.h
+ubamap.y: $S/pte.h

@@ -1,0 +1,37 @@
+.TH DOWNGRADE 8
+.CT 8 sa_nonmortals
+.SH NAME
+downgrade \- downgrade a file
+.SH SYNOPSIS
+.B /etc/downgrade
+.I label
+.I file ...
+.SH DESCRIPTION
+.I Downgrade
+clears from the label of each
+.I file
+all bits that correspond to one bits in
+.I label.
+Capabilities or licenses specified in 
+.I label
+are ignored.
+The 
+.I files
+must be readable and must be specified by full path name.
+.LP
+.I Downgrade 
+requires
+.B T_EXTERN 
+privilege, which may be granted to authorized users by
+.IR priv (8).
+.SH EXAMPLES
+.L
+priv downgrade 0110 /usr/myproject/*.c
+.SH FILES
+.F /dev/log
+.SH "SEE ALSO"
+.IR getlab (2),
+.IR setlab (1)
+.SH BUGS
+Downgrading is not an atomic operation.  If a file is
+relinked underfoot misleading logging records may result.

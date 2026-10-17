@@ -1,0 +1,153 @@
+.TH MOUNT 8
+.CT 1 sa_nonmortals
+.SH NAME
+mount, umount \- mount and dismount file system
+.SH SYNOPSIS
+.B /etc/mount
+[ options ]
+[
+.I special name
+[
+.I fstype
+[
+.I flags
+] ] ]
+.PP
+.B /etc/mount
+.B -a
+.PP
+.B /etc/mount
+[
+.I special name
+[
+.B -r
+]
+]
+.PP
+.B /etc/umount
+.I name
+.PP
+.B /etc/umount
+.B -a
+.SH DESCRIPTION
+.I Mount
+announces to the system that a removable file system
+of type
+.I fstype
+is present on the file
+.I special.
+The file
+.I name
+must exist already; it
+must be a directory (unless the root of the
+mounted file system is not a directory).
+It becomes the name of the newly mounted root.
+See
+.IR fmount (2)
+for a list of file system types
+and appropriate flags.
+If
+.I fstype
+or
+.I flags
+is omitted,
+zero is assumed;
+file system type 0
+is an ordinary disk file system.
+.PP
+The options are
+.TP
+.B -a
+Mount all the files designated in 
+.FR /etc/fstab ;
+see 
+.IR fstab (5).
+No other arguments are legal with 
+.BR -a .
+.TP
+.B -r
+Read only; shorthand for
+.I fstype
+0
+and
+.I flag
+1.
+A deprecated usage allows
+.B -r
+to follow
+.I name.
+.TP
+.BI -l " label
+The 
+.I label,
+given in the form of 
+.I atolab
+(see
+.IR labtoa (3)),
+becomes the file system ceiling described in
+.IR fmount (2).
+.PP
+.I Umount
+announces to the system that the file system mounted on file 
+.I name
+is to be removed.
+.PP
+If the
+.B -a
+option is present for 
+.I mount
+.RI ( umount ),
+an attempt is made to mount (remove) each file system named in
+.FR /etc/fstab
+(\c
+.FR /etc/mtab ).
+.PP
+These commands
+maintain a table of mounted devices in
+.FR /etc/mtab .
+If invoked without an argument,
+.I mount
+prints the table.
+.PP
+Physically write-protected and magnetic tape file
+systems must be mounted read-only
+or errors will occur when access times are updated,
+whether or not any explicit write is attempted.
+.SH EXAMPLES
+.TP
+.B "/etc/mount /dev/ra02 /usr"
+Mount the file system on disk
+.L /dev/ra02
+on directory
+.LR /usr .
+.TP
+.B "/etc/mount /dev/null /proc 2"	
+Mount the process file system.
+.TP
+.B " /etc/mount -l 'nu u ffff...' /dev/ra02 /usr
+File capabilities on
+.IR exec (2)
+are limited to
+.BR T_NOCHK
+and
+.BR T_UAREA ,
+with self-licensing only for
+.BR T_UAREA ;
+all lattice labels are accessible (ceiling is lattice top).
+.SH FILES
+.TF /etc/fstab
+.TP
+.F /etc/mtab
+mount table
+.TP
+.F /etc/fstab
+file system table
+.SH "SEE ALSO"
+.IR fmount (2),
+.IR fstab (5), 
+.IR netfs (8)
+.SH BUGS
+Mounting file systems full of garbage will crash the system.
+.br
+Mounting a root directory on a non-directory
+makes some apparently good pathnames invalid.

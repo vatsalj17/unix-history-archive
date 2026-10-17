@@ -1,0 +1,103 @@
+.TH INS 8
+.SH NAME
+ins \- install software
+.SH USAGE
+.B ins
+[
+.I option ...
+]
+[
+[
+.I source
+]
+.I target
+]
+.SH DESCRIPTION
+.I Ins
+queues a request to `install' the named 
+.I target 
+file \- in the simplest case, by copying from
+.I source 
+to
+.BR target " \-
+and then attempts to execute all pending requests
+for the target,
+until thwarted by lack of privilege.
+By default, each target has a separate queue, but if several files are
+to be updated together their requests can
+also be placed in another separate queue.
+If modification requests for a given target file appear in several
+different queues, those requests will be executed in correct time 
+order.
+A request will be served only when it is at the front of all the queues
+it is in.
+.PP
+If no target is named,
+.I ins
+attempts to serve all pending requests.
+The options are
+.TP
+.B -x
+Verify consistency of currently queued-up requests
+with historical record in
+.F /usr/spool/ins/log.
+.TP
+.B -v
+Print a verbose commentary
+(by copying logging data to standard output).
+.TP
+.B -n
+Print, but do not execute, the modification requests.
+.TP
+.BI -j " jobnumber"  "...
+Delete a queued-up request.
+Possible values for
+.I jobnumber
+are revealed by using the
+.B -n
+flag, where they are listed in the style
+.BI /usr/spool/ins/job jobnumber.
+.TP
+.BI -q " queuename
+Put the request in special named queue, in addition to the
+queue for
+.I target.
+.TP
+.B -r
+Remove target.
+.TP
+.BI -o " owner
+Set uid of target.
+.TP
+.BI -g " group
+Set gid of target.
+.TP
+.BI -m " mode
+Set file mode of target, as in 
+.IR chmod (1).
+.TP
+.BI -l " label
+Set file label of target, as in
+.IR setlab (1).
+.TP
+.BI -p " cap lic
+Set file privileges, as in
+.IR setpriv (8).
+.PP
+.I Ins
+records
+.IR xs (8)-style
+checksums of both modified software and of its own queues,
+keeps a verbose log file, etc, etc.
+.SH FILES
+.F /usr/spool/ins/log
+.br
+.F /usr/spool/ins/lock
+.br
+.F /usr/spool/ins/pending
+.br
+.F /usr/spool/ins/job*
+.br
+.F /usr/spool/ins/dat*
+.SH BUGS
+Not written yet.

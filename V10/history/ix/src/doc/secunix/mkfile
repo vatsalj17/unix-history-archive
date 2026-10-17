@@ -1,0 +1,77 @@
+%paper: %p0 %p1 %p2 %p3 
+	test -f .secref || >.secref
+	rm -f diags ${stem}temp
+	mk ${stem}temp
+	test -s diags && (
+		rm ${stem}temp
+		mk ${stem}temp
+	)
+	mv ${stem}temp ${stem}paper
+	test ! -s diags
+
+%temp:
+	cat ${stem}p0 ${stem}p1 ${stem}p2 ${stem}p3 | 
+	prefer | tbl | eqn $TS | troff  -ms $TS 2>diags >${stem}temp
+
+'np([0-3])':R:	p\\1
+	if test -f $target
+	then echo dont dare touch $target; exit 1
+	else cp $prereq $target
+	fi
+
+summa: summa0 summa1 summa2 summa3 summa4 summa5 summa.ref
+	cat summa0 summa1 summa2 summa3 summa4 summa5 |
+		prefer | eqn | troff -ms >summa 
+
+nsumma: nsumma0 nsumma1 nsumma2 nsumma3 nsumma4 nsumma5 summa.ref
+	cat nsumma0 nsumma1 nsumma2 nsumma3 nsumma4 nsumma5 |
+		prefer | tbl | eqn | troff -mspe >nsumma 
+
+nsumma.cstr: nsumma0.cstr nsumma1 nsumma2 nsumma3 nsumma4 nsumma5.cstr summa.ref
+	cat nsumma0.cstr nsumma1 nsumma2 nsumma3 nsumma4 nsumma5.cstr |
+		prefer | tbl | eqn | troff -ms >nsumma.cstr
+
+clean:
+	rm -f temp diags paper npaper nohup.out
+	diff p0 np0 2>/dev/null 1>/dev/null && rm np0
+	diff p1 np1 2>/dev/null 1>/dev/null && rm np1
+	diff p2 np2 2>/dev/null 1>/dev/null && rm np2
+	diff p3 np3 2>/dev/null 1>/dev/null && rm np3
+
+check: checkeq checkdup
+
+NP=p0 p1 p2 p3
+
+checkeq:
+	checkeq $NP
+
+checkdup:Q:
+	grep -h XL $NP|sort >junk
+	echo checkdup: duplicate defs, if any
+	uniq -d junk
+	sed '
+		:x
+		/\(.*\)\\\*(\([yz].\)/!d
+		s//\2\
+	\1/
+		P
+		s/.*\n//
+		bx
+	' $NP | sort -u >junk1
+	echo checkdup: defs in column 1, refs in column 2
+	join -a1 -a2 -j1 2 -o 1.2 2.1 -e == junk junk1 | 6
+
+print%euug:
+	eval `doctype ${stem}euug`|dcan
+
+intro: intro1 intro2 
+	tbl $prereq | troff -ms >intro
+
+mux: secmux
+	cat $prereq|prefer|eqn|troff -ms >mux
+
+title.troff: title
+	eqn title | troff -ms >title.troff
+
+gloss: glossary
+	eqn glossary |troff -mpm >gloss

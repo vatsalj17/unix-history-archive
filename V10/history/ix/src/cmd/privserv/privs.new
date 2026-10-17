@@ -1,0 +1,149 @@
+DEFINE	privedit(RE),
+	operator,
+	netoper,
+	secadmin,
+	installer,
+	daemon,
+	downgrade(LAB),
+	session;
+
+REQUEST("(up)?chuck|fsck|clri|dcheck")
+	NEEDS	operator
+	DOES	PRIV(n),
+		EXEC(/etc/$0 $1*);
+REQUEST(apx)
+	NEEDS	daemon
+	DOES	ANYSRC,
+		PRIV(x),
+		EXEC(/etc/apx);
+REQUEST(dd)
+	NEEDS	secadmin
+	DOES	PRIV(n),
+		EXEC(/bin/dd $1*);
+REQUEST(dd if=/dev/rra0. of=/dev/rra1.)
+	NEEDS	operator
+	DOES	PRIV(n),
+		EXEC(/bin/dd $1*);
+REQUEST(dismount)
+	NEEDS	operator
+	DOES	PRIV(g),
+		EXEC(/etc/nosh /etc/umount.nosh);
+REQUEST(downgrade)
+	NEEDS	downgrade($1)
+	DOES	PRIV(nx),
+		EXEC(/bin/setlab -v -s $1 $2*);
+REQUEST(inspkg)
+	NEEDS	installer
+	DOES	PRIV(nx),
+		EXEC(/usr/bin/inspkg $1*);
+REQUEST(kdiload|dkhup|dkclean)
+	NEEDS	netoper
+	DOES	PRIV(n),
+		EXEC(/etc/$0 $1*);
+REQUEST(mount)
+	NEEDS	operator
+	DOES	PRIV(x),
+		EXEC(/etc/mount $1*);
+REQUEST(nosh [-gunxlp]+)
+	NEEDS	secadmin
+	DOES	PRIV($1),
+		EXEC(/etc/nosh $2*);
+REQUEST(nosh [-ux]+)
+	NEEDS	operator
+	DOES	PRIV($1),
+		EXEC(/etc/nosh $2*);
+REQUEST(pcopy)
+	NEEDS	installer
+	DOES	PRIV(p),
+		EXEC(/bin/pcopy $1*);
+REQUEST(privedit .+ /.*)
+	NEEDS	privedit($1)
+	DOES	PRIVEDIT($1 $2);
+REQUEST(pwx)
+	NEEDS	
+	DOES	PRIV(p),
+		EXEC(/etc/pwx);
+REQUEST(pwx .+)
+	NEEDS	secadmin
+	DOES	PRIV(p),
+		EXEC(/etc/pwx $1*);
+REQUEST(scan)
+	NEEDS	installer
+	DOES	PRIV(nx),
+		EXEC(/usr/asd/scan $1*);
+REQUEST(session)
+	NEEDS	session
+	DOES	PRIV(l),
+		EXEC(/bin/session $1*);
+REQUEST(setlab)
+	NEEDS	secadmin
+	DOES	PRIV(nx),
+		EXEC(/bin/setlab -v $1*);
+REQUEST(setpriv - [-n])
+	NEEDS	installer
+	DOES	PRIV(p),
+		EXEC(/bin/setlab -p "$1 $2" $3*);
+REQUEST(setpriv [^-]+|..+)
+	NEEDS	secadmin
+	DOES	PRIV(p),
+		EXEC(/bin/setlab -p "$1 $2" $3*);
+REQUEST(stat)
+	NEEDS	operator
+	DOES	PRIV(n),
+		EXEC(/bin/stat $1*);
+REQUEST(syslog)
+	NEEDS	operator
+	DOES	PRIV(g),
+		EXEC(/etc/syslog $1*);
+REQUEST(umount)
+	NEEDS	operator
+	DOES	PRIV(x),
+		EXEC(/etc/umount $1*);
+
+ACCESS /	ID(doug),
+		PW(doug);
+ACCESS /	ID(reeds),
+		PW(reeds);
+RIGHTS /	privedit(/.*),
+		downgrade(ffff...),
+		operator,
+		netoper,
+		secadmin,
+		installer,
+		session,
+		daemon;
+
+ACCESS /admin	ID(ftg),
+		PW(ftg);
+ACCESS /admin	ID(norman),
+		PW(norman);
+ACCESS /admin	ID(ches),
+		PW(ches);
+ACCESS /admin	ID(ejs),
+		PW(ejs);
+RIGHTS /admin	operator,
+		netoper,
+		session,
+		privedit(/admin/.*),
+		daemon;
+
+ACCESS /admin/network	ID(caryl),
+		PW(caryl);
+ACCESS /admin/network	ID(presotto),
+		PW(presotto);
+RIGHTS /admin/network	netoper,
+		session;
+
+ACCESS /admin/trustedsrc	SRC(dk!201/mu/attbl);
+ACCESS /admin/trustedsrc	SRC("dk!nj/(astro|phone)/tty.*");
+ACCESS /admin/trustedsrc	SRC(/dev/console);
+ACCESS /admin/trustedsrc	SRC(dk!nj/astro/home1);
+RIGHTS /admin/trustedsrc	daemon;
+
+ACCESS /secure	;
+RIGHTS /secure	secadmin,
+		privedit(/.*);
+
+ACCESS /usr	;
+# under here we establish user-administered privileges
+RIGHTS /usr	privedit(/usr/.*);

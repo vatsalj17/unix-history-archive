@@ -1,0 +1,124 @@
+NAMES=y.tab lex inquiry init status disk sense start read diag capacity helptab\
+	media odump reset worm write copy search config testunit internal\
+	i0.tab i1.tab scsi.tab alternate readid diskid
+L=lib.a
+OBJ=`echo $NAMES|sed -e 's/[^ ][^ ]*/$L(&.o)/g'`
+CLIB=`echo $NAMES|sed -e 's/[^ ][^ ]*/O\/&.O/g'`
+CFLAGS=-g
+NPROC=2
+ALL=wmount scsish
+W=/usr/lib/worm
+INS=$W/wmount $W/scsish
+
+install:V:	$INS
+
+ship:	$INS
+	ship $newprereq && touch ship
+
+$W/(wmount|scsish):R:	\\1
+	cp $prereq $target && strip -g $target && chmod 775 $target
+
+wmount:	wmount.o $L
+	$CC $CFLAGS -o $target $prereq
+
+scsish:	scsish.o $L
+	$CC $CFLAGS -o $target $prereq
+
+clean:V:
+	rm -f O/* $ALL *.o
+
+%.tab.c:Q:	%.tab
+	echo generating $target
+	p=$stem.tab
+	awk -F'	' '
+	BEGIN	{ h["0"]=0;h["1"]=1;h["2"]=2;h["3"]=3;h["4"]=4;h["5"]=5;h["6"]=6;h["7"]=7;
+		h["8"]=8;h["9"]=9;h["a"]=10;h["b"]=11;h["c"]=12;h["d"]=13;h["e"]=14;h["f"]=15;
+		}
+	function done(	i){
+		for(i = 0; i < 256; i++) if(x[i]){
+				print "\t\"" x[i] "\","
+				x[i] = ""
+			} else printf "\t\"<#%x>\",\n", i
+		print "};"
+	}
+	function hex(n,	i){
+		return(h[substr(n, 1, 1)]*16+h[substr(n, 2, 1)]);
+	}
+	NF == 1	{ if(NR > 1) done(); print "char *" $1 "[] = {" }
+	NF > 1	{ x[hex($1)] = $2; }
+	END	{ done(); }' < $p > $p.c
+
+%.o O/%.O:	scsi.h
+
+cyntax:V:	O/wmount O/scsish
+
+O/wmount:	O/wmount.O $CLIB
+	cyntax $prereq && touch $target
+
+O/scsish:	O/scsish.O $CLIB
+	cyntax $prereq && touch $target
+
+pp:
+	smalllp [a-w]*.h [a-w]*.[cy]
+
+y.tab.c y.tab.h:	gram.y
+	yacc -d -D gram.y
+	ed - y.tab.c <<!
+	,s/printf/print/
+	w
+	q
+	!
+
+x.tab.h:Q:	y.tab.h
+	cmp -s x.tab.h y.tab.h || cp y.tab.h x.tab.h
+
+y.tab.o lex.o:	x.tab.h
+
+lex.o:	lex.l
+	lex -t lex.l > lex.c
+	ed - lex.c <<!
+	,s/fprintf(yyout/fprint(2/
+	w
+	q
+	!
+	$CC $CFLAGS -c lex.c && rm lex.c
+
+helptab.c:QD:	gram.y
+	( echo 'char *helpstrs[] = {'
+	sed -n -e '1,/^line/d
+	/^drive/,$d
+	/::/s/::.*/",/
+	/:/s/.*:/	"/p
+	/|/s/  *{.*/",/
+	/|/s/.*|	*/	"/p' < gram.y
+	echo '	0'
+	echo '};'
+	) > $target
+
+$L(%.o):N:	%.o
+$L:Q:	$OBJ
+	names=`membername $newprereq`
+	ar rv $L $names && rm $names
+	ranlib $L
+
+O/%.O:	%.c
+	cyntax -c $CFLAGS $stem.c && mv $stem.O O
+
+O/y.tab.O:	y.tab.c
+	cyntax -c -Vyyerror:1 y.tab.c && mv y.tab.O O
+
+O/lex.O:	lex.l
+	> /tmp/lex.c
+	cyntax -c /tmp/lex.c && mv /tmp/lex.O O
+
+spit:	scsish
+	push spit $newprereq . && touch $target
+
+scsi.out:	scsi.ms
+	tbl scsi.ms | troff -Tpost > $target
+
+scsi.lp:	scsi.out
+	lp -dpsu $prereq
+
+scsi.man:V:
+	troff -Tpost -man /usr/man/man1/worm.1 /usr/man/man?/scsi*.? | lp -dpsu

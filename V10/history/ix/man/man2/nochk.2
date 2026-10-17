@@ -1,0 +1,32 @@
+.TH NOCHK 2
+.SH NAME
+nochk \- control security checking by file
+.SH SYNOPSIS
+.B nochk(fd, onoff);
+.SH DESCRIPTION
+.I Nochk
+modifies file security checks in processes that have capability
+.BR T_NOCHK .
+If
+.I onoff
+is 1, file descriptor
+.I fd
+becomes exempt from security checks; this is the default state.
+If
+.I onoff
+is 0, the file descriptor will be checked as if the process
+did not have capability
+.BR T_NOCHK .
+.PP
+The return value is the previous checking state.
+.SH SEE ALSO
+.IR getplab (2)
+.SH DIAGNOSTICS
+.B EBADF
+.SH BUGS
+It would have been wise to let 0 be the default state,
+but this would have required modifying standard
+utilities, such as
+.IR fsck (8),
+which must be run with privilege
+.BR T_NOCHK .

@@ -1,0 +1,76 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH MULDIV 3L "630 MTG"
+.XE "muldiv()"
+.SH NAME
+muldiv \- calculate (a*b)/c accurately
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.br
+short muldiv (a, b, c)
+.br
+int a, b, c;
+.SH DESCRIPTION
+The
+.I muldiv
+function
+is a macro that returns the 16-bit result
+.IR (a*b)/c .
+.I (a*b)
+is calculated to 32 bits to minimize the precision lost.
+The
+.I muldiv
+function
+is convenient for calculating transformations.
+.SH EXAMPLE
+The following subroutine implements the transform(3R) function. It
+converts a point from window coordinates to screen coordinates:
+.sp
+.nf
+.ft CM
+
+#include <dmd.h>
+
+Point
+transform(p)
+Point p;
+{
+	Point Do, Dc, ret;
+
+	Do = Drect.origin;
+	Dc = Drect.corner;
+
+	ret.x = muldiv(p.x, Dc.x-Do.x, XMAX) + Do.x;
+	ret.y = muldiv(p.y, Dc.y-Do.y, YMAX) + Do.y;
+
+	return(ret);
+}
+.ft 1
+.fi
+.P
+The following subroutine does the opposite of the transform(3R)
+function. It converts a point from screen coordinates to window 
+coordinates.
+.nf
+.ft CM
+
+#include <dmd.h>
+
+Point
+untransform(p)
+Point p;
+{
+	Point Do, Dc, ret;
+
+	Do = Drect.origin;
+	Dc = Drect.corner;
+
+	ret.x = muldiv(p.x-Do.x, XMAX, Dc.x-Do.x);
+	ret.y = muldiv(p.y-Do.y, YMAX, Dc.y-Do.y);
+
+	return(ret);
+}
+.fi
+.ft R
+.SH SEE ALSO
+globals(3R), ptarith(3R), transform(3R/3L).

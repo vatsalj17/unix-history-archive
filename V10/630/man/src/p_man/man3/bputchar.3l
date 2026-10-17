@@ -1,0 +1,72 @@
+.TH BPUTCHAR 3L "630 MTG"
+.SH NAME
+bputchar \- 630 MTG debugging putchar function
+.SH SYNOPSIS
+.ft B
+void bputchar (c)
+.br
+\f3char c;\f1
+.ft R
+.SH DESCRIPTION
+\fIBputchar\fR is
+syntactically equivalent to the UNIX standard I/O putchar function.
+It can be called by downloaded application programs who
+want to display characters but do not want them displayed in their window.
+When first called, the bottom third of the 630 MTG's screen is cleared.
+All characters to be printed are displayed in this area as if it was
+a window. This will corrupt any windows already in this area. Therefore,
+this routine is only useful for debugging.
+.PP
+How characters are eventually
+displayed on a user's terminal when using the UNIX putchar function
+is affected by the UNIX host \fIstty\fR(1) settings
+and the user's terminal characteristics.
+Since \fIbputchar\fR displays directly onto the 630 MTG
+screen, it makes assumptions about desired \fIstty\fR
+settings. In general, \fIbputchar\fR does as little processing of
+the output stream as practical. 
+.P
+The following are the only control characters processed by \fIbputchar\fR.
+All other characters will be displayed as \fBASCII\fR characters:
+.TP
+.B \er
+Carriage Return. Move the current point to the left edge of the screen.
+.TP
+.B \en
+Newline. Move the current point down one line and to the left edge of the 
+window. Scroll the display area if necessary.
+.TP
+.B \et
+Horizontal tab. Tab characters are expanded to spaces with tab stops at every
+eighth space.
+.SH EXAMPLE
+.LP
+If a programmer wanted a record of every character it sends to the printer,
+he can replace every call to \fIpsendchar\fR with \fIdpsendchar\fR shown below.
+.PP
+.RS 3
+.ft CM
+.nf
+
+int psendchar();
+
+int
+dpsendchar(c)
+char c;
+{
+	int retval;
+
+	retval = psendchar(c);
+	if(retval)
+		bputchar(c);
+	return(retval);
+}
+
+
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+lputchar(3L), printf(3L), psendchar(3R).
+.br
+putc(3S) in the \fIUNIX System V Programmer's Reference Manual\fR.

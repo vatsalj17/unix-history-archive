@@ -1,0 +1,31 @@
+# *************************************************************** 
+# *	Copyright (c) 1990 AT&T 				*
+# *     All Rights Reserved				        *
+# *	THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T	*
+# *	The copyright notice above does not			*
+# *	evidence any actual or intended				*
+# *	publication of such source code.			*
+# ***************************************************************
+  library(1) works by mailing requests to mhuxd!techlib. Under the new
+version (3.2 and up) this is mainly table driven by the files installed in 
+	INSLIB=/usr/lib/library
+Change the Makefile if you want this elsewhere.
+ 
+ One possible problem is if mail(1) does not go between your machine 
+and mhuxd. Please test this when library(1) is installed
+(try sending mail to mhuxd!your-machine!LOGIN).
+  library(1) will respond over the path it receives things. The mail path
+is indicated on line ~15 in library.c  Presently it is mhuxd!techlib.
+Feel free to add hops in the middle (e.g. xyz1!mhuxd!techlib). However,
+note that the more links in the path the slower and less reliable the mail.
+
+     *********    NOTE     (especially non-BTL administrators)  ********
+Some things orderable by library only really work for BTL people. If you
+and/or your users run into this you may simply want to remove the option.
+In most cases this can be done by removing or changing a file in 
+/usr/lib/library
+
+    **********  NOTE for BSD systems   ***************
+There is a special CFLAGS commented out in the Makefile for you. See gnamef.h
+for its effects.  Also, you may have to swipe <regexp.h> from a system V
+machine.

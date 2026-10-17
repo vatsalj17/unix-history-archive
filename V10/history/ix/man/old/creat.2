@@ -1,0 +1,74 @@
+.TH CREAT 2
+.CT 2 file_inq_creat
+.SH NAME
+creat, bcreat \(mi create a new file
+.SH SYNOPSIS
+.nf
+.B int creat(name, mode)
+.B char *name;
+.PP
+.B int bcreat(name, mode, name2)
+.B char *name, name2[14];
+.fi
+.SH DESCRIPTION
+.I Creat
+creates a new file or prepares to rewrite an existing
+file called
+.I name,
+given as the address of a null-terminated string.
+If the file is new, its inode is initialized as follows.
+The owner of the file is the effective userid of the creating process.
+The group of the file is the group of the containing directory.
+The mode of the file is
+.IR mode ,
+as modified by the process's mode mask; see
+.IR umask (2).
+Setgid is turned off if the effective groupid of
+the process differs from the groupid of the file.
+See
+.IR stat (2)
+for the encoding of modes.
+.PP
+If the file did exist, its mode and owner remain unchanged.
+The file is truncated to 0 length unless it is append-only; see
+.IR stat (2).
+.PP
+The file is opened for writing, and its file descriptor
+is returned.
+.PP
+The
+.I mode
+given is arbitrary; it need not allow
+writing.
+This feature is used by programs which deal with temporary
+files of fixed names.
+The file is created with
+a mode that forbids writing.
+Then if a second
+instance of the program attempts a
+.I creat,
+an error is
+returned and the program knows that the name is unusable
+for the moment.
+.PP
+.I Bcreat
+performs the function of 
+.I creat,
+and then, if successful, copies the last component of the actual
+pathname of the created file as a NUL-padded string into
+.I name2.
+It is intended for use with blind directories, where new
+entries are created under random names; see
+.IR mkdir (2).
+.PP
+It is not possible to create or open for writing
+a file with set-userid  or set-groupid permission; see
+.IR stat (2).
+.SH "SEE ALSO"
+.IR chmod (2), 
+.IR close (2), 
+.IR umask (2),
+.IR write (2)
+.SH DIAGNOSTICS
+.L
+EACCES, EBADF, EBUSY, EFAULT, EIO, EISDIR, ELAB, ELOOP, EMFILE, ENFILE, ENOENT, ENOTDIR, EROFS, ETXTBSY

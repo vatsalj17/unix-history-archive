@@ -1,0 +1,170 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH KEYBOARD 3R "630 MTG"
+.XE "keyboard"
+.XE "NOPFEXPAND"
+.XE "NOCURSEXPAND"
+.XE "NOPADEXPAND"
+.XE "NOTRANSLATE"
+.XE "reqkbdID()"
+.SH NAME
+keyboard: P->state, SCRLOCKREQD, SCR_LOCK, NOPFEXPAND, NOCURSEXPAND, NOPADEXPAND, NOTRANSLATE, reqkbdID( ) \- per process keyboard states, keyboard ID
+
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B long P->state;
+.sp
+.B void reqkbdID ( )
+
+.SH DESCRIPTION
+.I P->state
+is the state variable for an application running in the 630
+MTG.
+.PP
+An application can give different interpretations on 
+groups of 630 MTG supported keyboard keys by
+setting corresponding bits in the process state variable.
+The groups are Scroll Lock key, programmable function keys, arrow keys,
+numerical keypad keys, or the whole keyboard. If
+the bits are not set, when a key is depressed, the
+keyboard will send to the process the ASCII/hexadecimal code(s) as specified 
+by the \fI630 MTG Terminal User's Guide\fR.
+An exception is the Scroll Lock key
+which is a "dead" key (no special processing) if it is not requested
+and processed by the application itself.
+.PP
+If an application program wishes to implement local 
+terminal flow control with the
+keyboard Scroll Lock key, it must request the use of the Scroll Lock key
+by setting the \s-1SCRLOCKREQD\s+1 in the state variable as follows:
+.sp
+.ft CM
+.ce
+P->state |= SCRLOCKREQD;
+.ft R
+.PP
+The application program can then determine if the Scroll Lock key has been
+depressed by checking the SCR_LOCK bit as follows:
+.sp
+.ft CM
+.ce
+P->state & SCR_LOCK;
+.ft R
+.PP
+The SCR_LOCK bit is set whenever the Scroll Lock key is depressed. It is 
+automatically cleared by the keyboard when the Scroll Lock key is depressed a second time.
+.PP
+The programmable function (PF) keys, 
+when depressed are expanded by default,
+i.e., the corresponding character strings (minus the \s-1NULL\s+1 character)
+stored in the non-volatile BRAM memory will be sent to the process as would
+be typed from the keyboard. If an application prefers to have its own interpretation
+of the programmable function keys,
+it is necessary to set a bit in the process state variable:
+.sp
+.nf
+.ft CM
+.ce
+P->state |= NOPFEXPAND;
+.ft R
+.fi
+.sp
+In this case, the keyboard will only send to the process the PF key keycode
+which is 0x80 for PF key F1, 0x81 for PF key F2, and so forth.
+.PP
+
+If a program wants to interpret the arrow keys without having to parse
+their entire sequence, it can set a bit in the process state variable:
+.sp
+.nf
+.ft CM
+.ce
+P->state |= NOCURSEXPAND;
+.ft R
+.fi
+.sp
+When an arrow key is then depressed, it will have the value:
+.sp
+.DS
+.TS
+center, tab(~);
+lp10 lp10.
+up arrow~0xE0
+down arrow~0xE1
+right arrow~0xE2
+left arrow~0xE3
+home key~0xE4
+.TE
+.DE
+.PP
+If a program wants to have its own interpretation of the numerical
+keypad keys,
+it is necessary to set a bit in the process state variable:
+.sp
+.ft CM
+.ce
+P->state |= NOPADEXPAND;
+.ft R
+.sp
+When a numerical keypad key is then depressed, it will have the value:
+.sp
+.DS
+.TS
+center, tab(~);
+lp10 lp10.
+Enter~0xC0
+\\=~0xC1
+*~0xC2
+/~0xC3
++~0xC4
+7~0xC5
+8~0xC6
+9~0xC7
+-~0xC8
+4~0xC9
+5~0xCA
+6~0xCB
+,~0xCC
+1~0xCD
+2~0xCE
+3~0xCF
+0~0xD0
+\\\.~0xD1
+.TE
+.DE
+.PP
+If a program wants to remap the entire keyboard, it must
+set a bit in the state variable:
+.sp
+.ft CM
+.ce
+P->state |= NOTRANSLATE;
+.ft R
+.sp
+The application will then receive from the keyboard the raw keycodes 
+as listed in the \fI630 MTG Terminal User's Guide\fR. 
+Also, the keyboard LEDs will no longer be automatically updated.
+At this point, calling the
+.I reqkbdID
+function will ask the keyboard for its identity (ID).
+The keyboard will send back its ID and all keys currently depressed,
+followed again by the ID. Refer to the \f2630 MTG
+Software Development Guide\f1 for more information.
+
+.SH SEE ALSO
+kbdchar(3R), state(3R), pfkey(3R), resources(3R), setled(3L).
+.br
+\fI630 MTG Terminal User's Guide\fR.
+.br
+\f2630 MTG Software Development Guide\f1.
+.SH WARNING
+If the process has not requested the keyboard (see \fIresources(3r)\fR),
+all per process keyboard states will be ignored, and the key's
+ASCII/hexadecimal code(s) as specified in the
+\fI630 MTG Terminal User's Guide\fR will be
+sent to the host (if the process is connected) or ignored (if the process
+runs locally).
+.PP
+The exception is the Scroll Lock key which does not require the application
+to request the whole keyboard. However in order to process that key, the
+application has to set the SCRLOCKREQD bit in \fIP->state\fR.

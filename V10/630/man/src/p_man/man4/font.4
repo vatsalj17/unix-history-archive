@@ -1,0 +1,59 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH FONT 4 "630 MTG"
+.XE "font"
+.SH NAME
+font \- font file format
+.SH DESCRIPTION
+A font file is a file containing a description of a Font that
+can be read by
+.I infont(3R/3L)
+or
+.I loadfont(1)
+and converted into a Font in the terminal.
+A font file can be created by using
+.IR outfont .
+.PP
+A font file begins with a structure that is similar to a Font.
+It looks like the following:
+.nf
+ struct Fontheader {
+        short    n;		/* number of chars in font */
+        char     height;	/* height of bitmap */
+        char     ascent;	/* top of bitmap to baseline */
+        long     unused;	/* in case we think of more stuff */
+        Fontchar info[1];	/* n+1 character descriptors */
+ }
+.fi
+
+The fields in this structure have the same meanings as the ones in the
+Font structure. There are really
+.IR n +1
+Fontchar structures in the info array. The only field that
+contains valid data in the [n+1]th element is \f2x\f1; the leftmost
+edge of the corresponding cell in the bitmap.
+Each Fontchar structure starts on a long integer boundary and is padded with
+null characters to the next long integer boundary and the start of the
+next Fontchar structure.
+Therefore, there are two nulls after each of the
+.IR n + 1
+Fontchars in the file.
+.PP
+Following this in the file is the bitmap image of the font.
+This is an array holding the bit image of all the characters
+in the font. It corresponds to
+.I bits->base
+in the Font structure.
+Its size is defined as:
+
+        char base[
+.I height
+][
+.RI (( info [
+.IR n +1
+].x+31)/32)\(**4 ]
+
+The last column of bits used by a font is 
+.IR info [ n +1].x-1.
+The width is rounded up to the nearest long integer boundary for the bitmap image.
+.SH SEE ALSO
+infont(3L), loadfont(1), structures(3R).

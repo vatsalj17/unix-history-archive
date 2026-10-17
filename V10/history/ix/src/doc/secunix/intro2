@@ -1,0 +1,423 @@
+.SH
+Privilege
+.PP
+Sometimes the fundamental rule
+that data flows up the lattice of labels must be broken.
+Data must be declassified.
+Administrators must install new software labeled below the floor.
+External media, which are normally labeled 
+.SM NO,
+must be made accessible.
+File systems, which contain data of all labels, must be
+checked and repaired.
+And finally, the right to break the rules must be administered.
+All these actions are regulated by privileges.
+.PP
+Privilege is mediated by
+.I licenses,
+which go with processes, and 
+.I capabilities,
+which go with files.
+The superuser has no 
+.I "ex officio
+licenses.
+.PP
+There is, for example, an ``extern'' privilege to 
+make external media visible.
+A process with an extern license isn't enough, however.
+The license may be exercised only in ``trusted'' programs
+that have the corresponding capability.
+Thus the mount command,
+which brings file systems into view, has extern capability,
+indicated by the 
+.CW x
+in its label.
+.EX
+\*x getlab /etc/mount
+.CW
+/etc/mount          	--x--- ------    0000 0000 ...
+.EE
+To run the mount command successfully a process must have
+extern license\(emplus userid 0 for old times' sake.
+.PP
+Licenses are obtained from the privilege server
+.CW priv ,
+more colloquially called the ``priv server.''
+The priv server verifies your rights and hands out exactly 
+the privileges you need for exactly one command.
+To mount a file system, you might invoke
+.EX
+\*x /etc/su
+.CW
+Password(root:74390):
+.CI
+\f(CW#\fP /etc/priv mount -r /dev/ra14 /mnt
+.CW
+Password(you:65330):
+priv(mount -r /dev/ra14 /mnt)? \fPy
+.EE
+First you become superuser, then you issue the mount command
+through the priv server.
+Consulting a database of command requirements and rights,
+the server
+finds that you are required to issue your password
+so that nobody can assume your privileges simply by finding your
+terminal unattended.
+Then, as
+protection against having received an
+improper request from a possibly dishonest shell, it prints
+the request it thinks you entered.
+Only after your confirmation is the request finally performed.
+.PP
+The form in which a privileged command is finally
+executed is controlled by the database.
+In the present example, a request for
+.CW mount
+becomes an invocation of
+.CW /etc/mount .
+.PP
+The full list of privileges is
+.CW guxnlp ,
+which appear in printed labels intermixed with minus signs
+in the same way that file permissions
+.CW rwxrwxrwx
+appear in the output of
+.CW ls .
+They mean
+.IP \f(CWg\fP
+Logging privilege.
+Only one program,
+.CW syslog ,
+has this capability.
+.IP \f(CWu\fP
+This relatively minor privilege allows changes to the ``uarea.''
+It is required for system calls such as
+.CW setuid
+and
+.CW setlogname .
+It is privileged because uarea data is
+passed between processes without label checks.
+Were it not for this privilege,
+untrusted code could use the uarea to pass information from
+high to low processes.
+.IP \f(CWx\fP
+Extern privilege allows new data sources to become accessible.
+It is needed to mount file systems, to give labels to
+terminals, or to downgrade (declassify) labels.
+.IP \f(CWn\fP
+Nocheck privilege bypasses label comparisons.
+It makes any data source
+available to the privileged program, which is presumed
+will treat the data with due respect.
+Nocheck privilege is weaker than extern privilege, which
+makes data accessible to untrusted processes as well.
+.IP \f(CWl\fP
+Setlic privilege (a slight misnomer)
+allows a process to add licenses,
+to change its label downward, or to change its ceiling upward.
+Only
+.CW session 
+and
+.CW priv
+have setlic capability.
+.IP \f(CWp\fP
+Setpriv privilege allows a process to change the privileges
+of files, usually programs.
+Only two programs have it.
+.SH
+Self-licensing programs
+.PP
+We have seen that a program gets a privilege if its process is
+licensed for that privilege and the executable file has
+the capability for that privilege.
+Executable files may also be ``self-licensing.''
+The 
+.CW su
+command is one such file.
+.EX
+\*x getlab /etc/su
+.CW
+/etc/su             	-u-n-- -u-n--    0000 0000 ...
+.EE
+The first set of privileges
+in the printed label are capabilities, the second set are
+licenses.
+As one might expect,
+.CW su
+is self-licensed to write in the uarea (\f(CWu\fP)
+so it can execute the
+.CW setuid
+system call.
+But why does it have nocheck privilege (\f(CWn\fP)?
+The reason is administrative.
+Customarily
+.CW su
+keeps a console log.
+The console, like all ports, is labeled 
+.SM NO;
+.CW su
+has nocheck privilege to bypass the label check.*
+.FS
+* An astute reader will see that the console log
+can't be public, for secrets can be sent to it this way:
+.EX
+\*x /etc/su attack_at_noon
+.EE
+.FE
+.PP
+Another self-licensing program is the priv server,
+which needs setlic capability (\f(CWl\fP) to issue licenses.
+The priv server is a permanent program;
+.CW /bin/priv
+simply passes it information.
+.EX
+\*x getlab /etc/priv /bin/priv
+.CW
+/etc/priv           	----l- ----l-    0000 0000 ...
+/bin/priv           	------ ------    0000 0000 ...
+.EE
+.PP
+The capability field of a running program describes its
+actual privileges.
+The license field tells what licenses it holds to
+be passed on across
+.CW exec
+system calls.
+Self-licensed privileges are not passed on.
+The session program, for example, has three
+capabilities and is self-licensed for two of them.
+.EX
+\*x getlab /bin/session
+.CW
+/bin/session        	--xnl- --xn--    0000 0000 ...
+.EE
+The
+.CW session
+program checks authorization, using nocheck privilege (\f(CWn\fP)
+to access the secret
+.CW pwfile .
+It then forks.
+The child process uses extern privilege (\f(CWx\fP) to
+set the terminal label.
+As long as the process label stays between floor and
+ceiling and the ceiling doesn't go up,
+.CW session 
+can work for itself, without going through the
+priv server or the black hole.
+Otherwise it requires set license privilege (\f(CWl\fP),
+the license for which comes from the priv server.
+.PP
+What label would
+.CW ps
+have to have in order to examine the core image of
+.CW session ?
+At least as high a label as that of the data 
+.CW session
+has read, namely 
+.CW pwfile .
+Nocheck privilege permits reading regardless of the
+label of the
+.CW ps
+process.
+With no information as to the real label of the
+information the process
+contains, the system assumes the worst and
+assigns the process file a top label.
+Only a top-labeled process, or another nocheck
+process, can inspect the image of any process
+that ever had nocheck privilege.
+Similarly a core dump of a nocheck process gets a top label.
+.SH
+Trust
+.PP
+Any program with privileges is called ``trusted.''
+The integrity of the system depends as critically on 
+the honesty of trusted programs as it does on that of the kernel.
+Programs must be carefully written and checked before being
+granted trust.
+Moreover trusted programs must not change.
+The only changes that can be made to a trusted program
+are changes in its trustedness, and those changes themselves
+require privilege.
+.PP
+No matter how carefully it is written, a program can't be
+trusted more than the data it receives as input.
+For that reason password checks are made over
+``private paths'', so that
+unintended processes can neither eavesdrop on nor
+corrupt the exchanges.
+A private path connects a ``trusted source'', usually
+a secure terminal, to a trusted program.
+No untrusted program may intervene in a private path.
+On a
+.CW mux
+terminal, the existence of a private path is marked
+by checkered border around the pertinent window.
+If you don't see the border, you know that somebody is
+spoofing you.
+.PP
+Similarly, the priv server, which usually receives requests from an
+untrusted shell, uses a private path
+to confirm a request before acting on it.
+A program such as
+.CW /bin/setlab ,
+which can do magic only when it inherits a license
+from its invoker, will not usually check
+its arguments, however.
+Instead it understands that the license could only have come
+from a trusted program that has already guaranteed
+the integrity of the input.
+.SH
+Nosh
+.PP
+As we have already pointed out, standard shells are untrustworthy.
+Besides abounding with hidden and ill-described features,
+they are programmable, which means that no
+matter how perfectly a shell is implemented, the current
+meaning of any shell command is unknown.
+.PP
+For delicate situations IX provides
+.CW nosh ,
+the no-feature shell.
+This shell is used for the startup script,
+.CW /etc/rc.nosh ,
+which plays the same role in IX that
+.CW /etc/rc
+does in ordinary
+.UX.
+The
+.CW nosh
+shell is also used for sessions below the floor, which can
+be obtained only with privilege.
+.EX
+\*x /etc/priv session -l 0
+.CW
+Password(you:57146):
+priv(session -l 0)? \fPy
+.CW
+\*y
+.EE
+The prompt changes to
+.CW $$ ,
+the signature of
+.CW nosh .
+.PP
+To avoid surprises,
+.CW nosh
+has no search path.
+.EX
+\*y echo hello world
+.CW
+first letter not / or .
+.CI
+\*y /bin/echo hello world
+.CW
+hello world
+.EE
+It does, however, let you change the working directory.
+.EX
+\*y cd /bin
+\*y ./echo hello world
+.CW
+hello world
+.EE
+If
+.CW nosh
+is invoked with privilege, the prompt reminds you which ones
+are available.
+Authorized users can get a privileged shell from the priv server.
+(In practice they don't; the only time a privileged shell
+is routinely invoked is in single-user mode at boot time.)
+.EX
+\*y /etc/priv nosh xn    # ask for xn licenses
+.CW
+Password(you:52892):
+priv(nosh xn)? \fPy
+.CW
+xn$$ \fP/bin/getlab
+.CW
+proc lab            	------ ------    0000 0000 ...
+proc ceil           	------ ------    ffff 0000 0000 ...
+.EE
+The
+.CW getlab
+report reveals no privileges even though the prompt did.
+This is more paranoia; to avoid licensing a program
+inadvertently,
+.CW nosh
+will not pass a license to a command unless you
+ask it to by supplying a ``license mask.''
+.EX
+.CW
+xn$$ \fPlmask n /bin/getlab
+.CW
+proc lab            	---n-- ---n--    ffff 0000 0000 ...
+proc ceil           	------ ------    ffff 0000 0000 ...
+.EE
+The second
+.CW n
+reports the license; the first 
+.CW n
+reports that 
+.CW getlab
+has nocheck privilege.
+The first
+.CW n
+results from and-ing the licenses with the capabilities
+of the executable file.
+It happens that
+.CW /bin/getlab
+has nocheck capability, so that authorized users can use it to see
+forbidden device labels.
+.EX
+.CW
+xn$$ \fPlmask n /bin/getlab /dev/dk/dk12
+.CW
+/dev/dk/dk12  [name]	------ ------ RN 0000 0000 ...
+.EE
+The device is rigidly (\f(CWR\fP) labeled 
+.SM NO
+(\f(CWN\fP), as
+it ought to be.
+.PP
+Control-D returns from the privileged
+.CW nosh 
+to the low session\(emstill using
+.CW nosh .
+The device label is no longer visible because the shell
+has no license to give to
+.CW getlab .
+.EX
+.CW
+xn$$ \fR<control-D>
+.CI
+\*y lmask n /bin/getlab /dev/dk/dk12
+.CW
+/dev/dk/dk12: Security label violation
+  e=001
+.EE
+The first error comment comes from 
+.CW getlab .
+The second, from 
+.CW nosh ,
+reports the exit code returned by
+.CW getlab .
+.PP
+In the low session, higher-labeled data are visible.
+Label controls, however, prevent their being
+written to the low-labeled terminal.
+.EX
+\*y /bin/ls
+.CW
+  t=015
+.EE
+The command terminated abnormally with termination code octal 15,
+.CW SIGPIPE .
+The reason is that the label of
+.CW ls 
+rose to the floor as it read the current directory.
+To prevent high-labeled data from reaching the
+bottom-labeled terminal, the system discarded the output of
+.CW ls 
+and killed the process just as if it had 
+written on a broken pipe.

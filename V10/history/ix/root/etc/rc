@@ -1,0 +1,58 @@
+HOME=/; export HOME
+exec >/dev/console 2>&1
+date
+case ${1-xx} in
+autoboot)
+	echo Autoboot:
+	/etc/fsck -p
+	case $? in
+	0)
+		;;
+	4)
+		/etc/reboot -n
+		;;
+	8)
+		echo "Automatic reboot failed... help!"
+		exit 1
+		;;
+	12)
+		echo "Reboot interrupted"
+		exit 1
+		;;
+	*)
+		echo "Unknown error in reboot"
+		exit 1
+		;;
+	esac
+esac
+/etc/ldpcs /etc/pcs750.bin
+
+>/etc/mtab
+/etc/mount -a
+#/etc/savecore /tmp/dump
+dd if=/dev/ra07 of=/tmp/dump/kcore bs=64k  iseek=112 count=64
+/etc/swapon -a
+
+cd /tmp
+/usr/lib/ex3.7preserve -a
+/bin/rm -f *
+cd /usr/tmp
+#/bin/rm -f *
+/etc/update
+/etc/cron
+/etc/kdiload
+sleep 5
+/etc/dkhup
+date >>/usr/adm/lastboot
+sleep 5
+#/usr/ipc/mgrs/ipconfig /dev/il00 giacobini mh-astro-net /dev/il01 &
+#/usr/ipc/mgrs/dkipconfig research giacobini-dk research-dk &
+#/usr/bin/route add \* research
+# /usr/ipc/mgrs/tcpmgr
+/usr/ipc/mgrs/svcmgr
+/usr/ipc/mgrs/dkmgr
+/usr/net/share.go; /usr/net/setup.go
+wwv -s
+/etc/procmount
+/bin/rm -f /etc/nologin
+exit 0

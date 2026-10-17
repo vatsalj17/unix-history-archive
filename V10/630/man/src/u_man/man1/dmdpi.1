@@ -1,0 +1,702 @@
+.TH DMDPI 1 "630 MTG"
+.SH NAME
+dmdpi \- 630 MTG process inspector and debugger
+.SH SYNOPSIS
+.B dmdpi [ -c ]
+.SH DESCRIPTION
+.I Dmdpi
+is a C language debugger that is bound dynamically to multiple subject
+processes executing in a 630 MTG window in the layers environment.
+In order to use dmdpi to its full capabilities, it is necessary to compile
+the source program with the
+.I -g
+option of
+.IR dmdcc .
+However, if the target program is not compiled with 
+.I -g, 
+or no symbol tables
+at all are available, dmdpi works as well as possible with the information
+provided to it.
+.PP
+If the -c option is selected, \f2dmdpi\f1 will be
+cached in the 630 MTG cache system. This will enable
+\f2dmdpi\f1 to be executed again without the need for another
+download.
+.PP
+Dmdpi uses a
+multi-window user interface.
+There are three types of windows:
+debugger control windows,
+which access the global state of the debugger;
+process control windows (exactly one per process),
+which start and stop processes and connect to process-specific functions;
+and process inspection windows,
+which include viewers for source text and memory, formatted various ways.
+Initially, there are three debugger control 
+windows available: \fBdmdpi\fR, \fBhelp\fR
+and \fBpwd/cd\fR.
+.P
+One might need to debug some initialization code that would ordinarily be 
+executed before dmdpi has a chance to gain control of the process.  
+The \fI-z\fR
+of \fIdmdld\fR is useful for this purpose. This allows you to take
+control of a process before the first statement is executed.
+See the \fIdmdld(1)\fR manual page for details on using this option.
+
+.SS User Interface
+Button 1 points.
+Pointing at a window makes it current, noted with a highlighted border;
+pointing at a line of text makes it current and inverts its video.
+A scroll bar at the left of each window shows how
+much of the text of a window is visible;
+pointing into the scroll region and moving the mouse 
+controls what text is displayed.
+.PP
+Button 2 has a menu of operations that apply to the current line.
+Operations above the 
+.B ~~~~~ 
+separator are specific to each line;
+operations below the separator are generic line operations:
+.TP 1i
+.B cut
+Remove the line.
+.TP
+.B sever
+Remove the line and all lines above it.
+.TP
+.B fold
+Wrap the line, if it extends past the right margin.
+.TP
+.B truncate
+Truncate the line at the right margin.
+.LP
+Button 3 has a menu of window-level operations and is in two parts.
+Operations above the separator are specific to each window.
+Operations below the separator are the following generic window operations:
+.TP 1i
+.B reshape
+Change the size of a window.
+.TP
+.B move
+Move a window to a different place.
+.TP
+.B close
+Delete a window.
+.TP
+.B fold 
+Like button 2 fold above except it applies to all lines in the window.
+.TP
+.B truncate
+Like button 2 truncate above except it applies to all lines in the window.
+.TP
+.B top
+The sub-menu off the \fBtop\fR
+is a list of windows;
+selecting one makes it top and current.
+.LP
+Button 3 also is also used to sweep out new windows.
+.PP
+Keyboard characters accumulate at the bottom of the window.
+If the current line accepts input, it flashes with each keystroke;
+otherwise, if the current window accepts input, its border flashes.
+Carriage return is ignored until a line or window
+accepts the text, whereupon
+the input line is sent to the line or window.
+.PP
+The following keyboard commands are also available:
+.TP
+.B "\'>file\'"
+This saves the contents of the current line, or current window if there is 
+no current line, into the named file. To achieve the status of no current line 
+in the window, scroll off the top or bottom of the window.
+.TP
+.B "\'<file\'"
+Each line of the named file is sent to the line or window as though it had
+come from the keyboard.
+.TP
+.B ?
+Each line or window that accepts keyboard input produces
+some help in response to
+.BR ? .
+These messages specify the format of what may be typed.
+Items in brackets ([]) are optional parameters in the keyboard input expression.
+Explanations are contained within braces ({}).
+
+.PP
+Special cursor icons occasionally appear:
+.TP
+.B arrow-dot-dot-dot
+The host is completing an operation; the terminal is ready
+asynchronously.
+.TP
+.B coffee cup
+The terminal is receiving input from the host; the terminal momentarily is blocked.
+.TP
+.B exclamation mark
+Confirm a dangerous menu selection by pressing that menu's button again.
+
+.SS Debugger Control Windows
+.TP
+.B Dmdpi Window
+The most important debugger control window is the dmdpi window, which is
+the first window created after the debugger downloads.
+Each line within the dmdpi window refers to a specific process running
+in the terminal.
+A process is identified by its 630 MTG process table address. 
+Along with each process is  a path to
+its host resident download module (argv[0]).
+This pathname is used by dmdpi to find the symbol table and debugger 
+information for the process.
+.RS
+.P
+Lines may be introduced to the dmdpi window by running
+.I list processes
+from the button 3 menu or by typing a process table address and symbol
+table path from the keyboard.
+Typing the information at the keyboard may be useful if one wishes to 
+change the pathname of where the process symbol table might be found.
+.P
+Lines are also introduced into the dmdpi window when opening
+or closing a process control window for a process which is
+currently not listed in the dmdpi window.
+.P
+Note that the list of processes in the dmdpi window is not
+dynamically updated as new processes are created or deleted,
+or when application programs exit. This can lead to invalid
+processes being listed in the dmdpi window until list
+processes is again chosen from the button 3 menu.
+.RE
+
+.TP
+.B Pwd/cd Window
+The pwd/cd window controls
+the working directory of the debugger.
+The initial working directory is the directory in which dmdpi is executed.
+The working directory can be changed either by typing a path from the keyboard
+or by selecting directory listings in button 2 and button 3 menus.
+
+
+.TP
+.B Help Window
+The help window contains a reminder of user interface mechanics.
+
+.SS Process Control Windows
+A process control window is created from the dmdpi window in
+one of two ways.
+.I Open process
+on the button 2 menu opens the process currently highlighted in the dmdpi
+window.
+.I Pick process
+on the button 3 menu causes the mouse cursor to change to a target cursor
+which can be used to point to a window containing a process to debug.
+.PP
+The paths to symbol tables shown in the dmdpi window is not a full path
+name if the location of the host resident download module for the program
+being debugged is specified to \fIdmdld\fR as a relative path name. If
+this is the case, the debugger is not able to find symbol tables
+unless the working directory of the debugger is the same as the 
+directory in which the application was downloaded. If symbol tables cannot be
+found, close the process window, change the working directory of the
+debugger from the pwd/cd window, and then reopen the process window.
+.PP
+A process control window indicates the process's state
+and shows the call stack traceback if the process is halted or dead.
+The call stack is the dynamic chain of activation records.
+The process control window also
+connects to process inspection windows that access source text,
+local variables within a stack frame,
+raw memory, and so on.
+These windows are cross-connected; so, for example,
+an instruction in a process's assembly language window can
+be inspected as a hexadecimal opcode in the raw memory window.
+Closing the process control window closes all the process inspection 
+windows associated with it.
+.PP
+States are:
+.TP 1.5i
+.PD 0
+.SM
+.B RUNNING
+running normally
+.TP
+.SM
+.B STOPPED
+stopped asynchronously by the debugger
+.TP
+.SM
+.B BREAKPOINT
+halted on reaching breakpoint
+.TP
+.SM
+.B STMT STEPPED
+halted after executing C source statement(s)
+.TP
+.SM
+.B INSTR STEPPED
+halted after executing machine instruction(s)
+.TP
+.SM
+.B PROCEESS EXCEPTION
+a process exception has occurred
+.TP
+.SM
+.B ERROR STATE
+the process has probably exited.
+.PD
+.LP
+When in the \fBRUNNING\fR state, the status of selected bits of the P->state
+variable is displayed and updated.
+.PP
+The menu operations on the process are:
+.TP 1i
+.PD 0
+.B run
+let the process run
+.TP
+.B stop
+stop the process
+.TP
+.B src text
+open source text window(s)
+.TP
+.B Globals
+open window for evaluating expressions in global scope
+.TP
+.B RawMemory
+open window for editing uninterpreted memory
+.TP
+.B Assembler
+open window for disassembler
+.TP
+.B User Types
+open window for setting user types
+.TP
+.B Journal
+open debugging session journal window
+.TP
+.B Bpt List
+open breakpoint list window
+.PD
+.LP
+Each line of the call stack traceback describes one function.
+Each function in the traceback can open a stack frame
+expression evaluator window
+or display its current source line.
+
+.SS Process Inspection Windows
+.TP 
+.B Source Text Windows
+The source text window contains a listing of a source file. If there is more
+than one source file for the process, selecting the  
+.B src text
+item in the process control window will give you a source files window
+in which there is a listing of  all the source files associated with that
+process. Library function source files are included in this list, even
+though one might not actually have the source for these functions.
+By highlighting a source line and selecting 
+.B open source file 
+in the button 2 menu, you can open a source listing for that file.
+Each source file is in a separate window, which can be opened when needed.
+The source files are searched for in the working directory.
+Entering a pathname from the keyboard (when the Source files window is 
+current) enters a pathname prefix which points to a directory
+where the source can be found, without changing the working directory.
+.RS
+.P
+When opening a source file, 
+dmdpi 
+checks to see whether the source file is in time sync with the object module. 
+If not, dmdpi gives a message of this fact. One may override this 
+condition with the 
+.B reopen 
+item in the button 3 menu of the source text window.
+Source lines are displayed on a "per request basis." In other words, only
+the lines that are currently visible are sent from the host. More lines
+are sent to be displayed on the terminal as needed. 
+.P
+Specific strings may be searched for in the source text by
+using \fI/string\fR, or the \fI?string\fR entered at the
+keyboard, for searching forward and backward in the source
+text respectively. The search will begin at the next (previous
+for backwards search) C language statement rather than at the
+next source line. Note that repeated reverse searches for the
+same pattern must be specified as \fI??\fR rather than \fI?\fR
+due to a conflict with the help operator (?).
+Line numbers can also be searched
+for by entering a line number at the keyboard when a line is not current
+within the window. If a line is current, the number is evaluated as 
+a constant expression (see expressions below). To achieve the 
+status of no current line, scroll the current line off the top or bottom of
+the window.
+.P
+.B Breakpoints 
+are set on source lines. A breakpoint is set by highlighting
+the line on which you wish to break execution and selecting 
+.B set bpt
+from the button 2 menu. 
+A breakpoint is denoted by a '>>>' next to the source line.
+When the process reaches this line the process 
+halts and will not execute the line on which the breakpoint is set. 
+Clearing the breakpoint is done by highlighting the line on which a breakpoint
+is set and selecting 
+.B clear bpt
+from the button 2 menu. Clearing the breakpoint can also be done from the  
+breakpoint list
+window (see below). A 
+.B conditional breakpoint 
+is a breakpoint that is set with a certain condition. When this condition
+evaluates to TRUE, the process is halted.
+Any valid dmdpi expression may be used as a condition 
+(see keyboard expressions).
+To set a conditional breakpoint, select 
+.B cond bpt
+from the button 2 menu. You are prompted to enter an expression
+from the keyboard as a condition. 
+An example of a condition would be (x==1). When the variable x becomes 
+equal to 1, then execution breaks. The 
+.B trace on
+item in the button 2 menu is actually a conditional breakpoint with 
+the condition of 0, meaning that the condition never evaluates to TRUE.
+This has the effect of tracing a statement but never breaking execution.
+The conditional breakpoint is removed in the same way a 
+regular breakpoint is removed. 
+.P 
+Once the process has been halted, select \f3run\f1 to start the process running again.
+You can also 
+.B step 
+(execute) a number of source lines and then stop
+again after these statements have been executed.
+When statements are stepped, the debugger will not enter functions 
+unless the 
+.B step into fcn
+item is actually specified. The current statement can always
+be seen by selecting
+the
+.B current stmt
+item in the button 3 menu. This highlights the statement currently in the PC.
+.P
+Another option that is available in the source text window is the ability 
+to look at the assembly code for a specified line. Highlighting a line and 
+selecting 
+.B assembler
+in the button 2 menu displays the first assembler instruction of the 
+statement.
+.RE
+
+.TP
+.B Globals and Stack Frame Windows
+A stack frame window is opened from a line in the call stack traceback 
+in the process control window or
+from a line of source text. A globals window is opened from the button 3 menu
+in the process control window.
+These windows evaluate expressions with respect to global scope,
+and scope in a function, respectively.
+.RS
+.P
+.B "Expressions"
+.P
+Expressions may be entered from the keyboard or with the mouse.
+The syntax for expressions in dmdpi is the same as C language expressions,
+except for differences noted below.
+The expressions are most commonly used for inspecting values of variables in 
+the program that is being debugged.
+An example of an expression is
+.I r.origin.x.
+This 
+may be typed in order
+to inspect the x coordinate value of a rectangle origin point if the process 
+has a rectangle 
+.I r.
+.P
+A summary of dmdpi's expression syntax is presented here only to 
+aid comprehension, rather than an exact statement of the language.
+.RE
+.sp
+.RS
+\fI
+expression :
+        constant
+        primary
+        \(**expression
+        &expression
+        -expression
+        !expression
+        ~expression
+        sizeof expression
+        typeof expression
+        fabs (expression)
+        (type-name) expression   /\(** from menu only \(**/
+        {expression} identifier
+        expression binop expression
+        expression = expression
+        expression , expression 
+
+
+primary:
+        $
+        identifier 
+        ( expression )
+        primary ( [expression-list] )
+        primary[ expression ]
+        lvalue.identifier
+        primary -> identifier
+
+lvalue:
+        identifier
+        primary[expression]
+        lvalue.identifier
+        primary -> identifier
+        \(**expression
+        (lvalue)
+
+binop:
+        \(**   /   %   +   -   >>   <<   <   > <=   >=   ==   !=   &   ^
+         |   &&   ||
+\fR
+.P
+The major differences in the expressions which dmdpi understands and
+the C expressions are:
+.IP ""
+The unary operators \fIfabs\fR and \fItypeof\fR are supported.
+.I fabs
+evaluates the absolute value of a floating point number.
+.I typeof
+evaluates the type of an expression.
+Examples are:
+.br
+	fabs(-2.0)=2
+.br
+	typeof(r.origin)= struct Point
+.IP ""
+The concept of a "current expression" has been introduced with the 
+.B $
+operator. 
+.B $ 
+is equal to the current highlighted expression. For example, if the line 
+containing \fIr.origin\fR is highlighted, one may type 
+.B $.x 
+to see the value of the x coordinate. 
+Another example of the 
+.B $
+expression is 
+.B $=<expression>.
+This can be used, for instance if
+.B $
+is equal to a variable x and you wish
+to change the value of x to <expression>.
+.IP ""
+Expressions are evaluated within the scope boundaries of the window in 
+which they are typed. One can cross scope boundaries in order to evaluate
+an expression with the syntax { expression } function-name. 
+This, for example, is useful for using the globals window to look 
+at static variables that are local
+to a function 
+without having to open up a stack frame window.
+.IP ""
+Type casting may only be done through the use of the menu.
+.IP ""
+The following is not supported by dmdpi: ++  --  ?:  op=  string.
+.IP ""
+NOTE: expressions are always evaluated internally with a 32-bit precision. 
+Therefore,
+results may not correspond in all cases with those generated by a C  
+program.
+.P
+Expressions are also used to specify the condition in the conditional 
+breakpoint. Note that the C comma operator is very useful in specifying
+the condition. 
+Expressions separated by a comma are evaluated left-to-right and all but
+the rightmost expression are discarded.
+For example, a condition of \fI(x,y,x==y)\fR evaluates all
+three expressions; however, only the last expression (x==y) determines
+the result of the overall condition. The result is that the values of 
+x and y are printed but execution halts only when x==y.
+.P
+Registers in the stack frame windows are prefixed with the character
+.B $
+, for example, 
+.B $d0. 
+The address of a register is the location at which it was saved.
+Register values are only available after execution has been halted
+at a breakpoint or after a step. The exception to this rule is that
+one may look at register variables in calling functions if they happened 
+to be saved in the called function.
+.P
+An expression may be made 
+.I spy, 
+in order to observe changes in the expression.
+The value of a spy expression is evaluated and displayed
+each time the debugger looks at the process, i.e., when the process calls 
+wait() or sleep().
+If the value of a spy changes, the expression is updated and a message is
+given that the expression has changed. 
+If a conditional breakpoint (or trace on) is set, then the process will be
+halted.
+The option 
+.B changed spies
+in the button 2 menu will manually force all spies to be re-evaluated. 
+.P
+A maximum of 150 global variables will fit into the globals menu. If
+the targeted program has more than 150 global variables, the remaining
+variables must be accessed by typing their name from the keyboard.
+.RE
+.SK
+.TP
+.B Raw Memory Window
+The raw memory window is
+a ``memory editor'' in which
+memory is viewed as a sequence of 1-, 2-, 4- or 8-byte cells.
+The 
+.B '.' 
+operator is a special symbol which denotes a cell address. Therefore, commands
+such as 
+.B .+1 
+in the button 2 menu give the next increment of memory after the current 
+cell address. The keyboard command
+.B .=<expression>
+displays the cell with address equal to expression. 
+The expression syntax is the same as defined above.
+The format of the displayed
+memory cells is 
+.I x/y: <contents>, 
+where x is the cell address, and y is the viewing increment. 
+.RS
+Some of the functions available are:
+.RS
+.TP
+change cell size and display format
+Use the \fBsize\fR and \fBformat\fR items in the menu.
+.TP
+display cells above and below current cell.
+Use the \fB.[+-]<amount>\fR options in the menu.
+.TP
+indirect to cell
+Look at the cell using the contents of the current cell as an address.
+Use the 
+.B \(** thru . 
+option.
+.TP
+change cell value
+This is done with the keyboard expression:
+.B $=<expression>
+.TP
+spy on memory cell
+If the memory contents change, dmdpi will give notification.
+.TP
+disassemble instruction at cell.
+Display the assembler instruction in the assembler window. Use the 
+.B asmblr
+option in the button 2 menu.
+.RE
+.RE
+.TP
+.B (Dis)Assembler Window
+Allows viewing of memory as a sequence of assembler instructions.
+The menu options of this window are similar to those in the source text 
+window. The difference is that this window deals with assembler instructions
+rather than the high-level source code.
+.RS
+.P
+An instruction at a certain address can be displayed by entering the 
+keyboard expression
+.B .=<expression>.
+The expression syntax is the same as defined above.
+More instructions can be viewed in a sequential manner using the 
+.B next
+options in the button 2 menu. The next 1, 5, or 10 instructions
+starting from the current instruction can be displayed.
+.P
+When setting a breakpoint or stepping into an assembler function, one must
+step through the link and the movm.l instructions before \fIdmdpi\fR will be
+able to generate the stack frame for the function.
+.P 
+Some of the other functions available are:
+.RS
+.TP
+change display format
+.TP
+open a stack frame window for instruction's function
+.TP
+display instruction as cells in the raw memory window
+.TP
+set/clear breakpoint on instruction
+.TP
+open stack frame window for instruction's function
+.TP
+display instruction at current PC 
+.TP 
+single step instruction(s)
+.RE
+.RE
+.TP
+.B User Types Window
+Shows user-defined types and allows the display format of user-defined 
+types displayed in the globals and stack frame windows to be changed.
+For example, the display format of a structure may be changed so that 
+certain fields are not displayed (hidden) and other fields are displayed
+(shown).
+.TP
+.B Journal Window
+Keeps a log of significant events in the course of a debugging session.
+.TP
+.B Breakpoint List Window
+Lists all active source and assembler breakpoints.
+Allows clearing of specified breakpoints or all breakpoints.
+.RS
+.P
+Functions available include:
+.RS
+.TP
+show source or assembler line at which a breakpoint is set 
+.TP
+clear a single breakpoint
+.TP
+clear all breakpoints
+.SH SEE ALSO
+.PP
+dmdcc(1),
+dmdld(1),
+ucache(1).
+.SH WARNINGS
+Do not use the -O optimizer option of dmdcc when compiling a program 
+to be debugged with dmdpi. 
+This will confuse dmdpi.
+.P
+It is possible to receive a message that there is no more memory on the 
+host system. This will happen if the process you are debugging has a very 
+large symbol table, or if you are debugging many processes at the same time.
+The maximum amount of memory that a UNIX process is allowed to consume
+can be changed by a system administrator. For a 3B2 host computer running
+System V Release 2.0, how to change the per process memory limit is
+documented in the manual \f2AT&T 3B2 Computer Unix System V Release 2.0 
+System Administration Utilities Guide\f1 in the chapter 
+"Administrative Tasks" under "Tunable Parameters." An alternative to
+changing the host computer's per process memory limit is to use
+the \fImc68cprs\fR CCS utility to compress the size of process symbol tables
+before they are opened for debugging with dmdpi.
+.SH BUGS
+In switch statements there is no boundary between the last case
+and the branch code; the program
+.I appears
+to jump to the last case (but is really in the branch)
+and then to the real case.
+.P 
+The structure P which is of type "struct Proc \(**" within applications is 
+interpreted by \fIdmdpi\fR as "struct proc". This implies that one must 
+type P.state rather than P->state when accessing the structure P from the 
+keyboard.
+.P
+If a program contains multiple global structure declarations
+of the same name, dmdpi will ignore all but the first declaration.
+.P
+A breakpoint cannot be set on a goto or return statement.
+Attempting to do so will set a breakpoint on the following
+line. Also, stepping onto a goto or return statement will
+execute the goto or return instead of stopping on the line.
+.P
+When stepping past an if statement that is the
+last statement within a while loop and the if condition fails
+and does not have an else condition,
+the program will appear to jump to the last line within the if
+statement. It is really jumping to the statement that will
+branch back to the top of the while loop.

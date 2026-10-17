@@ -1,0 +1,125 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH ALLOC 3R "630 MTG"
+.XE "alloc()"
+.XE "lalloc()"
+.XE "allocown()"
+.XE "free()"
+.SH NAME
+alloc, lalloc, free, allocown \- memory allocation
+.SH SYNOPSIS
+.B #include <dmd.h>
+.br
+.B char \(**alloc (nbytes)
+.PP
+.B char \(**lalloc (lnbytes)
+.PP
+.B void free (s)
+.PP
+.B void allocown (s, p)
+.sp
+.B unsigned nbytes;
+.br
+.B unsigned long lnbytes;
+.br
+.B Proc \(**p
+.br
+.B char \(**s;
+.SH DESCRIPTION
+The
+.I alloc
+function
+is equivalent to the standard C function
+.IR  malloc (3C).
+It either returns a pointer to a block of
+\f2nbytes\f1,
+contiguous bytes of storage
+or a 0 (\s-1NULL\s+1) if there is no available memory.
+The storage is aligned on 4-byte boundaries.
+Unlike
+.IR malloc ,
+\f2alloc\f1,
+clears the storage to zeros.
+.PP
+The
+.I lalloc
+function is identical to
+.I alloc
+except it takes an unsigned long as an argument.
+.PP
+The
+.I free
+function
+frees storage allocated by
+.IR alloc .
+The space is made available for further allocation.
+.PP
+The
+.I allocown
+function
+changes the ownership of memory allocated by
+.IR alloc.
+The argument
+.I s
+is a value previously returned from
+.IR alloc .
+The argument
+.I p
+is the process taking over ownership of the memory.
+If
+.I p
+is zero, the memory belongs to no one, and only an explicit call to
+.I free
+will free it.
+.PP
+The terminal
+automatically frees all memory allocated by a process
+when the process terminates or when
+the window it is running in is deleted.
+If the ownership of allocated memory is changed, it will
+only be freed when the new owner is deleted or when
+.I free
+is called.
+However, it is recommended that a process free its allocated
+memory when the storage is no longer needed so that other
+processes
+will be able to use it.
+.SH EXAMPLE
+The following example shows the use of
+.I alloc
+and
+.I free
+in dynamically allocating memory for a \fIPoint\fR.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+main()
+{
+    Point *p;
+    char *alloc();
+    void free();
+
+    p = (Point *)alloc (sizeof(Point));
+
+    .
+    .
+    .
+
+    free (p);
+}
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+balloc(3R), gcalloc(3R), structures(3R).
+.br
+malloc(3C) in the \f2UNIX System V Programmer's Reference Manual\f1.
+
+
+.SH WARNINGS
+The
+.I alloc
+function accepts an integer as argument; therefore, it can only allocate a
+contiguous block of memory of 64K bytes or less.

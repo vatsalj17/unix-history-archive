@@ -1,0 +1,52 @@
+.TH PQ 1 "Post 4.0" " "
+.SH NAME
+pq \- directory query interface
+.SH SYNOPSIS
+.B pq
+.RB [ \-l ]
+[directory query options] query ...
+.SH DESCRIPTION
+.I pq\^
+is a fast directory query interface; the
+.I "directory query options"
+and
+.I query
+are defined in
+.IR post (1).
+Unlike
+.BR "post \-w" ,
+.I pq
+does not recognize aliases and
+.BR \-q ,
+and only uses the
+.B POST
+environment variable.
+.TP
+.B \-l
+Query location directory; equivalent to
+.br
+.B
+\-a loc \-o "%6loc %12tel [%3cornet] %street, %city, %state, %zip"
+.SH EXAMPLES
+.PD 0
+Query directory for members of an office:
+.IP
+pq loc=mh/room=2b519
+.PP
+Query directory for location information:
+.IP
+pq \-l mt
+.PP
+Query directory for cornet number of a location:
+.IP
+pq \-l \-o %cornet ih
+.PD
+.SH FILES
+.TP 30
+$POST/lib/dispatch
+directory configuration file
+.SH SEE ALSO
+post(1),
+pq(3C),
+dispatch(4),
+modules(4).

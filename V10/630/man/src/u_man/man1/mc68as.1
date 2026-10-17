@@ -1,0 +1,120 @@
+.TH MC68AS 1 "630 MTG"
+.SH NAME
+mc68as \- \*N MC68000 assembler
+.SH SYNOPSIS
+.BR mc68as
+.RB "[" \-o " objfile]"
+.if 'mc68'x86' .RB \-x
+.if 'mc68'3b' .RB "[" \-Q "]"
+.RB "[" \-n "]"
+.RB "[" \-m "]"
+.RB "[" \-R "]"
+.RB "[" \-V "]"
+file-name
+.SH DESCRIPTION
+The 
+.I mc68as
+command
+assembles the named file.
+.if 'mc68'b16' \{\
+The output file is executable if no errors
+occurred during the assembly, transfer vectors were not used,
+and there are no unresolved external references.\}
+The following flags
+may be specified in any order:
+.TP \w'\fB\-o\fP\ \fIobjfile\fP\ \ 'u
+.BI \-o " objfile"
+Puts the output of the assembly in
+.IR objfile .
+By default, the output file name is formed by
+removing the 
+.B .s
+suffix, if there is one, from the input file name
+and appending a 
+.B .o
+suffix.
+.if 'mc68'x86' \{\
+.TP
+.B \-x
+This
+flag is
+.I required
+for all x86 files.
+\}
+.if 'mc68'3b' \{
+.TP
+.B \-Q
+Warn the user if a transfer vector operand is used
+in any context other than a "call" instruction.
+\}
+.TP
+.B \-n
+Turns off long/short address optimization.
+By default, address optimization takes place.
+.TP
+.B \-m
+Runs the 
+.I m4
+macro pre-processor
+on the input to the assembler.
+.TP
+.B \-R
+Removes (unlinks) the input file after assembly
+is completed.
+.TP
+.B \-V
+Writes the version number of the assembler being run
+on the standard error output.
+.SH FILES
+.RI /tmp/mc68a[A-L]AAa XXXXXX
+temporary files
+.SH "SEE ALSO"
+mc68ld(1),
+mc68nm(1),
+mc68strip(1).
+.br
+a.out(4) in the \f2UNIX System V Programmer's Reference
+Manual\f1.
+.br
+m4(1) in the
+\f2UNIX System V User's Reference Manual\f1.
+.br
+\f2UNIX Assembler User's Guide for the Motorola 68000\f1 in the
+\f2630 MTG Software Development Guide\f1.
+.SH WARNING
+.if 'mc68'3b' \{
+.PP
+If the input file does not contain a 
+.B .file
+assembler directive and the
+.B \-m
+flag was not specified,
+the file name given by the assembler when an
+error occurs is one of the temporary files
+.RB ( /usr/tmp/mc68as \s-1XXXXXX\s+1)
+\}
+.PP
+If the 
+.B \-m
+.RI ( m4
+macro pre-processor invocation) option is used,
+keywords for
+.I m4
+.RI "[see " m4 (1)]
+cannot be used as symbols (variables, functions, labels)
+in the input file since
+.I m4
+cannot determine which are assembler symbols and 
+which are real 
+.I m4
+macros.
+.SH BUGS
+The
+.B even
+assembler directive is not guaranteed to work
+in the
+.B .text
+section when optimization is performed.
+.PP
+Arithmetic expressions may only have
+one forward referenced symbol per expression.

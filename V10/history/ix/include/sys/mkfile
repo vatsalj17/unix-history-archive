@@ -1,0 +1,13 @@
+# Only explicit #include dependencies are given here.
+# Implicit dependencies (e.g. acct.h on types.h) are
+# unnecessary, because any program that includes, say,
+# acct.h must also include types.h (or a surrogate,
+# such as params.h) and should be registered as depending
+# on types.h (or surrogate).
+
+all:V:  ino.h label.h param.h user.h vm.h
+ino.h:N: label.h jlabel.h
+label.h:N: jlabel.h
+param.h:N: /usr/include/signal.h types.h
+user.h:N: pcb.h dmap.h vtimes.h /usr/include/errno.h
+vm.h:N: vmparam.h vmmac.h vmmeter.h vmsystm.h

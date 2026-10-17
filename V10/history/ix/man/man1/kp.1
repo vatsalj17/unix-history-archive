@@ -1,0 +1,91 @@
+.TH KP 1
+.CT 1 proc_man sa_mortals
+.SH NAME
+kp  \(mi kernel profiling
+.SH SYNOPSIS
+.B kp
+[
+.B -t
+.I duration
+]
+[
+.B -c
+.I command
+]
+[
+-
+.B fsx
+]
+[
+.I kernel
+]
+.PP
+.SH DESCRIPTION
+.I Kp
+prints kernel profiling data.
+If the
+.B -t
+option is specified
+.I kp
+uses data collected during a
+sleep of the indicated duration
+(in seconds).
+If the
+.B -c
+option is specified
+.I kp
+uses data
+collected while the indicated command is run
+by
+.IR system (3).
+If neither option is specified
+all profiling data since last boot is used;
+it is illegal to specify both
+.B -t
+and
+.B -c
+options.
+.LP
+Profiling data consists of
+(1)
+clock-driven
+.IR profil (2)-style
+pc bucket counting
+and
+(2)
+system call counts.
+The bucket counts are reported resolved to the kernel source-file level
+or the
+external text symbol level,
+according to whether the
+.B -f
+or
+.B -x
+options is given, respectively.
+Raw unscaled bucket tick counts are given.
+System call counts are reported if the
+.B -s
+option is specified.
+Specifying none of
+.B sfx
+is equivalent to specifying them all:
+the default treatment is to report ``the works.''
+.LP
+Normally the namelist in
+.B /unix
+is believed, but this may be overruled by giving the filename
+.I kernel
+argument.
+.LP
+Since this program needs privileges to read
+.FR /dev/kmem ,
+the
+.B -c
+option
+is an invitation to horesmanship.
+.SH FILES
+.B /unix
+.br
+.B /dev/kmem
+.SH BUGS
+Not sorted.

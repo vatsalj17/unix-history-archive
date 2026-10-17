@@ -1,0 +1,63 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH STRWIDTH 3R "630 MTG"
+.XE "strwidth()"
+.XE "jstrwidth()"
+.SH NAME  
+strwidth, jstrwidth \- width of character string
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.br
+#include <font.h>
+.sp
+int strwidth (f, s) 
+.sp
+int jstrwidth (s) 
+.sp
+Font \(**f; 
+.br 
+char \(**s;
+.SH DESCRIPTION
+The
+.I strwidth
+function
+returns the width in screen coordinates (pixels)
+of the null-terminated string
+.IR s ,
+interpreted in the Font
+.IR *f .
+The height of a character string is simply
+.IR f->height .
+.PP
+The call,
+.IR jstrwidth(s) ,
+is equivalent to
+.IR "strwidth (&mediumfont, s)" .
+.SH EXAMPLE
+The following code fragment places the width of a string
+that uses the resident font
+.I largefont
+into a variable called width.
+.PP
+.RS 3
+.nf
+.ft CM
+\s-1
+#include <dmd.h>
+#include <font.h>
+
+   .
+   .
+
+   int	width;
+   Font *f = &largefont;
+
+   width = strwidth (f, "hello world");
+
+   .
+   .
+
+.fi
+.RE
+.SH SEE ALSO
+infont(3L), string(3R), structures(3R).

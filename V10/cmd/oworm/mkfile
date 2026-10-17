@@ -1,0 +1,69 @@
+CFLAGS=-g -I. -I/n/bowell/usr/src/cmd/worm
+LIB=worm.a
+BIN=/usr/lib/worm
+L=io inode vlink flink sym getopt mapdev btree
+OBJ=`echo $L | sed -e 's:[^ ]*:$LIB(&.o):g'`
+COBJ=`echo $L | sed -e 's:[^ ]*:O/&.O:g'`
+NPROC=2
+# remember to change /usr/bin/worm if you add programs
+ALL=wmkfs wstat wwrite wread wls woffline wcat wormupd wbtree wrm wdir wreset wmv wtmpdir
+CALL=`echo $ALL | sed -e 's:[^ ]*:O/&:g'`
+BALL=`echo $ALL | sed -e 's:[^ ]*:$BIN/&:g'` $BIN/wmount $BIN/scsish
+F=../backup/src
+
+all:V:	$ALL
+	cd scsi; mk all
+cyntax:V:	$CALL
+	#cd scsi; mk cyntax
+
+$LIB:Q:	$OBJ
+	names=`membername $newprereq`
+	ar rv $LIB $names && rm $names
+	ranlib $LIB
+
+'^(w[^.]*)$':R:	\\1.o $LIB #O/\\1
+	$CC $CFLAGS -o $target $stem1.o $LIB -lcbt
+
+'^(poot)$':R:	\\1.o $LIB #O/\\1
+	$CC $CFLAGS -o $target $stem1.o $LIB -lcbt
+
+'^(O/w[^.]*)$':R:	\\1.O $COBJ
+	cyntax $prereq && > $target
+
+$BIN/'(w[^.]*)$':R:	\\1
+	cp $stem1 $target && strip $target; chmod 775 $target
+
+sym.o wtree.o thing.o:	sym.h
+wtree.o thing.o:	thing.h
+
+$LIB(%.o):N:	%.o
+%.o:	worm.h
+O/%.O:	%.c
+	cyntax -c $stem.c && mv $stem.O O
+O/%.O:	worm.h
+
+pp:
+	smallpr mkfile worm.h *.c
+
+clean:V:
+	rm -f *.o *.a $ALL core O/*
+
+install:V:	$BALL
+
+ship:V:	shipped
+shipped:	$BALL
+	ship $newprereq && touch $target
+
+$BIN/wmount $BIN/scsish:	scsi/*
+	cd scsi; mk install
+
+goo:V:	wmv wls wwrite wmkfs
+	> temp
+	wmkfs -ftemp testa
+	wwrite -ftemp testa w*.[ch]
+	wls -ftemp -l wreset.c
+	wmv -ftemp testa wreset.c xxx
+	wls -ftemp -l wreset.c xxx
+
+wild:	$BALL
+	dest=wild ship $newprereq && touch $target

@@ -1,0 +1,142 @@
+CFLAGS=-I.. -DKERNEL
+L=../lib/io.a
+FILES=\
+	$L(fd.x) $L(mem.x) $L(sw.x) \
+	$L(bio.x) $L(stream.x) $L(partab.x) \
+	         $L(dk.y) $L(dkp.x) $L(cmcld.x) $L(dkmod.x) $L(kdi.y) $L(kmc.y) \
+	$L(ttyld.x) $L(mesg.x) $L(connld.x) $L(bufld.x) \
+	$L(ra.x)          $L(uda.y)       \
+	$L(lg.x)
+
+
+$L:Q: $FILES
+	names=`membername $newprereq`
+	ar rv $L $names && rm $names
+	ranlib $L
+$L(%):N: %
+%.x: %.c
+	cc $CFLAGS -S $stem.c
+	/lib/c2 <$stem.s | sed -f ../lib/asm.sed | as -o $stem.x
+	rm $stem.s
+%.y: %.c
+	cc $CFLAGS -S $stem.c
+	/lib/c2 -i <$stem.s | sed -f ../lib/asm.sed | as -o $stem.y
+	rm $stem.s
+#
+S=../sys
+bio.x: $S/param.h
+bio.x: $S/systm.h
+bio.x: $S/user.h
+bio.x: $S/buf.h
+bio.x: $S/conf.h
+bio.x: $S/proc.h
+bio.x: $S/pte.h
+bio.x: $S/vm.h
+bufld.x: $S/param.h
+bufld.x: $S/stream.h
+bufld.x: $S/conf.h
+bufld.x: $S/bufld.h
+cmcld.x: $S/param.h
+cmcld.x: $S/stream.h
+cmcld.x: $S/dkio.h
+cmcld.x: $S/conf.h
+cmcld.x: $S/dkstat.h
+cmcld.x: $S/dkmod.h
+connld.x: $S/param.h
+connld.x: $S/stream.h
+connld.x: $S/filio.h
+connld.x: $S/conf.h
+connld.x: $S/file.h
+connld.x: $S/inode.h
+dk.y: $S/param.h
+dk.y: $S/systm.h
+dk.y: $S/stream.h
+dk.y: $S/dkio.h
+dk.y: $S/ubaddr.h
+dk.y: $S/conf.h
+dk.y: $S/dk.h
+dk.y: $S/dkstat.h
+dk.y: $S/dkmod.h
+dkmod.x: $S/param.h
+dkmod.x: $S/dkmod.h
+dkmod.x: $S/dkstat.h
+dkp.x: $S/param.h
+dkp.x: $S/stream.h
+dkp.x: $S/conf.h
+dkp.x: $S/ttyio.h
+dkp.x: $S/dkio.h
+dkp.x: $S/dkstat.h
+dkp.x: $S/dkp.h
+fd.x: $S/param.h
+fd.x: $S/file.h
+fd.x: $S/user.h
+fd.x: $S/proc.h
+fd.x: $S/conf.h
+fd.x: $S/inode.h
+kdi.y: $S/param.h
+kdi.y: $S/stream.h
+kdi.y: $S/ttyio.h
+kdi.y: $S/dkio.h
+kdi.y: $S/conf.h
+kdi.y: $S/dkstat.h
+kdi.y: $S/dkmod.h
+kdi.y: $S/ubaddr.h
+kdi.y: $S/kmc.h
+kdi.y: $S/kdi.h
+kdi.y: $S/buf.h
+kdi.y: $S/dkwindow.h
+kmc.y: $S/param.h
+kmc.y: $S/kmc.h
+kmc.y: $S/ubaddr.h
+kmc.y: $S/conf.h
+kmc.y: $S/user.h
+lg.x: $S/param.h
+lg.x: $S/user.h
+lg.x: $S/inode.h
+lg.x: $S/proc.h
+lg.x: $S/conf.h
+lg.x: $S/log.h
+mem.x: $S/param.h
+mem.x: $S/user.h
+mem.x: $S/buf.h
+mem.x: $S/conf.h
+mem.x: $S/systm.h
+mem.x: $S/pte.h
+mem.x: $S/mtpr.h
+mem.x: $S/vm.h
+mesg.x: $S/param.h
+mesg.x: $S/stream.h
+mesg.x: $S/conf.h
+mesg.x: $S/mesg.h
+ra.x: $S/param.h
+ra.x: $S/buf.h
+ra.x: $S/udaioc.h
+ra.x: $S/ra.h
+ra.x: $S/mscp.h
+ra.x: $S/user.h
+ra.x: $S/file.h
+ra.x: $S/conf.h
+ra.x: $S/diskio.h
+stream.x: $S/param.h
+stream.x: $S/stream.h
+stream.x: $S/mtpr.h
+stream.x: $S/buf.h
+sw.x: $S/param.h
+sw.x: $S/systm.h
+sw.x: $S/buf.h
+sw.x: $S/conf.h
+sw.x: $S/user.h
+sw.x: $S/inode.h
+sw.x: $S/file.h
+sw.x: $S/map.h
+ttyld.x: $S/param.h
+ttyld.x: $S/stream.h
+ttyld.x: $S/ttyio.h
+ttyld.x: $S/ttyld.h
+ttyld.x: $S/conf.h
+uda.y: $S/param.h
+uda.y: $S/buf.h
+uda.y: $S/ubaddr.h
+uda.y: $S/uda.h
+uda.y: $S/mscp.h
+uda.y: $S/user.h

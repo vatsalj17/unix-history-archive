@@ -1,0 +1,64 @@
+.TH DECACHE 3L
+.XE "decache()"
+.SH NAME
+decache \- remove the calling application from the Application cache
+.SH SYNOPSIS
+\f3int decache ( )\f1
+
+.SH DESCRIPTION
+The function
+.I decache
+lets the calling application remove itself from the Application
+cache.
+.PP
+The function \fIdecache\fR frees up all the system's information used to
+cache the application but 
+does not delete the application itself; it just
+returns the memory occupied by the application back to the application, so it can be
+automatically freed when the application exits or is deleted.
+.PP
+The function \fIdecache\fR returns a 1 if the operation is successful, a 0
+otherwise. Failure can be caused by not finding the calling application in the
+Application cache, and by finding the cached application is currently in use, or
+cannot be removed (i.e. see the discussion on \fBA_PERMANENT\fR flag in 
+\fIcache(3L)\fR).
+
+.SH EXAMPLE
+The following program illustrates the relationship
+between \fIdecache\fR and \fIcache(3L)\fR.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+#include <object.h>
+
+main ()
+{
+	register int n;
+
+	lprintf ("Type c to cache\\n");
+	lprintf ("Type u to uncache\\n");
+	lprintf ("Type q to quit");
+	request (KBD);
+	while (wait(KBD)) {
+		n = kbdchar();
+		lprintf ("\\ncharacter typed: %c", n);
+		if (n == 'c') {
+			n = cache ("test", 0);
+			lprintf (" -- cache returns %d", n);
+		} 
+		else if (n == 'u') {
+			n = decache ();
+			lprintf (" -- decache returns %d", n);
+		}
+		else if (n == 'q') 
+			break;
+	}
+}
+.fi
+.RE
+
+.SH SEE ALSO
+ucache(1),
+cache(3L), cmdcache(3L).

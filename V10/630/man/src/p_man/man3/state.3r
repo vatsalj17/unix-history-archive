@@ -1,0 +1,75 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH STATE 3R "630 MTG"
+.XE "P->state"
+.XE "MOVED"
+.XE "RESHAPED"
+.XE "SCR_LOCK"
+.SH NAME
+state: P->state, MOVED, RESHAPED, NO_RESHAPE \- per process windowing states
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B long P->state;
+.SH DESCRIPTION
+.I P->state
+is the state variable for an application running in the 630
+MTG.
+.PP
+The fields in the state variable relevant to windowing operations
+are:
+.IP ""
+\s-1MOVED\s+1
+.IP ""
+\s-1RESHAPED\s+1
+.IP ""
+\s-1NO_RESHAPE\s+1
+.PP
+These bits are set or checked by the terminal during a windowing operation.
+.PP
+If an application program wants to do some special processing after 
+being moved or reshaped,
+it must periodically check the proper \f2state\f1 bits. When
+the pertinent event occurs, the application program should perform
+its special processing and then
+reset the proper bits in the state variable as follows:
+.PP
+For a process to test whether its window has been
+moved ,
+it must check:
+.PP
+.ft CM
+( P->state&\s-1MOVED\s+1 )
+.ft R
+.PP
+To reset the \s-1MOVED\s+1 condition it is necessary to execute:
+.PP
+.ft CM
+P->state &= ~(\s-1MOVED|RESHAPED\s+1);
+.ft R
+.PP
+For a process to test whether its window has been
+reshaped,
+it must check:
+.PP
+.ft CM
+( P->state&\s-1RESHAPED\s+1 && !(P->state&\s-1MOVED\s+1) )
+.ft R
+.PP
+To reset the \s-1RESHAPED\s+1 condition it is necessary to execute:
+.PP
+.ft CM
+P->state &= ~\s-1RESHAPED\s+1;
+.ft R
+.PP
+The reason for the interaction of the \s-1MOVED\s+1 and \s-1RESHAPED\s+1 bits
+is purely historical.
+.PP
+The \s-1NO_RESHAPE\s+1 bit should be set if the application program does 
+not want
+to be reshaped by the user through the global mouse operation. A message box 
+with the message "Fixed size window: Cannot be reshaped" will be
+displayed if the user attempts to reshape the window.
+Clearing the bit makes the window reshapable again.
+.SH SEE ALSO
+keyboard(3r).
+

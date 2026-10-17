@@ -1,0 +1,206 @@
+.TH MODULES 4 "Post 4.0" " "
+.SH NAME
+Modules, Config \- post directory software configuration
+.SH DESCRIPTION
+A modules argument describes a particular directory
+(database) or network address.
+The
+.B \-m
+option of
+.IR post (1)
+and
+.IR pq (1)
+and the arguments to
+.IR server (1M)
+must describe a directory,
+and the
+.I pq_open
+call of
+.IR pq (3C)
+can describe either a directory or a network address.
+The syntax for modules arguments is described below.
+The
+.I dirmod
+and
+.I netmod
+arguments below are modules arguments themselves;
+in this way various modules can be stacked in a pipeline fashion.
+The default modules argument is
+.BR "opt join" .
+.SS "Directory Modules"
+.TP 5
+.BR "tee " "file [dirmod...]"
+Attach to the directory specified by
+.I dirmod
+and save the session in
+.I file
+in
+.IR server (1M)
+format.
+.TP
+.BR "opt " [dirmod...]
+Attach to the directory specified by
+.I dirmod
+and pass directory queries in optimized form.
+.TP
+.BR "join " [file]
+Attach to one or more directories listed in
+.I file.
+Relative paths are prefixed with $POST.
+The default is
+.B lib/dispatch
+and the format is described in
+.IR dispatch (4).
+.TP
+.BR "virt " [dirmod...]
+Attach to the directory specified by
+.I dirmod
+and translate the virtual attributes
+.BR pn ,
+.BR name ,
+and
+.BR tel
+into their constituent attributes (see
+.IR post (1)).
+.TP
+\f3ev\f1 [\f3\-s\f1 sep] [\f3\-d\f1 data] [\f3\-p\f1 proto] [index]
+Attach to an
+.IR ev (4)
+directory:
+.I sep
+is the field separator (default vertical bar
+.RB ( | )),
+.I index
+is the directory containing the index files (default current directory),
+.I data
+contains the database records (default
+.IB index /Data\f1),
+and
+.I proto
+describes the fields in the data file (default
+.IB index /Proto\f1).
+Relative paths are prefixed with $POST.
+.TP
+.BR "call " [netmod...]
+Connect to the network address specified by
+.I netmod
+and use the
+.IR server (1M)
+protocol.
+.SS "Network Modules"
+.TP 5
+.BR "tap " "infile outfile [netmod...]"
+Connect to the network address specified by
+.I netmod
+and save the input from the network in
+.I infile
+and the output to the network in
+.I outfile.
+.TP
+.BR "sys " file
+Connect to
+.I file
+(typically a device)
+opened for reading and writing.
+.TP
+.BR "cmd " "program [args...]"
+Connect to the standard input and output of
+.I program
+run via
+.IR execvp (2).
+.TP
+.BR "dk " dialstring
+Connect to the
+.IR dk (1)
+(Datakit) destination
+.I dialstring
+(typically
+.IR area/exch/line.service ).
+.TP
+.BR "rx " "host service"
+Connect to the
+.IR rexec (1)
+destination
+.I host
+and request
+.IR service .
+.TP
+.BR "tcp " "host service"
+Connect via the
+.IR socket (3)
+interface to the TCP/IP
+.I host
+and request
+.IR service .
+.TP
+.BR "tcpti " "host service"
+Connect via the transport interface to the TCP/IP
+.I host
+and request
+.IR service .
+.TP
+.BR "ti " "netspec address [service]"
+Connect to
+.I address
+on the transport provider
+.I netspec
+and optionally request
+.IR service .
+.P
+.I Modules
+lists the directory and network modules and options
+for compiling the directory query system of
+.IR post (1).
+Each line consists of a module name followed by the
+.IR cc (1)
+options needed for compilation of that module.
+The object file
+.IB module .o
+is loaded implicitly, and the special module name
+.B +
+is used to set global compilation options.
+Blank lines and comments introduced by sharp
+.RB ( # )
+are ignored.
+.P
+.I Config
+reads the
+.I Modules
+file and creates various files necessary for compilation.
+The file
+.B config.lib
+contains the
+.IR cc (1)
+options needed to load with programs that use
+.IR pq (3C),
+and the file
+.B networks
+lists the network modules that were configured.
+Modules are not included if their header files or libraries are not found.
+.P
+If the environment variable
+.B POST
+is not set, it defaults to
+.B /usr/add-on/post
+if it exists, or the home directory of the
+.B post
+login.
+.SH FILES
+.PD 0
+.TP 30
+$POST/src/pq/Modules
+modules file
+.TP
+$POST/src/pq/Config
+configuration program
+.TP
+$POST/src/pq/config.lib
+libraries needed for compilation
+.TP
+$POST/lib/networks
+configured network modules
+.PD
+.SH SEE ALSO
+post(1),
+server(1M),
+pq(3C).

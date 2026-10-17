@@ -1,0 +1,30 @@
+#	SEQIMAGE
+#
+#	Image of result sequence
+#
+#	Ralph E. Griswold
+#
+#	Last modified 12/19/84
+#
+
+procedure Seqimage(a)
+   local seq, result, i, j
+   seq := ""
+   i := @a[2]
+   j := @a[3]
+   while result := image(@a[1]) do
+      if *a[1] > \i then {
+         if /j then {
+            seq ||:= ", ..."
+            break
+            }
+         else {
+            resid := [", " || result]
+            every put(resid,", " || image(|@a[1]))
+            if *resid > j then seq ||:= ", ..."
+            every seq ||:= resid[*resid -j + 1 to *resid]
+            }
+         }
+      else seq ||:= ", " || result
+   return "{" || seq[3:0] || "}" | "{}"
+end

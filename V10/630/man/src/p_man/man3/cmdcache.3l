@@ -1,0 +1,273 @@
+.TH CMDCACHE 3L
+.XE "cmdcache()"
+.SH NAME
+cmdcache, useritems \- cache a command in the Application cache
+
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.br
+#include <menu.h>
+.br
+#include <object.h>
+.PP
+.ft B
+Titem1 useritems;
+.PP
+.ft B
+int cmdcache (s, m, b, u, e)
+.br
+char \(**s;
+.br
+Tmenu \(**m;
+.br
+Bitmap \(**b;
+.br
+void (\(**u)( );
+.br
+void (\(**e)( );
+
+.SH DESCRIPTION
+The 
+.I cmdcache
+function allows the caching of an application as a command to expand the
+basic set of 
+global menu commands accessed from button 3, such as 
+\f3New\f1, \f3Reshape\f1, etc.. Although the basic set of commands mostly
+deals with window operations, a cached command can have other functionalities. The 
+criteria to decide if an application should be cached as a command or
+as an application is as follows:
+.IP ""
+The application runs without a window.
+.IP ""
+The application is compact and specialized, and its user
+interface must be done through the mouse.
+.IP ""
+The scope of the application is global to the whole terminal.
+.PP
+An example of a cached command is the terminal resident \fBExit\fR command.
+.PP
+The application format is just a vehicle to download the code of the command into
+the terminal; therefore, it should use a template 
+similar to the one used in the \fBEXAMPLE\fR
+section, which has \fImain()\fR that calls the \fIcmdcache\fR function 
+with the right parameters and exits immediately.
+.PP
+The 
+.I cmdcache
+function will use the null terminated ASCII string \fIs\fR as the
+\fItag\fR name (see \fIcache(3L)\fR for a definition of a \fItag\fR name), and
+also as the \fImenu\fR name of the command. The menu name will be displayed on
+the \fBMore\fR menu for user selection. Note that a command can only be
+accessed from the \fBMore\fR menu, and booting it through \fIdmdld\fR will not
+work.
+.PP
+The bitmap \fIb\fR, if not null, will be displayed as an icon on the left on
+the menu name of the command. It is recommended that cached commands have
+an icon to differentiate them from cached applications, since the \fBMore\fR
+menu lists all of them nondiscriminatively.
+.PP
+The cached command can have a submenu of its own if the argument \fIm\fR is
+defined. The submenu \fIm\fR has to be generated \fIdynamically\fR, and the
+menu generator must use the globally defined \fIuseritems\fR
+(see \fItmenuhit(3R)\fR for details of a dynamic menu generation). The 
+structure for \fIuseritems\fR is \fBTitem1\fR,
+which is used for all global commands and is defined as follows:
+.PP
+.RS 3
+.nf
+.ft CM
+typedef struct Titem1 {
+	char *text;
+	struct {
+		unsigned short uval;
+		unsigned short grey;
+	} ufield;
+	struct Tmenu *next;
+	Bitmap *icon;
+	void (*dfn)();
+} Titem1;
+.fi
+.RE
+The field
+\fInext\fR does not apply for items in a cached command's submenu (i.e.,
+the terminal does not support fourth-level global submenus). Since submenu
+off the item is not supported, the field \fIdfn\fR is also not relevant.
+All other fields can be updated by the command's menu generator. 
+.PP
+The argument function \fIu\fR is called by the terminal during the generation of the 
+dynamic \fBMore\fR menu. (The \fBMore\fR menu keeps changing because applications
+and commands can constantly cache in and decache out.) When the terminal
+processes a cached command, it copies the static information of the
+command into \fIuseritems\fR: the argument \fIs\fR goes into the item field
+\fItext\fR, the argument \fIb\fR into item field \fIicon\fR, the argument
+\fIm\fR into item field \fInext\fR. Then the terminal will call the function
+of type \fIvoid\fR
+pointed by \fIu\fR, if present, with two arguments: The first one is a
+pointer to the command object under consideration
+(this argument is reserved) , and the other is a pointer 
+to the item structure being initialized (i.e., \fIuseritems\fR). The function
+pointed by \fIu\fR may dynamically update the item's \fIufield.grey\fR, and
+also re-initialize any fields of the item structure (e.g., if the current
+conditions dictate that all items in the command's submenu are
+invalid, the command may decide not to have a submenu, so the function
+pointed by \fIu\fR may change the field \fInext\fR to null). 
+.IP \fBNote\fR
+The fields \fIufield.uval\fR and \fIdfn\fR are used by the terminal for
+housekeeping: they differentiate between selections of cached applications,
+cached commands in the \fBMore\fR menu and items in third-level submenus of 
+those applications and commands. Even though it is possible to modify them,
+it is \fIstrongly\fR not recommended unless the programmer understands
+the terminal's internals.
+.PP
+If the argument \fIu\fR is not specified, the \fIcmdcache\fR supplies a default
+function which initializes the \fIgrey\fR field of the item to null (no greying).
+.PP
+The argument function \fIe\fR of type \fIvoid\fR
+is called when the command or an item from
+its submenu \fIm\fR is selected. The function \fIe\fR accepts two arguments:
+The first one is -1 if the command does not have a submenu, or 
+the index of the selected item (i.e., \fIuseritems.ufield.uval\fR)
+if the command has a submenu.
+The second argument is the pointer to the cached command object, but it
+is reserved.
+The function \fIe\fR is executed in the context of the 
+terminal's control process like other
+global menu commands; therefore, some global
+variables 
+relating to the downloaded application template and window parameters
+such as \fIP\fR, \fIdisplay\fR, \fIDrect\fR, etc., do not have any meaning.
+.PP
+If the argument function \fIe\fR is not specified, no action is taken if the
+item is selected. Also if the command has a submenu, selecting the command
+menu name in the \fBMore\fR menu instead of an item in the command's submenu
+will result to a null operation.
+
+.SS Return Value
+If the command is successfully cached, the function \fIcmdcache\fR
+returns a 1. Otherwise, a 0 is returned.
+.PP
+A failure may be due to the following reasons. Another command or
+application
+of the same name is already in the cache, or the terminal
+runs out of memory when initiating the caching operation.
+
+.SH EXAMPLE
+The following application caches a command 
+which lets the user pick a window and displays the name of the
+application running in that window. The command supports
+two options: the \fBfull\fR option displays the full name, and
+the \fBclipped\fR option displays the full name clipped from
+any path name prefix. The uargv field of the selected process
+\f2p\f1 holds the \f2argv\f1 used by that process.
+.PP
+Note that if the chosen application is cached, the displayed
+clipped name is the \fItag\fR name it is cached under.
+.PP
+.RS 3
+.nf
+.ft CM
+.S -2
+#include <dmd.h>
+#include <menu.h>
+#include <object.h>
+
+struct Tmenu obmenu;
+Word qmarkdata[] = {
+	0x3C00,
+	0x7E00,
+	0xE700,
+	0xC300,
+	0x0300,
+	0x0700,
+	0x0E00,
+	0x1C00,
+	0x1800,
+	0x1800,
+	0x0000,
+	0x1800,
+	0x1800
+};
+Bitmap qmark = {
+	(Word *)qmarkdata,
+	1,
+	0, 0, 8, 13,
+	0
+};
+
+
+main ()
+{
+	Titem1 *genesis(); /* command's submenu generator */
+	void showname(); /* command's executing code */
+
+
+	obmenu.item = (Titem *)0;	/* dynamic submenu */
+	obmenu.generator = (Titem *(*)())genesis;
+	obmenu.menumap = TM_TEXT|TM_UFIELD|TM_NEXT|
+			 TM_ICON|TM_DFN;
+
+	cmdcache ("name", &obmenu, &qmark, 0l, showname);	
+}
+
+
+Titem1 *
+genesis (i, m)
+int i;
+Tmenu *m;
+{
+	register Titem1 *item = &useritems;
+	/* MUST use "useritems" */
+
+	switch (i) {
+		case 0:		/* first item */
+			item->text = "full";
+			break;
+		case 1:
+			item->text = "clipped";
+			break;
+		default:	/* last item */
+			item->text = (char *)0;
+			return (item);
+	}	
+
+	item->ufield.uval = i;
+
+	/* WARNING: "useritems" is a global variable
+	** used by all cached commands that have a
+	** submenu, so we cannot assume that fields
+	** that are not initialized by genesis() are
+	** cleared since other
+	** commands may initialize
+	** them when they are running.
+	**
+	** To be sure, just clear any unused fields.
+	*/
+	item->ufield.grey = 0;
+	item->icon = (Bitmap *)0;
+	return (item);	/* returns "useritems" */
+}
+
+
+void
+showname (val)
+int val;
+{
+	register Proc *p;
+	register char *s;
+	Proc *point2window();
+	char *clipprefix();
+
+	p = point2window (3);	/* pick a window */
+	s = p->uargv[0];		/* "full" name */
+	if (val)		
+		s = clipprefix(s);	/* "clipped" name */
+	msgbox (s, (char *)0);		/* display name */
+}
+.fi
+.RE
+.S +2
+
+.SH SEE ALSO
+ucache(1),
+cache(3L), decache(3L), tmenuhit(3R).

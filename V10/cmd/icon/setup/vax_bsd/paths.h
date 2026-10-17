@@ -1,0 +1,6 @@
+#define RootPath "/usr/icon/D/v6"
+#define IcontPath "/usr/icon/D/v6/bin/icont"
+#define LinkPath "/usr/icon/D/v6/bin/ilink"
+#define TranPath "/usr/icon/D/v6/bin/itran"
+#define IconxPath "/usr/icon/D/v6/bin/iconx"
+#define HeaderPath "/usr/icon/D/v6/bin/iconx.hdr"

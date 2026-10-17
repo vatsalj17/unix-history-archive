@@ -1,0 +1,67 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH JTEXTURE 3L "630 MTG"
+.XE "jtexture()"
+.SH NAME
+jtexture \- draw Texture in Rectangle on display
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B void jtexture (r, t, f)  
+.br
+.B Rectangle r; 
+.br
+.B Texture16 \(**t;
+.br
+.B Code f;
+.sp
+.B Texture16 T_grey, T_lightgrey, T_darkgrey;
+.sp
+.B Texture16 T_black, T_white, T_background, T_checks;
+.SH DESCRIPTION
+The
+.I jtexture
+function
+fills the Rectangle
+.I r
+in the display Bitmap
+with Texture16
+.I t
+using function Code
+.IR f .
+The Rectangle
+.I r
+is in window coordinates.  The Texture16s listed above are predefined.
+.SH EXAMPLE
+The following routine allows one to doodle with a Texture16.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+Point add();
+
+main()
+{
+    Rectangle r;
+    Point s;
+
+    s.x = 16;
+    s.y = 16;
+    request (\s-1MOUSE\s+1);
+    for (;;) {
+        wait(\s-1MOUSE\s+1)
+        r.origin = mouse.jxy;
+        r.corner = add (r.origin, s);
+        if ( button3() )
+          break;
+        if ( button1() )
+          jtexture (r, &T_grey, F_STORE);
+        if ( button2() )
+          jtexture (r, &T_grey, F_CLR);
+    }
+}
+.fi
+.ft R
+.SH SEE ALSO
+globals(3R), structures(3R), texture(3R), transform(3R/3L).

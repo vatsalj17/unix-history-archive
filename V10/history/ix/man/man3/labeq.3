@@ -1,0 +1,80 @@
+.TH LABEQ 3
+.SH NAME
+labeq, lable, labmax, labmin \- compare security labels
+.SH SYNOPSIS
+.B #include <sys/label.h>
+.PP
+.B labEQ(x, y)
+.br
+.B struct label *x, *y;
+.PP
+.B labLE(x, y)
+.br
+.B struct label *x, *y;
+.PP
+.B struct label labMAX(x, y)
+.br
+.B struct label *x, *y;
+.PP
+.B struct label labMIN(x, y)
+.br
+.B struct label *x, *y;
+.SH DESCRIPTION
+.I LabEQ
+returns 1 if 
+.I x
+and
+.I y
+point to equal labels, otherwise 0.
+The result is 1 if and only if neither argument is 0, the
+flag fields are the same, and, when the flag fields are
+.BR L_BITS ,
+the lattice values are the same.
+.PP
+.I LabLE
+returns 1 if the security label pointed to by 
+.I x
+compares less than or equal to the security label pointed to by
+.I y.
+An improper argument is treated as if it had flag
+.BR L_NO .
+If one of the labels has flag
+.BR L_YES ,
+the result is 1; otherwise if one of the labels has flag
+.BR L_NO ,
+the result is 0;
+otherwise the the result is 1
+if and only if the lattice value of
+.I x
+is bitwise less than or
+equal to the lattice value of 
+.I y.
+(Inequalities involving
+.BR L_YES
+and
+.BR L_NO
+are not transitive.)
+.PP
+.I LabMAX
+and
+.I labMIN
+respectively return the maximum (bitwise OR) and
+minimum (bitwise AND) of lattice values of labels
+pointed to by
+.I x
+and
+.I y.
+An improper argument is treated as if it had flag
+.BR L_NO .
+If one of the labels has flag
+.BR L_YES ,
+the result is the other label; otherwise
+if one of the labels has flag
+.BR L_NO ,
+the result has flag
+.BR L_NO .
+.PP
+The privilege and frozen-label
+fields of the labels are disregarded by all of these functions.
+.SH SEE ALSO
+.IR getflab (2)

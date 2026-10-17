@@ -1,0 +1,24 @@
+CFLAGS=	-O
+OBJ=	atalla.o atolab.o \
+	cbit.o \
+	fmount5.o fstab.o \
+	labEQ.o labLE.o labMAX.o labMIN.o labconst.o labmount.o labtoa.o \
+	labtrans.o \
+	notary.o \
+	mkunique.o \
+	pex.o pexpw.o \
+	seek.o syslog.o \
+	tell.o \
+	unsafe.o \
+	xs.o
+LABEL=fgetflab.o fsetflab.o getflab.o getplab.o getstsrc.o \
+	nochk.o setflab.o setplab.o
+
+install:V: $OBJ $LABEL
+	ar rv /lib/libc.a $OBJ
+	ar t /lib/libc.a label.o >/dev/null 2>&1 || ar ruv /lib/libc.a $LABEL
+	ranlib /lib/libc.a
+
+purge:V:
+	ar d /lib/libc.a $LABEL
+	ranlib /lib/libc.a

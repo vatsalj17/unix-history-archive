@@ -1,0 +1,56 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH JSTRING 3L "630 MTG"
+.XE "jstring()"
+.SH NAME
+jstring \- draw character string on display
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B Point jstring (s)
+.br
+.B char \(**s;
+.SH DESCRIPTION
+The
+.I jstring
+function
+draws, in the \s-1F_XOR\s+1 mode,
+the null-terminated string
+.I s
+in the display Bitmap using mediumfont
+so that the origin
+of the rectangle enclosing the first character is at the current
+window point.
+It returns the current window point, which is left after the last character
+of the string, so adjacent calls to 
+.I jstring
+can appear to concatenate their argument strings on the screen.
+.SH EXAMPLE
+The following program shows how \fIjstring\fR automatically updates
+.IR PtCurrent .
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+Point jstring();
+
+main()
+{
+    jmove (Pt(16,16));
+    jstring ("I");
+    jline (Pt(40,0), F_XOR);
+    jstring ("love");
+    jline (Pt(40,0), F_XOR);
+    jstring ("my");
+    jline (Pt(40,0), F_XOR);
+    jstring ("630MTG");
+
+    request (KBD);
+    wait (KBD);
+}
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+globals(3R), string(3R), structures(3R).

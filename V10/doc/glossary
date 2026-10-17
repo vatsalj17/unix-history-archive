@@ -1,0 +1,2127 @@
+.de H
+.LP
+.in 1n
+.ti 0
+.HI \\$1 \\$2 \\$3 \\$4 \\$5 \\$6
+..
+.de HI
+.B
+\\$1 \\$2 \\$3 \\$4 \\$5 \\$6
+.R
+..
+.de C
+.I
+.if \\n(.$=1 \\$1
+.if \\n(.$=2 \\$1 \\$2
+.if \\n(.$=3 \\$1 \\$2 \\$3
+.if \\n(.$=4 \\$1 \\$2 \\$3 \\$4
+.if \\n(.$=5 \\$1 \\$2 \\$3 \\$4 \\$5
+.if \\n(.$=6 \\$1 \\$2 \\$3 \\$4 \\$5 \\$6
+.R
+..
+.rs
+.SP .5i
+.TL
+GLOSSARY
+.SP 2
+.LP
+This glossary covers major terms that have special meaning for the
+UNIX system.
+It excludes ordinary terms of art such as
+`ASCII', `compiler', `address space', or `byte'.
+It also excludes most terms peculiar to a single part of UNIX, e.g.
+`diversion' (\fItroff\fR), `enumeration' (C),
+or `pattern space' (\fIsed\fR).
+.SP 1.3v
+.nr PS 9
+.nr VS 10
+.2C
+.H absolute pathname\ 
+same as
+.C full pathname.
+.nr PD 1u
+.H access time\ 
+the most recent
+.C time
+at which the contents of a 
+.C file
+[2] were read or
+.C executed
+[2]; cf.\&
+.C modification time.
+.H alarm\ 
+a
+.C signal
+scheduled by the clock.
+.H a.out\ 
+the default name of a freshly compiled
+.C object file,
+pronounced `A-dot-out';
+historically 
+.CW a.out
+signified assembler output.
+.H archive\ 
+1.\&
+a collection of data gathered from several
+.C files
+into one file.
+2.\&
+especially, such a collection gathered by
+.I ar (1)
+for use as a
+.C library.
+.H argument\ 
+1.\&
+a
+string made available to a
+.C process
+upon
+.C executing
+a
+.C file.
+2.\&
+a string in a
+.C command,
+which the
+.C shell
+[1] will pass to the command program
+as an argument [1].
+.H ASCII file\ 
+same as
+.C text file.
+.H automatic\ 
+persistent only during the invocation of a procedure, said of
+data belonging to a
+.C process;
+automatic data occupies the
+.C stack segment;
+cf.\&
+.C static.
+.H background\ 
+running independently of a
+terminal, said of a
+.C process;
+converse of
+.C foreground.
+.H basename\ 
+1.\&
+the last component of a
+.C pathname;
+the basename of
+.CW /bin/proc
+is
+.CW proc .
+2.\&
+occasionally a basename [1] with conventional
+suffixes removed; see
+.I basename (1).
+.H blit\ 
+vernacular name for a prototype
+Teletype 5620 terminal; cf.\&
+.C jerq.
+.H block\ 
+1. \&
+the basic unit of
+.C buffering
+[1]
+in a
+.C file system
+[3], 1024 or 4096 bytes in this system.
+2. \&
+a unit in which memory usage is reported, usually 1024 bytes,
+but 512 bytes in imported code such as
+.I cpio (1).
+.H block device\ 
+a
+.C device
+that may contain a
+.C file system
+[3],
+typically a permanent storage device such as a tape or
+disk drive; the unit of data transfer is one
+.C block;
+cf.\&
+.C character device.
+.H boot\ 
+to start the operating system, so called because the
+.C kernel
+must bootstrap itself from secondary store into an empty machine.
+No
+.C login
+[3]
+or
+.C process
+persists across a boot.
+.H boot block\ 
+the first block of a
+.C file system
+[1],
+which is reserved for a 
+.C booting 
+program.
+.H break\ 
+1.\&
+an out-of-band signal on an asynchronous data line arising from
+the `break' or `interrupt' key on a terminal;
+before
+.C logging in
+a break causes a change in baud rate;
+thereafter it is interpreted as an
+.C interrupt.
+2.\&
+a control statement in C or
+.I sh (1).
+3.\&
+the
+.C program break.
+4.\&
+in
+.I troff (1),
+a point in running text where a new line must begin.
+.H BSD\ 
+see
+.C UNIX.
+.H bss segment\ 
+see
+.C segment.
+.H buffer\ 
+1.\&
+a staging area for input-output where arbitrary-length
+transactions are collected into convenient units for system operations.
+2.\&
+to use buffers.
+.H buffer pool\ 
+a region of 
+.C kernel
+memory available for holding
+.C blocks;
+non-\c
+.C raw
+input-output for
+.C block devices
+and
+.C file systems
+[3]
+goes through the buffer pool to make
+read and write operations
+independent of device format.
+.H cbreak\ 
+a mode of terminal input in which every character not a
+.C special character
+becomes available to a
+.I read (2)
+operation as soon as it is typed, instead of being
+.C buffered
+up to a
+.C newline
+or
+.C EOT character.
+.H change time\ 
+the most recent
+.C time
+at which the contents of a
+.C file
+[2] or its
+.C inode
+properties (e.g.
+.C owner
+and
+.I mode )
+were altered;
+cf.\&
+.C modification time.
+.H character\ 
+1.\&
+a unit of store, usually 8 bits;
+a byte.
+2.\&
+a token of the
+ASCII
+code, with octal value in the range 0 to 0177.
+.H character device\ 
+a
+.C device,
+such as a terminal or the
+.C null device,
+that cannot contain a
+.C file system
+[3];
+cf.\&
+.C block device.
+.H child process\ 
+see
+.C fork.
+.H client\ 
+a
+.C process
+that uses a service by 
+.C opening 
+the interface to a
+.C server.
+.H close\ 
+to make an
+.C open file
+unavailable for input or output; converse of
+.C open.
+.H command\ 
+1.\&
+an instruction to the
+.C shell
+[1], usually to run a
+.C program
+[1] as a
+.C child process.
+2.\&
+by extension, any
+.C executable file,
+especially a
+.C utility program.
+.H command file\ 
+same as
+.C shell script.
+.H connection line discipline\ 
+a
+.C line discipline
+used on
+.C mounted streams
+whereby each 
+.C opening
+of the stream provides a new
+.C pipe
+to the stream's
+.C server; 
+see
+.I connld (4).
+.H connection service\ 
+a collection of
+.C mounted streams,
+conventionally in
+.C directory
+.CW /cs ,
+that encapsulate generic setup protocols to reach
+.C servers;
+see
+.I ipc (3).
+.H control character\ 
+an
+ASCII
+character with octal code 0-037 or 0177, which does not
+print but may otherwise affect the behavior of a terminal;
+cf.\&
+.C special character.
+.H control stream, control terminal\ 
+a
+.C stream
+[2] associated with a
+.C process
+from which the process may receive
+.C interrupt,
+.C quit,
+and
+.C hangup
+signals; cf.\&
+.C process group.
+The control stream is conventionally 
+.CW /dev/tty ,
+.C file descriptor
+3.\&
+.H cooked\ 
+not
+.C raw
+[1],
+said of an input
+.C stream 
+[2] in which 
+.C special characters
+are active.
+.H cookie\ 
+a peculiar goody, token, saying, or remembrance returned by or
+presented to a 
+.C program
+[3], cf.\&
+.C file descriptor,
+.C process number.
+.H core file\ 
+a
+.C core image
+of a terminated
+.C process
+saved for debugging; a core file is created under the name
+.CW core
+in the
+.C current directory
+of the process.
+.H core image\ 
+the data of a running or terminated
+.C process;
+the data may reside physically in main store, in the
+.C swap area,
+or in a
+.C core file,
+and logically in a
+.C process file.
+.H create\ 
+to
+.C open
+a file for writing, bringing it into existence as a
+.C plain file
+if necessary, and discarding any data it may have
+contained previously; cf.\&
+.C unlink.
+.H current directory, working directory\ 
+the directory from which
+.C relative pathnames
+begin; a current directory is associated with each
+.C process.
+.H daemon\ 
+a
+.C background
+process, often perpetual, that performs a system-wide public function, e.g.
+.I calendar (1)
+and
+.I cron (8);
+the affected spelling is an ancient legacy; cf.\&
+.C server.
+.H Datakit\ 
+AT&T trademark for
+a data network based on virtual circuit switching.
+.H data segment\ 
+see
+.C segment.
+.H date\ 
+same as
+.C time.
+.H device\ 
+1.\&
+a
+.C file
+[2]
+that is not a
+.C plain file
+or a
+.C directory,
+examples are tape drive, terminal, a span of 
+.C blocks
+on a disk drive, or the
+.C null device;
+a
+.C special file.
+2.\&
+a physical input-output unit.
+.H device number\ 
+a system-dependent code used in
+.C inodes
+to distinguish
+.C devices
+[1].
+A device number has two parts:
+.HI major device
+for the type of the device and
+.HI minor device
+for an individual device of a type.
+.H directory\ 
+a
+.C file
+[2] that comprises a catalog of
+.C filenames
+[2];
+the organizing principle of the
+.C file system
+[2],
+a directory
+consists of
+.C entries
+which specify further
+files [2], including directories,
+and constitutes a node of the
+.C directory tree.
+.H directory entry, entry\ 
+1.\&
+an association of a name with an
+.C inode number
+appearing as an element of a
+.C directory.
+2.\&
+the name part of such an association.
+.H directory hierarchy, directory tree, file hierarchy\ 
+the tree of all
+.C directories, 
+in which each is reachable from the
+.C root
+[2]
+via a
+.C path
+of
+.C subdirectories.
+.H driver\ 
+a set of
+.C kernel
+subroutines that handle input/output for a given
+.C major device
+type.
+.H echo\ 
+to transmit characters received from a terminal back to it;
+the technique of echoing to a
+.C full duplex
+terminal provides acknowledgement of typed input.
+.H effective userid\ 
+see
+.C set userid.
+.H end of file\ 
+the condition of the
+.C read pointer
+being past the last character of an
+.C open file.
+End of file is signified by a read operation
+returning zero bytes, or by an EOF return
+from functions of the
+.C stdio
+package; it may be simulated from a terminal by
+typing EOT (control-D) after a
+.C newline.
+.H entry\ 
+see
+.C directory entry.
+.H environment\ 
+1.\&
+a set of strings, distinct from the
+.C arguments,
+made available to a
+.C process
+when it
+.C executes
+[1] a
+.C file;
+the environment is usually inherited across
+.I exec (2)
+operations.
+2.\&
+a specific environment [1] maintained by the
+.C shell
+[1].
+3.\&
+a nebulously identified way of doing things, as in
+`interactive environment': deprecated usage, not always expunged
+from these manuals.
+.H EOF\ 
+1.\&
+same as
+.C end of file.
+2.\&
+a conventional value returned at end of file by
+.C stdio
+functions.
+.H EOT, EOT character\ 
+1.\&
+the
+ASCII
+`end of transmission' character, control-D, octal code 04.
+2.\&
+a character that ends (and is excluded from) data
+obtained by
+.I read (2)
+from a terminal; EOT at the beginning of a line causes the
+.C end of file
+condition.
+.H epoch\ 
+see
+.C time.
+.H erase character\ 
+a
+.C special character
+[2] which, when received from a terminal, is deleted
+together with the character immediately preceding it on the line;
+usually defaulted to
+.CW #
+or backspace, the erase character may be changed by
+.I stty (1);
+cf.\&
+.C kill character.
+.H escape character\ 
+1.\&
+The ASCII character ESC, octal 033.
+2.\&
+a
+.C special character
+that may cause the following character
+to have other than its usual meaning;
+the default escape character in terminal input is 
+.CW \e .
+.H executable file, object program\ 
+1.\&
+an
+.C  object file 
+that is ready to be copied into the
+address space
+of a
+.C process
+to run as the code of that process.
+2.\&
+a file that has
+execute
+.C permission,
+either an
+.C executable file
+[1] or a
+.C shell script.
+.H execute, exec\ 
+1.\&
+to replace the
+.C text segment
+and
+.C data segments
+of a
+.C process
+with a given
+.C program
+[1]; see
+.I exec (2).
+2.\&
+informally, to run a
+.C program.
+.H exit\ 
+to terminate a
+.C process;
+exit is voluntary, in contrast to
+.C kill.
+.H exit status, return code\ 
+an integer value denoting the outcome of a
+.C process,
+including an indication of the cause of termination.
+.H export\ 
+1.\&
+to include in the 
+.C environment
+[1] of a
+.C process
+when it is
+.C executed
+[1],
+said of a string.
+.H external\ 
+known beyond the scope of a single compilation,
+said of names of data and functions in a program.
+.H file\ 
+1.\&
+in general, a potential source of input or destination for output.
+2.\&
+most specifically, an
+.C inode
+and/or associated contents, i.e. a
+.C plain file,
+a
+.C special file,
+or a
+.C directory.
+3.\&
+a
+.C directory entry
+[1];
+several directory entries may name the same file [2].
+4.\&
+most loosely, a
+.C plain file.
+.H file descriptor\ 
+a conventional integer quantity, or
+.C cookie,
+that designates an
+.C open file;
+cf.\&
+.C stream
+[1].
+.H file descriptor file\ 
+a
+.C special file
+that serves as a name for an
+.C open file
+[1]; see
+.I fd (4).
+.H file hierarchy\ 
+same as
+.C directory hierarchy.
+.H filename\ 
+1.\&
+a
+.C pathname.
+2.\&
+same as
+.C basename.
+.H file pointer\ 
+the number of the next byte that would normally
+be read or written in a
+.C file
+[2]; also called
+.C read pointer,
+.C write pointer,
+or 
+.C seek pointer.
+.H file system\ 
+1.\&
+a detachable part of the
+.C directory hierarchy.
+2.\&
+the collection of all 
+.C files
+[2] accessible to a computer,
+organized into a
+directory hierarchy.
+3.\&
+in particular a
+.C block device
+in which
+.C files
+[2] are organized according to an
+.C i-list
+and accessed by
+.C paths
+through 
+.C directories.
+.H file system switch\ 
+a
+.C kernel
+table that directs the interpretation of
+operations in
+.C file systems
+[1] and 
+.C special file systems.
+.H file times\ 
+.C access time,
+.C change time,
+and
+.C modification time.
+.H filter\ 
+a
+.C program
+[1]
+that reads from the
+.C standard input
+and writes on the
+.C standard output,
+so called because it can be used as a data-transformer in a
+.C pipeline.
+.H flag\ 
+same as
+.C option.
+.H flush\ 
+to empty a
+.C buffer,
+for example to throw away unwanted input-output upon
+.C interrupt
+or to release output from the clutches of
+.C stdio.
+.H foreground\ 
+running under direct control of a terminal, said of a
+.C process;
+converse of
+.C background.
+.H fork\ 
+1.\&
+to split one
+.C process
+into two, the
+.HI parent process
+and
+.HI child process,
+with separate, but initially identical,
+.C text, data,
+and
+.C stack
+.C segments.
+2.\&
+informally, same as
+.C spawn.
+.H free list\ 
+in a
+.C file system
+[1],
+the list of
+.C blocks
+that are not occupied by data.
+.H full duplex\ 
+1.\&
+capable of carrying information simultaneously in both directions,
+said of a communication channel.
+2.\&
+transmitting what is typed while printing what is received,
+said of a terminal, or of terminal communication;
+cf.\&
+.C half duplex
+and
+.C echo.
+.H gid\ 
+see
+.C groupid.
+.H global\ 
+same as
+.C external.
+.H group\ 
+1.\&
+a set of
+.C permissions
+alternative to
+.C owner
+permissions for access to a
+.C file.
+2.\&
+a set of
+.C userids
+that may assume the privileges of a group [1].
+3.\&
+the
+.C groupid
+of a 
+.C file.
+.H group file\ 
+the file
+.CW /etc/group ,
+which tells which
+.C groupids
+are available to each
+.C login name.
+.H groupid, gid\ 
+an integer value associated with
+.C processes
+and
+.C files
+[2] used in determining
+.C permissions.
+.H half duplex\ 
+1.\&
+capable of carrying information in both directions, but not simultaneously,
+said of a communication channel.
+2.\&
+transmitting (usually typing what is transmitted) and receiving,
+but not simultaneously, said of a terminal; cf.\&
+.C full duplex.
+.H hang\ 
+1.\&
+to 
+.C execute
+a
+.C program
+[1] so that it stops immediately, usually for debugging; cf.\&
+.I hang (1).
+2.\&
+to wait for something that won't happen; said of a process.
+.H hangup\ 
+a
+.C signal
+indicating that a user's terminal
+has been disconnected.
+.H hard link\ 
+1.\&
+a 
+.C directory entry
+[1] that does not designate a
+.C symbolic link.
+2.\&
+a
+.C link
+[2] that is not a
+.C symbolic link.
+.H header file\ 
+same as
+.C include file;
+the name of a header file customarily ends with 
+.CW \&.h
+(dot-h).
+.H here file\ 
+in a
+.C shell script,
+literally given input data for a
+.C command;
+here files are introduced by 
+.CW << .
+.H hole\ 
+a gap in a 
+.C plain file
+caused by
+.C seeking
+while writing; 
+.I read (2)
+takes data in holes to be zero;
+a
+.C block 
+in a hole occupies no space in its
+.C file system
+[1].
+.H home directory\ 
+1.\&
+the
+.C current directory
+established for each user upon
+.C logging in.
+2.\&
+the variable 
+.CW HOME
+in the
+.C environment
+[2], used in particular as the default destination for the 
+.C shell
+[1]
+.CW cd
+command.
+.H host process\ 
+a
+.C process
+working in collaboration with a
+.C terminal process.
+.H HZ\ 
+alternating-current line frequency,
+60 in North America, 50 in most other places.
+.H i-list\ 
+the index to a
+.C file system
+[1]
+listing all the
+.C inodes
+of the file system; cf.\&
+.C inode number.
+.H image\ 
+same as
+.C core image.
+.H include file, header file\ 
+a
+.C file
+[4],
+usually containing shared data declarations,
+that is to be copied into source programs as they are compiled.
+.H inode\ 
+an element of a
+.C file system
+[1];
+an inode specifies all properties of a particular
+.C file
+[2] and locates the file's contents, if any.
+.H inode number, i-number\ 
+the position of an
+.C inode
+in the
+.C i-list
+of a
+.C file system
+[1].
+.H Internet\ 
+an informal association of data networks using
+protocols developed mainly under the auspices of
+DARPA.
+.H interrupt\ 
+1.\&
+a
+.C signal
+that normally terminates a
+.C process,
+caused by a
+.C break
+[1]
+or an
+.C interrupt character;
+cf.\&
+.C quit.
+2.\&
+loosely, any
+.C signal.
+.H interrupt character\ 
+a character (normally
+ASCII
+DEL) that, when typed on a
+.C control terminal,
+causes an
+.C interrupt.
+.H io control, ioctl\ 
+1.\&
+a
+.C system call
+that changes the behavior of an
+.C open file,
+for example in interpreting
+.C  control characters.
+2.\&
+a function performed by 
+.I ioctl (2).
+.H jerq\ 
+vernacular name for a Teletype 5620 terminal.
+.H K\ 
+1024; 1024 bytes: a `4K file system' has 4096-byte
+.C blocks.
+.H kernel\ 
+the UNIX system proper;
+resident code that implements the
+.C system calls.
+.H kernel space, kernel address space\ 
+data and code that are addressable only by the
+.C kernel.
+.H kill\ 
+1.\&
+a particular
+.C signal
+guaranteed to terminate a
+.C process.
+2.\&
+by extension, to send any
+.C signal
+to a
+.C process.
+3.\&
+the
+.C kill character.
+.H kill character\ 
+a
+.C special character,
+which, when received from a terminal, is deleted together with
+all preceding characters on the line;
+defaulted to
+.CW @ ,
+the kill character may be changed by
+.I stty (1);
+cf.\&
+.C erase character.
+.H layer\ 
+a virtual terminal appearing on a screen and also capable
+of running
+.C terminal processes.
+The
+.C processes
+associated with each layer constitute
+a separate
+.C process group.
+.H library\ 
+an
+.C archive
+[2] of
+.C object files
+from which the
+.C link editor
+may select functions and data as needed.
+.H line\ 
+in a
+.C text file,
+a sequence of bytes terminated by a
+.C newline.
+.H line discipline\ 
+a module to handle protocol or data
+conversion for a
+.C stream
+[2].
+A line discipline, unlike a
+.C filter,
+is part of the 
+.C kernel.
+.H link\ 
+1.\&
+to add
+an entry for an existing
+.C file
+[2] to a directory;
+converse of
+.C unlink.
+2.\&
+particularly, any but one putatively primary directory entry for
+a given
+.C inode,
+either linked [1] or a
+.C symbolic link.
+.H link count\ 
+the number of
+.C directory entries
+[1] that pertain to an
+.C inode;
+a
+.C file
+[2] ceases to exist
+when its link count becomes zero
+and it is not 
+.C open.
+.H link editor, loader\ 
+the utility
+.I ld (1),
+which combines separately compiled
+.C object files
+into a single
+object file.
+.H listen\ 
+to issue a read on a
+.C stream,
+waiting for data, usually a service request, from some other
+.C process
+or
+.C remote
+source.
+.H loader\ 
+same as
+.C link editor.
+.H log in\ 
+to identify one's self as a user and start a computing session.
+.H login\ 
+1.\&
+the 
+.C program
+that controls logging in.
+2.\&
+the act of
+.C logging in.
+3.\&
+by extension, the computing session that follows a login
+[2].
+.H login name\ 
+the name by which a person is identified when
+.C logging in;
+cf.\&
+.C userid.
+.H magic number\ 
+a
+.C cookie
+that distinguishes various flavors of
+.C object file;
+see
+.I a.out (5).
+.H major device\ 
+see
+.C device number.
+.H makefile, mkfile\ 
+a list of dependencies among files and recipes for updating 
+them, usually by recompilation,
+used by
+.I make (1)
+or
+.I mk (1)
+to maintain self-consistent software;
+`mkfile' rhymes with `book file'.
+.H manager\ 
+same as
+.C server.
+.H memory image\ 
+same as
+.C core image.
+.H message line discipline\ 
+a
+.C line discipline
+used on
+.C pipes
+wherein a record of each
+.C system call
+on one end of the pipe is received as a message
+at the other end; see
+.I mesgld (4).
+.H minor device\ 
+see
+.C device number.
+.H mode, file mode\ 
+the
+.C permissions
+of a
+.C file;
+colloquially referred to by a 3-digit octal number, e.g. `a 755 file';
+see
+.I chmod (1).
+.H modification time\ 
+the most recent
+.C time
+at which the contents of a
+.C file
+[2] were altered;
+cf.\&
+.C access time,
+.C change time.
+.H mount\ 
+to associate with a
+.C directory entry
+[2] a 
+.C stream
+[2] or the
+.C root
+[1]
+of a
+.C file system
+[1],
+making respectively a virtual file
+or an extended
+.C file system
+[2].
+Mounting assigns to the
+.C inode
+of a directory entry a temporary meaning,
+which ceases with the associated
+.C server
+[1],
+with explicit unmounting,
+or with
+.C booting.
+.H mounted stream\ 
+a 
+.C directory entry
+[2] on which an open
+.C stream
+[2]
+has been
+.C mounted.
+.H named pipe\ 
+same as
+.C mounted stream.
+.H namelist\ 
+same as
+.C symbol table.
+.H network file system\ 
+a mechanism for cross-\c
+.C mounting
+the
+.C file systems
+[2] of different computers; see
+.I netfs (8).
+.H newline\ 
+the combined function of carriage return and line feed,
+represented by the
+ASCII
+character LF, octal value 012;
+separates
+.C lines
+in a
+.C text file;
+newline is evoked by the `return' key on most terminals.
+.H nice\ 
+to place a 
+.C process
+in
+.C nice mode
+[2].
+.H nice mode\ 
+1.\&
+the scheduling priority of a
+.C process;
+see
+.I nice (2).
+2.\&
+in particular, a low priority.
+.H null device\ 
+a
+.C device 
+[1] that always yields
+.C end of file
+on reading and discards all data on writing.
+.H null pointer\ 
+in C, a pointer object with value 0.
+.H object file\ 
+a
+.C file
+[2] that contains machine language code and data;
+object files are produced from source programs by compilers
+and from other object files and
+.C libraries
+by the
+.C link editor;
+an object file that is ready to run is an
+.C executable file
+[1].
+.H open\ 
+to make a
+.C file
+[2] available for writing or reading, with the
+.C file pointer
+positioned at byte 0;
+converse of
+.C close;
+cf.\&
+.C create.
+.H open file\ 
+1.\&
+the destination for input or output obtained by
+.C opening
+a
+.C file
+[2] or creating a
+.C pipe;
+a
+.C file descriptor;
+open files are shared across
+.C forks
+and persist across
+.C executes 
+[2].
+2.\&
+loosely, a 
+.C file
+[2]
+that has been opened.
+.H option\ 
+an
+.C argument
+that affects the way a
+.C command
+works; option names customarily begin with 
+.CW - .
+.H ordinary file\ 
+same as
+.C plain file.
+.H other\ 
+1.\&
+the category of
+.C permissions
+regulating access to a 
+.C file
+[2] by processes with
+.C userid
+different from the
+.C owner
+and
+.C groupid
+different from the
+.C group
+of the file.
+2.\&
+the customary name of the default 
+.C group
+[2] assigned upon 
+.C login
+[2].
+.H owner\ 
+a
+.C userid
+associated with a 
+.C file
+[2], usually
+that of the
+.C process
+that created it;
+the owner has distinctive
+.C permissions
+for a file.
+.H page\ 
+a hardware-dependent unit of virtual memory management,
+defined in
+.CW /usr/include/sys/types.h ;
+cf.\&
+.C block.
+.H parent directory\ 
+the
+.C directory
+next nearer the
+.C  root 
+than a given directory;
+the inverse of a
+.C subdirectory.
+A
+.C directory entry
+[2]
+.CW ..
+always refers to the parent directory.
+.H parent process\ 
+see
+.C fork.
+.H password\ 
+a secret word used to confirm a user's right to
+.C log in
+under a particular
+.C userid;
+passwords are encrypted by a one-way algorithm and kept in the
+.C password file.
+.H password file\ 
+a record of all
+.C login names
+with the
+.C password,
+.C userid,
+.C groupid,
+.C home directory,
+and
+.C shell
+[2] for each, used to control access to the system.
+.H path, pathname\ 
+a chain of names designating a
+.C file;
+a
+.HI relative pathname
+leads from the
+.C current directory,
+for example, a path to
+.C directory
+.CW A ,
+thence to directory 
+.CW B ,
+thence to 
+.C file
+[2]
+.CW C
+is denoted 
+.CW A/B/C ;
+a
+.HI full pathname
+begins at the
+.C root
+[2],
+indicated by an initial 
+.CW / ,
+as in
+.CW /A/B/C .
+.H permission\ 
+a right to access a
+.C file
+[2] in a particular way: read, write, execute (or look up in, if a directory);
+permissions are granted separately to
+.C owner,
+.C group,
+and
+.C others.
+.HI permission bit\ 
+a permission, so called because each permission is encoded into
+one bit in an
+.C inode.
+.H pid\ 
+see
+.C process id.
+.H pipe\ 
+a nameless
+.C stream
+[2] connection between
+.C processes,
+whereby data written on an
+.C open file
+in one process may be read in another; cf.\&
+.C named pipe.
+.H pipeline\ 
+a sequence of
+.C programs
+[1]
+connected by
+.C pipes.
+.H plain file, ordinary file\ 
+a
+.C file
+[2] that is neither a
+.C special file
+nor a
+.C directory;
+plain files are the customary repository of data.
+.H priority\ 
+see
+.C nice mode
+[1].
+.H process\ 
+a connected sequence of computation;
+a process is characterized by a
+.C core image
+with instruction location counter,
+.C current directory,
+a set of
+.C open files,
+.C control stream,
+.C userid,
+and
+.C groupid.
+.H process directory\ 
+a
+.C special file system,
+.CW /proc ,
+in which all
+.C process files
+appear.
+.H process file\ 
+a
+.C core image
+of a
+.C process,
+accessible as a
+.C file
+[3].
+.H process group\ 
+a set of processes that share a
+.C control stream
+and among which
+.C signals
+may be broadcast;
+process groups are created upon
+.C logging in,
+creating a window, or
+issuing certain
+.C io controls;
+see
+.I stream (4).
+.H process number, process id, pid\ 
+an integer that identifies a
+.C process.
+.H profile\ 
+1.\&
+an optional
+.C shell script,
+.CW \&.profile ,
+used by the
+.C shell
+[1] upon
+.C logging in
+to establish the
+.C environment
+[3]
+and other working conditions customary to a particular user.
+2.\&
+to collect a histogram of values of the instruction location counter of a
+.C process;
+see
+.I monitor (3).
+.H program\ 
+1.\&
+an
+.C executable file.
+2.\&
+a
+.C process.
+3.\&
+all the usual meanings.
+.H program break\ 
+the first address beyond the
+.C static
+data accessible to a
+.C process;
+the program break may be
+adjusted by
+.I brk (2).
+.H quit\ 
+a
+.C signal
+that normally terminates a
+.C process,
+caused by a
+.HI quit character
+(normally control-\e);
+quit differs from
+.C interrupt
+in that quit creates a
+.C core file
+for the terminated process.
+.H random library\ 
+a
+.C library
+that contains an index to 
+.C external
+names;
+a library is made into a random library by
+.C ranlib
+see
+.I ar (1).
+Nonrandom libraries must be carefully ordered for the
+.C link editor
+to cope with cross references among the subroutines.
+.H raw\ 
+1.\&
+a mode of terminal input in which every character typed is passed
+to a reading
+.C process
+and
+.C special characters
+lose their special character;
+converse of
+.C cooked.
+2.\&
+said of input-output to a
+.C raw device.
+.H raw device\ 
+a
+.C device
+[1],
+read and write operations to which are not 
+.C buffered,
+and are synchronized to natural records of the physical device.
+A raw device is usually a
+.C character device
+that addresses the same physical device as some
+.C block device.
+.H read ahead\ 
+to fill input
+.C buffers
+in the
+.C kernel
+in advance of
+.I read (2)
+operations.
+.H read pointer\ 
+same as
+.C file pointer.
+.H real userid\ 
+see
+.C set userid.
+.H reboot\ 
+same as
+.C boot.
+.H regular expression\ 
+1.\&
+an expression denoting a set of strings in a notation due to Kleene.
+2.\&
+especially,
+a restricted and modified form of regular expression used for pattern-matching in 
+.I ed (1)
+and elsewhere.
+.H relative pathname\ 
+see
+.C pathname.
+.H relocation bits, relocation information\ 
+information in an
+.C object file
+that tells the
+.C link editor
+how to adjust addresses when combining it with other
+.C object files;
+`bits' is a fossilized misnomer.
+.H return code\ 
+same as
+.C exit status.
+.H root\ 
+1.\&
+a distinguished directory that constitutes the origin of the
+.C directory hierarchy
+in a 
+.C file system
+[1].
+2.\&
+specifically, the origin for the 
+.C file system
+[2], with the conventional
+.C pathname
+.CW / .
+3.\&
+the conventional
+.C login name
+for the
+.C super-user.
+.H schedule\ 
+to assign resources \- main store and CPU time \- to
+.C processes.
+.HI scheduler\ 
+a permanent
+.C process,
+with
+.C process number
+1, and associated
+.C kernel
+facilities that do scheduling.
+.H search path\ 
+a list of
+.C pathnames
+of
+.C directories
+that determines the meaning of a
+.C command
+[2] name.
+In one form of
+.C exec,
+a
+.C relative pathname
+is prefixed with members of
+the search path in turn until
+a pathname of an
+.C executable file
+[2] results.
+.H seek\ 
+to set the
+.C file pointer
+to a specified place in an
+.C open file.
+.H seek pointer\ 
+same as
+.C file pointer.
+.H segment\ 
+a contiguous range of the
+address space
+of a
+.C process
+with consistent store access capabilities; the four segments are
+(i) the
+.HI text segment,
+occupied by executable code,
+(ii) the
+.HI data segment,
+occupied by
+.C static
+data that is
+explicitly initialized,
+(iii) the
+.HI bss segment,
+occupied by static data that is
+implicitly initialized to zero values
+(the name comes from a 1950's assembler), and
+(iv) the
+.HI stack segment,
+occupied by
+.C automatic
+data, see
+.C stack;
+sometimes (ii), (iii), and (iv) are collectively called data segments.
+.H server\ 
+1.\&
+a 
+.C process,
+usually permanent, that serves
+.C clients
+through a
+.C mounted
+interface, either a
+.C stream
+or a
+.C special file system.
+2.\&
+a program, often a server
+[1],
+accessed via a distinctive
+network address to provide some
+remote computing service.
+.H set userid\ 
+a special
+.C permission
+for an
+.C executable file
+[1] that causes a
+.C process
+executing it
+to have the access rights of the
+.C owner
+of the file;
+the owner's
+.C userid
+becomes the
+.HI effective userid
+of the process, distinguished from the
+.HI real userid
+under which the process began.
+.HI set userid bit\ 
+the associated
+.C permission bit.
+.H shared text\ 
+a
+.C text segment,
+one copy of which may be used simultaneously by more than one
+.C process.
+.H shell\ 
+1.\&
+the program
+.I sh (1),
+which causes other programs
+to be executed on
+.C command
+[2];
+the shell is usually started on a user's behalf upon
+.C logging in.
+2.\&
+by analogy, any program started upon logging in.
+.H shell script, command file\ 
+a
+.C file
+[2] of
+.C commands
+taken as input to the
+.C shell
+[1].
+.H signal\ 
+an exceptional occurrence that causes a
+.C process
+to terminate or divert from the normal flow of control; cf.\&
+.C interrupt,
+.C kill.
+.H sleep\ 
+to cease activity for a specified time, or until a
+.C signal
+occurs, said of a
+.C process.
+.H soft link\ 
+same as
+.C symbolic link.
+.H spawn\ 
+to cause a
+.C program
+to be run in a 
+.C child process;
+cf.\&
+.C fork, execute.
+.H special character\ 
+a character, which, when typed
+at a terminal, modifies the input or affects the behavior of
+.C processes
+for which that terminal is the
+.C control terminal;
+examples are the
+.C interrupt character,
+.C erase character,
+and
+.C EOT character.
+.H special file\ 
+an
+.C inode
+that designates a
+.C device,
+further categorized as either
+(i) a
+.HI block special file
+describing a
+.C block device,
+or (ii) a
+.HI character special file
+describing a
+.C character device.
+.H special file system\ 
+1.\&
+a virtual
+.C directory,
+in which
+.C `entries'
+are constructed as needed.
+Examples are
+.CW /n , 
+the
+.C network file system,
+and
+.CW /proc ,
+the
+.C process directory.
+.H spool\ 
+to collect and serialize output from multiple
+.C processes
+competing
+for a single output service.
+.HI spooler\ 
+a
+.C daemon
+that spools.
+.HI spool area\ 
+a
+.C directory
+in which a
+spooler collects work.
+.H stack, stack segment\ 
+a
+.C segment
+of the address space into which
+.C automatic
+data and subroutine linkage information is allocated in
+last-in-first-out fashion;
+the stack occupies the largest data addresses and grows downward
+towards
+.C static
+data.
+.H standard input, standard output, standard error\ 
+.C open files,
+customarily available when a
+.C process
+begins, with
+.C file descriptors
+0, 1, 2 and
+.C stdio
+names
+.CW stdin ,
+.CW stdout ,
+.CW stderr .
+Where possible, utilities by default read from the
+standard input, write on the standard output, and place
+error comments on the standard error file.
+.H standard input-output\ 
+see
+.C stdio.
+.H start/stop protocol, XON-XOFF protocol\ 
+a communication flow-control method in which a received
+.C special character,
+the
+.HI stop character,
+causes output to be suspended, and a received
+.HI start character
+causes output to be resumed.
+The default start and stop characters are ASCII DC1 (octal 022, control-Q)
+and DC3 (octal 024, control S) respectively.
+.H static\ 
+persistent throughout a process,
+said of data;
+static data occupies the
+.C data segment
+and the
+.C bss segment;
+cf.\&
+.C automatic.
+.H status\ 
+see
+.C exit status.
+.H stdio, standard input-output\ 
+a collection of functions for formatted and character-by-character
+input-output at a higher level than the basic
+.I read (2),
+.I write,
+and
+.I open (2)
+operations.
+.H stream\ 
+1.\&
+an
+.C open file
+with
+.C buffering
+superimposed by the
+.C stdio
+package.
+2.\&
+a bidirectional input-output connection between a
+.C process
+and a
+.C character device
+or another process.
+.H strip\ 
+remove the
+.C symbol table
+and
+.C relocation bits
+from an
+.C executable file
+[1].
+.H subdirectory\ 
+a
+.C directory
+that appears as an
+.C entry
+[1] in another.
+.H subshell\ 
+another copy of the
+.C shell
+[1], with its own
+.C environment
+and 
+.C open files,
+run as a 
+.C child process
+of the shell;
+.C shell scripts
+and commands subject to 
+.CW for
+and
+.CW while
+or
+enclosed in parentheses 
+.CW ()
+are normally run by subshells.
+.H super-block\ 
+the second
+.C block
+in a
+.C file system
+[1],
+which describes the allocation of space in the file system; cf.\&
+.C boot block.
+.H super-user\ 
+.C userid
+0, which can access any
+.C file
+[2] regardless of
+.C permissions
+and can perform privileged
+.C system calls,
+e.g. to set the clock.
+.H swap\ 
+to move the
+.C core image
+of an executing program between main and secondary store to
+make room for other
+.C processes.
+.H swap area\ 
+the part of secondary store to which
+.C core images
+are
+.C swapped;
+the swap area is disjoint from 
+.C file systems
+[1].
+.H symbolic link\ 
+an
+.C inode
+that contains the
+.C pathname
+of another.
+References to the symbolic link become references to
+the named inode.
+.H symbol table\ 
+information in an
+.C object file
+about the names
+of data and functions in that file;
+the symbol table and
+.C relocation bits
+are used by the
+.C link editor
+and by debuggers.
+.H system call\ 
+a basic operation performed by the
+.C kernel;
+see
+.I intro (2).
+.H system time\ 
+the accumulated time spent by a
+.C process
+in
+.C kernel
+code; cf.\&
+.C user time.
+.H tandem\ 
+a mode of the
+.C terminal line discipline
+in which the computer uses
+.C start/stop protocol
+to regulate data flow from another terminal or other computer.
+.H terminal line discipline, teletype line discipline\ 
+a
+.C line discipline
+that implements input-output features such as
+.C erase character
+and
+.C raw mode;
+see
+.I ttyld (4).
+.H terminal process\ 
+a program downloaded into a 
+.C layer,
+often in collaboration with a
+.C host process.
+Running in a different environment, a
+terminal process is not a UNIX
+.C process.
+.H text\ 
+see
+.C text file,
+.C segment.
+.H text file, ASCII file\ 
+a
+.C file,
+the bytes of which are understood to be in
+ASCII
+code.
+.H text segment\ 
+see
+.C segment.
+.H time\ 
+the number of seconds since the
+.HI epoch\fR,
+00:00:00 Greenwich Mean Time, January 1, 1970.
+.H u-area\ 
+a collection of data about, but not in the address space of, a
+.C process;
+the u-area is kept with the
+.C core image
+of the process.
+.H uid\ 
+see
+.C userid.
+.H umask\ 
+a list of
+.C permissions
+that will be denied for files
+.C created
+by a
+.C process,
+so called because the list is expressed as a
+.C mode
+bit mask.
+.H UNIX\ 
+the name of a family of systems software,
+not an acronym for anything;
+a registered trademark of AT&T, the word should be used
+as an adjective, e.g. `UNIX system' or `UNIX software'.
+Major genera are the
+research versions issued as numbered `editions', the
+Berkeley software distributions (BSD), and the commercial
+System V.
+.H unlink\ 
+to remove an
+.C entry
+[1] from a
+.C directory;
+converse to
+.C link
+and
+.C create.
+.H upas\ 
+1.\&
+a fabulous Javanese tree that poisoned everything
+for miles around.
+2.\&
+a routing and delivery system for electronic mail.
+.H URP\ 
+universal receiver protocol used by
+.C Datakit.
+.H usenet\ 
+an informal, nationwide computer network based on
+.I uucp (1),
+over which
+`netnews'
+is distributed; see
+.I readnews (7).
+.H user code\ 
+code that runs in a 
+.C process,
+as distinct from
+.C kernel
+code.
+.H userid, uid\ 
+an integer value, usually associated with a
+.C login name;
+the userid of a
+.C process
+becomes the
+.C owner
+of files
+.C created
+by the process; it is inherited
+across
+.C fork.
+.H user space, user address space\ 
+the address space of a 
+.C process, 
+as distinct from
+.C kernel space.
+The address spaces of different processes are
+mutually disjoint.
+.H user time\ 
+the accumulated time spent by a
+.C process
+in
+.C user code;
+cf.\&
+.C system time.
+.H utility, utility program\ 
+a standard, generally useful, permanently available
+.C program;
+utilities normally inhabit directories
+.CW /bin
+and
+.CW /usr/bin .
+.H wait\ 
+to suspend running until the termination of another
+.C process;
+only a
+.C parent process
+can wait for one of its
+.C child processes.
+.H window\ 
+1.\&
+same as
+.C layer.
+2.\&
+a sublayer in
+.C terminal processes
+such as
+.I pi (9)
+or
+.I sam (9).
+.H working directory\ 
+same as
+.C current directory.
+.H write behind\ 
+to 
+.C buffer
+data for writing to a
+.C device
+[2] at a convenient time without holding up the computation
+of a writing 
+.C process.
+.H write pointer\ 
+same as
+.C file pointer.
+.H XON-XOFF protocol\ 
+same as
+.C start/stop protocol.
+.H zombie\ 
+a terminated
+.C process
+with a running 
+.C parent process
+that has not 
+.C waited
+for it.

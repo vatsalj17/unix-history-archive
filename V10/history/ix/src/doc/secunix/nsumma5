@@ -1,0 +1,152 @@
+.NH 1
+CONCLUSIONS
+.XL yw
+.PP
+Although IX has run for several years as a full-featured
+.UX
+system, it has not stood the test of abuse outside
+the laboratory.
+Nevertheless it did enjoy an early success stopping a virus.
+Infected code was received over an unclassified data connection,
+and from it the virus propagated among user
+programs, including some run by the superuser.
+It could not, however, propagate into trusted code; and it revealed
+itself by attempting to do so.
+Thus the system worked exactly as intended.
+The same virus infested other
+.UX
+systems on the local network without being
+detected.|reference(duff)
+.PP
+Dynamic labels are an attractive model for
+mandatory security.
+They serve well for
+preventing unauthorized access and accidental
+disclosure, though not for interdicting covert channels.
+They are well matched to multilevel applications,
+such as multilevel windowed terminals.
+The uniformity of the model, with checking at every
+transaction, fosters a coherent implementation that
+works the same way across the spectrum of devices and system
+features.
+As a result, much of the work of label checking
+is expressible in tables (\*(y7).
+.PP
+Label policies on the IX model should be useful
+in settings where several users work on several
+projects, with varying patterns of sharing.
+For example, in educational institutions, secrecy labels
+could enforce separation among drafts of examinations,
+grade books, and students.  In medical labs, secrecy labels
+could isolate personal information about experimental
+subjects.  Integrity labels could help distinguish maintenance
+access from everyday use, even when users and maintainers
+are the same people.  IX labels should be adequate
+in many classified settings with need-to-know
+rules or concerns about inadvertent admixture
+of data; the potential for covert channels may be
+the least of one's worries about spying.|reference(woodward)
+.PP
+A potential problem with dynamic labels is label creep.
+High data mistakenly written into a low file contaminates
+that file irrevocably.  (Bell-LaPadula systems have a 
+complementary problem: you can't write
+high data into a low file even when you want to.)
+The most dramatic problem is that of tar-baby files (\*(y6).
+We believe, however, that label creep is 
+a manageable problem.
+The alternative is overclassification, especially
+of compartmented data.|reference(woodward)
+For example, 
+an intelligence analyst looking at data from various sources in a
+Bell-LaPadula system will naturally choose a label at the
+upper bound of all the data.  Outputs then will appear to
+belong to all compartments rather than just the compartments
+of the contributing inputs.
+This ought to be avoidable at a multilevel IX terminal.
+Unfortunately, however, we implemented each
+.I mux
+window as a virtual terminal bearing a single label just as
+an ordinary device file does.
+Thus the label of the keyboard is tied to the label of
+the highest output that the window can receive, and
+the host processes will be forced high regardless of
+what data is being examined.
+A plausible, and not too difficult, extension of
+.I mux
+would be to provide finer-grained control somewhat
+in the spirit of
+a `compartmented mode
+workstation' from IBM.|reference(CMW) 
+In that system, which has dynamic labels and per-file
+ceilings, input labels are divorced from output labels and
+in some cases labels are kept to the granularity of a byte.
+.PP
+The mechanisms for stream security
+and structured privilege are largely concerned with
+assuring integrity, by establishing mutual confidence among
+actors and by guiding behavior in authorized patterns.
+These notions are important for safe and sound operations in
+general, whether or not security labeling is in force.
+Private paths are broadly applicable.
+Any
+.UX
+system could benefit from them.
+Pexing is important for client/server applications
+and for multiplexed use of channels.
+Stream identifiers, or some equivalent way to
+attach characterizing information to channels,
+help considerably in safe use of heterogeneous networks.
+.PP
+The privilege server, though somewhat complicated, should be
+useful in classical
+.UX 
+or almost any system with security features.
+In particular, it could be used to realize
+security models, such as Clark-Wilson, which
+have been recommended for commercial
+applications.|reference(clark wilson)
+These models are more concerned with who can do what
+than with who can see what.
+The privilege server's authorization tree
+makes clear where rights originate and how they
+may be propagated.
+It corresponds
+well to the way organizations work by delegating
+and separating powers.
+It is a complement to, not a competitor for,
+identification and authentication facilities such as
+Kerberos.|reference(kerberos)
+.PP
+IX integrates mandatory controls
+with the
+.UX
+system in a way that should meet most
+needs for confidentiality.
+Compact and coherent, IX has several unique features that
+engender trust in its behavior:
+continuously checked dynamic labels, structured
+management of privilege, and private paths.
+.SH
+.SM ACKNOWLEDGMENTS
+.PP
+In building IX, we were fortunate to start from
+the 10th Edition research
+.UX
+system, the structure of which
+had been carefully cultivated by
+D. M. Ritchie, D. L. Presotto, and N. Wilson.
+D. L. Presotto and A. G. Hume cheerfully modified software
+on which IX depended.
+K. L. Thompson, F. T. Grampp, and L. A. Wehr influenced
+major design decisions.  Through J. D. Weiss and B.
+Smith-Thomas we kept in touch with the design of the
+B1-level System V/MLS; and through L. A. Wehr, D. Bendet,
+and G. B. Green with the B2-level System V release 4ES.
+Other technical contacts for those systems included
+C. W. Flink, T. F. Houghton, 
+W. J. Leighton, and T. L. Vaden.
+C. Mumford of the Joel Chandler Harris Foundation
+gave enthusiastic help with reference material.
+.Rf
+|reference_placement

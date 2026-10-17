@@ -1,0 +1,675 @@
+.NH 2
+Implementation of labels
+.XL y7
+.PP
+The label check performed at a system call
+depends on whether the call involves a file name or a
+file descriptor (the handle by which a
+process accesses an open file),
+whether the call
+is write-like or read-like, and so on.
+Most checks fall into a few classes that can be dispatched 
+by a table.
+The classes differ mainly in what
+dominance relations may be affected.
+For example, the 
+.I read
+system call must respect seven dominance relations among
+five labels: file label, process label, seek pointer label,
+process ceiling, and file system ceiling.
+The process and seek pointer labels may possibly be adjusted to
+preserve the relationships.
+The dominance relations and adjustabilities are recorded
+in tables that are interpreted by a single generalized
+label-check subroutine, which
+finds the minimum legal adjustment needed to satisfy the checks,
+or backs out gracefully if adjustment is impossible.
+.PP
+Continual rechecking of labels in this degree of
+generality is a time-consuming matter (\*(yp).
+Fortunately labels don't change often, so we use a
+check-caching scheme to avoid unacceptably large overhead
+from comparisons.
+Every file descriptor is endowed with two `safe bits,' one for
+safe-to-read and one for safe-to-write.
+A network of pointers, some of which exist in traditional
+.UX
+implementations, and some of which are new, connects
+files, file descriptors, and processes.
+Whenever a file label rises, associated safe bits 
+in all processes can be 
+located quickly and turned off.
+Subsequent accesses via other file descriptors
+will find the
+safe bits cleared and cause the label
+relations to be checked in detail.
+The label relations will be reestablished if possible,
+and the safe bits turned back on.
+Similarly, when the label of a process rises,
+safe-to-write bits are turned off throughout the process.
+.PP
+Typically the safe-to-read bit in a file descriptor
+will be turned on
+by the first read after file opening and stay on thereafter.
+As long as the safe-to-read bit doesn't change, label checking amounts
+to a one-bit test in each read (or in each atomic data
+transfer of a long read that the system chooses to
+do in pieces).
+Thus dynamic label checking costs imperceptibly more in time
+than would static label checking at file open, which suffices in
+Bell-LaPadula systems.
+Space costs, however, are significant (\*(yr).
+.NH 2
+Representation of labels
+.XL y9
+.PP
+Labels in IX comprise lattice values,
+privilege bits (\*(y0),
+two bits for fixity (modifiable, frozen, rigid, unmodifiable; \*(y6),
+and an indicator for $YES$ and $NO$.
+Lattice values are represented as bit vectors;
+lattice domination is represented as set inclusion.
+No further structure is predefined.
+Notions such as security level, compartment, or Biba integrity
+(\*(yc) are trivial to encode, however.
+.PP
+Labels account for about half of all the descriptive
+information kept permanently with each file.
+The labels of open files
+occupy appreciable space in main memory
+and take appreciable time to compare.
+.PP
+We considered, and for several reasons rejected, 
+a scheme of indirect labels in which
+each file bears a pointer into a table of all
+existing label values.
+.SP
+.IP
+1.\ It could be harder to recover from an
+inconsistent state induced by a crash or otherwise.
+.IP
+2.\ The corruption of one table entry would
+mislabel a bundle of files at once.
+.IP
+3.\ To fit with existing backup schemes, backup files would
+carry full labels anyway.
+.IP
+4.\ To realize the full benefits of indirect labels,
+there should be a separate coding table for each
+removable file system.
+.IP
+5.\ With dynamic labels, the encoding of labels would evolve
+differently on every system, even systems under
+common administration.
+.SP
+.PP
+The first reason was the most compelling.  
+With directly labeled files, inconsistencies between
+label and data are confined to individual files.
+Moreover, the inconsistencies are harmless because
+we force each rise in label to disk before
+transferring the data that caused the rise.
+Thus labels are robust against crashes;
+they are at risk only to
+wild scribbling in a file system, as by a berserk
+disk controller.
+.PP
+Direct labeling of files is not a panacea.
+Removable file systems can be moved only among systems
+that agree on label encodings.
+Moreover, labels will probably have to be translated
+between remotely communicating systems; but this is also true with
+indirect labels.
+(Indirect labels have been used
+in System V, where reason 5 does not pertain, and
+inode compatibility is of concern.
+|reference(bendet)|reference(SVMLS tech))
+.PP
+These considerations do not apply to labels that
+reside in main memory, where indirection is used.
+In system tables labels are shared via pointers to
+save space, to speed copying, and
+to speed comparisons.
+A further level of sharing guarantees that 
+coupled labels, such as the labels on the two ends of
+a pipe or on a process and its associated process
+file vary together.
+.ig
+.NH 2
+External media, session labels
+.XL ya
+.PP
+It is easy to maintain labels
+correctly through the course of computation, as all labels are
+under the control of the system.
+It is harder to assure the correct
+handling of classified information in external
+transactions, where one party is beyond the
+control of the system.
+Data must be labeled properly
+on entering the system from outside and
+data leaving the system must go only to appropriate destinations.
+.PP
+Something must be known about the other party in
+an external transaction, perhaps by
+the identity of the external port being used, perhaps by
+an authentication protocol.
+Then the medium can be assigned an appropriate label.
+As security behavior depends on it,
+the validation of external media cannot be left to
+untrusted processes.
+Thus only trusted processes may initiate
+external connections.
+.PP
+When not open in any process,
+an external medium bears label $NO$.
+A trusted process may open it, determine an appropriate
+label, and set the label away from
+$NO$. 
+While the file is open in any process,
+untrusted processes can access it, but cannot cause
+its label to change.
+At last close the label automatically reverts to $NO$.
+.PP
+The association of a file with a
+single label for both read and write
+implies that, while a port is presenting highly 
+classified information, all the
+users' inputs, no matter how trivial, are automatically
+classified high as well.
+This annoying effect can be mitigated by
+using multiple terminals, usually in the form of
+virtual terminals (windows) on a single trusted
+device (\*(yn).
+It might be well, however, for terminal ports
+to be treated as two separately
+labeled data streams for input and output.
+..
+.ig
+.NH 2
+Imported and exported file systems
+.XL yb
+.PP
+When an entire file system is carried to an untrusted
+recipient, the file system should contain no information
+that the recipient is not cleared for.
+To create an IX file system for export,
+the medium should be erased or degaussed
+and then mounted with a
+file system ceiling appropriate to the clearance of the
+recipient.
+The ceiling will assure that only data below 
+the ceiling get written on the file system.
+Once written, the file system can be demounted
+and shipped with confidence that it contains only
+safe labels.
+.PP
+The file system ceiling may also be used to protect
+against dangers in
+a file system imported from an untrusted source, either
+by carrying or by cross-mounting.
+One such danger is
+spuriously overclassified data.
+Another is spurious privilege marks on programs.
+Both can be masked out by the file system ceiling.
+..
+.NH 2
+The floor, integrity labels
+.XL yc
+.PP
+Biba pointed out that a secrecy lattice, where
+a highly cleared program can read almost any file and
+write almost none, is just the opposite of an `integrity'
+lattice, where a highly trusted program can modify almost
+any file but can read almost none for fear of becoming
+contaminated with bad data.|reference(denning)|reference(biba)
+IX labels can be used in Biba fashion, by starting untrusted
+users high, and keeping trusted software low.
+Any change to trusted software
+caused by untrusted users
+will be reflected in a raised label.
+By running with a low ceiling, trusted applications may
+be immunized against using the corrupt software.
+.PP
+To get integrity and secrecy
+controls simultaneously, we simply
+regard some of the bits in
+a label as integrity bits, others as secrecy bits.
+All users log in at an administratively
+defined middle, or 
+.I floor
+label, which has ones
+in its integrity bits and zeros in its secrecy bits.
+System source, utilities, and other important
+universally available files are labeled below the floor,
+typically at bottom.
+.PP
+In illustration, suppose that a project has one integrity
+bit and one secrecy bit.  The floor label at which
+everybody\(emincluding project members\(emlogs in is 10,
+with a 1 for low integrity and a 0 for low clearance.
+Project members are entitled to raise their ceiling to 11.
+Having begun at 10, their process labels can change to 11 but
+not to 00 or 01.
+The project administrator, who is entitled to `downgrade' 
+(i.e. upgrade in integrity) the
+integrity bit, may set the label on critical project data to 01.
+Should any ordinary project member
+succeed in writing the
+file, the integrity bit will change and the file label
+will become 11.
+The loss of integrity is thus recorded in the file
+label and optionally in a system audit trail (\*(yj).
+.PP
+Marking data as high-integrity does not
+protect the data from compromise.
+It does, however, protect against false belief in the high integrity.
+By setting the ceiling to cut off access to low-integrity data,
+a high-integrity process may be immunized against
+unwittingly using corrupted data.
+Of course low-integrity processes may still use the
+corrupted data, but as their outputs would have
+low integrity anyway, the integrity policy has been
+respected.
+The only real hazard is denial of service to high-integrity
+processes.
+.PP
+New system code will usually be tested at a normal label,
+at or above the floor.
+It will be installed by downgrading the 
+source code to a label
+below the floor, rechecking for accuracy, and compiling afresh.
+To be really careful, one would place the trusted
+computing base (\*(yB) below everything else.
+Then no untrusted tools could be invoked inadvertently
+while working on trusted code.
+.NH 1
+PRIVILEGES
+.XL yd
+.PP
+The data-flow policy, which covers normal operations,
+is insufficient for administrative purposes.
+For example, establishing a user session at a non-floor
+label may involve changing the process label down
+or the ceiling up, in contradiction to normal policy.
+Some other actions that violate the policy are
+document declassification, repair of
+multilevel file systems, opening of external media,
+and mounting of file systems.
+.PP
+Administrative actions that fall outside the data-flow
+policy are performed by privileged utilities, which
+are exempt in one way or another
+from kernel enforcement.
+As privileged code does not enjoy the guarantees of
+the policy, it must be written with great care to assure
+that it maintains intended security.
+Because such code is exempted from normal checks in
+the expectation that it will do no wrong, it is called `trusted.'
+Privilege can be exercised only through trusted code.
+.PP
+Roughly speaking, the privilege mechanism
+partitions the supreme powers once accorded to the superuser.
+Superuser status itself is diminished.
+The superuser is fully bound by security labels and 
+cannot ignore write permissions.
+To keep as much of the familiar 
+.UX
+semantics as possible and to
+avoid rewriting masses of code, we have retained
+the association of other special powers with the superuser.
+When these powers break the security
+rules, superuser status must be augmented by privilege.
+.NH 2
+Capabilities and licenses
+.XL y0
+.PP
+Each privilege is governed by a one-bit
+.I capability
+and a one-bit
+.I license.
+A process possessing a capability has the actual right to exercise
+privilege.
+A process possessing a license has a potential right.
+Process licenses can be gained only with privilege,
+usually by application to the privilege server (\*(yl),
+are inheritable across
+file execution (the \fIexec\fR system call),
+and may be relinquished at will.
+In effect licenses identify trusted users.
+Capabilities depend on the
+program being executed and are not inherited.
+.PP
+We denote the vector of capabilities of a
+process or file $x$ by $Cap(x)$ and the
+vector of licenses by $Lic(x)$.
+In general, a process $p$ executing file $f$ will have a
+given capability if the file has the capability
+and the process is licensed for it.
+The vector of capabilities is computed
+by bitwise intersection:
+.EQ I
+Cap(p)~=~Cap(f)~meet~Lic(p).
+.EN
+.LP
+Other factors participate in the computation of capabilities.
+A program file has a license vector, $Lic(f)$, which may
+endow the executing process with capabilities regardless of 
+the process's own licenses.
+Such a `self-licensed' program gets power in much the same way
+as does a set-user-id program in ordinary
+.UX
+systems, except that the power is not inherited on
+executing further programs.
+When file system $FS$ is mounted it may be assigned
+privilege masks, $Cap(FS)$ and $Lic(FS)$
+to exclude imports
+of spurious privilege, for example from untrusted remote
+machines in a network file system.
+Privilege masks may also be used
+to limit the locus
+of privilege to some well-managed region
+of the entire file space.
+If file $f$ lives in file system $FS(f)$,
+the complete formula for process capabilities is
+.EQ I
+Cap(p)~=~Cap(f)~meet~Cap(FS(f))
+~meet~(Lic(p)~join~(Lic(f) meet Lic(FS(f)))).
+.EN
+.PP
+Readers familiar with System V release 4ES will recognize
+homologies between
+IX capabilities and 4ES `working privileges,'
+licenses and `maximum privileges,'
+file capabilities and `inherited privileges,' self-licenses
+and `fixed privileges.'|reference(user's guide)
+Local control is somewhat stronger in System V, where a process
+can turn its working privileges on and off.  Global
+control is somewhat stronger in IX, where licenses cannot
+propagate through execution of untrusted code.
+(The danger in licensing untrusted processes:
+a Trojan horse might be able to pass a license to
+a privileged program to do ill.  
+To guard against this eventuality, a privileged program
+would have to assume the burden of verifying the
+legitimacy of each task it is asked to do.)
+.NH 2
+Specific privileges
+.XL ye
+.PP
+Believing that too many privileges would be
+unmanageable, we have provided just six generic
+privileges, rather than a long list of specific
+privileges such as `register new users,' `repair
+file systems,' or `downgrade files.'
+The existence of broad privileges does not automatically
+imply broad powers for a user who is authorized to
+exercise privilege.
+In practice, even trusted administrators are not
+granted active licenses.
+Instead, one applies to the privilege server (\*(yl)
+to run each privileged command.
+If a user is authorized to run the
+command with the given arguments, the server grants
+the necessary licenses and executes the command.
+The six privileges, listed in roughly descending
+order of power, are
+.SP
+.IP
+.I "Set privileges.
+Change file capabilities and licenses.
+.IP
+.I "Set licenses.
+Increase the license or ceiling of a process.
+.IP
+.I Extern.
+Mount file systems, change labels away from $NO$, or
+change labels of external media.
+.IP
+.I Nocheck.
+Read or write data without regard to security label.
+.IP
+.I "Control auditing.
+Adjust the intensity of auditing, nominate auditing
+files, or perform related actions.
+.IP
+.I "Write uarea.
+Change system-maintained data such as userid,
+which may be read by other processes.
+.SP
+.PP
+The last-mentioned privilege is more an artifact of
+.UX 
+than a corollary of the security mechanism (\*(yq).
+Otherwise each privilege overrides an identifiable
+aspect of that mechanism.
+.NH 2
+Concerns in privileged code
+.XL yf
+.PP
+Privileged processes in effect administer their
+own security policy, and thus must be written with
+the same care as the kernel itself.
+As an example, we consider the privilege `nocheck,' 
+which allows a process to circumvent automatic label checking
+on selected files.
+Nocheck is used in various trusted
+applications that have to read and write multilevel data.
+Among these applications are: checking, copying, and
+repairing multilevel file systems;
+managing a multilevel terminal over a single-level wire (\*(yn);
+delivering multilevel mail; and providing a centralized
+service (e.g. password authentication, \*(ym)
+for multilevel clients.
+.PP
+A nocheck process must take care to observe that file labels
+do not change underfoot in dangerous ways.
+Notification tools exist for this purpose.
+A new signal,
+.CW SIGLAB ,
+may be used to detect changes in labels of open files;
+and a special system call (\fIunsafe\fR) identifies
+which files are involved.
+It is up to the process, however, to decide whether each
+particular label change is safe or not.
+.NH 2
+The trusted computing base
+.XL yB
+.PP
+To a first approximation,
+the kernel and privileged programs constitute
+a trusted computing base (TCB).|reference(orange book)
+Nothing can join the TCB without the intervention of
+something that is already in it.
+Nothing in the TCB can change.
+The only way to modify
+a trusted program is to delete it from the TCB by
+removing its privilege, work on it, and then restore privilege.
+A paranoid protocol for modifying the TCB is given in \*(yA.
+.PP
+Anything that prepares or verifies components
+of the TCB should either have its effects vetted by
+a TCB program or itself be in the TCB.
+For example, a compiler whose correctness is taken on
+faith should be in the TCB, while a compiler whose output
+can be verified by an independent TCB tool need not be.
+A part of the TCB that does not
+need privilege must be made immutable in some other way.
+One way is to give the program a dummy license, but
+no capability.
+Such a program is formally privileged, but can exercise
+no privileges.
+Another way is to protect the TCB by integrity
+labeling (\*(y9).
+.NH 1
+PRIVATE PATHS
+.XL yh
+.PP
+In some instances security may be compromised by
+simultaneous access of trusted or untrusted processes
+to one file.
+Consider, for example, the apparently
+simple matter of collecting
+a password at login time from a user at a physically secure port.
+Until authentication is complete the
+user's clearance is unknown, so the port cannot be
+honestly labeled at any ordinary security level.
+If the port were unclassified, other
+processes might be able to steal the password.
+If the port were highly classified, high data could
+be sent to it without the recipient having yet been authenticated.
+Thus to assure that passwords go only where they are supposed to,
+and that the port not be misused for other
+information, the port should be placed in a special dedicated state.
+As long as the port remains in this state
+no other process can read, write, or seek on any file
+descriptor associated with it.
+.PP
+A properly cautious user will demand assurance
+that the password is in fact being demanded by trusted
+code.
+Hence the special state of the port and the
+credentials of the communicating process should be
+discernible by the user as well (\*(yn).
+We call the arrangement a
+.I "private path.
+.PP
+Should other trustable communications processes be
+interposed in a private path, then
+the (two-way) assurances need to
+extend transitively to each segment of the channel.
+If the trust
+breaks at any point of the channel, data that started along the
+channel in trust must not be misdelivered,
+and data that is delivered in trust must not have
+been injected from an unintended source.
+.PP
+IX has two features for administering private paths:
+process-exclusive access and stream identifiers.
+These features are used mainly to insure the
+integrity of transactions performed by trusted processes.
+.NH 2
+Pex
+.XL yC
+.PP
+A process can obtain a private path by asserting
+process exclusive, or
+.I pexed,
+access to a file or stream that is open in the process.
+Pex may be used to lock out interference when updating a
+file (\*(yA).
+If one end of a pipe is pexed, the pipe
+cannot be used unless the other end is pexed, too.
+Moreover, the pexing protocol provides to 
+the process at each end of the
+pipe unforgeable indicia of trust (userid and capabilities)
+about the other.
+The indicia provide the basis for extending trust
+transitively along a multistep private path.*
+.FS
+* Thus realizing something like Boebert's
+`assured pipeline.'|reference(boebert integrity)
+.FE
+When either process breaks trust by 
+unpexing its end, its partner is prevented
+from blindly continuing as if nothing had happened:
+the pipe becomes unusable until unpexed at both ends.
+.PP
+Transmissions on a pexed file or stream are
+understood to be immune to eavesdropping
+or injection of signals.
+Since such assurance is not necessarily available for external media,
+external media may be conditioned
+to allow or disallow pexing.
+Thus pexing might be denied on a communications port
+to an untrusted computer and permitted on
+a hard-wired line to a trusted terminal in a secured
+area.
+.PP
+Although pex is used almost entirely by privileged processes,
+it is available to any process.
+Herein lies a risk.
+By pexing a file,
+a malicious process can deny its use to others.
+The process can be forced to let go only by killing it.
+.NH 2
+Stream identifier
+.XL yD
+.PP
+The destination of a file, particularly if that
+file connects to the outside world, may determine
+how it can be used.
+We have just explained one determining condition,
+the ability to use the stream as a private path.
+Others are the identity of the port's user, the tokens
+or passwords the user has presented, the stream's network source, etc.
+For recording such facts about a port, IX allows an arbitrary
+string, called a
+.I "stream identifier,
+to be associated with any
+.UX
+stream.
+Settable only with privilege, the stream identifier 
+serves as a trustable repository of descriptive information.
+The stream identifier is usually set by the login program 
+and may be augmented by the session supervisor (\*(yy).
+.PP
+Pexing and stream identifiers associate security-related
+properties with channels, not with subjects or objects.
+In a communications-based system, the
+relationship of a stream to a subject may be remote indeed.
+What if the stream leads to a multiplexer process, 
+to an encrypter, to a data link,
+to another computer, to a decrypter, to
+a demultiplexer, to ...?
+It does not make sense to consider all stages
+in the path to be independent
+subjects ruled by the security policy.
+A multilevel demultiplexer, for example,
+must be able to violate the letter of the
+policy, while being trusted to carry out the intent.
+In order to do that it needs to know the security
+requirements of the data it is handling, even though
+it has no need to know about the origins of that data.
+Streams, not users, are what computer processes deal
+with.  As streams become more complicated, it becomes
+increasingly important to characterize their properties,
+which may be only weakly correlated with the properties
+of the agents they connect.
+.NH 1
+AUDITING
+.XL yj
+.PP
+Audit records are kept with selectable intensity
+by the kernel on special audit devices.
+Audit devices are also available for
+record-keeping by security-critical programs, such
+as the privilege server (\*(yl) or the login program.
+An audit device is associated with an ordinary
+.UX
+file by a privileged system call.
+The file itself becomes unreadable without privilege, but is
+universally writable.
+For maximum security, an audit device may be assigned
+to a data link to an off-line repository.
+.PP
+System events are classified into 11 
+independently auditable categories, selectable by one of
+four audit masks.
+All processes are audited at the level specified by a
+global mask.
+Individual files and processes may be invisibly
+.I poisoned
+to add auditing as specified by one of the other masks.
+A process that touches a poisoned file becomes poisoned.
+Poisoning is cumulative and inherited across processes.
+Poisoning allows the audit level to be cranked up in
+response to a sensitive or suspicious action or for selected users.
+.ig
+It is also important to assure that auditing cannot
+be bypassed or altered.
+That assurance might be strengthened by forbidding
+reductions in the global audit mask or in the
+complement of audit files.
+Then auditing could be turned off only by rebooting the system.
+..

@@ -1,0 +1,11 @@
+#
+set files=(install mat lib helper.66 helper.77 help \
+	sys.unix sys.vms sys.tso sys.cms sys.dec10 sys.cdc sys.prime \
+	doc demo doc.n mat.sngl lib.sngl)
+foreach conv (block ebcdic)
+	foreach f ($files)
+		echo "$f ($conv):"
+		dd if=$f of=/dev/rmt12 obs=1600 cbs=80 conv=$conv 
+	end
+end
+rewind

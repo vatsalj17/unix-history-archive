@@ -1,0 +1,207 @@
+From research!mtune!rutgers!SH.CS.NET!cic Thu Oct  1 01:45:12 1987
+Received: by mtune.ATT.COM (smail2.5)
+	id AA21359; 1 Oct 87 01:45:12 EDT (Thu)
+Received: by RUTGERS.EDU (5.54/1.14) 
+	id AA00008; Thu, 1 Oct 87 01:30:56 EDT
+Message-Id: <8710010530.AA00008@RUTGERS.EDU>
+Received: by SH.CS.NET id ak10308; 29 Sep 87 15:26 EDT
+Date: Tue, 29 Sep 87 14:25:27 EDT
+Subject: ns-6 REGISTER by Mail
+Reply-To: rutgers!SH.CS.NET!cic
+From: CSNET INFO SERVER <rutgers!SH.CS.NET!info>
+To: doug@research.att.com
+
+Request: info
+Topic: ns-6
+Document Updated: 28 Jul 87
+Subject: Register by Electronic Mail
+==============================================================================
+CSNET Coordination and Information Center (CIC) 	 Hotline: 617/497-2777
+10 Moulton Street                                        Email:  cic@sh.cs.net
+Cambridge, MA 02238             Info-Server requests to: info-server@sh.cs.net
+==============================================================================
+
+                     REGISTER BY ELECTRONIC MAIL
+
+If no host computer at the CSNET member site runs the Local Agent
+Software, the CSNET Technical Liaison can arrange to have the
+registrations performed by the CSNET Coordination and Information
+Center (CIC) by sending a message to cic@sh.cs.net, or telephoning the
+CIC at 617/497-2777.
+
+The information for users to be registered should be sent in a message
+addressed to cic@sh.cs.net.  Tables ns-6.1 and ns-6.2 show sample
+registrations for multiple names.  The field names, such as "Account",
+"MBox", etc., should start in column 1 of the body of the message.
+The field contents should start in column 2.  The User Name Server
+will turn the space in column 1 into a tab, so lines should be no more
+than 72 characters long.  
+
+You may put as many registrations as you wish in a message -- just
+separate them with a row of hyphens or some other marker.
+
+The tables show the MBox (MailBox) addresses for sites with
+domain-style names.  All Internet now have domain-style names, and
+CSNET PhoneNet sites have either converted to the domain system, or
+are in the process of doing so.  (For more information about
+domain-style names, see REFERENCES at the end of this document.)
+
+The purpose of the Account string is to provide a unique identifier
+for each person registered in the User Name Server.  It has the form
+
+	user,host,site
+
+Before the Internet domain name system was adopted, the designers of
+the User Name Server, intended the "host" string to be the name of
+the user's host computer, and the "site" string to be a unique name
+assigned by CSNET to the CSNET member organization.
+
+Now that the Internet domain name system assigns unique hierarchical
+names, the Account string should incorporate the domain names in some
+reasonable way.
+
+"User", "host" and "site" are just strings of characters, as far as
+the User Name Server is concerned.  As long as we don't end up with
+duplicate Account strings, the exact scheme used to form the Account
+string doesn't matter very much.  Here are some suggestions:
+
+    1.  The "user" string should be the user's login name, or the
+	name under which he or she receives mail.
+
+    2.  The domain name assigned to an entire organization consists
+	of a second-level domain unique to the organization, followed
+	by one of the top-level domains such as ".edu" or "com".
+	For example, AAA College might have the domain name
+	"aaa.edu".
+
+        If outsiders can send mail to anyone at the site, for example,
+	"aaa.edu"  by using the address "user@aaa.edu", the Account
+	string can be
+
+		user,aaa.edu,aaa.edu
+
+    3.  If outsiders must know the name of a lower-level domain --
+        which might be the name of a department within the
+	organization -- the lower-level domain can be placed in the
+	"host" string, and the domain for the organization should be
+	in the "site" string.  For example, a user in the Computer
+	Science Department of ZZZ University might have the Account:
+
+		user,cs.zzz.edu,zzz.edu
+
+	But if addresses must be specified down to the name of an
+	individual host computer, you can use hostnames, too.  You
+	might include the full domain name of the computer:
+
+		user,zebra.cs.zzz.edu,zzz.edu
+
+	Or, if you can guarantee that there is no other "zebra" in
+	"zzz.edu", you might use just the host name as it is used on
+	the internal network:
+
+		user,zebra,zzz.edu
+
+
+     TABLE ns-6.1.  SAMPLE MESSAGE FOR USERS AT SITE AAA.EDU
++--------------------------------------------------------------------+
+|HEADER FIELDS                                                       |
++--------------------------------------------------------------------+
+|To: cic@sh.cs.net                                                   |
+|Subject: User Name Server registrations for aaa.edu                 |
++--------------------------------------------------------------------+
+|BODY OF MESSAGE                                                     |
++--------------------------------------------------------------------+
+|Account                                                             |
+| alice,aaa.edu,aaa.edu                                              |
+|MBox                                                                |
+| alice@aaa.edu                                                      |
+|CsnPass                                                             |
+| abc123                                                             |
+|FullName                                                            |
+| Alice A. Amherst                                                   |
+|Address                                                             |
+| office: AAA College             home: 456 Something St.            |
+|         Computer Science Dept.        Somewhere, MA 00000          |
+|         123 Anything St.                                           |
+|         Anywhere, MA 00000                                         |
+|Phone                                                               |
+| office: 617/123-4567 x89        home: 617/765-4321                 |
+|Misc                                                                |
+| tcp 1 local area networks amhearst, amerst                         |
+|- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - |
+|Account                                                             |
+| albert,aaa,aaa                                                     |
+|MBox                                                                |
+| albert@aaa.edu                                                     |
+|CsnPass                                                             |
+| efghij                                                             |
+|FullName                                                            |
+| Albert B. Carlson                                                  |
+|Address                                                             |
+| office: AAA College             home: 2728 Denver Avenue ...       |
++--------------------------------------------------------------------+
+
+
+     TABLE ns-6.  SAMPLE MESSAGE FOR THE CS DEPARTMENT OF ZZZ.EDU
++--------------------------------------------------------------------+
+|HEADER FIELDS                                                       |
++--------------------------------------------------------------------+
+|To: cic@sh.cs.net                                                   |
+|Subject: User Name Server registrations for cs.zzz.edu              |
++--------------------------------------------------------------------+
+|BODY OF MESSAGE                                                     |
++--------------------------------------------------------------------+
+fi/adr-2|Account                                                             |
+| zack,zebra.cs.zzz.edu,zzz.edu                                      |
+|MBox                                                                |
+| zack@zebra.cs.zzz.edu                                              |  
+|CsnPass                                                             |
+| xyz321                                                             |
+|FullName                                                            |
+| Zack Z. Zimmerman                                                  |
+|Address                                                             |
+| office: ZZZ University ... (etc.) ...                                             |
++--------------------------------------------------------------------+
+
+	-------------------------------------------------------
+
+REFERENCES (Available from the CSNET Info Server):
+
+Topics under Request: info
+
+  adr-1  CSNET Addresses and the Domain System
+  adr-2  Transition to Domains
+
+Topics under Request: rfc
+
+  RFC733 "Standard for the Format of ARPA Network Text Messages", David H.
+     Crocker (The Rand Corporation), John J. Vittal (Bolt Beranek and
+     Newman Inc.), Kenneth T. Pogran (Massachusetts Institute of
+     Technology), D. Austin Henderson, Jr.(Bolt Beranek and Newman Inc.) 21
+     November 1977.
+
+  RFC822 "Standard for the Format of ARPA Internet Text Messages", David H.
+     Crocker (University of Delaware), August 1982.
+
+  RFC882 "Domain Names - Concepts and Facilities", P. Mockapetris
+     (Information Sciences Institute, University of Southern California),
+     November 1983.
+
+  RFC883 "Domain Names - Implementation and Specification", P. Mockapetris
+     (Information Sciences Institute, University of Southern California),
+     November 1983.
+
+  RFC920 "Domain Requirements", J. Postel and J. Reynolds (Information
+     Sciences Institute, University of Southern California), October 1984.
+
+  RFC921 "Domain Names System Implementation Schedule - Revised", Jon Postel
+     (Information Sciences Institute, University of Southern California),
+     October 1984.
+
+  RFC973 "Domain System Changes and Observations", Paul Mockapetris
+     (Information Sciences Institute, University of Southern California),
+     January 1983. Supplements RFC 883.
+
+  RFC974 "Mail Routing and the Domain System", Craig Partridge (CSNET CIC,
+     BBN Laboratories, Inc.), January 1986.
+

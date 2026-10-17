@@ -1,0 +1,55 @@
+#!/bin/sh
+# interactive script to accept asd shipments left on the receiving dock
+#	by a special version of dkinstall
+
+# before running the script
+#	become superuser
+#	to avoid later password demands from priv inspkg, do
+#		/bin/session -u yourself
+
+# for each shipment, scan does
+#	announce shipment number
+#	summarize contents
+#	check for cases that may need special handling
+#	ask whether to do the installation
+#	do installation if requested
+#	installation requires priv inspkg.  this
+#			may ask password & will ask confirmation
+#	ask whether to delete the shipment
+
+# ./stop lists files maintained locally; special installation action needed
+# ./sessck checks whether existing file is privileged; special rights
+#     above and beyond superuser needed to install
+
+ASD=/usr/asd	# the receiving dock
+
+case $# in
+0)	LIST="`echo [0-9]*`" ;;
+*)	LIST="$*"
+esac
+case "$LIST" in
+'[0-9]*')	exit
+esac
+
+for i in $LIST ; do
+	echo $i
+	ls -l $i
+	inspkg -nv $i 2>&1 | tee junk
+	fgrep -fx $ASD/stop junk >junk1 && {
+		echo LOCALLY MODIFIED:
+		cat junk1
+	}
+	$ASD/sessck junk
+	echo -n y to install:
+	read z
+	if [ ansy = ans$z ]  ; then
+		echo >> $ASD/Inslog
+		date >> $ASD/Inslog
+		who am i >> $ASD/Inslog
+		echo $i >> $ASD/Inslog
+		/bin/priv inspkg -v $ASD/$i 2>&1 | tee -a Inslog
+		echo -n "rm "
+		rm -i $i
+	fi
+	rm -f junk
+done 

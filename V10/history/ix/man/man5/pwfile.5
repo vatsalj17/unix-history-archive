@@ -1,0 +1,52 @@
+.TH PWFILE 5
+.CT 1 sa_nonmortals secur
+.SH NAME
+pwfile \- user security clearances file
+.SH DESCRIPTION
+The file
+.F /etc/pwfile
+is used by
+.IR session (1)
+to authorize clearances.
+Each (valid) line contains the following
+fields, separated by colons:
+.IP
+.nf
+name
+encrypted password
+SNK key
+process license (unused)
+clearance (maximum ceiling)
+.fi
+.PP
+The license and label fields are in the form
+understood by 
+.IR labtoa (3);
+thus the label field
+may contain white space.
+Lines with fewer than five fields
+are ignored.
+.PP
+The name field contains a user name for option
+.B -u
+of
+.FR /bin/session .
+It is customary, but not necessary, for `users' in 
+.I pwfile
+also to be registered in
+.IR passwd (5).
+.PP
+The label field gives the maximum permissible label for option
+.BR -l ,
+and the ceiling label otherwise. 
+.PP
+Because this file ultimately determines which users
+may access which data, it is not generally writable by the public.
+.SH FILES
+.F /etc/pwfile
+.SH "SEE ALSO"
+.IR getplab (2), 
+.IR session (1),
+.IR passwd (1),
+.IR pwserv (8),
+.IR pwquery (3)

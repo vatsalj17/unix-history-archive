@@ -1,0 +1,195 @@
+.nr Hy 0
+.nh
+.TH DMDMEMORY 1 "630 MTG"
+.SH NAME
+dmdmemory - 630 MTG memory profiler
+.SH SYNOPSIS
+.B dmdmemory [ \-c ]
+.SH DESCRIPTION
+Memory in the 630 MTG terminal is divided into two types of memory which can be
+requested by user level function calls:
+.IP . 2
+non-compactible \fIalloc\fR memory [\fIalloc\fR(3R)],
+.IP . 2
+garbage-collectible \fIgcalloc\fR memory [\fIgcalloc\fR(3R)].
+.P
+The \fIalloc\fR memory pool starts from the low addressed end of the user memory pool and
+grows upward. The \fIgcalloc\fR memory pool begins at the other end of the user
+memory pool (i.e. at the highest address) and grows downward. 
+The mobile boundaries of the \fIalloc\fR and
+\fIgcalloc\fR pools are named respectively \fBalloclevel\fR and \fBgclevel\fR.
+.P
+To contain fragmentation due to the non-compactibility of the \fIalloc\fR memory,
+there is an \fBalloclimit\fR which restricts the expansion of the \fIalloc\fR pool.
+.P
+In order to make better use of \fIalloc\fR fragments, the 630
+MTG memory allocation scheme converts a \fIgcalloc\fR request
+that cannot fit into
+the \fIgcalloc\fR pool to an \fIalloc\fR request.
+If there is a fragment big enough
+to satisfy the request, it becomes a \fIgcastray\fR block. \fIGcastray\fR memory is
+of the same type as   \fIgcalloc\fR but resides inside the \fIalloc\fR pool. Note that this
+type of memory is only known 
+by the terminal memory allocation system and cannot be requested directly by a user level
+function call.
+.P
+The \fIdmdmemory\fR utility 
+presents a graphical representation of the memory usage in the 630 MTG terminal.
+A user is able to monitor all three types of
+memory with a scope (or zoom) facility, modify the \fBalloclimit\fR, and look 
+at the memory or stack usage of a particular process.
+.P
+The \-c option causes \f2dmdmemory\f1 to be cached in the 630 MTG
+application cache.
+.P
+The window size used by \fIdmdmemory\fR is fixed. If the window size is
+not correct, a \fICore\fR icon and a "\fImenu on button 2\fR" string are displayed.
+The window must be reshaped if this appears by selecting either the
+reshape option from the mouse button 2 menu or the reshape
+function from the mouse button 3 menu.  If reshape is selected
+from the button 2 menu, the window is automatically reshaped to
+the proper size.  If the reshape function from the button 3 menu
+is selected, the default window size presented is the correct window
+for \fIdmdmemory\fR.
+.bp
+ If a different window size is swept, the core icon and
+message string are again displayed.  Similarly, if at any time the
+window is reshaped back to an incorrect size, the core icon and string are
+again displayed.  When the window size is incorrect, \fIdmdmemory\fR is largely inactive, so at
+times it may be desirable to place \fIdmdmemory\fR in this state to
+free cpu resources for other processes.  Reshaping the window back to the
+correct size reactivates \fIdmdmemory\fR.   
+.P
+In the working mode, the \fIdmdmemory\fR window contains the following, from top to bottom:
+.IP "" 2
+\f3\(em\f1 Three numerical upper fields which are, from left to right:
+.IP "" 5
+the scoped number of \fIalloc\fR blocks.
+.br
+the scoped number of \fIgcastray\fR blocks, 
+.br
+the scoped number of \fIgcalloc\fR blocks.
+.IP "" 5
+The number of scoped blocks is the number of those bolcks that
+fall within the range of memory represented by the dmdmemory
+window.
+.IP "" 2
+\f3\(em\f1A bar graph which represents the user memory pool in
+.br
+.in +1
+the viewing scope. \fIAlloc\fR
+blocks are reverse-videoed, \fIgcastray\fR blocks are \fIbackground\fR textured, and
+\fIgcalloc\fR blocks are grey shaded. To help the visualization, the bar graph is
+marked by 100 tick marks, 8 pixels apart. The \fIalloclimit\fR is represented by a longer
+vertical bar. 
+.in 0
+.IP "" 2
+\f3\(em\f1 Five numerical lower fields which are, from left to right:
+.IP "" 5
+the starting address of the viewing scope,
+.br
+the \fBalloclevel\fR address,
+.br
+the \fBalloclimit\fR address,
+.br
+the \fBgclevel\fR address,
+.br
+the ending address of the viewing scope.
+.IP "" 2
+In \fIfull view\fR
+the viewing scope addresses are the same as the boundary addresses of the total user
+memory pool. In a \fIscoped view\fR, the \fBalloclevel\fR, \fBalloclimit\fR or \fBgclevel\fR
+addresses may not be displayed if they are out of the viewing scope.
+.IP "" 2
+\f3\(em\f1An alphanumeric field which displays information or
+.br
+.in +1
+help messages. Information 
+includes the scope setting (\fIfull view\fR or \fIscoped view\fR) and the number of
+bytes per pixel. Help messages depend on the command selected.
+.in 0
+.P
+The \fIdmdmemory\fR facility supports six commands, all accessed from mouse button 2.
+Note that when a command is being executed, the \fIdmdmemory\fR window cannot be reshaped.  The six commands are described below.
+.bp
+.SS Base
+This command toggles between decimal and hexadecimal bases. Hexadecimal numbers are
+preceded by a "0x" prefix.
+
+.SS Process
+This command changes the mouse cursor to a "target" cursor and asks the user to
+pick a window by clicking button 1 over it. Picking nothing (i.e., the screen background)
+or clicking other buttons will cancel the command.
+.P
+Clicking button 1 over a window will cause the three numerical upper fields to blink.
+They now represent scoped amounts of \fIalloc\fR, \fIgcastray\fR and \fIgcalloc\fR
+memory used by the process running inside the selected window.
+The 
+display inside the bar graph also blinks to mark the corresponding positions of these memory
+blocks. The alphanumeric field displays the address of the
+process.
+.P
+Clicking or holding any button stops the blinking, exits this command mode, and returns
+\fIdmdmemory\fR to the normal viewing mode.
+.P
+If a cached process is selected, dmdmemory displays only that
+memory used by the process that was allocated via an alloc ro
+gcalloc procedure call. The memory actually occupied by the
+process code and data is not displayed by the process
+command.
+
+.SS Stack
+This command is similar to the \fIprocess\fR command, except that the information
+now deals with the stack assigned to the specified process.
+.P
+Since the process stack is \fIalloc\fR'ed, only the \fIalloc\fR field can have a
+non-zero value (assuming the stack is inside the viewing scope). The alphanumeric field
+shows how many bytes of its stack a process has used.
+.P
+The stack command displays the amount of assigned stack space
+whether the process is cached or not.
+.bp
+.SS Scope
+This command allows the user to zoom in (or out) in order to have a closer look at
+a particular region of the user memory pool. 
+.P
+When this command is selected, a full-length vertical bar blinks at the left side of
+the bar graph. The user drags the vertical bar by holding down button 1. Note that the
+starting address of the viewing scope (left-most lower numerical field) also blinks, 
+and changes with new values corresponding to the dragged bar positions. Releasing
+button 1 will select the new starting address of the viewing scope.
+.P
+The ending address of the viewing scope is modified in the same manner with a
+blinking bar appearing at the right end of the bar graph. If this bar
+is positioned to the left of the previous one, \fIdmdmemory\fR takes it as a
+zoom-out, back to \fIfull view\fR setting. Otherwise, the action results
+in a zoomed-in (or scoped) view of the memory pool, and the numerical fields are
+updated accordingly. Note that some addresses in the 
+lower fields are now out of scope and therefore are
+not displayed.
+.P
+During this process, if any button other than button 1 is pressed and held, the
+command is aborted and the current viewing scope is retained.
+.P
+The smallest scope is one byte per pixel. Attempts to zoom in
+further will automatically re-expand the viewing scope to this minimum setting.
+
+.SS Limit
+This command allows the user to modify the value of \fBalloclimit\fR. 
+.P
+When this command is selected, the vertical bar which represents the position
+of \fBalloclimit\fR in the graphical bar starts to blink. The same thing happens
+to the \fBalloclimit\fR numerical field (middle lower field). To modify its value,
+the user holds down button 1 and drags the vertical bar to new positions. The numerical
+field changes accordingly. Note that  \fBalloclimit\fR cannot go lower than \fBalloclevel\fR;
+otherwise, some \fIalloc\fR blocks would be out of the \fIalloc\fR pool.
+.P
+This command does nothing if the \fBalloclimit\fR is not within the scope.
+.P
+\fBCaution\fR: a value for \fBalloclimit\fR that is too low restricts the expansion of the
+\fIalloc\fR pool, causing \fIalloc\fR requests to fail.
+.SH FILES
+$DMD/lib/dmdmemory.m	downloadable file
+
+.SH SEE ALSO
+ucache(1), alloc(3R), gcalloc(3R).

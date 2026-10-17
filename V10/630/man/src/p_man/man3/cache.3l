@@ -1,0 +1,256 @@
+.ds ZZ APPLICATION DEVELOPMENT PACKAGE
+.TH CACHE 3L
+.XE "cache()"
+.SH NAME
+cache \- put the calling application into the Application cache
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.br
+#include <object.h>
+.PP
+.ft B
+int cache (s, f)
+.br
+char \(**s;
+.br
+\f3int f;\f1
+.ft R
+
+.SH DESCRIPTION
+An application can put itself into the terminal's Application cache by calling
+the function
+.IR cache .
+When this has been done, the window the application is running in can be
+deleted by the user or the application can exit, but the 
+application itself is still resident in the
+terminal's memory.
+.PP
+There are two ways to bring up a cached application. If the \fImenu name\fR of the
+application shows up under the \fBMore\fR menu, the user can select
+it  and
+open a new window to run the application. Otherwise, an
+application can be booted from a 
+window running a 630 terminal emulator by 
+calling \fIdmdld(1)\fR with the \fItag name\fR of the application.
+The cached application then replaces the terminal emulator in the window.
+.PP
+The \fItag name\fR of a cached application is the filename it is downloaded under
+(i.e. \fIargv[0]\fR) stripped from any pathname prefix. For example the tag
+name of \fI$HOME/dmda.out\fR is \fIdmda.out\fR. This name is used to
+uniquely identify a cached application.
+.PP
+The \fImenu name\fR of a cached application is the name as appeared on the
+\fBMore\fR menu. If the argument \fIs\fR is a null pointer, the default menu
+name is the same as the tag name. If \fIs\fR is initialized
+to some character string, that string will be the menu name of the cached
+application.
+.PP
+The programmer can also specify how an application is cached and how it
+will be subsequently invoked through the bit-vector argument \fIf\fR by
+OR'ing these constant flags:
+.IP \fBA_SHARED\fR
+The application is cached as a shared application. A shared application
+can have multiple copies of it running at the same time. All initialized
+or un-initialized global and static variables of the application are also 
+shared between all the running copies, so shared applications must be
+written accordingly. By definition the \fBA_SHARED\fR flag forces
+the \fBA_DATA\fR and \fBA_BSS\fR flags.
+.IP \fBA_NO_SHOW\fR 
+The application does not want to advertise itself through the \fBMore\fR
+menu. Usually this type of application requires host support to run, thus
+locally opening a window through the \fBMore\fR menu
+is not sufficient. In this case, it is preferrable
+to let the host side boot the terminal side
+(i.e., the cached application) with \fIdmdld(1)\fR. 
+.IP \fBA_BSS\fR
+The application does not want its un-initialized global and static variables
+(\fI.bss\fR section) to be reset to null for subsequent invocations.
+To conform with the default initialization rule of the C language which
+states that un-initialized global and static variables are guaranteed to
+be set to zero, the default for a cached application is to have its
+un-initialized global and static variables to be cleared of all updates
+made by previous runs before
+a new invocation of the application starts to execute. However, for
+shared applications or special applications that
+want to keep data accumulated from previous runs, the \fBA_BSS\fR
+flag can be set to prevent the \fI.bss\fR section from being cleared.
+.IP \fBA_DATA\fR
+The application does not want its initialized global and static variables 
+(\fI.data\fR section)
+to be reset to the original values when the function
+\fIcache\fR is called. By default, when the function \fIcache\fR is called,
+an instant snapshot of the \fI.data\fR section is made and stored into memory.
+Whenever the cached application is invoked again, the saved copy is used to
+re-initialize the \fI.data\fR section with the original values. However, for
+shared applications, or special applications that want to keep data 
+accumulated from previous runs, or applications that do not change the values
+of the variables in the \fI.data\fR section and do not want memory wasted
+for a snapshot, the \fBA_DATA\fR flag can be set to forgo the savings and copy.  
+.IP
+\fBNOTE:\fR the original values of the variables in the \fI.data\fR section are
+the values \fIat the time\fR the function \fIcache\fR is called. If any of these
+variables are modified before \fIcache\fR is
+called, the values remembered may not be the same as appeared in the source code.
+.IP \fBA_NO_BOOT\fR
+The application does not want to be booted from \fIdmdld\fR. Note that
+if both \fBA_NO_BOOT\fR and \fBA_NO_SHOW\fR are set, there is no
+way to access the cached application for invocation.
+.IP \fBA_PERMANENT\fR
+The applicaton cannot be removed by \fIdecache(3L)\fR or \fIucache(1)\fR.
+ROM-resident applications are cached this way.
+.PP
+The default when the bit-vector argument \fIf\fR is null is to cache
+the application as a non-shared text, which can be accessed from
+the \fBMore\fR menu and from \fIdmdld(1)\fR, has its \fI.bss\fR section
+cleared and its \fI.data\fR initialized before execution, and can be removed 
+from the application cache.
+.PP
+Besides the information supplied by the arguments, caching a downloaded
+application requires other parameters. The most useful ones are:
+.IP ""
+- host connection
+.IP ""
+- capability to reshape
+.IP ""
+- default window size
+.PP
+The
+.I cache
+function 
+extracts the above information
+from the current disposition of the application itself.
+This relieves the programmer from supplying the many parameters,
+and ensures a uniform user interface
+among different cached applications.
+.PP
+The state of host connection of a cached application is the same as
+of the application when the function \fIcache\fR is called. If the application is already
+local (no host connection), the application will be cached as local; otherwise,
+it will be cached as connected. When using the \fBMore\fR submenu to create a
+connected cached application, the user has to select the host he wants the
+application to be connected to through a Host submenu (like the one under the
+item \fBNew\fR in the global menu). 
+On the other hand, when \fIdmdld\fR is used to bootstrap a local
+cached application to replace the default terminal emulator, the previously
+connected window will 
+automatically loose its connection (i.e. its border is changed to a checkered
+pattern of a local window). 
+.PP
+The capability to reshape a cached application depends on the \fINO_RESHAPE\fR
+bit of the process state variable when the function \fIcache\fR is called.
+If this bit is set, the application is cached as non-reshapable. When using
+the \fBMore\fR submenu to create a non-reshapable cached application, the user
+gets the 
+application's default window size without a sweep cursor. When \fIdmdld\fR is used
+to bootstrap a non-reshapable cached application to replace the
+default terminal emulator, the window is automatically reshaped
+to the application's default window size.
+.PP
+The 
+cached application's default window size is determined by the \fIchar_to_bits\fR
+function (see \fIbtoc(3R)\fR)
+and the \fINO_RESHAPE\fR bit. If a function \fIchar_to_bits\fR is defined
+for the application, the function \fIcache\fR will call it with three arguments: 
+0, 0, and a pointer
+to the application's process table to calculate the 
+default window size. The result will be stored in the Application cache, and
+used by the terminal to generate the default outline if the application is
+selected from the \fBMore\fR menu, or to reshape the window if the application
+is not reshapable and is invoked from \fIdmdld\fR.
+If the \fIchar_to_bits\fR function is not defined, but the \fINO_RESHAPE\fR bit is set, the
+default window size will be taken as the current window size 
+of the application when the function
+\fIcache\fR is called. If neither the function \fIchar_to_bits\fR is defined
+nor the \fINO_RESHAPE\fR bit is set, no default window size will be displayed
+when the user selects the application's name under the \fBMore\fR menu, and
+the user will have to sweep a window to run the application.
+.PP
+All applications that are not cached with the \fBA_NO_SHOW\fR bit on, will
+be shown on the \fBMore\fR menu. What happens when selected depends on how they are cached,
+as explained below. 
+.PP
+If an application is cached as shared and local, selection of the application's
+name in the More submenu always results to the creation of a local window
+running the chosen application.
+.PP
+If an application is cached as shared and connected, there will be always
+a Host submenu connected to the application's name in the More submenu.
+Selection will be effective only when an item in the Host submenu is picked.
+Selection of the application's name in the More submenu is a null operation.
+.PP
+If an application is cached as non-shared and local, selection of the
+application's name in the More submenu results in the creation of a local
+window running the application, \fIif and only if\fR no other window is running 
+that application at the time. Otherwise the window running the application will
+be made Top and Current.
+.PP
+If an application is cached as non-shared and connected, there will be 
+a Host submenu connected to the application's name in the More submenu,
+\fIif and only if\fR no other window is running 
+that application at the time. Selection is effective only when an item
+in the Host submenu is picked. If there is a window running the application
+already, there will be no Host submenu, and selection of the application's
+name in the More submenu results to the window running the application be
+made Top and Current. \fI
+
+.SS Return Value
+If the calling application is successfully cached, the \fIcache\fR
+function returns a 1. Otherwise a 0 is returned.
+.PP
+A failure may be due to the following reasons. Another application
+of the same \fItag name\fR is already in the cache, or the terminal
+runs out of memory when saving the caching information.
+
+
+.SH EXAMPLE
+This is an example of a very crude terminal emulator that only
+prints what it receives from the host.
+This program, called \fIterm.c\fR is compiled as followed:
+.br
+	dmdcc -o term term.c
+.br
+in order to have the name \fIterm\fR in the \fBMore\fR submenu.
+.PP
+.RS 3
+.nf
+.ft CM
+.S -2
+#include <dmd.h>
+#include <object.h>
+
+main ()
+{
+	register int c;
+	Point setsize();
+
+
+	P->ctob = setsize;
+	cache ((char *)0, A_SHARED);
+	/* cache as shared application */
+
+	request (RCV);
+	while (1) {		/* never ending loop */
+		wait (RCV);	/* wait for a character */
+		while ((c = rcvchar()) != -1)
+			lprintf ("%c", c);
+			/* print anything received */
+	}
+}
+
+Point 
+setsize ()		/* do not need the arguments 0, 0, P */
+{
+	Point fPt();
+
+	return (fPt(728, 344));	/* just a nice size */
+}
+.fi
+.RE
+
+.SH SEE ALSO
+dmdld(1), ucache(1),
+btoc(3R),
+cmdcache(3L), decache(3L),
+local(3R), state(3R).
+

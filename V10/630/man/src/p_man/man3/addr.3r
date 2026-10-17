@@ -1,0 +1,52 @@
+.TH ADDR 3R "630 MTG"
+.XE "addr()"
+.SH NAME
+addr \- return the Word address of a Point in a Bitmap
+.SH SYNOPSIS
+\f3#include <dmd.h>\f1
+.sp
+\f3Word \(**addr (b, p)\f1
+.br
+.B Bitmap \(**b;
+.br
+.B Point p;\fR
+.SH DESCRIPTION
+The
+.I addr 
+function
+returns the address of the Word containing the bit
+corresponding to the Point
+.I p
+in the Bitmap
+.I b.
+.SH EXAMPLE
+The following subroutine can be used to determine whether a Point
+.I p
+in a Bitmap
+.I b
+is on or off (returning 1 or 0, respectively).
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+Word *addr();
+
+pixel (b, p)
+Bitmap *b;
+Point	p;
+{
+	Word *w;
+	UWord bit;
+
+	w = addr (b, p);
+	bit = FIRSTBIT >> (p.x%WORDSIZE);
+	return (*w&bit)==bit;
+}
+.fi
+.ft R
+.RE
+.PP
+This routine is implemented differently in \f2rol\f1(3L).
+.SH SEE ALSO
+rol(3L), structure(3R).

@@ -1,0 +1,66 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH POINT 3R "630 MTG"
+.XE "point()"
+.SH NAME
+point \- draw a single pixel in a Bitmap
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+void point (b, p, f)
+.br
+Bitmap \(**b;
+.br
+Point p;
+.br
+Code f;
+.SH DESCRIPTION
+The
+.I point
+function
+draws the pixel at Point
+.I p
+in the Bitmap
+.I \(**b
+according to function Code
+.IR f .
+.SH EXAMPLE
+The following program determines the Point at the middle of
+the window and draws it.  Hitting any key 
+will exit the program.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+Point middle();
+Point add();
+Point div();
+Point sub();
+
+main()
+{
+	Point centerdot;
+	
+	centerdot = middle();
+	point (&display, centerdot, F_XOR);	
+	request(KBD);
+	wait(KBD);
+}
+
+Point middle()
+{
+	Point center, offset;
+
+	offset = div (sub (Drect.corner,
+		Drect.origin), 2);
+	center = add (Drect.origin, offset);
+
+	return center;
+}
+\fR
+.fi
+.RE
+.SH SEE ALSO
+jpoint(3R).

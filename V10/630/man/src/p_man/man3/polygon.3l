@@ -1,0 +1,139 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH POLYGON 3L "630 MTG"
+.XE "polyf()"
+.XE "ptinpoly()"
+.SH NAME
+polygon: polyf, ptinpoly \- polygon routines
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+int polyf (bp, poly, np, t, f)
+.sp
+int ptinpoly (pt, poly, np)
+.sp
+Bitmap \(**bp;
+.br
+Point poly[ ];
+.br
+short np;
+.br
+Texture16 \(**t;
+.br
+Code f;	
+.br
+Point pt;
+.SH DESCRIPTION
+The
+.I polyf
+function
+is used to fill a closed polygon defined by the
+.I np
+Points in the array of Points
+.IR poly .
+The Points are absolute with respect to the Bitmap
+.I bp.
+The polygon is filled with the Texture16
+.I t
+using Code
+.I f.
+The
+.I polyf
+call
+returns 0 if the polygon is filled and -1 if a memory allocation
+error occurred during processing, in which case the polygon
+is not filled.
+.PP
+The
+.I ptinpoly
+call
+determines whether the Point
+.I pt
+is contained in the polygon defined by
+.I poly
+and
+.I np.
+The
+.I ptinpoly
+function
+returns 1 if the Point is inside the polygon,
+0 if the Point is not inside the polygon,
+and -1 if a memory allocation error occurs.
+.PP
+The polygon can consist of an arbitrary number of filled and unfilled
+regions.
+For example, a doughnut shape could be formed
+without filling
+the portion of the Bitmap corresponding to the hole of the doughnut.
+This permits a preservation of any background information previously
+placed in the Bitmap.
+Each region, filled or unfilled, is delimited
+by a Point whose x-coordinate has a value of
+.I \s-1POLY_F\s+1
+(defined in \f3dmd.h\f1).
+This Point in
+.I poly
+is ignored and merely serves as a flag indicating
+the start of a new region.
+There is always an assumed line connecting the first and last Point
+of each region.
+.SH EXAMPLE
+The following code permits interactive drawing of
+a polygon with interior regions, fills it, and then
+uses \f2ptinpoly\f1 to determine if the mouse is inside the polygon.
+Button 1 is used to draw the points, and button 2 sets a point to \f2POLY_F\f1.  After the polygon fills, clicking button 1 with the mouse inside the polygon will ring the terminal bell.  Clicking button 3 will exit
+the drawing and exit the program.
+.bp
+.PP
+.RS 3
+.nf
+\s-1
+.ft CM
+#include <dmd.h>
+
+Point npoly[1000];
+
+main()
+{
+	register int i, j;
+	register char c;
+
+	request (MOUSE|KBD);
+
+	i = 0;
+	for (;;)
+	{
+		while (i < 1000){
+			wait (MOUSE);
+			if( button1 () ){
+				npoly[i++] = mouse.xy;
+				point (&display, mouse.xy,
+				    F_STORE);
+				sleep (10);
+				continue;
+			}
+			if( button2 () ){
+				npoly[i++].x = POLY_F;
+				continue;
+			}
+			if( button3 () ) break;
+		}
+		polyf (&display, npoly, i, &T_black,
+		    F_STORE);
+
+		wait(MOUSE);
+
+		while( !button3() ){
+			wait (MOUSE);
+			if( button1() && ptinpoly
+			    (mouse.xy, npoly, i) )
+				ringbell();
+
+		}
+		break;
+	}
+}
+\fR
+.fi
+.RE
+\s+1

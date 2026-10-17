@@ -1,0 +1,59 @@
+.TH PT2WIN 3L "630 MTG"
+.XE "point2window()"
+.SH NAME
+pt2win: point2window \- find process table address of a window
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.br
+Proc \(**point2window (btn)
+.br
+int btn;
+.SH DESCRIPTION
+The
+.I point2window
+function implements the user interface for pointing to windows that
+are used by the Reshape, Move, Top, etc. functions of the 630 MTG
+main button 3 menu.
+.PP
+When
+.I point2window
+is called by an application program,
+the mouse cursor changes to a target icon.
+The function then busy waits for the user to move the mouse
+cursor into a window and press the button specified by \fIbtn\fR.
+When this happens, the mouse cursor will change back to the
+previous mouse cursor, and the process table address of the window
+pointed to will be returned.
+.PP
+The function will return (Proc *)0 if the user either clicks 
+button \fIbtn\fR while the target is over background
+texture or clicks a mouse button other than button \fIbtn\fR.
+.SH EXAMPLE
+The follow subroutine will flash a window pointed to with button 3.
+Note that in the following code, \fIp->layer\fR is equivalent
+to &\fIdisplay\fR for process p and that \fIp->rect\fR is equivalent
+to \fIDrect\fR for process p.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+flash()
+{
+	Proc *p;
+	Proc *point2window();
+
+	p = point2window(3);
+	if(p) {
+		rectf(p->layer, p->rect, F_XOR);
+		nap(20);
+		rectf(p->layer, p->rect, F_XOR);
+	}
+}
+\fR
+.fi
+.RE
+.SH SEE ALSO
+globals(3R), rectf(3R), sleep(3R).

@@ -1,0 +1,107 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH SCREENSWAP 3R "630 MTG"
+.XE "screenswap()"
+.SH NAME  
+screenswap \- swap screen Rectangle and Bitmap
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+void screenswap (b, r, s) 
+.br
+Bitmap \(**b;
+.br 
+Rectangle r, s; 
+.SH DESCRIPTION
+The
+.I screenswap
+function
+does an in-place exchange of the Rectangle
+.I r
+within the Bitmap
+.I b
+and screen rectangle
+.IR s.
+This exchange is done by \fIbitblt\fR'ing the bitmaps back and forth
+three times in XOR mode. This technique allows bitmaps to be exchanged
+without need for intermediate storage.
+.PP
+The action of screenswap is undefined, if
+.I r
+and
+.I s
+are not the same size.
+.PP
+.I Screenswap
+writes to the
+.I physical
+bitmap, so the
+.I s
+argument
+is clipped to the screen,
+not to the window's rectangle (display.rect).
+.SH EXAMPLE
+The following program floats a picture of a sailboat
+across the screen.
+.PP
+The 630 MTG mouse cursor is painted in XOR mode and therefore
+changes to inverse video when it moves over highlighted areas. This sailboat,
+however, does not inverse video when it moves over parts of the
+screen that are highlighted. This is accomplished by saving
+whatever is on the screen in the spot where the sailboat is currently
+painted and restoring the screen when the sailboat moves. The unique
+aspect of this is that the same physical memory is used to alternately
+store the picture of the sailboat and the saved screen rectangle, and
+these two bitmaps are swapped without use of intermediate storage.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+unsigned short sailicon[] = {
+	0xFDFF, 0xF9FF, 0xF1FF, 0xE0FF,
+	0xFD7F, 0xF9BF, 0xF5DF, 0xEDEF,
+	0xDDF7, 0xDDF7, 0xBDFB, 0xB8FB,
+	0x0000, 0x8003, 0xE007, 0xFFFF,
+};
+
+Bitmap sailmap = {
+	(Word *)sailicon,
+	1,
+	(short)0, (short)0, (short)16, (short)16,
+	(char *)0
+};
+
+extern Rectangle fRpt();
+extern Rectangle raddp();
+
+main()
+{
+	Rectangle r;
+
+	r = fRpt(0, YMAX/2-8, 16, YMAX/2+8);
+
+	/* put the sailboat onto the screen */
+	screenswap(&sailmap, sailmap.rect, r);
+
+	/* move the sailboat across the screen */
+	while(r.corner.x <= YMAX) {
+		sleep(3);
+		screenswap(&sailmap, sailmap.rect, r);
+		r = raddp(r, Pt(1,0));
+		screenswap(&sailmap, sailmap.rect, r);
+	}
+
+	/* remove the sailboat for the last time */
+	screenswap(&sailmap, sailmap.rect, r);
+}
+\fR
+.fi
+.RE
+.PP
+This example is very similar to how message boxes are implemented.
+Message boxes are rectangles containing messages which float
+around the screen when the mouse moves.
+.SH SEE ALSO
+bitblt(3R), msgbox(3R).

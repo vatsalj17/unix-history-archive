@@ -1,0 +1,45 @@
+.TH MKUNIQUE 3
+.CT 2 file_inq_creat
+.SH NAME
+mkunique, tmpnam \(mi make a file with a unique name
+.SH SYNOPSIS
+.nf
+.B char *mkunique(template, mode, fdp)
+.B char *template;
+.B int *fdp;
+.PP
+.B tmpnam(s)
+.B char *s;
+.fi
+.SH DESCRIPTION
+.I Mkunique
+creates a file with a unique name and the specified
+.I mode
+and returns a pointer to a
+.IR malloc (3)-ed
+copy of the unique name.
+.PP
+If the new file resides in an ordinary directory,
+the unique name will be the template suffixed by 8 digits,
+the first 5 of which are the current process id.
+The last component of the template should not
+be more than 6 characters long.
+In a blind directory, the entire last component of
+the unique name will be a random string; see
+.IR creat (2).
+.LP
+If the pointer
+.I fdp
+is nonzero, the location pointed to will be filled in
+with a file descriptor for the file, open for writing.
+.LP
+Note.
+It is bad form to leave files in the temporary directory.
+One way to avoid doing so is to
+.IR unlink (2)
+temporary files as soon
+as they are opened.
+.SH "SEE ALSO"
+.IR tmpnam (1)
+.SH DIAGNOSTICS
+Zero is returned if the operation fails for any reason.

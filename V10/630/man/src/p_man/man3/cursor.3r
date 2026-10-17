@@ -1,0 +1,206 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH CURSOR 3R "630 MTG"
+.XE "cursallow()"
+.XE "cursinhibit()"
+.XE "cursswitch()"
+.XE "cursset()"
+.XE "cursxyoff()"
+.XE "cursxyon()"
+.XE "Cursallow()"
+.XE "Cursinhibit()"
+.XE "Cursswitch()"
+.XE "C_skull"
+.XE "C_target"
+.XE "C_cup"
+.XE "C_deadmouse"
+.XE "C_arrows"
+.XE "C_insert"
+.SH NAME
+cursor: cursinhibit, cursallow, cursswitch, cursset, cursxyon, cursxyoff, Cursinhibit, Cursallow, Cursswitch \- cursor control
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B void cursallow ( )
+.br
+.B void Cursallow ( )
+.PP
+.B void cursinhibit ( )
+.br
+.B void Cursinhibit ( )
+.PP
+.B Texture16 \(**cursswitch (t)
+.br
+.B Texture16 \(**Cursswitch (t)
+.PP
+.B void cursset (p)
+.PP
+.B void cursxyon ( )
+.PP
+.B void cursxyoff ( )
+.PP
+.B Texture16 \(**t;
+.br
+.B Point p;
+.PP
+.B Texture16 C_target, C_arrows, C_insert;
+.PP
+.B Texture16 C_cup, C_deadmouse, C_skull;
+.SH DESCRIPTION
+The
+.I cursinhibit
+function
+turns off the interrupt-time cursor tracking
+(the drawing of the cursor on the screen),
+but the mouse coordinates are still kept current
+and available in the global structure
+.I mouse.
+.PP
+The
+.I cursallow
+function
+enables interrupt-time cursor tracking.
+.PP
+The
+functions
+.I cursallow
+and
+.I cursinhibit
+stack.
+To enable cursor tracking after two calls to
+.IR cursinhibit ,
+two calls to
+.I cursallow
+are required.
+.PP
+The
+.I cursswitch
+function
+changes the mouse cursor to the Texture16 specified by
+.IR t .
+If
+.I t
+is (Texture16 *)0, the cursor is restored to the default arrow. 
+The
+.I cursswitch
+function
+returns the previous value of the cursor,
+the argument of the previous call to 
+.IR cursswitch .
+.PP
+The
+.IR Cursallow ,
+.IR Cursinhibit ,
+and
+.I Cursswitch
+functions are the same as those described above, but
+they do not require ownership of the mouse or that the mouse
+be in the window.
+.PP
+The
+.I cursset
+function
+moves the mouse cursor from the current screen position to the new screen position 
+at Point
+.IR p .
+.PP
+.PP
+The \fIcursxyon\fP function restricts interrupt-time cursor
+tracking to only the vertical or horizontal axis.  The choice
+of movement along an axis is determined at interrupt-time
+and depends on the greater mouse movement along the axes.
+The lesser movement is ignored.
+This function is used by tmenuhit to help restrict the mouse's movement.
+.PP
+The \fIcursxyoff\fP function restores normal cursor tracking.
+.PP
+All of these functions require the mouse to be requested first.
+They work on a per process basis. They will not affect the
+mouse operation of other processes.
+.PP
+The Texture16s listed are resident in the 630 MTG.
+Their names explain what they look like.
+.SK
+.SH EXAMPLE
+The following example divides a window into four Rectangles.
+Based on which Rectangle the mouse is in,
+this program either switches the cursor to the default arrow,
+switches the cursor to the \s-1AT&T\s+1 Logo,
+inhibits the cursor,
+or sets the cursor to \fIDrect.origin\fR.
+.PP
+.RS 3
+.ft CM
+.nf
+\s-1
+#include <dmd.h>
+Texture16 att = {
+         0x07E0, 0x1F08, 0x0000, 0x7FFE,
+         0x3FC2, 0x0000, 0xFFFF, 0x7FC1,
+         0x0000, 0xFFFF, 0x1F01, 0x0000,
+         0x7FFE, 0x0000, 0x1008, 0x07E0,
+};
+
+Point div(), sub(), add();
+
+main()
+{
+    Point o, p;
+    Rectangle tl, tr, bl, br;
+    int lastr = 0;
+
+    o = div (sub (Drect.corner,
+             Drect.origin), 2);
+    tl.origin = tr.origin = bl.origin
+              = br.origin = Drect.origin;
+    tr.origin.x += o.x;
+    bl.origin.y += o.y;
+    br.origin = add (br.origin, o);
+    tl.corner = add (tl.origin, o);
+    tr.corner = add (tr.origin, o);
+    bl.corner = add (bl.origin, o);
+    br.corner = add (br.origin, o);
+    request (MOUSE|KBD);
+    while( kbdchar() == -1 ){
+         wait (MOUSE);
+         p = mouse.xy;
+         if( ptinrect (p, tl) && lastr!=1 ){
+           if( lastr==3) cursallow ();
+           lastr = 1;
+           cursswitch((Texture16 *)0);
+.SK
+         } else if( ptinrect (p, tr) &&
+                    lastr!=2 ){
+                  if( lastr==3) cursallow ();
+                  lastr = 2;
+                  cursswitch (&att);
+         } else if( ptinrect (p, bl) &&
+                    lastr!=3 ){
+                  lastr = 3;
+                  cursinhibit ();
+         } else if( ptinrect (p, br) &&
+                    lastr!=4 ){
+                  if( lastr==3) cursallow ();
+                  lastr = 4;
+                  cursset (Drect.origin);
+        }
+    }
+}
+\s+1
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+resources(3R), sleep(3R), structures(3R).
+.SH WARNING
+The
+.IR Cursallow ,
+.IR Cursinhibit ,
+and
+.I Cursswitch
+functions change the state of the mouse cursor without informing
+the 630 MTG operating system. Any action they do must be undone
+before calling
+.I sleep
+or
+.IR wait .
+Also, they should not be mixed with the other cursor control routines.

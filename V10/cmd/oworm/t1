@@ -1,0 +1,55 @@
+
+static Inode *inodes;
+static long ip;
+static long ninodes = 0;
+static char *nameb;
+static long np;
+static long nnameb = 0;
+static long nblocks;
+#define		IINC		1024
+#define		NINC		(64*IINC)
+
+ininit()
+{
+	if(nnameb == 0)
+		nameb = malloc((unsigned)(nnameb = NINC));
+	np = 0;
+	if(ninodes == 0)
+		inodes = (Inode *)malloc(sizeof(Inode)*(unsigned)(ninodes = IINC));
+	ip = 0;
+}
+
+inadd(s, i)
+	Superblock *s;
+	register Inode *i;
+{
+	register long len;
+
+	len = strlen(i->name.n)+1;
+	if(np+len > nnameb){
+		while(np+len > nnameb)
+			nnameb += NINC;
+		nameb = realloc(nameb, (unsigned)nnameb);
+	}
+	strcpy(nameb+np, i->name.n);
+	i->name.o = np;
+	np += len;
+	if(ip == ninodes){
+		ninodes += IINC;
+		inodes = (Inode *)realloc((char *)inodes, (unsigned)ninodes*sizeof(Inode));
+	}
+	inodes[ip++] = *i;
+	return(0);
+}
+
+inwrite(s)
+	Superblock *s;
+{
+	char *e;
+
+	if(e = lkwri(s, inodes, ip, nameb, np, 0L)){
+		fprint(2, "%s\n", e);
+		bad = 1;
+		return;
+	}
+}

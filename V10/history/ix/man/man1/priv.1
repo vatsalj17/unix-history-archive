@@ -1,0 +1,145 @@
+.TH PRIV 1
+.CT 1 sa_nonmortals secur
+.SH NAME
+priv, privedit \- run a command with privileges
+.SH SYNOPSIS
+.B priv
+[
+.I option ...
+] [
+.I command
+.I arg ...
+]
+.PP
+.B priv privedit
+.I node
+.I changes
+.SH DESCRIPTION
+If a
+.I command
+is given,
+.I priv
+determines from the
+.IR privs (5)
+file the most specifically matching
+.B REQUEST
+for which the process has all the
+.B NEEDS
+and to which it has
+.BR ACCESS 
+(terminology explained in
+.IR privs (5)).
+If a unique most specific match is found, 
+.I priv
+asks for confirmation.
+Then, if the confirmation is 
+.LR y ,
+the request is executed.
+Privileges and process ceiling are set according to
+the pertinent entry in
+.FR /etc/privs 
+and the current directory is set to a place with
+security label
+.BR L_NO ;
+see 
+.IR getflab (2).
+Thus relative pathnames won't work in the
+.I command
+until it executes
+.IR chdir (2).
+.PP
+If no command is given, the contents of the 
+.I privs
+file are printed on the standard output.
+.PP
+The options are
+.TP 
+.B -n
+Determine and report authorization and actions.
+Do not execute them except, if
+.B PRIVEDIT 
+is requested, place the edited privilege 
+file on the standard output.
+.TP
+.BI -f " servfile
+Use
+.I servfile
+instead of
+.FR /cs/priv ,
+to use a non-standard privilege server.
+.PP
+One request is more specific than another
+if the regular language for each argument
+of the first request is contained in the corresponding 
+language for the second request,
+and at least one containment is proper.
+.PP
+The standard error and standard input are used for confirmations.
+Both must come from the same trusted source, either a pexable
+stream with a stream identifier, or a pipe from a trusted
+process; see
+.IR pex (4)
+and
+.IR stream (4).
+.PP
+.I Privedit
+applies to the
+.I privs
+file the modifications given in the
+.I changes
+file.
+Only the part of the authorization tree rooted at the given
+.I node
+may be changed.
+The form of
+.I changes
+is described in
+.IR privs (5).
+The changes are echoed and confirmation is requested.
+.RI ( Privedit,
+like any other
+.I command,
+is a conventional token defined by the
+.I privs
+file; it is not built in.)
+.PP
+.I Priv
+clears the environment to prevent hidden corruption
+by untrusted processes.
+For the same reason it asks confirmation of the argument list.
+What you see is what it will do.
+.PP
+The real work of
+.I priv
+is done by 
+.IR privserv (8).
+.I Priv
+communicates with
+.I privserv
+via a pipe that the latter mounts on
+.BR /cs/priv . 
+.SH FILES
+.F /etc/privs
+.br
+.F /cs/priv
+.SH SEE ALSO
+.IR privs (5),
+.IR privserv (8),
+.IR session (1)
+.SH DIAGNOSTICS
+If a
+.I command 
+is performed,
+.I priv
+returns the result of the last constituent action; see
+.IR privs (5).
+.SH BUGS
+Trailing null
+.I args
+are deleted.
+.br
+The standard input and standard error cannot freely be redirected.
+.br
+It is possible for a password to be demanded twice.
+This would be mitigated if requests were assessed in
+decreasing order of specificity instead of table order.

@@ -1,0 +1,607 @@
+'\" t
+.TH POST 1 "Post 4.0" " "
+.ds q \fBpost\fP
+.ds p \fIpost\fP
+.SH NAME
+post \- read or send mail with corporate directory access
+.SH SYNOPSIS
+.SS Reading Mail
+\*q [\fImailx\fR(1) options]
+.SS Sending Mail
+\*q [\fImailx\fR(1) options] [directory query options] address ...
+.SS Directory Assistance
+\*q \fB\-D\fR
+.br
+\*q \fB\-w\fR [directory query options] address ...
+.SS Directory Update
+\*q \fB\-S\fR
+.SS Administrative
+\*q \fB\-G\fR [\fIsource\fR [\fIdest\fR]]
+.br
+\*q \fB\-V\fR
+.SH DESCRIPTION
+\*p is a mail processing system for reading and sending
+messages using
+.IR mailx (1).
+It provides the ability to look up employee/site information in 
+on-line corporate directories, in addition
+to recognizing
+.IR mailx (1)
+and
+.IR mail (1)
+addressing conventions.
+\*p also generates paper mail for intra-company delivery.
+.SS "Addressing"
+An
+.I address
+is one of:
+.RS 2
+.TS
+tab(;);
+l l.
+\fIalias\fP;as defined in \fImailx\fR(1)
+\fIlocal file delivery\fP;\fB+\fIfile\fR or \fB|\fIprogram\fR as defined in \fImailx\fR(1)
+\fInetwork address\fP;[\fIsystem\fB!\fR...]\fB!\fIlogin\fR or \fIlogin\fB@\fIsystem\fR
+\fIpaper address\fP;\fBpaper!\fIname\fB:\fIloc\fB:\fIroom\fR
+\fIlogin\fP;local user login id
+\fIquery\fP;corporate directory query
+.TE
+.RE
+.PP
+First, 
+.I alias
+is resolved.
+If the first character is a \fB+\fR or \fB|\fR, \fIlocal file delivery\fP
+is assumed.
+Then, \fIaddress\fP is searched from the left for the
+first occurrence of a \fB!\fR, \fB@\fR, \fB/\fR, \fB:\fP, or \fB\=\fR.
+If this character is a
+.BR ! " or"
+.BR @ ,
+.I address
+is a 
+.I "network address"
+.RI ( login
+in
+.I "network address"
+can be a
+.I query
+or
+.IR mail (1)
+system-wide alias).
+An
+.I address
+beginning with
+.B paper!
+delivers intra company mail specified by
+.IR name ,
+.IR loc ,
+.RI and " room.
+If the first character from the left is a
+.BR / ,
+.BR : " or"
+.BR = ,
+then
+.I address
+is a
+.I query.
+Finally, if
+.B \%POSTETC
+is set in the environment and
+.I address
+is found in
+.BR /etc/passwd ,
+it is a
+.IR login ,
+otherwise it is treated as a
+.IR query .
+A
+.I query
+is one more
+.I "value pairs"
+separated by
+.BR / " or"
+.BR : .
+Colon must be used in place of slash in \fIsystem\fB!\fIquery\fR.
+A
+.I "value pair" 
+is the construction \fIattribute\fB=\fIvalue\fR
+(see
+.BR Attributes ).
+.SS "Reading Mail"
+.PP
+See
+.IR mailx (1).
+.SS "Sending Mail"
+See
+.IR mailx (1)
+and
+.B Directory Queries.
+A resolution prompt will appear if
+.I address
+is ambiguous or invalid.
+.br
+.SS "Directory Assistance"
+.TP
+.B \-D
+Gives you information on the corporate directory:
+a support contact for reporting problems,
+the last update of the directory,
+and available attributes and titles.
+.TP
+.B \-w
+Who.
+Query directory.
+.br
+.ne 2i
+.SS "Directory Update"
+.TP
+.B \-S
+Update user information interactively and set up a new user on the system.
+This is automatically invoked when using \*p for the first time to send mail.
+The session prompts for personnel identification number,
+reporting organization,
+location code, room number, telephone number and electronic
+mail address.
+The default for each prompt is displayed within brackets.
+To delete a value, enter
+.BR \- .
+Any new information is electronically mailed to the Corporate Directory
+Administrator for update of the master directory.
+.SS "Administrative"
+.TP
+.B \-G \fR[\fIsource\fR [\fIdest\fR]]
+Generate a new
+.IR user (4)
+file by reading the
+.I source
+file, deleting entries for users no longer on the system, and writing
+the result to the file
+.IR dest .
+Both
+.I source
+and 
+.I dest
+are in
+.IR user (4)
+format and the default for both is
+.BR $POST/lib/user .
+.TP
+.B \-V
+Print the current version and release date.
+.SS "Directory Queries"
+.TP
+.BI \-a " attribute\fR[\fI/attribute\fR...]
+Provide default
+.IR attribute(s) .
+If a
+.I query
+sequence is missing an
+.IR attribute ,
+assume the corresponding
+.I attribute
+in the
+.B \-a
+argument.
+The default is
+.BR pn .
+.TP
+.BI \-m " mods
+Opens the directory specified by
+.I mods
+(see
+.IR modules (4)).
+.TP
+.BI \-o " fmt
+Format output of directory search (see
+.BR "Output Formatting" ).
+The default format is
+.br
+.B "%24pn %10org %6loc %6room %12tel %ema"
+.TP
+.BI \-q " query
+Provide default value pairs.
+If a
+.I query
+is missing a
+value pair given in the
+.BR \-q
+argument, add the value pair to the
+.I query
+(see
+.BR POSTQUAL ).
+.br
+.ne 8i
+.SS Attributes
+The ``Directory Attributes'' table below contains a list of the
+attributes used in
+.IR queries .
+The table also supplies a short description, a match type and a list
+of value characteristics (see explanation following table) for each attribute.
+.PP
+.TS
+center,allbox,tab(;); 
+c s s s s
+c | c | c | c | c
+l | l | c | c | l.
+\fBDirectory Attributes\fP
+\fIAttribute;Description;Match Type;Characteristics;Example\fR
+_
+pn;personal name;x;i;pn=j.f.s.smith,jr
+name;personal name;x;i;name=p_jones_\^_md
+first;first name;p;ia;first=frederick
+middle;first middle name;p;ia;middle=bernard
+middle2;second middle name;p;ia;middle2=emile
+last;last name;s;ia;last=adams
+suffix;name suffix;e;ia;suffix=sr
+soundex;soundex code;e;i;soundex=m460
+_
+pid;personnel identification number;n;a;pid=103459
+org;organization code;p;i;org=45263
+com;company affiliation;p;i;com=bl
+tl;title abbreviation;w;i;tl=dh
+occ;occupational code;e;;occ=c
+_
+tel;full telephone number;t;a;tel="(201) 386-4419"
+area;area code;e;a;area=201
+exch;exchange;e;a;exch=386
+ext;extension;e;a;ext=4419
+cornet;cornet number;e;a;cornet=232
+_
+loc;location code;s;ia;loc=wh
+room;room number;p;ia;room=3a-359
+street;street address;p;ia;street="whippany road"
+city;city address;p;ia;city=whippany
+state;state address;e;ia;state=nj
+zip;zip code;p;a;zip=07981
+_
+ema;email address;s;;ema=attmail!fsmith
+_
+multi;employees with multiple locations;e;m;multi=1
+_
+attribute;display valid attributes;e;;\-o %attribute
+.TE
+.PP
+.SS Match Type
+.PD 0
+.TP
+.B e
+Exact match.
+.TP
+.B n 
+Numeric match.
+.TP
+.B p
+Prefix match.
+.TP
+.B s
+Exact match unless argument ends with a star
+.RB ( * ),
+in which case prefix match.
+.TP
+.B t
+Telephone match.
+Treat rightmost four numbers as extension,
+next three rightmost as exchange,
+and last three rightmost as area code.
+Non-alphanumerics are ignored.
+The output format is
+.IR "area exch ext" " ."
+.TP
+.B w
+Prefix match on every word.
+.TP
+.B x
+Personal name match.
+Syntax for personal name is:
+[\fIfirst\fB.\fR[\fImiddle\fB.\fR[\fImiddle2\fB.\fR]]]\fIlast\fR[\fB,\^\fIsuffix\fR]\ \ or
+[\fIfirst\fB_\fR[\fImiddle\fB_\fR[\fImiddle2\fB_\fR]]]\fIlast\fR[\fB_\^_\fIsuffix\fR]
+.br
+.ne 1i
+To prefix match on last name, append
+.B *
+or
+.B ...
+to
+.IR last .
+To phonetic match on last name, append
+.B ?
+or
+.B ~
+to
+.IR last ,
+or prepend personal name with
+.BR ? .
+The output format for
+.B pn
+is
+\fIlast\fB,\ \fIfirst\ middle\ middle2\fB,\ \fIsuffix\fR\ ;
+and
+.B name
+is
+\fIfirst\fB_\fImiddle\fB_\fImiddle2\fB_\fIlast\fB_\^_\fIsuffix\fR\ .
+See
+.B first,
+.B middle,
+.B middle2,
+.B last,
+and
+.B suffix
+for the characteristics of the individual parts of
+.BR pn " and
+.BR name .
+.PD
+.SS Characteristics
+.PD 0
+.TP
+.B a
+Ignore non-alphanumerics.
+.TP
+.B i
+Ignore case.
+.TP
+.B m
+Multiple records match.
+If argument is empty,
+.BR 1 " or
+.BR 2 ,
+retrieve first, second or third record for
+.IR query ,
+respectively.
+.PD
+.PP
+\*p attributes used for mail delivery are described in the following table.
+These attributes only take effect on
+.IR queries .
+.PP
+.TS
+center,box,tab(;); 
+c s s
+c | c | c 
+c | l | lw(3i).
+\fBDelivery Attributes\fP
+_
+\fIAttribute;Possible Values;Description
+=
+\fRdel;paper;T{
+Delivery type.
+Forces paper mail delivery for \fIquery\fP recipients.
+T}
+_
+ask;yes, no (default);T{
+Ask before sending mail.
+The recipients of the message are displayed.
+T}
+_
+all;yes, no (default);T{
+Send to all recipients matching \fIquery\fP.
+Useful when sending to entire organizations.
+The \fIquery\fP is not expanded in the message header.
+T}
+_
+.TE
+.SS Output Formatting
+The
+.I fmt
+argument specified with the
+.B \-o
+option is used as a
+.IR printf (3C)-like
+string for formatting the output of directory queries.
+All characters are copied literally, except for
+attribute substitutions and backslash escapes.
+Quoting may be necessary to prevent shell interpretation.
+.PP
+The syntax for attribute substitutions is:
+.IP
+\fB% \fIflags width . precision \fIattribute\fP
+.PP
+Only
+.BR % " and
+.I attribute
+are required.
+.I Flags
+may be one or more of the following:
+.RS 2
+.PD 0
+.TP
+.B \(mi
+Right justify (left justification is the default).
+.TP
+.B ^
+Capitalize the first letter of each word.
+.TP
+.B +
+Capitalize all letters in the value.
+.TP
+.B <
+If the value is empty,
+delete back to the last
+.B \e\^<
+or beginning of output.
+.TP
+.B >
+If the value is empty, skip to the next
+.B \e\^>
+or end of format string.
+.RE
+.PD
+.PP
+.I Width
+is an integer giving the minimum field width.  
+If the value has fewer characters than this number, the
+value will be padded on the right (or left, if the
+.B \(mi
+flag is present) with blank spaces.
+The default
+.I width
+is zero. 
+.P  
+.I Precision
+is an integer that specifies 
+the maximum number of characters to
+be printed from the value.
+If the value has 
+more characters than this number, they will not
+be printed.
+Zero is a special case meaning print all characters (the default).
+A period is used to
+separate 
+.I width
+and
+.I precision
+and is only used if
+.I precision
+is used.
+.PP
+To follow an
+.I attribute
+with an alphanumeric,
+enclose the attribute substitution
+(except for the percent sign) in curly braces,
+.BR {} .
+.PP
+.ne 3i
+The backslash escapes are:
+.PP
+.TS
+allbox,center,tab(;);
+c s
+c | c
+c | l.
+\fBOutput Format Backslash Escapes\fP
+\fIEscape;Meaning\fR
+_
+\e\^c;Suppress terminating new-line
+\e\^b;Backspace
+\e\^f;Form feed
+\e\^n;New-line
+\e\^r;Carriage return
+\e\^t;Tab
+\e\^v;Vertical Tab
+\e\^\fInnn\fR;Octal ASCII character
+\e\^<;Marker for < flag
+\e\^>;Marker for > flag
+.TE
+.br
+.SS Environment Variables
+.TP
+.B POSTETC
+When this variable is set, \*p will search
+.B /etc/passwd
+for
+.I login
+arguments. 
+.TP
+.BI POSTQUAL\= query
+Provide default
+.I "value pairs"
+for
+.IR query .
+If a
+.I query
+is missing
+.I "value pair"
+given in the
+.B POSTQUAL
+argument, add it to the
+.I query
+.RB ( \-q
+overrides
+.BR POSTQUAL ).
+.SH EXAMPLES
+.PD 0
+Read from your \fBmbox\fP file:
+.IP
+post \-f
+.PP
+Send mail to all department heads in Division 452:
+.IP
+post org=452/tl=dh/all=yes
+.PP
+Send paper mail to all employees at Whippany in section 3A:
+.IP
+post loc=wh/room=3a/all=yes/del=paper
+.PP
+Query directory for employees using system whutt:
+.IP
+post \-w ema=whutt!*
+.PP
+Query directory and format output in label-like form:
+.IP
+post \-w \-o "%^pn\e\^n%+loc %+room" org=123
+.PP
+Query directory for valid attributes:
+.IP
+post \-w \-o %attribute
+.PD
+.SH FILES
+.PD 0
+.TP 30
+$POST/lib/dispatch
+distributed directory map
+.TP
+$POST/lib/mailx
+mailx program used by \*p
+.TP
+$POST/lib/user
+list of
+.IR post (1)
+users on this system
+.TP
+$POST/lib/dbinfo
+program to retrieve directory information
+.TP
+$POST/lib/update
+program to update directory
+.TP
+$POST/lib/genuser
+program to update
+.IR user (4)
+file
+.TP
+/bin/mail
+local mail delivery agent
+.TP
+/bin/rmail
+remote mail delivery agent
+.TP
+/etc/passwd
+list of local users
+.PD
+.SH SEE ALSO
+btoa(1),
+fixmbox(1),
+forward(1),
+gone.fishing(1),
+mail(1),
+mailx(1),
+pq(1),
+genesis(1M),
+server(1M),
+upas(1M),
+pq(3C),
+dispatch(4),
+ev(4),
+mail(4),
+modules(4),
+user(4).
+.br
+.nf
+.I "Post 4.0 Product Release Description"
+.I "Post 4.0 Primer"
+.I "Post 4.0 User Guide"
+.I "Post 4.0 User Reference Manual"
+.I "Post 4.0 Administrator Reference Manual"
+.I "Post 4.0 Quick Reference Card"
+.I "Post 4.0 Programmer Guide"
+.I "Post 4.0 Administrator Guide"
+.fi
+.SH WARNINGS
+Colon must be used in place of slash in the construction:
+\fIsystem\fB!\fIquery\fR.
+.SH BUGS
+Mailings to very large mailing lists, e.g.,
+.BR com=bl/all=yes ,
+may fail by exceeding system limits (see
+.IR exec (2)).

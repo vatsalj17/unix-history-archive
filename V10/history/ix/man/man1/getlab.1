@@ -1,0 +1,49 @@
+.TH GETLAB 1 
+.CT 1 shell
+.SH NAME
+getlab \- print security labels of files and processes
+.SH SYNOPSIS
+.B getlab
+[
+.B -d
+]
+[
+.I file ...
+]
+.SH DESCRIPTION
+If there is a
+.I file
+argument,
+.I getlab
+prints, in the style of
+.IR labtoa (3),
+the security labels of the named files.
+Otherwise,
+.I getlab
+prints the security label of the process and the process ceiling,
+The option is
+.TP
+.B -d
+Also print labels of all open file descriptors.
+.PP
+If a (character special)
+.I file
+can be opened, and the labels of the file and the file descriptor
+differ, both are printed.
+.SH EXAMPLES
+.TP
+.B getlab /dev/stdin
+Print the labels (file system entry and file
+descriptor) of the standard input.
+.TP
+.B drop getlab -d
+Print the process label,
+preventing the open-file check and the ceiling-label
+check (see
+.IR getplab (2))
+from raising the
+process label.
+.SH SEE ALSO
+.IR stat (1),
+.IR getflab (2),
+.IR getplab (2)

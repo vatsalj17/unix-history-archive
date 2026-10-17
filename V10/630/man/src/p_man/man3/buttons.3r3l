@@ -1,0 +1,155 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH BUTTONS 3R/3L "630 MTG"
+.XE "bttn()"
+.XE "bttn1()"
+.XE "bttn2()"
+.XE "bttn3()"
+.XE "bttn12()"
+.XE "bttn13()"
+.XE "bttn23()"
+.XE "bttn123()"
+.XE "button()"
+.XE "button1()"
+.XE "button2()"
+.XE "button3()"
+.XE "button12()"
+.XE "button13()"
+.XE "button23()"
+.XE "button123()"
+.XE "bttns()"
+.SH NAME
+button[123], bttn[123], bttns \- button state
+.SH SYNOPSIS
+.sp
+.B #include <dmd.h>
+.sp
+\f3int button1 ( ), button2 ( ), button3 ( )\f1 
+.br
+\f3int button12 ( ), button13 ( ), button23 ( ), button123 ( )\f1 
+.sp
+.B int button (b)
+.sp
+\f3int bttn1 ( ), bttn2 ( ), bttn3 ( )\f1
+.br
+\f3int bttn12 ( ), bttn13 ( ), bttn23 ( ), bttn123 ( )\f1 
+.sp
+.B int bttn (b)
+.sp
+.B void bttns (updown)
+.sp
+.B int b;
+.br
+.B int updown;
+.SH DESCRIPTION
+The functions
+.IR button1 ,
+.IR button2 ,
+and
+.I button3
+return the state of the associated mouse button.
+They return a
+non-zero if the button is depressed, 0 if not.
+.PP
+The
+.I button12
+function
+and the other multi-button functions return
+a Boolean OR
+of their states,
+e.g.,
+true if either button 1
+or
+button 2 is depressed
+(as opposed to button 1
+and
+button 2).
+.PP
+The
+.I button
+function
+takes as an argument the button number
+1, 2, or 3
+and returns the state of the button.
+The process must be current and have possession of the mouse.
+Furthermore, the mouse must be within the bounds of the window.
+.PP
+The bttn routines operate in the same manner as the corresponding
+button routines except that they do not clip to the process's window.
+This means that the calling processs must be current and have
+possession of the mouse. It is not necessary, however, for the
+mouse cursor to be inside the process's window.
+.P
+The ability to detect button transitions outside the window is
+necessary in applications which have menus that may go outside the
+window.
+The button routines should be used in preference to the bttn routines
+unless there is a specific need to be able to detect button state
+changes outside of the process's window.
+.P
+Usage of the bttn routines is restricted to routines which do not
+release the CPU, because the 630 MTG control process also watches
+for button transitions outside of the current process's window.
+The control process is the system process which normally handles
+button operations when the mouse is not in the selected window.
+Race conditions would otherwise arise as to whether the
+application process or the control process should interpret the
+button's state change.
+.PP
+The
+.I bttn
+function
+takes as an argument the button number
+1, 2, or 3
+and returns the state of the button.
+It does not clip to the window.
+.PP
+The
+.I bttns
+function
+is used to determine when the mouse state changes.
+When \fIbttns\fR is called, it ``busy loops''; not returning and not releasing
+the CPU until the mouse state changes.
+If
+.I updown
+is 0,
+.I bttns
+``busy loops'' until all buttons are released.
+If
+.I updown
+is 1,
+.I bttns
+``busy loops'' until any button is depressed.
+If
+.I updown
+is not 0 or 1,
+.I bttns
+returns immediately.
+.PP
+Note that these functions are only valid when \fBown()&MOUSE\fR is
+true.
+.SH EXAMPLE
+The following code segment could be written to ``doodle'' in
+a window.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+main()
+{
+	request (MOUSE);
+	for (;;){
+		wait (MOUSE);
+		if (button3())
+			break;
+		if (button1())
+			point (&display, mouse.xy,
+			    F_STORE);
+	}
+}
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+resources(3R), transform(3R/3L).

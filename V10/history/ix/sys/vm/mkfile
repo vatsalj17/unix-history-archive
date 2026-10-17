@@ -1,0 +1,114 @@
+CFLAGS=-I.. -DKERNEL
+L=../lib/vm.a
+FILES=\
+	$L(vmdrum.x) $L(vmmem.x) $L(vmmon.x) $L(vmpage.x) $L(vmproc.x) \
+	$L(vmpt.x) $L(vmsched.x) $L(vmsubr.x) $L(vmswap.x) $L(vmsys.x)
+
+$L: $FILES
+	names=`membername $newprereq`
+	ar r $L $names && rm $names
+	ranlib $L
+$L(%):N: %
+%.x: %.c
+	cc $CFLAGS -S $stem.c
+	/lib/c2 <$stem.s | sed -f ../lib/asm.sed | as -o $stem.x
+	rm $stem.s
+#
+S=../sys
+
+vmdrum.x: $S/param.h
+vmdrum.x: $S/systm.h
+vmdrum.x: $S/user.h
+vmdrum.x: $S/proc.h
+vmdrum.x: $S/buf.h
+vmdrum.x: $S/text.h
+vmdrum.x: $S/map.h
+vmdrum.x: $S/pte.h
+vmdrum.x: $S/vm.h
+vmdrum.x: $S/cmap.h
+vmmem.x: $S/param.h
+vmmem.x: $S/systm.h
+vmmem.x: $S/pte.h
+vmmem.x: $S/cmap.h
+vmmem.x: $S/user.h
+vmmem.x: $S/proc.h
+vmmem.x: $S/text.h
+vmmem.x: $S/vm.h
+vmmem.x: $S/buf.h
+vmmem.x: $S/map.h
+vmmon.x: $S/param.h
+vmmon.x: $S/systm.h
+vmmon.x: $S/user.h
+vmmon.x: $S/vmmeter.h
+vmpage.x: $S/param.h
+vmpage.x: $S/systm.h
+vmpage.x: $S/inode.h
+vmpage.x: $S/user.h
+vmpage.x: $S/proc.h
+vmpage.x: $S/pte.h
+vmpage.x: $S/buf.h
+vmpage.x: $S/text.h
+vmpage.x: $S/mtpr.h
+vmpage.x: $S/cmap.h
+vmpage.x: $S/vm.h
+vmproc.x: $S/param.h
+vmproc.x: $S/systm.h
+vmproc.x: $S/user.h
+vmproc.x: $S/proc.h
+vmproc.x: $S/mtpr.h
+vmproc.x: $S/pte.h
+vmproc.x: $S/map.h
+vmproc.x: $S/cmap.h
+vmproc.x: $S/text.h
+vmproc.x: $S/inode.h
+vmproc.x: $S/vm.h
+vmpt.x: $S/param.h
+vmpt.x: $S/systm.h
+vmpt.x: $S/user.h
+vmpt.x: $S/proc.h
+vmpt.x: $S/map.h
+vmpt.x: $S/mtpr.h
+vmpt.x: $S/pte.h
+vmpt.x: $S/cmap.h
+vmpt.x: $S/vm.h
+vmpt.x: $S/buf.h
+vmpt.x: $S/text.h
+vmsched.x: $S/param.h
+vmsched.x: $S/systm.h
+vmsched.x: $S/user.h
+vmsched.x: $S/proc.h
+vmsched.x: $S/text.h
+vmsched.x: $S/vm.h
+vmsched.x: $S/cmap.h
+vmsched.x: $S/conf.h
+vmsched.x: $S/buf.h
+vmsubr.x: $S/param.h
+vmsubr.x: $S/systm.h
+vmsubr.x: $S/user.h
+vmsubr.x: $S/vm.h
+vmsubr.x: $S/proc.h
+vmsubr.x: $S/mtpr.h
+vmsubr.x: $S/pte.h
+vmsubr.x: $S/cmap.h
+vmsubr.x: $S/inode.h
+vmsubr.x: $S/buf.h
+vmsubr.x: $S/text.h
+vmswap.x: $S/param.h
+vmswap.x: $S/systm.h
+vmswap.x: $S/user.h
+vmswap.x: $S/proc.h
+vmswap.x: $S/text.h
+vmswap.x: $S/map.h
+vmswap.x: $S/buf.h
+vmswap.x: $S/pte.h
+vmswap.x: $S/cmap.h
+vmswap.x: $S/vm.h
+vmsys.x: $S/param.h
+vmsys.x: $S/user.h
+vmsys.x: $S/proc.h
+vmsys.x: $S/vm.h
+vmsys.x: $S/pte.h
+vmsys.x: $S/cmap.h
+vmsys.x: $S/mtpr.h
+vmsys.x: $S/vlimit.h
+vmsys.x: $S/vadvise.h

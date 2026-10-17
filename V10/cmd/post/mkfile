@@ -1,0 +1,26 @@
+BIN=	/usr/bin
+LIB=	/usr/lib/post
+CFLAGS=	-O -I. -DPOST=\"$LIB\"
+LDFLAGS=-s
+LDLIBS=	-lipc
+ALL=	pq post
+OBJ=	attr.o call.o config.o eqattr.o error.o fmt.o ipc.o \
+	join.o opt.o path.o pq.o strcon.o strvec.o sys.o 
+
+all:N:	$ALL
+
+pq:	$OBJ main.o
+	$CC -o $target $prereq $LDFLAGS $LDLIBS
+
+post:	$OBJ post.o
+	$CC -o $target $prereq $LDFLAGS $LDLIBS
+
+$LIB:
+	mkdir $LIB
+
+install:V: $LIB all
+	cp $ALL $BIN
+	cp dispatch dbinfo update $LIB
+
+clean:V:
+	rm -f $ALL $OBJ main.o post.o

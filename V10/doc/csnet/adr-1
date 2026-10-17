@@ -1,0 +1,262 @@
+From research!mtune!rutgers!SH.CS.NET!cic Wed Sep 30 00:55:41 1987
+Received: by mtune.ATT.COM (smail2.5)
+	id AA19906; 30 Sep 87 00:55:41 EDT (Wed)
+Received: by RUTGERS.EDU (5.54/1.14) 
+	id AA19128; Tue, 29 Sep 87 18:14:44 EDT
+Message-Id: <8709292214.AA19128@RUTGERS.EDU>
+Received: by SH.CS.NET id ac10308; 29 Sep 87 15:25 EDT
+Date: Tue, 29 Sep 87 14:24:40 EDT
+Subject: adr-1 CSNET ADDRESSES
+Reply-To: rutgers!SH.CS.NET!cic
+From: CSNET INFO SERVER <rutgers!SH.CS.NET!info>
+To: doug@research.att.com
+
+Request: info
+Topic: adr-1
+Document Updated:  1 Jun 87
+Subject: CSNET Addresses and the Domain System
+==============================================================================
+CSNET Coordination and Information Center (CIC) 	 Hotline: 617/497-2777
+10 Moulton Street                                        Email:  cic@sh.cs.net
+Cambridge, MA 02238             Info-Server requests to: info-server@sh.cs.net
+==============================================================================
+
+                   CSNET ADDRESSES AND THE DOMAIN SYSTEM
+
+In July 1986, the CSNET CIC instituted a new policy of assigning a
+domain-style name to each new CSNET PhoneNet site before the site begins
+to send messages on PhoneNet.  This starts the site off right, with a
+name that conforms to the DDN Domain Naming System , and avoids the pain
+of changing names in the future.
+
+Assigning a domain name involves registering a second-level domain name
+with the Network Information Center (NIC) of the Defense Data Network
+(DDN).  The CSNET CIC has arranged with the DDN NIC to take care of the
+registration process for organizations that are members of the CSNET
+PhoneNet.  In a companion document, "adr-2  Transition to Domains", 
+CSNET-FORUM v2 #6 (23 May 86), we explained how to choose a domain name
+and register with the NIC.  In this article, we talk about the
+background of the domain naming system.
+
+The DDN is composed of the ARPANET, an experimental research and
+development network, and the MILNET, an operational military network.
+The Internet is composed of the DDN, plus other networks that share the
+same protocols, including the CSNET X25Net.  CSNET PhoneNet sites are
+not part of the Internet, but they can exchange electronic messages with
+the Internet through a "gateway" on RELAY.CS.NET (also known as
+CSNET-RELAY.ARPA).  This is the same host that also connects PhoneNet
+sites to each other, and to other networks, public and private, that
+have gateways on CSNET PhoneNet sites.
+
+The domain naming scheme represents an important step in making all
+these networks easier to use and allowing them to expand in the future.
+
+In the past, the addressing scheme used by the DDN was based upon
+individual host computers.  As spelled out in RFC733 (the ARPANET
+standard for text messages adopted in 1977), and in earlier standards,
+the basic pattern for an ARPANET address was:
+
+			user@host
+
+On the ARPANET, the hostnames must be translated into network numbers
+before the mail delivery programs can make connections between hosts.
+The original system stored the machine addresses with the host names in
+a host table.  The NIC Host Table was distributed by the DDN NIC to all
+hosts on the network.
+
+The RFC733 system was firmly based on hardware.  If a single
+organization had multiple host computers on the ARPANET, all of the
+hosts had to be registered with the Network Information Center of the
+DDN (NIC) and entered in the NIC Host Table.  But if there were hosts
+that were not on the ARPANET themselves, but could be reached through an
+ARPANET host, the NIC Host Table could not handle them.  It was up to
+the person sending the messages to spell out the route explicitly in the
+mailing address.  
+
+RFC733 did not, however, specify the rules for addressing messages to
+hosts on other networks.  The address form 'user%host1@host2', was
+generally used on the CSNET PhoneNet and other networks associated with
+the ARPANET, but was never adopted as a network standard, although the
+current network standard allows it (as one of many possible options). Some
+networks that gatewayed to the ARPANET used somewhat different rules,
+which were also acceptable.
+
+The new domain system is quite different.  It is based on RFC822, which
+was adopted in 1983.  RFC822 specifies a system of names, not physical
+addresses.  It sets up a domain, corresponding to an organizational
+unit, not the physical hardware, as the basic unit of the name.  All
+users at the same organization have addresses in the same domain,
+regardless of the hardware they use or the network or route that
+delivers their messages.
+
+This means that only one name, the domain name for the organization,
+must be registered with the NIC.  Names below the level of the
+organization as a whole are left up to the organizations to manage.  The
+responsibility for keeping track of the names and locations of host
+computers is thus delegated, and information is no longer centralized at
+the DDN NIC.  Eventually, when the domain system is fully implemented,
+the NIC will discontinue the NIC Host Table altogether.
+
+Distributed responsibility for names requires a distributed database.
+Domain names must still be translated into network numbers and routes
+between hosts, but this information is no longer kept in one place.
+Instead, it is split up and stored on different Internet host computers
+in dynamic database programs called "domain servers".  When an Internet
+host is about to send a message, it no longer checks its own copy of the
+NIC Host Table for the recipient host.  Instead, it queries other
+Internet hosts, over real-time connections, to determine which Internet
+host runs the domain server that stores the routing information for the
+recipient's domain.  The sending host then retrieves the routing
+information, and routes the message to its destination (or at least to
+the next Internet host along its route).
+
+CSNET PhoneNet sites cannot run their own domain servers, since they do
+not have direct real-time access to the Internet; instead, they must
+arrange with other hosts that are on the Internet to perform this
+function.  The CSNET CIC runs a domain server on RELAY.CS.NET, with a
+backup on SH.CS.NET, and offers to be the domain server for any PhoneNet
+site that needs this service.  
+
+Domain names are organized in a hierarchical tree structure.  At the top
+is a set of top-level domain names chosen and administered by the DDN
+NIC.  The top-level domains for the United States represent classes of
+organizations:
+
+    COM  Commercial organizations     MIL  Department of Defense
+    EDU  Educational organizations    NET  Administrative organizations 
+    GOV  Civilian government               for networks, e.g., CSNET.
+    ORG  Nonprofit organizations      ARPA Temporary top-level domain, 
+
+Non-US countries have their own top-level domains, named for the
+2-letter country codes of the International Standards Organization
+(ISO standard 3166).  The DDN NIC has announces country domains, as they
+are registered. 
+
+Second-level domains represent individual organizations.  Hypothetical
+examples of domains for organizations might be:
+
+            OXBRIDGE.EDU            Oxbridge University
+	    WIDGETS.COM             Widgets Mfg. Co., Inc.
+    	    THINKTANK.ORG           The Thinktank Institute
+
+Each new CSNET organization forms its domain name by selecting the
+appropriate top-level domain, and choosing a second-level domain.  The
+CSNET CIC checks the combination to make sure that it is unique.
+
+Once an organization has been registered as a second-level domain, it
+may freely create lower-level domains, according to its needs.
+
+The pattern for an electronic mail address is:
+
+                        local-part@domain             
+
+The "local-part" is ideally a simple username, but RFC822 allows any
+string in the local part (to the left of the @), so long as it can be
+interpreted by the machine that takes the responsibility for
+interpreting the complete "domain" (to the right of the @).
+
+The domain is a string of words separated by periods.  Lower-level
+domains are arranged left to right, in ascending order, ending with a
+top-level domain.  Any number of lower-level domains may be used.
+
+A domain may represent a subdivision of an organization (at any level),
+or an individual host computer.
+
+Examples of addresses might be:
+
+    laura@oxbridge.edu           oxbridge.edu either has no subdomains, 
+    	       			  or hides its subdomains from the 
+                                  outside world.
+    diane@eng.oxbridge.edu       Engineering Dept within oxbridge.edu.
+    dennis@ai.cs.oxbridge.edu    AI project in the Computer Science 
+                                  Department
+    craig@wk15.ccc.oxbridge.edu  Workstation in the Campus Computer 
+                                  Center.
+
+The transition to domains is not yet complete.  Some Internet hosts are
+not yet running domain servers, and some have not yet made the switch
+from the temporary ".arpa" domain to the full domain naming scheme.  
+
+The CSNET relay, originally CSNET-RELAY, then CSNET-RELAY.ARPA, and now
+RELAY.CS.NET, rewrites all CSNET PhoneNet addresses to include the
+relay's name when the message is destined for the Internet:
+
+	From: @RELAY.CS.NET:laura@oxbridge.edu
+
+Later, when all Internet hosts have domain servers, and are able to
+recognize all domain names, whether or not they are on the Internet,
+the address will change to:
+
+	From: laura@oxbridge.edu
+
+
+THE RFC822 ROUTING ADDRESS
+
+    For a long time, even after the RFC822 conventions were formally
+adopted for use on the Internet, the most common method of writing the
+routing address was the "%" notation:
+
+	user%oxbridge.csnet@relay.cs.net
+
+    However, this type of routing address is an informal convention,
+and is not specified in any official RFC or other Internet document.
+The routing address specified in RFC822 is of the form:
+
+	@relay.cs.net:user@oxbridge.csnet
+
+    This is the form that relay.cs.net uses for messages that are sent
+from CSNET PhoneNet sites to Internet hosts.
+
+    You will also see routing addresses for CSNET PhoneNet sites with
+domain-style names.  The reason is that there are still some Internet
+hosts that cannot handle domain server entries for off-Internet hosts.
+
+	@relay.cs.net:joe@cs.somewhere.edu
+
+Other examples of RFC822 routing addresses are:
+
+	@wiscvm.wisc.edu:XXYYZZ@XYZVS.BITNET
+	@seismo.css.gov:bill@uuhost.uucp 
+
+It is possible for a routing address to route through multiple hosts:
+
+	@elsewhere.com,@nowhere.edu,@relay.cs.net:joe@cs.somewhere.edu
+
+REFERENCES (Available from the CSNET Info Server):
+
+RFC733 "Standard for the Format of ARPA Network Text Messages", David H.
+     Crocker (The Rand Corporation), John J. Vittal (Bolt Beranek and
+     Newman Inc.), Kenneth T. Pogran (Massachusetts Institute of
+     Technology), D. Austin Henderson, Jr.(Bolt Beranek and Newman Inc.) 21
+     November 1977.
+
+RFC822 "Standard for the Format of ARPA Internet Text Messages", David H.
+     Crocker (University of Delaware), August 1982.
+
+RFC882 "Domain Names - Concepts and Facilities", P. Mockapetris
+     (Information Sciences Institute, University of Southern California),
+     November 1983.
+
+RFC883 "Domain Names - Implementation and Specification", P. Mockapetris
+     (Information Sciences Institute, University of Southern California),
+     November 1983.
+
+RFC920 "Domain Requirements", J. Postel and J. Reynolds (Information
+     Sciences Institute, University of Southern California), October 1984.
+
+RFC921 "Domain Names System Implementation Schedule - Revised", Jon Postel
+     (Information Sciences Institute, University of Southern California),
+     October 1984.
+
+RFC973 "Domain System Changes and Observations", Paul Mockapetris
+     (Information Sciences Institute, University of Southern California),
+     January 1983. Supplements RFC 883.
+
+RFC974 "Mail Routing and the Domain System", Craig Partridge (CSNET CIC,
+     BBN Laboratories, Inc.), January 1986.
+
+                               -----------
+
+This article appeared in CSNET-FORUM v2 #8 (8 Aug 86) with the title
+"Background on the Domain Naming System".
+

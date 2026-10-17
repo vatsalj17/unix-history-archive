@@ -1,0 +1,62 @@
+.TH ATALLA 8
+.SH NAME
+atalla \- initializing a challenge box
+.SH DESCRIPTION
+It is easiest to initialize an Atalla
+(a.k.a. SNK) box at the same time you use the
+.B -c
+option of
+.IR pwx ,
+before you hand it to the user, not in the user's presence.
+To initialize the box:
+freak it out by giving five consecutive wrong PIN entries, for example by
+pushing the sequence
+.B ON
+.B 0
+.B ENTER
+five times.
+The box's display should now read
+.BR "ES0 ----" ,
+you push
+.B 1
+.BR ENTER .
+The display now reads
+.BR "ES1 ----" ,
+you now enter eight bytes of secret key, which you may ask
+.I pwx 
+to invent, and which the user will not know.
+Each byte is represented by three octal digits, in the range
+.B 000
+through
+.BR 277 ,
+so it takes 24 key strokes to enter the secret key.
+Now push
+.BR ENTER ,
+and a check sum of form
+.B "C xxxxxxxx"
+is displayed.
+Push 
+.B ENTER
+again
+and another check sum is displayed,
+this time of form
+.BR "F xxxxxxxx" .
+Push
+.B ENTER
+yet again
+and
+the display reads
+.BR "EP1 ----" .
+At this point the box may be handed to the user.
+The user enters a personal password (his ``PIN'')
+of 4 through 8 digits' length,
+followed by
+.BR ENTER ,
+and again, as a check.
+Thereafter the user must 
+type his personal password whenever he uses the box.
+Instruct the user not to divulge his personal password, and
+promise the user you will not divulge
+his secret key.
+.SH SEE ALSO
+.IR passwd (1)

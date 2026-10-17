@@ -1,0 +1,56 @@
+SRC=main.c priv.c symb.c display.c undo.c tact.c rewrite.c log.c
+OBJ=gram.o dfa.o main.o priv.o symb.o display.o undo.o tact.o rewrite.o log.o
+CXX=gram.O dfa.O main.O priv.O symb.O display.O undo.O tact.O rewrite.O log.O
+YF= -Vbomb:1 -Vlogpr:1 -Verror:1
+BL=libipc.a
+
+
+privserv:	$OBJ
+	cc -o privserv $OBJ -ly -lipc
+ps2:	$OBJ
+	cc -o ps2 $OBJ -ly $BL -lipc
+
+agent:	agent.o
+	cyntax agent.c
+	cc -o agent agent.o -lipc
+	
+
+priv.o:  priv.h
+
+dfa.c:	dfa.y priv.h
+	yacc dfa.y
+	sed 's/yy/zz/g
+	     s/	printf(/	fprint(2,/
+	' y.tab.c >dfa.c
+	rm y.tab.c
+
+dfa.o:	dfa.c
+	$CC $CFLAGS -c dfa.c
+
+$OBJ:	priv.h
+$CXX:	priv.h
+
+gram.c: gram.y priv.h
+	yacc gram.y
+	sed 's/	printf(/	fprint(2,/' y.tab.c >gram.c
+	rm y.tab.c
+
+gram.o: gram.c
+	$CC $CFLAGS -c gram.c
+
+lint:V:
+	lint $SRC gram.c dfa.c
+
+%.O:	%.c
+	cyntax -c $YF $stem.c 
+
+cyntax:V: $CXX
+	cyntax $YF $CXX
+
+clean:V:
+	rm -f *.O $OBJ y.tab.* dfa.c gram.c
+
+pr:
+	pr priv.h $SRC gram.y dfa.y
+bundle:	
+	bundle agent.c $SRC mkfile priv.h gram.y dfa.y > B

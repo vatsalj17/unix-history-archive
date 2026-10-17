@@ -1,0 +1,22 @@
+#	SNAPSHOT
+#
+#	Snapshot of string scanning
+#
+#	Ralph E. Griswold and Randal L. Schwartz
+#
+#	Last modified 2/1/86
+#
+
+procedure snapshot()
+   local bar, bar2, is, is0
+   prefix := "&subject = "
+   is := image(&subject)
+   is0 := *image(&subject[1:&pos]) | fail # quick exit if bogus
+   write(bar := repl("-", *is + *prefix + 4)) # 4 = two vbars/two spaces
+   write(bar2 := ("|" || repl(" ", *is + *prefix + 2) || "|"))
+   write("| ", prefix, is, " |")
+   bar2[*prefix + is0 + 2] := "|" # 2 = "| " prefix
+   write(bar2)
+   write(bar)
+   return ""
+end

@@ -1,0 +1,48 @@
+.TH CANON 3R "630 MTG"
+.XE "canon()"
+.SH NAME 
+canon \- return canonical Rectangle format from two corner Points
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B Rectangle canon (p1, p2)
+.br
+.B Point p1, p2;
+.SH DESCRIPTION
+The
+.I canon
+function
+returns a Rectangle created from two Points \fIp1\fR and \fIp2\fR such that:
+.PP
+.RS
+\fIr.origin.x\fR equals the minimum of \fIp1.x\fR and \fIp2.x\fR
+.br
+\fIr.origin.y\fR equals the minimum of \fIp1.y\fR and \fIp2.y\fR
+.br
+\fIr.corner.x\fR equals the maximum of \fIp1.x\fR and \fIp2.x\fR
+.br
+\fIr.corner.y\fR equals the maximum of \fIp1.y\fR and \fIp2.y\fR
+.RE
+.PP
+In other words,
+the rectangle defined by the two corner points,
+p1 and p2, is returned in the standard format of
+(upper left, lower right).
+.SH EXAMPLE
+Each of the following cases will yield the Rectangle.
+.PP
+.RS 3
+.ft CM
+.nf
+{ 0, 0, 32, 32}
+
+canon( Pt(0, 32), Pt(32, 0) )
+
+canon( Pt(32, 32), Pt(0, 0) )
+
+canon( Pt(32, 0), Pt(0, 32) )
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+structures(3R).

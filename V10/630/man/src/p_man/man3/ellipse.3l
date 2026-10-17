@@ -1,0 +1,129 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH ELLIPSE 3L "630 MTG"
+.XE "ellipse()"
+.XE "eldisc()"
+.XE "eldiscture()"
+.XE "elarc()"
+.SH NAME
+ellipse, eldisc, eldiscture, elarc \- draw an ellipse
+.SH SYNOPSIS
+.B "#include <dmd.h>"
+.sp
+.B "void ellipse (bp, p, a, b, f)"
+.PP
+.B "void eldisc (bp, p, a, b, f)"
+.PP
+.B "void eldiscture (bp, p, a, b, t, f)"
+.PP
+.B "void elarc (bp, p, a, b, p1, p2, f)"
+.PP
+.B Bitmap \(**bp;   
+.br
+.B Point p, p1, p2;
+.br
+.B int a, b;
+.br
+.B Texture16 \(**t;
+.br
+.B Code f;
+.SH DESCRIPTION
+The
+.I ellipse
+function
+draws an ellipse centered at
+.I p
+with horizontal semi-axis
+.I a
+and vertical semi-axis
+.I b
+in Bitmap
+.I bp
+with Code
+.IR f .
+.PP
+The
+.I eldisc
+function
+draws an elliptical disc centered at
+.I p
+with horizontal semi-axis
+.I a
+and vertical semi-axis
+.I b
+in Bitmap
+.I bp
+with Code
+.IR f .
+.PP
+The
+.I eldiscture
+function
+draws an elliptical disc centered at
+.I p
+with horizontal semi-axis
+.I a
+and vertical semi-axis
+.I b
+in Bitmap
+.I bp
+using Texture16
+.I t
+with Code
+.IR f .
+.PP
+The
+.I elarc
+function
+draws the corresponding elliptical arc, traveling
+counterclockwise from the ellipse point closest to
+.I p1
+to the point closest to
+.IR p2 .
+Note: Differences exist between the calling conventions for
+.I arc
+and
+.IR elarc .
+.SH EXAMPLE
+The following routine can be used to allow a user to sweep out an
+ellipse by holding button 1 down.
+When button 1 is released,
+the ellipse is filled using the elliptical disc routine.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+main()
+{
+	sweep_eldisc();
+	request(KBD);
+	wait(KBD);
+}
+  
+sweep_eldisc()
+{
+   Point p, c;
+   int a, b;
+
+   request(MOUSE);
+
+   while (!button1() )
+      wait (MOUSE);       
+   c = p = mouse.xy;
+   while (button1())
+      if (!eqpt(p, mouse.xy)){
+         if( !eqpt( p, c))  /* undraw old ellipse */
+            ellipse (&display, c, a, b, F_XOR);
+         p = mouse.xy;
+         a = abs (p.x - c.x);
+         b = abs (p.y - c.y);
+         ellipse (&display, c, a, b, F_XOR);
+      }
+   ellipse (&display, c, a, b, F_XOR);
+   eldisc  (&display, c, a, b, F_XOR);
+}
+.fi
+.RE
+.SH SEE ALSO
+circle(3L), jcircle(3L), jellipse(3L).

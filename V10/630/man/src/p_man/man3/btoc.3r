@@ -1,0 +1,215 @@
+.TH BTOC 3R
+.XE "setjwin"
+.XE "P->btoc"
+.XE "P->ctob"
+.SH NAME
+btoc: setjwin, P->btoc, P->ctob \- specify rows and columns and default outline
+.SH SYNOPSIS
+\f3
+#include <dmd.h>
+.sp
+void setjwin (cols, rows)
+.br
+int cols, rows;
+.sp
+Point (\(**P->btoc)(x, y, p)
+.br
+int x,y;
+.br
+struct Proc \(**p;
+.sp
+Point (\(**P->ctob)(x, y, p)
+.br
+int x,y;
+.br
+struct Proc \(**p;
+.SH DESCRIPTION
+The purpose of the \fIsetjwin\fR and \fIbtoc\fR functions is to report the
+number of character rows and columns available in an application's window. 
+These routines are intended to be used by terminal emulator applications
+executing in the 630 MTG.
+If the application is running in a \fIlayers\fR
+window, the character rows and columns information is sent to the host.
+This information is then made available to application programs
+running on the host through an \fIioctl\fR() call to the xt device driver
+with the \fIrequest\fR argument of JWINSIZE.
+The windowing utilities \fIjwin\fR program is a simple host application
+which uses this facility to print rows and columns on its standard
+output. Other host applications, such as the \fIvi\fR editor, also use this
+facility to determine available rows and columns.
+.P
+The \fIsetjwin\fR function is called directly from an application
+program when the application begins execution, either after being
+downloaded or started from the application cache.
+The parameters \fIcols\fR and \fIrows\fR correspond to character
+columns and character rows respectively.
+.P
+\fIBtoc\fR is called indirectly by the 630 MTG system control
+process whenever the application's window is reshaped. 
+.I P->btoc
+is a pointer stored in the 
+application's process table.  
+The application's process table is simply a structure
+of type \fIProc\fR that contains system information 
+about the application program
+and is maintained and used by the 630 MTG's system processes.
+.I P->btoc
+points to a function named, for example, \fIbits_to_char\fR(),
+which returns a
+.I Point
+structure.
+The function \fIbits_to_char\fR() must be specified in 
+the application program and the
+.I P->btoc 
+pointer must be set
+in the application's initialization routine to point to these functions.
+The \fIbits_to_char\fR() function will then
+be called by the 630 MTG's system control process whenever the application's
+window is reshaped.  
+.P
+The parameters passed to the \fIbtoc\fR() function are:
+.RS 3
+\f3x\f1 = the width of the application's window in pixels
+.br
+\f3y\f1 = the height of the application's window in pixels
+.br
+\f3p\f1 = a pointer to the application's process table.
+.RE
+.PP
+The two integers x and y (returned in 
+the \fIPoint\fR structure) are the character rows and columns, respectively.
+.P
+\fISetjwin\fR and the \fIbtoc\fR() functions serve similar
+purposes, but both functions are necessary for the following reasons. 
+\fISetjwin\fR
+is used to inform the host of character rows and columns when an application
+boots. The \fIbtoc\fR() function cannot be used in this situation
+because the application has not yet executed, and therefore \fIP->btoc\fR
+has not been initialized.
+On the other hand, the \fIbtoc\fR() function is used to
+inform the host of character rows and columns when an application's window is
+reshaped. 
+The 630 MTG system control process needs to send a message 
+specifying current window size to the 
+host xt driver when a window is reshaped, and it is not possible
+to wait for the application to call \fIsetjwin\fR. This makes
+the \fIbtoc\fR() function necessary.
+.P
+If an application does not use the \fIsetjwin\fR and \fIbtoc\fR
+facilities, the host will be told the character row and 
+columns which would be available if Windowproc was running in
+a window the size of the application's window.
+.P
+The purpose of a \fIctob\fR() function is to specify a default outline
+for a window being reshaped based on the \fIHost\fR 
+default rows and columns settings
+specified during the 630 MTG \fISetup\fR procedure.  See the
+\fI630 MTG Terminal User's Guide\fR
+for more information about \fISetup\fR and \fIHost\fR 
+default rows and columns settings.
+.P
+Initialization of \fIP->ctob\fR is identical to initialization of
+\fIP->btoc\fR as described above. \fIP->ctob\fR is set to point
+to a function named, for example, \fIchar_to_bits\fR().
+The \fIchar_to_bits\fR() function is called by the 630 MTG
+system control process before an application's
+window is reshaped to determine the default window outline to
+display for the application during the reshape procedure.
+.P
+The parameters passed to \fIctob\fR() are, in order, 
+x and y (the \fIHost\fR default
+rows and columns, respectively), specified for a window in 
+\fISetup\fR; and \fIp\fR, a pointer
+to the application's process table.  The two integers x and y (returned 
+by \fIctob\fR() in
+the \fIPoint\fR structure) are the width and height, respectively, in pixels,
+of the window outline to be displayed.
+.P
+Note that \fIctob\fR
+could disregard the parameters x and y and always return a predetermined 
+outline. This is commonly done by non-terminal emulator applications
+that want to display a default outline which is not necessarily based upon
+\fISetup\fR options.
+.P
+If a \fIctob\fR function is not specified,
+a sweep cursor will appear without a default outline when
+the application program is reshaped.
+.P
+The cache(3L) function calls \fIctob\fR to determine the default outline
+for applications which are invoked from the \fBMore\fR menu.
+.SH EXAMPLE
+A simple example of a \fIbits_to_char\fR() and a \fIchar_to_bits\fR() function 
+is shown below.
+.P
+.RS 3
+.nf
+.ft CM
+
+#include <dmd.h>
+#include <font.h>
+
+Point bits_to_char();
+Point char_to_bits();
+
+main()
+{
+     .
+     .
+
+   P->btoc = bits_to_char;
+   P->ctob = char_to_bits;
+
+     .
+     .
+}
+
+Point
+bits_to_char(x,y,p)
+int x,y;
+struct Proc *p;
+{
+   Point q;
+
+   /* INSET is a constant equal to the pixel width of */
+   /* the 630 window border. It is defined in dmdproc.h. */
+   /* Dmdproc.h is included by dmd.h. */
+   q.x = (x - 2*INSET) / FONTWIDTH(largefont);
+   q.y = (y - 2*INSET) / FONTHEIGHT(largefont);
+   return q;
+}
+
+Point
+char_to_bits(x,y,p)
+int x,y;
+struct Proc *p;
+{
+   Point q;
+
+   q.x = FONTWIDTH(largefont) * x + 2*INSET;
+   q.y = FONTHEIGHT(largefont) * y + 2*INSET;
+   return q;
+}
+
+.RE
+.fi
+.ft R
+.SH SEE ALSO
+cache(3L), globals (3R), structures(3R).
+.br
+\fI630 MTG Terminal User's Guide\fR.
+.br
+jwin(1), vi(1) in the \f2UNIX System V Release 3 User's Reference Manual\f1.
+.br
+ioctl(2) in the \f2UNIX System V Programmer Reference Manual\f1.
+.br
+xt(7) in the \f2UNIX System V Release 3 System Administrator's Reference Manual\f1.
+.SH WARNINGS
+Since \fIbtoc\fR() and \fIctob\fR() are called 
+from the terminal's control process,
+the variable \fIP\fR should not be referenced within these routines.
+Instead, the parameter \fIp\fR should be used to reference the application's
+process table.
+.P
+The two integers x and y returned by ctob in the point
+structure must be less than or equal to XMAX and YMAX,
+respectively.

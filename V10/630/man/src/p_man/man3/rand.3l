@@ -1,0 +1,36 @@
+.\"#ident	"@(#)ccsman:g3c/rand	1.2"
+'\"macro stdmacro
+.nr X
+.if \nX=0 .ds x} RAND 3L "630 MTG" "\&"
+.TH \*(x}
+.SH NAME
+rand, srand \- simple random-number generator
+.SH SYNOPSIS
+.B int rand ( )
+.PP
+.B void srand (seed)
+.br
+.B unsigned seed;
+.SH DESCRIPTION
+.I rand\^
+uses a multiplicative, congruential,
+random-number generator
+.if t with period 2\u\s-232\s0\d
+.if n with period 2^32
+that returns successive pseudo-random
+.if t numbers in the range from 0 to 2\u\s-215\s0\d\-1.
+.if n numbers in the range from 0 to (2^15)-1.
+.PP
+.I Srand
+can be called at any time to reset the random-number generator
+to a random starting point.
+The generator is initially seeded with a value of 1.
+.SH NOTES
+The spectral properties of
+.I rand\^
+are limited.
+.IR Drand48 (3L)
+provides a much better, though more elaborate, random-number generator.
+.SH SEE ALSO
+drand48(3L).
+.Ee

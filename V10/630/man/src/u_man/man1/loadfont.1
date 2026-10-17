@@ -1,0 +1,212 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH LOADFONT 1 "630 MTG"
+.XE "loadfont"
+.SH NAME
+loadfont \- font managing program
+.SH SYNOPSIS
+.B 
+loadfont [\-r name,name...] [\-p directory] [\-s] [\-c] [file...]
+.SH DESCRIPTION
+The
+.I loadfont
+program lets the user load and remove fonts from the terminal's cache.
+It will download its terminal side which interacts with
+the user. The command line arguments have the following meanings:
+.PP
+.TP 12
+\fB\-r\fR
+Removes the given font from the terminal's cache.
+.PP
+.TP 12
+\fB\-p\fR
+Sets default search path for font files. If this isn't set,
+it defaults to $DMD/termfonts. All the file names in this directory
+are put in the load submenu.
+.TP 12
+\fB\-s\fR
+Makes loadfont stay running after executing the earlier command line options.
+.PP
+.TP 12
+\fB\-c\fR
+Causes loadfont to be cached in the 630 MTG cache system. When
+this option is used, the loadfont program will remain in the
+terminal after the program exits. Then, the next time loadfont
+is executed, it will not have to be downloaded again.
+.sp
+Another effect of downloading loadfont with the \-c option is
+that it can be executed in more than one window without
+additional downloading.
+.PP
+.TP 12
+\fBfile\fR
+Loads the given font file into the terminal's cache.
+.PP
+If a \f3file\f1 argument and/or the
+\f3\-r\f1 option are given, loadfont will exit after
+loading/removing the specified fonts, unless the \f3\-s\f1 is
+also given to make it stay running.
+.PP
+The user interacts with
+.I loadfont
+by using a button 2 menu and, when prompted, the keyboard.
+When button 2 is depressed, a menu with the following items appears.
+.PP
+.TP 8
+\fBLoad\fR
+Load has a submenu of fonts that can be downloaded.
+The fonts listed are all the files in the default search directory.
+If the first item, Keyboard, is selected, the user is prompted
+for the name of a font file to download.
+.PP
+.TP 8
+\fBRemove\fR
+Remove has a submenu of all the fonts in the terminal's cache.
+Selecting one will remove it from the cache and free the memory
+it was using. Fonts in ROM or being used by another process
+will be greyed in the menu and cannot be removed.
+.PP
+.TP 8
+\fBQuit\fR
+Will make the program exit.
+.PP
+While a font is downloading, the button 2 menu will have only
+one item, Terminate Download. Selecting it will stop the download
+and switch the user back to the original menu.
+.PP
+The three fonts in ROM, resident to the 630 MTG, are called "small
+font," "medium font," and "large font."  Brief descriptions of these
+fonts follow.
+.PP
+In the tables, 
+.I  cell size
+indicates the dimensions of the rectangle containing the character
+image.  All the characters in a particular font have the same cell size.
+.I Character size
+is the dimension of the largest character in the font.  
+.I Max chars 
+indicates how many characters in that font size will fit 
+horizontally and vertically in a full screen
+window.  See the section on fonts in the 
+\f2630 MTG Software Development Guide\f1
+for more information on font data structures.
+.sp
+.TS
+center, box, tab(~);
+lb | l.
+Font Name~small font
+Character Size~6 pixels wide by 9 pixels high
+Cell Size~7 pixels wide by 14 pixels high
+Max Chars~140 across, 69 down
+_
+Font Name~medium font       
+Character Size~8 pixels wide by 11 pixels high
+Cell Size~9 pixels wide by 14 pixels  high        
+Max Chars~109 across, 69 down
+_
+Font Name~large font        
+Character Size~9 pixels wide by 12 pixels high  
+Cell Size~11 pixels wide by 16 pixels high
+Max Chars~89 across, 61 down
+_
+.TE
+.bp
+.SH FILES
+The default search path for font files is $DMD/termfonts. This
+directory contains nine fonts.
+.sp 2
+.TS
+center, box, tab(~);
+lb | l.
+Font Name~noseprint         
+Character Size~5 pixels wide by 7 pixels high 
+Cell Size~6 pixels wide by 9 pixels high
+Max Chars~163 across, 108 down
+Comments~The characters are a single pixel thick and all
+~are smaller than the characters found in the 
+~resident "small font".
+_
+Font Name~7x14thin          
+Character Size~6 pixels wide by 9 pixels high
+Cell Size~7 pixels wide by 14 pixels high
+Max Chars~140 across, 69 down
+Comments~The difference between "7x14thin" and the resident 
+~"small font" is in the thickness of the characters.
+~The "7x14thin" consists of characters which are a  
+~single pixel in thickness whereas the "small font" 
+~consists of characters which are two pixels in thickness.
+_
+.TE
+.bp
+.TS
+center, box, tab(~);
+lb | l.
+Font Name~12x18norm         
+Character Size~10 pixels wide by 13 pixels high
+Cell Size~12 pixels wide by 18 pixels high
+Max Chars~81 across, 54 down
+Comments~The characters are 2 pixels thick.
+_
+Font Name~12x25thin                 
+Character Size~9 pixels wide by 18 pixels high 
+Cell Size~12 pixels wide by 25 pixels high 
+Max Chars~81 across, 39 down
+Comments~The characters are a single pixel thick.
+_
+Font Name~12x25norm         
+Character Size~9 pixels wide by 18 pixels high 
+Cell Size~12 pixels wide by 25 pixels high
+Max Chars~81 across, 39 down
+Comments~The characters are 2 pixels thick.
+_
+Font Name~12x25round        
+Character Size~9 pixels wide by 18 pixels high 
+Cell Size~12 pixels wide by 25 pixels high
+Max Chars~81 across, 39 down
+Comments~The main difference between this font and the 
+~font called "12x25norm" is in the STYLE of the
+~characters. The characters in "12x25round" are
+~rounder in appearance, whereas the characters in
+~"12x25norm" are squarer in appearance.
+_
+Font Name~12x25BOLD
+Character Size~9 pixels wide by 18 pixels high
+Cell Size~12 pixels wide by 25 pixels high 
+Max Chars~81 across, 39 down
+Comments~The characters are 3 pixels thick.
+_
+Font Name~script
+Character Size~15 pixels wide (approx.) by 15 pixels high
+Cell Size~16 pixels wide by 24 pixels high
+Max Chars~61 across, 40 down
+Comments~The characters in this font are created in 
+~script style.
+_
+Font Name~twice_big  
+Character Size~18 pixels wide by 24 pixels high
+Cell Size~22 pixels wide by 32 pixels high
+Max Chars~44 across, 30 down
+Comments~The characters are twice as tall and twice as 
+~wide as the resident "large font"
+_
+.TE
+.bp
+.SH SEE ALSO
+ucache(1), font(4).
+.br
+\f2630 MTG Software Development Guide\f1.
+.SH WARNING
+.P
+Fonts that do not have 128 characters require the proper
+parity setting when used in the default window process in the
+non-layers environment. This is needed because a mod is done
+on characters received from the host with the number of
+characters in the font being used.
+.P
+This implies that parity bits are ignored for fonts with
+exactly 128 characters, since c&0x7F == c%128. Fonts with less
+than 128 characters need identical parity settings on the host
+and in the terminal so that parity bits get stripped properly.
+Characters with more than 128 characters require 8 bits with
+no parity on both the host and in the terminal, because the
+eighth bit is used to access characters greater than
+128.

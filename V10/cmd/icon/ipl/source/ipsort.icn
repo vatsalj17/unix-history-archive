@@ -1,0 +1,42 @@
+#	IPSORT
+#
+#	Sort Icon procedures and declarations
+#
+#	Ralph E. Griswold
+#
+#	Last modified 4/29/86
+#
+
+procedure main()
+   local line, x, i, proctable, proclist, comments, procname
+   comments := []			# list of comment lines
+   proctable := table()			# table of procedure declarations
+   while line := read() do {
+     line ? {
+        if ="procedure" &		#  procedure declaration
+           tab(many('\t ')) &
+           procname := tab(upto('(')) | stop("*** bad syntax: ",line)
+        then {				# if main, force sorting order
+           if procname == "main" then procname := "\0main"
+           proctable[procname] := x := []
+           while put(x,get(comments))	#  save it
+           put(x,line)
+           while line := read() do {
+              put(x,line)
+              if line == "end" then break
+              }
+           }
+					#  other declarations
+         else if =("global" | "record" | "link")
+         then {
+            while write(get(comments))
+            write(line)
+            }
+         else put(comments,line)
+         }
+      }
+   while write(get(comments))
+   proclist := sort(proctable,3)		#  sort procedures
+   while get(proclist) do
+      every write(!get(proclist))
+end

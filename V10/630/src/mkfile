@@ -1,0 +1,21 @@
+BIN	= /usr/630/bin
+CFLAGS	= -I/usr/jerq/include
+RM	= /bin/rm -f
+
+630ld:		630ld.o proto.o pcheck.o
+	cc $LFLAGS -o 630ld 630ld.o proto.o pcheck.o
+
+630ld.o:		proto.h
+proto.o:	proto.h
+pcheck.o:	pcheck.c
+	cc $CFLAGS -c $prereq
+
+install:V:	630ld
+		cp $prereq $BIN
+		strip $BIN/630ld
+
+clean:V:
+		rm -f *.o* 630ld
+
+clobber:	clean
+		rm -f 630ld

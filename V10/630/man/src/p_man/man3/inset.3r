@@ -1,0 +1,60 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH INSET 3R "630 MTG"
+.XE "inset()"
+.SH NAME
+inset \- inset a border for a Rectangle
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B Rectangle inset (r, n) 
+.br
+.B Rectangle r;
+.br
+.B int n;
+.SH DESCRIPTION
+The
+.I inset
+function returns the Rectangle:
+.PP
+{ \fIr.origin.x+n\fR, \fIr.origin.y+n\fR, \fIr.corner.x-n\fR, \fIr.corner.y-n\fR } .
+.SH EXAMPLE
+The following simple program creates a clear
+Rectangle
+.I r
+with a 5-dot wide border inside
+.IR r :
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+Rectangle inset();
+Point add();
+
+main()
+{
+	make_border();
+	request(KBD);
+	wait(KBD);
+}
+
+make_border()
+{
+	Rectangle r;
+	Point s;
+	s.x = 100;
+	s.y = 100;
+	
+	r.origin = add(Drect.origin, s);
+	r.corner = add(r.origin, s);
+	rectf(&display, r, F_STORE);
+	rectf(&display, inset(r, 5), F_CLR);
+	return;
+}
+
+.fi
+.ft R
+.RE
+.SH SEE ALSO
+structures(3R).

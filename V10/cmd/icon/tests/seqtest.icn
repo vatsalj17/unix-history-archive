@@ -1,0 +1,557 @@
+procedure Gk(k)
+local i, m_
+i := 0
+m_ := table(0)
+
+suspend m_[C_([i +:= |1,k])] := i - m_[C_([m_[C_([i - k,k])],k])]
+end
+procedure Q()
+local i, m_
+i := 0
+m_ := table(0)
+suspend m_[i +:= 1] := 1
+suspend m_[i +:= 1] := 1
+suspend m_[i +:= |1] := m_[i - m_[i - 1]] + m_[i - m_[i - 2]]
+end
+procedure Fib()
+local i, m_
+i := 0
+m_ := table(0)
+suspend m_[i +:= 1] := 1
+suspend m_[i +:= 1] := 1
+suspend m_[i +:= |1] := m_[i - 1] + m_[i - 2]
+end
+procedure G()
+local i, m_
+i := 0
+m_ := table(0)
+
+suspend m_[i +:= |1] := i - m_[m_[i - 1]]
+end
+procedure Fibs()
+local i, m_
+i := 0
+m_ := table("")
+suspend m_[i +:= 1] := "a"
+suspend m_[i +:= 1] := "b"
+suspend m_[i +:= |1] := m_[i - 1] || m_[i - 2]
+end
+procedure Unop_(op,X)			# op(X)
+   local e, a, i, s 
+   if S_(X) then {
+      a := copy(X.a)
+      i := *X.a
+      e := create !a | Pre_(X.e,i)
+      return Sequence([],create |Unop_(op,@e))
+      }
+   else suspend op(X)
+end
+
+procedure Binop_(op,X1,X2)		# op(X1,X2)
+   local e1, e2, a1, a2, i1, i2, s1, s2
+   if not S_(X1 | X2) then suspend op(X1,X2)
+   else {
+      s1 := Seq_(X1)
+      s2 := Seq_(X2)
+      a1 := copy(s1.a)
+      a2 := copy(s2.a)
+      i1 := *s1.a
+      i2 := *s2.a
+      e1  := create !a1 | Pre_(s1.e,i1)
+      e2  := create !a2 | Pre_(s2.e,i2)
+      return Sequence([],create |Binop_(op,@e1,@e2))
+      }
+end
+
+procedure Triop_(op,X1,X2,X3)		# op(X1,X2,X2)
+   local e1, e2, e3, a1, a2, a3, i1, i2, i3, s1, s2, s3
+   if not S_(X1 | X2 | X3) then suspend op(X1,X2,X3)
+   else {
+      s1 := Seq_(X1)
+      s2 := Seq_(X2)
+      s3 := Seq_(X3)
+      a1 := copy(s1.a)
+      a2 := copy(s2.a)
+      a3 := copy(s3.a)
+      i1 := *s1.a
+      i2 := *s2.a
+      i3 := *s3.a
+      e1  := create !a1 | Pre_(s1.e,i1)
+      e2  := create !a2 | Pre_(s2.e,i2)
+      e3  := create !a3 | Pre_(s3.e,i3)
+      return Sequence([],create |Triop_(op,@e1,@e2,@e3))
+      }
+end
+
+procedure Quadop_(op,X1,X2,X3,X4)	# op(X1,X2,X3,X4)
+   local e1, e2, e3, e4, a1, a2, a3, a4, i1, i2, i3, i4, s1, s2, s3, s4
+   if not S_(X1 | X2 | X3 | X4) then suspend op(X1,X2,X3,X4)
+   else {
+     s1 := Seq_(X1)
+     s2 := Seq_(X2)
+     s3 := Seq_(X3)
+     s4 := Seq_(X4)
+     a1 := copy(s1.a)
+     a2 := copy(s2.a)
+     a3 := copy(s3.a)
+     a4 := copy(s4.a)
+     i1 := *s1.a
+     i2 := *s2.a
+     i3 := *s3.a
+     i4 := *s4.a
+     e1  := create !a1 | Pre_(s1.e,i1)
+     e2  := create !a2 | Pre_(s2.e,i2)
+     e3  := create !a3 | Pre_(s3.e,i3)
+     e4  := create !a4 | Pre_(s4.e,i4)
+     return Sequence([],create |Quadop_(op,@e1,@e2,@e3,@e4))
+     }
+end
+
+procedure P_(a)				# limited evaluation
+   return case *a of {
+      2 :  Unop_(a[1],a[2])
+      3 :  Binop_(a[1],a[2],a[3])
+      4 :  Triop_(a[1],a[2],a[3],a[4])
+      5 :  Quadop_(a[1],a[2],a[3],a[4],a[5])
+      default :  stop("Too many arguments in parallel evaluation")
+      }
+end
+
+record Sequence(a,e)	# sequence data type
+record Undef()	# for unique "undefined" value
+
+global Phi, Iplus, Iplus_, Izero, Undef_, X_, Genseq_, GenJ_
+
+procedure At(X)				# element generation for sequences
+   every i := seq() do 
+      if s := Ref_(X,i) then suspend s
+      else fail
+end
+
+procedure C_(a)				# identifying "subscript" for
+   local s				# recurrence lookup
+   s := a[1]
+   every s ||:= "." || image(a[2 to *a])
+   return s
+end
+
+procedure Cat_(X1,X2)			# concatenation of X1 and X2
+   local s1, s2, e1, e2, i1, i2, a1, a2
+   s1 := Seq_(X1)
+   s2 := Seq_(X2)
+   e1 := s1.e
+   i1 := *s1.a
+   e2 := s2.e
+   i2 := *s2.a
+   a2 := copy(s2.a)
+   return Sequence(copy(s1.a),create Pre_(e1,i1) | !a2 | Pre_(e2,i2))
+end
+
+procedure Collapse_(X)			# generate scalars from X
+   if S_(X) then
+      suspend Collapse_(Gen_(X))
+  else return X
+end
+
+procedure Expr_(X)			# return refreshed co-expression for X
+   if type(X) == "Sequence" then return ^X.e | &null
+   else if /X then return Phi.e
+   else return create X
+end
+
+procedure Gen_(X,v)			# generate elements of X
+   local i, x
+   if X_[\v] === Undef_ then fail	# termination heuristic
+   if not S_(X) then return X		# note: does not fail if X null-valued
+   every i := seq() do {
+      if x := X.a[i] then		# produce stored values first
+         suspend x
+      else {				# transfer remaining values
+         put(X.a,@X.e) | fail
+         if x := X.a[i] then suspend x else fail
+         }
+      if X_[\v] === Undef_ then fail	# termination heuristic
+      }
+end
+
+procedure Generic_(p,X)			# apply p to X
+   if /X then fail
+   return if S_(X) then every p(Gen_(X)) else p(X)
+end
+
+procedure Init_()
+   GenJ_ := Gen_
+   Undef_ := Undef()
+   X_ := table()
+   Iplus := Sequence([],create seq(1))
+   Iplus_ := Sequence([],create seq(1))
+   Izero := Sequence([],create seq(0))
+   Izero_ := Sequence([],create seq(0))
+   Phi := Sequence([], create &fail)
+   Genseq_ := Iplus_
+end
+
+procedure Lim_(X,i)			# limit X to i elements
+   local e, s, a, n
+
+   if i < 1 then return .Phi
+   s := Seq_(X)
+   a := copy(s.a)
+   n := *s.a
+   return Sequence([],create (!a | Pre_(s.e,n)) \ i)
+
+end
+
+procedure Post_(e,i)			# limit X to at most i values
+   e := ^e
+   suspend |@e \ i
+end
+
+procedure Pp_(v)			# push/pop undefined marker
+   X_[\v] := &null
+   suspend
+   X_[\v] := &null
+   fail
+end
+
+procedure Pre_(e,i)			# skip first i values of X
+   e := ^e
+   every 1 to i
+      do @e | fail
+   suspend |@e
+end
+
+procedure Qq_(v)			# pop/push undefined marker
+   X_[\v] := &null
+   suspend
+   X_[\v] := &null
+   fail
+end
+
+procedure Red_(X,op)			# reduction of X over op
+   local x, y, i
+   i := 1
+   suspend x := Ref_(X,i)
+   while y := Ref_(X,i +:= 1) do
+      suspend (x := op(x,y))		# op(x,y) may fail, not changing x
+end
+
+procedure Ref_(X,i,v)			# X!i
+   local x
+   if i < 1 then {
+      X_[\v] := Undef_			# termination heuristic
+      fail
+      }
+   if not S_(X) then 			# J: coerce to a sequence
+      X := Sequence([],create X)
+   if i > *X.a then
+      every 1 to i - *X.a do
+         put(X.a,@X.e) | {
+            X_[\v] := Undef_		# termination heuristic
+            fail
+            }
+   return X.a[i]			# note that this is not dereffed
+end
+
+procedure S_(x)				# is X a sequence?
+   return type(x) == "Sequence"
+end
+
+procedure Seq_(X)			# coerce X to a unit sequence
+   if type(X) == "Sequence" then return X
+   else if /X then return Phi
+   else return Sequence([],create X)
+end
+
+procedure Shift_(X,i)			# shift X left by i elements
+   local e,a,n,s
+   if i < 1 then return .Phi
+   s := Seq_(X)
+   a := copy(s.a)
+   n := *a
+   if n > i then {
+      e := create a[i+1 to n] | Pre_(s.e,n)
+      return Sequence([],create |@e)
+      }
+   else
+      return Sequence([], create Pre_(s.e,i))
+end
+global Fibseq, Abc, U, L
+procedure main();
+Init_()
+Abc := Sequence([], create ("") | ("a") | ("b") | ("c") | ("aa") | ("ab") | ("ac") | ("ba") | ("bb") | ("bc") | ("ca") | ("cb") | ("cc") | ("aaa"));
+Fibseq := Sequence([], create (Fib()));
+U := Sequence([], create ("A") | ("B") | ("C"));
+L := Sequence([], create ("a") | ("b"));
+sec1();
+sec1();
+sec1();
+sec2_0();
+sec2_0();
+sec2_0();
+sec2_1();
+sec2_1();
+sec2_1();
+sec2_3();
+sec2_3();
+sec2_3();
+sec2_4();
+sec2_4();
+sec2_4();
+sec3_1();
+sec3_1();
+sec3_1();
+sec3_2();
+sec3_2();
+sec3_2();
+sec3_3();
+sec3_3();
+sec3_3();
+sec4();
+sec4();
+sec4();
+sec5();
+sec5();
+sec5();
+end
+procedure sec1();
+write("{x, {y}}: ",Image(Sequence([], create ("x") | (Sequence([], create ("y"))))));
+write("|{{1,2}}|: ",Length(Sequence([], create (Sequence([], create (1) | (2))))));
+write("F!6: ",Ref_((Fibseq),6,));
+write("{1,2,3} -> {6,7,8,9}: ",Image(Cat_((Sequence([], create (1) | (2) | (3))),(Sequence([], create (6) | (7) | (8) | (9)))),10));
+write("F sub 3:5: ",Image(Subseq(Fibseq,3,5)));
+write("F sub 5:inf: ",Image(Shift_((Fibseq),4)));
+end
+procedure sec2_0();
+write("Fibonacci sequence: ",Image(Fibseq,10));
+write("closure of a,b,c: ",Image(Abc,10));
+write("[i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((i) ,"i"),Qq_("i"))))));
+write("[i - 1]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Binop_("-",i,1)) ,"i"),Qq_("i"))))));
+write("[i ^ 2]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Binop_("^",i,2)) ,"i"),Qq_("i"))))));
+write("[i mod 3]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Binop_("%",i,3)) ,"i"),Qq_("i"))))));
+write("[a to i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((repl("a",i)) ,"i"),Qq_("i"))))));
+write("[1]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((1) ,"i"),Qq_("i"))))));
+write("[aa]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_(("aa") ,"i"),Qq_("i"))))));
+end
+procedure sec2_1();
+write("[Iplus:i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(.Iplus,"i") & 1(GenJ_((i) ,"i"),Qq_("i"))))));
+write("[Izero:i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(.Izero,"i") & 1(GenJ_((i) ,"i"),Qq_("i"))))));
+write("[Fibseq:i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Fibseq,"i") & 1(GenJ_((i) ,"i"),Qq_("i"))))));
+write("[[i ^ 2]:F]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Binop_("^",i,2)) ,"i"),Qq_("i")))),"i") & 1(GenJ_((Ref_((Fibseq),i,"i")) ,"i"),Qq_("i"))))));
+write("[[i ** 2]:F]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Sequence([], create (1) | (4) | (9) | (16)),"i") & 1(GenJ_((Ref_((Fibseq),i,"i")) ,"i"),Qq_("i"))))));
+write("[{1,3,5}:Abc!i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Sequence([], create (1) | (3) | (5)),"i") & 1(GenJ_((Ref_((Abc),i,"i")) ,"i"),Qq_("i"))))));
+write("Iplus \\ 4: ",Image(Lim_((.Iplus) ,4),10));
+write("[Iplus \\ 4:Abc!i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Lim_((.Iplus) ,4),"i") & 1(GenJ_((Ref_((Abc),i,"i")) ,"i"),Qq_("i")))),10));
+end
+procedure sec2_2();
+write("[{i,i}]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Sequence([], create (i) | (i))) ,"i"),Qq_("i"))))));
+end
+procedure sec2_3();
+k := 100;
+write("[lambda(j)k + j]: ",Image(Sequence([],create (Pp_("j") &
+j := Gen_(Genseq_,"j") & 1(GenJ_((Binop_("+",k,j)) ,"j"),Qq_("j"))))));
+write("[F:lambda(j)k + j]: ",Image(Sequence([],create (Pp_("j") &
+j := Gen_(Fibseq,"j") & 1(GenJ_((Binop_("+",k,j)) ,"j"),Qq_("j"))))));
+write("[Abc:lambda(s)s || s]: ",Image(Sequence([],create (Pp_("s") &
+s := Gen_(Abc,"s") & 1(GenJ_((Binop_("||",s,s)) ,"s"),Qq_("s"))))));
+end
+procedure sec2_4();
+write("[lambda(i)[lambda(j) U!i || L!j]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Sequence([],create (Pp_("j") &
+j := Gen_(Genseq_,"j") & 1(GenJ_((Binop_("||",Ref_((U),i,"i"),Ref_((L),j,"j"))) ,"j"),Qq_("j"))))) ,"i"),Qq_("i"))))));
+write("[lambda(i)[lambda(j) U!j || L!i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Sequence([],create (Pp_("j") &
+j := Gen_(Genseq_,"j") & 1(GenJ_((Binop_("||",Ref_((U),j,"j"),Ref_((L),i,"i"))) ,"j"),Qq_("j"))))) ,"i"),Qq_("i"))))));
+write("[Izero:lambda(j)[(Iplus %% j) \\ (j + 1):i]]: ",Image(Sequence([],create (Pp_("j") &
+j := Gen_(.Izero,"j") & 1(GenJ_((Sequence([],create (Pp_("i") &
+i := Gen_(Lim_(((Shift_((.Iplus),j))) ,(Binop_("+",j,1))),"i") & 1(GenJ_((i) ,"i"),Qq_("i"))))) ,"j"),Qq_("j"))))));
+end
+procedure sec3_1();
+I := Sequence([], create (1) | (2) | (3) | (4) | (5) | (6));
+J := Sequence([], create (100) | (200) | (300) | (400) | (500) | (600));
+write("I + J: ",Image(Binop_("+",I,J)));
+write("{a, ab, c} || {c, b, a}: ",Image(Binop_("||",Sequence([], create ("a") | ("ab") | ("c")),Sequence([], create ("c") | ("b") | ("a")))));
+write("Abc || Abc: ",Image(Binop_("||",Abc,Abc)));
+write("{1,2,3,4} + {1,4}: ",Image(Binop_("+",Sequence([], create (1) | (2) | (3) | (4)),Sequence([], create (1) | (4)))));
+write("{a, ab, c} || {x}: ",Image(Binop_("||",Sequence([], create ("a") | ("ab") | ("c")),Sequence([], create ("x")))));
+end
+procedure sec3_2();
+I := Sequence([], create (1) | (2) | (0) | (0) | (45) | (0));
+write("[if I!i = 0 then {0} else {1}]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((if Binop_("=",Ref_((I),i,"i"),0) then Sequence([], create (0)) else Sequence([], create (1))) ,"i"),Qq_("i"))))));
+write("[if I!i = 0 then 0 else 1]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((if Binop_("=",Ref_((I),i,"i"),0) then 0 else 1) ,"i"),Qq_("i"))))));
+end
+procedure sec3_3();
+write("Red(Iplus \\ 5,+): ",Image(Red(Lim_((.Iplus) ,5),"+")));
+write("[Red(F \\ i,+)]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Red(Lim_((Fibseq) ,i),"+")) ,"i"),Qq_("i"))))));
+write("[Red(Abc \\ (i + 1),||)]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Red(Lim_((Abc) ,(Binop_("+",i,1))),"||")) ,"i"),Qq_("i"))))));
+end
+procedure sec4();
+write("[if Iplus!i mod 2 = 0 then Iplus!i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((if Binop_("=",Binop_("%",Ref_((.Iplus),i,"i"),2),0) then Ref_((.Iplus),i,"i")) ,"i"),Qq_("i"))))));
+write("[if |Abc!i| mod 2 = 0 then Abc!i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((if Binop_("=",Binop_("%",Unop_("*",(Ref_((Abc),i,"i"))),2),0) then Ref_((Abc),i,"i")) ,"i"),Qq_("i"))))));
+write("[if i mod 2 = 1 then F!(i + 1) else F!(i - 1)]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((if Binop_("=",Binop_("%",i,2),1) then Ref_((Fibseq),(Binop_("+",i,1)),) else Ref_((Fibseq),(Binop_("-",i,1)),)) ,"i"),Qq_("i")))),10));
+write("[if i mod 2 = 1 then Iplus!i + Iplus!(i + 1)]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((if Binop_("=",Binop_("%",i,2),1) then Binop_("+",Ref_((.Iplus),i,"i"),Ref_((.Iplus),(Binop_("+",i,1)),))) ,"i"),Qq_("i"))))));
+I := Sequence([], create (0) | (1) | (2) | (3) | (0) | (2) | (0) | (5));
+write("[if I!i = 0 then i]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((if Binop_("=",Ref_((I),i,"i"),0) then i) ,"i"),Qq_("i"))))));
+end
+procedure sec5();
+write("[Fib(i)]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Fib()) ,"i"),Qq_("i"))))));
+write("[Fibs(i)]: ",Image(Sequence([],create (Pp_("i") &
+i := Gen_(Genseq_,"i") & 1(GenJ_((Fibs()) ,"i"),Qq_("i"))))));
+write("[G(i - 1)]: ",Image(Sequence([], create (0 | G()))));
+write("[Izero:G(i)]: ",Image(Sequence([], create (0 | G()))));
+write("[Izero:Gk(i,2)]: ",Image(Sequence([], create (Gk(2)))));
+end
+procedure Compress(X)			# compression of X to scalar sequence
+   return Sequence([],create Collapse_(Copy(X)))
+end
+
+procedure Copy(X)			# copy X
+   local e, i 
+   i := *X.a
+   return Sequence(copy(X.a),create Pre_(X.e,i))
+end
+
+procedure Compose(f,X1,X2,X3,X4)	# apply f in parallel
+   local a
+end
+
+procedure Empty(X)			# is X an empty sequence?
+   if /X then return Phi
+   if not(S_(X)) | (*X.a > 0) | put(X.a,@X.e) then fail
+   else return Phi
+end
+
+procedure Image(X,i,r)			# image of X to i values
+   local s, t, j
+   if S_(X) then {
+      /i := 5
+      /r := 0
+      if r >= i then return "{...}"
+      j := 0
+      s := "{"
+      every t := (Gen_(X) \ i) do {
+         s ||:= Image(t,i,r +:= 1) || ","
+         j +:= 1
+         }
+      if j = 0 then return "{}"
+      if Ref_(X,i + 1) then s ||:= "...,"
+      s[-1] := "}"
+      return s
+      }
+   else return image(X)
+end
+
+
+procedure ImageW(X,i,r)			# image of X to i values
+   local s, t, j
+   if S_(X) then {
+      /i := 5
+      /r := 0
+      if r >= i then return "{...}"
+      j := 0
+      s := "{"
+      every t := (Gen_(X) \ i) do {
+         s ||:= write(ImageW(t,i,r +:= 1)) || ","
+         j +:= 1
+         }
+      if j = 0 then return "{}"
+      if Ref_(X,i + 1) then s ||:= "...,"
+      s[-1] := "}"
+      return s
+      }
+   else return image(X)
+end
+
+procedure Index(X)			# current size of X
+   if not S_(X) then return 1
+   return *X.a
+end
+
+procedure Last(X)			# produce all values of X
+   if not S_(X) then return X
+   return X.a[Length(X)]
+end
+
+procedure Length(X)			# length of X
+   if not S_(X) then return 1
+   while put(X.a,@X.e)
+   return *X.a
+end
+
+procedure Next(X)			# produce next value of X
+   local x
+   if not S_(X) then fail
+   if x := @X.e then {
+      put(X.a,x)
+      return x
+      }
+end
+
+procedure Print(X,i)			# write the image of a stream
+	Write(Image(X,i))
+	return X
+end
+
+procedure Read(f)			# sequence from file f
+   return Sequence([],create read(!f))
+end
+
+procedure Red(X,op)			# reduction of X over op
+   local S
+
+   S := Seq_(X)
+   a := copy(S.a)
+   e := S.e
+   return Sequence([], create Red_(Sequence([], create !a | |@e),op))
+end
+
+procedure Run(X,i)			# force computation of next i elements
+
+   if not S_(X) then return X
+   every 1 to i do 
+      put(X.a,@X.e) | fail
+   return X   
+end
+
+procedure Subseq(X,i,j)			# subsequence of X from i to j
+   return Lim_(Shift_(X,i-1),j - i + 1)
+end
+
+procedure Trace(X,i)			# image of X, returning X
+   write(Image(X,i))
+   return X
+end
+
+procedure Write(X)			# write elements in X with linefeeds
+   return Generic_(write,X)
+end
+
+procedure Writes(X)			# write elements in X without linefeeds
+   return Generic_(writes,X)
+end

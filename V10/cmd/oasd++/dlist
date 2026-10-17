@@ -1,0 +1,29 @@
+#!/usr/bin/awk -f
+function list(arr, alen,	newf, newarr, i, j) {
+	for (i = 0; i < alen; i++) {
+		newf = path arr[i]
+		if ((getline < newf) <= 0)
+			print arr[i]
+		else {
+			j = 0;
+			do {
+				newarr[j++] = $0;
+			} while ((getline < newf) > 0)
+			close(newf)
+			list(newarr, j)
+		}
+	}
+}
+BEGIN {
+	path = "/usr/lib/asd/dest/"
+	if (ARGC <= 1) {
+		boot[0] = "default";
+		len = 1;
+	} else {
+		for (i = 1; i < ARGC; i++)
+			boot[i-1] = ARGV[i];
+		len = ARGC - 1;
+	}
+	list(boot, len)
+	exit
+}

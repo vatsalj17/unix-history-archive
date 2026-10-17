@@ -1,0 +1,152 @@
+.TH CIRCLE 3L "630 MTG"
+.XE "circle()"
+.XE "disc()"
+.XE "discture()"
+.XE "arc()"
+.SH NAME
+circle, disc, discture, arc \- circle routines
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+\f3void circle (b, p, r, f)\f1
+.sp
+.B void disc (b, p, r, f)
+.sp
+\f3void discture (b, p, r, t, f)\f1
+.sp
+\f3void arc (b, p, p1, p2, f)\f1
+.sp
+.B Bitmap \(**b;
+.br
+.B Point p, p1, p2;
+.br
+.B int r;
+.br
+.B Texture16 \(**t;
+.br
+.B Code f;
+.SH DESCRIPTION
+The
+.I circle
+function
+draws the best approximate circle of radius
+.I r
+centered at Point
+.I p
+in the Bitmap
+.I b
+with Code
+.IR f .
+The circle is guaranteed to be symmetrical about the horizontal,
+vertical, and diagonal axes.
+.PP
+The
+.I disc
+function
+draws a disc of radius
+.I r
+centered at Point
+.I p
+in the Bitmap
+.I b
+with Code
+.IR f .
+A disc is a circle which has been completely filled.
+.PP
+The
+.I discture
+function
+draws a disc of radius
+.I r
+centered at Point
+.I p
+in the Bitmap
+.I b
+using the Texture16
+.I t
+with Code
+.IR f .
+The
+.I discture
+function
+is similar to
+the
+.I disc
+function
+except it allows one to specify a pattern to fill the disc.
+.PP
+The
+.I arc
+function
+draws a circular arc centered on
+.IR p ,
+traveling counter-clockwise from
+.I p1
+to the point on the circle closest to
+.IR p2 .
+.SH EXAMPLE
+The following routine draws a ``smiling face'' in the display Bitmap
+with center specified by clicking button 1.
+.PP
+.RS 3
+.ft CM
+.nf
+.S -4
+#include <dmd.h>
+
+
+main()
+{
+	int radius;
+	extern Texture16 T_darkgrey;
+	Point s;
+	
+ 	request(MOUSE);
+	wait(MOUSE);
+	bttns(1);
+
+	s = mouse.xy;
+	radius = 50;
+
+	/* smiling will draw the face.  The nose will be 
+	 * placed wherever the mouse is clicked in
+	 * the window.
+	 */
+	
+	smiling(&display, s, radius, &T_darkgrey, F_XOR); 
+
+	request(KBD);
+	wait(KBD);
+}
+
+
+smiling(b, c, rad, t, f)
+Bitmap  *b;
+Point    c;
+int      rad;
+Texture16 *t;
+Code     f;
+{
+    int mino, e; /* offsets for placing */
+	         /* eyes, nose and mouth */
+    int enrad;   /* radius of eyes and nose */
+
+    mino = rad/2;
+    e = rad/3;
+    enrad = e/3;
+    circle (b, c, rad, f); /* face outline */
+    disc (b, Pt(c.x-e, c.y-mino),
+         enrad, f);        /* left eye */
+    disc (b, Pt(c.x+e, c.y-mino),
+         enrad, f);        /* right eye */
+    discture (b, c, enrad, t, f); /* nose */
+    arc (b, c, Pt(c.x-mino, c.y+mino),
+	Pt(c.x+mino, c.y+mino),f);
+     /* mouth */
+}
+.fi
+.ft R
+.RE
+.S +4
+.SH SEE ALSO
+ellipse(3L), jcircle(3L), jellipse(3L), texture(3R).

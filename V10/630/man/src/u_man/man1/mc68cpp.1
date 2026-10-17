@@ -1,0 +1,314 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH MC68CPP 1 "630 MTG"
+.SH NAME
+mc68cpp \- the C language preprocessor
+.SH SYNOPSIS
+.B $DMD/lib/mc68cpp [
+option ...
+.B ]
+.B [
+ifile
+.B [
+ofile
+.B ] ]
+.SH DESCRIPTION
+.PP
+.I Mc68cpp\^
+is the C language preprocessor which is invoked as the
+first pass of any C compilation using the
+.IR dmdcc (1)
+command.  Thus, the output of
+.I mc68cpp\^
+is designed to be in a form acceptable as input
+to the next pass of the C compiler.
+As the C language evolves,
+.I mc68cpp\^
+and the rest of the C compilation package will be
+modified to follow these changes.
+Therefore, the use of
+.I mc68cpp\^
+other than in this framework is not suggested.
+The preferred way to invoke
+.I mc68cpp\^
+is through the
+.IR dmdcc (1)
+command, since the functionality of
+.I mc68cpp\^
+may some day be moved elsewhere.  See
+.IR m4 (1)
+for a general macro processor.
+.PP
+.I Mc68cpp\^
+optionally accepts two file names as arguments.
+.I Ifile\^
+and
+.I ofile\^
+are respectively the input and output
+for the preprocessor.  They default to standard input
+and standard output if not supplied.
+.PP
+The following \fIoptions\fP to
+.I mc68cpp\^
+are recognized:
+.TP
+.B \-P
+Preprocesses the input without producing the line control
+information used by the next pass of the C compiler.
+.TP
+.B \-C
+By default,
+.I mc68cpp\^
+strips C-style comments.  If the
+.B \-C
+option is specified, all comments (except those found on
+.I mc68cpp
+directive lines)
+are passed along.
+.TP
+.BI \-U name\^
+Removes any initial definition of
+.IR name ,
+where
+.I name\^
+is a reserved symbol
+that is predefined by the particular preprocessor.
+The current list of these possibly reserved symbols includes:
+.PD 0
+.ne 3v
+.RS 10
+.TP 19
+operating system:
+ibm, gcos, os, tss, unix
+.TP
+hardware:
+interdata, pdp11, u370, u3b, u3b5, vax, mc68000, mc68k16, mc68k32
+.TP
+\s-1UNIX\s+1 variant:
+.SM RES\*S,
+.SM RT
+.RE
+.PD
+.TP
+.BI \-D name\^
+.PD 0
+.TP
+.BI \-D name=def\^
+Defines
+.I name\^
+as if by a
+.B #define
+directive.  If no
+.I =def\^
+is given,
+.I name\^
+is defined as 1.
+.bp
+.PD
+.TP
+.BI \-I dir\^
+Changes the algorithm for searching for
+.B #include
+files
+whose names do not begin with \f3/\fP
+to look in
+.I dir\^
+before looking in the directories on the standard list.
+Thus,
+.B #include
+files whose names are enclosed in \f3"\|"\fP
+will be searched for
+first in the directory of the
+.I ifile\^
+argument,
+then in directories named in 
+.B \-I
+options,
+and last in directories on a standard list.
+For
+.B #include
+files whose names are enclosed in
+.BR <> ,
+the directory of the
+.I ifile\^
+argument is not searched.
+.PP
+Two special names are understood by
+.IR mc68cpp .
+The name
+.B _\^\^_\s-1LINE\s+1_\^\^_
+is defined as the current line number (as a decimal integer) as known by
+.IR mc68cpp ,
+and
+.B _\^\^_\s-1FILE\s+1_\^\^_
+is defined as the current file name (as a C string) as known by
+.I mc68cpp.\^
+They can be used anywhere (including in macros) just as any
+other defined name.
+.PP
+All
+.I mc68cpp\^
+directives start with lines whose first character is
+.BR # .
+The directives are:
+.TP
+.BI #define " name" " " token-string
+Replaces subsequent instances of
+.I name\^
+with
+.IR token-string .
+.TP
+\fB#define\fI name\fB(\fI arg\fB, ...,\fI arg\fB )\fI token-string\fR
+Notice that there can be no space between
+.I name
+and the
+.BR ( .
+Replaces subsequent instances of
+.I name
+followed by a
+.BR ( ,
+a list of comma separated tokens, and a
+.B )
+by
+.I token-string
+where each occurrence of an
+.I arg
+in the
+.I token-string
+is replaced by the corresponding token in the comma separated list.
+.TP
+.BI #undef " name"
+Causes the definition of
+.I name
+(if any) to be forgotten from now on.
+.TP
+\fB#include\fI "filename"
+.PD 0
+.TP
+.BI #include " " < filename >
+Include at this point the contents of
+.I filename
+(which will then be run through
+.IR mc68cpp ).
+When the
+.BI < filename >
+notation is used,
+.I filename
+is only searched for in the standard places.
+See the
+.B \-I
+option above for more detail.
+.PD
+.TP
+\fB#line\fI integer-constant "filename"
+Causes
+.I mc68cpp
+to generate line control information for the next pass of the
+C compiler.
+.I Integer-constant
+is the line number of the next line
+and
+.I filename
+is the file where it comes from.
+If \fI"filename"\fR is not given, the current file name is unchanged.
+.TP
+.B #endif
+.br
+Ends a section of lines begun by a test directive
+.RB ( #if ,
+.BR #ifdef ,
+or
+.BR #ifndef ).
+Each test directive must have a matching
+.BR #endif .
+.bp
+.TP
+.BI #ifdef " name"
+The lines following will appear in the output if, and only if,
+.I name
+has been the subject of a previous
+.B #define
+without being the subject of an intervening
+.BR #undef .
+.TP
+.BI #ifndef " name"
+The lines following will not appear in the output if, and only if,
+.I name
+has been the subject of a previous
+.B #define
+without being the subject of an intervening
+.BR #undef .
+.SK
+.TP
+.BI #if " constant-expression"
+Lines following will appear in the output if, and only if, the
+.I constant-expression
+evaluates to non-zero.
+All binary non-assignment C operators, the
+.B ?:
+operator, the unary
+.BR \(mi ,
+.BR ! ,
+and
+.B ~
+operators are all legal in
+.IR constant-expression .
+The precedence of the operators is the same as defined by the C language.
+There is also a unary operator
+.BR defined ,
+which can be used in
+.I constant-expression
+in these two forms:
+.BI defined " " ( " name " )
+or
+.BI defined " name" .
+This allows the utility of
+.BR #ifdef " and " #ifndef
+in a
+.B #if
+directive.
+Only these operators, integer constants, and names which
+are known by
+.I mc68cpp
+should be used in
+.IR constant-expression .
+In particular, the
+.B sizeof
+operator is not available.
+.TP
+.B #else
+Reverses the notion of the test directive which
+matches this directive.  So if lines previous to
+this directive are ignored, the following lines
+will appear in the output,
+and vice versa.
+.PP
+The test directives and the possible
+.B #else
+directives can be nested.
+.SH FILES
+.TP 1.5i
+/usr/include
+standard directory for
+.B #include
+files
+.SH SEE ALSO
+.PP
+dmdcc(1). 
+.br
+m4(1) in the
+\f2UNIX System V User's Reference Manual\f1.
+.SH DIAGNOSTICS
+.PP
+The error messages produced by
+.I mc68cpp\^
+are intended to be self-explanatory.  The line number and filename
+where the error occurred are printed along with the diagnostic.
+.SH WARNING
+When newline characters were found in argument lists for macros
+to be expanded, previous versions of
+.I mc68cpp\^
+put out the newlines as they were found and expanded.
+The current version of
+.I mc68cpp\^
+replaces these newlines with blanks to alleviate problems that the
+previous versions had when this occurred.

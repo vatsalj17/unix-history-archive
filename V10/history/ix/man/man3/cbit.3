@@ -1,0 +1,105 @@
+.TH CBIT 3X
+.SH NAME
+cbit, cbitread, cbitlookup, cbitparse, cbitcert \(mi security category manipulation
+.SH SYNOPSIS
+.nf
+.PP
+.B #include <cbit.h>
+.PP
+.B "struct cbit *cbitparse(char **fields, struct cbit *cb);"
+.PP
+.B "struct cbit *cbitread(char *file);"
+.PP
+.B "struct cbit *cbitlookup(char *name, struct cbit *cb);"
+.PP
+.B "char *cbitcert(struct cbit *p);"
+.fi
+.SH DESCRIPTION
+These functions manipulate
+certificates entitling computers to handle
+compartmented security categories.
+Each security compartment is represented by a structure of form:
+.EX
+.ta 8n +25n
+.nf
+\fLstruct cbit {
+	\fLchar *name;\fR		official name of category
+	\fLint floor;\fR		default value (only bottom bit used)
+	\fLchar *owner;\fR		public name of issuing authority
+	\fLchar *nickname;\fR		our version of category name
+	\fLint bitslot;\fR		where we store it
+	\fLchar *exerciser;\fR		who we are
+	\fLchar *certificate;\fR	owner's signature
+\fL}
+.fi
+.EE
+which describes the meaning of the
+.IR bitslot -th
+bit in a computer's label space.
+By convention, the lines of the file
+.F /etc/cbits
+contain (in ASCII colon-separated form) the compartments currently
+held on the local computer.
+.PP
+.I Cbitparse
+fills in and returns a
+cbit
+in the obvious way from a vector of seven strings.
+If the second argument is zero
+.I cbitparse
+allots a new structure using
+.IR malloc (3).
+.PP
+.I "Cbitread"
+reads and parses an ASCII file of
+cbits,
+returning an array of
+filled in structures.
+The last entry in the array is a dummy; it is signalled by having
+a zero value of
+.IR name .
+.PP
+.IR Cbitlookup ,
+when fed a category name and an array of
+cbits
+(such as returned by
+.IR cbitread ),
+returns a pointer to the unique entry whose category name is
+.IR name ,
+or returns zero.
+.PP
+.IR Cbitcert
+composes a certificate granting
+.I exerciser
+the right to hold files with the given security category.
+The output of
+.I cbitcert
+depends only on
+.IR name ,
+.IR floor ,
+.IR owner ,
+and
+.IR exerciser .
+The output
+must be signed by
+.I owner
+with
+.IR xs
+(see
+.IR notary (3))
+to produce
+the checksum value in
+.IR certificate .
+Third parties may check validity of a cbit
+by calling
+.EX
+.B "verify(p->exerciser, p->certificate, cbitcert(p), strlen(cbitcert(p)))"
+.EE
+.SH FILES
+.F /etc/cbits
+.SH SEE ALSO
+.IR notary (3).
+.SH DIAGNOSTICS
+These routines all return 0
+on error.
+

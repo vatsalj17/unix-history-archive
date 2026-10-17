@@ -1,0 +1,238 @@
+.TH GETFLAB 2
+.SH NAME
+getflab, fgetflab, setflab, fsetflab \- get or set
+file security label and privilege
+.SH SYNOPSIS
+.B #include <sys/label.h>
+.PP
+.B getflab(name, labp)
+.br
+.B char *name;
+.br
+.B struct label *labp;
+.PP
+.B fgetflab(fildes, labp)
+.br
+.B struct label *labp;
+.PP
+.B setflab(name, labp)
+.br
+.B char *name;
+.br
+.B struct label *labp;
+.PP
+.B fsetflab(fildes, labp)
+.br
+.B struct label *labp;
+.SH DESCRIPTION
+.I Getflab
+copies the security label from the the named file into the
+structure pointed to by
+.IR labp .
+.I Fgetlab
+copies the security label from an open file specified by
+file descriptor.
+The field
+.B lb_junk
+is always zero.
+.PP
+The structure of a security label as defined in 
+.BR <sys/label.h>
+is
+.LP
+.EX
+.ta \w'#define 'u +\w'struct labpriv 'u +\w'lb_flag  'u
+#define	LABSIZ	60
+struct	labpriv {
+	unsigned int	lp_junk : 16,	/* poison level, see syslog(2) */
+		lp_flag : 2,
+		lp_fix : 2,	/* fixity */
+		lp_t : 6,	/* capabilities */
+		lp_u : 6;	/* licenses */
+};
+struct	label {
+	struct labpriv	lb_priv;
+	unsigned char	lb_bits[LABSIZ];
+#	define lb_junk	lb_priv.lp_junk
+#	define lb_flag	lb_priv.lp_flag
+#	define lb_t	lb_priv.lp_t
+#	define lb_u	lb_priv.lp_u
+#	define lb_fix	lb_priv.lp_fix
+};
+		/* codes in lb_flag */
+#define L_YES	1
+#define	L_NO	2
+#define	L_BITS	3
+		/* codes in lb_fix */
+#define	F_LOOSE	0
+#define	F_FROZEN	1
+#define	F_RIGID	2
+#define	F_CONST	3
+		/* bits of lb_t and lb_u */
+#define	T_SETPRIV	001	/* may set file privilege */
+#define	T_SETLIC	002	/* may change process license */
+#define	T_NOCHK	004	/* exempt from label checking */
+#define	T_EXTERN	010	/* may introduce foreign data */
+#define	T_UAREA	020	/* may write in u area */
+#define	T_LOG	040	/* may execute syslog() call */
+.EE
+.PP
+Three types of labels are distinguished by the
+.B lb_flag
+field:
+.TF L_BITS
+.PD
+.TP
+.B L_YES
+The file 
+can be read or modified without regard to label.
+Its inode data (see
+.IR stat (2))
+have permanent conventional values.
+.IR Null (4),
+.IR log (4),
+and
+.IR fd (4)
+are labeled
+.BR L_YES .
+.TP
+.B L_NO
+The the file and its inode cannot be
+read or written except by processes with capability
+.BR T_NOCHK .
+A 
+.BR L_NO 
+label may be changed by processes with capability
+.BR T_EXTERN ,
+unless prevented by
+.BR F_CONST 
+described below.
+.TP
+.B L_BITS
+The label has a `lattice value', given by
+.BR lb_bits 
+and so called because the values form a mathematical lattice with 
+bitwise AND as the meet operation and OR as the join.
+.PP
+Each process and each file has a label.
+Normally data may only flow `up' the lattice.
+The destination of a read, write, inode
+query, or inode change must have a lattice value that
+dominates (bitwise) the lattice value of the source, unless
+the process concerned has capability
+.BR T_NOCHK .
+.PP
+To assure upward flow, a
+.IR read (2)
+or an inode query (e.g.\&
+.IR stat (2))
+normally causes the file label to be OR-ed into the process label.
+Similarly a
+.IR write (2)
+or an inode change (as by
+.IR chmod (2)
+or
+.IR link (2))
+causes the process label to be OR-ed into the file label.
+However such side-effect changes in a file or process label
+may happen only if the label is loose
+(see below) and the new label is dominated by the process ceiling;
+see
+.IR getplab (2).
+Otherwise the system call terminates with error
+.BR ELAB .
+.PP
+Security checks are independent of, and made prior to, the
+permission checks described in
+.IR access (2).
+Super-user processes are subject to security checks.
+.PP
+.I Setflab
+replaces the security label of the named file with the
+contents of the structure pointed to by
+.I labp.
+.I Fsetflab
+replaces the security label of an open file specified by
+file descriptor.
+If the new label has flag
+.BR L_BITS ,
+the new lattice value must dominate the old one,
+dominate the process label, and be dominated
+by the process ceiling.
+If the new label has flag
+.BR L_NO ,
+the old label must be dominated by the process ceiling.
+Flag
+.B L_YES
+is an error.
+The field
+.B lb_junk
+is ignored.
+.PP
+The field
+.B lb_t
+contains `capability' bits;
+.B lb_u
+contains corresponding `license' bits; their meanings
+are described in
+.IR getplab (2)
+and
+.IR exec (2).
+The two fields together are known as `privileges'.
+Any file that has nonzero privileges is called `trusted'
+and cannot be changed, in contents or in inode, except by
+processes with capability
+.BR T_SETPRIV .
+.PP
+Aside from considerations of trustedness,
+a label can be changed with more or less freedom according to
+its `fixity',
+.BR lb_fix :
+.TF F_FROZEN
+.PD
+.TP
+.B F_LOOSE
+Any process can change the lattice value of a
+loose file label implicitly as a side effect
+as described above or (up to the process ceiling) explicitly with
+.I setflab
+or
+.I fsetflab.
+The file owner or the super-user can change the fixity.
+.TP
+.B F_FROZEN
+The lattice value of a frozen label cannot change.
+The fixity can be changed by the file owner or the super-user.
+.TP
+.B F_RIGID
+Only processes with capability
+.BR T_EXTERN 
+can change a rigid label; see
+.IR getplab (2).
+The labels of external media, such as terminals, tapes or
+disks, are automatically rigid.
+A loose or frozen label on a stream 
+(see
+.IR stream (4))
+can be changed to rigid.
+This facility allows filters, such as
+.IR mux (9.1),
+to make pipes behave like external devices.
+The fixity of a rigid label cannot change.
+.TP
+.B F_CONST
+A constant label may not be changed.
+The labels of certain special files, such as
+.F /dev/null
+and
+.FR /dev/mem ,
+are automatically constant; no other labels may become constant.
+.SH SEE ALSO
+.IR getplab (2),
+.IR getlab (1),
+.IR labLE (3),
+.IR setlab (8),
+.IR unsafe (2),
+.IR signal (2)
+.SH DIAGNOSTICS
+.B "EFAULT, EIO, ELAB, ELOOP, ENOENT, ENOTDIR

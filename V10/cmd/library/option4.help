@@ -1,0 +1,42 @@
+Searches via library() are done using electronic mail. That is, your search
+request is sent to a remote computer which does the search and mails back the
+results.  Usually you should have results within 20 minutes or less.
+
+There are two search stategies available through library().  Note that these
+are search languages of the slimmer system - see slimmer documentation for more
+details than given below.
+
+The main method is to enter a search string which library handles as follows:
+    a) It is broken up into alpha-numeric components (words) and all
+       punctuation is thrown away.
+    b) The words are used from left-to-right to find items having the
+       word (note anywhere - e.g. smith will find authors, titles, etc).
+    c) The set of items retrieved by each word is ANDed with those
+       retrieved so far, with the constraint that something always remains
+       in the retrieved set.
+
+ Some points of interest:
+    1) If you surround something with quotes, rule a above is bypassed.
+       I.e. to search on the word  CP/M   enter "cp/m" otherwise the
+       slash will cause it to search on   'CP AND M'
+    2) Authors are in the indices in the form  LAST FM, i.e.
+		WALDSTEIN RK
+       Searching on WALDSTEIN will retrieve everything by any author with
+       last name WALDSTEIN. To search a particular author use "WALDSTEIN RK".
+
+A more complex full Boolean search capacity is also available. It is
+used if the search string begins with a parenthesis "(".
+
+The operators are (in order of precedence):
+  /=<field list>      restrict a set to a list of fields
+  A (f) B             results in items with A and B in the same field
+  A NOT B             results in items containing term A, NOT term B
+  A AND B             results is items containing both term A and term B
+  A OR  B             results in items with term A OR term B
+
+So a legitimate, though overly complex search, is
+
+  ((science (f) (fantas? or fiction))/=ti and (84 or 85)/=da) not asimov
+
+
+

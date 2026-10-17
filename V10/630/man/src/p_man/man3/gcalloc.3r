@@ -1,0 +1,115 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH GCALLOC 3R "630 MTG"
+.XE "gcalloc()"
+.XE "gcallocown()"
+.XE "gcfree()"
+.SH NAME
+gcalloc, gcfree, gcallocown \- garbage compacting memory allocation
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B char \(**gcalloc (nbytes, where)
+.PP
+.B void gcfree (s)
+.PP
+.B void gcallocown (s, p)
+.PP
+.B unsigned long nbytes;
+.br
+.B long \(**\(**where;
+.br
+.B char \(**s;
+.br
+.B Proc \(**p;
+.SH DESCRIPTION
+The
+.I gcalloc
+function
+provides a simple garbage-compacting memory allocator.
+It returns either a pointer to a block of
+.I nbytes
+contiguous bytes of storage or a \s-1NULL\s+1 if unavailable.
+The storage is not initialized to zeros.
+The pointer
+.I where
+points to the location where the address of the
+storage block is to be saved.
+The contents of
+.I where
+will be updated after each compaction.
+That is, if garbage collection occurs, your storage will be moved,
+and your pointer will be changed to point to the new location of your
+storage area.
+Therefore, a program using
+.I gcalloc
+should never store the location of 
+gcallocated
+memory anywhere other than the location handed to the allocator.
+Typically, this location is contained in a structure such as a \fIBitmap\fR.
+.PP
+The
+.I gcallocown
+function
+changes the owning process of the memory returned by
+.IR gcalloc .
+If
+.I p
+is zero, the memory will belong to no one and will only be freed by an explicit call to
+.IR gcfree .
+.PP
+The
+.I gcfree
+function
+frees the storage block at
+\fIs\fR,
+thus making it available for future allocation.
+.PP
+The terminal
+automatically frees all memory \fIgcalloc\fR'ed and owned by a process
+when the process terminates or when
+the window it is running in is deleted.
+However, it is recommended that a process free its garbage compactable
+memory when the storage is no longer needed so that other
+processes
+will be able to use it.
+
+.SH EXAMPLE
+These routines could be used for allocating and freeing space
+used to store Points in a polygon.
+.PP
+.RS 3
+.ft CM
+.S -2
+.nf
+#include <dmd.h>
+
+Point *poly;
+
+Point *
+polyalloc(n)
+{
+     char *gcalloc();
+
+return (poly = (Point *)gcalloc(sizeof(Point)*n, &poly));
+}
+
+polyfree( )
+{
+     void gcfree();
+
+     gcfree (poly);
+}
+.fi
+.ft R
+.S +2
+.SH SEE ALSO
+alloc(3R), balloc(3R), structures(3R).
+
+.SH DIAGNOSTICS
+When garbage compaction is in effect, a small rectangle flashes on the
+upper left corner of the terminal's screen.
+.SH BUGS
+If \f2gcalloc\f1 is called to attempt to allocate over 7000000
+bytes, it will fail, but it may say it succeeded. If this
+happens, the memory used by \f2gcalloc\f1 is corrupted and may
+damage other programs running in the terminal.

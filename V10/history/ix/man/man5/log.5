@@ -1,0 +1,126 @@
+.TH LOG 5
+.CT 1 sa_nonmortals secur
+.SH NAME
+log \- format of security logging records
+.SH SYNOPSIS
+.B #include <sys/log.h>
+.SH DESCRIPTION
+The structure of system log file records
+as declared in
+.B <sys/log.h>
+is
+.EX
+.ta \w'struct 'u +\w'logbuf 'u +\w'body[LOGLEN]; 'u
+struct	logbuf	{
+	short	len;		/* total length of whole record */
+	short	pid;		/* process id */
+	long	slug;		/* transaction number */
+	char	code;		/* kind of record */
+	char	mode;		/* sub-kind */
+	char	colon;		/* ':', aids sync */
+	char	body[LOGLEN];
+};
+.EE
+The
+.BR code 
+field identifies the kind of record;
+for legal values see the include file.
+In kernel records the
+.B mode
+field identifies where in the kernel
+the logging record originated,
+for user records it contains the minor device number of the
+.BI /dev/log/log xx
+file used to create the record.
+.LP
+The 
+.B body
+field contains the logging record proper; its actual length is
+determined from the
+.B len
+field.
+In kernel records the
+.B body
+is a sequence of values,
+each prefixed by one or more format bytes according to
+the following list.
+Multibyte numbers are represented low byte first.
+.TP
+.B s
+Next two bytes are a byte count for following
+string.
+.TP
+.B $
+Next one byte is a byte count for following string, which
+is typically a file component name.
+.TP
+.B C
+Next byte is a byte count for following string, which is
+the command name.
+.TP
+.B j
+Next value is a security label: two bytes of 
+.B lb_priv
+followed by two bytes of index into the kernel's
+shared label table for the
+lattice value of the label; see
+.IR getflab (2).
+.TP
+.B J
+Next value is a security label: two bytes of 
+.B lb_priv
+followed by two bytes of index into the kernel's
+shared label table for the
+lattice value of the label,
+followed by 60 bytes of
+bits of the lattice value of the label.
+.TP
+.I n
+Next 
+.I n
+bytes
+.RI (n =1,2,3,4)
+represent a number.
+.TP
+.B I
+Next bytes name an inode:
+two bytes of device followed by two bytes of inumber.
+.TP
+.B E
+The current system call suffered an
+.B ELAB
+error.
+.TP
+.B e
+Next byte is an
+.I errno
+code; see
+.IR intro (2).
+.PP
+The various bits of the log mask (see
+.IR syslog (2)
+are named
+.BR LN ,
+.BR LS ,
+.BR LU ,
+.BR LI ,
+.BR LD ,
+.BR LP ,
+.BR LL ,
+.BR LA ,
+.BR LX ,
+.BR LE ,
+.BR LT ,
+with the same meanings as the corresponding key letters defined in
+.IR syslog (8).
+.SH FILES
+.F /dev/log
+.SH "SEE ALSO"
+.IR syslog (2), 
+.IR log (4),
+.IR syslog (8)
+.SH BUGS
+The various kinds of kernel logging records are understandable only
+by reading the kernel source code.
+.br
+It takes 7 bytes, not 4, to name an inode.

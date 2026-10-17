@@ -1,0 +1,59 @@
+.TH UNSAFE 2
+.SH NAME
+unsafe \- detect potential file security violations
+.SH SYNOPSIS
+.B #include <sys/types.h>
+.PP
+.B unsafe(nfd, readfds, writefds)
+.br
+.B fd_set *readfds, *writefds;
+.SH DESCRIPTION
+.I Unsafe
+examines file descriptors 0 through
+.I nfd\-1
+and sets the corresponding bits of the masks in
+.I readfds
+and
+.I writefds
+to indicate files that are not known to be safe (i.e. to satisfy
+security label rules) for reading or writing respectively.
+The bit masks are indexed and manipulated as described in
+.IR select (2).
+.PP
+At the same time, if the process has capability
+.BR T_NOCHK 
+(see
+.IR getplab (2)),
+all file descriptors indicated by ones among the first
+.I nfd
+bits of the previous values of 
+.I readfds
+and
+.I writefds
+are marked safe to read or write respectively.
+.PP
+Potentially unsafe situations arise from changes in file label caused
+by this or other processes,
+changes in process label, and file opening.
+.PP
+To prevent unintended violations of security policy,
+programs with capability
+.B NOCHK
+must monitor label changes.
+For this purpose the process label may be frozen (see
+.IR getplab (2))
+to prevent unintended automatic label changes.
+.B SIGLAB
+may be used to detect changes in file labels
+(see
+.IR signal (2)),
+and
+.I unsafe
+to pinpoint them.
+.SH DIAGNOSTICS
+.B EFAULT
+.SH SEE ALSO
+.IR getflab (2),
+.IR getplab (2),
+.IR signal (2),
+.IR select (2)

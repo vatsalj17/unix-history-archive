@@ -1,0 +1,62 @@
+.TH BUILDMAP 3X
+.SH NAME
+buildmap, transin, transout \(mi translate labels between computers
+.SH SYNOPSIS
+.nf
+.PP
+.B
+#include <cbit.h>
+.PP
+.B "struct mapping *buildmap(int fd, char *file, char *me, char *pw, server);"
+.PP
+.B "transin(struct mapping *map, struct label *foreign, struct label *domestic);"
+.PP
+.B "transout(struct mapping *map, struct label *domestic, struct label *foreign);"
+.fi
+.SH DESCRIPTION
+Buildmap and its partner (which may be another instance of
+.IR buildmap )
+at the far end of the stream 
+.I fd
+work out a mapping for translating labels.
+The label space at the near end is defined by
+.I file ,
+which contains ASCII representations of
+.IR cbit (3)
+structures.
+The identity (for authorization purposes)
+of the near end
+is
+.IR me ,
+using a secret password
+.IR pw .
+Each end challenges the other, using its own password to compose a
+response, whose
+validity is checked by
+.I verify ;
+see
+.IR notary (3);
+The ends need not know each other's passwords.
+.I Server
+is to simplify the protocol: one end should have server set to zero,
+the other end to one.
+.PP
+.I Transout
+and
+.I transin
+translate labels according to the formula
+determined by
+.IR buildmap .
+Labels in transit are represented in the binary form of the source machine
+and are translated on receipt, so
+.IR transout 's
+job is simpler.
+Both routines
+return 0 if translation is impossible or illegal,
+otherwise they perform the translation and return 1.
+.SH SEE ALSO
+.IR cbit (3),
+.IR notary (3)
+.SH DIAGNOSTICS
+These routines all return 0
+on error.

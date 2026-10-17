@@ -1,0 +1,61 @@
+.TH CHMOD 2
+.CT 2 file_inq_creat dirs secur
+.SH NAME
+chmod, fchmod \(mi change mode of file
+.SH SYNOPSIS
+.nf
+.B int chmod(name, mode)
+.B char *name;
+.PP
+.B int fchmod(fd, mode)
+.fi
+.SH DESCRIPTION
+.I Chmod
+changes the permissions and other mode bits of the file specified 
+by the null-terminated string
+.I name
+to
+.IR mode .
+.I Fchmod
+changes the mode bits of an open file referred
+to by a file descriptor.
+The modes are defined in
+.IR stat (2).
+Only the
+.B 07777
+bits of 
+.IR mode
+are significant.
+.PP
+The userid of the process must be
+the super-user or the owner of the file.
+.PP
+Set-groupid mode,
+.BR S_ISGID ,
+is turned off unless the process is super-user 
+or has the same groupid as the file.
+.PP
+Blind mode,
+.BR S_IBLIND ,
+cannot be changed unless the process has capability
+.BR T_EXTERN ;
+see
+.IR mkdir(2)
+and
+.IR getplab (2).
+.SH "SEE ALSO"
+.IR chmod (1)
+.SH DIAGNOSTICS
+.BR EBADF ,
+.BR EFAULT ,
+.BR EIO ,
+.BR ELAB ,
+.BR ELOOP ,
+.BR ENOENT ,
+.BR ENOTDIR ,
+.BR EPERM ,
+.BR EPRIV
+.SH BUGS
+An attempt to change the mode of
+a file on a read-only file system
+is quietly ignored.

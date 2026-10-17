@@ -1,0 +1,63 @@
+.TH PEX 3
+.SH NAME
+pex, unpex \- obtain process-exclusive file access
+.SH SYNOPSIS
+.B #include <sys/pex.h>
+.PP
+.B int pex(fd, seconds, pexbuf)
+.br
+.B struct pexclude *pexbuf;
+.PP
+.B int unpex(fd, seconds)
+.SH DESCRIPTION
+.I Pex
+tries, using the
+.CW FIOPX
+ioctl call, to obtain exclusive access to the file designated by
+file descriptor
+.IR fd ;
+see
+.IR pex (4).
+If
+.I pexbuf
+is nonzero, facts about the 
+other end of the pipe are placed in the object
+.I pexbuf
+points to, as described in
+.IR pex (4).
+.PP
+If
+.I fd
+refers to a stream, 
+.I pex
+first empties the input and output queues,
+flushing if
+.I seconds
+is negative, and otherwise waiting up to the specified
+time interval for the queues to drain.
+If the queues do not drain, an error results.
+.PP
+.I Unpex
+uses
+.CW FIONPX
+to try to reverse the effect of
+.I pex,
+again flushing or draining queues as specified by
+.I seconds.
+.PP
+On a pipe,
+.I pex
+or
+.I unpex
+succeeds only if the process at the other end answers
+with an FIOPX or FIONPX ioctl respectively.
+.I Pex
+and
+.I unpex
+should not be used to answer.
+.SH SEE ALSO
+.IR pex (4)
+.SH DIAGNOSTICS
+.I Pex
+returns \-1 on failure, 0 on success, and 1 for a half-pexed
+pipe.

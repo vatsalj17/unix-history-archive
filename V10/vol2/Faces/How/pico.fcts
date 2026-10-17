@@ -1,0 +1,153 @@
+barts:
+x new = old[sqrt(x*512),clamp(y+sin(x)/(x+50))]
+
+pjw.1
+x new=$pjw[x_cart((r = r_polar(x,y)+(sin(r_polar(x, y)))/100), a=a_polar(x,y)), y_cart(r,a)]
+pg.1
+x new=$td[x_cart((r = r_polar(x,y)), (a=a_polar(x,y)+(sin(a_polar(x, y)))/300)), y_cart(r,a)]
+td.3
+x new=$td[x_cart((r = r_polar(x,y)+(sin(a_polar(x, y)))/300), (a=a_polar(x,y))), y_cart(r,a)]
+howard.1
+x new=$howard[x_cart((r = r_polar(x,y)-(sin(a_polar(x, y)))/300), (a=a_polar(x,y))), y_cart(r,a)]
+ftg.1
+ x new=$ftg[x_cart((r = r_polar(x,y)+(sin(a_polar(x, y)))/300), (a=a_polar(x,y)-(sin(r_polar(x, y)))/300)), y_cart(r,a)]
+clowns-nose:
+x new=$Pg[x_cart((r = r_polar(x,y)-(sin(a_polar(x, y)))/300), (a=a_polar(x,y))), y_cart(r,a)]
+
+ken swirl:
+x new=old[xclamp(x_cart(r=r_polar(x,y),a=(a_polar(x,y)+r/3))),yclamp(y_cart(r,a))]
+
+lincoln transformation
+x new=old[x_cart(r=(r_polar(x,y)/8)*8,a=(a_polar(x,y)/8)*8), y_cart(r,a)]
+
+fading
+x new=(x<X/3)?$1:(x>X*2/3)?$2:3*((x-X/3)*$2+(X*2/3-x)*$1)/X
+x new=(y<Y/6)?$1:(y>Y/3)?$2:6*((y-Y/6)*$2+(Y/3-y)*$1)/Y
+
+random split
+x {
+	global int r;
+	r = X/2
+	for (y = 0; y < Y; y++)
+	{	r = r+(rand()%3)-1
+		for (x = 0; x < r; x++)
+			new[x,y] = $1[x,y];
+		x--
+		for (x++; x < X; x++)
+			new[x,y] = $2[x-180,clamp(y-20)]
+	}
+}
+
+weird
+x new=($1>$2)?$2:$1
+x new=($1>100)?$1:$2
+
+charicature:
+x new=old[x_cart(r=sqrt(256*r_polar(x,y)),a=a_polar(x,y)), y_cart(r,a)]
+
+inverse charicature:
+x new=old[x_cart(r=pow(r_polar(x,y), 2)/256,a=a_polar(x,y)), y_cart(r,a)]
+
+doug's fctns:
+x new=old[xclamp(x+Sin(720*x)/150), yclamp(y+Sin(720*y)/150)]
+x new=old[xclamp(x + Cos(((x-512)*36000)/512)/128), y]
+x new=$1*((512-(x-512)*(x-512)-(y-512)*(y-512))>>14)
+
+random smearing
+x new = old[clamp(x+(rand()&15)),clamp(y+(rand()&15))]
+
+mapping of square onto disc
+x new=old[xclamp(a_polar(x,y)*2), yclamp(r_polar(x,y)*2)]
+
+mapping onto a sphere:
+def bubble(R) {
+	int rx, Rx, dx, ex, xy, OX, OY
+	int ry, Ry, dy, ey, a, R2
+	/* use R = 200 */
+	OX=X/2
+	OY=Y/2
+	R2 = R*R
+	for (y = 0; y < Y; y++)
+	{	ey = y-OY
+		ry = R2 - ey*ey
+		Ry = sqrt(ry)
+		for (x = 0; x < X; x++)
+		{	ex = x-OX
+			if (abs(ex) <= Ry)
+			{	rx = R2 - ex*ex
+				Rx = sqrt(rx)
+				xy = sqrt(rx+ry-R2)
+				dx = X-(2*R*atan(ex, xy))/180
+				dy = Y-(2*R*atan(ey, xy))/180
+			}
+			else
+			{	dx = x
+				dy = y
+			}
+			new[x,y] = old[dx, dy]
+		}
+	}
+}
+
+def oil(h) {
+	int v, a, b, mfp
+	array histo[256]
+
+	for (y = h; y < 512-h; y++)
+	{	new[0,y] = 0;
+		for (x = h; x < 512-h; x++)
+		{	for (a = v = 0; a < 256; a++)
+				histo[a] = 0
+			for (a = y-h; a <= y+h; a++)
+			for (b = x-h; b <= x+h; b++)
+			{	histo[old[b,a]]++
+			}
+			for (a = b = 0; a < 256; a++)
+			{	if (histo[a] > b)
+				{	b = histo[a]
+					mfp = a
+				}
+			}
+			new[x,y] = mfp;
+		}
+	}
+}
+
+x new=0	
+x new[x, yclamp(y - $clouds[x,y]/4)]=$clouds 	/* bentley drip */
+x new=old
+x {
+	int r
+	array yshift[Y]
+
+	for (y = 0; y < Y; y++)
+	{	if (rand() < 2000)
+			r=(rand()&127)-64
+		yshift[y] = r
+	}
+	
+	for (y=0; y<Y; y++)
+	{	if (rand() < 2000)
+			r=(rand()&127)-64
+		for (x=0; x<X; x++)
+			new[x,y] = old[clamp(x+r), clamp(y+yshift[x])]
+	}
+}
+
+def tilt(an, XL, YL, D) {
+	int dx, dy, d, ex, ey
+	int sa, ca
+	/* try x { tile(60, 612, 800, 2048); }
+	sa = sin(-an)
+	ca = cos(-an)
+
+	for (y = 0; y < Y; y++)
+	for (x = 0; x < X; x++)
+	{	d  = ((x-XL)*sa)/ca
+		ex = ((x-XL)*D)/(d+D)
+		ey = ((y-YL)*D)/(d+D)
+		dx = XL + (ex*1024)/ca
+		dy = YL + ey
+		new[x,y] = old[xclamp(dx),yclamp(dy)]
+	}
+}

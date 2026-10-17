@@ -1,0 +1,2153 @@
+.NH 1
+Details
+.XL yJ
+.PP
+This section specifies
+security check calculations (\*(yc),
+the effect of label changes and $SIGLAB$ (\*(y0),
+the privilege mechanism (\*(yQ),
+labels of special files (\*(y1),
+new system calls (\*(yN),
+and special security behavior of system calls (\*(yY, \*(yG).
+.NH 2
+Security checks
+.XL yc
+.PP
+Standard security checks are made for system calls that refer to
+files or file descriptors.
+Each system call is first subjected to the security check calculation
+specified in table \*(zT below, as elaborated
+in sections \*(yY, \*(yN, and \*(yG.
+Failed security checks return error $ELAB$ (\*(yT)
+or $EPRIV$ (\*(yU) unless otherwise specified.
+.PP
+Table \*(zT summarizes the data flows caused by each system
+call, lists the standard checks performed for each call,
+and indicates renewal possibilities.
+Some calls have special checks, which are described in
+sections referred to in the Notes column.
+The standard checks are
+.RS
+.IP READ($d$) 10
+for a
+.I read
+call with descriptor $d$ (\*(yr)
+.IP WRITE($d$) 10
+for a
+.I write
+call with descriptor $d$ (\*(yw)
+.IP R($x$) 10
+fre retrieving other data from an object $x$, as in
+.I stat
+(\*(zr)
+.IP RS($d$) 10
+for retrieving the seek pointer of file descriptor $d$ (\*(yt)
+.IP W($x$) 10
+for assigning other data to an object $x$ (\*(zw)
+.IP WS($d$) 10
+for assigning to the seek pointer of file descriptor $d$ (\*(zs)
+.IP RD($f$) 10
+for interpreting a file name $f$ (\*(zR)
+.IP WRD($f$) 10
+for writing a file name $f$ in a directory (\*(zW)
+.IP P($f$) 10
+process-exclusive access (\*(yx)
+.IP $Tlog$ 10
+$Tlog (p)$
+must be true
+.IP $Textern$ 10
+$Textern (p)$
+must be true
+.IP $Tuarea$ 10
+$Tuarea (p)$
+must be true if superuser status is required
+.RE
+.PP
+Information (usually concerning access rights)
+obtained only through error returns
+is not normally subject to security checks.
+Information (such as link counts) created 
+as side effects of system calls is checked
+unless checking would seriously impair utility.
+.PP
+Data flows marked * are not checked.
+Bracketed entries in the data flow column refer to
+covert flows that are checked, although
+they do not count as data flows in
+the strict sense of \*(zD.
+.SP
+For example, it may be possible to infer the value of a seek pointer
+from the bits delivered by a read, although the
+value is not delivered directly.
+Hence a flow $[s -> p]$
+is attributed to the
+.I read
+system call.
+.PP
+Symbols $f$, $d$, and $s$ in the body of the table denote the
+file, file descriptor, and seek pointer (if any) referred to by
+the arguments of the system call.
+Thus for a system call with a file descriptor argument $d$, 
+the symbol $f$ means $f(d)$
+and $s$ means $s(d)$.
+Subscripts distinguish multiple file arguments.
+Symbol $q$ refers to another process, in particular the
+new process after
+.I exec ;
+$u(p)$ and $u(q)$ denote
+the user areas of the respective processes; $u$ is short for $u(p)$.
+The remaining codes used in the table are
+.RS
+.IP i 8
+information about inode inferable through error return
+.IP p 8
+implicit write to
+.CW /proc
+or to inode of \f(CW/proc/\fIp\fR
+.IP u 8
+implicit write in uarea, readable through
+.CW /proc/\c
+.I p ;
+contrast with explicit write $p~->~u$
+.IP X 8
+abolish
+.RE
+.SP
+Consider \f(CWchmod("/etc/passwd",0666)\fR.
+It is necessary to read directory
+.CW /etc
+to find the file
+.CW passwd
+(RD).
+It is also necessary to read the inode of
+.CW /etc/passwd
+to determine whether the process has the right to change it.
+This is an implicit read (i).
+If permission is granted, the given mode is written into the inode
+(W($f$)).
+Finally the inode change date
+is set as a side effect.
+.QE
+.SP
+To do
+.CW unlink("/etc/passwd") ,
+it is necessary to read directory
+.CW /etc
+to find the file
+.CW passwd
+(RD, implied by WRD)
+and to read the inode of
+.CW /etc/passwd
+to determine whether the process has the right to change it (i).
+If the link count does not go to zero, the new count must be
+written and the inode change time updated (W).
+Finally the entry for
+.CW passwd
+must be deleted from directory
+.CW /etc
+and the modification and change times for
+.CW /etc
+must be updated
+(WRD).
+.PP
+The behavior of system calls with no marks in
+the table is unaffected.
+When both security and permissions are checked on a given
+file, security is checked first.
+An implementer may choose to return
+a search permission error encountered early in a path
+even if a security error would occur later in the path.
+.ne 1i
+.NH 3
+Table of system calls
+.XL zT
+.LP
+.TS H
+box center;
+lc|c|c|c
+lc|c|l|l
+lc|r|l|l.
+_
+System	Priv	Data	Checks	Notes
+call		flows
+=
+.TH
+access($f,m$)			RD($f$)	i
+acct($f$)	$Tlog$		RD($f$)	i \*(z4
+alarm($n$)							u
+biasclock($n$)				\*(yB
+brk($n$)		$p -> u$
+_
+chdir($f$)		RD($f$)	iu
+chmod($f,m$)		$p -> f$	RD($f$),W($f$)	i \*(zm
+chown($f,n sub 1 ,n sub 2$)		$p -> f$	RD($f$),W($f$)		i \*(zn
+chroot				X		
+close($d$)				u \*(z7
+_
+creat($f,m$)		$p -> f$	P($f$),WRD($f$)	iu \*(yf
+dirread($d$)		$f -> p$	READ($d$)	i \*(yR
+		$[f -> s ]$
+		$[s -> p ]$
+dup($d$)				u \*(zd
+dup2($d sub 1 ,d sub 2$)				u \*(zd
+exec($f,a$)		$p -> q$	RD($f$)	iup \*(y6
+		$f -> q$
+		$u(p) -> u(q)*$
+_
+exec($f,0$)		$f -> q$	RD($f$)	iup \*(y6
+		$u(p) -> u(q)*$
+exit($v$)				p \*(yg
+fchmod($d,m$)		$p -> f$	W($f$)
+fchown($d,n sub 1 ,n sub 2$)		$p -> f$	W($f$)
+fgetflab($d,l$)		$f -> p$	R($f$)	\*(zG
+_
+fmount($n sub 1 ,d,f,n sub 2$)	$Textern$	$p -> f$	RD($f$),W($f$)	i \*(z8
+fmount5($n,d,f,n,c$)	$Textern$	$p - >f$	RD($f$),W($f$)	i \*(z8
+fork()		$u(p) -> u(q)$		up
+fsetflab($d,l$)		$p -> f$		\*(y2
+fstat($d,b$)		$f -> p$		R($f$)
+_
+ftime($b$)
+funmount($f$)		$p -> f$	RD($f$),W($f$)
+getegid()		$u -> p$
+geteuid()		$u -> p$
+getflab($f,l$)		$f -> p$	RD($f$),R($f$)	\*(zG
+_
+getgid()		$u -> p$
+getgroups($n,b$)				X
+getlogname($b$)		$u -> p$
+getpgrp($p$)		$u -> p*$					\*(yj
+getpid()		$u -> p$
+_
+getplab($l,c$)			RS($C(p)$)	\*(zE
+getppid()		$u -> p$
+getuid()		$u -> p$
+ioctl($d,n,b$)		various	P($f$),etc.	\*(yG
+kill($q,n$)		$[p -> q]$		p \*(ye
+_
+labmount($d,l$)		$f -> p$		\*(zl
+link($f sub 1, f sub 2$)		$[p -> f sub 1 ]$	RD($f sub 1$),WRD($f sub 2$),W($f sub 1$)
+lock($n$)				u
+lseek($d,n sub 1 ,n sub 2$)		$p -> s$	P($f$),WS($d$),RS($d$)	\*(yh
+		$s -> p$
+lstat($f,b$)		$f -> p$	RD($f$),R($f$)
+_
+mkdir($f,m$)		$p -> f*$	WRD($f$)	\*(yM
+mknod($f,m,b$)		$p -> f*$	WRD($f$)	\*(yM
+nap($n$)
+nice($n$)				u \*(z2
+nochk($d,m$)				\*(zk
+_
+open($f,n$)			RD($f$)	iu
+pause()				u				u
+pipe()				u
+profil($b,n sub 1 ,n sub 2 ,n sub 3$)
+read($d,b,n$)		$f -> p$	P($f$),READ($d$)	\*(yR
+		$[f -> s]$
+		$[s -> p]$
+	$[p -> s]$
+_
+readlink($f,b,n$)		$f -> p$	RD($f$),R($f$)
+reboot($n$)		
+rmdir($f$)		WRD($f$)				i \*(yu
+seek($d,n sub 1 , n sub 2$)		$p -> s$	P($f$),WS($d$)	\*(yH
+select($n sub 1 , b sub 1 ,b sub 2 ,n sub 2$)				\*(yA
+_
+setflab($f,l$)		$p -> f$	RD($f$)	i \*(y2
+setgid($n$)	$Tuarea$	$p -> u$
+setgroups($n,b$)			X
+setlogname($b$)	$Tuarea$	$p -> u$
+setpgrp($p,0$)			u \*(yj
+_
+setpgrp($p,n$)	$Tuarea$	$p -> u$		\*(yj
+setplab($l,c$)				u \*(yd
+setruid($n$)	$Tuarea$	$p -> u$		up
+setuid($n$)	$Tuarea$	$p -> u$		up
+signal($n,g$)				u \*(ye
+_
+stat($f,b$)		$f -> p$	RD($f$),R($f$)
+stime($b$)				\*(yB
+symlink($f sub 1, f sub 2$)		$p -> f sub 2$	WRD($f$),W($f sub 2$)	i
+sync()
+syslog($n sub 1 , n sub 2 , n sub 3$)	$Tlog$	various		\*(yl
+_
+tell($d$)		$s -> p$	RS($d$)	\*(yI
+time($b$)
+times($b$)				\*(yC
+umask($m$)		$p -> u$					u \*(zu
+unlink($f$)		$[p -> f]$	WRD($f$)	i \*(yu
+_
+unsafe($n,b sub 1 ,b sub 2$)				\*(y8
+utime($f,b$)		$p -> f$	RD($f$),W($f$)		i
+vadvise($n$)
+vlimit($d,n sub 1 , n sub 2$)	$Tuarea$	$p -> u$
+vswapon($f$)				\*(yK
+_
+vtimes($b sub 1 ,b sub 2$)	sys$->p$				\*(yC
+wait($b$)		$q -> p$		u \*(yg
+write($d,b,n$)		$p -> f$	P($f$),WRITE($d$),W($f$)	\*(yW
+		$[p -> s]$
+		$[s -> f]$
+_
+.TE
+.NH 3
+Standard check computations
+.PP
+Security checks enforce
+.I "critical inequalities
+among labels as required by the ``Data flow''
+column of table \*(zT.
+An inequality need not be checked if it is
+overridden by privilege, if it involves a seek pointer
+in a stream, or if its truth is implied by side knowledge.
+Such knowledge may be obtained
+from safe bits, or from the partial transitivity of $<=$ and
+the invariants
+.EQ I
+lpile {
+{ L(p)~<=~C(p) } above
+{ L(p)~member~LL } above
+{ C(p)~member~LL } above
+{ L(s)~member~LL ,~ roman "if the seek pointer is defined" }
+}
+.EN
+.NH 3
+READ($d$): Check for the read system call
+.XL yr
+.LP
+Let file descriptor $d$ name $(p,^ s,^ f)$.
+The critical inequalities are
+.EQ I
+lpile {
+{ L(f)~<=~C(f) } above
+{ L(f)~<=~L(s) } above
+{ L(f)~<=~L(p) } above
+{ L(f)~<=~C(p) } above
+{ L(s)~<=~L(p) } above
+{ L(s)~<=~C(p) } above
+{ L(p)~<=~L(s) }
+}
+.EN
+.SP
+Seek pointer inequalities follow from the observation that
+reading entails direct flow $f~->~p$ (the bits)
+and covert flows $[s~->~p]$ (which bits),
+$[p~->~s]$ (how many) and
+$[f~->~s]$ (at end of file).
+.LP
+Do the following check as each block of data is copied to user space.
+.IP
+Let $M~=~max (L(p),^L(s),^L(f))$.
+.IP
+If $d$ is marked safe-to-read the check succeeds.
+.IP
+Otherwise, if $Tnochk (p)$ and $d$ is marked exempt
+the check succeeds.
+.IP
+Otherwise, if the critical inequalities hold the check succeeds.
+.IP
+Otherwise, if $L(f)~!<=~C(f)$ then $error$.
+.IP
+Otherwise, if $M~!<=~C(p)$ then $error$.
+.IP
+Otherwise, if $L(p)~!=~M$ and $F(p)~!=~LOOSE$ then $error$.
+.IP
+Otherwise, establish the critical inequalities:
+.RS
+.IP
+If $L(p)~!=~M$ set $L(p)~:=~M$ and propagate with CHP($p$), \*(yP.
+.IP
+If $L(s)~!=~M$ set $L(s)~:=~M$ and propagate with CHS($s$), \*(ys.
+.RE
+.LP
+If no error occurred mark $d$ safe-to-read.
+.NH 3
+WRITE($d$): Check for the write system call
+.XL yw
+.LP
+Let file descriptor $d$ name $(p,^ s,^ f)$.
+For streams, $s$ doesn't matter; we suppose $L(s)~=~L(f)$.
+The critical inequalities are
+.DS I
+$L(p)~<=~C(f)$
+$L(s)~<=~C(f)$
+$L(f)~<=~C(p)$
+$L(s)~<=~L(f)$
+$L(s)~<=~C(p)$
+$L(p)~<=~L(s)$
+$L(p)~<=~L(f)$
+.DE
+.SP
+Seek pointer inequalities follow from the observation that
+writing entails direct flows $p~->~f$ (the bits) 
+and covert flows $[s~->~f]$ (which bits) and
+$[p~->~s]$ (how many).
+Inequality $L(s)~<=~C(p)$ prevents $p$ from interfering
+with a higher process through a shared seek pointer.
+.LP
+Do the following check as each block of data
+is copied out of user space.
+.IP
+Let $M~=~max (L(p),^L(s),^L(f))$ and $C~=~min (C(p),^C(f))$.
+.IP
+If $d$ is marked safe-to-write the check succeeds.
+.IP
+Otherwise, if $T(f)$ then $error$.
+.IP
+Otherwise, if $Tnochk (p)$ and $d$ is marked exempt
+the check succeeds.
+.IP
+Otherwise, if the critical inequalities hold
+the check succeeds.
+.IP
+Otherwise, if $M~!<=~ C$ then $error$.
+.IP
+Otherwise, if $f$ is the process file for process $q$
+and $M~!<=~L(q)$ then $error$.
+.IP
+Otherwise, if $M~!<=~L(f)$ and $F(f)~!=~LOOSE$ then $error$.
+.IP
+Otherwise, establish the critical inequalities:
+.RS
+.IP
+If $L(p)~!<=~L(s)$ set $L(s)~:=~max (L(p),^L(s))$ and propagate with
+CHS($s$), \*(ys.
+.IP
+If $L(f)~!=~M$ set $L(f)~:=~M$ and propagate with CHF($f$), \*(yF.
+.RE
+.LP
+On error, raise signal $SIGPIPE$.
+.LP
+Otherwise, mark $d$ safe-to-write.
+.SP
+Some of the complexity of the check arises from
+the possibility that $L(f)~=~YES$.
+.SP
+$SIGPIPE$ has nothing to do with security.
+Just as with broken pipes, it stops processes when their output is
+unexpectedly being thrown away.
+.SP
+.I Write
+calls may fail with $ELAB$ or $EPERM$ even though the corresponding
+.I open
+calls succeed; programmers should always take care to check for
+.I write
+errors explicitly.
+.NH 3
+R($f$): Check for read-like calls on a file
+.XL zr
+.LP
+The critical inequalities are
+.DS I
+$L(f)~<=~C(f)$
+$L(f)~<=~L(p)$
+$L(p)~<=~C(p)$
+.DE
+.LP
+If $Tnochk (p)$ the check succeeds.
+.LP
+Otherwise, if the critical inequalities hold the check succeeds.
+.LP
+Otherwise, if $L(f)~!<=~inf (C(f),^C(p))$ then $error$.
+.LP
+Otherwise, if $F(p)~!=~LOOSE$ then $error$.
+.LP
+Otherwise, establish the critical inequalities:
+.IP
+Set $L(p)~:=~max (L(p),^L(f))$ and propagate with CHP($p$), \*(yP.
+.RE
+.SP
+The capability to omit checks overrides.
+If the process is not cleared to read the object,
+raise the process label.
+.NH 3
+RS($x$): Check for other read-like calls
+.XL yt
+.LP
+If $x$ is a file descriptor $d$ let $s$ be $s(d)$.
+.LP
+Otherwise let $s$ be $C(p)$.
+.LP
+The critical inequalities are
+.DS I
+$L(s)~<=~L(p)$	
+$L(p)~<=~C(p)$
+.DE
+.LP
+If $Tnochk (p)$ the check succeeds.
+.LP
+Otherwise, if $d$ is marked safe-to-read the check succeeds.
+.LP
+Otherwise, if the critical inequalities hold the check succeeds.
+.LP
+Otherwise, if $L(s)~!<=~C(p)$ or $F(p)~!=~LOOSE$ then $error$.
+.LP
+Otherwise, establish the critical inequalities:
+.IP
+Set $L(p)~:=~max (L(p),^L(s))$ and propagate with CHP($p$), \*(yP.
+.SP
+This check is used only by
+.I lseek,
+\*(yh,
+.I tell,
+\*(yI, and
+.I getplab,
+\*(zE.
+For
+.I getplab
+the label $L(s)$ is not the ceiling label $C(p)$, but is
+instead the label of the ceiling, $L(C(p))$.
+.NH 3
+W($f$): Check for write-like calls on a file
+.XL zw
+.LP
+The critical inequalities are
+.DS I
+$L(p)~<=~C(f)$
+$L(f)~<=~C(p)$	
+$L(p)~<=~L(f)$
+.DE
+.LP
+If $T(f)$ then $error$.
+.LP
+Otherwise, if $Tnochk (p)$ the check succeeds.
+.LP
+Otherwise, if the critical inequalities hold
+the check succeeds.
+.LP
+Otherwise, if $f$ is the process file for
+process $q$ and $L(p)~!<=~L(q)$ then $error$.
+.LP
+Otherwise, if $L(f)~=~NO$ then $error$.
+.LP
+Otherwise, if $F(x)~!=~LOOSE$ then $error$.
+.LP
+Otherwise establish the critical inequalities:
+.IP
+Set $L(f)~:=~max (L(p),^L(f))$ and propagate with CHF($f$), \*(yF.
+.SP
+Do not alter trusted files (except with a privileged
+.I setflab,
+\*(y2).
+If the file is not cleared to receive from the process, attempt
+to raise the file label.
+.NH 3
+WS($d$): Check for write-like calls on a seek pointer
+.XL zs
+.LP
+Let $s~=~s(d)$.
+.LP
+The critical inequalities are
+.DS I
+$L(s)~<=~C(p)$
+$L(p)~<=~L(s)$
+.DE
+.LP
+If $d$ is marked safe-to-read the check succeeds.
+.LP
+Otherwise, if $Tnochk (p)$ and $d$ is marked
+exempt the check succeeds.
+.LP
+Otherwise, if the critical inequalities hold
+the check succeeds.
+.LP
+Otherwise, if the real value of $L(s)~=~max (L(p),^L(s))$
+the check succeeds.
+(An artificial value of $L(s)$ may have been
+considered, \*(yH.)
+.LP
+Otherwise establish the critical inequalities:
+.IP
+Set $L(s)~:=~max (L(p),^L(s))$ and propagate with CHS($s$), \*(ys.
+.SP
+This check is used only by
+.I lseek,
+\*(yh, and
+.I seek,
+\*(yH.
+.NH 3
+RD: Interpret a file name
+.XL zR
+.LP
+Let directories
+$f sub i ,^i=1,2, ...$, be visited in tracing the pathname.
+(The current directory is visited in tracing a relative pathname.)
+.LP
+For each $f sub i $ check R($f sub i$).
+.IP
+If the check fails then $error$.
+.IP
+Otherwise, if $L(f sub i )~!<=~C(f sub i )$ 
+then $error$.
+.SP
+Directory search does not involve data flow, so
+the label check is something of a frill.
+However, it stops a potential 150bps covert channel
+and prevents processes from peeking above their ceilings.
+(Bit rates are explained at \*(yY.)
+.SP
+The labels of symbolic links, like their permissions, are
+not checked;
+the labels of the substituted pathname suffice.
+.NH 3
+WRD: Write in a directory
+.XL zW
+.LP
+Directories are written whenever entries are made or deleted.
+.LP
+Perform the RD check.
+Unless the directory is blind, \*(yb,
+perform the W check for the directory as if it were a plain file
+being written.
+.SP
+Although deleted entries are discernible only by
+processes authorized to read a directory,
+it would be prudent to clear them.
+.NH 3
+P($f$): Process-exclusive check
+.XL yx
+.LP
+If $X(f)~!=~~UNPEXED$ and $p~!=~H(f)$ then error
+.CW ECONC .
+.LP
+If $f$ is one end of a pipe and $p~=~H(f)$
+.IP
+If $X(f)~=~PEXED$ and $X(f sup prime )~!=~PEXED$
+then error
+.CW ECONC .
+.IP
+If $X(f)~=~UNPEXING$, then error
+.CW ECONC .
+.NH 3
+Atomicity
+.PP
+No label changes shall occur between making a security check
+and performing the action that the check is intended to protect.
+It is permissible, however, for label changes to intervene
+between checking a directory in a pathname and checking
+an entry in the directory.
+It may be necessary to check several times during an action,
+for example during a
+.I read
+that incurs several disk transfers or page waits.
+.NH 2
+Label changes
+.XL y0
+.PP
+The degree to which a label is changeable is determined by its
+fixity, which takes on one of four values
+$LOOSE$, $FROZEN$, $RIGID$, and $CONST$.
+The owner of a file with a loose or frozen label may change the
+fixity of that label to any value except $CONST$.
+A process may change the fixity of its label back and forth
+between loose and frozen.
+There is no other way to change fixity.
+.PP
+.I Loose
+labels can be changed by any process, either as a result of
+an explicit label-changing system call or as a
+side effect of a security check calculation.
+.PP
+.I Frozen
+labels cannot be changed without first making the label loose.
+.PP
+.I Rigid
+labels can be changed only by processes with capability
+$Textern$.
+The labels of external media are forced to be rigid.
+.PP
+.I Constant
+labels never change.
+Label constancy is a property of certain device files; see \*(y1.
+.br
+.ne3
+.SP
+External media have rigid labels because the label is the
+only record of what the external destination is allowed
+to see or of how incoming data should be classified.
+.PP
+Changes in labels are propagated by the following procedures.
+The actions described are to be taken immediately and atomically,
+even in the middle of a
+.I read
+or
+.I write
+call.
+.NH 3
+CHP($p$): Propagate change in process label
+.XL yP
+.LP
+Clear the
+safe-to-write bits on all file descriptors
+in process $p$.
+.LP
+If $p$ has an associated process file $f$, propagate with CHF($f$),
+avoiding further recursion.
+.SP
+The inequalities $L(p)~<=~L(f)$ are no longer known to be true
+for files $f$ open in $p$.
+When $p$ next attempts a write or when $p$ resumes an
+incomplete write
+WRITE will be checked afresh.
+.NH 3
+CHF($f$): Propagate change in file label
+.XL yF
+.LP
+If $f$ has a disk inode, wait for it to be updated.
+.LP
+For all file descriptors $d$ such that $f(d)~=~f$
+.IP
+Clear the
+safe-to-read and safe-to-write bits on $d$.
+.IP
+Raise signal $SIGLAB$ in $p(d)$.
+.LP
+If $f$ is the process file for process $q$ then
+propagate with CHP($q$), avoiding further recursion.
+.LP
+If $f$ is a pipe end with other end $f sup prime$ then
+propagate with CHF($f sup prime$), avoiding further recursion.
+.SP
+To prevent inconsistency in case of a crash,
+record the the label change on disk before transferring 
+any data to the file.
+.SP
+The inequalities $L(f)~<=~L(q)$ are no longer known to be true in
+other processes $q$.
+When $q$ next attempts a read or when $q$ resumes an
+incomplete read
+READ will be checked afresh.
+Similarly the inequalities $L(f)~<=~C(q)$ will be checked on
+future writes.
+.NH 3
+CHS($s$): Propagate change in seek pointer label
+.XL ys
+.LP
+Clear the 
+safe-to-read and safe-to-write bits on all
+file descriptors $d$ such that $s(d)~=~s$.
+.LP
+Raise signal $SIGLAB$ in $p(d)$ for all such $d$.
+.NH 3
+New file descriptors
+.LP
+Perform the following operations  on
+every new file descriptor and on every descriptor copied between
+processes, as by
+.I exec
+or
+.CW FIORCVFD .
+.LP
+Clear the safe-to-read bit and safe-to-write bit.
+.LP
+Set the exempt bit.
+.SP
+These rules are conservative.
+An implementer may copy the safe bits on descriptors cloned by
+.I fork
+or
+.I dup
+or by
+.I open ing
+a file descriptor file (\f(CW/dev/fd/*\fR).
+The values of exempt bits do not matter unless $Tnochk (p)$ is true.
+.NH 3
+SIGLAB
+.XL yS
+.PP
+Signal $SIGLAB$ is raised whenever a file descriptor changes label.
+$SIGLAB$ is ignored if not caught.
+.SP
+A trusted process with $Tnochk$ capability would use
+$SIGLAB$ to prevent unintended downgrading that
+could occur if the labels of its input files changed.
+The process would most likely freeze its own
+label by setting $F(p)$ with
+.I setplab 
+(\*(yd), catch $SIGLAB$, and use
+.I unsafe
+(\*(y8) to isolate changes when they occur.
+.NH 3
+ELAB
+.XL yT
+.PP
+Attempts to violate critical label inequalities
+return error number $ELAB$.
+.SP
+Information may be communicated through $ELAB$:
+Let process Low not be cleared for information known to
+process High, i.e. $L( roman High )~!<=~L( roman Low )$,
+and let $f$ be a file that Low is cleared for.
+High either does or does not contaminate (raise the label of) $f$
+by writing in it.
+Low tries to read $f$, and discovers which
+action High took according as it does or does not get
+error $ELAB$.
+The bandwidth of about 80bps might be reduced
+by inserting delay when returning $ELAB$.
+.SP
+Denning describes a similar channel,
+slower (10bps) but nonetheless elegant:|reference(Denning)
+High either does or does not contaminate $f$.
+Low writes a 1 in another low file $g$, then
+reads $f$ and from the contents determines whether $f$
+(and Low itself) has been contaminated.
+If $f$ is not contaminated Low replaces the 1 by a 0.
+The still low file $g$ now tells whether High did (1) or did
+not (0) contaminate $f$, yet in neither case does there exist
+a forbidden chain of data flow (in the sense of \*(y5)
+from High to $g$, nor did any system call fail.
+.SP
+Denied writes on a file descriptor raise $SIGPIPE$; see \*(yw.
+It may also be desirable to stop processes that attempt too many
+security violations with a new, uncatchable signal, say $SIGSPY$.
+.NH 3
+EPRIV
+.XL yU
+.PP
+Attempts to violate privilege rules
+return error number $EPRIV$.
+.SP
+$EPRIV$ affords covert channels as does $ELAB$.
+But processes that can modulate privilege must 
+themselves be privileged; they have far more
+potent ways to make covert channels.
+.NH 2
+Privileges
+.XL yQ
+.PP
+The privilege bits $Vvec (p)$ and $Vvec (f)$ 
+(recall that $Vvec (.)$ comprises both capabilities, $Tvec (.)$,
+and licenses, $Uvec (.)$)
+are stored
+with $L(p)$ and $L(f)$.
+The system calls 
+.I "getplap, setplab, getflab, 
+and
+.I setflab
+retrieve and change privileges
+according to the policy set forth in \*(y9.
+.LP
+Privileges $Vvec (p)$ are inherited across
+.I fork.
+Licenses $Uvec (p)$ may be inherited across
+.I exec ;
+see \*(y6.
+The initial capabilities of a child process $q$ executing 
+a trusted file
+$f$ from file system $FS(f)$ are given by
+.EQ
+Tvec (q)~=~Tvec (f) and Tvec FS(f) and
+( Uvec (p)~or~Uvec (f) and Uvec (FS(f)) and Uvec sup 0 )
+.EN 
+.LP
+The compile-time parameter $Uvec sup 0$ 
+limits the self-licensing of files.
+Currently only $Tnochk$, $Textern$, and $Tuarea$ may be self-licensed.
+.SP
+The capabilities and licenses of a file are masked by the
+capability and license of its file system. 
+A process obtains the capabilities it is licensed
+for from the capabilities
+of its executable file.
+Capabilities are licensed either by inherited licenses
+$Uvec (p)$ or by file licenses $Uvec (f)$.
+.SP
+The utility of the self-licensing limit $Uvec sup 0$ is questionable.
+.NH 3
+$bold {Cap sub extern}$
+.XL zM
+.PP
+This capability is used to introduce 
+foreign data into the system.
+It is required for the
+.I fmount
+system call, to change labels away from $NO$, and to 
+change rigid labels.
+.SP
+Capability $Textern$ is necessary to open external media or to modify
+the label of an already open external medium.
+In general a $Textern$ process will perform
+some authentication protocol to determine the
+proper label for the medium.
+Automatic label setting won't work because the system
+does not know what or who is out there.
+.SP
+Label $NO$ may be used to hide data from (almost) everybody.
+Once marked $NO$, it can't be read by normal means until 
+resurrected by $Textern$.
+In effect data marked $NO$ has been removed from the system;
+it comes back with a newly minted label as determined
+by an administrative program with capability $Textern$.
+.NH 3
+$bold{Cap sub uarea}$
+.PP
+This capability permits modifying ``user-area'' data that
+is readable by a descendent processes.
+In general, only the superuser can write such data
+(e.g.
+.I setuid
+and
+.I setlogname ).
+Thus $Tuarea$ enforces the notion that the superuser
+has no business executing untrusted code.
+.SP
+Non-superuser writing in the user area is controlled
+differently.
+.I Umask
+is censored when process labels drop; see\*(y6.
+The process ceiling has its own label; see
+\*(yd.
+The notion of abolishing 
+$Tuarea$ and instead labeling each user-area item is appealing.
+However, we feared that this could lead
+to the necessity for some other privilege to undo label
+creep in the user area.
+.NH 3
+$bold{Cap sub nochk}$
+.PP
+This privilege allows a process to ignore label comparisons.
+It is required for programs that inherently deal with
+multilevel data, for example programs to repair 
+or back up file systems, or programs
+to handle multilevel multiplexed communication.
+.PP
+Capability $Tnochk$ overrides label checking only on
+file descriptors marked exempt.
+Fresh file descriptors are exempt; their
+exempt status may be changed by the
+.I nochk
+system call; see \*(zk.
+.SP
+$Tnochk$ and $Textern$ may both be used to grant access to external media.
+The difference is that $Tnochk$ gives access only to the process
+that has the privilege\(emwhat is done with the access is under
+its control\(emwhile $Textern$ makes the data available to
+other processes.
+.NH 3
+$bold{Cap sub setpriv}$
+.PP
+This capability is required to change file privileges.
+.SP
+Programs with capability $Tsetpriv$ have the keys to
+the kingdom; they must be very carefully designed.
+.NH 3
+$bold{Cap sub setlic}$
+.PP
+This capability is required to increase process licenses
+or to change the process label and ceiling arbitrarily.
+.SP
+Capability $Tsetlic$
+is used to set up user sessions.
+.NH 3
+$bold{Cap sub log}$
+.PP
+This capability is required to set up or change mandatory
+auditing.
+.NH 2
+Special files
+.XL y1
+.PP
+Because special files address resources with unusual properties
+they may require unusual security considerations.
+Some files, for example
+.CW /dev/stdin ,
+have the property that the file descriptor obtained by
+.I open
+refers to a different object than the file name does.
+On such a file
+.I fstat
+and 
+.I stat
+may return completely differing data;
+similarly 
+.I fchmod
+may not affect the original file that was opened to
+obtain the file descriptor.
+Some special files have rigid or constant labels; it is
+impossible to change the fixity of these files.
+.NH 3
+Character special files.
+.XL yp
+.PP
+On directories and
+character special files the accept pex
+indicator $APX(f)~=~false$ by default,
+otherwise $APX(f)~=~true$ by default.
+The setting of $APX(f)$ can be changed only for
+character special files (\*(zx).
+.SP
+Process exclusive (pex) requests are designed to secure
+trusted paths that are free from eavesdropping or
+from forging or corruption of data by other processes (\*(zP).
+A typical application is demanding a password from
+a terminal.
+If, however, the ``terminal'' is really a communication line
+to another computer that is relaying the conversation,
+process-exclusive access is not enough to guarantee the 
+privacy of the password.
+Only after a trusted process has somehow authenticated
+the trustedness of the external path can 
+exclusive use of the internal path assure privacy (\*(zp).
+Initially, then, devices must
+refuse to accept pex requests.
+.NH 3
+External media
+.XL yD
+.PP
+External media comprise
+all special files not otherwise discussed in section \*(y1.
+They are files over whose contents the system
+has not maintained complete control.
+Examples are terminals, communication links,
+tapes, and disks.
+Pipes are not external media.
+.PP
+When an external medium is not open, its label is $NO$.
+The label is rigid and
+remains $NO$ after opening until it is
+set away from $NO$ by a trusted process; see \*(y2.
+Further openings see this new label.
+The label reverts to $NO$ when no process has the file open.
+.SP
+In general authentication is required before
+access may be granted to an external medium.
+Authentication will be administered by trusted processes.
+.SP
+The fact that an inode shares a label with a file has
+the unfortunate effect that
+ordinary programs cannot read the properties of most device
+files.
+.NH 3
+Streams
+.PP
+When a stream is created, its stream identifier is
+initialized to the null string.
+.PP
+Both ends of a pipe stream share a single label,
+which is initialized to 
+$bottom$.
+.PP
+A device stream shares its label
+with the device it is attached to.
+.NH 3
+Null and mem
+.PP
+The null device
+.CW /dev/null
+has constant label $YES$.
+The 
+.I stat
+system call returns
+dummy data for
+.CW /dev/null .
+.SP
+This plugs covert channels through the mode bits of
+.CW /dev/null .
+.PP
+The memory devices,
+.CW /dev/mem 
+and
+.CW /dev/kmem ,
+have constant label $NO$.
+.NH 3
+Process files
+.PP
+For each file $f$ in
+.CW /proc
+$Vvec (f)~=~Vvec (p)$, where $p$ is the corresponding process.
+If $Tnochk (p)$ was ever true, $L(f)~=~top$, otherwise
+$L(f)~=~L(p)$.
+The process file disappears with the process, regardless of
+whether it was trusted.
+.LP
+The virtual directory
+.CW /proc
+has a $RIGID$ bottom label and has universal read permission.
+Creating a process does not count as writing in
+.CW /proc .
+.SP
+The top label for $Tnochk$ processes prevents leaks
+through debuggers.
+.SP
+By modulating the rate of process creation, unrelated
+processes can communicate covertly through
+.CW /proc
+at a rate of a few bits per second.
+.SP
+When $Tnochk (p)$ is true upon
+.I exec,
+our implementation divorces the file privileges as well as the
+file label from that of the process. 
+The divorce happens when the inode is created, which
+occurs on demand, not at process creation.
+Subsequent changes in process privilege are not reflected
+in the file.
+Thus, the privileges of a process file labeled $top$
+may not agree with those of the process.
+But unless the file has capability $Tsetlic$, its privileges
+dominate those of the process.
+.NH 3
+File descriptor files
+.PP
+The files
+.CW /dev/fd/* ,
+.CW /dev/tty ,
+.CW /dev/stdin ,
+etc, when referred to by file descriptor,
+share labels with the file descriptors they
+correspond to.
+When referred to by name, these files have the
+constant label $YES$.
+.NH 3
+Blind directories
+.XL yb
+.LP
+A new file mode
+.CW S_IBLIND
+designates a directory as ``blind.''
+No process can read a blind directory.
+Only the owner of a file can remove it from a blind directory.
+Only trusted processes can change blind mode.
+.SP
+Blind mode is special pleading to preserve the semantics of
+.CW /tmp 
+\- a compromise for compatibility. 
+It affords an 80bps covert channel: High creates a file from some 
+prearranged alphabet of names and Low tests whether the 
+names are there.
+(Bit rates are explained at \*(yY.)
+.SP
+Trusted processes that place temporaries of known name in
+.CW /tmp
+(or anywhere else) must take care to prevent improper
+access by other processes.
+For example, an untrusted user of a trusted process that
+wrote and later reopened a file might replace the
+file in the interim.
+.NH 3
+Log files
+.XL yL
+.PP
+Security audit records are written to special files,
+.CW /dev/log* .
+Data so written are actually appended to an
+associated ``repository'' file
+nominated by the privileged
+.I syslog
+system call, \*(yl.
+A log file 
+can be written by any process regardless of label and can be
+read by no process.
+Identifying information is automatically attached to
+each record written, so data cannot be forged and
+histories can be reconstructed.
+Direct writes on a repository file are silently discarded as on
+.CW /dev/null .
+Repository files are protected by normal access control.
+.PP
+A distinguished log file,
+.CW /dev/log00
+receives mandatory audit records in addition to data 
+volunteered by writes.
+The intensity of mandatory auditing is controlled in each process by
+an audit mask, which is inherited across
+.I fork
+and
+.I exec ;
+see \*(yl.
+.PP
+Every file $f$ has a poison class $PC(f)$.
+The poison class is normally invisible; it can be set or
+interrogated only with capability $Tlog$.
+At each system call that mentions file
+$f$ in a pathname, the poison mask
+$PM[PC(f)]$ is OR-ed into the process audit mask $AM(p)$.
+.SP
+Data written on log files escape
+the formal policy.
+Unlimited covert channels via writing on a log file and
+reading from its repository are possible.
+A prudent administrative countermeasure is to nominate
+as repositories only files labeled $top$ or $NO$; external
+media make particularly safe repositories.
+.SP
+Poison classes allow administrators to stipulate
+extra logging when particular files are touched.
+Thus sensitive activities can be watched carefully
+without incurring a flood of low-value audit data
+from routine activities.
+.NH 2
+Security behavior of old system calls
+.XL yY
+.SP
+Bit-per-second (bps) estimates of covert channel
+bandwidth given below pertain to
+the research Tenth Edition (v10) running on a DEC VAX-11/750.
+The bandwidth could be held to the same level on faster machines
+by inserting a delay of about 100ms when
+.I exec
+is invoked with no arguments.
+.SP
+Many reasonable estimates can be made with only a few basic constants
+and measurements:
+the open file limit (128 in v10), the number of
+forks a process can do per second (about 10),
+the number of files a process can create or open per
+second (about 80), and the number of message
+round trips per second possible across a pair of pipes (about 80).
+Some covert channels presuppose a population of files
+readily identifiable from content.
+We take 1000 as a population estimate, on the premise that
+a much larger population would call attention to itself.
+.SP
+In making measurements some care must be taken to achieve
+fast process-switching rates.
+For example, in v10 it often helps to insert
+.I nap
+calls instead of busy-waits.
+In general it is real time, not user and system time, that counts.
+Also, because of overlaps, time measurements $x$ and $y$
+often combine as $max ( x,^y)$ rather than as $x~+~y$.
+.SP
+Covert channels often need synchronization:
+Low tells High, ``I got it,'' and then High sends another message.
+The rules allow Low to pipe to High, which make this easy.
+.NH 3
+acct(f)
+.XL z4
+.LP
+The writing of shell accounting records is immune to label checks.
+.SP
+Only a trusted process can nominate the accounting file.
+It must assure that the file is appropriately
+protected, perhaps by label $top$, by label $NO$, or by
+write-only transmission off line.
+Otherwise we have a 1000bps channel: High renames an executable
+file and executes it; Low reads the name from the accounting
+file.
+.NH 3
+chmod(f, m), fchmod(d, m)
+.XL zm
+.LP
+There are two new
+.I modes,
+append-only,
+.CW S_IAPPEND ,
+and blind 
+.CW S_IBLIND ,
+the latter being useful only with directories.
+.LP
+If $f$ (or $f(d)$) is a directory and
+if blind mode is changed and $not Textern (p)$ then error $EPRIV$.
+.SP
+If unprivileged processes could change blind mode,
+High could create files in a virgin blind directory.
+Later, Low could turn blind mode off and read the names.
+.NH 3
+chown(f, u, g), fchown(d, u, g)
+.XL zn
+.LP
+If $f$ has setuid or setgid permission (mode 04000 or 02000)
+and either the new userid or the new groupid differs from the
+old then error $EPERM$.
+.LP
+If userid of $p$ is not superuser
+.IP
+If userid of $p$ does not own $f$ then $error$ $EPERM$.
+.IP
+If the new userid is not the same as the old then $error$ $EPERM$.
+.IP
+If the new groupid is neither the same as the old nor the same
+as the effective groupid of the process then $error$ $EPERM$.
+.SP
+These rules have little bearing on the security policy.
+However, by using
+.I chmod
+or
+.I chown,
+the superuser can circumvent discretionary denial of
+write permission.
+This gambit should be highly visible in an audit trail.
+.NH 3
+close(d)
+.XL z7
+.LP
+If $d$ refers to a stream perform
+.CW "ioctl(d, FIONPX, 0)" ,
+but do not wait; see \*(yn.
+.LP
+If the file has been read and
+$L(p)~<=~L(f)$, update the file access time.
+.SP
+To avoid the elaboration of a safe-to-write-access-time bit
+in every file descriptor,
+access times are not continually updated.
+The access-time check reduces a covert channel:
+High reads a file; Low spots the access.
+The bandwidth is limited, by the rate at which files can
+be opened, to about 50bps;
+the check is a cheap frill.
+.SP
+A narrow (<100bps) covert channel using
+.I close :
+High selectively closes pipes, which Low detects with
+.CW EPIPE .
+.NH 3
+creat(f, m)
+.XL yf
+.LP
+If $f$ exists, perform only the RD part of the WRD (write directory)
+check.
+.LP
+If $f$ is a log file (\*(yL) then error $EPERM$.
+.LP
+Otherwise, if $f$ is new
+.IP
+Set $L(f)~:=~bottom$.
+.IP
+Set $Vvec (f)~:=~0$.
+.IP
+Set $F(f)~:=~LOOSE$.
+.IP
+Perform the $W(f)$ check.
+.LP
+Otherwise
+.IP
+If the mode of $f$ includes
+.CW S_IAPPEND ,
+do not truncate $f$.
+.IP
+If the size of $f$ is nonzero, check $W(f)$.
+.LP
+Set $L(s)~:=~bottom$.
+.LP
+Clear the safe-to-read and safe-to-write bits
+for the new file descriptor.
+.SP
+Notionally file labels and seek pointers begin at $bottom$.
+However, 
+.I creat
+writes mode bits into a new file, so the label
+rises immediately to $L(p)$.
+.SP
+The $W(f)$ check on non-empty files closes an 80bps covert
+channel between unrelated processes: Low writes in a file;
+High optionally truncates it; Low detects which.
+In honest use, the label would probably rise anyway since
+.I creat
+is almost always followed by 
+.I write.
+.NH 3
+dup($d$), dup2($d$,$d$)
+.XL zd
+.SP
+Covert channel: High opens some files, uses
+$dup2$ to selectively create more file descriptors, forks,
+and $exec$s a low process.
+Low infers which file descriptors are in use by attempting
+to read from them, thus learning one bit of information
+from the presence or absence of each possible file descriptor.
+If High picks among files that have read permission,
+no read permission, or a high label, the four possible outcomes for
+each file descriptor yield about 250bps.
+A similar bandwidth can be achieved by High picking among
+a vocabulary of files which Low distinguishes by reading
+inode number or permission bits with $fstat$.
+.NH 3
+exec(f, arg, env), umask(m)
+.XL y6
+.XL zu
+.LP
+This description pertains to all flavors of
+.I exec .
+.LP
+Let $p$ be the executor process and let $q$ be the new process.
+.LP
+If $arg$ and $env$ are empty and no file descriptors have
+numbers greater than 3
+.IP
+Set $L(q)~:=~bottom$.
+.IP
+If $L(p)~!=~bottom$ set $umask~:=~022$.
+.LP
+Otherwise set $L(q)~:=~L(p)$.
+.LP
+Perform the R($f$) check (\*(zr) in $q$, disregarding $Tnochk (q)$
+and $F(q)$.
+.LP
+Clear all safe-to-read and safe-to-write bits in $q$.
+.LP
+Set all exempt bits in $q$.
+.LP
+Set $F(q)~:=~false$.
+.LP
+Set process licenses.
+.IP
+If $T(f)$ set $Uvec (q)~:=~Uvec (p)$.
+.IP
+Otherwise, set $Uvec (q)~:=~0$.
+.IP
+Set $Tvec (q)$ per \*(yQ.
+.LP
+Set $C(q)~:=~C(p)$.
+.LP
+Set $AM(q)~:=~AM(p)~or~SAM$.
+.LP
+Set $L(C(q))~:=~L(C(p))$.
+.LP
+Check R($f$) in process $q$.
+.SP
+The pex state (\*(y3) of open files persists across
+.I exec.
+.SP
+It is understood that no data will pass across
+.I exec
+in registers.
+This undocumented channel appears in some versions of
+.UX ,
+including v10.
+.SP
+Various covert channels arise from the
+``drop-on-exec'' feature, which gives a bottom label
+to a process when there is no memory via arguments.
+These channels involve inferring the values of
+freely settable uarea information:
+open files (identifiable by inode number or content),
+current directory (by inode number), program text file (by content).
+To keep the bandwidth down, drop-on-exec
+pertains only to processes that have at most the four
+default file descriptors (standard input, standard output,
+standard error, and control stream) open.
+.RS
+.SP
+(1) Parent High opens three low files before
+.I fork
+and
+.I exec ;
+child Low identifies them by 
+.I fstat
+and writes the results in the fourth open file (230bps).
+This is the widest known covert channel.
+.br
+(2) High executes a sequence of low files, which
+record the sequence (100bps).
+.br
+(3) Parent High sets current directory;
+child Low records it (80bps).
+.RE
+.SP
+The permission mask,
+being directly writable and readable by
+.I umask,
+could provide a direct channel on drop-on-exec.
+That channel is closed by censoring the mask to a fixed value.
+.SP
+Licenses are inheritable only by trusted code.
+If untrusted code could inherit licenses, it could
+do nothing bad directly, but it could pass the licenses
+to trusted code along with bogus arguments.
+Then all trusted code would have to contain defenses against
+the possibility.
+.NH 3
+fmount(n, d, f, m), fmount5(n, d, f, m, Cp)
+.XL z8
+.LP
+Let $FS$ be $FS(f(d))$.
+.LP
+If the system call is 
+.I fmount,
+set $C(FS)$ and $Vvec (FS)$ to their
+default values.
+The default ceiling $C(FS)$ is $top$ on all file system types
+except network file systems, where it is $bottom$.
+The default privilege mask $Vvec (FS)$ is all zeros.
+.LP
+If the sysem call is
+.I fmount5,
+set $C(FS)$ and $Vvec (FS)$ from the
+values pointed to by $Cp$.
+.NH 3
+getpgrp(q), setpgrp(q, n)
+.XL yj
+.LP
+If $q~=~0$ set $q~:=~p$.
+.LP
+Otherwise, if $q~!=~p$ then $error$.
+.LP
+If the operation is
+.I setpgrp
+and $n~!=~p$ and $not Tuarea(p)$ then $error$.
+.SP
+The call
+.CW "setpgrp(p, p)
+(or
+.CW "setpgrp(0, p)" )
+is similar to the
+.CW TIOCSETPGRP
+.I ioctl
+call; and is quite common in practice.
+The requirement for privilege to set $n$ arbitrarily avoids
+untrusted data flow through the process group.
+.SP
+The ability to set the process group on another process
+would necessitate special label checks.  As that ability
+is not used in v10 software it was deemed not
+worth the trouble.  (``Job control'' shells, which
+use the ability, have never caught on in v10 \- partly because
+windows largely subsume job control.)
+.NH 3
+lseek(d, o, n)
+.XL yh
+.LP
+This call is equivalent to, and checked like,
+.I "seek(d, o, n)"
+followed by
+.I tell(d) ;
+see \*(yH and \*(yI.
+.SP
+Seek pointers must be protected to stop a wide channel:
+High sets a shared seek pointer; Low reads it (3000bps for
+one file, proportionately more with many shared pointers).
+If a seek pointer had the same label as its file
+it would be impossible to read strictly up because the requirements
+$L(f)~<=~L(p)~=~L(s)$ (\fIread\fR changes the seek pointer)
+would degenerate to $L(f)~=~L(p)$.
+Hence seek pointers have separate labels.
+.NH 3
+mkdir(f, m), mknod(f, m, a)
+.XL yM
+.LP
+Set $L(f)~:=~bottom$, except where specified
+differently for special files, \*(y1.
+.LP
+Set $Vvec (f)~:=~0$.
+.LP
+Set $F(f)~=~LOOSE$.
+.LP
+Perform the $W(f)$ check.
+.LP
+If the operation is 
+.I mknod,
+set the groupid of $f$ to be the same as the groupid of the
+containing directory; if this differs from the groupid
+of $p$ delete setgid from the mode of $f$.
+.SP
+Notionally file labels begin at $bottom$.
+However, mode bits are written into a new file, so the label
+rises immediately to $L(p)$.
+.SP
+A blind directory (\*(yb) cannot be created directly, because
+.I mkdir
+heeds only the 9 file permission bits in $m$.
+.NH 3
+nice(n)
+.XL z2
+.SP
+In some systems (not v10)
+.I nice
+returns a value and could be used as a covert channel,
+at least by the superuser.
+.NH 3
+read(d, b, n); dirread(d, b, n)
+.XL yR
+.LP
+If $d$ refers to a blind directory, then $error$.
+.NH 3
+seek(d, o, n)
+.XL yH
+.LP
+This call is like
+.I lseek,
+but returns an integer, \-1 for failure and 0 for success.
+.LP
+If $n~!=~1$ or $o~!=~0$ check $P(f(d))$, \*(yx.
+.LP
+Let file descriptor $d$ name $(p,^s,^f)$.
+.LP
+If $n~=~0$ check WS($d$) (\*(zs) as if $L(s)$ were equal to $bottom$.
+.LP
+If $n~=~1$ check WS($d$).
+.LP
+If $n~=~2$ check WS($d$) as if $L(s)$ were equal to $L(f)$.
+.SP
+Do not disturb $d$
+if some process other than  $p$ has process-exclusive access to it.
+On seeking relative to the beginning, the previous state
+of $s$ is forgotten, so its previous label is irrelevant.
+On seeking to the end, the new value of $s$ depends on 
+the size of $f$, but not on the old value of $s$.
+.SP
+This function, resurrected from earlier
+.UX
+systems, avoids unnecessary label inflation that
+could happen with 
+.I lseek ;
+see \*(yh.
+.SP
+An untrusted process that shares an open file with a
+trusted process may by moving the seek pointer be able to insert
+information into trusted writes.
+In this way a process could influence downward
+writes or writes above its ceiling.
+To be safe, trusted processes should assert exclusive
+access over possibly shared file descriptors; 
+see \*(yX.
+.NH 3
+select(n, rd, wd, t)
+.XL yA
+.LP
+Delete any descriptor $d$ such that
+$X(f(d))~=~X(f sup prime (d))~=~PEXED$
+and $H(f(d))~!=~p$ from the sets $rd$ and $wd$.
+.LP
+If $X(f sup prime (d))$ for some file
+descriptor $d$ changes while waiting in
+.I select,
+report $d$ as ready; see \*(zP.
+.SP
+A file held in process-exclusive state by other processes is
+not ready in $p$.
+A file in an impure process-exclusive state may need attention.
+.SP
+Covert channels:
+(1) High writes on one of several pipes; Low uses
+.I select
+to discover which; High empties the pipe by reading it.
+(2) Low fills several pipes; High reads from one; Low uses
+.I select 
+to discover which.
+.NH 3
+signal(s, fp), kill(p, s)
+.XL ye
+.LP
+Let $L$ be the label of the signal source.
+.LP
+If a signal would be caught and $L~!<=~L(p)$
+then the signal is ignored.
+.LP
+If a core image is required, it will be made as if by
+.I creat 
+and
+.I write.
+However, if $Tnochk (p)$ was ever true, no core image
+will be made.
+The condition, ``$Tnochk (p)$ was ever true,'' is inherited across
+.I fork
+but not across
+.I exec.
+.SP
+Downward signals provide a covert channel of only 100bps.
+Stopping them is technically difficult, so we have not done so
+in our experimental system.
+.SP
+A process with capability
+$Tnocheck$
+is trusted, and hence can be counted on not to spill its
+secrets across 
+.I exec
+even if it relinquishes trustedness.
+.NH 3
+stime(t), biasclock(m)
+.XL yB
+.SP
+By diddling the clock, a superuser can communicate
+to an unrelated process.
+The channel is highly exposed; superusers
+have better ways to cheat.
+.NH 3
+tell(d)
+.XL yI
+.LP
+Return, as a long, the current value of the seek pointer.
+.SP
+This call is resurrected from earlier
+.UX
+systems; see \*(yH.
+.NH 3
+vswapon(f)
+.XL yK
+.LP
+Legitimate values of $f$, which are built into v10, must
+be confined to nonremovable media.
+.SP
+No privilege has been required for this system call that
+sets the swap device, because suitable devices are
+automatically labeled $NO$.  Compile-time conventions
+have been relied on to prevent an untrusted superuser
+program from diverting swaps to a removable device.
+.NH 3
+times(b), vtimes(b)
+.XL yC
+.SP
+A fraction of a bit per second may be communicated from
+child to parent through
+.I times ,
+around 10bps through
+.I vtimes.
+.NH 3
+unlink(f), rmdir(f)
+.XL yu
+.LP
+If $T(f)$ then $error$.
+.LP
+If $f$ is in a blind directory and
+userid of $p$ is not the owner of $f$ then $error$.
+.LP
+If $not Tnochk (p)$ and $L(f)~!<=~C(p)$ then $error$.
+.SP
+No process, not a even trusted process, may unlink
+a trusted file.
+To deter spoofing by file substitution in
+.CW /tmp ,
+only a file's owner may delete it from 
+a blind directory.
+A process may not delete files that it can't see data in.
+.SP
+Covert channel: Low creates a bunch of files and places links
+to them in the blind directory
+.CW /tmp .
+High unlinks them selectively; Low detects the change
+in link count and replenishes the links.
+.SP
+A $W$ check on unlink would narrow the covert channel.
+But a $W$ check would have a nasty side effect:
+innocently created files could get stuck so no
+combination of untrusted processes could remove them.
+For example, suppose Low creates, and freezes the label of,
+a file in
+a directory that High subsequently raises above Low's ceiling.
+Low cannot remove the file because it can't see the directory.
+High, or any other process that can see the directory,
+will fail a W check because the file's label is frozen.
+Only Low, the file's owner, can loosen the label.
+The directory can't be deleted because the file is in it.
+Both file and directory are stuck.
+(High might get help from the superuser in unfreezing
+the file, but there is no guarantee that an
+unprivileged superuser can see all files that High can.)
+.NH 3
+wait(b), exit(s)
+.XL yg
+.LP
+Let $q$ be the exiting process.
+.LP
+If either the exit or the termination code of $q$ is nonzero
+and $L(q)~!<=~L(p)$, 
+the status reported by 
+.I wait
+shows exit code 0 and termination code
+.CW SIGTERM .
+.SP
+The status is censored to prevent downward data flow;
+a 10bps covert channel remains.
+.NH 3
+write(d, b, n)
+.XL yW
+.LP
+If the file mode of $d$ includes 
+.CW S_IAPPEND ,
+write at the end of file, regardless of the seek pointer.
+Increment the seek pointer by the number of bytes written.
+.LP
+If $f(d)$ is nominated as a log file (\*(yl) then error $ECONC$.
+.NH 2
+New system calls.
+.XL yN
+.NH 3
+fmount5(n, d, f, m, Cp)
+.LP
+See \*(z8.
+.NH 3
+getflab(f, Lp), fgetflab(d, Lp)
+.XL zG
+.LP
+These two system calls return the label on a file, specified either by
+file name or file descriptor.
+The label $L(f)$ and privileges $Vvec (f)$ are placed in the
+location $Lp$ points to.
+.NH 3
+getplab(Lp, Cp)
+.XL zE
+.LP
+Return the label, ceiling and privilege vector of
+the current process.
+.LP
+If pointer $Cp$ is not zero
+.IP
+Check RS($C(p)$).
+.IP
+If the check succeeds, place $C(p)$ and a zero
+privilege vector in the location pointed to.
+.IP
+Otherwise place $NO$ in the location pointed to.
+.LP
+If pointer $Lp$ is not zero, place
+$L(p)$ and $Vvec (p)$ in the location pointed to.
+.LP
+If the RS($C(p)$) check failed then $error$.
+.SP
+The system calls
+.I setplab
+and
+.I getplab
+mediate data flow through the ceiling label.
+To enforce the formal policy on this flow the ceiling
+label itself is labeled.  In the absence of such enforcement,
+5000bps could be passed downward on this channel.
+.NH 3
+labmount(d, Cp)
+.XL zl
+.LP
+Return the ceiling of the file system in which file
+descriptor $d$ resides.
+.LP
+If $f(d)$ is in a file system place 
+$C(FS(f(d)))$ in the location $Cp$ points to.
+.LP
+Otherwise place $YES$ in the location pointed to.
+.NH 3
+nochk(fd, code)
+.XL zk
+.LP
+If $code~=~0$
+mark file descriptor $fd$ not exempt and clear
+safe-to-read and safe-to-write bits in $fd$.
+.LP
+Otherwise, mark $fd$ exempt.
+.LP
+Return 0 or 1 according as $fd$ was not or was exempt before.
+.SP
+Exempt bits are turned on by default (\*(y6), although
+the opposite convention would be better.
+The present convention allows some administrative programs
+that need $Tnochk$ privilege to be identical
+with those on ordinary
+.UX
+systems.
+.NH 3
+setflab(f, Lp), fsetflab(d, Lp)
+.XL y2
+.LP
+These two system calls set the label on a file.
+The description applies to
+.I setflab ;
+.I fsetflab
+is to
+.I setflab
+as
+.I fchmod
+is to
+.I chmod.
+The proposed new privilege vector $Vvec$, fixity
+$F$, and label $L$ are pointed to by $Lp$.
+.LP
+If userid of $p$ is not superuser or owner of $f$ then $error$
+.CW EPERM .
+.LP
+If $f$ is a process file then $error$.
+.SP
+Prevent violations of
+the ceiling or increases in privilege of the process.
+.LP
+Check privilege:
+.IP
+If $Tsetpriv (p)$ the check succeeds.
+.IP
+Otherwise, if $F~!=~F(f)$ and userid of $p$
+is not the superuser or the same as the owner of $f$, then error
+$EPERM$.
+.IP
+Otherwise, if $T(f)$ then $error$.
+.IP
+Otherwise, if $Vvec$ is nonzero then $error$.
+.IP
+Otherwise, the check succeeds.
+.LP
+If the privilege check succeeds, check labels: the following label check:
+.IP
+If $L ~=~ YES$ 
+then $error$.
+.IP
+Otherwise, if $L ~=~ NO$
+.RS
+.IP
+If $L(f)~<=~C(p)$ the check succeeds.
+.IP
+Otherwise $error$.
+.RE
+.IP
+Otherwise, if $L(f)~=~NO$ and $Textern (p)$ the check succeeds.
+.IP
+Otherwise, if $L(f) ~!<=~ L$ then $error$.
+.IP
+Otherwise, if $Tnochk (p)$ the check succeeds.
+.IP
+Otherwise, if $L(p)~<=~L~<=~C(p)$ the check succeeds.
+.IP
+Otherwise $error$.
+.LP
+If the label check succeeds, check fixity: the following fixity check:
+.IP
+If $F(f)~=~CONST$ then $error$.
+.IP
+Otherwise, if $F~=~CONST$ then $error$.
+.IP
+Otherwise, if $F~=~RIGID$ and $f$ is not a stream then $error$.
+.IP
+Otherwise, if $F(f)~=~LOOSE$ the check succeeds.
+.IP
+Otherwise, if $F(f)~=~FROZEN$ and userid of $p$ is the same
+as the owner of $f$, the check succeeds.
+.IP
+Otherwise, if $F(f)~=~RIGID$ and $Textern (p)$
+the check succeeds.
+.IP
+Otherwise $error$.
+.LP
+If the fixity check succeeds, change the label:
+.IP
+If $F(f)~=~RIGID$ then set $F~:=~RIGID$.
+.IP
+If $L(f) ~!= ~L$,
+and if $f$ is an external medium, then
+block all input/output activity for all openings of $f$,
+drain its output buffers, and flush its input buffers.
+.IP
+Set $F(f)~:=~F$.
+.IP
+If $L(f) ~!= ~L$ or $Vvec (f)~!=~Vvec$, then set $L(f) ~:=~ L$
+and $Vvec (f) ~:=~Vvec $
+and propagate with CHF($f$); see \*(yF.
+.IP
+Unblock input/output (if blocked).
+.SP
+Processes can be marked trusted only with trusted tools.
+Trustedness also can be removed only by trusted tools, not
+to forestall security breaches, but to preserve the
+tools themselves.
+.SP
+Labels can only go up.
+Trusted processes can upgrade anything.
+Trusted processes may downgrade only by copying.
+The labels of external are rigid; their labels can change only with
+capability $Textern$; see \*(yD.
+.SP
+.I Setflab
+on a file labeled $NO$, usually an external medium, renews the file
+(\*(y5).
+A file may be downgraded
+by setting its label to $NO$ and then using capability $Textern$
+to set the label away from $NO$.
+.NH 3
+setplab(Lp, Cp)
+.XL yd
+.LP
+This system call sets the label, privilege,
+and ceiling of the current process.
+The proposed label $L$, privilege $Vvec$, capability
+$Tvec$, license $Uvec$ and fixity $F$ are pointed to by $Lp$;
+the proposed ceiling by $Cp$.
+A zero pointer designates a proposed value equal
+to the current value.
+.LP
+Check privilege:
+.IP
+If $Tvec$ is not bitwise
+less than or equal to $Tvec (p)$ then $error$.
+.IP
+Otherwise, if $Uvec$ is bitwise less than or equal to
+$Uvec (p)$ the check succeeds.
+.IP
+Otherwise, if $Tsetlic (p)$ the check succeeds.
+.IP
+Otherwise $error$.
+.LP
+If the privilege check succeeds,
+check labels:
+.IP
+If $L ~=~ YES$ or
+if $L ~=~ NO$ or
+if $C ~=~ YES$ or
+if $C ~=~ NO$ then $error$.
+.IP
+Otherwise, if $L~!<=~C$ then $error$.
+.IP
+Otherwise, if $L(p)~!<=~L$ and $not Tsetlic (p)$ then $error$.
+.IP
+Otherwise, if $C~!<=~C(p)$ and $not Tsetlic (p)$ then $error$.
+.IP
+Otherwise the check succeeds.
+.LP
+If the label check succeeds then
+.IP
+If $F~=~RIGID$ or $F~=~CONST$ then $error$.
+.IP
+Set $F(p)~:=~F$.
+.IP
+If $L(p)~!=~L$ set $L(p)~:=~L$ and propagate with $CHP()$;
+see \*(yP.
+.IP
+If the process loses capability $Tnochk$ or $C(p)~!<=~C$
+then clear all safe-to-read and safe-to-write bits in $p$.
+.IP
+Set $Vvec (p) ~:=~ Vvec$.
+.IP
+Set $C(p)~:=~C$.
+.IP
+If $Cp$ is not zero set $L(C(p))$.
+.RS
+.IP
+If $not Tsetlic (p)$ set $L(C(p))~:=~L(p)$.
+.IP
+Otherwise, set $L(C(p))~:=~bottom$.
+.RE
+.SP
+The label of an untrusted process can only go up;
+the ceiling can only come down.
+Label and ceiling may never cross.
+If the ceiling passes the label of open files, subsequent
+R($f$) checks (\*(zr) or W($f$) checks (\*(zw) will fail.
+.SP
+.I Setplab
+does not observe 
+the license $Tvec (f)$ of the file being executed
+or the maximum license $Uvec sup 0$; these are used only
+for initializing after
+.I exec.
+.SP
+The bits in the ceiling are labeled (by $L(C(p))^$) because
+the ceiling is readable and to some extent writable
+by an untrusted process.
+If the ceiling were not labeled,
+a lowish process with an all-ones ceiling could
+leak more than 5000bps by twiddling the ceiling.
+.NH 3
+syslog(c, n, x)
+.XL yl
+.PP
+Change or inquire about security auditing.
+Argument $n$ is an integer, which may also be interpreted as
+a file descriptor, $d$, or as a process id, $q$.
+.LP
+Switch on $c$ into
+.IP
+Case $font CW LOGON$: nominate file $f(d)$
+as the repository for the log file with minor device number $x$, \*(yL.
+.IP
+Case $font CW LOGOFF$: turn off logging on device $x$.
+.IP
+Case $font CW LOGGET$: return poison mask $PM[n]$.
+$PM[4]$ means the system audit mask $SAM$.
+.IP
+Case $font CW LOGSET$: set $PM[n]~:=~x$.
+$PM[4]$ means $SAM$.
+.IP
+Case $font CW LOGFGET$: return poison class $PC(f(d))$.
+.IP
+Case $font CW LOGFSET$: set $PC(f(d))~:=~x$.
+.IP
+Case $font CW LOGPGET$: return process audit mask $AM(q)$.
+.IP
+Case $font CW LOGPSET$: set $AM(q)~:=~x$.
+.LP
+Each bit of an audit mask designates a
+class of mandatory audit records.
+The classes are
+.EQ
+delim off
+.EN
+.de ZP
+.IP \f(CW\\$1\\fP
+..
+.EQ
+delim $$
+.EN
+.br
+.RS
+.ZP N
+uses of file names (calls to
+.I namei
+in the kernel)
+.nr PD 0
+.ZP S
+seek calls
+.ZP U
+writes to the ``uarea''
+.ZP I
+accesses of inode contents:
+.I stat (2),
+.I utime (2),
+etc.
+.ZP D
+possession and use of file descriptors:
+.I open (2),
+.I close (2),
+.I read (2),
+.I write (2),
+etc.
+.ZP P
+process history:
+.I exec (2),
+.I fork (2),
+.I kill (2),
+.I exit (2)
+.ZP L
+explicit changes of labels:
+.I setflab (2),
+.I setplab (2)
+.ZP A
+all changes of labels
+.ZP X
+uses of privilege
+.ZP E
+$ELAB$ error returns
+.ZP T
+uses of a traced file or process
+.RE
+.nr PD .3v
+.LP
+The format of audit records varies with the kind
+of action recorded.
+.SP
+Writing of audit records is immune to label checking; the only
+security check is that the process which sets
+.CW LOGON
+is trusted and has been able to open file $d$.
+Whether $d$ is open for reading or writing does not matter.
+Logging persists after file $d$ is closed.
+Log files may share repositories.
+.SP
+It is the duty of the trusted nominating process to
+assure that the repository is protected so
+that loggging records cannot be read in violation
+of the security policy, \*(yL.
+.NH 3
+unsafe(n, rp, wp)
+.XL y8
+.LP
+This system call queries and selectively clears
+safe-to-read and safe-to-write bits.
+.LP
+Two bit strings, $rs$ and $ws$,
+pointed to by $rp$ and $wp$ are indexed as in
+.I select.
+Let the actual safe-to-read bits and safe-to-write
+bits of all file descriptors constitute strings $rd$ and $wd$.
+Only the first
+.I n
+bits of each string are considered.
+.LP
+Do simultaneously
+.IP
+Set $rs~:=~rd$ and $ws~:=~wd$.
+.IP
+If $Tnochk (p)$ then set $rd~:=~rd & not rs$ and $wd~:=~wd & not ws$.
+.SP
+Covert channel: High has pipe to Low; High raises level; Low uses
+.I unsafe
+to discover it.
+The channel runs dry when High hits its ceiling, so not many
+bits\(emprobably less than 20\(emcan be transmitted.
+The call might be restricted to trusted processes, which are
+expected to be its principal user; see \*(yS.

@@ -1,0 +1,128 @@
+.TH PASSWD 1 
+.CT 1 comm_term sa_mortals secur
+.SH NAME
+passwd, pwx \(mi change login password
+.SH SYNOPSIS
+.B passwd
+[
+.B -an
+]
+[
+.I name
+]
+.PP
+.B priv pwx
+[ [
+.B -qcd
+]
+.I name
+] ]
+.SH DESCRIPTION
+.I Passwd
+changes a password
+associated with the user
+.IR name
+(your own name by default).
+.PP
+The program prompts for the old password and then for the new one.
+The caller must supply both.
+The new password must be typed twice, to forestall mistakes.
+.PP
+New passwords must be at least four characters long if they use
+a sufficiently rich alphabet and at least six characters long
+if monocase.
+These rules are relaxed if you are insistent enough.
+.PP
+Only the owner of the name or the super-user may change a password;
+the owner must prove he knows the old password.
+.PP
+If the
+.B -a
+option is given,
+.I passwd
+prompts for new values of certain fields of the
+password file entry.
+.PP
+The super-user may use the
+.B -n
+option to install new users.
+The prompts are self-explanatory,
+and most of the defaults obvious.
+A null response to the
+.L UID:
+prompt
+assigns a numeric userid one greater than the
+largest one previously in
+.FR /etc/passwd .
+A null response to
+.L Directory:
+assigns a home directory in
+.FR /usr .
+If the first character of the response to this
+prompt is an asterisk, the remaining characters
+are taken as the name of the new user's home
+directory, and a symbolic link to this directory
+is placed in
+.FR /usr .
+.PP
+A new user's home directory starts with a file named
+.FR .profile ,
+which is a copy of
+.F /etc/stdprofile
+with
+.B \eN
+replaced by the user's name, and
+.B \eD
+replaced by the name of the user's home directory.
+.PP
+.I Pwx
+modifies the password entry for
+the named user in the secret password file,
+.IR pwfile (5).
+With no option 
+.I pwx
+changes the classical password for the named user,
+or the invoker by default.
+The options are
+.TP
+.B -c
+Change other information.
+A special editing password for a fictitious user,
+`pwedit', is demanded.
+Then
+.I pwx
+prompts for treatment of the user password, 
+SNK key, maximum privilege, and clearance (maximum ceiling).
+.TP
+.B -d
+Delete an entry.
+The editing password is demanded.
+.TP
+.B -q
+Demand the user password.
+If a correct password is entered, return status 0;
+otherwise nonzero.
+.PP
+Options
+.B -c
+and
+.B -d
+require
+.B T_SETPRIV
+privilege.
+.SH FILES
+.F /etc/passwd
+.br
+.F /etc/stdprofile
+.br
+.F /etc/pwfile
+.SH "SEE ALSO"
+.IR crypt (3),
+.IR passwd (5),
+.IR pwfile (5),
+.IR pwserv (8)
+.br
+Robert Morris and Ken Thompson,
+`UNIX password security,'
+.I AT&T Bell Laboratories Technical Journal
+63 (1984) 1649-1672

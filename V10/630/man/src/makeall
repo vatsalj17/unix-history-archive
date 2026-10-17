@@ -1,0 +1,19 @@
+
+if [ X$1 = X-p ]
+then
+	op="./pman -h"
+else
+	op="./makeman"
+fi
+
+find ?_man -type f -print | (
+	while read a
+	do
+		if [ `basename $a` != "SOURCE" ]
+		then
+			$op $a
+		fi
+	done
+	)
+
+echo makeall done

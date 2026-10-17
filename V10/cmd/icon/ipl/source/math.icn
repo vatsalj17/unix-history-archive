@@ -1,0 +1,193 @@
+#	MATH
+#	
+#	Mathematical procedures
+#
+#	George D. Yee
+#	1847 N. Frances Blvd.
+#	Tucson, AZ  85712
+#
+#	Last modified 5/6/86 by Ralph E. Griswold
+#
+#
+#    Free distribution and use of this material is granted provided the
+#    above credit is left intact on all source copies.  No warranties
+#    are made as to the correctness or suitability of these procedures
+#    for any purpose.  Please send any suggestions to the author at the above
+#    address.
+#
+
+procedure sin(x)
+   return _sinus(numeric(x),0)
+end
+
+procedure cos(x)
+   return _sinus(abs(numeric(x)),1)
+end
+
+procedure tan(x)
+   return sin(x) / (0.0 ~= cos(x))
+end
+
+# atan returns the value of the arctangent of its
+# argument in the range [-pi/2,pi/2].
+procedure atan(x)
+   if numeric(x) then
+      return if x > 0.0 then _satan(x) else -_satan(-x)
+end
+
+# atan2 returns the arctangent of y/x
+# in the range [-pi,pi].
+procedure atan2(y,x)
+   local r
+   static pi
+   initial pi := 3.141592653589793238462643
+   return if numeric(y) & numeric(x) then {
+      if x > 0.0 then
+         atan(y/x)
+      else if x < 0.0 then {
+         r := pi - atan(abs(y/x))
+         if y >= 0.0 then r else -r
+         }
+      else if x = y = 0.0 then
+         0.0         # special value if both x and y are zero
+      else
+         if y >= 0.0 then pi/2.0 else -pi/2.0
+      }
+end
+
+procedure asin(x)
+   if abs(numeric(x)) <= 1.0 then
+      return atan2(x, (1.0-(x^2))^0.5)
+end
+
+procedure acos(x)
+   return 1.570796326794896619231e0 - asin(x)
+end
+
+procedure dtor(deg)
+   return numeric(deg)/57.29577951308232
+end
+
+procedure rtod(rad)
+   return numeric(rad)*57.29577951308232
+end
+
+procedure sqrt(x)
+    return (0.0 <= numeric(x)) ^ 0.5
+end
+
+procedure floor(x)
+   return if numeric(x) then
+      if x>=0.0 | real(x)=integer(x) then integer(x) else -integer(-x+1)
+end
+
+procedure ceil(x)
+   return -floor(-numeric(x))
+end
+
+procedure log(x)
+   local z, zsq, ex
+   static log2, sqrto2, p0, p1, p2, p3, q0, q1, q2
+   initial {
+      # The coefficients are #2705 from Hart & Cheney. (19.38D)
+      log2   :=  0.693147180559945309e0
+      sqrto2 :=  0.707106781186547524e0
+      p0     := -0.240139179559210510e2
+      p1     :=  0.309572928215376501e2
+      p2     := -0.963769093368686593e1
+      p3     :=  0.421087371217979714e0
+      q0     := -0.120069589779605255e2
+      q1     :=  0.194809660700889731e2
+      q2     := -0.891110902798312337e1
+      }
+   if numeric(x) > 0.0 then {
+      ex := 0
+      while x >= 1.0 do {
+         x /:= 2.0
+         ex +:= 1
+         }
+      while x < 0.5 do {
+         x *:= 2.0
+         ex -:= 1
+         }
+      if x < sqrto2 then {
+         x *:= 2.0
+         ex -:= 1
+         }
+      return ((((p3*(zsq:=(z:=(x-1.0)/(x+1.0))^2)+p2)*zsq+p1)*zsq+p0)/
+             (((1.0*zsq+q2)*zsq+q1)*zsq+q0))*z+ex*log2
+      }
+end
+
+procedure exp(x)
+   return 2.718281828459045235360287 ^ numeric(x)
+end
+
+procedure log10(x)
+   return log(x)/2.30258509299404568402
+end
+
+procedure _sinus(x,quad)
+   local ysq, y, k
+   static twoopi, p0, p1, p2, p3, p4, q0, q1, q2, q3
+   initial {
+      # Coefficients are #3370 from Hart & Cheney (18.80D).
+      twoopi :=  0.63661977236758134308
+      p0     :=  0.1357884097877375669092680e8
+      p1     := -0.4942908100902844161158627e7
+      p2     :=  0.4401030535375266501944918e6
+      p3     := -0.1384727249982452873054457e5
+      p4     :=  0.1459688406665768722226959e3
+      q0     :=  0.8644558652922534429915149e7
+      q1     :=  0.4081792252343299749395779e6
+      q2     :=  0.9463096101538208180571257e4
+      q3     :=  0.1326534908786136358911494e3
+      }
+   if x < 0.0 then {
+      x := -x
+      quad +:= 2
+      }
+   y := (x *:= twoopi) - (k := integer(x))
+   if (quad := (quad + k) % 4) = (1|3) then
+      y := 1.0 - y
+   if quad > 1 then
+      y := -y
+   return (((((p4*(ysq:=y^2)+p3)*ysq+p2)*ysq+p1)*ysq+p0)*y) /
+           ((((ysq+q3)*ysq+q2)*ysq+q1)*ysq+q0)
+end
+
+procedure _satan(x)
+   static sq2p1,sq2m1,pio2,pio4
+   initial {
+      sq2p1 := 2.414213562373095048802e0
+      sq2m1 := 0.414213562373095048802e0
+      pio2  := 1.570796326794896619231e0
+      pio4  := 0.785398163397448309615e0
+      }
+   return if x < sq2m1 then
+             _xatan(x)
+          else if x > sq2p1 then
+             pio2 - _xatan(1.0/x)
+          else
+             pio4 + _xatan((x-1.0)/(x+1.0))
+end
+
+procedure _xatan(x)
+   local xsq
+   static p4,p3,p2,p1,p0,q4,q3,q2,q1,q0
+   initial {
+      # coefficients are #5077 from Hart & Cheney. (19.56D)
+      p4    := 0.161536412982230228262e2
+      p3    := 0.26842548195503973794141e3
+      p2    := 0.11530293515404850115428136e4
+      p1    := 0.178040631643319697105464587e4
+      p0    := 0.89678597403663861959987488e3
+      q4    := 0.5895697050844462222791e2
+      q3    := 0.536265374031215315104235e3
+      q2    := 0.16667838148816337184521798e4
+      q1    := 0.207933497444540981287275926e4
+      q0    := 0.89678597403663861962481162e3
+      }
+   return x * ((((p4*(xsq:=x^2)+p3)*xsq+p2)*xsq+p1)*xsq+p0) /
+          (((((xsq+q4)*xsq+q3)*xsq+q2)*xsq+q1)*xsq+q0)
+end

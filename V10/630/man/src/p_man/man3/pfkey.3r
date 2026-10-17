@@ -1,0 +1,61 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH PFKEY 3R "630 MTG"
+.XE "pfkey()"
+.SH NAME
+pfkey \- get programmable function (PF) key strings
+.SH SYNOPSIS
+.ft B
+int pfkey (keynum, str, maxlen)
+.br
+int keynum, maxlen;
+.br
+char \(**str;
+.SH DESCRIPTION
+The
+.I pfkey
+function
+places up to
+(\f2maxlen\f1-1)
+characters from the given programmable function (PF) key
+.I keynum
+into the character array
+\f2str\f1
+which must be big enough to accept them. 
+When
+.I pfkey
+encounters a null value or it has processed the 
+(\f2maxlen\f1-1) th
+character,
+.I pfkey 
+terminates the string with a \s-1NULL\s+1 and returns the length of the string.
+.PP
+The value of
+.I keynum
+must be between 0x80 and 0x87, inclusive, which corresponds to PF key F1 to F8 on the
+keyboard.
+Each PF key
+can store up to 80 characters plus a NULL in the non-volatile BRAM space of the 
+terminal.
+.SH EXAMPLE
+The following code displays the value of programmable function key F1 on the window.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+#define MAXPFKEY 80
+
+showf1 () {
+    char pfval[MAXPFKEY+1];
+
+    pfkey (0x80, pfval, MAXPFKEY+1);
+    jstring (pfval);
+}
+\fR
+.fi
+.RE
+
+
+.SH SEE ALSO
+keyboard(3R).

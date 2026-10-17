@@ -1,0 +1,65 @@
+#	TABLW
+#
+#	Tabulate words
+#
+#	Ralph E. Griswold
+#
+#	Last modified 4/29/86
+#
+
+global limit, icase
+
+procedure main(x)
+   local wcount, unique, order, i, s, a, pair, lwidth, rwidth, max
+   limit := 0				# lower limit on usage to list
+   unique := 0				# switch to list unique usage only
+   order := 3				# alphabetical ordering switch
+   i := 0
+   while i < *x do {
+      s := x[i +:= 1] | break
+      case s of {
+         "-a":  order := 3
+         "-i":  icase := 1
+         "-n":  order := 4
+         "-l":  limit := (0 < integer(x[i +:= 1])) | Usage()
+         "-u":  unique := 1
+         default:  Usage()
+         }
+      }
+   wcount := table(0)			# table of words
+   every wcount[words()] +:= 1
+   a := sort(wcount,order)
+   if unique = 1 then {
+      while s := get(a) do
+         if get(a) = 1 then write(s)
+      }
+   else {
+      max := 0
+      rwidth := 0
+      i := 1
+      while i < *a do {
+         max <:= *a[i]
+         rwidth <:= *a[i +:= 1]
+	 }
+      lwidth := max + 3
+      while write(left(get(a),lwidth),right(get(a),rwidth))
+      }
+end
+
+#  generate words
+#
+procedure words()
+   local wchar, line, word
+   wchar := &lcase ++ &ucase
+   while line := read() do {
+      if \icase then line := map(line)
+      line ? while tab(upto(wchar)) do {
+         word := tab(many(wchar)) || ((tab(any('-\'')) || tab(many(wchar))) | "")
+         if *word > limit then suspend word
+         }
+      }
+end
+
+procedure Usage()
+   stop("usage:  tablw [-a -i -n -l n -u]")
+end

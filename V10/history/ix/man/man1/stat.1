@@ -1,0 +1,70 @@
+.TH STAT 1
+.SH NAME
+stat \- file statistics and labels
+.SH SYNOPSIS
+.B stat
+.I file ...
+.SH DESCRIPTION
+.I Stat
+places facts about the named
+.I files
+on the standard output.
+Successive output lines show
+.IP
+The file name.
+.IP
+Inode number, mode, link count, owner,
+group, and size displayed like output from
+.IR ls (1)
+with options
+.LR lidL .
+For device files, the size is replaced by major and minor
+device numbers separated by a comma.
+.IP
+The major and minor device numbers of this inode's file system
+and the file mode in octal.
+.IP
+Modification, access, and change times, each on a separate line.
+.IP
+The security label (of the destination, if a symbolic link)
+is given in the style of
+.IR labtoa (3).
+.IP
+If the file can be opened and corresponding data
+differ for the opened file, similar
+information for the opened file follows.
+.IP
+If the file is a symbolic link, the link destination is given,
+marked by
+.LR -> .
+.PP
+.I Stat
+has nocheck capability; a superuser with nocheck license can
+use it to examine any file.
+.SH EXAMPLES
+.EX
+/dev/tty:
+	0 crwxrwxrwx 0 root 0 0,0
+	255,255 020777
+	Jun 22 22:52:30 1988
+	Jun 22 22:52:30 1988
+	Jun 22 22:52:30 1988
+	------ ------CY 0000 0000 ...
+	974  rw-rw-r-- 0 reeds other 0
+	255,255 0100664
+	------ ------R  0000 0000 ...
+/usr/spool/man:
+	9926 lrwxrwxrwx 1 doug bin 23
+	7,66 0120777
+	Oct 17 21:21:21 1987
+	Jun 22 22:52:14 1988
+	Oct 17 21:21:21 1987
+	------ ------C  0000 0000 ...
+	-> /n/bowell/usr/spool/man
+.EE
+.SH DIAGNOSTICS
+Diagnostics appear on the standard output.
+.SH SEE ALSO
+.IR stat (2),
+.IR ls (1),
+.IR getlab (1)

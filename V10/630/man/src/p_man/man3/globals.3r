@@ -1,0 +1,130 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH GLOBALS 3R "630 MTG"
+.XE "physical"
+.XE "display"
+.XE "Drect"
+.XE "Jrect"
+.XE "mouse"
+.XE "PtCurrent"
+.SH NAME
+globals: physical, display, Drect, Jrect, PtCurrent, P, mouse \- globals describing display and mouse
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B Bitmap physical;
+.PP
+.B Bitmap display;
+.PP
+.B Rectangle Drect;
+.PP
+.B Rectangle Jrect;
+.PP
+.B Point PtCurrent;
+.PP
+.B #define XMAX  1024
+.br
+.B #define YMAX 1024
+.PP
+.B #define INSET 4
+.PP
+.B struct Mouse {
+.RS 3
+.br
+.B        Point xy;
+.br
+.B        Point jxy;
+.br
+.B        short buttons;
+.br
+.RE
+.B } mouse;
+.PP
+.B Proc \(**P;
+.SH DESCRIPTION
+Each global is defined when
+.B dmd.h
+is included.
+One should not include these definitions in their source code.
+.PP
+The global
+.I physical
+is a Bitmap describing the entire screen display in screen coordinates.
+.PP
+The global
+.I display
+is the Bitmap describing an individual window in screen coordinates.
+.PP
+The global
+.I Drect
+is a Rectangle
+defining, in screen coordinates,
+the display area available to the program.
+It is not
+.I display.rect,
+which includes the border around each window.
+.PP
+The global
+.I Jrect
+is the Rectangle
+{ 0, 0, \fIXMAX\fR, \fIYMAX\fR }
+.PP
+The global
+.I PtCurrent
+is the current Point in window coordinates which the j-routines reference and update.
+.PP
+The values
+.I XMAX
+and
+.I YMAX
+define the maximum x and y coordinates of the 630 MTG screen.
+These are the same as
+.I physical.rect.corner.x
+and
+.IR physical.rect.corner.y .
+.PP
+The value
+.I INSET
+is the width of the border around a window.
+Therefore,
+.I Drect
+is the same as
+.IR inset(display.rect,INSET) .
+.PP
+The global
+.I mouse
+is a location containing the current mouse coordinates
+and button states.
+The Point
+.I xy
+is in screen coordinates;
+.I jxy
+is in window coordinates.
+The
+.I buttons
+field is a bit vector of the mouse buttons that is
+most easily interpreted by using the button macros.
+The
+.I mouse
+is updated only when requested and the window is current.
+.PP
+\f2P\f1 is a special variable used by the 630 MTG. It
+represents the running process. A process can be a downloaded
+application or the default terminal emulator or an internal
+maintenance process. An example is the ``control'' process
+that puts up the button 3 global menu.
+.PP
+The 630 MTG changes the value of \f2P\f1 whenever one process
+switches out through ``wait'' or ``sleep'' to let another run.
+It always points to the running process's table (Proc). Many
+routines either update \f2P\f1 or use \f2P\f1 to find
+information specific to the process. For example, the memory
+allocator ``alloc'' uses \f2P\f1 to record who owns the memory
+requested. The ``allocown'' routine can be used to change
+this.
+.SH SEE ALSO
+alloc(3R), btoc(3R), buttons(3R/3L), inset(3R), resources(3R),
+sleep(3R), structures(3R), transform(3R/3L).
+.SH WARNING
+These globals (except XMAX, YMAX, and INSET) reside in the terminal.
+They cannot be used in automatic initializations of a program's
+global variables.

@@ -1,0 +1,197 @@
+.TH SESSION 1
+.CT 1 sa_nonmortals secur
+.SH NAME
+session, drop, runlow \- substitute labels temporarily
+.SH SYNOPSIS
+.B session
+[ 
+.I option ...
+]
+.PP
+.B priv session
+[ 
+.I option ...
+]
+.PP
+.B runlow 
+.I command
+.PP
+.B drop
+[ 
+.B -l
+.I label
+]
+[
+.I command-arg ... 
+]
+.SH DESCRIPTION
+.I Session
+sets a temporary security label for the duration of one command.
+The ceiling is raised sufficiently to cover the requested
+label, up to the authorization recorded for the
+current login name.
+If no
+.I command-args
+are given, the command is taken to be a shell:
+.IR sh (1)
+above the system floor, or
+.IR nosh (8)
+below.
+With
+.I command-args,
+the specified command is run; there is no shell-like path search.
+.PP
+If the current ceiling does not dominate the new ceiling,
+or the the new process label is below the system floor
+and does not dominate the current label
+.I session 
+must be invoked through
+.IR priv (1).
+.LP
+The options are
+.TP
+.BI -l " label
+Set the process label and the label of
+the standard input to the given value, specified as in
+.IR atolab ;
+see
+.IR labtoa (3).
+If the value does not dominate the current process label,
+clear the environment and pass no arguments to the
+invoked command.
+If 
+.I label
+is missing, it is taken to be the system floor.
+.TP
+.BI -C " label
+Set the process ceiling at or above the given value.
+If
+.I label
+is missing, it is taken to be the process label.
+.TP
+.BI -u " user
+The password for
+.I user
+will be demanded.
+The fact that the password has been presented will be recorded
+in the stream identifier (see
+.IR stream (4))
+of the standard input.
+For the duration
+of the session, further queries for that password will succeed
+automatically.
+If
+.I user
+is missing, it is taken to be the current login name.
+.TP
+.B -x
+Replace current session instead of suspending it 
+for the duration of the new session (like
+.B exec
+in
+.IR sh (1)).
+.TP
+.BI -c " command-arg ... 
+Instead of a shell, run the given command with the given arguments.
+This option must come last.
+.PP
+To change labels, the input source must come over
+a trustable channel, in particular neither from an
+untrusted computer nor from a terminal into which
+untrusted code has been downloaded.
+The request may require confirmation to assure that no
+software has tampered with it; answer
+.L y
+for yes.
+Confirmation and password inquiries happen under cover of
+.IR pex (4).
+In a
+.IR mux (9.1)
+window, this gives a visible indication; a missing indication
+is a sign of spoofing.
+.PP
+.I Runlow
+runs a command, starting the label at bottom, somewhat like
+.BR "session -l 0" ,
+but without changing the label of the standard input.
+The executable file is located according to environment variable
+.B $PATH
+as in 
+.IR sh (1).
+The command receives empty argument and environment lists,
+but inherits open file descriptors; only descriptors 0-3
+are allowed.
+The process label will immediately rise to dominate that of
+the executable file.
+.PP
+.I Drop
+sets the process ceiling
+to
+.I label
+(by default to the process label)
+for the running of one
+.I command
+with the given
+.I arguments.
+If no
+.I command
+is given, 
+.F /bin/sh
+is run.
+.LP
+The current process label, process licenses, terminal label, 
+and environment are preserved.
+.SH EXAMPLES
+.TP
+.B priv session -C ffff...
+Change ceiling to the maximum authorized for the current user.
+.TP
+.B priv session -l 0
+.br
+.ns
+.TP
+.B cd /usr/src
+Enter a bottom-label interactive terminal subsession.
+Get out of the black-hole directory that 
+.IR priv (1)
+leaves you in.
+.TP
+.B runlow /bin/sh	# not useful
+An attempt to fool the system into giving a bottom-label 
+interactive shell.
+When the shell reads from standard input,
+its label will revert to that of the current session.
+.TP
+.B drop ls -l *
+.br
+.ns
+.TP
+.B drop pwd
+Prevent the process label from rising to cover the labels of
+files in the directories examined by 
+.I ls
+or
+.I pwd.
+(If the label did rise, the output could not get
+to the terminal.)
+.SH FILES
+.F /dev/log/sessionlog
+.br
+.F /etc/pwfile
+.br
+.F /etc/floor
+.br
+.F /bin/sh
+.br
+.F /etc/nosh
+.SH SEE ALSO
+.IR sh (1),
+.IR getflab (2),
+.IR getplab (2),
+.IR exec (2),
+.IR pwfile (5),
+.IR login (8),
+.IR nosh (8),
+.IR pwserv (8)
+.SH DIAGNOSTICS
+`Sorry', instead of asking for a password: untrusted channel.

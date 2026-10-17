@@ -1,0 +1,217 @@
+.TH PEX 4
+.SH NAME
+pex \- ioctl requests for process-exclusive access
+.SH SYNOPSIS
+.nf
+.B #include <sys/pex.h>
+.PP
+.B ioctl(fildes, FIOPX, p)
+.B struct pexclude *p;
+.PP
+.B ioctl(fildes, FIONPX, p)
+.B struct pexclude *p;
+.PP
+.B ioctl(fildes, FIOQX, p)
+.B struct pexclude *p;
+.PP
+.B ioctl(fildes, FIOAPX, p)
+.B struct pexclude *p;
+.PP
+.B ioctl(fildes, FIOANPX, p)
+.B struct pexclude *p;
+.ig
+.PP
+.B ioctl(fildes, FIONBUF, np)
+.B int *np;
+..
+.fi
+.SH DESCRIPTION
+These 
+.IR ioctl (2)
+requests provide and check temporary exclusive access to
+an input/output source.
+.B FIOPX
+marks as `pexed' the file or
+pipe end referred to by
+.I fildes.
+On a pexed file 
+.I read,
+.IR write (2),
+and most forms of
+.IR ioctl 
+work only in the pexing process.
+Moreover, these operations do not work in any process
+on a half-pexed pipe (a pipe with exactly one pexed end).
+The mark remains until the pexing process requests
+.B FIONPX
+or closes all file descriptors that
+refer to the file.
+.PP
+When
+.I fildes
+refers to a stream,
+.B FIOPX
+and
+.B FIONPX
+require the stream's input and output queues to be empty;
+.IR pex (3)
+gives a method for emptying them.
+When
+.I fildes
+refers to a pipe, the far end of which is unpexed,
+.B FIOPX
+waits, with timeout, for an answering
+.B FIOPX
+or
+.B FIONPX
+at the far end.
+.B FIONPX
+waits similarly when the far end is pexed.
+Either request returns 1 when it leaves a pipe with exactly one end 
+pexed.
+A pipe must cycle through the fully unpexed state
+between fully pexed states;
+from the time one end becomes unpexed until the far end does too, 
+.B FIOPX
+on the unpexed end will return error
+.BR ECONC  .
+.PP
+If argument
+.I p
+is nonzero, the structure it points to is filled in 
+with information about the pexedness of the file and
+about the process at the far end of a pexed pipe.
+The format, defined in
+.BR <sys/filio.h> 
+is:
+.EX
+struct pexclude {
+	int oldnear;	/* FIOPX or FIONPX: state at beginning of call */
+	int newnear;	/* FIOPX or FIONPX: state at end of call */
+	int farpid;	/* -1 if not pipe, 0 if not pexed, else process id */
+	int farcap;	/* if farpid>0, capabilities */
+	int faruid;	/* if farpid>0, user id */
+};
+.EE
+Capabilities are represented as in the 
+.B lb_t
+field of a label; see
+.IR getflab (2).
+.PP
+.B FIOQX
+obtains the information without affecting state.
+.PP
+.I Read, write,
+or
+.I ioctl 
+calls that fail due to pexedness return error
+.BR ECONC .
+The only
+.I ioctl
+requests that may succeed on a half-pexed pipe are
+.BR FIOCLEX  , 
+.BR FIONCLEX  ,
+.BR FIOPX , 
+.BR FIONPX  ,
+and 
+.BR FIOQX   .
+A half-pexed pipe is deemed ready by
+.IR select (2).
+.PP
+.B FIOANPX
+and
+.BR FIOAPX 
+modify the response of open stream device files to
+.B FIOPX
+requests.
+They require
+.B T_EXTERN
+capability; see
+.IR getplab (2).
+After 
+.B FIOANPX
+all
+.B FIOPX 
+requests on the special file return 1 and leave the device in an
+unusable state
+(as if the device driver were a process at the far end of a pipe,
+always responding
+.BR FIONPX ).
+The treatment is reversed with
+.BR FIOAPX .
+This mechanism
+allows a terminal to be denounced to the kernel
+as being
+attached to an untrusted remote computer
+that cannot guarantee the exclusivity asked by
+.BR FIOPX .
+.ig
+.PP
+The request
+.B FIONBUF
+stores, in the integer pointed to by
+.I np,
+the number of bytes of data buffers currently in a stream.
+This number may exceed the number of bytes of data in
+the stream, but a stream will not contain any empty buffers.
+The request may be used to tell whether a stream is empty before
+executing one of the process-exclusive controls, which
+destroy stream contents.
+..
+.SH EXAMPLES
+A program collecting a password wishes to exclude other
+programs from the dialogue.
+The following code does the trick.
+(When the dialogue passes through
+.IR mux (9.1)
+or
+.IR con (1),
+downstream stages of the path to the terminal
+can be assumed to be similarly pexed, provided
+.B FIOPX
+succeeds.)
+.IP
+.EX
+#define ok(p) (p->farpid==-1 || p->farpid>0 && p->farcap!=0)
+struct pexclude x;
+if(ioctl(fd, FIOPX, &x) == 0 && ok(&x)) {
+	static char buf[9];
+	write(fd, promptstr, strlen(promptstr));
+	read(fd, buf, 8);
+	s = buf;
+} else 
+	s = 0;
+ioctl(fd, x.oldnear, 0);	/* restore state */
+.EE
+.LP
+An intervening trusted program, with a policy of
+recognizing exclusive access only for trusted processes,
+may cooperate with
+.IP
+.EX
+n = read(fd, buf, BUFSIZE);
+if(n == -1 && errno == ECONC) {
+	if(ioctl(fd, FIOPX, &pexcode)!=0 || pexcode.farcap==0)
+		ioctl(fd, FIONPX, 0);
+	} else  /* improper pexing */
+.EE
+.SH SEE ALSO
+.IR ioctl (2),
+.IR pipe (2),
+.IR stream (4),
+.IR pex (3)
+.SH DIAGNOSTICS
+.BR EBADF ,
+.BR ECONC ,
+.BR EFAULT ,
+.BR EIO ,
+.BR ENOTTY
+.RB ( FIOAPX
+and
+.BR FIOANPX )
+.br
+.B ECONC
+for forbidden IO calls in other processes.
+.br
+.B EBUSY
+for an undrained queue.

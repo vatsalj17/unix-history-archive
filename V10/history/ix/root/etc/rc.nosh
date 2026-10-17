@@ -1,0 +1,61 @@
+	/bin/echo
+	/bin/date
+
+lmask n /etc/ldpcs /etc/pcs750.bin
+
+lmask nx /bin/setlab 0 /etc/mtab
+	>/etc/mtab
+#	/bin/echo rc label
+#lmask n	/bin/getlab
+#lmask n	/bin/stat /etc/floor
+lmask n /bin/getlab /etc/floor
+lmask x	/etc/mount -a
+
+#	/etc/accton /usr/adm/acct
+#lmask g	/etc/syslog on /usr/adm/seclog /dev/log/seclog
+lmask g	/etc/syslog on /usr/adm/setlablog /dev/log/setlablog
+lmask g	/etc/syslog on /usr/adm/sulog /dev/log/sulog
+
+lmask nx /bin/setlab 0 /tmp/dump
+lmask n /etc/savecore /tmp/dump /dev/rra11
+
+#	/bin/xs -s /unix /etc/init /etc/nosh /etc/rc.nosh /bin/xs /bin/sh
+
+	/etc/swapon -a
+
+#	/usr/lib/ex3.7preserve -a	# not useful in multilevel system
+lmask x	/bin/chmod 777 /tmp /usr/tmp
+	/bin/sh -c /bin/rm\ -f\ /tmp/*\ /usr/tmp/*
+lmask x	/bin/chmod 7777 /tmp /usr/tmp	# blind directories
+
+	/etc/update
+lmask u	/etc/cron
+
+lmask n	/etc/kdiload
+
+	/usr/bin/sleep 5
+lmask n /etc/dkclean /dev/dk			# get dk/dkXX file modes right.
+lmask n	/etc/dkhup
+	/bin/date >/usr/adm/lastboot		# append-only file
+
+	/usr/bin/sleep 5
+
+lmask nx /etc/pwserv
+lmask nx /bin/setlab 0 /usr/ipc/log/svc
+lmask x /usr/ipc/mgrs/ns
+lmask nx /usr/ipc/mgrs/svcmgr
+lmask nx /usr/ipc/mgrs/dkmgr 
+lmask nuxl /etc/privserv
+
+#lmask xn  /usr/notary/notaryd
+lmask xn  /usr/xnotary/notaryd -d /usr/xnotary -m /cs/mcert
+
+	/usr/bin/sleep 2
+
+lmask nx /bin/setlab 0 /usr/netb/setupl
+lmask xu /usr/netb/setup 2>/usr/netb/setupl # was unx
+
+lmask n /usr/bin/wwv -s
+	/bin/rm -f /etc/nologin
+	/bin/echo notary key
+exit 0

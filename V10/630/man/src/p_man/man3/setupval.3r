@@ -1,0 +1,138 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH SETUPVAL 3R "630 MTG"
+.XE "setupval()"
+.SH NAME
+setupval \- return a setup option
+.SH SYNOPSIS
+\f3
+#include <setup.h>
+.sp
+int setupval (obj, opt)
+.br
+.B int obj, opt;\fR
+.SH DESCRIPTION
+The
+.I setupval 
+function
+returns the value of a setup option.
+The first argument,
+.IR obj ,
+is an object that has setup values.
+Possible objects are the terminal
+.RI ( S_PREF ),
+the printer
+.RI ( S_PRINT ),
+and the host
+.RI ( whathost() ).
+The second argument,
+.IR opt ,
+is a particular option for that object.
+The return value is an integer which describes that setting for
+that option. This is summarized in the table below.
+.sp
+.TS
+center tab (~);
+lp8 lp8 lp8 lp8.
+Object~Option~Returned~Meaning
+
+S_PREF~S_PREF_CTRL~S_PREF_CTRL_VIS~visible
+(user's~(control character~S_PREF_CTRL_INVIS~invisible
+preferences)~display)~S_PREF_CTRL_SPACE~a space
+
+~S_PREF_KCLK~S_PREF_KCLK_OFF~off
+~(keyboard click)~S_PREF_KCLK_ON~on
+
+~S_PREF_KVOL~S_PREF_KVOL_0~off
+~(keyboard volume)~S_PREF_KVOL_1~1
+~~S_PREF_KVOL_2~2
+~~S_PREF_KVOL_3~3
+~~S_PREF_KVOL_4~4
+~~S_PREF_KVOL_5~5
+~~S_PREF_KVOL_6~6
+~~S_PREF_KVOL_7~full
+
+~S_PREF_CURS~S_PREF_CURS_NOBLK~no blinking
+~(cursor mode)~S_PREF_CURS_BLK~blinking
+
+~S_PREF_KRPT~S_PREF_KRPT_15~15 per second
+~(keyboard~S_PREF_KRPT_20~20 per second
+~repeat rate)~S_PREF_KRPT_30~30 per second
+~~S_PREF_KRPT_60~60 per second
+
+~S_PREF_WBUF~S_PREF_WBUF_OFF~off
+~(windowproc buffer)~S_PREF_WBUF_ON~on
+
+~S_PREF_WTYP~S_PREF_WTYP_BASIC~basic
+~(windowproc type)~S_PREF_WTYP_EHN~enhanced
+
+S_PRINT~S_PRINT_TAB~S_PRINT_TAB_NO~no
+(printer)~(tab expansion)~S_PRINT_TAB_YES~yes
+
+~S_PRINT_ESC~S_PRINT_ESC_NO~no
+~(filter escapes)~S_PRINT_ESC_YES~yes
+
+whathost()~S_HOST_ENC~S_HOST_ENC_OFF~off
+(process's host)~(encoding)~S_HOST_ENC_ON~on
+
+~S_HOST_RTN~S_HOST_RTN_CR~carriage return
+~(sent return~S_HOST_RTN_LF~line feed
+~key definition)~S_HOST_RTN_CRLF~carriage return
+~~~and line feed
+
+~S_HOST_NL~S_HOST_NL_LF~line feed
+~(newline~S_HOST_NL_CRLF~carriage return
+~definition)~~and line feed
+
+~S_HOST_FONT~S_HOST_FONT_SMALL~smallfont
+~(font)~S_HOST_FONT_MEDIUM~mediumfont
+~~S_HOST_FONT_LARGE~largefont
+
+~S_HOST_COL~multiplexed columns~number
+~S_HOST_ROW~multiplexed rows~number
+~S_HOST_NCOL~nonmultiplexed columns~number
+~S_HOST_NROW~nonmultiplexed rows~number
+
+~S_HOST_FIXED~S_HOST_FIXED_NO~no
+~(fixed size window)~S_HOST_FIXED_YES~yes
+.TE
+.PP
+If the object is invalid,
+.I setupval
+returns -1.
+If the option for a given object is invalid,
+the return value is undefined.
+
+
+.SH EXAMPLE
+The following example prints out the setting of some options.
+.PP
+.RS 3
+.nf
+.ft CM
+.S -2
+#include <setup.h>
+
+printval()
+{
+   int i;
+
+   lprintf("key click is ");
+   switch(setupval(S_PREF, S_PREF_KCLK))
+   {
+      case S_PREF_KCLK_OFF: lprintf("off\\n"); break;
+      case S_PREF_KCLK_ON:  lprintf("on\\n"); break;
+   }
+   i = setupval(whathost(), 
+                ismpx()? S_HOST_ROW: S_HOST_NROW);
+   if(i == -1)
+      lprintf("I am local\\n");
+   else
+      lprintf("default rows = %d\\n", i);
+}
+.fi
+.ft R
+.S +2
+.RE
+.PP
+.SH SEE ALSO
+ismpx(3R), whathost(3R).

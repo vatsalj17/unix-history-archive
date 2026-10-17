@@ -1,0 +1,24 @@
+CFLAGS=-I.. -I/usr/include -DKERNEL $gflag
+L=../lib/lccio.a
+FILES=\
+	$L(lg.x) \
+	$L(fd.x) $L(mem.x) $L(sw.x) \
+	$L(bio.x) $L(stream.x) $L(partab.x) \
+	$L(dk.y) $L(kdi.y) $L(kmc.y) \
+	$L(cmcld.x) $L(dkp.x) $L(dkmod.x) \
+	$L(ttyld.x) $L(mesg.x) $L(connld.x) $L(bufld.x) \
+	$L(ra.x) $L(uda.y) 
+
+$L: $FILES
+	names=`membername $newprereq`
+	ar r $L $names && rm $names
+	ranlib $L
+$L(%):N: %
+%.x: %.c
+	lcc $CFLAGS -S $stem.c
+	sed -f ../lib/lccasm.sed <$stem.s | as -o $stem.x
+	rm $stem.s
+%.y: %.c
+	lcc $CFLAGS -Wf-k -S $stem.c
+	sed -f ../lib/lccasm.sed <$stem.s | as -o $stem.y
+	rm $stem.s

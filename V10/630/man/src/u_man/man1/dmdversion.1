@@ -1,0 +1,99 @@
+.TH DMDVERSION 1 "630 MTG"
+.SH NAME
+dmdversion \- inquire terminal/host software version
+.SH SYNOPSIS
+.B dmdversion 
+[
+.B \-ehlst
+]
+.SH DESCRIPTION
+The 
+.I dmdversion
+utility displays the version numbers of the 630 MTG terminal and host software.
+The terminal version number is the equivalent to the ASCII
+string which contains three fields (f1;f2;f3) defined as
+follows:
+.TP 1i
+.B f1
+identifies the 630 MTG as a windowing terminal
+.TP
+.B f2
+identifies the terminal as a 630 MTG
+.TP
+.B f3
+identifies the firmware release
+.LP
+.PP
+Host software version is read from the file $DMD/VERSION.
+.PP
+The \f3\-t\f1 option is used to display the terminal version number.
+The \f3\-h\f1 option is used to display the host software version
+number. The default action is to display both terminal and
+host software version numbers.
+.PP
+In the \fBlayers\fR environment, terminal version is found through an 
+\fIioctl(2)\fR call to the
+xt device driver. In non-layers, or if the \fB-e\fR flag is specified, the
+terminal version is found through the Request Terminal Type escape sequence \fBESC[c\fR.
+.PP
+The \fB-l\fR option can be used to inquire if Local Area
+Network (LAN) Encoding is set for the terminal
+through terminal setup. This is found through the Request Encoding escape
+sequence \fBESC[F\fR. This option excludes the \fB-e\fR option and does not
+inquire the terminal version number.
+.PP
+When the \f3\-s\f1 flag is present, no output is printed but
+an exit value is returned as follows. If the \f3\-t\f1 or
+\f3\-e\f1 options are present, the decimal ascii value of the
+last digit of the terminal's version is returned. If the
+\f3\-l\f1 option is present, 1 is returned if LAN encoding is
+enabled; 0 otherwise. The \f3\-l\f1 option will overide the
+\f3\-t\f1 or \f3\-e\f1 options. In all other cases, 255 (-1) is
+returned.
+.SS EXAMPLE
+The following example can be used to determine if a 630 MTG or
+some other windowing terminal (such as a 5620) is being used.
+.RS 6
+.nf
+.ft CM
+case `dmdversion -t` in
+   *'8;8'*)
+        echo I am a 630
+        ;;
+   *'8;7'*)
+        echo I am a 5620
+        ;;
+   *)
+        echo Unknown terminal type
+        ;;
+esac
+.fi
+.ft R 
+.RE
+.SH FILES
+.TP 22
+$DMD/VERSION
+the host version
+.SH SEE ALSO
+version(3R).
+.br
+ioctl(2) in the \f2UNIX System V Programmer's Reference Manual\f1.
+.br
+layers(1) in the UNIX System V Release 3 User's Reference
+Manual.
+.br
+layers(1) in the 5620 Dot-Mapped Display Reference
+Manual.
+.br
+\f2630 MTG Terminal User's Guide\f1.
+
+.SH DIAGNOSTICS
+The 
+.B -e
+and
+.B -l
+flags only work if the window connected to the standard output is
+running the default 630 MTG terminal emulator or any other emulator that
+supports the described escape sequences.
+
+

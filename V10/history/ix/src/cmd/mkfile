@@ -1,0 +1,457 @@
+#	to add a command, add its name to ALL below and insert the appropriate
+#	rules to make it below. copy existing rules to get it right
+#
+#INCDIR=-I/usr/include
+BIN=/bin/
+ETC=/etc/
+USRBIN=/usr/bin/
+USRLIB=/usr/lib/
+#LIBC=/root/lib/libc.a
+LIBC=
+
+PATH=/bin:/usr/bin
+UXSRC=/n/bowell/usr/src/cmd
+CFLAGS=-O $INCDIR
+MAKE=make BIN=$BIN ETC=$ETC USRBIN=$USRBIN USRLIB=$USRLIB LIBC=$LIBC INCDIR=$INCDIR
+ENVIRON='INS(){
+	if [ -f $4 ]
+		then
+		chmod 666 $4 2> /dev/null || (UNPRIV $4; mv $4 $4.x; chmod 666 $4.x)
+	fi
+	cp $1 $4
+	strip $4 || true
+	/etc/chown $2 $4
+	chmod $3 $4
+	rm $1
+}
+UNPRIV(){
+	/bin/priv setpriv 0 0 $* </dev/tty
+}
+PRIV(){
+	/bin/priv setpriv $1 $2 $3 $3 </dev/tty
+}
+STAT(){
+	stat $target
+}
+dirins(){
+	PATH=:/bin:/usr/bin
+	$MAKE install
+	# $MAKE clean && $MAKE install && $MAKE clean
+}
+dirinsmk(){
+	PATH=:/bin:/usr/bin
+	mk install
+	# $MAKE clean && $MAKE install && $MAKE clean
+}
+'
+ALL=\
+	adb apx autofsck \
+	blackmail \
+	chuck cl clri cyntax \
+	cron \
+	dcheck dkclean dkinstall downgrade drop \
+	fsck \
+	getlab \
+	icheck init integrity \
+	kp \
+	lint login logpr logtty ls \
+	mkbitfs mkunique mount \
+	ncheck nosh notary notaryd \
+	priv ps pstat pwserv pwx \
+	redmail runfs runlow \
+	setlab session setup showq stat su syslog \
+	tmpnam \
+	umount \
+	vmstat \
+	xs
+
+default:Q:
+	echo there is no default target!
+
+adb:V:
+	cd adb/vax; dirins
+
+apx:	apx.c
+	$CC $CFLAGS -d2 -o apx apx.c $LIBC
+$ETC/apx:	apx
+	INS	apx bin,bin 755 $target
+	STAT
+apx.ins:V:	$ETC/apx
+
+autofsck:	autofsck.c
+	$CC $CFLAGS -d2 -o autofsck autofsck.c $LIBC
+$ETC/autofsck:	autofsck
+	INS	autofsck bin,bin 775 $target
+	STAT
+autofsck.ins:V:	$ETC/autofsck
+
+blackmail:	blackmail.c
+	$CC $CFLAGS -d2 -o blackmail blackmail.c $LIBC
+$USRBIN/blackmail:	blackmail
+	INS	blackmail bin,bin 775 $target
+	PRIV	n n $target
+	STAT
+blackmail.ins:V:	$USRBIN/blackmail
+
+chuck:V:
+	UNPRIV $ETC/chuck $ETC/upchuck
+	(cd chuck; dirins)
+	PRIV	n - $ETC/chuck
+	PRIV	n - $ETC/upchuck
+
+cl:	cl.c
+	$CC $CFLAGS -d2 -o cl cl.c $LIBC
+$ETC/cl:	cl
+	INS	cl bin,bin 775 $target
+	STAT
+cl.ins:V:	$ETC/cl
+
+clri:	clri.c
+	$CC $CFLAGS -d2 -o clri clri.c $LIBC
+$ETC/clri:	clri
+	INS	clri bin,bin 775 $target
+	PRIV	n - $target
+	STAT
+clri.ins:V:	$ETC/clri
+
+#cron: stopgap till bowell gets fixed
+cron:	cron.c
+	$CC $CFLAGS -d2 -o cron cron.c $LIBC
+$ETC/cron:	cron
+	INS	cron bin,bin 775 $target
+	PRIV	u - $target
+	STAT
+cron.ins:V:	$ETC/cron
+
+cyntax:V:
+	cd cyntax; dirins
+
+dcheck:	dcheck.c
+	$CC $CFLAGS -o dcheck dcheck.c $LIBC
+$ETC/dcheck:	dcheck
+	INS	dcheck bin,bin 775 $target
+	PRIV	n - $target
+	STAT
+dcheck.ins:V:	$ETC/dcheck
+
+
+dkclean:	dkclean.c
+	$CC $CFLAGS -d2 -o dkclean dkclean.c $LIBC
+$ETC/dkclean:	dkclean
+	INS	dkclean root,bin 700 $target
+	PRIV	n - $target
+	STAT
+dkclean.ins:V:	$ETC/dkclean
+
+dkinstall:V:
+	cd asd++; dirins
+
+downgrade:	downgrade.c
+	$CC $CFLAGS -d2 -o downgrade downgrade.c $LIBC
+$ETC/downgrade:	downgrade
+	INS	downgrade bin,bin 775 $target
+	PRIV	xn xn $target
+	STAT
+downgrade.ins:V:	$ETC/downgrade
+
+drop:	drop.c
+	$CC $CFLAGS -d2 -o drop drop.c $LIBC
+$BIN/drop:	drop
+	INS	drop bin,bin 775 $target
+drop.ins:V:	$BIN/drop
+
+fsck:	fsck.c
+	$CC $CFLAGS -o fsck fsck.c $LIBC
+$ETC/fsck:	fsck
+	INS	fsck bin,bin 775 $target
+	PRIV	n - $target
+	STAT
+fsck.ins:V:	$ETC/fsck
+
+getlab:	getlab.c
+	$CC $CFLAGS -d2 -o getlab getlab.c $LIBC
+$BIN/getlab:	getlab
+	INS	getlab bin,bin 775 $target
+	STAT
+getlab.ins:V:	$BIN/getlab
+
+icheck: /n/bowell/usr/src/cmd/icheck.c
+	$CC $CFLAGS -o icheck $prereq $LIBC
+$ETC/icheck:	icheck
+	INS	icheck bin,bin 775 $target
+	PRIV	n - $target
+	STAT
+icheck.ins:V:	$ETC/icheck
+
+ins:V:
+	cd ins; dirins
+
+inspkg:U:
+	cd asd; $MAKE inspkg
+$USRBIN/inspkg: inspkg
+	INS	asd/inspkg bin,bib 755 $target
+	PRIV	p 0 $target
+	STAT
+inspkg.ins:V: $USRBIN/inspkg
+
+init:	init.c
+	$CC $CFLAGS -d2 -o init init.c $LIBC
+$ETC/init:	init
+	UNPRIV $target $target.old
+	mv	$target $target.old
+	PRIV	nx 0 $target.old
+	INS	init bin,bin 775 $target
+	PRIV	nx 0 $target
+	STAT
+init.ins:V:	$ETC/init
+
+integrity: integrity.c
+	$CC $CFLAGS -o integrity integrity.c $LIBC
+$ETC/integrity:	integrity
+	INS	integrity bin,bin 775 $target
+integrity.ins:V:	$ETC/integrity
+
+kp:	kp.c
+	$CC $CFLAGS -o kp kp.c $LIBC
+$USRBIN/kp:	kp
+	INS	kp bin,bin 775 $target
+	PRIV	n 0 $target
+	STAT
+kp.ins:V:	$USRBIN/kp
+
+lint:V:	cyntax
+
+logpr:	logpr.c
+	$CC $CFLAGS -d2 -o logpr logpr.c $LIBC
+$ETC/logpr:	logpr
+	INS	logpr bin,bin 775 $target
+	STAT
+logpr.ins:V:	$ETC/logpr
+
+login:	login.c
+	$CC $CFLAGS -d2 -o login login.c -lipc $LIBC
+$ETC/login:	login
+	INS	login bin,bin 775 $target
+	PRIV	un u $target
+	STAT
+login.ins:V:	$ETC/login
+logtty:	/n/bowell/usr/src/cmd/logtty.c
+	$CC $CFLAGS -o logtty $prereq
+$USRBIN/logtty:	logtty
+	INS	logtty bin,bin 755 $target
+	STAT
+logtty.ins:V:	$USRBIN/logtty
+
+ls:	ls.c
+	$CC $CFLAGS  -o ls ls.c $LIBC
+ls.c:	$UXSRC/ls.c
+	cp $UXSRC/ls.c ls.c
+$BIN/ls:	ls
+	INS	ls bin,bin 775 $target
+	STAT
+ls.ins:V:	$BIN/ls
+
+mkbitfs:	mkbitfs.c
+	$CC $CFLAGS -d2 -o mkbitfs mkbitfs.c $LIBC
+$ETC/mkbitfs:	mkbitfs
+	INS	mkbitfs root,bin 775 $target
+	PRIV	n 0 $target
+	STAT
+mkbitfs.ins:V:	$ETC/mkbitfs
+
+mkunique:	mkunique.c
+	$CC $CFLAGS -d2 -o mkunique mkunique.c $LIBC
+$USRBIN/mkunique:	mkunique
+	INS	mkunique bin,bin 775 $target
+	STAT
+mkunique.ins:V:	$USRBIN/mkunique
+
+mount:	mount.c
+	$CC $CFLAGS -d2 -o mount mount.c $LIBC
+$ETC/mount:	mount
+	INS	mount root,sys 775 $target
+	PRIV	x 0 $target
+	STAT
+mount.ins:V:	$ETC/mount
+
+ncheck:	ncheck.c
+	$CC $CFLAGS -o ncheck ncheck.c $LIBC
+ncheck.c:	$UXSRC/ncheck.c
+	cp $UXSRC/ncheck.c ncheck.c
+$ETC/ncheck:	ncheck
+	INS	ncheck bin,bin 775 $target
+	PRIV	n - $target
+	STAT
+ncheck.ins:V:	$ETC/ncheck
+
+nosh:	nosh.c
+	$CC $CFLAGS -d2 -o nosh nosh.c $LIBC
+$ETC/nosh:	nosh
+	INS	nosh bin,bin 775 $target
+	PRIV	- n $target
+	STAT
+nosh.ins:V:	$ETC/nosh
+
+notary:	notary.c
+	$CC $CFLAGS -d2 -o notary notary.c -lc -lipc
+$USRBIN/notary:	notary
+	INS	notary bin,bin 775 $target
+	PRIV	n n $target
+	STAT
+notary.ins:V:	$USRBIN/notary
+
+
+notaryd:V:
+	UNPRIV	/usr/notary/notaryd
+	(cd notaryd; dirins)
+	PRIV	nx - /usr/notary/notaryd
+	stat /usr/notary/notaryd 
+
+priv:V:
+	cd priv; mk priv
+$ETC/priv:	priv priv/priv
+	INS	priv/priv bin,bin 775 $target
+	PRIV	l l $target
+	STAT
+priv.ins:V:	$ETC/priv
+ps:V:
+	UNPRIV	$BIN/ps
+	/bin/chmod 666 $BIN/ps
+	(cd ps; dirinsmk)
+	PRIV	n - $BIN/ps
+	stat $BIN/ps
+
+pstat:	pstat.c
+	$CC $CFLAGS -d2 -o pstat pstat.c $LIBC
+$ETC/pstat:	pstat
+	INS	pstat bin,bin 775 $target
+	PRIV	n n $target
+	STAT
+pstat.ins:V:	$ETC/pstat
+
+pwserv:V:
+	UNPRIV	$ETC/pwserv
+	(cd pwserv; dirins)
+	PRIV	nx nx $ETC/pwserv
+	stat $ETC/pwserv
+
+pwx:	pwx.c
+	$CC $CFLAGS -o $target $target.c -lipc $LIBC
+$ETC/pwx:	pwx
+	INS	pwx root,bin 4775 $target
+	PRIV	np n $target
+	STAT
+pwx.ins:V:	$ETC/pwx
+
+redmail:	redmail.c
+	$CC $CFLAGS -d2 -o redmail redmail.c $LIBC
+$USRBIN/redmail:	redmail
+	INS	redmail bin,bin 775 $target
+	STAT
+redmail.ins:V:	$USRBIN/redmail
+
+runfs:	runfs.c
+	$CC $CFLAGS runfs.c -o runfs
+/usr/netb/runfs:	runfs
+	INS	runfs root,bin 775 $target
+	PRIV	x - $target
+	STAT
+runfs.ins:V:	/usr/netb/runfs
+
+runlow:	runlow.c
+	$CC $CFLAGS -d2 -o runlow runlow.c $LIBC
+$BIN/runlow:	runlow
+	INS	runlow bin,bin 755 $target
+	PRIV n - $target
+runlow.ins:	$BIN/runlow
+
+
+session:	session.c
+	$CC $CFLAGS -d2 -o session session.c -lipc $LIBC
+$BIN/session:	session
+	UNPRIV	$target
+	mv	$BIN/session $BIN/osession
+	INS	session root,bin 4775 $target
+	PRIV	nlx nxl $target
+	STAT
+session.ins:V:	$BIN/session
+
+setlab:	setlab.c
+	$CC $CFLAGS -d2 -o setlab setlab.c $LIBC
+$BIN/setlab:	setlab
+	strip	setlab
+	/etc/nosh /usr/src/cmd/setlab.go
+	rm	setlab
+setlab.ins:V:	$BIN/setlab
+
+setup:	setup.c
+	cc -O -I/usr/include/sys setup.c -lipc -o setup
+/usr/netb/setup:	setup
+	INS	setup root,bin 775 $target
+	PRIV	ux - $target
+	STAT
+setup.ins:V:	/usr/netb/setup
+
+showq:	showq.c
+	$CC $CFLAGS -d2 -o showq showq.c $LIBC
+$ETC/showq:	showq
+	INS	showq bin,bin 775 $target
+	STAT
+showq.ins:V:	$ETC/showq
+
+stat:		stat.c
+	$CC $CFLAGS -d2 -o stat stat.c $LIBC
+$BIN/stat:	stat
+	INS	stat bin,bin 775 $target
+	PRIV	n 0 $target
+	STAT
+stat.ins:V:	$BIN/stat
+
+su:	su.c
+	$CC $CFLAGS -d2 -o su su.c -lipc $LIBC
+$ETC/su:	su
+	INS	su bin,bin 775 $target
+	PRIV	u u $target
+	STAT
+su.ins:V:	$ETC/su
+
+syslog:	syslog.c
+	$CC $CFLAGS -d2 -o syslog syslog.c $LIBC
+$ETC/syslog:	syslog
+	INS	syslog bin,bin 775 $target
+	PRIV	g 0 $target
+	STAT
+syslog.ins:V:	$ETC/syslog
+
+tmpnam: tmpnam.c
+	$CC $CFLAGS -d2 -o tmpnam tmpnam.c $LIBC
+$BIN/tmpnam:	tmpnam
+	INS	tmpnam bin,bin 755 $target
+	STAT
+tmpnam.ins:V:	$BIN/tmpnam
+
+umount:	umount.c
+	$CC $CFLAGS -d2 -o umount umount.c $LIBC
+$ETC/umount:	umount
+	INS	umount root,sys 775 $target
+	PRIV	x 0 $target
+	STAT
+umount.ins:V:	$ETC/umount
+
+vmstat:	vmstat.c
+	$CC $CFLAGS -d2 -o vmstat vmstat.c $LIBC
+$BIN/vmstat:	vmstat
+	INS	vmstat bin,bin 775 $target
+	PRIV	n n $target
+	STAT
+vmstat.ins:V:	$BIN/vmstat
+
+
+xs:	xs.c
+	$CC $CFLAGS -d2 -o xs xs.c $LIBC
+$BIN/xs:	xs
+	INS	xs bin,bin 775 $target
+	PRIV	0 n $target
+	STAT
+xs.ins:V:	$BIN/xs
+

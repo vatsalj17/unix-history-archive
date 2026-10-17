@@ -1,0 +1,428 @@
+default targets 'all'
+rules: start=116928
+	Rule 116928: mkfile[91] attr=20 next=118656 chain=0 alltarget='all'
+	target=all: gnulib gcc cc1 cpp
+	recipe@116912=''
+	Rule 118656: mkfile[93] attr=0 next=118976 chain=0 alltarget='compilations'
+	target=compilations: toplev.o version.o parse.tab.o tree.o print-tree.o decl.o typecheck.o stor-layout.o fold-const.o rtl.o expr.o stmt.o expmed.o explow.o optabs.o varasm.o symout.o dbxout.o emit-rtl.o insn-emit.o integrate.o jump.o cse.o loop.o flow.o stupid.o combine.o regclass.o local-alloc.o global-alloc.o reload.o reload1.o insn-peep.o final.o recog.o insn-recog.o insn-extract.o insn-output.o
+	recipe@118652=''
+	Rule 118976: mkfile[95] attr=0 next=119228 chain=0 alltarget='gcc'
+	target=gcc: gcc.o version.o obstack.o alloca.o
+	recipe@118928='$CC $CFLAGS -o gccnew $prereq
+mv gccnew gcc
+'
+	Rule 119228: mkfile[99] attr=0 next=121036 chain=0 alltarget='gcc.o'
+	target=gcc.o: gcc.c config.h tm.h
+	recipe@119204='$CC $CFLAGS -c gcc.c
+'
+	Rule 121036: mkfile[102] attr=0 next=121492 chain=0 alltarget='cc1'
+	target=cc1: toplev.o version.o parse.tab.o tree.o print-tree.o decl.o typecheck.o stor-layout.o fold-const.o rtl.o expr.o stmt.o expmed.o explow.o optabs.o varasm.o symout.o dbxout.o emit-rtl.o insn-emit.o integrate.o jump.o cse.o loop.o flow.o stupid.o combine.o regclass.o local-alloc.o global-alloc.o reload.o reload1.o insn-peep.o final.o recog.o insn-recog.o insn-extract.o insn-output.o obstack.o alloca.o
+	recipe@121008='$CC $CFLAGS -o cc1 $prereq
+'
+	Rule 121492: mkfile[108] attr=0 next=121968 chain=0 alltarget='gnulib'
+	target=gnulib: gnulib.c
+	recipe@121200='set +e; mkdir libtemp; set -e
+cd libtemp
+rm -f gnulib
+for name in ${LIBFUNCS}
+do
+  echo ${name}
+  rm -f ${name}.c
+  ln ../gnulib.c ${name}.c
+  $OLDCC $CCLIBFLAGS -O -I.. -c -DL${name} ${name}.c
+  $AR qc gnulib ${name}.o
+done; set -e
+cd ..
+mv libtemp/gnulib .
+rm -rf libtemp
+ranlib gnulib
+'
+	Rule 121968: mkfile[130] attr=0 next=122420 chain=0 alltarget='decl.o'
+	target=decl.o: decl.c config.h tm.h tree.h tree.def machmode.def flags.h c-tree.h parse.h
+	recipe@121964=''
+	Rule 122420: mkfile[131] attr=0 next=122780 chain=0 alltarget='typecheck.o'
+	target=typecheck.o: typecheck.c config.h tm.h tree.h tree.def machmode.def c-tree.h flags.h
+	recipe@122416=''
+	Rule 122780: mkfile[132] attr=0 next=123168 chain=0 alltarget='tree.o'
+	target=tree.o: tree.c config.h tm.h tree.h tree.def machmode.def
+	recipe@122776=''
+	Rule 123168: mkfile[133] attr=0 next=123560 chain=0 alltarget='print-tree.o'
+	target=print-tree.o: print-tree.c config.h tm.h tree.h tree.def machmode.def
+	recipe@123164=''
+	Rule 123560: mkfile[134] attr=0 next=123948 chain=0 alltarget='stor-layout.o'
+	target=stor-layout.o: stor-layout.c config.h tm.h tree.h tree.def machmode.def
+	recipe@123556=''
+	Rule 123948: mkfile[135] attr=0 next=124356 chain=0 alltarget='fold-const.o'
+	target=fold-const.o: fold-const.c config.h tm.h tree.h tree.def machmode.def
+	recipe@123944=''
+	Rule 124356: mkfile[136] attr=0 next=124844 chain=0 alltarget='toplev.o'
+	target=toplev.o: toplev.c config.h tm.h tree.h tree.def machmode.def flags.h
+	recipe@124352=''
+	Rule 124844: mkfile[138] attr=0 next=125028 chain=0 alltarget='parse.tab.o'
+	target=parse.tab.o: parse.tab.c config.h tm.h tree.h tree.def machmode.def parse.h c-tree.h flags.h
+	recipe@124840=''
+	Rule 125028: mkfile[140] attr=0 next=125380 chain=0 alltarget='parse.tab.c'
+	target=parse.tab.c: parse.y
+	recipe@125008='$BISON -v parse.y
+'
+	Rule 125380: mkfile[143] attr=0 next=125944 chain=0 alltarget='rtl.o'
+	target=rtl.o: rtl.c config.h tm.h rtl.h rtl.def machmode.def
+	recipe@125376=''
+	Rule 125944: mkfile[145] attr=0 next=126628 chain=0 alltarget='varasm.o'
+	target=varasm.o: varasm.c config.h tm.h tree.h tree.def machmode.def rtl.h rtl.def machmode.def flags.h expr.h
+	recipe@125940=''
+	Rule 126628: mkfile[146] attr=0 next=127360 chain=0 alltarget='stmt.o'
+	target=stmt.o: stmt.c config.h tm.h rtl.h rtl.def machmode.def tree.h tree.def machmode.def flags.h insn-flags.h expr.h insn-config.h regs.h
+	recipe@126624=''
+	Rule 127360: mkfile[148] attr=0 next=128108 chain=0 alltarget='expr.o'
+	target=expr.o: expr.c config.h tm.h rtl.h rtl.def machmode.def tree.h tree.def machmode.def flags.h insn-flags.h insn-codes.h expr.h insn-config.h recog.h
+	recipe@127356=''
+	Rule 128108: mkfile[150] attr=0 next=128672 chain=0 alltarget='expmed.o'
+	target=expmed.o: expmed.c config.h tm.h rtl.h rtl.def machmode.def tree.h tree.def machmode.def flags.h insn-flags.h insn-codes.h expr.h insn-config.h recog.h
+	recipe@128104=''
+	Rule 128672: mkfile[152] attr=0 next=129420 chain=0 alltarget='explow.o'
+	target=explow.o: explow.c config.h tm.h rtl.h rtl.def machmode.def tree.h tree.def machmode.def flags.h expr.h
+	recipe@128668=''
+	Rule 129420: mkfile[153] attr=0 next=129996 chain=0 alltarget='optabs.o'
+	target=optabs.o: optabs.c config.h tm.h rtl.h rtl.def machmode.def tree.h tree.def machmode.def flags.h insn-flags.h insn-codes.h expr.h insn-config.h recog.h
+	recipe@129416=''
+	Rule 129996: mkfile[155] attr=0 next=130488 chain=0 alltarget='symout.o'
+	target=symout.o: symout.c config.h tm.h tree.h tree.def machmode.def rtl.h rtl.def machmode.def symseg.h gdbfiles.h
+	recipe@129992=''
+	Rule 130488: mkfile[156] attr=0 next=130944 chain=0 alltarget='dbxout.o'
+	target=dbxout.o: dbxout.c config.h tm.h tree.h tree.def machmode.def rtl.h rtl.def machmode.def
+	recipe@130484=''
+	Rule 130944: mkfile[158] attr=0 next=131560 chain=0 alltarget='emit-rtl.o'
+	target=emit-rtl.o: emit-rtl.c config.h tm.h rtl.h rtl.def machmode.def regs.h insn-config.h
+	recipe@130940=''
+	Rule 131560: mkfile[160] attr=0 next=131984 chain=0 alltarget='integrate.o'
+	target=integrate.o: integrate.c config.h tm.h rtl.h rtl.def machmode.def tree.h tree.def machmode.def flags.h expr.h insn-flags.h
+	recipe@131556=''
+	Rule 131984: mkfile[162] attr=0 next=132436 chain=0 alltarget='jump.o'
+	target=jump.o: jump.c config.h tm.h rtl.h rtl.def machmode.def flags.h regs.h
+	recipe@131980=''
+	Rule 132436: mkfile[163] attr=0 next=132924 chain=0 alltarget='stupid.o'
+	target=stupid.o: stupid.c config.h tm.h rtl.h rtl.def machmode.def regs.h hard-reg-set.h
+	recipe@132432=''
+	Rule 132924: mkfile[165] attr=0 next=133400 chain=0 alltarget='cse.o'
+	target=cse.o: cse.c config.h tm.h rtl.h rtl.def machmode.def insn-config.h regs.h hard-reg-set.h
+	recipe@132920=''
+	Rule 133400: mkfile[166] attr=0 next=133888 chain=0 alltarget='loop.o'
+	target=loop.o: loop.c config.h tm.h rtl.h rtl.def machmode.def insn-config.h regs.h recog.h
+	recipe@133396=''
+	Rule 133888: mkfile[167] attr=0 next=134464 chain=0 alltarget='flow.o'
+	target=flow.o: flow.c config.h tm.h rtl.h rtl.def machmode.def basic-block.h regs.h hard-reg-set.h
+	recipe@133884=''
+	Rule 134464: mkfile[168] attr=0 next=135040 chain=0 alltarget='combine.o'
+	target=combine.o: combine.c config.h tm.h rtl.h rtl.def machmode.def flags.h insn-config.h regs.h basic-block.h recog.h
+	recipe@134460=''
+	Rule 135040: mkfile[170] attr=0 next=135560 chain=0 alltarget='regclass.o'
+	target=regclass.o: regclass.c config.h tm.h rtl.h rtl.def machmode.def flags.h regs.h insn-config.h recog.h hard-reg-set.h
+	recipe@135036=''
+	Rule 135560: mkfile[171] attr=0 next=136168 chain=0 alltarget='local-alloc.o'
+	target=local-alloc.o: local-alloc.c config.h tm.h rtl.h rtl.def machmode.def basic-block.h regs.h hard-reg-set.h
+	recipe@135556=''
+	Rule 136168: mkfile[172] attr=0 next=136344 chain=0 alltarget='global-alloc.o'
+	target=global-alloc.o: global-alloc.c config.h tm.h rtl.h rtl.def machmode.def flags.h basic-block.h regs.h hard-reg-set.h insn-config.h
+	recipe@136164=''
+	Rule 136344: mkfile[174] attr=80 next=136924 chain=0 alltarget='expr.h'
+	target=expr.h: insn-codes.h
+	recipe@136340=''
+	Rule 136924: mkfile[175] attr=0 next=137556 chain=0 alltarget='reload.o'
+	target=reload.o: reload.c config.h tm.h rtl.h rtl.def machmode.def reload.h recog.h hard-reg-set.h insn-config.h regs.h
+	recipe@136920=''
+	Rule 137556: mkfile[177] attr=0 next=138124 chain=0 alltarget='reload1.o'
+	target=reload1.o: reload1.c config.h tm.h rtl.h rtl.def machmode.def flags.h reload.h regs.h hard-reg-set.h insn-config.h basic-block.h
+	recipe@137552=''
+	Rule 138124: mkfile[179] attr=0 next=138652 chain=0 alltarget='final.o'
+	target=final.o: final.c config.h tm.h rtl.h rtl.def machmode.def regs.h recog.h conditions.h gdbfiles.h insn-config.h
+	recipe@138120=''
+	Rule 138652: mkfile[180] attr=0 next=139172 chain=0 alltarget='recog.o'
+	target=recog.o: recog.c config.h tm.h rtl.h rtl.def machmode.def regs.h recog.h hard-reg-set.h insn-config.h
+	recipe@138648=''
+	Rule 139172: mkfile[185] attr=0 next=139456 chain=0 alltarget='.PRECIOUS'
+	target=.PRECIOUS: insn-config.h insn-flags.h insn-codes.h insn-emit.c insn-recog.c insn-extract.c insn-output.c insn-peep.c
+	recipe@139168=''
+	Rule 139456: mkfile[188] attr=10 next=139732 chain=0 alltarget='insn-config.h'
+	target=insn-config.h: md genconfig
+	recipe@139380='./genconfig md > TI-config.h
+./move-if-change TI-config.h insn-config.h
+'
+	Rule 139732: mkfile[192] attr=10 next=140008 chain=0 alltarget='insn-flags.h'
+	target=insn-flags.h: md genflags
+	recipe@139660='./genflags md > TI-flags.h
+./move-if-change TI-flags.h insn-flags.h
+'
+	Rule 140008: mkfile[196] attr=10 next=140488 chain=0 alltarget='insn-codes.h'
+	target=insn-codes.h: md gencodes
+	recipe@139936='./gencodes md > TI-codes.h
+./move-if-change TI-codes.h insn-codes.h
+'
+	Rule 140488: mkfile[200] attr=0 next=140748 chain=0 alltarget='insn-emit.o'
+	target=insn-emit.o: insn-emit.c config.h tm.h rtl.h rtl.def machmode.def expr.h insn-config.h
+	recipe@140460='$CC $CFLAGS -c insn-emit.c
+'
+	Rule 140748: mkfile[203] attr=10 next=141208 chain=0 alltarget='insn-emit.c'
+	target=insn-emit.c: md genemit
+	recipe@140680='./genemit md > TI-emit.c
+./move-if-change TI-emit.c insn-emit.c
+'
+	Rule 141208: mkfile[207] attr=0 next=141484 chain=0 alltarget='insn-recog.o'
+	target=insn-recog.o: insn-recog.c config.h tm.h rtl.h rtl.def machmode.def insn-config.h
+	recipe@141176='$CC $CFLAGS -c insn-recog.c
+'
+	Rule 141484: mkfile[210] attr=10 next=141824 chain=0 alltarget='insn-recog.c'
+	target=insn-recog.c: md genrecog
+	recipe@141412='./genrecog md > TI-recog.c
+./move-if-change TI-recog.c insn-recog.c
+'
+	Rule 141824: mkfile[214] attr=0 next=142112 chain=0 alltarget='insn-extract.o'
+	target=insn-extract.o: insn-extract.c rtl.h rtl.def machmode.def
+	recipe@141792='$CC $CFLAGS -c insn-extract.c
+'
+	Rule 142112: mkfile[217] attr=10 next=142540 chain=0 alltarget='insn-extract.c'
+	target=insn-extract.c: md genextract
+	recipe@142032='./genextract md > TI-extract.c
+./move-if-change TI-extract.c insn-extract.c
+'
+	Rule 142540: mkfile[221] attr=0 next=142800 chain=0 alltarget='insn-peep.o'
+	target=insn-peep.o: insn-peep.c config.h tm.h rtl.h rtl.def machmode.def regs.h
+	recipe@142512='$CC $CFLAGS -c insn-peep.c
+'
+	Rule 142800: mkfile[224] attr=10 next=143484 chain=0 alltarget='insn-peep.c'
+	target=insn-peep.c: md genpeep
+	recipe@142732='./genpeep md > TI-peep.c
+./move-if-change TI-peep.c insn-peep.c
+'
+	Rule 143484: mkfile[228] attr=0 next=143768 chain=0 alltarget='insn-output.o'
+	target=insn-output.o: insn-output.c config.h tm.h rtl.h rtl.def machmode.def regs.h insn-config.h insn-flags.h conditions.h output.h aux-output.c
+	recipe@143452='$CC $CFLAGS -c insn-output.c
+'
+	Rule 143768: mkfile[231] attr=10 next=144096 chain=0 alltarget='insn-output.c'
+	target=insn-output.c: md genoutput
+	recipe@143692='./genoutput md > TI-output.c
+./move-if-change TI-output.c insn-output.c
+'
+	Rule 144096: mkfile[237] attr=0 next=144416 chain=0 alltarget='genconfig'
+	target=genconfig: genconfig.o rtl.o obstack.o alloca.o
+	recipe@144060='$CC $CFLAGS -o genconfig $prereq
+'
+	Rule 144416: mkfile[240] attr=0 next=144752 chain=0 alltarget='genconfig.o'
+	target=genconfig.o: genconfig.c rtl.h rtl.def machmode.def
+	recipe@144388='$CC $CFLAGS -c genconfig.c
+'
+	Rule 144752: mkfile[243] attr=0 next=145072 chain=0 alltarget='genflags'
+	target=genflags: genflags.o rtl.o obstack.o alloca.o
+	recipe@144704='$CC $CFLAGS -o genflags genflags.o rtl.o $LIBS
+'
+	Rule 145072: mkfile[246] attr=0 next=145408 chain=0 alltarget='genflags.o'
+	target=genflags.o: genflags.c rtl.h rtl.def machmode.def
+	recipe@145044='$CC $CFLAGS -c genflags.c
+'
+	Rule 145408: mkfile[249] attr=0 next=145728 chain=0 alltarget='gencodes'
+	target=gencodes: gencodes.o rtl.o obstack.o alloca.o
+	recipe@145360='$CC $CFLAGS -o gencodes gencodes.o rtl.o $LIBS
+'
+	Rule 145728: mkfile[252] attr=0 next=146056 chain=0 alltarget='gencodes.o'
+	target=gencodes.o: gencodes.c rtl.h rtl.def machmode.def
+	recipe@145700='$CC $CFLAGS -c gencodes.c
+'
+	Rule 146056: mkfile[255] attr=0 next=146376 chain=0 alltarget='genemit'
+	target=genemit: genemit.o rtl.o obstack.o alloca.o
+	recipe@146008='$CC $CFLAGS -o genemit genemit.o rtl.o $LIBS
+'
+	Rule 146376: mkfile[258] attr=0 next=146712 chain=0 alltarget='genemit.o'
+	target=genemit.o: genemit.c rtl.h rtl.def machmode.def
+	recipe@146348='$CC $CFLAGS -c genemit.c
+'
+	Rule 146712: mkfile[261] attr=0 next=147032 chain=0 alltarget='genrecog'
+	target=genrecog: genrecog.o rtl.o obstack.o alloca.o
+	recipe@146664='$CC $CFLAGS -o genrecog genrecog.o rtl.o $LIBS
+'
+	Rule 147032: mkfile[264] attr=0 next=147380 chain=0 alltarget='genrecog.o'
+	target=genrecog.o: genrecog.c rtl.h rtl.def machmode.def
+	recipe@147004='$CC $CFLAGS -c genrecog.c
+'
+	Rule 147380: mkfile[267] attr=0 next=147716 chain=0 alltarget='genextract'
+	target=genextract: genextract.o rtl.o obstack.o alloca.o
+	recipe@147328='$CC $CFLAGS -o genextract genextract.o rtl.o $LIBS
+'
+	Rule 147716: mkfile[270] attr=0 next=148044 chain=0 alltarget='genextract.o'
+	target=genextract.o: genextract.c rtl.h rtl.def machmode.def
+	recipe@147684='$CC $CFLAGS -c genextract.c
+'
+	Rule 148044: mkfile[273] attr=0 next=148364 chain=0 alltarget='genpeep'
+	target=genpeep: genpeep.o rtl.o obstack.o alloca.o
+	recipe@147996='$CC $CFLAGS -o genpeep genpeep.o rtl.o $LIBS
+'
+	Rule 148364: mkfile[276] attr=0 next=148708 chain=0 alltarget='genpeep.o'
+	target=genpeep.o: genpeep.c rtl.h rtl.def machmode.def
+	recipe@148336='$CC $CFLAGS -c genpeep.c
+'
+	Rule 148708: mkfile[279] attr=0 next=149028 chain=0 alltarget='genoutput'
+	target=genoutput: genoutput.o rtl.o obstack.o alloca.o
+	recipe@148656='$CC $CFLAGS -o genoutput genoutput.o rtl.o $LIBS
+'
+	Rule 149028: mkfile[282] attr=0 next=149224 chain=0 alltarget='genoutput.o'
+	target=genoutput.o: genoutput.c rtl.h rtl.def machmode.def
+	recipe@149000='$CC $CFLAGS -c genoutput.c
+'
+	Rule 149224: mkfile[286] attr=0 next=149532 chain=0 alltarget='cpp'
+	target=cpp: cccp
+	recipe@149176='set +e; rm -f cpp; set -e
+ln cccp cpp; set -e
+'
+	Rule 149532: mkfile[289] attr=0 next=149692 chain=0 alltarget='cccp'
+	target=cccp: cccp.o cexp.o version.o alloca.o
+	recipe@149500='$CC $CFLAGS -o cccp $prereq
+'
+	Rule 149692: mkfile[291] attr=0 next=149884 chain=0 alltarget='cexp.o'
+	target=cexp.o: cexp.c
+	recipe@149688=''
+	Rule 149884: mkfile[292] attr=0 next=150044 chain=0 alltarget='cexp.c'
+	target=cexp.c: cexp.y
+	recipe@149848='$BISON cexp.y
+mv cexp.tab.c cexp.c
+'
+	Rule 150044: mkfile[295] attr=0 next=150300 chain=0 alltarget='cccp.o'
+	target=cccp.o: cccp.c
+	recipe@150040=''
+	Rule 150300: mkfile[299] attr=0 next=151016 chain=0 alltarget='clean'
+	target=clean: 
+	recipe@150168='rm -f $STAGESTUFF $STAGE_GCC
+rm -f *.s *.s[0-9] *.co *.greg *.lreg *.combine *.flow *.cse *.jump *.rtl *.tree *.loop
+rm -f core
+'
+	Rule 151016: mkfile[307] attr=20 next=151176 chain=0 alltarget='install'
+	target=install: /usr/lib/gcc-cc1 /usr/lib/gcc-gnulib /usr/lib/gcc-cpp /usr/bin/gcc
+	recipe@151012=''
+	Rule 151176: mkfile[308] attr=20 next=151540 chain=0 alltarget='ship'
+	target=ship: shipped
+	recipe@151172=''
+	Rule 151540: mkfile[309] attr=0 next=151752 chain=0 alltarget='shipped'
+	target=shipped: /usr/lib/gcc-cc1 /usr/lib/gcc-gnulib /usr/lib/gcc-cpp /usr/bin/gcc
+	recipe@151520='ship $newprereq
+'
+	Rule 151752: mkfile[312] attr=0 next=151988 chain=0 alltarget='/usr/lib/gcc-cc1'
+	target=/usr/lib/gcc-cc1: cc1
+	recipe@151712='cp $prereq $target; chmod 775 $target
+'
+	Rule 151988: mkfile[314] attr=0 next=152200 chain=0 alltarget='/usr/lib/gcc-gnulib'
+	target=/usr/lib/gcc-gnulib: gnulib
+	recipe@151932='cp $prereq $target; chmod 775 $target
+ranlib $target
+'
+	Rule 152200: mkfile[317] attr=0 next=152404 chain=0 alltarget='/usr/lib/gcc-cpp'
+	target=/usr/lib/gcc-cpp: ccp
+	recipe@152160='cp $prereq $target; chmod 775 $target
+'
+	Rule 152404: mkfile[319] attr=0 next=152820 chain=0 alltarget='/usr/bin/gcc'
+	target=/usr/bin/gcc: gcc
+	recipe@152364='cp $prereq $target; chmod 775 $target
+'
+	Rule 152820: mkfile[324] attr=0 next=153088 chain=0 alltarget='maketest'
+	target=maketest: 
+	recipe@152536='ln -s $DIR/*.[chy] .
+ln -s $DIR/*.def .
+ln -s $DIR/*.md .
+ln -s $DIR/.gdbinit .
+set +e; ln -s $DIR/bison.simple .; set -e
+ln -s $DIR/gcc .; set -e
+ln -s $DIR/move-if-change .
+ln -s $DIR/Makefile test-Makefile
+set +e; rm tm.h aux-output.c; set -e
+make -f test-Makefile clean; set -e
+'
+	Rule 153088: mkfile[338] attr=20 next=153228 chain=0 alltarget='stage1'
+	target=stage1: 
+	recipe@152944='set +e; rm -fr stage1; mkdir stage1; set -e
+rm -f stage/*; cp $STAGESTUFF $STAGE_GCC stage
+mv $STAGESTUFF $STAGE_GCC stage1
+ln gnulib stage1
+'
+	Rule 153228: mkfile[344] attr=20 next=153432 chain=0 alltarget='unstage'
+	target=unstage: 
+	recipe@153212='cp stage/* .
+'
+	Rule 153432: mkfile[347] attr=20 next=153740 chain=0 alltarget='recomp'
+	target=recomp: stage1
+	recipe@153384='mk CC=stage1/gcc CFLAGS="-O -DUSG -Bstage1/"
+'
+	Rule 153740: mkfile[350] attr=20 next=153968 chain=0 alltarget='stage2'
+	target=stage2: 
+	recipe@153636='set +e; rm -fr stage2; mkdir stage2; set -e
+mv $STAGESTUFF $STAGE_GCC stage2; set -e
+ln gnulib stage2
+'
+	Rule 153968: mkfile[355] attr=20 next=154096 chain=0 alltarget='stage3'
+	target=stage3: 
+	recipe@153864='set +e; rm -fr stage3; mkdir stage3; set -e
+mv $STAGESTUFF $STAGE_GCC stage3; set -e
+ln gnulib stage3
+'
+	Rule 154096: mkfile[360] attr=0 next=154272 chain=0 alltarget='force'
+	target=force: 
+	recipe@154092=''
+	Rule 154272: mkfile[362] attr=0 next=154432 chain=0 alltarget='TAGS'
+	target=TAGS: force
+	recipe@154252='etags *.y *.h *.c
+'
+	Rule 154432: mkfile[364] attr=0 next=0 chain=0 alltarget='.PHONY'
+	target=.PHONY: TAGS
+	recipe@154428=''
+metarules: start=154596
+	Rule 154596: mkfile[366] attr=1 next=154764 chain=0 alltarget='%.o'
+	target=%.o: %.c
+	recipe@154572='$CC $CFLAGS -c $stem.c
+'
+	Rule 154764: mkfile[369] attr=1 next=0 chain=0 alltarget='%.O'
+	target=%.O: %.c
+	recipe@154736='cyntax $CFLAGS -c $stem.c
+'
+variables:
+	CLIBS='alloca.O obstack.O'
+	LEX='lex'
+	bindir='/usr/bin'
+	CLIB='alloca.o'
+	HOME='/usr/andrew'
+	MKARGS=''
+	OBSTACK='obstack.o'
+	HISTORY='/tmp/histagh28929'
+	CONFIG_H='config.h tm.h'
+	TREE_H='tree.h tree.def machmode.def'
+	PATH=':/usr/andrew/poly/bin:/usr/andrew/bin:/bin:/usr/bin:/usr/jerq/bin'
+	CFLAGS='-g -O -DUSG'
+	NPROC='2'
+	MKFLAGS='-dp'
+	NREP='1'
+	STAGESTUFF='version.o obstack.o alloca.o gcc.o toplev.o tree.o print-tree.o parse.tab.o decl.o stor-layout.o typecheck.o fold-const.o genflags.o gencodes.o genconfig.o rtl.o dbxout.o symout.o genemit.o jump.o stupid.o flow.o genpeep.o local-alloc.o genextract.o genrecog.o genoutput.o cexp.o cccp.o explow.o varasm.o integrate.o stmt.o expmed.o expr.o emit-rtl.o optabs.o insn-emit.o loop.o cse.o regclass.o combine.o global-alloc.o reload1.o final.o reload.o insn-peep.o recog.o insn-extract.o insn-recog.o insn-output.o insn-flags.h insn-config.h insn-codes.h insn-output.c insn-recog.c insn-emit.c insn-extract.c insn-peep.c genemit genoutput genrecog genextract genflags gencodes genconfig genpeep cc1 cpp cccp'
+	AR='ar'
+	AS='as'
+	OBJS='toplev.o version.o parse.tab.o tree.o print-tree.o decl.o typecheck.o stor-layout.o fold-const.o rtl.o expr.o stmt.o expmed.o explow.o optabs.o varasm.o symout.o dbxout.o emit-rtl.o insn-emit.o integrate.o jump.o cse.o loop.o flow.o stupid.o combine.o regclass.o local-alloc.o global-alloc.o reload.o reload1.o insn-peep.o final.o recog.o insn-recog.o insn-extract.o insn-output.o'
+	libdir='/usr/lib'
+	LFLAGS=''
+	CC='gcc'
+	BINS='/usr/lib/gcc-cc1 /usr/lib/gcc-gnulib /usr/lib/gcc-cpp /usr/bin/gcc'
+	FC='f77'
+	OBSTACK1='obstack.o'
+	FFLAGS=''
+	TERM='5620'
+	PS1='pipe=; '
+	PS2='	'
+	YACC='yacc'
+	CDPATH=':/usr/ucds/src:/usr/src/cmd:/usr/andrew'
+	CSOURCE='source=dk!nj/astro/home1 user=_unknown_ line=astro1.33.11.F.BD=09600'
+	OLDCC='cc'
+	RTL_H='rtl.h rtl.def machmode.def'
+	LIBFUNCS='va_end _eprintf _umulsi3 _mulsi3 _udivsi3 _divsi3 _umodsi3 _modsi3 _lshrsi3 _lshlsi3 _ashrsi3 _ashlsi3 _divdf3 _muldf3 _negdf2 _adddf3 _subdf3 _cmpdf2 _fixunsdfsi _fixunsdfdi _fixdfsi _fixdfdi _floatsidf _floatdidf _truncdfsf2 _extendsfdf2 _addsf3 _negsf2 _subsf3 _cmpsf2 _mulsf3 _divsf3'
+	SHELL='/bin/sh'
+	COBJS='toplev.O version.O parse.tab.O tree.O print-tree.O decl.O typecheck.O stor-layout.O fold-const.O rtl.O expr.O stmt.O expmed.O explow.O optabs.O varasm.O symout.O dbxout.O emit-rtl.O insn-emit.O integrate.O jump.O cse.O loop.O flow.O stupid.O combine.O regclass.O local-alloc.O global-alloc.O reload.O reload1.O insn-peep.O final.O recog.O insn-recog.O insn-extract.O insn-output.O'
+	BISON='bison'
+	YFLAGS=''
+	LDFLAGS=''
+	BUILTINS=''
+	STAGE_GCC='gcc'
+	LIBS='obstack.o alloca.o'
+	ENVIRON=''
+	DIR='../gcc'
+mk: 'all' is up to date

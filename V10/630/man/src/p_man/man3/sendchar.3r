@@ -1,0 +1,96 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH SENDCHAR 3R "630 MTG"
+.XE "sendchar()"
+.XE "sendnchars()"
+.SH NAME
+sendchar, sendnchars \- send character(s) to host
+.SH SYNOPSIS
+\f3
+int sendchar (c)
+.br
+char c;
+.sp
+void sendnchars (n, p)
+.br
+int n;
+.br
+char \(**p;
+\fR
+.SH DESCRIPTION
+The
+.I sendchar
+function
+sends a single byte to the host
+which will normally be read on the standard input of the host process.
+The bytes sent will be processed as though they were typed on the
+keyboard by the user.
+.PP
+Since local programs have no host connection, a call to
+.I sendchar
+by a local program will always return -1.
+Sendchar will always return 1 for non-local programs.
+.PP
+The
+.I sendnchars
+function is similar to 
+.I sendchar
+except
+.I n
+characters pointed to by
+.I p
+are sent to the host.
+.PP
+A call to
+.I sendchar
+or 
+.I sendnchars
+by an application program causes the bytes to be sent to the host computer to
+be placed into a buffer in the terminal. The terminal will then send the bytes
+in the buffer to the host as fast
+as the communication line to the host is able to transmit.
+An application program is generally able to queue requests to
+send bytes to the host much faster than the terminal is able
+to actually send the bytes over the communication line to the host.
+So, if an application rapidly sends many bytes to the host,
+internal terminal buffers eventually fill up. When this happens,
+the
+.I sendchar
+and
+.I sendnchars
+routines will call
+.I wait
+to block the calling process until internal buffers are no longer full.
+This whole process is transparent to applications, but application program
+writers may want to be aware that a call to
+.I sendchar
+or 
+.I sendnchars
+may not return immediately.
+.SH EXAMPLE
+The following program will send a
+.I ls
+command to the host and display its output.
+Typing a 'q' on the keyboard will cause the program to exit.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+main()
+{
+	int c;
+
+	request(SEND|RCV|KBD);
+	sendnchars(3, "ls\er");
+	do {
+		wait(RCV|KBD);
+		while( (c=rcvchar()) != -1 )
+			lputchar(c);
+	} while(kbdchar() != 'q');
+}
+\fR
+.fi
+.RE
+.SH SEE ALSO
+local(3R), rcvchar(3R), resources(3R).

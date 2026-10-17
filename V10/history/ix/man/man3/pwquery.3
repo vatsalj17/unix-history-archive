@@ -1,0 +1,71 @@
+.TH PWQUERY 3X
+.CT 2 sa secur
+.SH NAME
+pwquery, pexpw \(mi password services
+.SH SYNOPSIS
+.nf
+.B pwquery(fd, name, param)
+.B char *name;
+.B char *param;
+.PP
+.B char *pexpw(fd, prompt)
+.B char *prompt;
+.fi
+.SH DESCRIPTION
+.I Pwquery
+calls upon the password server,
+.IR pwserv (8)
+to cause a password to be demanded from file descriptor
+.I fd
+and checked against the password for the named user.
+It is loaded by option
+.BR -lipc
+of
+.IR ld (1).
+.PP
+Echoing is disabled during the transaction,
+and the server is persnickety about when to use an
+Atalla challenge/response dialogue and when to use 
+.IR crypt (3)-style
+passwords.
+A negative return value indicates a protocol error in
+reaching the server or that the server is not trusted.
+A zero return value indicates rejection of the password.
+A positive return value indicates approval of the password.
+.PP
+The argument
+.I param
+may be zero (for vanilla password service)
+or may point to a blank-separated list of one or more keywords.
+Currently only one keyword is understood:
+.TP
+.B pex
+Reject the password if the stream is unpexable.
+.PP
+.I Pexpw
+reads a password from the indicated
+file descriptor,
+after prompting with the null-terminated string
+.I prompt
+and disabling echoing.
+A pointer is returned to a null-terminated string
+of at most 8 characters.
+The dialogue is not attempted if it cannot be protected
+from eavesdropping by the process-exclusive
+mechanism of
+.IR pex (4).
+.SH FILES
+.nf
+.F /cs/pw
+.F /etc/pwserv
+.fi
+.SH "SEE ALSO"
+.IR ipc (3),
+.IR getpass (3),
+.IR pex (4)
+.IR pwserv (8)
+.SH BUGS
+.I Pexpw
+returns a pointer to static memory that is overwritten
+at every call.
+

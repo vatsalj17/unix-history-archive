@@ -1,0 +1,1989 @@
+# To unbundle, sh this file
+echo unbundling makefile 1>&2
+cat >makefile <<'//GO.SYSIN DD *'
+CFLAGS = -d2
+
+a.out:	m4.o m4ext.o m4macs.o m4y.o
+	cc m4.o m4ext.o m4macs.o m4y.o
+
+m4.o m4ext.o m4macs.o :	m4.h
+
+list:
+	pr m4.h m4.c m4ext.c m4macs.c m4y.y makefile
+
+gcos:
+	yacc m4y.y
+	mv y.tab.c m4.tab.c
+	fsend m4*.c m4.test*
+
+install:	a.out
+	strip a.out
+	mv a.out /usr/bin/m4
+
+clean:
+	rm -f a.out *.o
+//GO.SYSIN DD *
+echo unbundling m4.c 1>&2
+cat >m4.c <<'//GO.SYSIN DD *'
+#include	<stdio.h>
+#include	<signal.h>
+#include	"m4.h"
+
+#define match(c,s)	(c==*s && (!s[1] || inpmatch(s+1)))
+
+char	*xcalloc();
+
+
+main(argc,argv)
+char 	**argv;
+{
+	register t;
+
+	{
+	static	sigs[] = {SIGHUP, SIGINT, SIGPIPE, 0};
+	for (t=0; sigs[t]; ++t)
+		if (signal(sigs[t], SIG_IGN) != SIG_IGN)
+			signal(sigs[t],catchsig);
+	}
+
+	tempname = mktemp("/tmp/m4aXXXXXX");
+	close(creat(tempname,0));
+
+	procnam = argv[0];
+	getflags(&argc,&argv);
+	initalloc();
+
+	setfname("-");
+	if (argc>1) {
+		--argc;
+		++argv;
+		if (strcmp(argv[0],"-")) {
+			ifile[ifx] = xfopen(argv[0],"r");
+			setfname(argv[0]);
+		}
+	}
+
+	for (;;) {
+		token[0] = t = getchr();
+		token[1] = EOS;
+
+		if (t==EOF) {
+			if (ifx > 0) {
+				fclose(ifile[ifx]);
+				ipflr = ipstk[--ifx];
+				continue;
+			}
+
+			getflags(&argc,&argv);
+
+			if (argc<=1)
+				if (Wrapstr) {
+					pbstr(Wrapstr);
+					Wrapstr = NULL;
+					continue;
+				} else
+					break;
+
+			--argc;
+			++argv;
+
+			if (ifile[ifx]!=stdin)
+				fclose(ifile[ifx]);
+
+			if (*argv[0]=='-')
+				ifile[ifx] = stdin;
+			else
+				ifile[ifx] = xfopen(argv[0],"r");
+
+			setfname(argv[0]);
+			continue;
+		}
+
+		if (isalpha(t)) {
+			register char	*tp = token+1;
+			register	tlim = toksize;
+
+			while (alphanum(*tp++=getchr()))
+				if (--tlim<=0)
+					error2("more than %d chars in word",
+							toksize);
+
+			putbak(*--tp);
+			*tp = EOS;
+
+			if (((struct nlist *)(*((struct nlist **)Ap)=lookup(token)))->def) {
+				if (++Ap >= astklm) {
+					--Ap;
+					error2(astkof,stksize);
+				}
+
+				if (Cp++==NULL)
+					Cp = callst;
+
+				Cp->argp = Ap;
+				*Ap++ = op;
+				puttok(token);
+				stkchr(EOS);
+				t = getchr();
+				putbak(t);
+
+				if (t!='(')
+					pbstr("()");
+				else	/* try to fix arg count */
+					*Ap++ = op;
+
+				Cp->plev = 0;
+			} else {
+				puttok(token);
+			}
+		} else if (match(t,lquote)) {
+			register	qlev = 1;
+
+			for (;;) {
+				token[0] = t = getchr();
+				token[1] = EOS;
+
+				if (match(t,rquote)) {
+					if (--qlev > 0)
+						puttok(token);
+					else
+						break;
+				} else if (match(t,lquote)) {
+					++qlev;
+					puttok(token);
+				} else {
+					if (t==EOF)
+						error("EOF in quote");
+
+					putchr(t);
+				}
+			}
+		} else if (match(t,lcom)) {
+			puttok(token);
+
+			for (;;) {
+				token[0] = t = getchr();
+				token[1] = EOS;
+
+				if (match(t,rcom)) {
+					puttok(token);
+					break;
+				} else {
+					if (t==EOF)
+						error("EOF in comment");
+					putchr(t);
+				}
+			}
+		} else if (Cp==NULL) {
+			putchr(t);
+		} else if (t=='(') {
+			if (Cp->plev)
+				stkchr(t);
+			else {
+				/* skip white before arg */
+				while (isspace(t=getchr()))
+					;
+
+				putbak(t);
+			}
+
+			++Cp->plev;
+		} else if (t==')') {
+			--Cp->plev;
+
+			if (Cp->plev==0) {
+				stkchr(EOS);
+				expand(Cp->argp,Ap-Cp->argp-1);
+				op = *Cp->argp;
+				Ap = Cp->argp-1;
+
+				if (--Cp < callst)
+					Cp = NULL;
+			} else
+				stkchr(t);
+		} else if (t==',' && Cp->plev<=1) {
+			stkchr(EOS);
+			*Ap = op;
+
+			if (++Ap >= astklm) {
+				--Ap;
+				error2(astkof,stksize);
+			}
+
+			while (isspace(t=getchr()))
+				;
+
+			putbak(t);
+		} else
+			stkchr(t);
+	}
+
+	if (Cp!=NULL)
+		error("EOF in argument list");
+
+	delexit(OK);
+}
+
+char *
+inpmatch(s)
+register char	*s;
+{
+	register char	*tp = token+1;
+
+	while (*s) {
+		*tp = getchr();
+
+		if (*tp++ != *s++) {
+			*tp = EOS;
+			pbstr(token+1);
+			return 0;
+		}
+	}
+
+	*tp = EOS;
+	return token;
+}
+
+getflags(xargc,xargv)
+register int	*xargc;
+register char 	***xargv;
+{
+	while (*xargc > 1) {
+		register char	*arg = (*xargv)[1];
+
+		if (arg[0]!='-' || arg[1]==EOS)
+			break;
+
+		switch (arg[1]) {
+		case 'B':
+			bufsize = atoi(&arg[2]);
+			break;
+		case 'D':
+			{
+			register char *t;
+			char *s[2];
+
+			initalloc();
+
+			for (t = s[0] = &arg[2]; *t; t++)
+				if (*t=='=') {
+					*t++ = EOS;
+					break;
+				}
+
+			s[1] = t;
+			dodef(&s[-1],2);
+			break;
+			}
+		case 'H':
+			hshsize = atoi(&arg[2]);
+			break;
+		case 'S':
+			stksize = atoi(&arg[2]);
+			break;
+		case 'T':
+			toksize = atoi(&arg[2]);
+			break;
+		case 'U':
+			{
+			char *s[1];
+
+			initalloc();
+			s[0] = &arg[2];
+			doundef(&s[-1],1);
+			break;
+			}
+		case 'e':
+			setbuf(stdout,NULL);
+			signal(SIGINT,SIG_IGN);
+			break;
+		case 's':
+			/* turn on line sync */
+			sflag = 1;
+			break;
+		default:
+			fprintf(stderr,"%s: bad option: %s\n",
+				procnam,arg);
+			delexit(NOT_OK);
+		}
+
+		(*xargv)++;
+		--(*xargc);
+	}
+
+	return;
+}
+
+initalloc()
+{
+	static	done = 0;
+	register	t;
+
+	if (done++)
+		return;
+
+	hshtab = (struct nlist **)xcalloc(hshsize,sizeof(struct nlist *));
+	callst = (struct call *)xcalloc(stksize/3+1,sizeof(struct call));
+	Ap = argstk = (char **)xcalloc(stksize+3,sizeof(char *));
+	ipstk[0] = ipflr = ip = ibuf = xcalloc(bufsize+1,sizeof(char));
+	op = obuf = xcalloc(bufsize+1,sizeof(char));
+	token = xcalloc(toksize+1,sizeof(char));
+
+	astklm = &argstk[stksize];
+	ibuflm = &ibuf[bufsize];
+	obuflm = &obuf[bufsize];
+	toklm = &token[toksize];
+
+	for (t=0; barray[t].bname; ++t) {
+		static char	p[2] = {0, EOS};
+
+		p[0] = t|~LOW7;
+		install(barray[t].bname,p,NOPUSH);
+	}
+
+	install("unix",nullstr,NOPUSH);
+}
+
+/*struct nlist	* */
+install(nam,val,mode)
+char	*nam;
+register char	*val;
+{
+	register struct nlist *np;
+	register char	*cp;
+	int		l;
+
+	if (mode==PUSH)
+		lookup(nam);	/* lookup sets hshval */
+	else
+		while (undef(nam))	/* undef calls lookup */
+			;
+
+	np = (struct nlist *)xcalloc(1,sizeof(*np));
+	np->name = copy(nam);
+	np->next = hshtab[hshval];
+	hshtab[hshval] = np;
+
+	cp = xcalloc((l=strlen(val))+1,sizeof(*val));
+	np->def = cp;
+	cp = &cp[l];
+
+	while (*val)
+		*--cp = *val++;
+}
+
+struct nlist	*
+lookup(str)
+char 	*str;
+{
+	register char		*s1, *s2;
+	register struct nlist	*np;
+	static struct nlist	nodef;
+
+	s1 = str;
+
+	for (hshval = 0; *s1; )
+		hshval += *s1++;
+
+	hshval %= hshsize;
+
+	for (np = hshtab[hshval]; np!=NULL; np = np->next) {
+		s1 = str;
+		s2 = np->name;
+		while (*s1++==*s2)
+			if (*s2++==EOS)
+				return(np);
+	}
+
+	return(&nodef);
+}
+
+expand(a1,c)
+char	**a1;
+{
+	register char	*dp;
+	register struct nlist	*sp;
+
+	sp = (struct nlist *)a1[-1];
+
+	if (sp->tflag || trace) {
+		int	i;
+
+		fprintf(stderr,"Trace(%d): %s",Cp-callst,a1[0]);
+
+		if (c > 0) {
+			fprintf(stderr,"(%s",chkbltin(a1[1]));
+			for (i=2; i<=c; ++i)
+				fprintf(stderr,",%s",chkbltin(a1[i]));
+			fprintf(stderr,")");
+		}
+
+		fprintf(stderr,"\n");
+	}
+
+	dp = sp->def;
+
+	for (; *dp; ++dp) {
+		if (*dp&~LOW7) {
+			(*barray[*dp&LOW7].bfunc)(a1,c);
+		} else if (dp[1]=='$') {
+			if (isdigit(*dp)) {
+				register	n;
+				if ((n = *dp-'0') <= c)
+					pbstr(a1[n]);
+				++dp;
+			} else if (*dp=='#') {
+				pbnum((long) c);
+				++dp;
+			} else if (*dp=='*' || *dp=='@') {
+				register i = c;
+				char **a = a1;
+
+				if (i > 0)
+					for (;;) {
+						if (*dp=='@')
+							pbstr(rquote);
+
+						pbstr(a[i--]);
+
+						if (*dp=='@')
+							pbstr(lquote);
+
+						if (i <= 0)
+							break;
+
+						pbstr(",");
+					}
+				++dp;
+			} else
+				putbak(*dp);
+		} else
+			putbak(*dp);
+	}
+}
+
+setfname(s)
+register char 	*s;
+{
+	strcpy(fname[ifx],s);
+	fname[ifx+1] = fname[ifx]+strlen(s)+1;
+	fline[ifx] = 1;
+	nflag = 1;
+	lnsync(stdout);
+}
+
+lnsync(iop)
+register FILE	*iop;
+{
+	static int cline = 0;
+	static int cfile = 0;
+
+	if (!sflag || iop!=stdout)
+		return;
+
+	if (nflag || ifx!=cfile) {
+		nflag = 0;
+		cfile = ifx;
+		fprintf(iop,"#line %d \"",cline = fline[ifx]);
+		fpath(iop);
+		fprintf(iop,"\"\n");
+	} else if (++cline != fline[ifx])
+		fprintf(iop,"#line %d\n",cline = fline[ifx]);
+}
+
+fpath(iop)
+register FILE	*iop;
+{
+	register	i;
+
+	fprintf(iop,"%s",fname[0]);
+
+	for (i=1; i<=ifx; ++i)
+		fprintf(iop,":%s",fname[i]);
+}
+
+catchsig()
+{
+	signal(SIGHUP,SIG_IGN);
+	signal(SIGINT,SIG_IGN);
+
+	delexit(NOT_OK);
+}
+
+delexit(code)
+{
+	register i;
+
+	cf = stdout;
+
+/*	if (ofx != 0) {	/* quitting in middle of diversion */
+/*		ofx = 0;
+/*		code = NOT_OK;
+/*	}
+*/
+	ofx = 0;	/* ensure that everything comes out */
+	for (i=1; i<10; i++)
+		undiv(i,code);
+
+	tempname[7] = 'a';
+	unlink(tempname);
+
+	if (code==OK)
+		exit(code);
+
+	_exit(code);
+}
+
+puttok(tp)
+register char *tp;
+{
+	if (Cp) {
+		while (*tp)
+			stkchr(*tp++);
+	} else if (cf)
+		while (*tp)
+			sputchr(*tp++,cf);
+}
+
+pbstr(str)
+register char *str;
+{
+	register char *p;
+
+	p = str;
+
+	while (*p++)
+		;
+
+	--p;
+
+	while (p > str)
+		putbak(*--p);
+}
+
+undiv(i,code)
+register	i;
+{
+	register FILE *fp;
+	register	c;
+
+	if (i<1 || i>9 || i==ofx || !ofile[i])
+		return;
+
+	fclose(ofile[i]);
+	tempname[7] = 'a'+i;
+
+	if (code==OK && cf) {
+		fp = xfopen(tempname,"r");
+
+		while ((c=getc(fp)) != EOF)
+			sputchr(c,cf);
+
+		fclose(fp);
+	}
+
+	unlink(tempname);
+	ofile[i] = NULL;
+}
+
+char 	*copy(s)
+register char *s;
+{
+	register char *p, *s1;
+
+	p = s1 = xcalloc(strlen(s)+1,1);
+
+	while (*s1++ = *s++)
+		;
+
+	return(p);
+}
+
+pbnum(num)
+long num;
+{
+	pbnbr(num,10,1);
+}
+
+pbnbr(nbr,base,len)
+long	nbr;
+register	base, len;
+{
+	register	neg = 0;
+
+	if (base<=0)
+		return;
+
+	if (nbr<0) {
+		neg = 1;
+		nbr = -nbr;
+	}
+
+	while (nbr>0) {
+		int	i;
+		if (base>1) {
+			i = nbr%base;
+			nbr /= base;
+		} else {
+			i = 1;
+			--nbr;
+		}
+		putbak(itochr(i));
+		--len;
+	}
+
+	while (--len >= 0)
+		putbak('0');
+
+	if (neg)
+		putbak('-');
+}
+
+itochr(i)
+register	i;
+{
+	if (i>9)
+		return i-10+'A';
+	else
+		return i+'0';
+}
+
+long ctol(str)
+register char *str;
+{
+	register sign;
+	long num;
+
+	while (isspace(*str))
+		++str;
+	num = 0;
+	if (*str=='-') {
+		sign = -1;
+		++str;
+	}
+	else
+		sign = 1;
+	while (isdigit(*str))
+		num = num*10 + *str++ - '0';
+	return(sign * num);
+}
+
+min(a,b)
+{
+	if (a>b)
+		return(b);
+	return(a);
+}
+
+FILE	*
+xfopen(name,mode)
+char	*name,
+	*mode;
+{
+	FILE	*fp;
+
+	if ((fp=fopen(name,mode))==NULL)
+		error(badfile);
+
+	return fp;
+}
+
+char *
+xcalloc(nbr,size)
+{
+	register char	*ptr;
+
+	if ((ptr=calloc(nbr,size)) == NULL)
+		error(nocore);
+
+	return ptr;
+}
+
+error(str)
+	char *str;
+{
+	fprintf(stderr,"\n%s:",procnam);
+	fpath(stderr);
+	fprintf(stderr,":%d %s\n",fline[ifx],str);
+	if (Cp) {
+		register struct call	*mptr;
+
+		/* fix limit */
+		*op = EOS;
+		(Cp+1)->argp = Ap+1;
+
+		for (mptr=callst; mptr<=Cp; ++mptr) {
+			register char	**aptr, **lim;
+
+			aptr = mptr->argp;
+			lim = (mptr+1)->argp-1;
+			if (mptr==callst)
+				fputs(*aptr,stderr);
+			++aptr;
+			fputs("(",stderr);
+			if (aptr < lim)
+				for (;;) {
+					fputs(*aptr++,stderr);
+					if (aptr >= lim)
+						break;
+					fputs(",",stderr);
+				}
+		}
+		while (--mptr >= callst)
+			fputs(")",stderr);
+
+		fputs("\n",stderr);
+	}
+	delexit(NOT_OK);
+}
+
+error2(str,num)
+	char *str;
+	int num;
+{
+	char buf[500];
+
+	fprintf(buf,str,num);
+	error(buf);
+}
+
+char *
+chkbltin(s)
+char	*s;
+{
+	static char	buf[24];
+
+	if (*s&~LOW7) {
+		sprintf(buf,"<%s>",barray[*s&LOW7].bname);
+		return buf;
+	}
+	return s;
+}
+//GO.SYSIN DD *
+echo unbundling m4.h 1>&2
+cat >m4.h <<'//GO.SYSIN DD *'
+#define EOS	'\0'
+#define LOW7	0177
+#define MAXSYM	5
+#define PUSH	1
+#define NOPUSH	0
+#define OK	0
+#define NOT_OK	1
+
+#define SPACE	1
+#define DIG	2
+#define ALPH	4
+#define isspace(c)	(type[c]&SPACE)
+#define isdigit(c)	(type[c]&DIG)
+#define isalpha(c)	(type[c]&ALPH)
+#define alphanum(c)	(type[c]&(ALPH|DIG))
+
+#define	getchr()	(ip>ipflr?*--ip:\
+	((C=(feof(ifile[ifx])?EOF:getc(ifile[ifx])))=='\n'?(fline[ifx]++,C):C))
+#define	putbak(c)	(ip < ibuflm? (*ip++ = (c)): error(pbmsg,bufsize))
+#define	stkchr(c)	(op < obuflm? (*op++ = (c)): error(aofmsg,bufsize))
+#define sputchr(c,f)	(putc(c,f)=='\n'? lnsync(f): 0)
+#define putchr(c)	(Cp?stkchr(c):cf?(sflag?sputchr(c,cf):putc(c,cf)):0)
+
+struct bs {
+	int	(*bfunc)();
+	char	*bname;
+};
+
+struct	call {
+	char	**argp;
+	int	plev;
+};
+
+struct	nlist {
+	char	*name;
+	char	*def;
+	char	tflag;
+	struct	nlist *next;
+};
+
+extern FILE	*cf;
+extern FILE	*ifile[];
+extern FILE	*ofile[];
+extern FILE	*xfopen();
+extern char	**Ap;
+extern char	**argstk;
+extern char	*Wrapstr;
+extern char	**astklm;
+extern char	*calloc();
+extern char	*copy();
+extern char	*fname[];
+extern char	*ibuf;
+extern char	*ibuflm;
+extern char	*ip;
+extern char	*ipflr;
+extern char	*ipstk[10];
+extern char	*obuf;
+extern char	*obuflm;
+extern char	*op;
+extern char	*procnam;
+extern char	*tempname;
+extern char	*token;
+extern char	*toklm;
+extern char	aofmsg[];
+extern char	astkof[];
+extern char	badfile[];
+extern char	fnbuf[];
+extern char	lcom[];
+extern char	lquote[];
+extern char	nocore[];
+extern char	nullstr[];
+extern char	pbmsg[];
+extern char	rcom[];
+extern char	rquote[];
+extern char	type[];
+extern int	C;
+extern int	bufsize;
+extern int	catchsig();
+extern int	fline[];
+extern int	hshsize;
+extern int	hshval;
+extern int	ifx;
+extern int	nflag;
+extern int	ofx;
+extern int	pid;
+extern int	sflag;
+extern int	stksize;
+extern int	sysrval;
+extern int	toksize;
+extern int	trace;
+extern long	ctol();
+extern struct bs	barray[];
+extern struct call	*Cp;
+extern struct call	*callst;
+extern struct nlist	**hshtab;
+/*extern struct nlist	*install(); */
+extern struct nlist	*lookup();
+extern char		*inpmatch();
+extern char		*chkbltin();
+extern char		*mktemp();
+//GO.SYSIN DD *
+echo unbundling m4ext.c 1>&2
+cat >m4ext.c <<'//GO.SYSIN DD *'
+#include	<stdio.h>
+#include	"m4.h"
+
+
+/* storage params */
+int	hshsize 	= 199;		/* hash table size (prime) */
+int	bufsize 	= 4096;		/* pushback & arg text buffers */
+int	stksize 	= 100;		/* call stack */
+int	toksize 	= 512;		/* biggest word ([a-z_][a-z0-9_]*) */
+
+
+/* pushback buffer */
+char	*ibuf;				/* buffer */
+char	*ibuflm;			/* highest buffer addr */
+char	*ip;				/* current position */
+char	*ipflr;				/* buffer floor */
+char 	*ipstk[10];			/* stack for "ipflr"s */
+
+
+/* arg collection buffer */
+char	*obuf;				/* buffer */
+char	*obuflm;			/* high address */
+char	*op;				/* current position */
+
+
+/* call stack */
+struct call	*callst;		/* stack */
+struct call	*Cp 	= NULL;		/* position */
+
+
+/* token storage */
+char	*token;				/* buffer */
+char	*toklm;				/* high addr */
+
+
+/* file name and current line storage for line sync and diagnostics */
+char	fnbuf[200];			/* holds file name strings */
+char	*fname[11] 	= {fnbuf};	/* file name ptr stack */
+int	fline[10];			/* current line nbr stack */
+
+
+/* input file stuff for "include"s */
+FILE	*ifile[10] 	= {stdin};	/* stack */
+int	ifx;				/* stack index */
+
+
+/* stuff for output diversions */
+FILE	*cf 	= stdout;		/* current output file */
+FILE	*ofile[11] 	= {stdout};	/* output file stack */
+int	ofx;				/* stack index */
+
+
+/* comment markers */
+char	lcom[MAXSYM+1] 	= "#";
+char	rcom[MAXSYM+1] 	= "\n";
+
+
+/* quote markers */
+char	lquote[MAXSYM+1] 	= "`";
+char	rquote[MAXSYM+1] 	= "'";
+
+
+/* argument ptr stack */
+char	**argstk;
+char	**astklm;			/* high address */
+char	**Ap;				/* current position */
+
+
+/* symbol table */
+struct nlist	**hshtab;		/* hash table */
+int	hshval;				/* last hash val */
+
+
+/* misc */
+char	*procnam;			/* argv[0] */
+char	*tempname;			/* used for diversion files */
+char	*Wrapstr;			/* last pushback string for "m4wrap" */
+char	nullstr[] 	= "";
+int	C;				/* see "m4.h" macros */
+int	nflag 	= 1;			/* name flag, used for line sync code */
+int	sflag;				/* line sync flag */
+int	sysrval;			/* return val from syscmd */
+int	trace;				/* global trace flag */
+
+
+char	aofmsg[] 	= "more than %d chars of argument text";
+char	astkof[] 	= "more than %d items on argument stack";
+char	badfile[] 	= "can't open file";
+char	nocore[] 	= "out of storage";
+char	pbmsg[] 	= "pushed back more than %d chars";
+
+
+/* char map */
+char	type[] 	= {
+	0,	0,	0,	0,	0,	0,	0,	0,
+	0,	SPACE,	SPACE,	SPACE,	SPACE,	SPACE,	0,	0,
+	0,	0,	0,	0,	0,	0,	0,	0,
+	0,	0,	0,	0,	0,	0,	0,	0,
+	SPACE,	0,	0,	0,	0,	0,	0,	0,
+	0,	0,	0,	0,	0,	0,	0,	0,
+	DIG,	DIG,	DIG,	DIG,	DIG,	DIG,	DIG,	DIG,
+	DIG,	DIG,	0,	0,	0,	0,	0,	0,
+	0,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,
+	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,
+	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,
+	ALPH,	ALPH,	ALPH,	0,	0,	0,	0,	ALPH,
+	0,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,
+	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,
+	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,	ALPH,
+	ALPH,	ALPH,	ALPH,	0,	0,	0,	0,	0,
+};
+//GO.SYSIN DD *
+echo unbundling m4macs.c 1>&2
+cat >m4macs.c <<'//GO.SYSIN DD *'
+#include	<stdio.h>
+#include	<sys/types.h>
+#include	<sys/stat.h>
+#include	"m4.h"
+
+#define arg(n)	(c<(n)? nullstr: ap[n])
+
+dochcom(ap,c)
+char	**ap;
+{
+	register char	*l = arg(1);
+	register char	*r = arg(2);
+
+	if (strlen(l)>MAXSYM || strlen(r)>MAXSYM)
+		error2("comment marker longer than %d chars",MAXSYM);
+	strcpy(lcom,l);
+	strcpy(rcom,*r?r:"\n");
+}
+
+docq(ap,c)
+register char 	**ap;
+{
+	register char	*l = arg(1);
+	register char	*r = arg(2);
+
+	if (strlen(l)>MAXSYM || strlen(r)>MAXSYM)
+		error2("quote marker longer than %d chars", MAXSYM);
+
+	if (c<=1 && !*l) {
+		l = "`";
+		r = "'";
+	} else if (c==1) {
+		r = l;
+	}
+
+	strcpy(lquote,l);
+	strcpy(rquote,r);
+}
+
+dodecr(ap,c)
+char 	**ap;
+{
+	pbnum(ctol(arg(1))-1);
+}
+
+dodef(ap,c)
+char	**ap;
+{
+	def(ap,c,NOPUSH);
+}
+
+def(ap,c,mode)
+register char 	**ap;
+{
+	register char	*s;
+
+	if (c<1)
+		return;
+
+	s = ap[1];
+	if (isalpha(*s))
+		while (alphanum(*++s))
+			;
+	if (*s || s==ap[1])
+		error("bad macro name");
+
+	if (strcmp(ap[1],ap[2])==0)
+		error("macro defined as itself");
+	install(ap[1],arg(2),mode);
+}
+
+dodefn(ap,c)
+register char	**ap;
+register c;
+{
+	register char *d;
+
+	while (c > 0)
+		if ((d = lookup(ap[c--])->def) != NULL) {
+			putbak(*rquote);
+			while (*d)
+				putbak(*d++);
+			putbak(*lquote);
+		}
+}
+
+dodiv(ap,c)
+register char **ap;
+{
+	register int f;
+
+	f = atoi(arg(1));
+	if (f>=10 || f<0) {
+		cf = NULL;
+		ofx = f;
+		return;
+	}
+	tempname[7] = 'a'+f;
+	if (ofile[f] || (ofile[f]=xfopen(tempname,"w"))) {
+		ofx = f;
+		cf = ofile[f];
+	}
+}
+
+dodivnum(ap,c)
+{
+	pbnum((long) ofx);
+}
+
+dodnl(ap,c)
+char 	*ap;
+{
+	register t;
+
+	while ((t=getchr())!='\n' && t!=EOF)
+		;
+}
+
+dodump(ap,c)
+char 	**ap;
+{
+	register struct nlist *np;
+	register	i;
+
+	if (c > 0)
+		while (c--) {
+			if ((np = lookup(*++ap))->name != NULL)
+				dump(np->name,np->def);
+		}
+	else
+		for (i=0; i<hshsize; i++)
+			for (np=hshtab[i]; np!=NULL; np=np->next)
+				dump(np->name,np->def);
+}
+
+dump(name,def)
+register char	*name,
+		*def;
+{
+	register char	*s = def;
+
+	fprintf(stderr,"%s:\t",name);
+
+	while (*s++)
+		;
+	--s;
+
+	while (s>def)
+		if (*--s&~LOW7)
+			fprintf(stderr,"<%s>",barray[*s&LOW7].bname);
+		else
+			fputc(*s,stderr);
+
+	fputc('\n',stderr);
+}
+
+doerrp(ap,c)
+char 	**ap;
+{
+	if (c > 0)
+		fprintf(stderr,"%s",ap[1]);
+}
+
+long	evalval;	/* return value from yacc stuff */
+char	*pe;	/* used by grammar */
+doeval(ap,c)
+char 	**ap;
+{
+	register	base = atoi(arg(2));
+	register	pad = atoi(arg(3));
+
+	evalval = 0;
+	if (c > 0) {
+		pe = ap[1];
+		if (yyparse()!=0)
+			error("invalid expression");
+	}
+	pbnbr(evalval, base>0?base:10, pad>0?pad:1);
+}
+
+doexit(ap,c)
+char	**ap;
+{
+	delexit(atoi(arg(1)));
+}
+
+doif(ap,c)
+register char **ap;
+{
+	if (c < 3)
+		return;
+	while (c >= 3) {
+		if (strcmp(ap[1],ap[2])==0) {
+			pbstr(ap[3]);
+			return;
+		}
+		c -= 3;
+		ap += 3;
+	}
+	if (c > 0)
+		pbstr(ap[1]);
+}
+
+doifdef(ap,c)
+char 	**ap;
+{
+	if (c < 2)
+		return;
+
+	while (c >= 2) {
+		if (lookup(ap[1])->name != NULL) {
+			pbstr(ap[2]);
+			return;
+		}
+		c -= 2;
+		ap += 2;
+	}
+
+	if (c > 0)
+		pbstr(ap[1]);
+}
+
+doincl(ap,c)
+char	**ap;
+{
+	incl(ap,c,1);
+}
+
+incl(ap,c,noisy)
+register char 	**ap;
+{
+	if (c>0 && strlen(ap[1])>0) {
+		if (ifx >= 9)
+			error("input file nesting too deep (9)");
+		if ((ifile[++ifx]=fopen(ap[1],"r"))==NULL){
+			--ifx;
+			if (noisy)
+				error(badfile);
+		} else {
+			ipstk[ifx] = ipflr = ip;
+			setfname(ap[1]);
+		}
+	}
+}
+
+doincr(ap,c)
+char 	**ap;
+{
+	pbnum(ctol(arg(1))+1);
+}
+
+doindex(ap,c)
+char	**ap;
+{
+	register char	*subj = arg(1);
+	register char	*obj  = arg(2);
+	register	i;
+
+	for (i=0; *subj; ++i)
+		if (leftmatch(subj++,obj)) {
+			pbnum( (long) i );
+			return;
+		}
+
+	pbnum( (long) -1 );
+}
+
+leftmatch(str,substr)
+register char	*str;
+register char	*substr;
+{
+	while (*substr)
+		if (*str++ != *substr++)
+			return (0);
+
+	return (1);
+}
+
+dolen(ap,c)
+char 	**ap;
+{
+	pbnum((long) strlen(arg(1)));
+}
+
+domake(ap,c)
+char 	**ap;
+{
+	if (c > 0)
+		pbstr(mktemp(ap[1]));
+}
+
+dopopdef(ap,c)
+char	**ap;
+{
+	register	i;
+
+	for (i=1; i<=c; ++i)
+		undef(ap[i]);
+}
+
+dopushdef(ap,c)
+char	**ap;
+{
+	def(ap,c,PUSH);
+}
+
+doshift(ap,c)
+register char	**ap;
+register c;
+{
+	if (c <= 1)
+		return;
+
+	for (;;) {
+		pbstr(rquote);
+		pbstr(ap[c--]);
+		pbstr(lquote);
+
+		if (c <= 1)
+			break;
+
+		pbstr(",");
+	}
+}
+
+dosincl(ap,c)
+char	**ap;
+{
+	incl(ap,c,0);
+}
+
+dosubstr(ap,c)
+register char 	**ap;
+{
+	char	*str;
+	int	inlen, outlen;
+	register	offset, ix;
+
+	inlen = strlen(str=arg(1));
+	offset = atoi(arg(2));
+
+	if (offset<0 || offset>=inlen)
+		return;
+
+	outlen = c>=3? atoi(ap[3]): inlen;
+	ix = min(offset+outlen,inlen);
+
+	while (ix > offset)
+		putbak(str[--ix]);
+}
+
+dosyscmd(ap,c)
+char 	**ap;
+{
+	sysrval = 0;
+	if (c > 0) {
+		fflush(stdout);
+		sysrval = system(ap[1]);
+	}
+}
+
+dosysval(ap,c)
+char	**ap;
+{
+	pbnum((long) (sysrval>>8));
+}
+
+dotransl(ap,c)
+char 	**ap;
+{
+	char	*sink, *fr, *sto;
+	register char	*source, *to;
+
+	if (c<1)
+		return;
+
+	sink = ap[1];
+	fr = arg(2);
+	sto = arg(3);
+
+	for (source = ap[1]; *source; source++) {
+		register char	*i;
+		to = sto;
+		for (i = fr; *i; ++i) {
+			if (*source==*i)
+				break;
+			if (*to)
+				++to;
+		}
+		if (*i) {
+			if (*to)
+				*sink++ = *to;
+		} else
+			*sink++ = *source;
+	}
+	*sink = EOS;
+	pbstr(ap[1]);
+}
+
+dotroff(ap,c)
+register char	**ap;
+{
+	register struct nlist	*np;
+
+	trace = 0;
+
+	while (c > 0)
+		if ((np=lookup(ap[c--]))->name)
+			np->tflag = 0;
+}
+
+dotron(ap,c)
+register char	**ap;
+{
+	register struct nlist	*np;
+
+	trace = !*arg(1);
+
+	while (c > 0)
+		if ((np=lookup(ap[c--]))->name)
+			np->tflag = 1;
+}
+
+doundef(ap,c)
+char	**ap;
+{
+	register	i;
+
+	for (i=1; i<=c; ++i)
+		while (undef(ap[i]))
+			;
+}
+
+undef(nam)
+char	*nam;
+{
+	register struct	nlist *np, *tnp;
+
+	if ((np=lookup(nam))->name==NULL)
+		return 0;
+	tnp = hshtab[hshval];	/* lookup sets hshval */
+	if (tnp==np)	/* it's in first place */
+		hshtab[hshval] = tnp->next;
+	else {
+		while (tnp->next != np)
+			tnp = tnp->next;
+
+		tnp->next = np->next;
+	}
+	cfree(np->name);
+	cfree(np->def);
+	cfree((char *)np);
+	return 1;
+}
+
+doundiv(ap,c)
+register char 	**ap;
+{
+	register int i;
+
+	if (c<=0)
+		for (i=1; i<10; i++)
+			undiv(i,OK);
+	else
+		while (--c >= 0)
+			undiv(atoi(*++ap),OK);
+}
+
+dowrap(ap,c)
+char	**ap;
+{
+	register char	*a = arg(1);
+	extern char *xcalloc();
+
+	if (Wrapstr)
+		cfree(Wrapstr);
+
+	Wrapstr = xcalloc(strlen(a)+1,sizeof(char));
+	strcpy(Wrapstr,a);
+}
+
+struct bs	barray[] = {
+	dochcom,	"changecom",
+	docq,		"changequote",
+	dodecr,		"decr",
+	dodef,		"define",
+	dodefn,		"defn",
+	dodiv,		"divert",
+	dodivnum,	"divnum",
+	dodnl,		"dnl",
+	dodump,		"dumpdef",
+	doerrp,		"errprint",
+	doeval,		"eval",
+	doexit,		"m4exit",
+	doif,		"ifelse",
+	doifdef,	"ifdef",
+	doincl,		"include",
+	doincr,		"incr",
+	doindex,	"index",
+	dolen,		"len",
+	domake,		"maketemp",
+	dopopdef,	"popdef",
+	dopushdef,	"pushdef",
+	doshift,	"shift",
+	dosincl,	"sinclude",
+	dosubstr,	"substr",
+	dosyscmd,	"syscmd",
+	dosysval,	"sysval",
+	dotransl,	"translit",
+	dotroff,	"traceoff",
+	dotron,		"traceon",
+	doundef,	"undefine",
+	doundiv,	"undivert",
+	dowrap,		"m4wrap",
+	0,		0
+};
+//GO.SYSIN DD *
+echo unbundling y.tab.c 1>&2
+cat >y.tab.c <<'//GO.SYSIN DD *'
+
+# line 2 "m4y.y"
+extern long	evalval;
+#define	YYSTYPE	long
+# define DIGITS 257
+# define OROR 258
+# define ANDAND 259
+# define GT 260
+# define GE 261
+# define LT 262
+# define LE 263
+# define NE 264
+# define EQ 265
+# define POWER 266
+# define UMINUS 267
+#define yyclearin yychar = -1
+#define yyerrok yyerrflag = 0
+extern int yychar;
+extern short yyerrflag;
+#ifndef YYMAXDEPTH
+#define YYMAXDEPTH 150
+#endif
+#ifndef YYSTYPE
+#define YYSTYPE int
+#endif
+YYSTYPE yylval, yyval;
+# define YYERRCODE 256
+
+# line 48 "m4y.y"
+
+
+extern char *pe;
+
+yylex() {
+
+	while (*pe==' ' || *pe=='\t' || *pe=='\n')
+		pe++;
+	switch(*pe) {
+	case '\0':
+	case '+':
+	case '-':
+	case '/':
+	case '%':
+	case '^':
+	case '~':
+	case '(':
+	case ')':
+		return(*pe++);
+	case '*':
+		return(peek('*', POWER, '*'));
+	case '>':
+		return(peek('=', GE, GT));
+	case '<':
+		return(peek('=', LE, LT));
+	case '=':
+		return(peek('=', EQ, EQ));
+	case '|':
+		return(peek('|', OROR, '|'));
+	case '&':
+		return(peek('&', ANDAND, '&'));
+	case '!':
+		return(peek('=', NE, '!'));
+	default: {
+		register	base;
+
+		evalval = 0;
+
+		if (*pe == '0') {
+			if (*++pe=='x' || *pe=='X') {
+				base = 16;
+				++pe;
+			} else
+				base = 8;
+		} else
+			base = 10;
+
+		for (;;) {
+			register	c, dig;
+
+			c = *pe;
+
+			if (c>='0' && c<='9')
+				dig = c - '0';
+			else if (c>='a' && c<='f')
+				dig = c - 'a' + 10;
+			else if (c>='A' && c<='F')
+				dig = c - 'A' + 10;
+			else
+				break;
+
+			evalval = evalval*base + dig;
+			++pe;
+		}
+
+		return(DIGITS);
+	}
+	}
+}
+
+peek(c, r1, r2)
+{
+	if (*++pe != c)
+		return(r2);
+	++pe;
+	return(r1);
+}
+
+yyerror() {;}
+short yyexca[] ={
+-1, 1,
+	0, -1,
+	-2, 0,
+-1, 33,
+	260, 0,
+	261, 0,
+	262, 0,
+	263, 0,
+	264, 0,
+	265, 0,
+	-2, 7,
+-1, 34,
+	260, 0,
+	261, 0,
+	262, 0,
+	263, 0,
+	264, 0,
+	265, 0,
+	-2, 8,
+-1, 35,
+	260, 0,
+	261, 0,
+	262, 0,
+	263, 0,
+	264, 0,
+	265, 0,
+	-2, 9,
+-1, 36,
+	260, 0,
+	261, 0,
+	262, 0,
+	263, 0,
+	264, 0,
+	265, 0,
+	-2, 10,
+-1, 37,
+	260, 0,
+	261, 0,
+	262, 0,
+	263, 0,
+	264, 0,
+	265, 0,
+	-2, 11,
+-1, 38,
+	260, 0,
+	261, 0,
+	262, 0,
+	263, 0,
+	264, 0,
+	265, 0,
+	-2, 12,
+	};
+# define YYNPROD 26
+# define YYLAST 294
+short yyact[]={
+
+  24,  18,  25,   1,  48,  22,  20,   0,  21,   0,
+  23,  24,  18,   0,   0,   0,  22,  20,   0,  21,
+   0,  23,  24,  18,   0,   0,  24,  22,  20,   0,
+  21,  22,  23,  24,  18,   0,  23,   0,  22,  20,
+   0,  21,   0,  23,  24,  18,   0,   0,   0,  22,
+  20,   0,  21,  24,  23,   0,   0,  19,  22,  20,
+   0,  21,   0,  23,  24,   0,   3,   0,  19,  22,
+  20,   0,  21,   5,  23,   0,   7,   0,   6,  19,
+   0,   0,   0,   0,   0,   0,   0,  17,   0,   0,
+  19,   0,   0,   0,   0,   0,   0,   0,  17,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,  17,
+   0,   2,   0,   0,   0,  26,  27,  28,  29,  30,
+  17,  31,  32,  33,  34,  35,  36,  37,  38,  39,
+  40,  41,  42,  43,  44,  45,  46,  47,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   4,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   9,  10,  13,  14,  15,  16,  12,  11,  25,
+   0,   0,   9,  10,  13,  14,  15,  16,  12,  11,
+  25,   0,   0,   0,  10,  13,  14,  15,  16,  12,
+  11,  25,   0,   0,   0,  25,  13,  14,  15,  16,
+  12,  11,  25,   0,   0,   0,   0,  13,  14,  15,
+  16,  12,  11,  25,   0,   0,  13,  14,  15,  16,
+  12,  11,  25,   0,   0,   0,   0,   0,   0,   0,
+   8,   0,   0,  25 };
+short yypact[]={
+
+  33,-1000, -26,  33,  33,  33,  33,  33,-1000,  33,
+  33,  33,  33,  33,  33,  33,  33,  33,  33,  33,
+  33,  33,  33,  33,  33,  33,  16,  16, -37,-1000,
+-1000, -15,  -4,  27,  27,  27,  27,  27,  27,   7,
+  16,   7, -11, -11,-264,-264,-264,-264,-1000 };
+short yypgo[]={
+
+   0,   3, 111 };
+short yyr1[]={
+
+   0,   1,   1,   2,   2,   2,   2,   2,   2,   2,
+   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+   2,   2,   2,   2,   2,   2 };
+short yyr2[]={
+
+   0,   1,   0,   3,   3,   2,   2,   3,   3,   3,
+   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,
+   3,   3,   3,   2,   2,   1 };
+short yychk[]={
+
+-1000,  -1,  -2,  33, 126,  40,  45,  43, 257, 258,
+ 259, 265, 264, 260, 261, 262, 263, 124,  38,  94,
+  43,  45,  42,  47,  37, 266,  -2,  -2,  -2,  -2,
+  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,
+  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  41 };
+short yydef[]={
+
+   2,  -2,   1,   0,   0,   0,   0,   0,  25,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   5,   6,   0,  23,
+  24,   3,   4,  -2,  -2,  -2,  -2,  -2,  -2,  13,
+  14,  15,  16,  17,  18,  19,  20,  22,  21 };
+# ifdef YYDEBUG
+# include "y.debug"
+# endif
+
+# define YYFLAG -1000
+# define YYERROR goto yyerrlab
+# define YYACCEPT return(0)
+# define YYABORT return(1)
+
+/*	parser for yacc output	*/
+
+#ifdef YYDEBUG
+int yydebug = 0; /* 1 for debugging */
+#endif
+YYSTYPE yyv[YYMAXDEPTH]; /* where the values are stored */
+int yychar = -1; /* current input token number */
+int yynerrs = 0;  /* number of errors */
+short yyerrflag = 0;  /* error recovery flag */
+
+yyparse()
+{	short yys[YYMAXDEPTH];
+	int yyj, yym;
+	register YYSTYPE *yypvt;
+	register int yystate, yyn;
+	register short *yyps;
+	register YYSTYPE *yypv;
+	register short *yyxi;
+
+	yystate = 0;
+	yychar = -1;
+	yynerrs = 0;
+	yyerrflag = 0;
+	yyps= &yys[-1];
+	yypv= &yyv[-1];
+
+yystack:    /* put a state and value onto the stack */
+#ifdef YYDEBUG
+	if(yydebug >= 3)
+		if(yychar < 0 || yytoknames[yychar] == 0)
+			printf("char %d in %s", yychar, yystates[yystate]);
+		else
+			printf("%s in %s", yytoknames[yychar], yystates[yystate]);
+#endif
+	if( ++yyps >= &yys[YYMAXDEPTH] ) { 
+		yyerror( "yacc stack overflow" ); 
+		return(1); 
+	}
+	*yyps = yystate;
+	++yypv;
+	*yypv = yyval;
+yynewstate:
+	yyn = yypact[yystate];
+	if(yyn <= YYFLAG) goto yydefault; /* simple state */
+	if(yychar<0) {
+		yychar = yylex();
+#ifdef YYDEBUG
+		if(yydebug >= 2) {
+			if(yychar <= 0)
+				printf("lex EOF\n");
+			else if(yytoknames[yychar])
+				printf("lex %s\n", yytoknames[yychar]);
+			else
+				printf("lex (%c)\n", yychar);
+		}
+#endif
+		if(yychar < 0)
+			yychar = 0;
+	}
+	if((yyn += yychar) < 0 || yyn >= YYLAST)
+		goto yydefault;
+	if( yychk[ yyn=yyact[ yyn ] ] == yychar ){ /* valid shift */
+		yychar = -1;
+		yyval = yylval;
+		yystate = yyn;
+		if( yyerrflag > 0 ) --yyerrflag;
+		goto yystack;
+	}
+yydefault:
+	/* default state action */
+	if( (yyn=yydef[yystate]) == -2 ) {
+		if(yychar < 0) {
+			yychar = yylex();
+#ifdef YYDEBUG
+			if(yydebug >= 2)
+				if(yychar < 0)
+					printf("lex EOF\n");
+				else
+					printf("lex %s\n", yytoknames[yychar]);
+#endif
+			if(yychar < 0)
+				yychar = 0;
+		}
+		/* look through exception table */
+		for(yyxi=yyexca; (*yyxi!= (-1)) || (yyxi[1]!=yystate);
+			yyxi += 2 ) ; /* VOID */
+		while( *(yyxi+=2) >= 0 ){
+			if( *yyxi == yychar ) break;
+		}
+		if( (yyn = yyxi[1]) < 0 ) return(0);   /* accept */
+	}
+	if( yyn == 0 ){ /* error */
+		/* error ... attempt to resume parsing */
+		switch( yyerrflag ){
+		case 0:   /* brand new error */
+#ifdef YYDEBUG
+			yyerror("syntax error\n%s", yystates[yystate]);
+			if(yytoknames[yychar])
+				yyerror("saw %s\n", yytoknames[yychar]);
+			else if(yychar >= ' ' && yychar < '\177')
+				yyerror("saw `%c'\n", yychar);
+			else if(yychar == 0)
+				yyerror("saw EOF\n");
+			else
+				yyerror("saw char 0%o\n", yychar);
+#else
+			yyerror( "syntax error" );
+#endif
+yyerrlab:
+			++yynerrs;
+		case 1:
+		case 2: /* incompletely recovered error ... try again */
+			yyerrflag = 3;
+			/* find a state where "error" is a legal shift action */
+			while ( yyps >= yys ) {
+				yyn = yypact[*yyps] + YYERRCODE;
+				if( yyn>= 0 && yyn < YYLAST && yychk[yyact[yyn]] == YYERRCODE ){
+					yystate = yyact[yyn];  /* simulate a shift of "error" */
+					goto yystack;
+				}
+				yyn = yypact[*yyps];
+				/* the current yyps has no shift onn "error", pop stack */
+#ifdef YYDEBUG
+				if( yydebug ) printf( "error recovery pops state %d, uncovers %d\n", *yyps, yyps[-1] );
+#endif
+				--yyps;
+				--yypv;
+			}
+			/* there is no state on the stack with an error shift ... abort */
+yyabort:
+			return(1);
+		case 3:  /* no shift yet; clobber input char */
+#ifdef YYDEBUG
+			if( yydebug ) {
+				printf("error recovery discards ");
+				if(yytoknames[yychar])
+					printf("%s\n", yytoknames[yychar]);
+				else if(yychar >= ' ' && yychar < '\177')
+					printf("`%c'\n", yychar);
+				else if(yychar == 0)
+					printf("EOF\n");
+				else
+					printf("char 0%o\n", yychar);
+			}
+#endif
+			if( yychar == 0 ) goto yyabort; /* don't discard EOF, quit */
+			yychar = -1;
+			goto yynewstate;   /* try again in the same state */
+		}
+	}
+	/* reduction by production yyn */
+#ifdef YYDEBUG
+	if(yydebug) {	char *s;
+		printf("reduce %d in:\n\t", yyn);
+		for(s = yystates[yystate]; *s; s++) {
+			putchar(*s);
+			if(*s == '\n' && *(s+1))
+				putchar('\t');
+		}
+	}
+#endif
+	yyps -= yyr2[yyn];
+	yypvt = yypv;
+	yypv -= yyr2[yyn];
+	yyval = yypv[1];
+	yym=yyn;
+	/* consult goto table to find next state */
+	yyn = yyr1[yyn];
+	yyj = yypgo[yyn] + *yyps + 1;
+	if( yyj>=YYLAST || yychk[ yystate = yyact[yyj] ] != -yyn ) yystate = yyact[yypgo[yyn]];
+	switch(yym){
+		
+case 1:
+# line 19 "m4y.y"
+{ evalval = yypvt[-0]; } break;
+case 2:
+# line 20 "m4y.y"
+{ evalval = 0; } break;
+case 3:
+# line 23 "m4y.y"
+{ yyval = (yypvt[-2]!=0 || yypvt[-0]!=0) ? 1 : 0; } break;
+case 4:
+# line 24 "m4y.y"
+{ yyval = (yypvt[-2]!=0 && yypvt[-0]!=0) ? 1 : 0; } break;
+case 5:
+# line 25 "m4y.y"
+{ yyval = yypvt[-0] == 0; } break;
+case 6:
+# line 26 "m4y.y"
+{ yyval = ~yypvt[-0]; } break;
+case 7:
+# line 27 "m4y.y"
+{ yyval = yypvt[-2] == yypvt[-0]; } break;
+case 8:
+# line 28 "m4y.y"
+{ yyval = yypvt[-2] != yypvt[-0]; } break;
+case 9:
+# line 29 "m4y.y"
+{ yyval = yypvt[-2] > yypvt[-0]; } break;
+case 10:
+# line 30 "m4y.y"
+{ yyval = yypvt[-2] >= yypvt[-0]; } break;
+case 11:
+# line 31 "m4y.y"
+{ yyval = yypvt[-2] < yypvt[-0]; } break;
+case 12:
+# line 32 "m4y.y"
+{ yyval = yypvt[-2] <= yypvt[-0]; } break;
+case 13:
+# line 33 "m4y.y"
+{ yyval = (yypvt[-2]|yypvt[-0]); } break;
+case 14:
+# line 34 "m4y.y"
+{ yyval = (yypvt[-2]&yypvt[-0]); } break;
+case 15:
+# line 35 "m4y.y"
+{ yyval = (yypvt[-2]^yypvt[-0]); } break;
+case 16:
+# line 36 "m4y.y"
+{ yyval = (yypvt[-2]+yypvt[-0]); } break;
+case 17:
+# line 37 "m4y.y"
+{ yyval = (yypvt[-2]-yypvt[-0]); } break;
+case 18:
+# line 38 "m4y.y"
+{ yyval = (yypvt[-2]*yypvt[-0]); } break;
+case 19:
+# line 39 "m4y.y"
+{ yyval = (yypvt[-2]/yypvt[-0]); } break;
+case 20:
+# line 40 "m4y.y"
+{ yyval = (yypvt[-2]%yypvt[-0]); } break;
+case 21:
+# line 41 "m4y.y"
+{ yyval = (yypvt[-1]); } break;
+case 22:
+# line 42 "m4y.y"
+{ for (yyval=1; yypvt[-0]-->0; yyval *= yypvt[-2]); } break;
+case 23:
+# line 43 "m4y.y"
+{ yyval = yypvt[-0]-1; yyval = -yypvt[-0]; } break;
+case 24:
+# line 44 "m4y.y"
+{ yyval = yypvt[-0]-1; yyval = yypvt[-0]; } break;
+case 25:
+# line 45 "m4y.y"
+{ yyval = evalval; } break;
+	}
+	goto yystack;  /* stack new state and value */
+}
+//GO.SYSIN DD *

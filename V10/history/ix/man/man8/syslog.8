@@ -1,0 +1,172 @@
+.TH SYSLOG 8
+.CT 1 sa_nonmortals
+.SH NAME
+syslog, logpr \- system security logging
+.SH SYNOPSIS
+.B priv syslog
+.I command
+[
+.I arg2
+[
+.I arg3
+]
+]
+.PP
+.B /etc/logpr
+.I file
+[
+.I offset
+]
+.SH DESCRIPTION
+.I Syslog
+controls the mandatory logging scheme.
+License
+.B T_LOG
+is required.
+The variety of different commands and command formats
+reflects the full complexity of the
+protean
+.IR syslog (2)
+system call.
+In the usages given below a
+.I mask
+argument is a combination of letters
+.BR NILESDATUPX ,
+meaning:
+.TP
+.PD0
+.B N
+Record all uses of file names.
+.TP
+.B S
+Record all seek calls.
+.TP
+.B U
+Record all writes to the `u area'.
+.TP
+.B I
+Record all accesses of inode contents.
+.TP
+.B D
+Record possession and use of file descriptors.
+.TP
+.B P
+Record process history:
+.IR exec (2),
+.IR fork (2),
+.IR kill (2),
+.IR exit (2).
+.TP
+.B L
+Record all explicit changes of labels by
+.IR setflab 
+(see
+.IR getflab (2))
+and
+.IR setplab 
+(see
+.IR getplab (2)).
+.TP
+.B A
+Record all changes of labels.
+.TP
+.B X
+Record all uses of privilege.
+.TP
+.B E
+Record all
+.B ELAB
+error returns.
+.TP
+.B T
+Record all uses of a traced file or process.
+.PD
+.PP
+Valid arguments to
+.I syslog
+are:
+.TP
+.BI "on " file " " logdev
+Nominate
+.I file
+as repository for user generated
+logging records written to logging special file
+.IR logdev .
+.I File
+must be a full path name, and must be openable for writing.
+If
+.IR logdev 's
+minor device number is zero,
+.I file
+will also receive mandatory (kernel generated) logging records.
+.I Logdev
+may be a full path name or a minor device number.
+.PD0
+.TP
+.BI "off "  logdev
+Cancel the effect of an
+.B on
+command.
+.TP
+.BI "get " n
+Print the value of the
+.IR n -th
+log mask.
+Values of
+.I n
+are 0, 1, 2, or 3
+for the `poison' masks; 4 is `global' mask.
+.TP
+.BI "set " n " " mask
+Set the value of the
+.IR n -th
+log mask.
+.TP
+.BI "fget " file
+Print the poison level of
+.IR file ,
+one of the integers 0, 1, 2, or 3.
+.I File
+must be the full path name of a readable file.
+.TP
+.BI "fset " file " " n
+Set the poison level of
+.I file
+to
+.IR n .
+.I File
+must be the full path name of a readable file.
+.TP
+.BI "pget " pid
+Print the logging mask of process
+.IR pid .
+.TP
+.BI "pset " pid " " mask
+Set the logging mask of process
+.I pid
+to
+.IR mask .
+.PD
+.PP
+.I Logpr
+converts to cryptic
+.SM ASCII
+the cryptic binary format of a log file described in
+.IR log (5).
+The optional numerical byte offset tells where in the file printing
+is to start.
+.SH FILES
+.TF /dev/log/log00
+.TP
+.F /dev/log/log00
+where
+.I syslog
+makes voluntary entries
+.SH "SEE ALSO"
+.IR syslog (2),
+.IR log (4),
+.IR log (5).
+.SH DIAGNOSTICS
+`Covert channel warning': the log file has
+a label that is neither top nor flagged
+.BR L_NO .

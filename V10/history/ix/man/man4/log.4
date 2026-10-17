@@ -1,0 +1,42 @@
+.TH LOG 4
+.CT 2 log_man
+.SH NAME
+log \- security log file
+.SH SYNOPSIS
+.B #include <sys/log.h>
+.SH DESCRIPTION
+The special files
+.FR /dev/log/log00 
+through
+.FR /dev/log/log15
+refer to `repository' files nominated by
+.IR syslog (2).
+.PP
+The kernel automatically records selected events on
+the `system log file'
+.FR /dev/log/log00
+in the form described in
+.IR log (5).
+.PP
+Any process with write access may write on a log file;
+no process has read access.
+Each write places in the repository file a
+.IR log (5)
+record with
+.B code
+=
+.BR LOG_USER .
+The data written are truncated to
+.B LOGLEN
+bytes and placed in the
+.B body 
+field.
+When logging is not turned on, a log file
+acts like a write-only
+.BR /dev/null .
+.SH FILES
+.F /dev/log/*
+.SH SEE ALSO
+.IR syslog (2),
+.IR log (5),
+.IR syslog (8)

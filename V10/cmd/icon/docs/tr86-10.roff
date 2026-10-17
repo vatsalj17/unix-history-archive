@@ -1,0 +1,742 @@
+.so tmac.tr
+.de Ta
+.ta .8i +.8i +.8i +.8i +.8i +.8i +.8i
+..
+.de Px
+.ta 3.5i
+..
+.ds CF \s10- \\n(PN - \s0
+.de Ap
+.bp
+.ce 10
+\f3\\$1\f1
+.ce 0
+.sp 2
+.if !''\\$2' 'so \\$2
+..
+.TR 86-10a
+.DA "June 8, 1986"
+.Gr
+.TL
+Version 6.0 of Icon
+.AU
+Ralph E. Griswold
+William H. Mitchell
+Janalee O'Bagy
+.AE
+.tr *\(**
+.NH
+Background
+.PP
+Different versions of the Icon programming language are identified by numbers. The first,
+Version 1, was superceded by Version 2. Starting with Version 3, the
+implementation of Icon was completely changed. While Version 2 is still
+in use on some computers, Version 5 is by far the mostly widely
+used version of Icon.
+The features of Version 5 are described in the ``Icon book'' [1].
+Since this book is the only complete and generally available description
+of a widely used version of Icon, Version 5 is sometimes called
+``standard Icon''.
+.PP
+Since Icon is the byproduct of a research effort that
+is concerned with the development of novel programming language
+features,
+some extensions to the standard language are inevitable.
+These extensions are incorporated as features of new releases of
+the implementation.
+These releases are identified by minor version numbers that are separated
+from the major version number by a decimal point. For example, Version 5.10
+is the tenth minor revision of Version 5.
+.PP
+Because of the relationship between language design and implementation,
+major version numbers usually contain significant language changes
+that have accumulated over a number of minor revisions, while minor
+version numbers primarily reflect implementation changes.
+.PP
+Recently an implementation of Icon written almost entirely in C has
+been completed. This implementation is so different from previous
+ones that some designation is needed to distinguish it from other
+implementations. It therefore has been designated Version 6.
+Despite the change in major version number, the Version 6.0
+language is nearly the same as the Version 5.10 language and
+the Version 5 book continues to serve as the primary reference
+for Version 6.
+Since a revision of a book is a major and time-consuming process,
+this report is provided to supplement the present Icon book.
+Together, the book and this report provide a description of
+Version 6.0.
+.PP
+Most of the language extensions in Version 6.0 are upward-compatible with
+Version 5 and almost all programs that contain only standard Version 5
+features work properly under Version 6.0.
+However, some of the more implementation-dependent aspects described
+in the Version 5 book are now obsolete and there are significant new
+language features.
+.NH
+Features of Version 6.0
+.PP
+Version 6.0 extensions consist of a declaration to facilitate the use
+of Icon procedure libraries, a new set data type, new options for sorting
+tables, new syntax to support the use of co-expressions in programmer-defined
+control operations, the invocation of functions and operators by their
+string names, and a few new functions.
+.NH 2
+The Link Declaration
+.PP
+The link declaration simplifies the inclusion of
+separately translated libraries of Icon procedures. If \*Micont\fR [2] is run
+with the \*M\-c\fR option, source files are translated into intermediate
+\fIucode\fR files (with names ending in \*M.u1\fR and \*M.u2\fR).
+For example,
+.Ds
+icont -c libe.icn
+.De
+produces the ucode files \*Mlibe.u1\fR and \*Mlibe.u2\fR. The ucode files
+can be incorporated in another program with the new link
+declaration, which has the form
+.Ds
+link libe
+.De
+The argument of \*Mlink\fR is, in general, a list of identifiers or
+string literals that specify the names of files to be linked (without
+the \*M.u1\fR or \*M.u2\fR). Thus, when running under \*U,
+.Un
+.Ds
+link libe, "/usr/icon/ilib/collate"
+.De
+specifies the linking of \*Mlibe\fR in the current directory and
+\*Mcollate\fR in \*M/usr/icon/ilib\fR.
+The syntax for paths may be different for other operating systems.
+.PP
+The environment variable \*MIPATH\fR controls the location of files
+specified in link declaratinos. The value of \*MIPATH\fR should be a
+blank-separated string\s-2\u1\d\s0
+.FS
+\s-2\u1\d\s0\^The separator is a colon for UNIX systems under Versions 5.9 and
+5.10.
+.FE
+of the form \fIp\^\*(sd1\*(su\^\0\^p\^\*(sd2\*(su\0 \*(El p\^\*(sdn\*(su\fR where each
+\fIp\^\*(sdi\*(su\fR names a directory.
+Each directory is searched in turn to locate files named in link
+declarations. The default value of \*MIPATH\fR is the
+current directory.
+.NH 2
+Sets
+.PP
+Sets are unordered collections of values and have many of the properties normally
+associated with sets in the mathematical sense.
+The function
+.Ds
+set(a)
+.De
+creates a set that contains the distinct elements of the list \*Ma\fR. For
+example,
+.Ds
+set(\^["abc",\*b3])
+.De
+creates a set with two members, \*Mabc\fR and 3.
+Note that
+.Ds
+set(\^[\^])
+.De
+creates an empty set.
+Sets, like
+other data aggregates in Icon, need not be homogeneous \(em a set
+may contain members of different types.
+.PP
+Sets, like other Icon data aggregates, are represented by pointers to
+the actual data. Sets can be members of sets, as in
+.Ds
+s1 := set(\^[1,\*b2,\*b3])
+s2 := set(\^[s1,\*b\^[\^]])
+.De
+in which \*Ms2\fR contains two members, one of which is a set of three
+members and the other of which is an empty list.
+.PP
+Any specific value can occur only once in a set. For example,
+.Ds
+set(\^[1,\*b2,\*b3,\*b3,\*b1])
+.De
+creates a set with the three members 1, 2, and 3.
+Set membership is determined the same way the equivalence of
+values is determined in the operation
+.Ds
+x === y
+.De
+For example,
+.Ds
+set(\^[\^[\^],\*b\^[\^]])
+.De
+creates a set that contains two distinct empty lists.
+.PP
+Several set operations are provided. The function
+.Ds
+member(s,\*bx)
+.De
+succeeds and returns the value of \*Mx\fR if \*Mx\fR is a member of
+\*Ms\fR, but fails otherwise. Note that
+.Ds
+member(s1,\*bmember(s2,\*bx))
+.De
+succeeds if \*Mx\fR is a member of both \*Ms1\fR and \*Ms2\fR.
+.PP
+The function
+.Ds
+insert(s,\*bx)
+.De
+inserts \*Mx\fR into the set \*Ms\fR and returns the value of \*Ms\fR.
+Note that \*Minsert(s,\*bx)\fR is similar to \*Mput(a,\*bx)\fR in form.
+A set may contain (a pointer to) itself:
+.Ds
+insert(s,\*bs)
+.De
+adds \*Ms\fR as an member of itself.
+.PP
+The function
+.Ds
+delete(s,\*bx)
+.De
+deletes the member \*Mx\fR from the set \*Ms\fR and returns the
+value of \*Ms\fR.
+.PP
+The functions \*Minsert(s,\*bx)\fR and \*Mdelete(s,\*bx)\fR always
+succeed, whether or not \*Mx\fR is in \*Ms\fR. This allows their
+use in loops
+in which failure may occur for other reasons. For example,
+.Ds
+s := set(\^[\^])
+while insert(s,\*bread())
+.De
+builds a set that consists of the (distinct) lines from the standard
+input file.
+.PP
+The operations
+.Ds
+s1 ++ s2
+s1 ** s2
+s1 -\^- s2
+.De
+create the union, intersection, and difference of \*Ms1\fR and \*Ms2\fR,
+respectively. In each case, the result is a new set.
+.PP
+The use of these operations on csets is unchanged. There is no
+automatic type conversion between csets and sets; the result of the
+operation depends on the types of the arguments. For example,
+.Ds
+\&'aeiou' ++ 'abcde'
+.De
+produces
+the cset \*M\(fmabcdeiou\(fm\fR, while
+.Ds
+set(\^[1,\*b2,\*b3]) ++ set(\^[2,\*b3,\*b4])
+.De
+produces a set that contains 1, 2, 3, and 4. On the other hand,
+.Ds
+set(\^[1,\*b2,\*b3]) ++ 4
+.De
+results in Run-time Error 119 (\*Mset expected\fR).
+.PP
+The functions and operations of Icon that apply to other data aggregates
+apply to sets as well. For example, if \*Ms\fR is a set,
+.Ds
+*s
+.De
+is the size of \*Ms\fR (the number of members in it). Similarly,
+.Ds
+type(s)
+.De
+produces the string \*Mset\fR.
+The string images of sets are in the
+same style as for other aggregates, with the size enclosed in
+parentheses. Therefore,
+.Ds
+s := set(\^["abc",\*b3])
+write(image(s))
+.De
+writes \*Mset(2)\fR.
+.PP
+The operation
+.Ds
+!s
+.De
+generates the members of \*Ms\fR, but in no predictable order. Similarly,
+.Ds
+?s
+.De
+produces a randomly selected member of \*Ms\fR.
+These operations produce values, not variables \(em it is not possible
+to assign a value to \*M!s\fR or \*M?s\fR.
+.PP
+The function
+.Ds
+copy(s)
+.De
+produces a new set, distinct from \*Ms\fR, but which contains the same
+members as \*Ms\fR. The copy is made in the same fashion as the copy
+of a list \(em the members themselves are not copied.
+.PP
+The function
+.Ds
+sort(s)
+.De
+produces a list containing the members of \*Ms\fR in sorted order.
+Sets occur after tables but before records in Icon's collating sequence.
+.SH
+Examples
+.a
+.LP
+\fIWord Counting:\fR
+.PP
+The following program lists, in alphabetical order, all the different
+words that occur in standard input:
+.Ds
+.Px
+procedure main()
+   letter := &lcase ++ &ucase
+   words := set(\^[\^])
+   while text := read() do
+      text ? while tab(upto(letter)) do
+         insert(words,\*btab(many(letter)))
+   every write(!sort(words))
+end
+.De
+.LP
+\fIThe Sieve of Eratosthenes:\fR
+.PP
+The follow program produces prime numbers, using the classical ``Sieve of
+Eratosthenes'':
+.Ds
+.Px
+procedure main()
+   local limit, s, i
+   limit := 5000
+   s := set(\^[])
+   every insert(s,\*b1 to limit)
+   every member(s,\*bi := 2 to limit) do
+      every delete(s,\*bi + i to limit by i)
+   primes := sort(s)
+   write("There are ",\*b*primes,\*b" primes in the first ",\*blimit,\*b" integers.")
+   write("The primes are:")
+   every write(right(!primes,\*b*limit + 1))
+end
+.De
+.NH 2
+Sorting Tables
+.PP
+Two new options are available for sorting tables. These options are specified by
+the values 3 and 4 as the second argument of \*Msort(t,\*bi)\fR.
+Both of these options produce a single list in which the entry values and
+assigned values of table elements alternate. A value of 3 for \*Mi\fR
+produces a list in which the entry values are in sorted order, and
+a value of 4 produces a list in which the assigned values are in sorted
+order. For example, if the table \*Mwcount\fR contains elements whose entry values are
+words and whose corresponding assigned values are counts, the following
+code segment writes out a list of the words and their counts, with the
+words in alphabetical order:
+.Ds
+a := sort(wcount,\*b3)
+every i := 1 to *a - 1 by 2 do
+   write(a\^[i]," : ",a\^[i + 1])
+.De
+.PP
+The main advantage of the new sorting options is that they only produce
+a single list, rather than a list of lists as produced by the options
+1 and 2. The amount of space needed for the single list is proportionally much less
+than for the list of lists.
+.NH 2
+Programmer-Defined Control Operations
+.PP
+As described in [3], co-expressions can be used to provide programmer-defined
+control operations. Version 6.0 provides support for this facility by means
+of an alternative syntax for procedure invocation in which the arguments
+are passed in a list of co-expressions. This syntax uses braces
+in place of parentheses:
+.Ds
+p{\*1, \*2, \*(El, \*n}
+.De
+is equivalent to
+.Ds
+p(\^[create \*1, create \*2, \*(El, create \*n])
+.De
+Note that
+.Ds
+p{\^}
+.De
+is equivalent to
+.Ds
+p(\^[\^\^])
+.De
+.NH 2
+Invocation By String Name
+.PP
+A string-valued expression that corresponds to the
+name of a procedure or operation can be used in place of the
+procedure or operation in an invocation expression. For example,
+.Ds
+"image"(x)
+.De
+produces the same call as
+.Ds
+image(x)
+.De
+and
+.Ds
+"-"(i,\*bj)
+.De
+is equivalent to
+.Ds
+i - j
+.De
+.PP
+In the case of operator symbols with unary and binary forms, the number of arguments determines
+the operation. Thus
+.Ds
+"-"(i)
+.De
+is equivalent to
+.Ds
+-i
+.De
+Since \*Mto-by\fR is an operation, despite its reserved-word syntax,
+it is included in this facility with the string name \*M"..."\fR .
+Thus
+.Ds
+"..."(1,\*b10,\*b2)
+.De
+is equivalent to
+.Ds
+1 to 10 by 2
+.De
+Similarly, range specifications are represented by \*M":"\fR, so that
+.Ds
+":"(s,\*bi,\*bj)
+.De
+is equivalent to
+.Ds
+s\^[i:j]
+.De
+.PP
+Defaults are not provided for omitted or null-valued arguments in this
+facility. Consequently,
+.Ds
+"..."(1,\*b10)
+.De
+results in a run-time error when it is evaluated.
+.PP
+The subscripting operation is available with the string name
+\*M"[\^\^]"\fR. Thus
+.Ds
+"[\^\^]"(&lcase,\*b3)
+.De
+produces \*Mc\fR.
+.PP
+Arguments to operators invoked by string names are dereferenced. Consequently,
+string invocation for assignment operations is ineffective and results
+in error termination.
+.PP
+String names are available for the operations in Icon, but not for
+control structures. Thus
+.Ds
+"|"(\*1,\*b\*2)
+.De
+is erroneous.
+Note that string scanning is a control structure.
+.PP
+Field references, of the form
+.Ds
+\*0 . \fIfieldname\fR
+.De
+are not operations in the ordinary sense and are not available
+via string invocation.
+In addition, conjunction is not available via string invocation, since
+no operation is actually performed.
+.PP
+String names for procedures are available through global identifiers.
+Note that the names of functions, such as \*Mimage\fR, are global
+identifiers. Similarly, any procedure-valued global identifier may be
+used as the string name of a procedure. Thus in
+.Ds
+global q
+
+procedure main()
+   q := p
+   "q"("hi")
+end
+
+procedure p(s)
+   write(s)
+end
+.De
+the procedure \*Mp\fR is invoked via the global identifier \*Mq\fR.
+.NH 2
+New Functions
+.PP
+The function \*Mproc(x,\*bi)\fR
+converts \*Mx\fR to a procedure, if possible.
+If \*Mx\fR is procedure-valued, its value is returned unchanged. If the
+value of \*Mx\fR is a string that corresponds to the name of a procedure
+as described in the preceding section, the corresponding procedure
+value is returned.
+The value of \*Mi\fR is used to distinguish between
+unary and binary operators.
+For example, \*Mproc("*",\*b2)\fR produces the multiplication operator, while
+\*Mproc("*",\*b1)\fR produces the size operator.
+The default value for \*Mi\fR is 1.
+If \*Mx\fR cannot be converted to a procedure, \*Mproc(x,\*bi)\fR fails.
+.PP
+The function \*Mseq(i,\*bj)\fR generates an infinite sequence of
+integers starting at \*Mi\fR with increments of \*Mj\fR. An omitted
+or null-valued argument defaults to 1. For example,
+\*Mseq()\fR generates 1, 2, 3, \*(El .
+.PP
+Storage is allocated automatically during the
+execution of an Icon program, and garbage collections
+are performed automatically to reclaim storage for subsequent
+reallocation. Garbage collection normally only occurs when
+it is necessary. Garbage collection can be forced by the
+function
+\*Mcollect()\fR.
+.br
+.ne 1.5i
+.NH 2
+Minor Language Changes
+.PP
+There are two minor language changes:
+.RS
+.IP \(bu 4n
+The keyword \*M&options\fR of Version 5.10 is not present in Version 6.0.
+.IP \(bu
+Version 6.0 reads the last line of a file, even if that line does
+not end with a newline; Version 5 discards such a line.
+.RE
+.NH 2
+Version Checking
+.PP
+The Icon translator converts a source-language program to an
+intermediate form, called \fIucode\fR. The Icon linker converts
+one or more ucode files to a binary form called \fIicode\fR. The
+format of Version 6.0 ucode and icode files is different from
+that of earlier versions.
+To avoid the possibility of malfunction
+due to incompatible ucode and icode formats, Version 6.0 checks
+both ucode and icode files and terminates processing with an
+error message if the versions are not correct.
+.NH
+Obsolete and Changed Features of Version 5
+.PP
+The original implementation of Version 5 supported both a compiler (\*Miconc\fR)
+and an interpreter (\*Micont\fR).
+Version 6.0 supports only
+an interpreter. Interpretation is only slightly slower than the execution
+of compiled code and the interpreter is portable and gets into
+execution much more quickly than the compiler. However, it is not
+possible to load C functions with the interpreter as it was with the compiler.
+A system for
+personalized interpreters [4] is included with Version 6.0 for UNIX systems to
+make it comparatively easy to add new functions and otherwise modify the Icon run-time system.
+.PP
+Some run-time environment variables have changed; see Appendix A.
+A number of error messages have been changed.
+Appendix B contains a list of run-time error messages.
+.sp -1
+.NH
+Known Bugs in Version 6.0
+.PP
+.RS
+.IP \(bu
+The translator does not detect arithmetic overflow in conversion of
+numeric literals. Very large numeric literals may have incorrect values.
+.IP \(bu
+Integer overflow on multiplication and exponentiation is not detected
+during execution.
+Such overflow may occur during type conversion.
+.IP \(bu
+Line numbers may be wrong in diagnostic messages related to lines with continued
+quoted literals.
+.IP \(bu
+In some cases, trace messages may show the return of subscripted
+values, such as \*M&null\^[2]\fR, that would be erroneous if they were
+dereferenced.
+.IP \(bu
+If a long file name for an Icon source-language program is truncated by
+the operating system,
+mysterious diagnostic
+messages may occur during linking.
+.IP \(bu
+Stack overflow is checked using a heuristic that may not always be effective.
+.IP \(bu
+If an expression such as
+.Ds
+\*Mx := create \*0
+.De
+is used in a loop, and
+\*Mx\fR is not a global variable, unreferenceable co-expressions are
+generated by each successive \*Mcreate\fR operation.
+These co-expressions are not
+garbage collected.  This problem can be circumvented
+by making \*Mx\fR a global variable or by assigning a value to \*Mx\fR before
+the \*Mcreate\fR operation, as in
+.Ds
+x := &null
+x := create \*0
+.De
+.IP \(bu
+Stack overflow in a co-expression may not
+be detected
+and may cause mysterious program malfunction.
+.IP \(bu
+Co-expressions were designed to support coroutine programming
+as well as the more usual application for the controlled production
+of the results of a generator.
+However, the implementation is not sufficiently general to support
+coroutines. In Version 5, the use of co-expressions in a coroutine
+fashion could produce program malfunction. In Version 6.0, such uses
+are prevented and cause error termination. As a consequence, some uses of co-expressions that
+worked in Version 5 may not work in Version 6.0. In particular, the
+example in Section 13.4.2 of the Icon book does not work in
+Version 6.0.
+.IP \(bu
+The garbage collector was designed for machines with comparatively small
+address spaces and may not perform well for computers with very large
+address spaces.
+In particular, if
+an attempt is made to create a very large data object that will
+not fit into memory (such as a million-element list), it takes
+an inordinately long time to determine that the object can
+not be allocated.
+.RE
+.NH
+Possible Differences Among Version 6.0 Implementations
+.PP
+Version 6.0 of Icon is written almost entirely in C and most of its
+features are machine-independent. Appendix B of the Icon book lists
+differences that may occur because of different machine architectures.
+In addition to the differences listed there, the implementation of
+sets and tables uses a parameter that is different for 16- and 32-bit
+computers. This parameter determines how set members and table elements
+are physically stored as a result of hashing. The difference only is
+noticeable in the results produced by \*M!x\fR and \*M?x\fR, where
+\*Mx\fR is a set or a table.
+.PP
+A few aspects of the implementation of Version 6.0 are specific to
+different computer architectures and operating systems. Co-expressions
+require a context switch that is implemented in assembly language.
+If this context switch is not implemented, an attempt to activate a
+co-expression results in error termination.
+Arithmetic overflow checking also generally requires assembly-language
+routines and may not be supported on some implementations of Version 6.0.
+.PP
+Some features of Icon, such as opening a pipe for i/o and the \*Msystem\fR function,
+are closely related to UNIX. These features should work correctly
+for Version 6.0 running on UNIX systems, but they may not be supported
+on other operating systems.
+.SH
+Acknowledgements
+.PP
+In addition to the authors of this report, several persons contributed to
+the implementation of Version 6.0 of Icon.
+The implementation of sets and the new sorting options were done by Rob McConeghy.
+Other major contributors include Gregg Townsend, Chris Janton, and
+Kelvin Nilsen.
+.SH
+References
+.LP
+1.  Griswold, Ralph E. and Madge T. Griswold. \fIThe Icon Programming
+Language\fR, Prentice-Hall, Inc., Englewood Cliffs, New Jersey. 1983.
+.LP
+2.  Griswold, Ralph E. \fIICONT(1)\fR,
+manual page for \fIUNIX Programmer's Manual\fR, Department of Computer
+Science, The University of Arizona. May 1986.
+.LP
+3.  Griswold, Ralph E. and Michael Novak. ``Programmer-Defined Control
+Operations'', \fIThe Computer Journal\fR, Vol. 26, No. 2 (May 1983).
+.LP
+4.  Griswold, Ralph E. \fIPersonalized Interpreters for Version 6.0 of Icon\fR,
+Technical Report TR 86-12, Department of Computer Science, The University of
+Arizona. May 1985.
+.Ap "Appendix A \(em Environment Variables"
+.sp
+.PP
+There are a number of environment variables that can be set to
+override the default values for sizes of Icon's storage regions
+and other run-time parameters. These environment variables are:
+.RS
+.IP \*MTRACE\fR 1i
+The initial value of \*M&trace\fR. The default value is zero.
+.IP \*MNBUFS\fR
+The number of input-output buffers.
+The default value is 10 for computers with large address spaces and
+5 for computers with small address spaces.
+.IP \*MNOERRBUF\fR
+No buffering of standard error output.
+.IP \*MICONCORE\fR
+Produce a core dump in the case of error termination.
+.IP \*MMSTKSIZE\fR
+The size in words of the main interpreter stack. The default value is
+10000 for machines with large address spaces and 3000 for machines
+with small address spaces.
+.IP \*MSTRSIZE\fR
+The initial size in bytes of the allocated string region. The default value is
+51200 for machines with large address spaces and 10240 for machines
+with small address spaces.
+.IP \*MHEAPSIZE\fR
+The initial size in bytes of the allocated block region. The default value is
+51200 for machines with large address spaces and 10240 for machines
+with small address spaces.
+.IP \*MSTATSIZE\fR
+The initial size in bytes of the static region in which co-expressions are
+allocated. The default value is 20480 for machines with large
+address spaces and 1024 for machines with small address spaces.
+.IP \*MSTATINCR\fR
+The increment for expanding the static region. The default increment
+is one-fourth the initial size of the static region.
+.IP \*MCOEXPSIZE\fR
+The size in words of co-expression blocks. The default value is 2000 for
+machines with large address spaces and 1000 for machines with
+small address spaces.
+.RE
+.Ap "Appendix B \(em Run-Time Error Messages"
+.sp 2
+.DS
+.ft R
+.ta .8i
+101	integer expected
+102	numeric expected
+103	string expected
+104	cset expected
+105	file expected
+106	procedure or integer expected
+107	record expected
+108	list expected
+109	string or file expected
+110	string or list expected
+111	variable expected
+112	invalid type to size operation
+113	invalid type to random operation
+114	invalid type to subscript operation
+115	list or table expected
+116	invalid type to element generator
+117	missing main procedure
+118	co-expression expected
+119	set expected
+
+201	division by zero
+202	remaindering by zero
+203	integer overflow
+204	real overflow underflow or division by zero
+205	value out of range
+206	negative first operand to real exponentiation
+207	invalid field name
+208	second and third arguments to map of unequal length
+209	invalid second argument to open
+210	argument to system function too long
+211	by clause equal to zero
+212	attempt to read file not open for reading
+213	attempt to write file not open for writing
+214	recursive co-expression activation
+
+301	interpreter stack overflow
+302	C stack overflow
+303	unable to expand memory region
+304	memory region size changed
+.DE

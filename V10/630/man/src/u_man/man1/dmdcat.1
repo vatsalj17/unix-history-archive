@@ -1,0 +1,92 @@
+.TH DMDCAT 1 "630 MTG"
+.SH NAME
+dmdcat - send files to a 630 MTG connected printer.
+.SH SYNOPSIS
+\fBdmdcat\fR [ \f3\-s\f1 ] [ \f3\-b\f1 ] [ \f3\-v\f1 ] [
+\f3\-u\f1 ] [ \f3\-t\f1 ] [ \f3\-e\f1 ] [ file\&.\&.\&. ]
+.SH DESCRIPTION
+The
+.I dmdcat
+command is intended to be used
+to send files to a printer connected to the Printer port of the 630
+MTG terminal.
+\f2Dmdcat\f1 will send the concatenation of files specified on its
+command line, or the standard input if no files are specified.
+.PP
+The data is sent to the terminal preceded by a \fIPrinter-On\fR Request
+escape sequence, and is terminated by a \fIPrinter-Off\fR request
+escape sequence.
+The \fIPrinter-On\fR request escape sequence commands the terminal emulator to start
+sending incoming data to the printer if the printer is available. The \fIPrinter-Off\fR request escape sequence tells
+the terminal emulator to stop the sending.
+The escape sequences sent are:
+.RS 8
+.ft CW
+.sp
+\f3Printer On\f1  - ESC[?5;1i
+.sp
+\f3Printer Off\f1 - ESC[?4i
+.ft 1
+.RE
+.PP
+If the \fB\-s\fR is present, \f2dmdcat\f1 uses this set of escape
+sequences:
+.RS 8
+.ft CW
+.sp
+\f3Printer On (no screen)\f1  - ESC[?5;2i
+.sp
+\f3Printer Off (no screen)\f1 - ESC[4i
+.ft 1
+.RE
+.sp
+which tells the terminal emulator to start/stop
+sending incoming data to the printer (if the printer is available) as before
+but not to display this data on the screen.
+.PP
+The terminal responds with:
+.RS 8
+.ft CW
+.sp
+ESC[?\f3ps\f1i where:
+.sp
+\f3ps\f1=0 indicates printer was not granted
+.sp
+\f3ps\f1=1 indicates printer was granted.
+.ft 1
+.RE
+.sp
+If the printer was not granted, or if the terminal does not respond,
+\fIdmdcat\fR displays a message and aborts.
+.PP 
+The second option, \fB\-b\fR, strips backspaces
+from the output of \f2dmdcat\f1.
+If backspaces result in two or more characters appearing
+in the same place, only the last character read is output.
+This means that the printed output appears exactly as it
+appears on the 630 MTG screen, without bold and underline.
+This option is useful for printers which either cannot process
+backspaces or are slow in processing backspaces.
+.PP
+\fIDmdcat\fR is a shell program that calls \fIcat\fR(1) and will pass
+the options \fB-u\fR, \fB-v\fR, \fB-t\fR, and \fB-e\fR to \fIcat\fR(1).
+
+.SH FILES
+$DMD/lib/dmdgetpr	reads terminal response
+
+.SH SEE ALSO
+cat(1), col(1) in the
+\f2UNIX System V User Reference Manual\f1.
+.br
+\f2630 MTG Terminal User's Guide\f1.
+.SH DIAGNOSTICS
+\f2Dmdcat\f1 uses the \f2col\f1(1) command to
+strip backspaces with the \fB\-b\fR option.
+\fICol\f1(1) is not available on all \s-1UNIX\s+1
+systems.
+The \fB\-b\fR option will give 
+an error message if it cannot locate the \f2col\f1(1) command.
+.PP
+\f2Dmdcat\f1 only works if it is executed from 
+the default 630 MTG terminal emulator or any terminal emulator that supports the
+escape sequence sets described above. 

@@ -1,0 +1,90 @@
+.TH BOX 3R "630 MTG"
+.XE "box()"
+.SH NAME
+box \- draw a Rectangle
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+void box (bp, r, f)
+.br
+Bitmap \(**bp;
+.br
+Rectangle r;
+.br
+Code f;
+.SH DESCRIPTION
+The
+.I box
+function
+draws the Rectangle
+.I r
+in the Bitmap
+.I bp
+using function Code
+.IR f .
+The coordinates of the corner point of the Rectangle
+.I r
+are decremented by one
+before the outline is drawn so that abutting
+Rectangles do not have common edges.
+.SH EXAMPLE
+The following subroutine can be used to draw a rectangle in the window and
+have its position follow mouse movement.
+.PP
+.RS
+.ft CM
+.nf
+.S -4
+#include <dmd.h>
+
+int request();
+int wait();
+Rectangle raddp();
+void box();
+int eqpt();
+
+trackRect(tr)
+Rectangle tr;
+{
+	Rectangle r;
+	Point     p,q;
+	int half_height, half_width;
+
+	half_width  = (tr.corner.x - tr.origin.x)/2;
+	half_height  = (tr.corner.y - tr.origin.y)/2;
+	request (MOUSE);
+	while (!button1())
+		wait(MOUSE);
+	q = mouse.xy;
+	/*
+	 * position the rectangle with mouse position
+	 * in the middle
+	 */
+	r = raddp (tr, Pt(q.x - half_width,
+		   q.y - half_height));
+	box (&display, r, F_XOR);
+	do {
+		/*
+		 * NOTE:  This do-while loop does not give up
+		 * the CPU for other processes to run.
+		 */
+		p = mouse.xy;
+		if (!eqpt(p, q)){
+		/* allow update of mouse and video refresh */
+		nap(2);
+		box (&display, r, F_XOR);
+		r = raddp (tr, Pt(p.x - half_width,
+			   p.y - half_height));
+			nap(2);
+			box (&display, r, F_XOR);
+			q = p;
+		}
+	} while( bttn(1) );
+}\fR
+.fi
+.ft R
+.RE
+.S +4
+.SH SEE ALSO
+structures(3R).

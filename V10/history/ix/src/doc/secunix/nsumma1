@@ -1,0 +1,447 @@
+.NH 1
+INTRODUCTION
+.XL y1
+.PP
+We have built
+.I IX,
+an experimental `multilevel secure'
+variant of the
+.UX
+operating system.
+IX supports document classification with 
+.I "mandatory access control" ;
+classified input must yield classified output.
+Its security model differs from that of
+Bell and LaPadula, which is espoused in
+the National Computer Security
+Center's `Orange Book.'
+|reference( bell lapadula)
+|reference( trusted computer system evaluation criteria)
+This paper is an overview; details are given elsewhere.
+|reference(reeds mcilroy euug)
+|reference(reeds mcilroy design of ix)
+|reference(reeds network)
+.PP
+.I "IX preserves data classification.
+Every file and every process has a
+.I label,
+which tells its classification.
+Users are allowed to see only information they are cleared for.
+Data transfers may only happen
+in a direction of increasing labels.
+Labels of processes or files may
+adjust automatically during
+computation to guarantee that outputs
+are classified at least as high as the
+inputs from which they derive.
+Labels are discussed more fully in \*(y3.
+.PP
+.I "IX clips the wings of the superuser.
+Activities, such as declassification, that 
+deviate from the usual
+labeling rules can be accomplished only with the
+exercise of
+.I privilege.
+A trusted user may be endowed with one or more
+privileges, which may be exercised only through
+trusted programs that have been certified for
+those privileges.
+In normal usage each use of privilege is vetted by a
+.I "privilege server,
+which confirms the client's authority and
+hands out exactly the privileges needed
+for the operation at hand.
+The basic privilege mechanism is described in \*(yd;
+its use is further explained in \*(yk.
+.PP
+.I "IX provides private communication paths 
+and methods for mutual
+confirmation between privileged processes (\*(yh).
+.PP
+.I "IX safeguards outside communications.
+External media such as tape cartridges or
+communication ports can be opened and labeled only by trusted code.
+That code has the duty to authenticate the clearance
+of the destination.
+After trusted code has set the label, an external
+medium can be used like any other file.
+In particular network connections, once established,
+are as easy to use as in ordinary
+.UX
+systems.
+We routinely cross-mount the file systems of
+IX machines and ordinary 
+.UX 
+machines for the exchange of unclassified data.
+.PP
+There is little experience with multilevel
+systems in nonmilitary applications.
+We expected that we would learn by
+trying to make one, and that we would learn more by trying
+a model that was not literally
+Orange Bookish.
+Wishing to preserve
+as much of the flexibility and spontaneity of
+.UX 
+as possible,
+we have taken less draconian measures against covert channels
+than the Orange Book suggests (\*(yz).
+Thus, IX will protect information from automated
+theft by unauthorized users and from accidental disclosure,
+but will not perfectly protect it from being leaked laboriously by
+dishonest programs run on behalf of authorized people.
+.PP
+We wished particularly to preserve
+the simplicity of programming in the large with
+shell scripts and pipelines.
+In support of this goal,
+dynamic labels eliminate some of the need
+to foresee just what labels a run might produce.
+A potential benefit is more accurate labeling,
+for output files can be labeled exactly, not
+merely with a convenient umbrella label.
+.ig
+.PP
+As a realistic compromise, IX is designed to
+allow users who `wear multiple hats'
+to move freely among their several domains,
+protected against leaking secrets by mistake.
+Its need-to-know compartmentalization is
+strong enough to prevent any copying of
+secret data to public places by ordinary means.
+It does, however, afford covert channels 
+whereby exotically dishonest programs
+can leak data at rates unacceptable by Orange
+Book standards (100 bits/sec on our experimental machine).
+..
+.PP
+In short, the
+IX model, unlike Bell-LaPadula, was
+intended to make security calculations for users
+rather than against them.
+.NH 2
+Data-flow versus subject/object models
+.XL yx
+.PP
+Modern computer systems, where
+files may be fronts for server processes and processes may act
+on behalf of no person, accord poorly with the Bell-LaPadula
+subject/object model.
+Roughly speaking, that model describes the computer as a filing
+cabinet plus a collection of isolated
+.I subjects
+who visit it to consult or deposit
+.I objects.
+The subjects, usually processes understood as proxies for
+real people, are branded with security clearances.
+The objects are usually files.
+A
+.I "reference monitor
+guarding the cabinet interdicts access to secret files by uncleared
+people or deposition of public files by cleared people.
+At the beginning of each computer session, or `day at the
+office,' a person must select a legitimate clearance and stick to
+it.
+Ongoing activities involving data at different classification
+levels are constrained to run at the highest of those levels,
+much as if a lunch order from a classified meeting had to
+be classified.
+Interprocess communication complicates matters.
+Transactions then happen without going through the filing cabinet.
+It becomes necessary to invent
+subjects unconnected with persons and to
+identify some subjects also as objects.
+.PP
+IX caters for more realistic
+`office protocols' than subject/object models do.
+It simply recognizes places
+between which data occasionally flows.
+Data flowing out from a
+place that has memory is contaminated
+by data that has flowed in; hence data labels must be tracked from
+place to place.
+Nothing, however, prevents a succession of
+actions from happening at different levels.
+Lunch orders can leave classified meetings, albeit not utterly
+freely, because the computer is charged with assuring that
+the lunch order not be written on the back of a secret report.
+What ultimately counts is that data leaving the computer
+should reach only agents who are eligible to
+receive it.  The agents (subjects) do not appear in the model at all;
+but their limitations appear as constraints on the labels
+of data flowing to output ports.
+.PP
+In Bell-LaPadula systems the label of a file
+must remain constant while the file is in use, so labels
+need be checked only when files are opened.
+In IX, by contrast, where labels of files and processes
+change underfoot,
+labels must be checked on every data transfer.
+Continuous label checking posed a
+challenge: to check labels
+without incurring unacceptable overhead.
+It also provided reassurance; nothing depends on the
+fiction that labels never change.
+No special system mechanisms are needed to 
+prevent untoward side effects arising from a change
+in the label of a file or of a terminal session.
+.PP
+In retrospect, continuous label checking was not
+hard to do.
+Privilege, for which the literature offers no models,
+was a more recalcitrant matter.
+We have found ourselves ever more
+concerned with confining the use of privilege,
+establishing mutual trust among cooperating
+privileged processes,
+and guaranteeing the integrity of their communications.
+These concerns were addressed by the notion of
+private communication paths (\*(yh) and a structured
+privilege server (\*(yl).
+.ig
+.NH 2
+Structure of the paper.
+.PP
+Major security features supported by
+the IX kernel are covered in subsequent sections:
+labels (\*(y3), privilege (\*(yd), private paths (\*(yh),
+and auditing (\*(yj).
+Some
+crucial and illustrative user-level programs are treated in \*(yk;
+costs in time, space, and implementation
+vis a vis ordinary 
+.UX
+systems and Orange Book systems are discussed in \*(zx;
+and some general conclusions are reached in \*(yw.
+..
+.NH 1
+LABELS
+.XL y3
+.PP
+Every file, device, and pipe has a 
+classification label, as does every process.
+For technical reasons, every seek pointer, which gives the
+current location in an open file, also has a label (\*(yq).
+Furthermore, every process and every file system has a
+.I ceiling,
+a label below which all transactions
+must stay.
+File system ceilings help in managing remote
+file systems and exportable media.
+Process ceilings are a kind of insurance.
+They partly fulfill the function of Bell-LaPadula
+subject labels\(empreventing processes from getting into
+overly sensitive places, from which they could leak data
+by covert channels.  They also prevent the injection of
+noise by writing into high places, and inadvertent
+excursions to high level that result in overclassified
+outputs.
+.PP
+A label is an element
+of a mathematical lattice (\*(y9)
+or one of two special symbols, $YES$ and $NO$.
+Label $YES$ is intended for files that may always be read
+or written, notably
+.CW /dev/null .
+A file labeled $YES$ is perfectly amnesiac;
+what comes out is unrelated to what goes in.
+Label $NO$ is intended for files that cannot be read or written
+without the intervention of privilege.
+Every external device file (terminal,
+communication link, disk, etc) is 
+labeled $NO$ when not in use.
+.PP
+The label of an entity $x$ (process, file, or seek
+pointer) is denoted $L(x)$.
+The ceiling of an entity (process or file system)
+is denoted $C(x)$.
+Labels may vary with time.
+We write $L(x,^t)$ or $C(x,^t)$
+when the time $t$ matters.
+Labels may be compared.
+The inequality $L(x)~<=~L(y)$ holds when either $x$ or $y$ is
+labeled $YES$ or when $L(y)$ dominates $L(x)$ in the lattice.
+.NH 2
+Data-flow policy
+.XL y4
+.PP
+Data flow results from system calls.
+In general an unprivileged process can only cause
+`upward' data flow below all
+pertinent ceilings.
+When data flows from source $x$ to destination $y$, it
+is required that $L(x)~<=~L(y)$.
+Moreover, if the causative process is $p$, then $L(y)~<=~C(p)$.
+If $x$ (or $y$) belongs to file system $z$,
+then $L(x)~<=~C(z)$ (or $L(y)~<=~C(z)$).
+.PP
+Data also flows in time.
+In general the label of any memory $x$
+must satisfy $L(x,^t sub 1 )~<=~L(x,^t sub 2 )$ for $t sub 1^<=^t sub 2$.
+The ceiling of an unprivileged process must decrease
+monotonically with time:
+$C(p,^t sub 2 )~<=~C(p,^t sub 1 )$ for $t sub 1^<=^t sub 2$.
+The ceiling of a mounted file system cannot change.
+.PP
+The label of a memory may be reset when it is
+reinitialized, that is, when its entire
+contents are replaced.
+One reinitialization action is argumentless
+execution of a file, which
+replaces process memory (\*(y5).
+Another is absolute file seek,
+which replaces a seek pointer.
+File truncation, however, is not deemed to be a reinitialization,
+because some settable properties of a file (owner 
+and permissions)
+persist across the operation.
+.PP
+We understand data flow to be a direct transfer of bits.
+Bits originating at a source are received unchanged at
+the destination.
+Other mechanisms of communicating information are deemed to
+be covert channels (\*(yz).
+.PP
+Reads and writes constitute data flow, as does
+creation of file names in a directory.
+A file seek may participate in data flow because the seek pointer
+can be read.
+The customary permission bits of a file and the
+so-called modification date, which
+can be set arbitrarily, may participate in data flow.
+On the other hand, the inode number (serial position in the
+file system) and the file change date, neither of
+which can be set directly, do not participate in
+data flow.
+Directly readable kernel data, such as login names and userids,
+participate in data flow; other kernel data, such as
+the table of open files do not.
+Although error returns from system calls
+do not constitute data flow,
+process exit status does; status is censored to a
+one-bit success/fail indication
+unless the flow is upward.
+.NH 2
+Covert channels
+.XL yz
+.PP
+Methods of communicating information that are not recognized
+as explicit data flow are called
+.I "covert channels.
+Covert channels typically involve the modulation and
+observation of usage patterns, for example 
+of file openings or data accessibility.
+.PP
+If an spy could get a process with a high enough
+label, the spy could read nuggets
+of information and smuggle them out via covert channels.
+For example, the fact of a file's being classified
+can be used to communicate information: a high
+process conditionally writes in a file and
+a low process detects whether the write
+happened by attempting to read it.
+The read fails if the write occurred.
+One bit of information has been communicated at the cost
+of a file creation, a write, a read, and a file deletion
+to wipe the slate clean.
+.PP
+Process ceilings guard against intrusion by
+preventing uncleared users from obtaining access to
+high places.
+A cleared mole or a Trojan horse, however, can leak via
+covert channels.
+Trojan horses may be countered in several ways.
+The ceiling of highly cleared users can be kept low during
+ordinary work,
+so that a process label cannot rise to unintentional heights.
+Integrity labels (\*(yc) can be used to protect highly cleared
+users against executing unapproved software.
+Static auditing can detect mutations in programs.
+Dynamic auditing can reveal the exotic
+behavior of programs exploiting covert channels, most
+of which involve an unusual ratio of file or process
+creation to other activities.
+.PP
+We have determined the typical bandwidth
+of covert channels, and have closed channels of significant
+bandwidth whether or not they involve direct data flow.
+Some covert channels have been closed for reasons other
+than bandwidth.
+For example, neither deleting from nor
+searching in a directory entails overt data flow.
+Nevertheless labels are checked on search
+to frustrate prowlers, and on
+deletion to prevent meddling above a process ceiling.
+.NH 2
+Anti-inflationary measures and their dangers
+.XL y5
+.PP
+To help keep labels as low as possible, IX has a `drop-on-exec'
+feature.
+An `empty' process gets the bottom label, which will later
+rise as usual to cover the labels of code
+that the process executes and data that it reads.
+A process is deemed empty if it has no arguments and
+has no open files beyond the standard four (input, output,
+error, and control).
+With drop-on-exec, a user in a high session 
+can print a low document without
+gratuitous overclassification, thus:
+.DS
+.CW "runlow lp <low.doc
+.DE
+.I Runlow
+suppresses the hidden
+arguments\(emcommand name and environment variables\(emthat
+.UX
+shells normally pass to invoked commands.
+If the arguments were passed, they would contaminate
+.I lp
+and keep its label at the same level as the shell.
+.PP
+Drop-on-exec entails covert channels, most
+notably through the identity of open files.
+It is not clear that the feature is worth the price (\*(yv),
+for it can be used only in circumstances
+where one process can set up another without passing arguments.
+In particular, drop-on-exec is incompatible with the
+.UX
+convention of environment variables.
+.PP
+At one time, IX created each new file with a bottom label,
+in an attempt to avoid label inflation when
+copying low files.
+This convention, however, allowed data flow through
+the file access mode bits, and was nearly useless
+because a low file created by a high process would
+necessarily be hidden in a high directory.
+The convention has been abolished in the name of purity.
+.NH 2
+Fixed labels
+.XL y6
+.PP
+When the name of a new file is written in a directory,
+the label of the directory may have to rise to cover that
+of the creating process.
+Should this happen unexpectedly to a low directory, the whole
+directory can go out of sight for applications that
+had been using it.
+The directory becomes a `tar-baby':
+|reference(harris)
+any process that searches or reads it is forced to a high label.
+If the process makes files in other directories,
+it may tar those directories, too.
+To forestall such behavior, the owner
+of a directory (or file or process, for that matter)
+may mark its label `frozen.'
+As long as a label is so marked, it cannot be changed and
+transactions that would have caused a change are aborted.
+.PP
+The label policy implies that
+the labels of some files cannot change freely.
+In particular the labels of external media, such as
+terminals, tapes, and communication links, must not
+rise arbitrarily, lest output exceed the clearance of
+the destination, which is not under control of the local system.
+Such labels are irrevocably marked `rigid,'
+meaning they can be changed only with privilege.

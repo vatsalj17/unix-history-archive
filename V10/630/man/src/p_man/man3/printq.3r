@@ -1,0 +1,45 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH PRINTQ 3R "630 MTG"
+.XE "printqempty()"
+.XE "printqspace()"
+.XE "printqclear()"
+.SH NAME
+printq: printqempty, printqspace, printqclear \- printer queue management
+.SH SYNOPSIS
+.B int printqempty ( )
+.sp
+.B int printqspace ( )
+.sp
+.B void printqclear ( )
+.sp
+.SH DESCRIPTION
+Between terminal processes and the printer is a queue used
+for buffering characters being sent to the printer.
+The
+.I printqempty
+function
+returns 1 if this queue is empty.
+Otherwise, 0 is returned.
+.P
+The
+.I printqspace
+function
+returns the number of characters that can be added to the queue before
+it fills. A full buffer affects the way the
+.I psendchar
+function operates.
+.P
+The
+.I printqclear
+function
+removes all the characters currently in the queue.
+This prevents them from going to the printer.
+This routine clears the queue only if the printer is owned.
+.P
+If the printer is not owned,
+.I printqempty
+returns 1 and
+.I printqspace
+returns 0.
+.SH SEE ALSO
+psendchar(3R), resources(3R).

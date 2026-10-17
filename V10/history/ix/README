@@ -1,0 +1,58 @@
+This is the /usr file system for ix, shorn of most
+material that may be copied bodily from research unix
+(v8,v9,v10).
+
+./root is a copy of the root file system.
+
+As ix uses a different size inode, it will take considerable
+work to bring the stuff up; you must begin with mkfs.
+Single-user mode has all privileges but still requires
+the lmask feature of nosh to exercise them.
+Other advice is in ./man and ./src/doc.
+
+A listing of appropriate security-label settings is given in
+./adm/cl.out.  Devices are listed only to reveal existence;
+their labels are supplied automatically (U is unusable).
+Set unlisted labels to:
+	directories mentioned ------ ------F  0000 ...
+	other directories     ------ ------F  ffff 0000 ...
+	files                 ------ ------   ffff 0000 ...
+"Mentioned" means mentioned in any path.
+Funny uids (mostly reeds or doug) may be understood to be bin.
+
+You can run with labeling off by fooling with labinit.
+
+Because most contents of /dev are unreadable, its contents
+are largely excised.  Here is what existed there at shutdown.
+
+./console ./log1    ./ra02    ./ra10	./ra16	  ./rra04   ./rra12   ./stderr
+./drum	  ./mem	    ./ra03    ./ra11	./ra17	  ./rra05   ./rra13   ./stdin
+./kUmem	  ./mtpr    ./ra04    ./ra12	./rra00	  ./rra06   ./rra14   ./stdout
+./kmc0	  ./null    ./ra05    ./ra13	./rra01	  ./rra07   ./rra15   ./tty
+./kmc1	  ./ra00    ./ra06    ./ra14	./rra02	  ./rra10   ./rra16   ./worm0
+./kmem	  ./ra01    ./ra07    ./ra15	./rra03	  ./rra11   ./rra17   ./worm1
+
+./dk:
+dk03  dk11  dk19  dk27	dk35  dk43  dk51  dk59	dk67  dk75  dk83  dk91
+dk04  dk12  dk20  dk28	dk36  dk44  dk52  dk60	dk68  dk76  dk84  dk92
+dk05  dk13  dk21  dk29	dk37  dk45  dk53  dk61	dk69  dk77  dk85  dk93
+dk06  dk14  dk22  dk30	dk38  dk46  dk54  dk62	dk70  dk78  dk86  dk94
+dk07  dk15  dk23  dk31	dk39  dk47  dk55  dk63	dk71  dk79  dk87  dk95
+dk08  dk16  dk24  dk32	dk40  dk48  dk56  dk64	dk72  dk80  dk88  dkctl
+dk09  dk17  dk25  dk33	dk41  dk49  dk57  dk65	dk73  dk81  dk89
+dk10  dk18  dk26  dk34	dk42  dk50  dk58  dk66	dk74  dk82  dk90
+
+./fd:
+0   104	110 117	123 15	21  28	34  40	47  53	6   66	72  79	85  91	98
+1   105	111 118	124 16	22  29	35  41	48  54	60  67	73  8	86  92	99
+10  106	112 119	125 17	23  3	36  42	49  55	61  68	74  80	87  93
+100 107	113 12	126 18	24  30	37  43	5   56	62  69	75  81	88  94
+101 108	114 120	127 19	25  31	38  44	50  57	63  7	76  82	89  95
+102 109	115 121	13  2	26  32	39  45	51  58	64  70	77  83	9   96
+103 11	116 122	14  20	27  33	4   46	52  59	65  71	78  84	90  97
+
+./log:
+log00	    log04	log08	    log12	privlog	    setlablog
+log01	    log05	log09	    log13	pwlog	    shutdownlog
+log02	    log06	log10	    log14	seclog	    sulog
+log03	    log07	log11	    log15	sessionlog

@@ -1,0 +1,101 @@
+grep -n . <tokens | sed "s/\([^:]*\):\(.*\)/#define \2 \1/" >tokdefs
+cd efixsrc; mk
+lcc -c  main.c
+main.c:399: warning: parameter `argc' is not referenced
+lcc -c  process.c
+lcc  cpt.c -o ../cpt
+cpt.c:
+../cpt:
+lcc  main.o process.o -o ../Efix
+lex lex.l
+fixuplex
+mv lex.yy.c lex.c
+mkdir efix
+ln defs tokdefs efix
+( sed <tokdefs "s/#define/%token/" ;\
+	cat gram.head gram.dcl gram.expr gram.exec) >gram.in
+yacc  gram.in
+sed 's!^# include "y.debug"!/* & */!;s!^# line.*!/* & */!' y.tab.c >gram.c
+rm gram.in y.tab.c
+
+conflicts: 5 shift/reduce
+Efix main.c >efix/main.c
+cpt main.c efix/main.c
+lcc  -c efix/main.c
+efix/main.c:1: warning: static `xxxvers' is not referenced
+Efix init.c >efix/init.c
+cpt init.c efix/init.c
+lcc  -c efix/init.c
+Efix tailor.c >efix/tailor.c
+cpt tailor.c efix/tailor.c
+lcc  -c efix/tailor.c
+Efix symtab.c >efix/symtab.c
+cpt symtab.c efix/symtab.c
+lcc  -c efix/symtab.c
+Efix dcl.c >efix/dcl.c
+cpt dcl.c efix/dcl.c
+lcc  -c efix/dcl.c
+Efix addr.c >efix/addr.c
+cpt addr.c efix/addr.c
+lcc  -c efix/addr.c
+Efix struct.c >efix/struct.c
+cpt struct.c efix/struct.c
+lcc  -c efix/struct.c
+efix/struct.c:173: warning: parameter `dim' is not referenced
+efix/struct.c:210: warning: parameter `dim' is not referenced
+Efix field.c >efix/field.c
+cpt field.c efix/field.c
+lcc  -c efix/field.c
+Efix blklab.c >efix/blklab.c
+cpt blklab.c efix/blklab.c
+lcc  -c efix/blklab.c
+Efix mk.c >efix/mk.c
+cpt mk.c efix/mk.c
+lcc  -c efix/mk.c
+Efix misc.c >efix/misc.c
+cpt misc.c efix/misc.c
+lcc  -c efix/misc.c
+Efix alloc.c >efix/alloc.c
+cpt alloc.c efix/alloc.c
+lcc  -c efix/alloc.c
+Efix print.c >efix/print.c
+cpt print.c efix/print.c
+lcc  -c efix/print.c
+Efix simple.c >efix/simple.c
+cpt simple.c efix/simple.c
+lcc  -c efix/simple.c
+Efix exec.c >efix/exec.c
+cpt exec.c efix/exec.c
+lcc  -c efix/exec.c
+Efix temp.c >efix/temp.c
+cpt temp.c efix/temp.c
+lcc  -c efix/temp.c
+Efix io.c >efix/io.c
+cpt io.c efix/io.c
+lcc  -c efix/io.c
+Efix error.c >efix/error.c
+cpt error.c efix/error.c
+lcc  -c efix/error.c
+Efix pass2.c >efix/pass2.c
+cpt pass2.c efix/pass2.c
+lcc  -c efix/pass2.c
+Efix icfile.c >efix/icfile.c
+cpt icfile.c efix/icfile.c
+lcc  -c efix/icfile.c
+Efix free.c >efix/free.c
+cpt free.c efix/free.c
+lcc  -c efix/free.c
+Efix dclgen.c >efix/dclgen.c
+cpt dclgen.c efix/dclgen.c
+lcc  -c efix/dclgen.c
+Efix namgen.c >efix/namgen.c
+cpt namgen.c efix/namgen.c
+lcc  -c efix/namgen.c
+lcc  -c lex.c
+lcc  -c gram.c
+echo LOAD
+lcc   main.o init.o tailor.o gram.o lex.o symtab.o dcl.o addr.o struct.o field.o blklab.o mk.o misc.o alloc.o print.o simple.o exec.o temp.o io.o error.o pass2.o icfile.o free.o dclgen.o namgen.o 
+size
+LOAD
+text	data	bss	dec	hex
+79872	23552	23068	126492	1ee1c

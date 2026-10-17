@@ -1,0 +1,305 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH MSGOP 3L "630 MTG"
+.XE "msgsnd()"
+.XE "msgrcv()"
+.SH NAME
+msgop \- message operations
+.SH SYNOPSIS
+.B #include <message.h>
+
+.B int msgsnd (msqid, msgp, msgsz, msgflg)
+.br
+.B long msqid;
+.br
+.B struct msgbuf \(**msgp;
+.br
+.B int msgsz, msgflg;
+.sp
+\fBint msgrcv (msqid, msgp, msgsz, msgtyp, msgflg)\fR
+.br
+.B long msqid;
+.br
+.B struct msgbuf [\(**]\(**msgp;
+.br
+.B int msgsz;
+.br
+.B long msgtyp;
+.br
+.B int msgflg;
+.SH DESCRIPTION
+.I Msgsnd
+is used to send a message to the queue associated
+with the message queue identifier specified by
+.IR msqid .
+.I Msgp
+points to a structure containing the message.
+This structure is composed of the following members:
+.sp
+.RS 6
+long    mtype;      /* message type */
+.br
+char    mtext[];    /* message text */
+.sp
+.RE
+.I Mtype
+is a positive integer that can be used by the
+receiving process for message selection (see
+.I msgrcv
+below).
+.I Mtext
+is any text of length
+.I msgsz
+bytes.
+.I Msgsz
+can range from 0 to what memory will allow.
+.PP
+.I Msgflg
+specifies the action to be taken if one or more of
+the following are true:
+.sp
+.RS 6
+The number of bytes already on the queue is equal to
+.BR msg_qbytes .
+.sp
+There is not enough memory to put the message on the queue.
+.sp
+.RE
+These actions are as follows:
+.sp
+.RS 6
+If
+.RI ( msgflg
+& 
+.BR IPC_NOWAIT )
+is ``true'', the message will not be sent and the
+calling process will return immediately.
+.sp
+If
+.RI ( msgflg
+&
+.BR IPC_NOWAIT )
+is ``false'', the calling process will suspend
+execution until one of the following occurs:
+.sp
+.RS 6
+The condition responsible for the suspension no
+longer exists, in which case the message is
+sent.
+.sp
+.I Msqid
+is removed from the system (see
+.IR msgctl ).
+.PP
+.RE 1
+.I Msgsnd
+will fail and no message will be sent if one or more
+of the following are true:
+.RS 6
+.sp
+.I Msqid
+is not a valid message queue identifier.
+.sp
+.I Mtype
+is less than 1.
+.sp
+The message cannot be sent for one of the
+reasons cited above and
+.RI ( msgflg
+&
+.BR IPC_NOWAIT )
+is ``true''.
+.sp
+.I Msgsz
+is less than zero.
+.sp
+.RE
+Upon successful completion, the following actions are taken
+with respect to the data structure associated with
+.IR msqid .
+.sp
+.RS 6
+.B Msg_qnum
+is incremented by 1.
+.sp
+.B Msg_lspid
+is set equal to the process id of the cal\ ling process.
+.sp
+.B Msg_stime
+is set equal to the current time.
+.RE
+.PP
+An extra feature of
+.I msgsnd
+lets the user send messages without a copy being made. If
+.RI ( msgflg
+&
+.BR NO_COPY )
+is ``true'', the message pointed to by
+.I msgp
+is put directly
+into the message queue. This can only be done if the
+.I msgbuf
+was allocated (created by a call to alloc).
+This is because the ownership of that memory must
+be changed. The sending process then no longer owns that memory
+and should not try to access it or free it.
+.PP
+.I Msgrcv
+reads a message from the queue associated with the
+message queue identifier specified by
+.I msqid
+and places it in the structure pointed to by
+.IR msgp .
+This structure is composed of the following members:
+.sp
+.RS 6
+long    mtype;      /* message type */
+.br
+char    mtext[];    /* message text */
+.PP
+.RE
+.I Mtype
+is the received message's type as specified by the
+sending process.
+.I Mtext
+is the text of the message.
+.I Msgsz
+specifies the size in bytes of
+.IR mtext .
+The received message is truncated to
+.I msgsz
+bytes if it is larger than
+.I msgsz
+and
+.RI ( msgflg
+&
+.BR MSG_NOERROR )
+is ``true''.  The truncated part of
+the message is lost and no indication of the truncation is
+given to the calling process.
+.PP
+.I Msgtyp
+specifies the type of message requested as follows:
+.RS 6
+.sp
+If
+.I msgtyp
+is equal to 0, the first message on the queue is received.
+.sp
+If
+.I msgtyp
+is greater than 0, the first message of type
+.I msgtyp
+is received.
+.sp
+If
+.I msgtyp
+is less than 0, the first message of the
+lowest type that is less than or equal to the absolute
+value of
+.I msgtyp
+is received.
+.PP
+.RE
+.I Msgflg
+specifies the action to be taken if a message of the
+desired type is not on the queue.  These are as follows:
+.RS 6
+.sp
+If
+.RI ( msgflg
+&
+.BR IPC_NOWAIT )
+is ``true'', the calling process will return immediately
+with a return value of -1.
+.sp
+If
+.RI ( msgflg
+&
+.BR IPC_NOWAIT )
+is ``false'', the calling process will suspend execution
+until one of the following occurs:
+.RS 6
+.sp
+A message of the desired type is placed on the queue.
+.sp
+.I Msqid
+is removed from the system. When this occurs,
+a value of -1 is returned.
+.PP
+.RE 1
+.I Msgrcv
+will fail and no message will be received if one or
+more of the following are true:
+.RS 6
+.sp
+.I Msqid
+is not a valid message queue identifier.
+.sp
+.I Msgsz
+is less than 0.
+.sp
+.I Mtext
+is greater than
+.I msgsz
+and
+.RI ( msgflg
+&
+.BR MSG_NOERROR )
+is ``false''.
+.sp
+The queue does not contain a message of the
+desired type and
+.RI ( msgtyp
+&
+.BR IPC_NOWAIT )
+is ``true''.
+.PP
+.RE
+Upon successful completion, the following actions are taken
+with respect to the data structure associated with
+.IR msqid .
+.sp
+.RS 6
+.B Msg_qnum
+is decremented by 1.
+.sp
+.B Msg_lrpid
+is set equal to the process id of the calling process.
+.sp
+.B Msg_rtime
+is set equal to the current time.
+.PP
+.RE
+Again, the option of not copying the message is available. If
+.RI ( msgflg
+&
+.BR NO_COPY )
+is ``true'',
+.I msgp
+is treated as a pointer to a pointer to a message. In other words,
+.I *msgp
+is set to the address of the received message. The ownership of the message
+is then set to the receiving process. The receiving process can then
+read the message and free it.
+.PP
+A side effect of \fImsgrcv\fR is that it clears the MSG resource
+ready condition used by the \fIwait\fR and \fIown\fR resource functions.
+.PP
+.SS Return Values
+Upon successful completion, the return value is as follows:
+.sp
+.RS 6
+.I Msgsnd
+returns a value of 0.
+.sp
+.I Msgrcv
+returns a value equal to the number of bytes
+actually placed into
+.IR mtext .
+.sp
+.RE
+Otherwise, a value of -1 is returned.
+.PP
+.SH SEE ALSO
+alloc(3R), msgctl(3L), msgget(3L), realtime(3R), resources(3R), structures(3R).

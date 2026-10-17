@@ -1,0 +1,122 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH STRING 3R "630 MTG"
+.XE "string()"
+.XE "smallfont"
+.XE "mediumfont"
+.XE "largefont"
+.XE "FONTWIDTH()"
+.XE FONTHEIGHT()"
+.SH NAME  
+string, FONTWIDTH, FONTHEIGHT, smallfont, mediumfont, largefont \- draw string in bitmap
+.SH SYNOPSIS
+\f3
+#include <dmd.h>
+.br
+#include <font.h>
+.sp
+Point string (ft, s, b, p, f)
+.br
+Font \(**ft; 
+.br 
+char \(**s;
+.br 
+Bitmap \(**b;
+.br 
+Point p;
+.br 
+Code f;
+.sp
+int FONTWIDTH (fnt)
+.br
+int FONTHEIGHT (fnt)
+.sp
+Font fnt;
+.sp
+Font smallfont;
+.br
+Font mediumfont;
+.br
+Font largefont;
+\f1
+.SH DESCRIPTION
+The
+.I string
+function
+draws the null-terminated string
+.I s
+using characters from Font
+.I \(**ft
+in Bitmap
+.I \(**b
+at Point
+.I p
+with function Code
+.IR f .
+The returned Point value is the location of the first character position
+following the string
+.IR s .
+The returned Point can be passed to successive calls to
+.I string
+to concatenate strings.
+.PP
+The drawing of the characters is done such that the bounding rectangle
+of the maximum height character in the font would have its origin at
+.IR p .
+Therefore, a character drawn on the screen at the point
+.I Drect.origin
+will occupy the upper-leftmost character position of the application's
+window.
+.PP
+The
+.I string
+function
+draws characters as they are in the font.
+No special action is taken for control characters such as tabs and newlines.
+.PP
+The globals
+.IR smallfont ,
+.IR mediumfont ,
+and
+.IR largefont
+are the names of, not pointers to, the three resident fonts in the 630
+MTG.
+.P
+The
+.I FONTWIDTH
+macro returns the width of the space character in the given
+font. This is only useful if all
+the characters in the font have the same width.
+The
+.I FONTHEIGHT
+macro returns the height of the given font.
+.bp
+.SH EXAMPLE
+The following example demonstrates the use of
+.I string.
+The simple subroutine prints "hello world" using the resident font
+called 
+.I largefont .
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+#include <font.h>
+
+Point add();
+Point string();
+
+hello_world()
+{
+	Font *f;
+	Point p;
+
+	f = &largefont;
+	p = add (Drect.origin, Pt(4,4));
+	string (f, "hello world", &display, p, F_XOR);
+}
+\fR
+.fi
+.RE
+.SH SEE ALSO
+loadfont(1), jstring(3R), structures(3R).

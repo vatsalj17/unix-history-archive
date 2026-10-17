@@ -1,0 +1,57 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH FONTREQUEST 3R "630 MTG"
+.XE "fontrequest()"
+.XE "fontrelease()"
+.XE "fontavail()"
+.SH NAME
+fontrequest, fontrelease, fontavail \- request/release use of a font
+.SH SYNOPSIS
+.B #include <dmd.h>
+.br
+.B #include <font.h>
+.sp
+.B Font \(**fontrequest (fname)
+.sp
+.B void fontrelease (fname)
+.sp
+.B Font \(**fontavail (fname)
+.sp
+.B char \(**fname;
+.SH DESCRIPTION
+.I Fname
+points to a font name,
+a null terminated string of up to 14 characters.
+.PP
+The
+.I fontrequest
+function returns a pointer to a font of the given name in the font cache.
+This routine will return 0 if one of the following conditions is true:
+.IP "-" 
+there is no font of the given name in the cache,
+.IP "-"
+there is no more memory to attach the
+request information to the font,
+.IP "-"
+the calling process has already
+requested the named font.
+.PP
+While the font is requested, no 
+process can remove it from the cache until it is released.
+.PP
+The
+.I fontrelease
+function tells the cache that the named font is no longer being
+used by the calling process. This is automatically done
+for all the fonts that a process has requested when that
+process exits or is deleted.
+.PP
+The
+.I fontavail
+function returns a pointer to the named font if it is in
+the font cache; 0, otherwise. This function is used
+only to check if a given font is in the cache, and it cannot
+substitute for \fIfontrequest\fR if the application intends
+to make use of the font.
+
+.SH SEE ALSO
+fontname(3R), fontsave(3L), infont(3R/3L), structures(3R).

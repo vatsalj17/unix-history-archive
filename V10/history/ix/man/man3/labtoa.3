@@ -1,0 +1,123 @@
+.TH LABTOA 3
+.SH NAME
+labtoa, atolab, atopriv, privtoa \- security label conversion
+.SH SYNOPSIS
+.B #include <sys/label.h>
+.PP
+.B char *labtoa(labp)
+.B struct label *labp;
+.br
+.B struct label *atolab(string)
+.B char *string;
+.PP
+.B  atopriv(string)
+.B char *string;
+.PP
+.B char *privtoa(n)
+.SH DESCRIPTION
+.I Labtoa
+returns a pointer to a null-terminated
+.SM ASCII
+string that represents
+the value of the security label pointed to by 
+.I labp.
+The string has a form exemplified by
+.IP
+.B "guxnlp guxnlpFY 0000 0000 ...
+.LP
+The characters of the first group
+.L guxnlp
+denote capabilities
+.BR T_LOG ,
+.BR T_UAREA ,
+.BR T_EXTERN ,
+.BR T_NOCHK ,
+.BR T_SETLIC ,
+and
+.BR T_SETPRIV
+respectively.
+Characters of the second group denote corresponding licenses; see
+.IR getplab (2).
+Missing capabilities or licenses are denoted by
+.LR - .
+.PP
+The character shown as 
+.L F
+denotes the fixity of the label.
+It may be a space (loose),
+.L F
+(frozen),
+.L R
+(rigid),
+or
+.L C
+(constant)
+The character shown as 
+.L Y
+denotes the label's flag.
+It may be a space for a lattice label,
+.L N
+for
+.BR L_NO ,
+.L Y
+for
+.BR L_YES ,
+or
+.L U
+for the erroneous flag value 0.
+.PP
+Each group of four zeros may be any four lower case hex digits 
+representing the value of two bytes of the lattice value.
+Repeating groups at the end of the string are denoted
+.LR ... .
+.LP
+.I Atolab
+inverts the process.
+The order of characters in, and length of, privilege strings are
+arbitrary, except that a nonempty license string must be
+preceded by a nonempty capability string.
+The order of characters from the set
+.B YNUFRC
+is arbitrary.
+Spaces must separate nonempty capability and license strings,
+and may be interspersed arbitrarily after the license string.
+A final
+.B ...
+causes the last four hex digits 
+to be repeated, provided the preceding label contains
+a multiple of four digits.
+A short or missing lattice value is padded with zeros.
+.PP
+.I Atopriv
+converts a string of characters from the set
+.L guxnlp-
+into privilege bits that may be stored in the
+.B lb_t
+or
+.B lb_u
+fields of a label structure.
+The order and number of characters are arbitrary.
+.PP
+.I Privtoa
+is inverse to
+.I atopriv.
+.SH SEE ALSO
+.IR getflab (2),
+.IR getplab (2),
+.IR getlab (1)
+.SH DIAGNOSTICS
+.I Atolab
+returns 0 for unrecognizable input.
+.PP
+.I Atopriv
+returns the negative value 
+.B ~(T_LOG|T_UAREA|T_EXTERN|T_NOCHK|T_SETLIC|T_SETPRIV)
+for unrecognizable input.
+.SH BUGS
+The value returned by
+.I labtoa,
+.I atolab,
+or
+.I privtoa
+points to a static buffer that is overwritten
+at each call.

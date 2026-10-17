@@ -1,0 +1,162 @@
+.TH MC68DIS 1 "630 MTG" 
+.SH NAME
+mc68dis \- MC68000 disassembler
+.SH SYNOPSIS
+.B mc68dis
+.RB [ \-o ]
+.RB [ \-V ]
+.RB [ \-L ]
+.RB [ \-d " sec]"
+.RB [ \-da " sec ]"
+.RB [ \-F " function]"
+.RB [ \-t " sec]"
+.br
+.RB [ \-l " string]"
+files
+.SH DESCRIPTION
+The 
+.I mc68dis
+command
+produces an assembly language listing
+of each of its
+object
+.IR file
+arguments.
+The listing includes
+assembly
+statements
+and a hexadecimal or octal representation of the binary that
+produced those statements.
+.PP
+The following \fIoptions\fP are
+interpreted by the disassembler and may be specified in any order.
+.PP
+.TP 12
+.B \-o
+Prints numbers in octal.
+Default is hexadecimal.
+.PP
+.TP 12
+.B \-V
+Version number of the disassembler is written to standard error.
+.PP
+.TP 12
+.B \-L
+Invokes a look-up of C source labels in the symbol table for
+subsequent printing.
+.PP
+.TP 12
+.BR \-d " sec"
+Disassembles the 
+named section as data,
+printing the offset of
+the data from the
+beginning of the section.
+.PP
+.TP 12
+.BR \-da " sec"
+Disassembles the 
+named section as data,
+printing the actual 
+address of the data.
+.PP
+.TP 12
+.BR \-F " function"
+Disassembles the
+named function
+in each object file
+that is specified
+on the command line.
+.PP
+.TP 12
+.BR \-t " sec"
+Disassembles the
+named section as text.
+.PP
+.TP 12
+.BR \-l " string"
+Disassembles the
+library file specified
+as
+.IR string .
+For example,
+one would issue the
+command
+.B "mc68dis \-l x \-l z"
+to disassemble
+.B libx.a
+and
+.B libz.a\c
+\&.
+All libraries are
+assumed to be in
+.BR $DMD/lib .
+.DT
+.br
+.PP
+If the
+.BR \-d ,
+.B \-da
+or
+.BR \-t
+options are specified,
+only those named
+sections from each
+user supplied file name
+are disassembled.
+Otherwise, all sections
+containing text will
+be disassembled.
+.PP
+If the
+.BR \-F
+option is specified,
+only those named 
+functions from each
+user supplied file name
+are disassembled.
+.B \-F
+only works with object files that have been compiled with the
+.B "dmdcc -g"
+option.
+.bp
+.PP
+On output, a number enclosed in brackets
+at the beginning of a line,
+such as 
+.BR [5] ,
+represents a C break-pointable line number that
+starts with the following instruction.
+These line numbers are present only when the
+object file has been compiled with the
+.B "dmdcc -g"
+option.
+An expression such as
+.B <40>
+in the operand field,
+following a relative displacement
+for control transfer instructions,
+is the computed address
+within the section to which
+control is transferred.
+Similarly, an expression such as
+\f3<40>+%d0\f1,
+following a program counter index plus displacement
+operand, indicates that the effective address
+of the operand in the current section is 40 plus the content of %d0.
+A C function name
+will appear in the first column,
+followed by
+.BR (\|) ,
+if the function was compiled with
+.BR -g .
+.SH "SEE ALSO"
+dmdcc(1),
+mc68as(1),
+mc68ld(1).
+.SH "DIAGNOSTICS"
+The self-explanatory diagnostics
+indicate errors in
+the command line or problems
+encountered with the
+specified files.

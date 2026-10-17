@@ -1,0 +1,228 @@
+From research!mtune!rutgers!SH.CS.NET!cic Thu Oct  1 23:21:27 1987
+Received: by mtune.ATT.COM (smail2.5)
+	id AA13402; 1 Oct 87 23:21:27 EDT (Thu)
+Received: by RUTGERS.EDU (5.54/1.14) 
+	id AA29881; Thu, 1 Oct 87 01:28:21 EDT
+Message-Id: <8710010528.AA29881@RUTGERS.EDU>
+Received: by SH.CS.NET id aj10308; 29 Sep 87 15:26 EDT
+Date: Tue, 29 Sep 87 14:25:22 EDT
+Subject: ns-3 QUERY by Electronic Mail
+Reply-To: rutgers!SH.CS.NET!cic
+From: CSNET INFO SERVER <rutgers!SH.CS.NET!info>
+To: doug@research.att.com
+
+Request: info
+Topic: ns-3
+========================================================================
+CSNET Coordination and Information Center  (CIC)           cic@sh.cs.net
+10 Moulton St, Cambridge MA 02238   617/497-2777     (cic@csnet-sh.arpa)
+========================================================================
+                                                      Updated: 27 Jul 84
+
+                        QUERY BY ELECTRONIC MAIL
+
+If your local CSNET site has no Local Agent software and no TELNET
+access you can send and receive queries by electronic mail.  You can
+use this technique on any X25Net or Arpanet site when you want the
+results of your queries in message form.
+
+
+HOW TO PREPARE YOUR NAME SERVER MESSAGES
+
+Address your messages to the registrar at the CSNET Service Host:
+
+        To: registrar@csnet-sh
+
+You will receive an automatic answer to your query by message from
+NS_Service@CSNET-SH.
+
+The subject field of the message you send will not be read by the Name
+Server, and may contain any text (or no text).
+
+The body of the message should contain only the commands and keywords
+for the query, and no other text.  The general form is:
+
+        whois
+        exact
+            keyword1 keyword2 ...
+        end
+
+The words "whois", "exact", and "end" must each begin in column 1 of
+a new line.  The keywords may begin anywhere except column one.  Any
+number of keywords, possibly extending over more than one line, is
+acceptable.
+
+Table ns-3.1 is similar to Table ns-2.1 (in Message ns-2), but shows
+both interactive query commands and the equivalent forms that you
+should use in your message.
+
+
+COMPOSING YOUR QUERY
+
+The selection method used in the name Server is that of the "inverted
+index".  Each word in each entry is indexed separately, and, in
+general, the Name Server selects only on whole words.  A search
+specification consists of one or more words, and selection occurs when
+all the specified words are present in an entry.  It is not possible
+to specify other types of relationships between words.
+
+A word is a string of characters between two delimiters. The delimiters
+recognized by the Name Server are:
+
+
+	<space>  <tab>  <end-of-line>  ;  .  ,  (  )  &  #
+
+
+A CAUTION ABOUT "%" 
+
+Please note that the "%" character is NOT a delimiter at the present
+time.  For this reason, the Name Server treats "name%host" as a single
+word but "name.host" as two words.  At the time that the Name Server
+was designed, the full Arpanet address for a PhoneNet site was
+"name.host@csnet-relay"; at the current time, the Internet is in the
+process of preparing for domain-style addresses, and the Internet
+address which is recommended by the Arpanet Network Information Center
+is "name%host@csnet-relay".  
+
+The reason is that many sites are now including a domain name to the
+left of the "@", for example, "name%host.csnet@csnet-relay.arpa".  The
+use of "%" clarifies the distinction between hosts and domains.  When
+the domain system is fully implemented, this special use of "%" will
+probably be discarded.  However, if "%" remains special, the Name
+Server will be changed to treat "%" as a delimiter.
+
+
+REVISING THE DATABASE
+
+The CSNET Staff is in the process of revising the Name Server database
+to update the old relay names, "udel-relay" and "rand-relay" and
+replace them with "csnet-relay".  At the same time, all entries
+"name.host-relay" will be changed to "name%host@csnet-relay".
+
+
+SEARCHING FOR WORDS IN THE DATABASE
+
+There are a few restrictions on the characters in a word: The words
+must be strings of letters and numbers, or of letters only, but not of
+numbers only, so that you cannot select on a zip code or a telephone
+area code.  You can select on "@", but only if it is in the middle of
+a word.  You can use the wildcards, "*" and "?" at the middle or end
+of a word, but not at the beginning.  Because the analysis of the
+words is done before the query is made, there is no method for
+"quoting" numbers, the "@", wildcards or delimiters to allow
+selection.
+
+
+     TABLE ns-3.1.  EXAMPLES OF INTERACTIVE AND MESSAGE QUERIES
++--------------------------------------------------------------------+
+|    You may abbreviate "-account", "-ident", "-short" or            |
+|    "-threshold" as "-a", "-i", "-s" or "-t". 		             |
++----------------------------------------------+---------------------+
+|INTERACTIVE COMMANDS			       |MESSAGE COMMANDS     |
++----------------------------------------------+---------------------+
+|site                                          |whois                |
+|                                              |exact                |
+|    Selects the site entry for your site.     |    site             |
+|                                              |end                  |
++----------------------------------------------+---------------------+
+|site oregon-grad                              |whois                |
+|                                              |exact                |
+|    Selects the site entry for the Oregon     |    site oregon-grad |
+|    Graduate Center, Beaverton, OR            |end                  |
++----------------------------------------------+---------------------+
+|site list                        	       |whois		     |
+|					       |exact		     |
+|    Either command selects the long "sites"   |    sites list	     |
+|    entry, which contains the list of all     |end		     |
+|    CSNET sites (PhoneNet, X25Net, ARPANET).  |		     |
+|					       |		     |
+|    To avoid selecting the "sites" entry,     |		     |
+|    try to frame your query to include more   |		     |
+|    than the site name in the specification.  |		     |
++----------------------------------------------+---------------------+
+|whois oregon-grad@*relay       	       |whois		     |
+|					       |exact    	     |
+|    Returns all selections at oregon-grad,    |  oregon-grad@*relay |
+|    which is a PhoneNet site. Does not return |end                  |
+|    the long "sites" entry.                   |   		     |
+|                                              |                     |
+|    Returns the "long" form of the entries if |                     |
+|    there 9 or fewer selections.  Returns the |                     |
+|    one-line "short" form if there are        |	             |
+|    between 9 and 200.  Rejects the query as  |                     |
+|    too ambiguous if there are more than 200. |                     |
+|    "*" is a wild-card.                       |                     |
++----------------------------------------------+---------------------+
+|whois rice -threshold 100		       |whois		     |
+|					       |exact	             |
+|    Returns all users at Rice University,     |    rice 	     |
+|    if there are 100 or fewer.  Also 	       |threshold    	     |
+|    returns the long "sites" entry, the       |    100  	     |
+|    site entry for Rice and the entries for   |end		     |
+|    people named "Rice".  There is no fool-   |		     |
+|    proof way select only entries for the     |		     |
+|    Rice site.  			       |		     |
++----------------------------------------------+---------------------+
+|whois bob -short			       |whois		     |
+|					       |exact    	     |
+|    Selects all entries with the word	       |    bob   	     |
+|    "bob" anywhere in the entry, if there are |short  		     |
+|    200 or fewer, in one-line "short" form.   |end		     |
++----------------------------------------------+---------------------+
+|whois bob purdue			       |whois		     |
+|					       |exact		     |
+|    Selects entries that contain both "bob"   |    bob purdue	     |
+|    and "purdue".			       |end		     |
++----------------------------------------------+---------------------+
+|whois bob purdue [smith schmidt]	       |whois		     |
+|					       |exact		     |
+|    Tries to disambiguate by selecting on     |    bob purdue	     |
+|    either "smith" or "schmidt", but only     |disambig	     |
+|    if "exact" selects multiple entries.      |    smith schmidt    |
+|					       |end		     |
++----------------------------------------------+---------------------+
+|whois ric? purdue [s*m*t*]		       |whois		     |
+|					       |exact		     |
+|    Selects entries with "rich", "rick" or    |    ric? purdue      |
+|    "rice", etc., and "purdue", then disam-   |disambig             |
+|    biguates with "smith" or "schmidt".       |    s*m*t*           |
+|    The "*" is a wildcard that matches any    |end           	     |
+|    number of characters, including zero,     |          	     |
+|    and a "?" matches any one character.  A   |          	     |
+|    wildcard can be used only in the middle   |   		     |
+|    or at the end of a word. 		       |                     |
++----------------------------------------------+---------------------+
+|whois jones -short -threshold 10 [purdue]     |whois		     |
+|					       |exact		     |
+|    Tries to select entries for Jones	       |   jones    	     |
+|    that include "purdue", if any.	       |short    	     |
+|    Otherwise returns all, if there are       |threshold	     |
+|    10 or fewer.  (Note that the field        | 10       	     |
+|    contents may begin at any column	       |disambig	     |
+|    except column 1.)			       |       purdue	     |
+|					       |end		     |
++----------------------------------------------+---------------------+
+|whois -account bjones			       |whois		     |
+|					       |account 	     |
+|    Selects the owner of the account	       |    bjones	     |
+|    "bjones,host,site" with your host and     |end		     |
+|    site. On a CSNET site such as Purdue,     |		     |
+|    the account is "bjones,purdue,purdue".    |		     |
+|    You may type in a complete account,       |		     |
+|    such as "bjones,purdue-ee,purdue".        |		     |
+|    There are no spaces in the string.        |		     |
++----------------------------------------------+---------------------+
+|whois -account purdue,csnet,csnet	       |whois		     |
+|					       |account 	     |
+|    Returns the site entry for Purdue.        |  purdue,csnet,csnet |
+|    The account string for a site is	       |end		     |
+|    "site,csnet,csnet".		       |		     |
++----------------------------------------------+---------------------+
+|whois -ident 2573			       |whois		     |
+|					       |ident		     |
+|    Selects the owner of the account with     |   2573 	     |
+|    the csnet-id number "2573".  This	       |end		     |
+|    feature is included for the benefit of    |		     |
+|    programs that query the name server.      |		     |
++----------------------------------------------+---------------------+
+

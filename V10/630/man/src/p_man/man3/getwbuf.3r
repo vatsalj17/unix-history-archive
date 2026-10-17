@@ -1,0 +1,84 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH GETWBUF 3R "630 MTG"
+.XE "getwbuf()"
+.XE "putwbuf()"
+.SH NAME
+getwbuf, putwbuf, Wbufsize \- access the 630 MTG default terminal emulator buffer
+.SH SYNOPSIS
+.B int getwbuf (buf, size)
+.sp
+.B int putwbuf (buf, size)
+.sp
+.B char \(**buf;
+.br
+.B int size;
+.sp
+.B int Wbufsize;
+.SH DESCRIPTION
+These functions give access to the global
+text buffer used by the 630 MTG default terminal emulator to hold the last cut, sent
+or saved text.
+They offer the ability for cut-and-paste communication between the 
+default terminal emulator and user's
+applications.
+.PP
+The
+.I getwbuf
+function reads from the global text buffer.
+Up to
+.I size
+bytes are copied into the buffer pointed
+to by
+.IR buf .
+The actual number of bytes copied is returned.
+.PP
+The
+.I putwbuf
+function writes from the character buffer pointed to by
+.I buf
+into the global text buffer.
+The number of bytes copied is returned.
+The previous content of the global text buffer is thrown away.
+.PP
+The global variable
+.I Wbufsize
+is the current number of characters in the global buffer used by
+.I getwbuf
+and
+.IR putwbuf .
+.SH EXAMPLE
+The following example is a function that takes the global text buffer and
+converts every 8 continuous spaces into a tab.
+.sp
+.nf
+.RS 3
+.ft CM
+tabexpand()
+{
+   char buf1[120];
+   char buf2[120];
+   int i,j,k,space;
+
+   k = 0;
+   space = 0;
+   i = getwbuf(buf1, 120);
+   for(j=0; j<i; ++j)
+   {
+      buf2[k] = buf1[j];
+      if(buf2[k] == ' ')
+         space++;
+      else
+         space = 0;
+      if(space == 8)
+      {  
+         k -= 7;
+         buf2[k] = '\\t';
+         space = 0;
+      }
+      ++k;
+   }
+   putwbuf(buf2, k);
+}
+.fi
+.RE
+.ft R

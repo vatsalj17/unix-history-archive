@@ -1,0 +1,152 @@
+	/* LINTLIBRARY */
+#define	lint
+#include <fio.h>
+#include <setjmp.h>
+#include <u.h>
+#include <gnot.h>
+#include <font.h>
+#include <libc.h>
+/*
+ * System calls
+ */
+
+int	errno;
+int	access(name, mode) char *name; { return 1; }
+int	brk(a) char *a; { return 0; }
+int	chdir(s) char *s; { return 1; }
+int	close(f) { return 1; }
+int	create(s, m, p) char *s; long p; { return 1; }
+int	dup(f1, f2) { return 1; }
+int	errstr(e, s) char *s; { return 1; }
+	exec(f, a) char *f, **a; { }
+	/* VARARGS */
+	execl(f, a) char *f, *a; { }
+void	exit(n) { }
+int	fmount(s) char*s; { return 1L; }
+int	fork() { return 1; }
+int	fstat(f, d) Dir *d; { return 1; }
+int	getpgrp() { return 1; }
+int	getpid() { return 1; }
+int	mount(s, n) char *s, *n; { return 1; }
+int	newpgrp() { return 1; }
+int	open(f, m) char *f; { return 1; }
+int	pipe(f) int f[2]; { return 1; }
+long	read(f, b, l) char *b; long l; { return l; }
+int	remove(s) char *s; { return 1; }
+void	*sbrk(i) long i; { return (void *)0; }
+long	seek(f, o, d) long o; { return 1; }
+int	sleep(s) long s; { return 1; }
+int	stat(s, d) char *s; Dir *d; { return 1; }
+long	times(b) long *b; { return 1L; }
+int	unmount(a, b) char *a, *b; { return 1; }
+int	userstr(t, d, uid, s) char *s; { return 1; }
+int	wait() { return 1; }
+long	write(f, b, l) char *b; long l; { return l; }
+
+/*
+ * String routines
+ */
+
+char	*strcat(a, b) char *a, *b; { return ""; }
+char	*strchr(s, c) char *s; { return ""; }
+int	strcmp(a, b) char *a, *b; { return 1; }
+char	*strcpy(a, b) char *a, *b; { return ""; }
+long	strcspn(s1, s2) char *s1, *s2; { return 1; }
+char	*strdup(s) char *s; { return ""; }
+long	strlen(s) char *s; { return 1; }
+char	*strncat(s1, s2, n) char *s1, *s2; { return ""; }
+int	strncmp(s1, s2, n) char *s1, *s2; { return 1; }
+char	*strncpy(s1, s2, n) char *s1, *s2; { return ""; }
+char	*strpbrk(s1, s2) char *s1, *s2; { return ""; }
+char	*strrchr(s, c) char *s; { return ""; }
+long	strspn(s1, s2) char *s1, *s2; { return 1; }
+char	*strtok(s1, s2) char *s1, *s2; { return ""; }
+
+/*
+ * Memory routines
+ */
+
+void	*memccpy(s1, s2, c, n) char *s1, *s2; long n; { return (void *)""; }
+void	*memchr(s, c, n) char *s; long n; { return (void *)""; }
+int	memcmp(s1, s2, n) char *s1, *s2; long n; { return 1; }
+void	*memcpy(s1, s2, n) char *s1, *s2; long n; { return (void *)""; }
+void	*memset(s, c, n) char *s; long n; { return (void *)""; } 
+void	*malloc(n) unsigned long n; { return (void *)"";}
+void	free(p) char *p; { }
+	ialloc(ptr, size) char *ptr; unsigned size; { }
+void	*realloc(p, n) char *p; unsigned n; { return (void *)"";}
+
+/*
+ * Formatted I/O routines
+ */
+int	atoi(s) char *s; { return 1; }
+long	atol(s) char *s; { return 1L; }
+	/* VARARGS */ /*PRINTFLIKE1*/
+	print( s ) char *s; { }
+	/* VARARGS */ /*PRINTFLIKE2*/
+	fprint(f, s) int f; char *s; { }
+	/* VARARGS */ /*PRINTFLIKE2*/
+	sprint(f, s) char *f; char *s; { }
+
+/*
+ * FIO routines
+ */
+
+int	Fflush(fd){ return(fd); }
+int	Fgetc(fd){ return(fd); }
+void	Finit(fd, buf) char *buf; { return; }
+	/* VARARGS */ /*PRINTFLIKE2*/
+int	Fprint(fd, fmt) char *fmt; { return(fd); }
+int	Fputc(fd, c) { return(c); }
+char	*Frdline(fd) { return(""); }
+long	Fread(fd, addr, n) char *addr; long n; { return(n); }
+long	Fseek(fd, n, cmd) long n; { return(n); }
+void	Fundo(fd) { return; }
+long	Fwrite(fd, addr, nbytes) char *addr; long nbytes; { return(0); }
+
+/*
+ * Misc
+ */
+
+int	abs(i) { return i; }
+void	longjmp(env, val) jmp_buf env; { }
+long	lrand() { return lrand(); }
+int	nrand(val) { return 1; }
+char	*mktemp(p) char *p; { return "";}
+void	perror(s) char *s; { }
+void	qsort(b, n, w, compar) char *b;	int (*compar)(); { }
+int	rand( ) { return 1; }
+int	setjmp(e) jmp_buf e; { return 1; }
+void	srand(seed) { }
+	swab(a, b, n) char *a, *b; { }
+
+/*
+ * Graphics
+ */
+static 		Point p;
+static 		Rectangle r;
+Bitmap 		display;
+Point		Pt(a, b) { return p; }
+Rectangle	Rect(a, b, c, d) { return r; }
+Rectangle	Rpt(p, q) Point p, q; { return r; }
+Point		add(p, q) Point p, q; { return p; }
+Point		sub(p, q) Point p, q; { return p; }
+Point		mul(p, a) Point p; { return p; }
+Point		div(p, a) Point p; { return p; }
+int		eqpt(p, q) Point p, q; { return 0; }
+int		eqrect(r, s) Rectangle r, s; { return 0; }
+int		rectXrect(r, s) Rectangle r, s; { return 0; }
+int		ptinrect(p, r) Point p; Rectangle r; { return 0; }
+int		rectclip(rp, b) Rectangle *rp, b; { return 0; }
+Rectangle	rsubp(r, p) Rectangle r; Point p; { return r; }
+Rectangle	raddp(r, p) Rectangle r; Point p; { return r; }
+Rectangle	inset(r, a) Rectangle r; { return r; }
+Point		string(b, p, f, s, m) Bitmap *b; Point p; Font *f; char *s;
+			{ return p; }
+int		strwidth(f, s) Font *f; char *s; { return 0; }
+Bitmap		*balloc(r, l) Rectangle r; { return &display; }
+ulong		*addr(b, p) Bitmap *b; Point p; { return display.base; }
+void		bitblt(d, p, s, r, m) Bitmap *d, *s; Point p; Rectangle r; {}
+void		rectf(d, r, m) Bitmap *d; Rectangle r; {}
+void		texture(d, r, t, m) Bitmap *d; Rectangle r; Texture *t; {}
+void		point(d, p, v, m) Bitmap *d; Point p; ulong v; {}

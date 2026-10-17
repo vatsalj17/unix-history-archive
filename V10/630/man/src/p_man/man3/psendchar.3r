@@ -1,0 +1,66 @@
+.nr Hy 0
+.nh
+.ds ZZ DEVELOPMENT PACKAGE
+.TH PSENDCHAR 3R "630 MTG"
+.XE "psendchar()"
+.XE "psendnchars()"
+.XE "xpsendchar()"
+.XE "xpsendnchars()"
+.SH NAME
+psendchar, psendnchars, xpsendchar, xpsendnchars \- send character to printer port
+.SH SYNOPSIS
+.ft B
+int psendchar (c)
+.sp
+int xpsendchar (c)
+.sp
+void psendnchars (n, s)
+.sp
+void xpsendnchars (n, s)
+.sp
+char c;
+.br
+int n;
+.br
+char \(**s;
+.SH DESCRIPTION
+The
+.I psendchar
+function
+sends a single byte to the printer output queue.
+If the calling process does not own the printer,
+.I psendchar
+will send nothing to the printer and returns a 0.
+Otherwise, 
+.I psendchar
+initiates printing
+and returns a 1.
+.PP
+The
+.I xpsendchar
+function is identical to
+.I psendchar
+except that it may expand tabs and filter escape sequences
+depending on the printer's setup values.
+.PP
+The
+.I psendnchars
+and
+.I xpsendnchars
+functions send the string
+.I s
+of length
+.I n
+to the printer.
+\f2Xpsenchars\f1 handles expanding tabs and filtering escape sequences.
+These routines block until all the characters fit on the printer output
+queue.
+.PP
+If the printer output queue is full, the above functions will
+block the
+.br
+calling process until they are able to place the data into 
+the printer queue.
+
+.SH SEE ALSO
+resources(3R).

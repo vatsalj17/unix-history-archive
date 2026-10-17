@@ -1,0 +1,146 @@
+.NH 2
+Contrasts with Orange Book 
+.UX
+systems
+.XL yv
+.PP
+The `tradition' in our title refers to that of
+simplicity and generality as established in early
+research systems.
+In commercial systems, `tradition' connotes also burdens of
+history and market perceptions.
+We are fortunate to have been able to follow the former
+tradition, which allowed us to value coherence before compatibility
+and marketing demands.
+.PP
+.I "Administrative tools.
+As yet, IX has no tools for handling
+labels symbolically, translating them on
+passing across machine boundaries, and so forth.
+Nor has it any significant tools for
+analyzing audit records.
+.PP
+.I "Labeling output.
+IX does not provide visible labels on a windowed terminal
+or mandatorily place labels in printed output.
+Such labeling would be
+easy to enforce, because external devices can be reached only
+with mediation of privilege.
+Indeed, for windowed terminals, 
+.I mux
+and the
+.I layers
+program in System V/MLS,
+|reference(windowing certifiable)
+were built on the same basic model at the same time
+by a group with whom we were in touch.
+.I Layers 
+handles the labeling with no difficulty.
+.PP
+.I "Temporary directory
+Blind directories in IX are somewhat more open and more 
+vulnerable to tampering than
+the `multilevel directories' of System V,
+|reference(bendet)|reference(SVMLS Tech)
+or the multilevel cloned copies of LOCK/ix,
+|reference(schaffer)
+neither of which is easily adaptable to work with
+dynamic labels.
+.PP
+.I "Access control lists.
+We deliberately chose not to support
+discretionary access control lists (ACLs), which the Orange
+Book effectively requires.
+Their implementation poses no research challenge.
+More importantly, we have little faith in the protective
+value of such a complex, structureless mechanism, which
+must be even harder to keep in order than are ordinary
+.UX
+permissions.
+.PP
+.I "Covert channels.
+We believe that covert channels between deliberately
+cooperating processes are not a
+significant concern in most commercial applications.
+Accordingly IX admits covert channels much
+wider than the Orange Book contemplates.
+Some are a natural corollary of dynamic labels.
+The widest channels arise from the drop-on-exec
+convention (\*(y5), the value of which is open to question.
+If that convention were abandoned in favor of some other
+mechanism for obtaining processes with low labels,
+many covert channels would vanish.
+.PP
+.I "Trustable shell.
+The extreme programmability and the complex semantics of
+.UX
+shells makes them dangerous.
+You cannot tell what a shell script
+does by looking at it, because the shell's behavior is so crucially
+dependent on its environment;
+administrative shell scripts
+are accidents waiting to happen.
+The availability of
+.I nosh
+allows us to 
+exclude ordinary shells from the TCB.
+We thereby sacrifice some flexibility, but less than one might expect.
+For example, with the shell unable to generate file names,
+we can clean a directory by executing
+.CW "rm \-r ." ,
+instead of the more usual
+.CW "rm *" .
+.PP
+.I "Private path.
+Private paths with two-way confirmation are
+essential to building virtual trusted systems,
+such as the
+.I mux
+window manager, on top of
+.UX .
+The pex idea should generalize to multiple 
+trusted computers, with pex-protected
+paths crossing machine boundaries by cryptographic
+means if necessary.|reference(reeds network)
+.PP
+We are not aware of any exact analogue of pex in other systems.
+Locking primitives in some systems achieve the privacy of pex,
+on files if not on IPC channels.
+But the mutual confirmation aspect of pex on pipes,
+which is important in client/server architectures, seems to be new.
+Neither `assured paths' in  LOCK
+|reference(boebert) nor the
+ability to test privacy in System V/MLS|reference(SVMLS tech)
+provide mutual confirmation.
+.PP
+IX has no exact Orange Book `trusted path'
+facility, whereby a magic signal gets a direct connection
+to the TCB.
+Pex on a 
+.I mux
+terminal (\*(yn) comes close, but it is still wise
+to cycle the power off and on to refresh
+a terminal that others have been using.
+.PP
+.I Privilege.
+The privilege server's data base imposes structure on the
+pattern of authorization in the system and permits
+the delegation of authority.
+Corresponding programs in other systems 
+work from flat data bases with entries
+equivalent to ($User,$ $Added_priv,$ $Program$),
+which allow specific users to run specific
+programs with specific privileges.*
+.FS
+* The
+.UX
+login program is an example, where
+$Program$ is the user's login shell,
+$Added_priv$ is given by the user- and group-id fields,
+and $User$ is given by the user name and encrypted
+password fields.
+.FE
+The structure provides a notion of
+`coherent state' or `legal edit', which
+are missing from a flat data bases, where he who edits the
+data base is king.

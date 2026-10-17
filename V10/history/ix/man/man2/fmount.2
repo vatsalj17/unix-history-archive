@@ -1,0 +1,149 @@
+.TH FMOUNT 2
+.CT 2 sa
+.SH NAME
+fmount, funmount \- mount or remove file system
+.SH SYNOPSIS
+.nf
+.B int fmount(type, fildes, name, flag)
+.B char *name;
+.PP
+.B int funmount(name)
+.B char *name;
+.PP
+.B #include <sys/label.h>
+.PP
+.B int fmount5(type, fildes, name, flag, ceiling)
+.B char *name;
+.B struct label *ceiling;
+.fi
+.SH DESCRIPTION
+.I Fmount
+mounts a file system of the named
+.I type
+described by the file descriptor
+.I fildes
+on pathname
+.IR name .
+The ceiling label, described under
+.I fmount5,
+is given a default value.
+Henceforth,
+references to
+.I name
+(the mount point)
+will refer to the root file
+on the newly mounted file system.
+.PP
+.I Name
+must already exist.
+Its old contents are inaccessible while the
+file system is mounted.
+.PP
+The meaning of
+.I flag
+varies with the file system type.
+.PP
+Allowed types are
+.TP
+.B 0
+Regular (block device) file system.
+.I Fildes
+should be a block special file.
+If
+.I flag
+is nonzero,
+the file system may not be written on;
+this must be used with physically write-protected media
+or errors will occur when access times are updated,
+even if no explicit write is attempted.
+The default ceiling label is lattice top with all privileges.
+.TP
+.B 1
+Obsolete version of the
+network file system.
+.TP
+.B 2
+Process file system,
+.IR proc (4).
+.I Fildes
+is ignored.
+.TP
+.B 3
+Mounted stream.
+.I Fildes
+must refer to a stream;
+future calls to
+.IR open (2)
+on
+.I name
+will reopen the stream.
+The mount is undone
+if the other end of the stream
+is closed or hung up.
+.TP
+.B 4
+Stream (network) file system.
+.I Fildes
+is a stream,
+whose other end is handled by a file system server,
+.IR netfs (8).
+The default ceiling label is lattice bottom with no privileges.
+.PP
+Types 5 and 6
+are used internally
+to close off errors
+and for pipes;
+these types may not be mounted.
+.PP
+.I Fmount5
+performs the function of
+.I fmount
+and, on file systems of type 0 or 4, imposes a specified 
+.I ceiling
+label.
+No file in the file system can be accessed \-
+regardless of privilege \- unless the label of the file
+is dominated by the file system ceiling.
+Moreover, in determining capabilities during
+.IR exec (2),
+capability and license bits in the file label are
+masked by corresponding bits in the ceiling.
+.PP
+Ceilings may be used to limit the labels of data
+placed in file systems for export to untrusted destinations,
+and to limit the acquisition
+of privilege by programs in file systems of untrusted origin.
+.PP
+.I Funmount
+removes knowledge of the file system
+on which
+.I name
+resides.
+The mount point
+reverts to its previous interpretation.
+.PP
+Anyone may mount or unmount
+process file systems
+(type 3);
+for other types,
+these calls are restricted to the
+super-user.
+All require capability
+.BR T_EXTERN ;
+see 
+.IR getplab (2).
+.SH SEE ALSO
+.IR labmount (2),
+.IR mount (8)
+.SH DIAGNOSTICS
+.BR EBADF ,
+.BR EBUSY ,
+.BR EINVAL ,
+.BR EIO ,
+.BR ELAB ,
+.BR ENODEV
+.SH BUGS
+Although
+.I fildes
+for type 2 file systems is ignored,
+it must be a valid file descriptor.

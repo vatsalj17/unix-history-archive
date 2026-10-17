@@ -1,0 +1,66 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH RECTXRECT 3R "630 MTG"
+.XE "rectXrect()"
+.SH NAME  
+rectxrect: rectXrect \- check for overlapping Rectangles
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+int rectXrect (r, s)
+.br
+Rectangle r, s; 
+.SH DESCRIPTION
+The
+.I rectXrect
+function
+returns 1 if
+.I r
+and
+.I s
+share any point;
+0, otherwise.
+.SH EXAMPLE
+The following routine will prompt the user to sweep out two
+Rectangles with button 1.
+If they intersect, the bell will ring.
+Typing any key will exit the program.
+.PP
+.RS 3
+.nf
+.ft CM
+    #include <dmd.h>
+
+    int request();
+    int wait();
+    void box();
+    void ringbell();
+    Rectangle newrect();
+
+    main()
+    {
+	Rectangle r, s;
+
+	request (MOUSE|KBD);
+	while (kbdchar () == -1) {
+	    wait (MOUSE);
+
+	    r = newrect (1, Rect(0,0,0,0));
+	    box (&display, r, F_XOR);
+	    s = newrect (1, Rect(0,0,0,0));
+	    box (&display, s, F_XOR);
+	    if (rectXrect (r, s))
+		 ringbell ();
+	    box (&display, r, F_XOR);
+	    box (&display, s, F_XOR);
+
+	    wait (MOUSE | KBD);
+	}
+    }
+\fR
+.fi
+.RE
+.SH SEE ALSO
+structures(3R).
+
+.RE

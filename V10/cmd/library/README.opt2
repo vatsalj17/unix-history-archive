@@ -1,0 +1,59 @@
+# *************************************************************** 
+# *	Copyright (c) 1990 AT&T 				*
+# *     All Rights Reserved				        *
+# *	THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T	*
+# *	The copyright notice above does not			*
+# *	evidence any actual or intended				*
+# *	publication of such source code.			*
+# ***************************************************************
+Option 2 is where generic requests that can be described by a template are
+handled. The template files have a name starting with "2." and are in
+library's directory.
+  The template file divides into 2 pieces.  The top control part, and the
+bottom template part.  The two parts are separated by a dashed line starting
+with at least 10 dashes. Lines anywhere starting with a # are comment lines.
+
+  Top / control part of template:
+
+If the first line starts with a capital w (W), then the rest of the line 
+is what this selection type is called on the welcome menu of library.
+If there is no W line, this type of request is named by the filename,
+which follows the "2.". For example, take the file 2.photo-cp.  If it
+did not start with a W line, it would say on the menu that "photo-cp"
+were available. 
+  Once the user selects option 2, they are displayed a new menu of what is 
+available. This is controlled by the template file's D lines. If there
+is no D line (anywhere in the top part) then the selection is numbered and
+is named by the file's name as above.  Note that this is unwise since the
+numbering of the selections have no meaning and can change as new templates
+arrive. The D line has the format
+	D <selection alpha-numeric> Description.
+If the single letter <selection alnum> is not there, then the selection is
+numbered as above.  If the description isn't there then the filename is used.
+   All the lines in the top of the template starting with a ? are displayed
+when the user does a ? about the selection.
+   All the lines starting with a H are displayed before the first instance
+of the selection is done.
+   The M line says where to send mail connected with this selection. Note that
+the default is mhuxd!techlib where most of library() requests go.  
+You may, however, specify other destinations for machine-specific products.
+However, if you add machine-specific products and want them handled through
+mhuxd!techlib, you must contact the AT&T Library Network first.
+See the README.info for the person to call.
+
+   The S line says what to Send to mark the selection taken .
+   A control line saying "ONE" says only one request will be taken.
+
+
+  Bottom / actual template part of template:
+
+    Lines here fall into several classes:
+  - lines ending with +number or *number.  These are the actual template lines.
+    The user is prompted with this lines preceded by the word "Enter ". If the
+    line ends with +number, a response is required and can be at most <number>
+    lines. If it ends with *number, the response is optional.
+  - lines starting with ?.  These are displayed when the user types a ? at
+    one of the prompts.  Generally it is a good idea to have these. Note that
+    it displays all the ? lines between the present prompt and the next
+    prompt line.
+  - Other lines are simply displayed as they are scanned over.

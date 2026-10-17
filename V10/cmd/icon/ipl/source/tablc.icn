@@ -1,0 +1,41 @@
+#	TABLC
+#
+#	Tabulate characters
+#
+#	Ralph E. Griswold
+#
+#	Last modified 4/29/86
+#
+
+procedure main(x)
+   local ccount, unique, order, i, s, a, pair, rwidth
+   unique := 0				# switch to list unique usage only
+   order := 3				# alphabetical ordering switch
+   i := 0
+   while i < *x do {
+      s := x[i +:= 1] | break
+      case s of {
+         "-a":  order := 3
+         "-n":  order := 4
+         "-u":  unique := 1
+         default:  Usage()
+         }
+      }
+   ccount := table(0)			# table of characters
+   while ccount[reads()] +:= 1
+   a := sort(ccount,order)
+   if unique = 1 then {
+      while s := get(a) do
+	 if get(a) = 1 then write(s)
+      }
+   else {
+      rwidth := 0
+      every rwidth <:= *!a
+      while s := get(a) do
+         write(left(image(s),10),right(get(a),rwidth))
+      }
+end
+
+procedure Usage()
+   stop("usage:  tablc [-a -n -u]")
+end

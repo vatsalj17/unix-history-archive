@@ -1,0 +1,75 @@
+.\"#ident	"@(#)ccsman:g3c/conv	1.2"
+'\"macro stdmacro
+.nr X
+.if \nX=0 .ds x} CONV 3L "630 MTG" "\&"
+.TH \*(x}
+.SH NAME
+conv: toupper, tolower, _toupper, _tolower, toascii \- translate characters
+.SH SYNOPSIS
+.nf
+.B #include <ccs/ctype.h>
+.PP
+.B int toupper (c)
+.B int c;
+.PP
+.B int tolower (c)
+.B int c;
+.PP
+.B int _toupper (c)
+.B int c;
+.PP
+.B int _tolower (c)
+.B int c;
+.PP
+.B int toascii (c)
+.B int c;
+.SH DESCRIPTION
+.I Toupper\^
+and
+.I tolower\^
+have as domain the range of
+.IR jx (1)
+.IR getc :
+the integers from \-1 through 255.
+If the argument of
+.I toupper\^
+represents a lower-case letter, the
+result is the corresponding upper-case
+letter.
+If the argument of
+.I tolower\^
+represents an upper-case letter, the
+result is the corresponding lower-case
+letter.
+All other arguments in the domain are
+returned unchanged.
+.PP
+The macros
+.I _toupper\^
+and
+.IR _tolower ,
+are macros that accomplish the same thing as
+.I toupper\^
+and
+.I tolower\^
+but have restricted domains and are faster.
+.I _toupper\^
+requires a lower-case letter as its argument;
+its result is the corresponding upper-case letter.
+The macro
+.I _tolower\^
+requires an upper-case letter as its argument;
+its result is the corresponding lower-case letter.
+Arguments outside the domain cause undefined results.
+.PP
+.I Toascii\^
+yields its argument with all bits turned off that are not
+part of a standard
+.SM ASCII
+character; it is intended for compatibility
+with other systems.
+.SH SEE ALSO
+jx(1),
+ctype(3L),
+ascii(5).
+.Ee

@@ -1,0 +1,35 @@
+unix:V:
+	date
+	(cd sys; mk -t)
+	(cd os; mk -k )
+	(cd vm; mk -k )
+	(cd md; mk -k )
+	(cd io; mk -k )
+	(cd fs; mk -k )
+	(cd ml; mk -k )
+	(cd jak; mk -k)
+	df /
+
+install:V: unix
+	date
+	cd jak; mk install
+
+lint:V:
+	date
+	cd os
+	lint -DKERNEL -I.. \
+		../os/*.c ../vm/*.c ../md/*.c ../io/*.c ../fs/*.c ../jak/jak.c.c
+
+CYN:V:
+	date
+	(cd sys; mk -t )
+	(cd os; mk -k -f Cmk)
+	(cd md; mk -k -f Cmk)
+	(cd io; mk -k -f Cmk)
+	(cd fs; mk -k -f Cmk)
+	(cd vm; mk -k -f Cmk)
+	(cd ml; mk ml.O)
+	cyntax -n */*.O
+DIFFS:
+	date
+	diff -r `pwd` /n/bowell/usr/src/nsys/sys > DIFFS

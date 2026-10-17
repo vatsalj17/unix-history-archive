@@ -1,0 +1,792 @@
+.de EX
+.DS I
+.CI
+.ta 8u*\w'0'u +8u*\w'0'u +8u*\w'0'u +8u*\w'0'u
+..
+.de EE
+.R
+.DE
+..
+.de CI
+.ft CI
+..
+.ds x \f(CW$\fP
+.ds # \f(CW#\fP
+.ds y \f(CW$$\fP
+.TL
+A Tour of IX
+.AU
+Doug McIlroy
+.AU
+Jim Reeds
+.hw re-minds
+.AB
+The IX experimental version of
+.UX
+supports
+dynamic security labels, integrity controls, and divided privileges.
+Examples of its use show how IX differs from classical 
+systems, and give some hints about how
+cope with the differences.
+.AE
+.PP
+Although this tour consists of simple examples, it is intended for
+.UX
+experts.
+It touches on the actions of system administrators
+as well as of ordinary users.
+.PP
+Many of the examples show things that don't work, because
+that seemed like a quicker way to show what IX is really about
+and to give a feel for how to cope with its novelties
+than would a series of examples that always worked.
+The frustrations of these examples, which are not qualitatively
+different from the frustrations that a newcomer to
+.UX
+may experience, should not be taken as characteristic of
+everyday use.
+By and large IX works just like any
+.UX system.
+The differences only show up when you work in multiple
+security compartments or levels at the same time.
+Then the IX model is actually easier than that of other
+.UX
+systems with labeled access control.
+.SH
+Logging in 
+.PP
+The first thing you see when you attempt to log in
+is familiar.
+.EX
+.CW
+login:
+.EE
+But after you answer with a login name, the password prompt
+is different.
+It may look like this,
+.EX
+.CW
+Password(you:19818):
+.EE
+The prompt reminds you of who you claim to be, in
+case you didn't know.
+You may reply with a traditional password.
+The prompt also gives a 5-digit challenge string
+for a Secure Net Key (also known as Atalla) challenge
+box, which you may obtain from the system's security
+administrator.
+Unlock the box with its password, key the challenge
+string into the box,
+and type into the computer the first 5 characters of
+the response\(emall in lower case.
+If the box displays
+.EX
+.CW
+9Ab34F70
+.EE
+type
+.EX
+9ab34
+.EE
+and you should be admitted.
+Every time you log in you get a different challenge.
+.PP
+Why all the challenge-box folderol?
+Because sometimes the system admits no alternative.
+IX is paranoid about eavesdropping.
+If you try to log in from some ``untrusted'' source,
+such as a modem in California or another computer, where
+unknown agents might be listening in, you
+.I must
+use the challenge box:
+.EX
+.CW
+Password(TAPPED LINE:23740):
+.EE
+The line may not be tapped, but one never knows, so the
+system makes the pessimistic guess and reminds you not
+to use your ordinary password.
+.PP
+Once you're logged in, you can poke around as in
+an ordinary
+.UX
+system.
+Try a few
+.CW ls
+commands:
+.EX
+\*x ls .
+\*x ls /
+\*x ls -l /etc
+.EE
+You may see some surprises.
+Along with the listing of
+.CW /etc
+appears
+.EX
+.CW
+ls: /etc/pwfile: Security label violation
+.EE
+This is a file you're not cleared to see, and with good reason;
+it contains the challenge-box passwords.
+The file has a very high security
+.I label,
+or classification.
+It may seem odd that the label applies not only to the contents of the
+file, but also to its inode.
+The reason is that information, such as file mode and modification
+time, can be written in the inode.
+That information is, as far as the system can tell, as
+secret as anything else in the file.
+.PP
+Here is a classic security issue.
+Why would anybody put secrets in an inode?
+Of course no ordinary user would.
+IX, however, attempts to prevent
+dishonest as well as accidental disclosure of secrets.
+Any ordinary program could be a Trojan horse, attempting to
+slip secrets through the cracks.
+Inode information is just one of many possible cracks.
+.SH
+Labels
+.PP
+Every process and every file, including terminals, pipes, and
+even
+.CW /dev/null ,
+has a label.
+To find the label of your shell, type
+.EX
+\*x getlab
+.CW
+proc lab            	------ ------    ffff 0000 0000 ...
+proc ceil           	------ ------    ffff 0000 0000 ...
+.EE
+There is the process label,
+.CW "ffff 0000 0000 ..." ,
+a hex constant representing the first 48 of a total of 480
+bits of label.
+(We apologize for the primitive representation.
+There ought to be symbolic names for common labels, but
+they haven't been implemented.)
+This particular label is the system
+.I floor,
+the standard unclassified starting place for all users.
+It is also the standard label for communicating with the
+unclassified outside world.
+The strings of minus signs
+have to do with the tricky matter of privilege.
+We'll come back to that later.
+.PP
+You can ask for the label of the terminal\(emactually for the
+labels of all open file descriptors (\f(CW-d\fP):
+.EX
+\*x getlab -d
+.CW
+proc lab            	------ ------    ffff 0000 0000 ...
+proc ceil           	------ ------    ffff 0000 0000 ...
+fd 0                	------ ------ R  ffff 0000 0000 ...
+fd 1                	------ ------ R  ffff 0000 0000 ...
+fd 2                	------ ------ R  ffff 0000 0000 ...
+fd 3                	------ ------ R  ffff 0000 0000 ...
+.EE
+For good measure, the process label has been reported again.
+All four default file descriptors, standard input,
+standard output, standard error, and control stream, have
+the same label\(emas they must, for they all refer to the
+same open file.
+.PP
+Besides a label, each process also has a
+.I ceiling,
+the highest label the process
+is allowed to deal with.
+When you first log in, you are not permitted
+to see anything higher than the floor.
+You may look below the floor, however.
+A process may look at any file with a bitwise lesser
+or equal label.
+.PP
+The all-purpose
+.CW getlab 
+command can also retrieve the label of a file.
+.EX
+\*x getlab /etc/passwd
+.CW
+/etc/passwd           	------ ------    0000 0000 ...
+.EE
+The all-zero label, known as
+.I bottom,
+is visible from every process.
+Thus the classical password file is, as always, visible to
+everybody.
+.PP
+What's the point of having files with labels below the floor,
+which serves as the ``unclassified'' security level?
+Before we answer, we must discuss the basic rule for handling
+classified information.
+.QP
+.I
+The label of the destination of a data transfer must dominate
+(be bitwise greater than or equal to) the label of the source.
+.R
+.LP
+In other words, data may only flow up.
+Unlike ordinary file permissions, which
+the owners of files can change at will, label restrictions
+are mandatory.
+The system enforces them automatically.
+.PP
+IX supports the usual file permission mechanism.
+When the permissions allow writing,
+an attempt to write high data into a low file can have one
+of two outcomes.
+The transfer may be prohibited, or the file label
+may change to cover the label of the source process.
+Depending on which outcome is preferred,
+files below the floor may be protected in two different ways.
+Their labels may be
+.I frozen,
+in which case writing down is prohibited, or their
+labels may be
+.I loose,
+in which case writing raises the label.
+It is impossible for data written by an ordinary process
+to have a label below the label of the process.
+Thus unauthorized tampering with a supposedly bottom file will,
+if it is possible at all, be exposed by the file's label
+changing away from bottom.
+.PP
+We think of the floor as the zero of labels, with labels
+below the floor being ``negative.''
+Labels above the floor are concerned with protecting secrets.
+Labels below the floor are concerned with monitoring
+``integrity'', i.e. with detecting unintended
+changes.
+.PP
+Let us look at some more labels.
+.EX
+\*x getlab /bin /bin/cp
+.CW
+/bin                	------ ------ F  0000 0000 ...
+/bin/cp             	------ ------    0000 0000 ...
+.EE
+Both files have bottom labels.
+One, the directory
+.CW /bin ,
+is flagged
+.CW F
+for frozen.
+This is a prophylactic measure to prevent
+the directory's label from rising
+whenever somebody\(emmistakenly\(emcreates a file in it from
+a high process.
+(Recall that file creation involves 
+.I writing
+in the containing directory.)
+.PP
+Considerable trouble would ensue
+should the directory ever get a high label.
+All the files in
+it would be cut off from processes with lower ceilings.
+More subtly, the labels of all low processes that
+did have clearance to search the directory would automatically
+rise.
+Thus contaminated, the processes would spread the unwanted
+label like a disease.
+Mislabeled directories have justifiably been dubbed ``tar babies.''
+.PP
+The label of the program
+.CW /bin/cp 
+is not frozen, although it might well be.
+The penalty if it becomes wrong, however, is considerably less,
+because a program (except perhaps for a shell) is far less
+often consulted than is its directory.
+The program, of course, is still protected by permissions:
+.EX
+\*x ls -l /bin/cp
+.CW
+-rwxrwxr-x  1  bin     bin    11264 Oct 16  1987 /bin/cp
+.EE
+.CW /bin/cp
+can be written by user
+.CW bin
+and by group
+.CW bin 
+only.
+In particular, the superuser cannot write in the file;
+in IX the superuser has been stripped of universal write permission.
+The superuser can still do damage by masquerading:
+.EX
+\*# /etc/su bin
+\*x cp trash /bin/cp
+.EE
+or by taking over the file
+.EX
+\*# /etc/chown root /bin/cp
+\*# cp trash /bin/cp
+.EE
+Still, unless the superuser has managed to get
+the process label down to bottom (by use of privilege, which we shall
+discuss later) the incident will
+leave a tell-tale notice in the new label
+.EX
+\*x getlab /bin/cp
+.CW
+/bin/cp             	------ ------    ffff 0000 0000 ...
+.EE
+The floor label on a file that should be at bottom reveals that
+the file has been compromised.
+A system administrator installing new software could
+guard against handling it with a bogus
+.CW cp
+by running with a ceiling below the floor; we'll see how later.
+.PP
+It's a good idea to have your home directory frozen
+at the login label.
+Work at other labels is best done in other directories.
+Just to check,
+.EX
+\*x getlab $HOME
+.CW
+/usr/you           	------ ------ F  ffff 0000 0000 ...
+.EE
+Wisely, it is frozen.
+As one would expect, there is a
+.CW setlab
+program to change things.
+A file's owner\(emand nobody else\(emmay change
+a file from frozen to loose and back. 
+Here we subtract (\f(CW-s\fP) the frozen indicator,
+which works.
+.EX
+\*x setlab -s F $HOME
+\*x getlab $HOME
+.CW
+/usr/you           	------ ------    ffff 0000 0000 ...
+.EE
+Next we try to set the label lower by ``subtracting''
+.CW ffff .
+This, being a downward change in label, is illegal.
+.EX
+\*x setlab -s ffff $HOME
+.CW
+/usr/you: Security label violation
+.EE
+Because it's wise to leave the home directory frozen,
+let's add (\f(CW-a\fP) the frozen indicator,
+.CW F ,
+back into the label.
+.EX
+\*x setlab -a F $HOME
+\*x getlab $HOME
+.CW
+/usr/you           	------ ------ F  ffff 0000 0000 ...
+.EE
+.SH
+Fixity,
+.SM YES,
+and
+.B no
+.PP
+We have seen that a label may be ``frozen'' or ``loose.''
+There are two more degrees of fixity, ``rigid'' and ``constant.''
+Rigid labels cannot be changed without privilege.
+The file descriptors for a terminal are rigid, denoted
+.CW R 
+in a displayed label.
+.EX
+\*x getlab -d
+.CW
+proc lab            	------ ------    ffff 0000 0000 ...
+proc ceil           	------ ------    ffff 0000 0000 ...
+fd 0                	------ ------ R  ffff 0000 0000 ...
+fd 1                	------ ------ R  ffff 0000 0000 ...
+fd 2                	------ ------ R  ffff 0000 0000 ...
+fd 3                	------ ------ R  ffff 0000 0000 ...
+.EE
+The reason for the rigidity of a terminal's label
+is that data cannot be controlled after leaving
+the computer.
+Special negotiations were required to
+determine an acceptable label in the first place.
+The system cannot honor an arbitrary change in label,
+for only a single level of data transfer has been approved.
+.PP
+Constant labels, denoted
+.CW C
+in a
+.CW getlab
+display, are built in; they can never be changed.
+An example is
+.CW /dev/null .
+.EX
+\*x getlab /dev/null
+.CW
+/dev/null           	------ ------ CY 0000 0000 ...
+.EE
+It is also marked
+.CW Y
+for the special label 
+.SM YES.
+A file so labeled
+can be read or written by processes of any label.
+This is justified for
+.CW /dev/null
+because whatever goes in there never comes out.
+.PP
+Complementary to 
+.SM YES
+is the other special label 
+.B no .
+A file so labeled can be
+read or written only with privilege.
+The usual use of label 
+.B no
+is to prevent data from
+leaving the machine.
+Unopened external ports are labeled rigid 
+.B no .
+Privileged programs, in particular
+.CW login ,
+can give a different label to the file.
+The label persists
+as long as any process has the device open, at which
+time it reverts automatically to 
+.B no .
+Because label protection covers inodes as well as
+data, unprivileged processes cannot fetch the label from a
+.B no 
+file.
+In the following example, the labels of two currently active
+login devices,
+.CW dk08
+and
+.CW dk10 ,
+can be seen; the
+.B no
+label of the currently unused device,
+.CW dk12 ,
+cannot.
+.EX
+\*x who
+.CW
+reeds    dk/dk08  May 14 05:59
+you      dk/dk10  May 14 12:59
+.CI
+\*x getlab /dev/dk/dk08 /dev/dk/dk10 /dev/dk/dk12
+.CW
+/dev/dk/dk08  [name]	------ ------ R  ffff 0000 0000 ...
+/dev/dk/dk10  [name]	------ ------ R  ffff 0000 0000 ...
+/dev/dk/dk12: Security label violation
+.EE
+.PP
+The label of a device need not be the same as the
+label of an opening of the device.
+When they are different,
+.CW getlab
+reports both.
+An example is
+.CW /dev/tty .
+.EX
+\*x getlab /dev/tty
+.CW
+/dev/tty      [name]	------ ------ CY 0000 0000 ...
+/dev/tty      [desc]	------ ------ R  ffff 0000 0000 ...
+.EE
+The device is a constant 
+.SM YES;
+it can always be examined.
+The open file, though, is just another instance
+of file descriptor 3 and shares its label,
+which in this (normal) case has a rigid floor value.
+.SH
+Higher labels
+.PP
+When you register as a user, you are given
+clearance for data up to some maximum level.
+To work with data above the floor, but within
+your clearance, you need a higher-label session.
+Here's a try for a session with a top (all-1's) label.
+We apply to the ``privilege server'' to invoke a session-making
+command to do the trick.
+.EX
+\*x priv session -l ffff...
+.CW
+Password(you:38510):
+Sorry.
+.EE
+Too bad; not enough clearance.
+.EX
+\*x priv session -l ffffa
+.CW
+Password(you:57747):
+priv(session -l ffffa)? \f(CIy\fP
+session -l ffffa (EXEC /bin/sh)? \f(CIy\fP
+.CI
+\*x getlab
+.CW
+proc lab            	------ ------    ffff a000 0000 ...
+proc ceil           	------ ------    ffff a000 0000 ...
+.EE
+Success.
+As a free service of
+.I session,
+the ceiling went up too.
+The fact that it went up at all proves that you are
+recorded as being cleared for at least that level.
+.PP
+Besides the password, two other questions were asked,
+one by
+.CW priv ,
+and one by
+.CW session .
+This is more paranoia.
+Your request for a sensitive action was mediated by
+the shell.
+The shell, a horrendously complicated and highly spoofable 
+program cannot be trusted to deliver the arguments to
+other programs as you typed them.
+Thus you were asked to confirm that what the
+trusted programs received is what you typed.*
+.FS
+* Later we'll see how you know that the whole
+dialog wasn't a spoof.
+.FE
+.PP
+There is nothing special about any of the bits beyond the
+floor group.
+The bits are often portioned out to different information
+``compartments.''
+You are evidently cleared for at least compartment
+.IP
+.CW "0000 8000 0000 ..." ,
+.LP
+which stands perhaps for payroll information, and
+.CW "0000 2000 0000 ..." ,
+perhaps labor relations.
+Or-ed together with the floor, these compartments make the full label
+.CW "ffff a000 0000 ...
+.PP
+Labels also can be used to indicate classical security levels
+ordered by increasing sensitivity.  For example
+.IP
+.nf
+.CW "0000 0000 0000 ..." "	unclassified
+.CW "0000 0100 0000 ..." "	confidential
+.CW "0000 0300 0000 ..." "	secret
+.CW "0000 0700 0000 ..." "	top secret
+.LP
+Notice that the values are counted 0, 1, 3, 7 
+rather than 0, 1, 2, 3
+because labels are compared bitwise, not as numeric values.
+.PP
+Remembering that it's wise to do higher level work in a
+different directory, try making one.
+.EX
+\*x mkdir classified
+.CW
+classified: Unknown error
+.EE
+Too bad, again.
+Things have been done in the wrong order.
+You intended to write the name
+of a new file into your home directory.
+The write is forbidden because that directory is frozen
+at a lower label than your current session.
+``Unknown error'' should really be ``Security label violation,''
+but not all standard programs yet know about this new
+error code.
+.PP
+Better leave the high session and start again.
+.EX
+\*x \fR<control-D>     (to leave high session)\fP
+\*x mkdir classified
+\*x priv session -l ffffa
+.CW
+Password(you:57747):
+priv(session -l ffffa)? \f(CIy\fP
+session -l ffffa (EXEC /bin/sh)? \f(CIy\fP
+.CI
+\*x getlab classified
+.CW
+classified: Security label violation
+.EE
+Now things are getting a bit ridiculous.
+Where are we?
+.EX
+\*x pwd
+.CW
+/
+.EE
+This is crazy; and it is a lie.
+You are actually stuck in a black hole, a directory labeled
+.B no ,
+which not even
+.CW pwd
+can trace the path to.
+With perhaps an excess of zeal the privilege server,
+.CW priv ,
+starts each privileged process in the black hole and
+cleans out the environment.
+This prevents spoofing games with relative pathnames and
+environment variables.
+It also means that you have to do a bit of extra work
+and probably reexecute your profile to get a friendly shell
+in a differently labeled session.
+.EX
+\*x cd $HOME
+.CW
+no home directory
+.EE
+Oops.  The environment is empty.
+.EX
+\*x cd /usr/you
+\*x getlab classified
+classified          	------ ------    ffff 0000 ...
+.EE
+Now create a file in directory
+.CW classified
+(which as yet is still labeled at bottom).
+.EX
+\*x >classified/secretfile
+\*x getlab classified classified/secretfile
+.CW
+classified          	------ ------    ffff a000 0000 ...
+classified/secretfile	------ ------    ffff a000 0000 ...
+.EE
+The label of the directory 
+.CW classified
+rises to cover the label of the process that created
+.CW secretfile .
+And 
+.CW secretfile
+bears the label of that process, too.
+.PP
+You may have guessed that the labels printed by
+.CW getlab
+have blanks
+in them only for readability.
+The blanks are optional.
+We have already used additive and subtractive labels in 
+.CW setlab ;
+absolute labels may be used as well.
+This is another way to freeze the label of the new directory:
+.EX
+\*x setlab Fffffa classified
+.EE
+Besides preventing the label from rising automatically,
+freezing prevents anybody else\(emeven the superuser\(emfrom
+tinkering with the label.
+As the file's owner, you can still change it with
+.CW setlab .
+You can only change it upwards, however.
+Let's raise our ceiling and change the label up further.
+.EX
+\*x priv session -C fffff	# raise ceiling
+\*x setlab "ffff e" secretfile
+.EE
+.PP
+Now let's write stuff into the file and try to read it back
+.EX
+\*x echo hello >secretfile
+\*x cat secretfile
+.CW Terminated
+.EE
+Trouble again.
+The ceiling is high enough, so
+.CW cat
+can work, but the terminal is not
+labeled high enough and its label is rigid.
+Thus the output of
+.CW cat
+is blocked.  
+The process dies in the same way that it would
+from writing on a broken pipe.
+.PP
+If the ceiling were brought down to the session level,
+.CW cat
+could not read the file.
+Try the
+.CW drop
+command, which runs a process with the ceiling dropped
+to the current process label.
+.EX
+\*x drop cat secretfile
+.EE
+Still silence.
+How come?
+It is all right for
+.CW secretfile
+to be opened; no secrets are revealed thereby, for its
+name is known in a lower-labeled directory.*
+.FS
+* Actually a small secret, exactly one bit,
+is revealed, namely whether
+the file permissions permit opening.
+This covert channel is beneath our notice.
+.FE
+Trouble sets in only when the file is read.
+The silence of
+.CW cat
+indicates that it is not careful about distinguishing
+read errors from end-of-file.
+Some commands are.
+.EX
+\*x drop cp secretfile /dev/tty
+.CW
+cp: secretfile: Unknown error
+.EE
+``Unknown error'' really should be ``Security label violation.''
+This little glitch simply shows that
+.CW cp ,
+like most code in IX, was taken over lock, stock, and
+barrel from v10, knows nothing about security labels.
+.PP
+Let's get rid of the file while we can
+.EX
+\*x rm secretfile
+.EE
+A couple of EOTs will get us back to where we started.
+.EX
+\*x \fR<control-D>\fP
+\*x \fR<control-D>\fP
+\*x getlab
+.CW
+proc lab            	------ ------    ffff 0000 0000 ...
+proc ceil           	------ ------    ffff 0000 0000 ...
+.CI
+\*x pwd
+.CW
+/usr/you
+.EE
+Now remove the classified directory.
+.EX
+\*x rm classified
+.CW
+rm: classified: Security label violation
+.EE
+It didn't work.
+The directory is above the ceiling,
+where you're not supposed to meddle.
+You need a process label at floor and a ceiling above the
+file being removed.
+To get rid of it, we raise the ceiling for just one
+command.
+Remembering that the command is going to
+be executed from the black hole,
+we give a full pathname
+.EX
+\*x priv session -C fffff -c rm $HOME/classified
+.EE
+The usual verification dialog ensues.
+.PP
+With
+.CW mux
+windows, the constant changing of sessions would not be
+necessary. 
+A different window can be devoted to each kind of
+session you're likely to need.
+Of course you can't cut and paste from a high window
+to a low one, but otherwise the windows work normally.
+And if in a window you return from a high session to a previos
+lower one, the entire contents of the window gets
+wiped out with the comment, ``Sanitized window downgrade.''

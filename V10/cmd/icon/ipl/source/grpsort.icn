@@ -1,0 +1,127 @@
+#	GRPSORT
+#
+#	Sort groups of lines
+#
+#	Thomas R. Hicks
+#
+#	Last modified 8/8/85
+#
+
+global lcount, linelst, ordflag
+
+procedure main(args)
+   local division, keytable, keylist, line, info, nexthdr, null
+   linelst := []
+   keytable := table()
+   lcount := 0
+
+   if *args = 2 then
+      if args[1] == "-o" then
+          ordflag := pop(args)
+      else
+          Usage()
+
+   if *args = 1 then {
+      if args[1] == "?" then
+          Usage()
+      if args[1] == "-o" then
+          ordflag := pop(args)
+      else
+          division := args[1]
+      }
+
+   if *args = 0 then
+      division := ""
+
+   nexthdr := lmany(division) | fail	# find at least one record or quit
+   info := [nexthdr,[lcount]]
+
+   # gather all data lines for this group/record
+   while line := getline() do {
+      if eorec(division,line) then {	# at end of this record
+          # enter record info into sort key table
+          put(info[2],lcount-1)
+          enter(info,keytable)
+          # look for header of next record
+          if nexthdr := lmany(division) then
+      	info := [nexthdr,[lcount]] # begin next group/record
+          else
+      	info := null
+          }
+      }
+   # enter last line info into sort key table
+   if \info then {
+      put(info[2],lcount)
+      enter(info,keytable)
+      }
+
+   keylist := sort(keytable,1)		# sort by record headers
+   if \ordflag then
+      printord(keylist)		# list sorted order of records
+   else
+      printrecs(keylist,division)	# print records in order
+end
+
+procedure Usage()
+   stop("Usage: groupsort [-o] [separator string] <file >sortedfile")
+end
+
+# enter - enter the group info into the sort key table
+procedure enter(info,tbl)
+   if /tbl[info[1]] then		# new key value
+      tbl[info[1]] := [info[2]]
+   else
+      put(tbl[info[1]],info[2])	# add occurrance info
+end
+
+# eorec - suceed if a delimiter string has been found, fail otherwise
+procedure eorec(div,str)
+   if div == "" then			# If delimiter string is empty,
+      if str == div then return	# then make exact match
+      else
+          fail
+   if match(div,str) then return	# Otherwise match initial string.
+   else
+      fail
+end
+
+# getline - get the next line (or fail), trim off trailing tabs and blanks.
+procedure getline()
+   local line
+   static trimset
+   initial trimset := ' \t'
+   if line := trim(read(),trimset) then {
+      if /ordflag then	# save only if going to print later
+          put(linelst,line)
+      lcount +:= 1
+      return line
+      }
+end
+
+# lmany - skip over many lines matching string div.
+procedure lmany(div)
+   local line
+   while line := getline() do {
+      if eorec(div,line) then next	#skip over multiple dividing lines
+      return line
+      }
+end
+
+# printord - print only the selection order of the records.
+procedure printord(slist)
+   local x, y
+   every x := !slist do
+      every y := !x[2] do
+          write(y[1],"-",y[2],"\t",x[1])
+end
+
+# printrecs - write the records in sorted order, separated by div string.
+procedure printrecs(slist,div)
+   local x, y, z
+   every x := !slist do 
+      every y := !x[2] do {
+          every z := y[1] to y[2] do
+      	write(linelst[z])
+          write(div)
+          }
+end

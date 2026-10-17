@@ -1,0 +1,31 @@
+BUILTINS =
+SRC = src/ofault.c src/onbrk.f src/setjmp.s src/sgset.c src/main.f\
+	src/matlab.f src/parse.f src/comand.f src/clause.f src/expr.f\
+	src/term.f src/factor.f src/funs.f src/stackp.f src/stackg.f\
+	src/stack1.f src/stack2.f src/print.f src/prntid.f src/getsym.f\
+	src/getlin.f src/getch.f src/getval.f src/matfn1.f src/matfn2.f\
+	src/matfn3.f src/matfn4.f src/matfn5.f src/matfn6.f\
+	src/error.f src/pythag.f src/rat.f\
+	src/files.f src/helper.f src/flop.f src/xchar.f src/user.f src/prompt.f\
+	src/savlod.f src/formz.f src/edit.f src/plot.f\
+	src/wgeco.f src/wgefa.f src/wgesl.f src/wgedi.f src/wpofa.f\
+	src/rref.f src/hilber.f src/htridi.f src/htribk.f src/imtql2.f\
+	src/corth.f src/comqr3.f src/wsvdc.f src/wqrdc.f src/wqrsl.f\
+	src/magic.f src/base.f src/urand.f src/wmul.f src/wdiv.f src/wsign.f\
+	src/wsqrt.f src/wasum.f src/wlog.f src/watan.f src/iwamax.f src/wnrm2.f\
+	src/wrscal.f src/wscal.f src/waxpy.f src/wdotur.f src/wdotui.f\
+	src/wdotcr.f src/wdotci.f src/wcopy.f src/wset.f src/wswap.f src/rset.f\
+	src/rswap.f src/rrot.f src/rrotg.f src/eqid.f src/putid.f src/round.f
+
+matlab:	matlab.a
+	f77 matlab.a -o matlab
+
+matlab.a: $SRC
+	o=`echo $newprereq | sed 's!src/!!g;s/\.[cfs]/.o/g'`
+	f77 -c -O $newprereq
+	if test -w matlab.a
+		then ar ru matlab.a $o
+		else ar q matlab.a $o
+		fi
+	ranlib matlab.a
+	rm $o

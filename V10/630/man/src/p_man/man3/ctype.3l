@@ -1,0 +1,83 @@
+.\"#ident	"@(#)ccsman:g3c/ctype	1.2.1.1"
+'\"macro stdmacro
+.nr X
+.if \nX=0 .ds x} CTYPE 3L "630 MTG" "\&"
+.TH \*(x}
+.SH NAME
+ctype: isdigit, isxdigit, islower, isupper, isalpha, isalnum, isspace, iscntrl, ispunct, isprint, isgraph, isascii \- character handling
+.SH SYNOPSIS
+.B #include <ccs/ctype.h>
+.PP
+.B int isdigit (c)
+.br
+.B int c;
+.PP
+.B . . .
+.PP
+.B isascii (c)
+.br
+.B int c;
+.PP
+.B . . .
+.br
+.PP
+.SH DESCRIPTION
+The character classification macros listed below
+return nonzero for true,
+zero for false.
+.I isascii\^
+is defined on all integer values;
+the rest are defined on valid members of the character set
+and on the single value -1
+(guaranteed not to be a character set member).
+.TP 15n
+.I isdigit\^
+tests for the digits 0 through 9.
+.TP
+.I isxdigit\^
+tests for any character for which \fIisdigit\fP is true or for
+the letters \fIa\fP through \fIf\fP or \fIA\fP through \fIF\fP.
+.TP
+.I islower\^
+tests for any lowercase letter as defined by the character set.
+.TP
+.I isupper\^
+tests for any uppercase letter as defined by the character set.
+.TP
+.I isalpha\^
+tests for any character for which \fIislower\fP or \fIisupper\fP is true and
+possibly any others as defined by the character set.
+.TP
+.I isalnum\^
+tests for any character for which \fIisalpha\fP or \fIisdigit\fP is true.
+.TP
+.I isspace\^
+tests for a space, horizontal-tab, carriage return, newline, vertical-tab,
+or form-feed.
+.TP
+.I iscntrl\^
+tests for ``control characters'' as defined by the character set.
+.TP
+.I ispunct\^
+tests for any character other than the ones for which \fIisalnum\fP, \fIiscntrl\fP,
+or \fIisspace\fP is true or space.
+.TP
+.I isprint\^
+tests for a space or any character for which \fIisalnum\fP or \fIispunct\fP is true 
+or other ``printing character'' as defined by the character set.
+.TP
+.I isgraph\^
+tests for any character for which \fIisprint\fP is true, except for space.
+.TP
+.I isascii\^
+tests for an \s-1ASCII\s0 character (a non-negative number less than 0200.)
+.PP
+All the character classification macros
+do a table lookup.
+.SH "SEE ALSO"
+conv(3L),
+ascii(5).
+.SH DIAGNOSTICS
+If the argument to any of the character handling macros  
+is not in the domain of the function, the result is undefined.
+.Ee

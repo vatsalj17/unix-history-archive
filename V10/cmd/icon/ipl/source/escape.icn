@@ -1,0 +1,56 @@
+#	ESCAPE
+#
+#	Interpret Icon literal escapes
+#
+#	William H. Mitchell
+#
+#	Last mofied 2/1/86
+#
+
+procedure escape(s)
+   ns := ""
+   s ? while c := move(1) do {
+      ns ||:= if c == "\\" then case c2 := (move(1) | "") of {
+      "b":  "\b"
+      "d":  "\d"
+      "e":  "\e"
+      "f":  "\f"
+      "l":  "\n"
+      "n":  "\n"
+      "r":  "\r"
+      "t":  "\t"
+      "v":  "\v"
+      "'":  "'"
+      "\"":  "\""
+      "x":  hexcode()
+      "^":  ctrlcode(move(1))
+      any('01234567',c2) & c2:  octcode(c2)
+      default:  c2
+      } else c
+      }
+   return ns
+end
+
+procedure hexcode()
+   static cdigs
+   initial cdigs := ~'0123456789ABCDEFabcdef'
+   
+   move(i := 2 | 1) ? s := tab(upto(cdigs) | 0)
+   move(*s - i)
+   return &cset[integer("16r" || s) + 1]
+end
+
+procedure octcode(c)
+   static cdigs
+   initial cdigs := ~'01234567'
+   
+   move(-1)
+   move(i := 3 | 2 | 1) ? s := tab(upto(cdigs) | 0)
+   move(*s - i)
+   return &cset[integer("8r" || s) + 1]
+end
+
+procedure ctrlcode(s)
+   return &cset[find(map(s),&lcase) + 1]
+end
+

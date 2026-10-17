@@ -1,0 +1,44 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH RCVCHAR 3R "630 MTG"
+.XE "rcvchar()"
+.SH NAME
+rcvchar \- receive character from host
+.SH SYNOPSIS
+.ft B
+int rcvchar ( )
+.SH DESCRIPTION
+The
+.I rcvchar
+function
+returns the next character received from the host.
+If there are no characters available,
+.I rcvchar
+returns -1.
+.PP
+Since local programs have no host connection, a call to
+.I rcvchar
+by a local program will always return -1.
+.SH EXAMPLE
+The following program is a very simple terminal emulator.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+main()
+{
+	int c;
+
+	request(RCV);
+	for(;;) {
+		wait(RCV);
+		while( (c=rcvchar()) != -1 )
+			lputchar(c);
+	}
+}
+\fR
+.fi
+.RE
+.SH SEE ALSO
+local(3R), resources(3R), sendchar(3R).

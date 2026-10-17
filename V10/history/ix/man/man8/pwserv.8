@@ -1,0 +1,77 @@
+.TH PWSERV 8
+.CT 1 sa_auto
+.SH NAME
+pwserv \- password verification service 
+.SH SYNOPSIS
+.B /etc/pwserv
+.SH DESCRIPTION
+.I Pwserv,
+normally started from
+.IR rc (8),
+handles password verification requests initiated by (say)
+.IR pwquery (3)
+through the conventional 
+process mount point
+.FR /cs/pw .
+When a request is made a file descriptor (called the `line' below)
+is passed to 
+.I pwserv
+together with a user name and an optional parameter string.
+Normally,
+.I pwserv
+writes a prompt on the line, reads a reply, and returns
+an indication of success to the invoking client.
+Valid passwords are taken from the file
+.FR /etc/pwfile ,
+which lists for each user an ordinary (encrypted,
+.IR crypt (3)-style)
+password and an
+SNK (Secure Net Key) challenge-response key.
+Before prompting, an
+.B FIOPX
+IO control is attempted to render the line to the end user private;
+see
+.IR pex (4).
+If this succeeds 
+either a classical or an Atalla password is accepted.
+If the pex bid fails, the prompt warns that the line
+is not private, and only an SNK response is accepted.
+.PP
+In the pexed case the prompt looks like
+.B Password(pjw:31416):
+and in the unpexed case like
+.B "Password(TAPPED LINE:01492):
+The five digit string after the colon is the Atalla challenge string.
+Only the first five digits of the Atalla response string are significant.
+Hex digits in the response must be typed in lower case.
+.PP
+Possible values of the optional parameter string are
+.TP
+.B pex
+(specified by opening  the server with
+.B ipcopen("/cs/pw!pex") )
+Accept passwords only if the
+.B FIOPX
+succeeds.
+.PP
+When the line's stream identifier asserts previous confirmation
+of the same password,
+.I pwserv
+answers affirmatively without demanding a password; see
+.IR session (1)
+and
+.IR src (5).
+.SH FILES
+.nf
+.F /etc/pwserv
+.F /etc/pwfile
+.fi
+.SH "SEE ALSO"
+.IR pwquery (3),
+.IR ipc (3),
+.IR pex (4),
+.IR stream (4),
+.IR pwfile (5),
+.IR passwd (1)
+.SH BUGS
+Jammable.

@@ -1,0 +1,88 @@
+#	IMAGE
+#
+#	Generalized image of Icon object
+#
+#	Ralph E. Griswold
+#
+#	Last modified 2/1/86
+#
+
+procedure Image(x,done)
+   /done := table()
+   if match("record ",image(x)) then return rimage(x,done)
+   else return case type(x) of {
+      "list":  limage(x,done)
+      "table": timage(x,done)
+      "set":   simage(x,done)
+      default: image(x)
+      }
+end
+
+#  list image
+#
+procedure limage(a,done)
+   static i
+   local s, tag
+   initial i := 0
+   if \done[a] then return done[a]
+   done[a] := tag := "L" || (i +:= 1)
+   if *a = 0 then s := tag || ":[]" else {
+      s := tag || ":["
+      every s ||:= Image(!a,done) || ","
+      s[-1] := "]"
+      }
+   return s
+end
+
+#  record image
+#
+procedure rimage(x,done)
+   static i
+   local s, tag
+   initial i := 0
+   s := image(x)
+					#  might be record constructor
+   if match("record constructor ",s) then return s
+   if \done[x] then return done[x]
+   done[x] := tag := "R" || (i +:= 1)
+   s ?:=  (="record " & (":" || (tab(upto('(') + 1))))
+   if *x = 0 then s := tag || s || ")" else {
+      s := tag || s
+      every s ||:= Image(!x,done) || ","
+      s[-1] := ")"
+      }
+   return s
+end
+
+# set image
+#
+procedure simage(S,done)
+   static i
+   local s, tag
+   initial i := 0
+   if \done[S] then return done[S]
+   done[S] := tag := "S" || (i +:= 1)
+   if *S = 0 then s := tag || ":[]" else {
+      s := tag || ":["
+      every s ||:= Image(!S,done) || ","
+      s[-1] := "]"
+      }
+   return s
+end
+
+#  table image
+#
+procedure timage(t,done)
+   static i
+   local s, tag, a, a1
+   initial i := 0
+   if \done[t] then return done[t]
+   done[t] := tag := "T" || (i +:= 1)
+   if *t = 0 then s := tag || ":[]" else {
+      a := sort(t,3)
+      s := tag || ":["
+      while s ||:= Image(get(a),done) || "->" || Image(get(a),done) || ","
+      s[-1] := "]"
+      }
+   return s
+end

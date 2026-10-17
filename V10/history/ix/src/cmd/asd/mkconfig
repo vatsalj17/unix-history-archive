@@ -1,0 +1,19 @@
+#!/bin/sh
+# ASD compilation configuration
+
+inc=/usr/include
+
+# does the system have V8/4.2 ndir stuff?
+if [ -f $inc/ndir.h ]
+then	echo "#define NDIR 1"
+fi
+
+# does the system have the fcntl system call?
+if [ -f $inc/fcntl.h ] && grep -s F_DUPFD $inc/fcntl.h
+then	echo "#define FCNTL 1"
+fi
+
+# does <sys/types.h> define u_long?
+if grep -s 'typedef.*u_long' $inc/sys/types.h
+then	echo "#define ULONG 1"
+fi

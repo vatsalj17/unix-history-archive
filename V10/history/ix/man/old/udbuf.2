@@ -1,0 +1,48 @@
+.TH UDBUF 2
+.CT 2 file_io file_inq_creat
+.SH NAME
+udbuf \(mi fetch file name component
+.SH SYNOPSIS
+.nf
+.B #include <sys/types.h>
+.B #include <sys/dir.h>
+.PP
+.B int udbuf(name)
+.B char name[DIRSIZ];
+.fi
+.SH DESCRIPTION
+.I Udbuf
+copies the current contents of the user's
+.B u.u_dbuf
+array into the array
+.I name.
+This is the most recent filename component decoded by the
+kernel subroutine
+.BR namei .
+It is usually the last component of the filename which was
+most 
+recently presented by the user process to a system call.
+If that file name, however,
+refered to an entry in a `blind directory' (see
+.IR bl (4))
+the kernel may have randomized the name before using it.
+.SH "SEE ALSO"
+.IR bl (4), 
+.IR mkunique (3)
+.SH DIAGNOSTICS
+.L
+EFAULT
+.SH BUGS
+Ill named.
+On a VAX the
+.I u.
+area is in user space, and
+the same effect may be had by:
+.EX
+#include <sys/types.h>
+#include <sys/dir.h>
+#include <sys/user.h>
+
+struct user *ua = (struct user *)(0x80000000 - UPAGES*NBPG);
+strncpy(name, ua->u_dbuf, DIRSIZ);
+.EE

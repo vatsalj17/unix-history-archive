@@ -1,0 +1,741 @@
+.NH 1
+SECURITY-RELATED PROGRAMS
+.XL yk
+.PP
+This section describes some distinctive and important
+programs in the TCB.
+.ig
+.PP
+The
+.I "privilege server
+provides administrative control over the exercise of
+privilege in a structured way.
+.PP
+The
+.I "session supervisor
+sets the ceiling, process label, and terminal label
+and starts a session shell at a
+requested level, but only after authenticating and
+checking the rights of the requesting user.
+.PP
+The
+.I "password server
+exemplifies the use of private paths
+and the sanitizing of multilevel queries to a
+secure data base.
+.PP
+.I Mux,
+a multilevel window manager, exemplifies
+the handling of multilevel
+external media, the use of private paths, and
+the transitive extension of private paths through
+system emulators.
+.PP
+The
+.I nosh
+shell is simple and transparent enough to
+be usable with confidence when working on the TCB.
+.PP
+.I Pcopy
+is a paranoid file copy routine, suitable for
+copying privileged files.
+..
+.NH 2
+Privilege server
+.XL yl
+.PP
+The privilege server hands
+out the exact privilege needed to execute administrative
+tasks.
+It is guided by a data base of
+privileged commands and conditions for their execution.
+On request for a particular privileged action, the 
+server checks authorization for that action and
+invokes the action  under carefully controlled conditions.
+The privilege server imposes more structure on authorizations than do
+homologous programs in other
+.UX
+systems.
+As a result, IX can enforce
+a notion of a well formed edit of the privilege data base.
+.PP
+Authority may be made delegable, so
+suborganizations can edit parts
+of the privilege data base controlled by their
+superior organizations, without
+intervention by an omnipotent system administrator.
+In particular,
+it is possible to give a particular user complete
+administrative control over
+a particular bit (or security category)
+in the label space.
+.PP
+The privilege server's data base consists of a tree of authorizations
+and a set of action rules.|reference(reeds network)
+The nodes in the authorization tree are labeled with
+triples of form $( pathname, ~access_predicate , ~rights)$.
+The pathname names the tree node and the access predicate
+is built with 
+.SM AND
+and
+.SM OR
+out of these kinds of atoms:
+.DS
+A regular expression for the client's login name.
+A password demand for the password server to verify.
+A regular expression for the stream identifier of the client's standard input.
+.DE
+Rights are a set of capabilities that access to the node confers.
+The simplest rights are plain identifiers.  Other rights
+are identifiers that bear limiting values that confine
+the right to part of some lattice.  Currently
+we support these nontrivial lattices: 
+.DS
+The lattice of labels.
+The lattice of regular languages ordered by inclusion.
+The lattice of subsets of privileges.
+.DE
+In mathematical terms, $rights$ names an element of the Cartesian
+product of as many lattices as there are distinct identifiers
+(with plain identifiers understood as tops of two-element lattices).
+Rights are monotone in the authorization tree: if node $x$ is
+above (closer to the root than) node $y$, then the rights
+of $x$ dominate those of $y$.
+By convention, the root of the tree has all rights.
+The root of the authorization tree represents the
+undiluted power of the TCB, and the various subnodes represent
+various limited ranges of powers, suitable for granting to various users.
+.PP
+In response to a user's request, which looks like a shell command,
+the privilege server searches for nodes
+whose access predicates are satisfied.
+The user is provisionally granted the set of corresponding rights.
+Then the request is compared with the action rules, which
+are triples of form $( template, ~need, ~action)$:
+.DS
+The $template$ is a regular expression describing the request. 
+The $need$ defines the minimum rights necessary.
+The $action$ tells what to do.
+.DE
+If some provisional rights dominate the $need$,
+then the $action$ is carried out.
+Both the need and the action can contain parameters substituted
+from substring matches in template.
+.PP
+Before execution, the proposed action is presented
+under cover of pex (\*(yC) for the user's confirmation.
+Requests placed from an insecure terminal or from a remote computer
+will be rejected because the pex will fail.
+However, a request can safely be issued through untrusted
+software, in particular the shell, because the user gets to
+vet and confirm the action over a private
+path to the privilege server.
+.PP
+Usually the action specifies execution of a particular
+program, with process license and ceiling set to particular values.
+The action may also specify an edit of a named subtree of the
+authorization tree, always preserving the monotonicity of the
+authorization tree.
+Authority is delegable by granting the
+right to edit a subtree.
+.PP
+When an action has been approved by both the privilege server
+and the user, it is executed in a paranoid,
+context-independent way.
+There are no environment variables.
+The invocation is direct, unmediated by a shell.
+The current directory is set to a `black hole' labeled $NO$;
+thus files can only be referred to by absolute path names.
+.PP
+For example, suppose the authorization tree has a node 
+.DS
+.TS
+lf2W(1.4i) lf5.
+pathname:	/admin/networks/internet
+access predicate:	SRC(/dev/console)
+rights:	netoper
+.TE
+.DE
+and immediately superior node
+.DS
+.TS
+lf2W(1.4i) lf5.
+pathname:	/admin/networks
+access predicate:	ID(ches)\^&\^PW(ches)
+rights:	netadmin\^|\^netoper
+.TE
+.DE
+(Monotonicity requires at least the right
+.CW netoper ,
+since access to the superior node must imply access to the
+inferior node.)
+The first access predicate grants rights to privilege requests
+that originate at
+.CW /dev/console ;
+the second to a user with a certain login name
+who can present a password appropriate to that name.
+If one of the action rules is
+.DS
+.TS
+lf2W(1.4i) lf5.
+template:	tcpgateway
+need:	netoper
+action:	PRIV(x), EXEC(/lib/tcp/tcpgateway)
+.TE
+.DE
+a request for the privileged action
+.CW tcpgateway
+will be admitted if the source is
+.CW /dev/console
+or if the login name
+.CW ches
+can be confirmed.  Only then will the action be performed,
+executing the desired program with external-medium (\f(CWx\fR) privilege.
+.PP
+The project administrator in the example in \*(yc might be
+granted access to a node with right
+.CW downgrade(projectbit) ,
+where
+.CW projectbit
+names a part of the lattice of labels assigned
+to the project.
+The downgrade request would need
+$font CW "downgrade($1)"$
+privilege, where $font CW "$1"$
+refers to the first argument of the request and must name a label.
+Then the administrator could use the following command to
+declassify a report issued by the project.
+.DS
+.CW
+priv downgrade projectbit report
+.DE
+.LP
+Although the administrator has downgrade privilege, the
+privilege is confined to the one project.
+.PP
+The right to edit the privilege data base must be
+carefully controlled, for whoever can edit the root of
+the authorization tree holds an ultimate key to the system.
+To keep that right from being exercised unilaterally, it
+may be protected, for example, by requiring two
+or more passwords, which are known by different people.
+Beyond the privilege server, there is one more source
+of ultimate power\(emsingle-user mode at
+the main console (\*(yo), access to
+which must be controlled by physical security measures.
+.NH 2
+Session supervisor
+.XL yy
+.PP
+The session supervisor handles requests for
+sessions with a different label, much as
+the standard
+$su$ command does for sessions with a different userid.
+It accepts requests to change the label of the terminal
+(standard input) and the process ceiling.
+After verifying the
+user's clearance and the suitability of the particular
+port for traffic at the desired label,
+the session supervisor resets the label of the standard input
+to the desired level, adjusts the process ceiling, and
+invokes a shell.
+At the end of the session, the supervisor restores
+the label of the standard input and exits.
+Label inequalities prevent misuse of the terminal
+by processes that survive across either label change.
+.NH 2
+Password server
+.XL ym
+.PP
+Ordinary 
+.UX
+passwords are open to compromise from eavesdropping.
+As a countermeasure, IX supports cryptographic protocols.
+Unfortunately such protocols, unlike classical
+.UX
+passwords, depend on the system knowing secret keys, which
+must be very closely held.
+Password checking may have to be done at any
+security level, so the password file can't be
+protected simply by giving it a high label.
+For these reasons IX has a privileged server
+that collects passwords from the user and verifies them.
+An incidental benefit is that
+new authentication algorithms can be adopted easily,
+for only the password server needs to know them.
+.PP
+A client program
+(such as
+.I login
+or
+.I su ),
+which needs to verify the claimed identity of the party
+at the far end of a file descriptor,
+establishes a connection
+to the password server through a pipe 
+mounted in the file system.
+|reference(ritchie presotto)
+The connection is assured by pex (\*(yC); if pexing fails,
+the identity claim is denied.
+The client then sends to the server 
+the claimed identity and the file descriptor.
+.PP
+The server attempts to verify the claimed identity by using
+one of two authentication algorithms.
+The user is asked to provide either a classical
+.UX
+password or a response from a cryptographic pocket calculator.
+If the user's file descriptor cannot be pexed,
+meaning that the channel cannot be trusted to keep
+passwords secret, only
+a cryptographic response is accepted.
+After the user's reply is collected and checked,
+the server reports success or failure to the client
+and drops off the line.
+.PP
+Because only one program needs access to the password file,
+that file could be kept off line for safety.
+The password server would then become a stub that observes the
+password protocol and maintains exclusive access to the
+off-line connection.
+.PP
+For a system administrator engaged in a spurt of privileged
+actions, it would be tedious to reauthenticate for every action.
+And it would be dangerous to use a privileged shell, for such 
+a blanket grant of privilege raises the possibility that
+the privilege may be exercised in unintended ways.
+Instead the session supervisor can create
+special sessions, wherein the
+administrator's I/O stream is tagged (in the
+stream identifier, \*(yD) to tell
+what authenticating checks have been successfully passed.
+The password server uses the information to short-circuit
+its authenticating protocols.
+(Pex-protected user confirmation is still required, however, to
+prevent untrusted software from initiating unintended privileged
+actions.)
+During such a session, the administrator can invoke the privilege
+server without having to present a password at each invocation.
+.NH 2
+Multilevel windows
+.XL yn
+.PP
+To illustrate the use of private paths, we consider how
+multiple asynchronous windows are managed on a bitmapped
+terminal, the Teletype 5620.
+Since the terminal has no hardware memory protection,
+all code in the terminal
+must be trusted if it is to 
+run as a multilevel device.
+Moreover that code must adhere to the label policy on
+data transfers (cut and paste) among windows.
+.PP
+All communication with the terminal passes through a
+host multiplexer program,
+.I mux.
+|reference(blit)
+Normally a process group, comprising a shell and
+programs that it invokes, has its standard output
+connected to
+.I mux
+by a pipe, one process group and pipe per window.
+To the processes the pipe looks like a conventional terminal,
+running at some fixed label.
+.I Mux
+itself must run with privilege
+to be able to deal with differently labeled windows.
+.PP
+Interesting things happen when a privileged process
+is invoked in a window.
+For example, the
+.UX 
+super-user command,
+.I su ,
+demands a password.
+(To be precise,
+.I su
+calls on the password server to demand the password.)
+The command pexes the pipe to
+.I mux ,
+which reciprocates by pexing the other end and extends the
+private path to the window code in the terminal.
+In turn a characteristic pattern is displayed in the window
+to announce the private path.
+Thus the user is assured
+that the password will be treated safely.
+In this respect, the more complex multilevel terminal
+offers an advantage over a simple dumb terminal, which
+is unable to deliver such out-of-band assurance.
+.PP
+To work at a different label in a window, one
+invokes the session command in the host.
+After determining that the user is
+properly cleared, the session command sets the label on its input
+pipe.
+The pipe leads to
+.I mux,
+which detects the change and passes it on to the window.  
+Unless the new label dominates the old, the
+contents of the window are erased.
+A new shell is spawned for the duration of the session.
+Although an old shell and possibly
+other processes are also attached to the pipe,
+no attempt to access the pipe from these processes
+can violate the label policy.
+When the new shell exits
+at the end of the session, the pipe label is restored,
+the label change is propagated to the terminal, and the
+window's memory is erased if necessary.
+.NH 2
+Nosh, a believable shell
+.XL yo
+.PP
+The customary
+.UX
+shell programs are extremely complex.
+Their semantics are incompletely defined and their
+behavior depends heavily on the environment.
+They can all too easily be made to do
+the unexpected, and hence are dangerous instruments for
+system administration.
+.PP
+For critical uses in IX we have written
+.I nosh,
+a no-surprise shell.
+.I Nosh
+is invoked for the single-user maintenance shell that
+comes up with all privileges at system boot and for
+the customary boot script (\fIrc\fP).
+It is also used in sessions labeled below the system
+floor, where system updating is done.
+By all measures 
+.I nosh 
+is less than 6% the size of the classical Bourne shell; and
+its 400 lines of source are coded in a direct, understandable style.
+It is most easily characterized by the features it lacks.
+.I Nosh
+has
+.IP "" .5i
+.nf
+no path search; all commands begin with \f(CW/\fP or \f(CW.\^/\fP
+no variables
+no environment
+no user profile
+no aliases or defined functions
+no redirection of I/O other than standard output
+no pipelines (\f(CW|\fP)
+no compound commands (\f(CWif, for, case, &&, ...\fP)
+no background commands (\f(CW&\fP) or job control
+no manipulation of signals
+no file name generation (\f(CW*\fP or \f(CW?\fP)
+no command substitution (\f(CW`...`\fP)
+no history
+no mail notification
+no arithmetic or test commands
+.SP
+.PP
+When licensed for privileges, as it is in single-user maintenance
+mode,
+.I nosh 
+refrains from passing licenses to other commands
+except by specific request on each command.
+.I Nosh
+retains the customary shell flag
+.CW \-e ,
+which causes an immediate exit
+when any command fails; this feature is important for the
+boot-time shell script (\f(CW/etc/rc\fR).
+.NH 2
+Pcopy, software installation
+.XL yA
+.PP
+A privileged file cannot be changed (\*(yB).
+Thus to copy a privileged file, including its
+licenses and capabilities, one must first copy it to
+an unprivileged place and then mark the copy privileged.
+In the meantime, the copy may be open to meddling.
+.I Pcopy
+does the job `atomically' under cover of pex.
+.PP
+In a system where powers are strictly separated
+between a system administrator
+(sysadmin) and a security administrator (secadmin),
+the job of replacing a privileged program $P$
+might be divided
+between them according to the following scenario.
+Steps 1 to 5 may take considerable time.
+Steps 6 to step 8, however, should be done
+quickly, because program $P$ is unavailable
+during that interval.
+.I Pcopy
+is used to assure the integrity of the copy.
+Except where noted otherwise, each step is mediated
+by the privilege server, whose tables provide
+just enough privilege to each administrator.
+Neither can do the job alone.
+.IP
+.SP
+1.\ Sysadmin compiles, or receives from some
+official source, new code $P sup prime$.  No privilege needed.
+.IP
+2.\ Sysadmin protects $P sup prime$ from
+modification by giving it a dummy license (\*(y8).
+Secadmin does not have the right to do this.
+.IP
+3.\ Sysadmin checks the contents of $P sup prime$, perhaps
+by code testing, decompiling, or comparing against a 
+reference copy.
+No privilege needed.
+.IP
+4.\ Secadmin adds a dummy license to $P sup prime$.
+Sysadmin does not have the right to do this.
+.IP
+5.\ Secadmin checks the contents of $P sup prime$, perhaps by
+cryptographic certification or virus scan.
+No privilege needed.
+.IP
+6.\ Sysadmin removes the privilege from $P$ and uses
+.I pcopy
+to copy $P sup prime$ and the dummy licenses to $P$.
+.IP
+7.\ Secadmin compares the freshly written $P$ to 
+the original $P sup prime$.
+No privilege needed.
+.IP
+8.\ Secadmin sets the final privilege on $P$ and removes
+the dummy licenses.
+To enforce the separation of powers, this step should be conditional
+on the proper dummy licenses being in place.
+.IP
+9.\ Either administrator removes the dummy licenses from $P sup prime$.
+.ig
+.PP
+The preceding protocol would be imposed through the privilege
+server's data base.
+To assure the integrity of the protocol
+itself, a similar protocol would control the editing of
+the pertinent part of the authorization tree.
+..
+.NH 1
+SYSTEM MATTERS
+.XL zx
+.NH 2
+Efficiency
+.XL yp
+.PP
+The efficiency of IX relative to the underlying 10th Edition
+system varies depending on
+how frequently label computations must be made.
+Listing a directory, which requires a label check
+for each file, incurs
+a 15% time penalty.
+The overhead on creating a file in the
+current directory, writing one byte in it, and destroying
+it is 20%.
+Long path names, which require a
+label comparison at every intermediate directory, make things worse.
+An inefficiently coded file-tree walk drags miserably.
+.PP
+For reading and writing, however, where the caching of label
+checks comes into play, the efficiency story is different.
+The overhead is immeasurably small for typical
+file-processing programs working on files more than
+a few disk blocks long.
+.NH 2
+Special 
+.UX
+considerations
+.XL yq
+.PP
+Most of the security facilities of IX are generic
+and reflect the policy, not the system.
+A few, however, deal with features peculiar to
+.UX .
+.PP
+.I "Blind directory.
+To preserve the portability of
+.UX
+code, the common temporary directory,
+.CW /tmp ,
+had to be kept, and somehow be usable
+by processes of different labels.
+After considering, and even implementing,
+various alternatives, we settled on the simple notion
+of a blind directory.
+A blind directory cannot be read; hence no data
+flows can occur through it and its label does not matter.
+A blind directory admits covert channels, however.
+For example,
+a low process can learn via error returns whether the directory
+contains files by known names, regardless of the files' labels.
+Or a low process can create a collection of links and
+watch link counts change as a high process unlinks them.
+.PP
+A somewhat stronger `doubly blind' technique for concealing
+temporary files was also implemented,
+but was dropped
+because it changed the system interface in a way that affected
+every program that created a file in the temporary directory.
+In this scheme, the system generated a random
+name for each file created in the blind directory and returned
+the name to the creator.
+.PP
+.I "Seek pointer.
+Two processes that through inheritance share an open file
+also share the seek pointer on that file.
+By using the 
+.UX
+system call
+.I lseek
+in one process to set the seek pointer and
+in another to read it, a remarkably high interprocess bandwidth
+can be attained in classic 
+.UX
+systems.
+As a medium of data flow, seek pointers must be labeled.
+The labels of seek pointers should not be tied to either
+process or file labels, for that would unnecessarily
+force identity of labels in many instances.
+Hence each seek pointer has a label of its own.
+.PP
+The standard 
+.UX
+system call
+.I lseek,
+by virtue of both writing and reading the seek pointer,
+has the side effect of forcing the labels
+of the file and the process to be equal in most cases.
+For programs that wish to circumvent this unfortunate property,
+we resuscitated an ancient pair of system calls,
+.I seek
+and 
+.I tell,
+which separate the functions.
+.PP
+.I "User area.
+Associated with each
+.UX
+process is a collection of descriptive information, which
+includes user number, login name, permission mask (\fIumask\fP),
+permission group, process ceiling, and other items.
+As the listed items can be set and read by system calls
+and are inherited by successor processes, they
+provide data-flow channels between processes, which
+could be exploited in connection with the drop-on-exec
+convention (\*(y5).
+We have interdicted most of them by
+defining a peculiar privilege for setting user-area items.
+Most of the items need super-user status anyway;
+the need for privilege in connection with the user
+area affects only administration, not ordinary usage.
+.PP
+Different mechanisms are used to protect
+two user-area items settable by ordinary users,
+the permission mask and the process ceiling (which can
+be revised downward).
+To prevent downward data flow through the permission mask, it
+is set to a default value when drop-on-exec occurs.
+To prevent downward flow through the ceiling, the ceiling
+itself has a label that is set whenever the ceiling 
+changes.
+A privileged ceiling change sets the label on the ceiling
+to bottom;
+other changes set it to the process label.
+.PP
+Of the three mechanisms
+for protecting user-area data (a special privilege,
+censoring, and giving each item its own label) the
+most straightforward is the last.
+But it is not clear what restoring force, analogous to
+dropping the item's label when the item is set with privilege,
+can be provided for labels on items other than the ceiling.
+.NH 2
+System changes
+.XL yr
+.PP
+IX is based on the 10th Edition research
+.UX 
+system.
+|reference(v10)
+It has the following special system calls over and above those
+of the 10th Edition:
+.IP "" .5i
+.nf
+get/set file label and privileges
+get/set process label and privileges
+get file system ceiling
+mount, setting file system ceiling
+control auditing
+control nocheck privilege on individual open files
+identify open files with changed labels
+seek and tell (\*(yq)
+I/O controls for pexing (\*(yC)
+I/O controls for stream identifiers (\*(yD)
+.in 0
+.SP
+.LP
+A few rare system calls
+have been abolished.
+One is
+.I chroot,
+whose potential for mischief overtaxed our understanding.
+The other two,
+.I setgroups
+and
+.I getgroups,
+entailed a user-area covert channel
+of enormous bandwidth.
+.PP
+The kernel changes were implemented in about
+1300 lines of alterations to normal 10th Edition source,
+plus about 2100 lines of new modules.
+The total kernel source of under 33,000 lines handles the usual
+10th Edition system calls (no
+System-V style IPC or shared memory), console, disks,
+Datakit networking, and remote file systems.
+Further device drivers could be taken over verbatim from the
+10th Edition.
+.PP
+Some extra kernel memory is required for labels,
+but sharing (\*(y9) keeps the total
+low even though hundreds of 62-byte labels may be
+in use at one time.
+The data structure for maintaining
+coherence of the cached checks (\*(y7) is another matter.
+In a system configured for 300 processes, this data structure
+occupies about 150K bytes including file descriptors, which 
+cannot be swapped with
+their processes as had been possible before.
+The data structure is coded expansively, with
+several fixed-size tables and lots of 32-bit pointers.
+Although its storage requirements could be
+reduced by a significant factor,
+we have not
+bothered to optimize it, for it works adequately.
+.PP
+The layout of file systems was changed to accommodate labels.
+.PP
+About ten maintenance utilities (e.g.
+.I fsck
+and
+.I mount )
+had to be adapted to the new file system
+and kernel layouts.
+A handful of security-related utilities (e.g.
+.I login
+and
+.I su )
+had to be modified to use the new security mechanisms.
+.ig
+(e.g.
+.I ps ).
+." autofsck chuck clri dcheck fsck lmount mkbitfs mount ncheck umount
+." adb ps pstat showq vmstat
+..
+.PP
+Some new utilities have been written.
+Besides those described in \*(yk, there are
+programs to set and retrieve labels,
+handle multilevel mail, and administer auditing.
+The new utilities comprise about 6000 lines of code, of which
+the privilege server accounts for nearly half.

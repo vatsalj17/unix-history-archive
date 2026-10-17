@@ -1,0 +1,71 @@
+.TH CHOWN 2
+.CT 2 file_inq_creat dirs secur
+.SH NAME
+chown, fchown \(mi change owner and group of a file
+.SH SYNOPSIS
+.nf
+.B int chown(name, owner, group)
+.B char *name;
+.PP
+.B int fchown(fd, owner, group)
+.fi
+.SH DESCRIPTION
+.I Chown
+changes the
+.I owner
+and
+.I group
+of the file specified by the null-terminated string
+.IR name .
+.I Fchown
+changes the owner and group of an open file
+specified by file descriptor.
+Only the super-user may
+change the userid of a file.
+The owner of a file
+may change its groupid
+to match the current effective groupid;
+any other changes
+are restricted to the super-user.
+If the file has either
+set-userid or set-groupid permission (see
+.IR stat (2))
+neither the userid or groupid may be changed.
+.SH EXAMPLES
+The following sequence, executed by a superuser process with
+.BR T_NOCHK 
+and
+.B T_SETPRIV
+capabilities, will change the owner of any file, regardless of
+privileges and set-id modes
+(less Herculean methods usually suffice).
+The sequence is illustrative only: it ignores the
+possiblility of the file being altered by a hostile superuser
+while the file is unprivileged.
+Sound security procedures might require the various steps to be done by
+different persons, with interspersed vetting similar to that described in
+.IR setpriv (8).
+.IP
+.EX
+getflab(file, &savlab);
+setflab(file, &nopriv);
+stat(file, &savmod);
+chmod(file, 0);
+chown(file, uid, gid);
+chmod(file, savmod.s_mode);
+setflab(file, &savlab);
+.EE
+.SH "SEE ALSO"
+.IR chown (8), 
+.IR chmod (2), 
+.IR passwd (5)
+.SH DIAGNOSTICS
+.BR EACCES ,
+.BR EBADF ,
+.BR EFAULT ,
+.BR EIO ,
+.BR ELAB ,
+.BR ELOOP ,
+.BR ENOENT ,
+.BR ENOTDIR ,
+.BR EPERM

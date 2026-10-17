@@ -1,0 +1,36 @@
+#!/bin/sh
+PATH=/bin:/usr/bin
+/usr/lib/backup/fcheck 512 14 /usr/* /etc | \
+sed -e '/\.o$/d
+/a\.out/d
+/\/core$/d
+/\/foo$/d
+/^\/usr\/tmp\//d
+/\/usr\/adm\/messages/d
+/\/usr\/adm\/trimlog/d
+/\/usr\/adm\/wtmp/d
+/\/usr\/asd\/7.*/d
+/\/usr\/lib\/upas\//{
+	/names\.11.*/d
+	/attlist/d
+}
+/\/usr\/ipc\/lib\//{
+	/networks.*/d
+	/hosts.*/d
+}
+/\/usr\/spool\//{
+	/\/usr\/spool\/mail\//!d
+}'
+cat <<'EOF'
+/etc/passwd
+/etc/group
+/etc/ttys
+/etc/crontab
+/etc/rc
+/etc/rc.nosh
+/etc/rc.nosh.auto
+/etc/fstab
+/etc/aculist
+/usr/lib/backup/act
+/usr/lib/backup/sel
+EOF

@@ -1,0 +1,100 @@
+#	LABELS
+#
+#	Format mailing labels
+#
+#	Ralph E. Griswold
+#
+#	Last modified 12/25/85
+#
+
+global line, lsize, repet, llength, ldepth, first
+
+procedure main(x)
+   local selectors, use, y, i
+   line := ""
+   selectors := '#'
+   lsize := 9
+   ldepth := 8
+   llength := 40
+   repet := 1
+   i := 0
+   use := "usage: labels [-c n] [-s s] [-t] [-d n] [-w n] [-l n] [-f]"
+   while y := x[i +:= 1] do
+      case y of {
+         "-f":  first := 1
+         "-s": selectors := cset(x[i +:= 1]) | stop(use)
+         "-t":  {
+            lsize := 12
+            if ldepth > lsize then ldepth := lsize
+            }
+         "-w":  llength := (0 < integer(x[i +:= 1])) | stop(use)
+         "-l":  {
+            ldepth := (0 < integer(x[i +:= 1])) | stop(use)
+            if lsize < ldepth then lsize := ldepth
+            }
+         "-d":  {
+            lsize := (0 < integer(x[i +:= 1])) | stop(use)
+            if ldepth > lsize then ldepth := lsize
+            }
+         "-c": repet := (0 < integer(x[i +:= 1])) | stop(use)
+         default: stop(use)
+         }
+   repeat {				# processing loop
+      if line[1] == "#" & upto(selectors,line)
+         then obtain() else {
+            line := read() | break
+            }
+      }
+end
+
+#  Obtain next label
+#
+procedure obtain()
+   local label, max
+   label := []
+   max := 0
+   line := ""
+   while line := read() do {
+      if line[1] == "*" then next
+      if line[1] == "#" then break
+      if \first then {
+         write(line)
+         return
+         }
+      else put(label,line)
+      max <:= *line
+      if *label > ldepth then {
+         error(label[1],1)
+         return
+         }
+      if max > llength then {
+         error(label[1],2)
+         return
+         }
+      }
+   every 1 to repet do format(label,max)
+end
+
+#  Format a label
+#
+procedure format(label,width)
+   local j, indent
+   indent := repl(" ",(llength - width) / 2)
+   j := lsize - *label
+   every 1 to j / 2 do write()
+   every write(indent,!label)
+   every 1 to (j + 1) / 2 do write()
+end
+
+#  Issue label for an error
+#
+procedure error(name,type)
+   static badform
+   initial badform := list(lsize)
+   case type of {
+      1:  badform[3] := "     **** too many lines"
+      2:  badform[3] := "     **** line too long"
+      }
+   badform[1] := name
+   every write(&errout,!badform)
+end

@@ -1,0 +1,71 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH FONTSAVE 3L "630 MTG"
+.XE "fontcache()"
+.XE "fontsave()"
+.XE "fontremove()"
+.SH NAME
+fontsave, fontcache, fontremove \- save/remove a font from the cache
+.SH SYNOPSIS
+.B #include <dmd.h>
+.br
+.B #include <font.h>
+.sp
+.B int fontcache (fname, f)
+.sp
+.B Font *fontsave (fname, f)
+.sp
+.B void fontremove (fname)
+.sp
+.B char \(**fname;
+.br
+.B Font \(**f;
+.SH DESCRIPTION
+.I Fname
+points to a font name,
+a null terminated string of up to 14 characters.
+.PP
+The
+.I fontsave
+and
+.I fontcache
+functions put the given font into the font cache
+and give it the name
+.IR fname .
+Once the font is in the cache, any other
+process within the terminal can use it by calling
+.IR fontrequest .
+.PP
+The 
+.I fontcache
+function expects
+the given font to be already in allocated memory through calls to
+\fIalloc\fR and \fIgcalloc\fR.
+This function also does a  \fIfontrequest\fR for the
+calling application. If the caching or subsequent
+request fails, \fIfontcache\fR will return a 0; otherwise,
+a 1 is returned on success. Note that once
+the font is put into
+the cache, the font should only be freed by calling
+.IR fontremove .
+.PP
+The
+.I fontsave
+function is used to cache fonts not in
+memory allocated through calls to \fIalloc\fR and \fIgcalloc\fR. 
+\fIFontsave\fR first attempts to allocate
+memory, then duplicates the given font into the allocated memory, and
+finally calls 
+.I fontcache
+to cache the newly created font.
+On success, \fIfontsave\fR returns the pointer to the new font.
+If it cannot allocate enough memory for the creation of the new font,
+of if \fIfontcache\fR fails, \fIfontsave\fR will return a null pointer.
+.PP
+The
+.I fontremove
+function removes the named font from the cache and frees its memory.
+A request to remove a font that is currently requested by some other
+process will be ignored.
+.SH SEE ALSO
+alloc(3R), fontname(3R), fontrequest(3R), gcalloc(3R), infont(3R/3L),
+structures(3R).

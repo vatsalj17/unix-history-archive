@@ -1,0 +1,56 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH SEGMENT 3R "630 MTG"
+.XE "segment()"
+.SH NAME
+segment \- draw a line segment in a Bitmap
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B void segment (b, p, q, f) 
+.br
+.B Bitmap \(**b;
+.br
+.B Point p, q;
+.br
+.B Code f;
+.SH DESCRIPTION
+The
+.I segment
+utility
+draws a line segment in Bitmap
+.I b
+from Point
+.I p
+to Point
+.I q
+with function Code
+.IR f .
+.PP
+Like all the other graphics operations,
+.I segment
+clips the line so that only the portion of the line intersecting the
+Bitmap is displayed.
+.SH EXAMPLE
+The following call simply draws a line connecting a window's
+origin Point to its corner Point (a diagonal line from the upper
+left corner to the lower right corner of the window).
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+connectcorners()
+{
+
+	segment (&display, Drect.origin,
+ 	       Drect.corner, F_XOR);
+
+}
+
+\fR
+.fi
+.RE
+.SH SEE ALSO
+jsegment(3R).
+.RE

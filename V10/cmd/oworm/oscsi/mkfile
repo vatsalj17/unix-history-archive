@@ -1,0 +1,90 @@
+NAMES=y.tab lex inquiry init status disk sense start read diag capacity helptab\
+	media reset worm write drdiag copy search
+L=lib.a
+OBJ=`echo $NAMES|sed -e 's/[^ ][^ ]*/$L(&.o)/g'`
+CLIB=`echo $NAMES|sed -e 's/[^ ][^ ]*/O\/&.O/g'`
+CFLAGS=-g
+NPROC=2
+ALL=wmount scsish
+W=/usr/lib/worm
+INS=$W/wmount $W/scsish
+
+install:V:	$INS
+
+ship:	$INS
+	ship $newprereq && touch ship
+
+$W/(wmount|scsish):R:	\\1
+	cp $prereq $target && strip -g $target && chmod 775 $target
+
+wmount:	wmount.o $L
+	$CC $CFLAGS -o $target $prereq
+
+scsish:	scsish.o $L
+	$CC $CFLAGS -o $target $prereq
+
+clean:V:
+	rm -f O/* $ALL *.o
+
+%.o O/%.O:	scsi.h
+
+cyntax:	O/wmount O/scsish
+
+O/wmount:	O/wmount.O $CLIB
+	cyntax $prereq && touch $target
+
+O/scsish:	O/scsish.O $CLIB
+	cyntax $prereq && touch $target
+
+pp:
+	smalllp [a-w]*.h [a-w]*.[cy]
+
+y.tab.c y.tab.h:	gram.y
+	yacc -d -D gram.y
+	ed - y.tab.c <<!
+	,s/printf/print/
+	w
+	q
+	!
+
+x.tab.h:Q:	y.tab.h
+	cmp -s x.tab.h y.tab.h || cp y.tab.h x.tab.h
+
+y.tab.o lex.o:	x.tab.h
+
+lex.o:	lex.l
+	lex -t lex.l > lex.c
+	ed - lex.c <<!
+	,s/fprintf(yyout/fprint(2/
+	w
+	q
+	!
+	$CC $CFLAGS -c lex.c && rm lex.c
+
+helptab.c:Q:	gram.y
+	( echo 'char *helpstrs[] = {'
+	sed -n -e '1,/^line/d
+	/^drive/,$d
+	/::/s/::.*/",/
+	/:/s/.*:/	"/p
+	/|/s/  *{.*/",/
+	/|/s/.*|	*/	"/p' < gram.y
+	echo '	0'
+	echo '};'
+	) > $target
+
+$L(%.o):	%.o
+$L:Q:	$OBJ
+	names=`membername $newprereq`
+	ar rv $L $names && rm $names
+	ranlib $L
+
+O/%.O:	%.c
+	cyntax -c $CFLAGS $stem.c && mv $stem.O O
+
+O/y.tab.O:	y.tab.c
+	cyntax -c -Vyyerror:1 y.tab.c && mv y.tab.O O
+
+O/lex.O:	lex.l
+	> /tmp/lex.c
+	cyntax -c /tmp/lex.c && mv /tmp/lex.O O

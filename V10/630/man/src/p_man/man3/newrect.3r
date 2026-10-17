@@ -1,0 +1,71 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH NEWRECT 3R "630 MTG"
+.XE "newrect()"
+.SH NAME
+newrect \- get swept or default rectangle
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B Rectangle newrect (btn, rect)
+.br
+.B int btn;
+.br
+.B Rectangle rect;
+.SH DESCRIPTION
+The
+.I newrect
+function
+prompts the user with a sweep cursor and an outline of the
+specified Rectangle \f2rect\f1, which then moves with the mouse.
+The function then busy waits for a
+Rectangle to be swept out with the specified 
+.I btn
+button,
+or for the outline to be chosen by a click of 
+.I btn.
+The function then returns the screen coordinates of the created Rectangle.
+If any button other than 
+.I btn
+is depressed at any stage of the operation, 
+.I newrect
+returns a null size Rectangle (i.e., the lower right corner is equal
+to the upper left origin). If \f2rect\f1 is a null size
+Rectangle, no outline will be presented; only a sweep cursor
+will appear.
+
+.SH EXAMPLE
+The following routine will permit the user to sweep out a Rectangle.
+As long as the Rectangle swept out does not have any points in common with
+.IR Drect ,
+the user will be prompted to sweep out another Rectangle.
+Once the swept out Rectangle has points within
+.IR Drect ,
+the Rectangle will be clipped to \fIDrect\fR and returned.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+Rectangle
+sweep_rect( )
+{
+       Rectangle r;
+
+       do
+               r = newrect(2, Drect);
+       while (!rectclip(&r, Drect));
+       return r;
+}
+.fi
+.ft R
+.RE
+
+.SH SEE ALSO
+box(3R), rectclip(3R).
+
+.SH DIAGNOSTICS
+A mouse click is detected by the amount of mouse movement, not by the
+time between a button depression and release. The function \fInewrect\fR
+will see as a click any sweeping action whose result is a Rectangle less than 20 by 20
+pixels. 

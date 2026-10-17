@@ -1,0 +1,67 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH ITOX 3L "630 MTG"
+.XE "itox()"
+.XE "itoa()"
+.XE "itoo()"
+.SH NAME
+itox, itoa, itoo \- convert integer to string representation
+.SH SYNOPSIS
+.B char \(**itox (n, s)
+.sp
+.B char \(**itoa (n, s)
+.sp
+.B char \(**itoo (n, s)
+.sp
+.B long n;
+.br
+.B char  \(**s;
+.SH DESCRIPTION
+The
+.I itox
+function
+returns the hexadecimal string representation of the long integer
+.I n
+prefixed with "0x".
+.PP
+The
+.I itoa
+function
+returns the decimal string representaion of the integer
+.IR n .
+.PP
+The
+.I itoo
+function
+returns the octal string representation of the integer
+.I n
+prepended with "0".
+.PP
+The argument
+.I s
+must point to a buffer large enough to hold the string.
+The return value is
+.IR s .
+.SH EXAMPLE
+The following example produces a hexadecimal string without the "0x" prefix.
+.sp
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+char *itox();
+
+char *
+myitox(buf)
+char *buf;
+{
+        return(itox((long)192, buf) + 2);
+}
+.fi
+.ft R
+.RE
+.PP
+Note:
+the return value is
+.I buf
++ 2,
+which is the hexadecimal string ``C0''.

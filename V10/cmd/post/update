@@ -1,0 +1,33 @@
+new= fmt= nl='
+'
+get() {
+	attr=$1; shift
+	eval echo -n '"$*: [$'$attr'] "'; read val
+	[ -n "$val" ] && new=$new$nl$attr=$val
+}
+ask() {
+	echo -n "$*? [yes] "; read yesno
+	case $yesno in [^yY]*) return 1;; esac
+}
+pid='no default'
+get pid "Enter your SSN (PAN for Bell Labs)"
+eval $new
+[ -z "$pid" -o "$pid" = "-" ] && exit
+pq "pid=$pid" || {
+	echo The directory does not have a record for you.
+	exit
+}
+ask Is this your name || exit
+ask Is the data correct && exit
+for attr in pid pn org loc room tel ema
+do fmt=$fmt$nl$attr=\"%$attr\"
+done
+eval `pq -o "$fmt" "pid=$pid"`
+new=pid=$pid${nl}pn=$pn
+get org  New organization
+get loc  New location
+get room New room
+get tel  New telephone
+get ema  New electronic mail address
+echo "$new" | /bin/mail `pq -o %ema update.post`
+echo Please allow 2-4 weeks for update.

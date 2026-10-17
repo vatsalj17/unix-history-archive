@@ -1,0 +1,109 @@
+.SA 1
+.ds ZZ DEVELOPMENT PACKAGE
+.TH MC68CONV 1 "630 MTG"
+.SH NAME
+mc68conv \- \*N MC68000 object file converter
+.SH SYNOPSIS
+.B mc68conv
+.RB [ \- ]
+.RB [ \-a ]
+.RB [ \-o ]
+.RB [ \-p ]
+.RB [ \-s ]
+.B -t
+target files
+.SH DESCRIPTION
+The
+.I mc68conv
+command
+converts \*N object files from their current format to the format
+of the
+.I target
+machine.
+Mc68conv can read an archive file in any of three formats:
+the
+.SM UNIX
+pre-5.0 format, the 5.0 random access format, and the
+6.0 portable
+.SM ASCII
+format.
+It produces a file in the format specified
+.RB ( -a ,
+.BR -o ,
+or
+.BR -p ).
+The converted file is written to
+file\c
+.I .v\c
+\&.
+.PP
+Command line options are:
+.PP
+.TP 12
+.BR \-
+indicates 
+.I files
+should be read from
+.I stdin\c
+\&.
+.PP
+.TP 12
+.B \-a
+If the input file is an archive, produces the ouput file in the
+6.0 portable ASCII archive format.
+.PP
+.TP 12
+.B \-o
+If the input file is an archive, produces
+the output file in the UNIX pre-5.0 format.
+.PP
+.TP 12
+.BR \-p
+If the input file is an archive, produces the ouput file in the
+UNIX 5.0 random access archive format.
+This is the default.
+.PP
+.TP 12
+.BR \-s
+Functions exactly as 3bswab, i.e. "preswab"
+all characters in the object file.  This is useful only for AT&T
+3B20 Computer object files which are to be "swab-dumped" from a DEC machine
+to a 3B20 Computer.
+.PP
+.TP 12
+.BR \-t " target"
+Converts the object file to the byte ordering of the 
+machine (\f2target\f1) to which the object file is being shipped.  This
+may be another host or a target machine.  Legal values for
+.I target
+are: pdp, vax, ibm, i80, x86, b16, n3b, m32, and mc68.
+.PP
+Mc68conv can be used to convert all object files in common object file
+format. It can be used on either
+the source ("sending") or target ("receiving") machine.
+.PP
+Mc68conv is meant to ease the problems created
+by a multi-host cross-compilation development environment. Mc68conv is best
+used within a procedure for shipping object files from one machine to
+another.
+.SH "EXAMPLE"
+.nf
+# ship object files from pdp11 to ibm
+$echo \(**.out | mc68conv -t ibm -$OFC\/foo.o
+$uucp \(**.v my370!~\/rje\/
+.fi
+.SH "DIAGNOSTICS"
+All diagnostics are
+intended to be self-explanatory. Fatal diagnostics on the command
+lines cause termination. Fatal diagnostics on an input file cause the
+program to continue to the next input file.
+.bp
+.SH "WARNINGS"
+.PP
+Mc68conv will not convert archives from one format to another if
+both the source and target machines have the same byte ordering.
+The
+.SM UNIX
+tool
+.IR convert (1)
+should be used for this purpose.

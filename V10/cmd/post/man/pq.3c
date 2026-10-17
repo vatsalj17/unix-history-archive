@@ -1,0 +1,138 @@
+.TH PQ 3C "Post 4.0" " "
+.SH NAME
+pq \- post directory query and network interface
+.SH SYNOPSIS
+.nf
+.B char \(**pq_open (argv)
+.B char \(**\(**argv;
+.P
+.B int pq_close (pq)
+.B char \(**pq;
+.P
+.B int pq_read (pq, vec)
+.B char \(**pq, \(**\(**vec;
+.P
+.B int pq_write (pq, vec)
+.B char \(**pq, \(**\(**vec;
+.P
+.B int pq_read (pq, buf, size)
+.B char \(**pq, \(**buf;
+.B int size;
+.P
+.B int pq_write (pq, buf, size)
+.B char \(**pq, \(**buf;
+.B int size;
+.P
+.B extern char \(**pq_error;
+.SH DESCRIPTION
+.I pq
+is a set of routines that provides access to a directory
+(database) or a network.
+.P
+.I pq_open
+arranges for a directory or network to be accessed.
+.I argv
+identifies the particular directory or network
+and is described in
+.IR modules (4).
+The return value is a handle to the opened object
+and is used in subsequent operations on that object.
+.P
+.I pq_close
+ends access to the directory or network referenced by the handle
+.IR pq .
+All resources used by the handle are released.
+.P
+.I pq_read
+and
+.I pq_write
+access the object referenced by the handle
+.I pq
+and have different calling sequences for directory and network handles.
+Directory handles pass an array of strings
+.I vec
+and network handles pass a character buffer
+.I buf
+and its size in bytes
+.IR size .
+.P
+.IR pq_write ,
+where
+.I pq
+is a directory handle, arranges to query the directory for the attributes
+and values listed in the array of strings
+.IR vec ,
+which is terminated by a null pointer.
+Each string is either
+.IR attribute=value ,
+which selects records whose
+.I attribute
+matches
+.IR value ;
+or
+.IR attribute ,
+which projects records with
+.I attribute
+from the directory.
+Selects with different attributes are anded;
+selects with like attributes are ored.
+If
+.I vec
+consists of exactly one string
+.BR attribute ,
+the query projects the names of the attributes in the directory.
+The attribute names are directory specific,
+and the matching algorithms are directory and attribute specific (see
+.IR modules (4)).
+.P
+.IR pq_read ,
+where
+.I pq
+is a directory handle, returns an array of strings in
+.I vec
+for the next record that matches the query requested by the last
+.I pq_write
+call.
+The strings are returned in the same order as the query.
+Attributes that are repeated in the query have their values
+repeated in the return vector, which is terminated by a null pointer.
+.P
+Where
+.I pq
+is a network handle,
+.I pq_read
+reads at most
+.I size
+bytes from the network connection into the buffer
+.IR buf ,
+and
+.I pq_write
+writes
+.I size
+bytes from the buffer
+.I buf
+to the network connection.
+.SH DIAGNOSTICS
+All functions return -1 on failure, except for
+.IR pq_open ,
+which returns a null pointer.
+An error message is placed in
+.I pq_error
+for all failures, except for functions that
+take a network handle argument, which set
+.I errno
+instead.
+.P
+.I pq_read
+returns a positive integer if a record is
+retrieved for a directory handle,
+or the number of bytes read from the connection for a network handle.
+It returns 0 if no more records match in a directory,
+or if the network connection is closed remotely.
+.P
+.I pq_write
+returns a positive integer if the query is accepted by the directory,
+or the number of bytes written to the network connection.
+.SH SEE ALSO
+post(1),
+modules(4).

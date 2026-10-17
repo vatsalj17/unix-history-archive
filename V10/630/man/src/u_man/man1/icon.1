@@ -1,0 +1,162 @@
+.TH ICON 1 "630 MTG"
+.SH NAME
+icon \- interactive icon drawing program
+.SH SYNOPSIS
+.B icon
+[ \fB\-x\fR m ] [ \fB\-y\fR n ] [ \fB\-c\fR ]
+.SH DESCRIPTION
+The
+.I icon
+utility
+is a menu-driven interactive icon and picture drawing program.
+It runs under 
+.I layers
+using the "mouse" and keyboard for command and text entry.
+The default \fIicon\fR display consists of a 50X50 cell grid in the
+lower right-hand corner of the layer in which
+.I icon
+is invoked.  By invoking \fIicon\fR with the \fB\-x\fR and \fB\-y\fR flags,
+the grid size may be specified to be \fIm\fRX\fIn\fR, overriding the default.
+Each cell in this grid corresponds to a single bit in the 
+.I icon
+being created or edited.
+In the upper left-hand corner of the layer,
+an actual size view of the icon is displayed.
+.P
+The \f3\-c\f1 option causes icon to be cached in the 630 MTG
+application cache.
+.P
+The grid size parameters \f2m\f1 and \f2n\f1 must be in the
+range of 1 to 480. A parameter larger than 480 is reduced to
+480, and a parameter smaller than 1 is set to the default
+value of 50.
+.P
+If icon is invoked in a window that is too small for the
+specified grid size, icon will display a grid icon in
+the upper left corner of the window along with a message
+``menu on button 2''. The window must be reshaped before icon
+will continue. At this point a menu on button 2 will contain a
+reshape selection. If selected, icon will automatically
+reshape its window to a size and shape appropriate for the
+grid size. Alternately, the button 3 reshape function can be
+used to manually reshape the window. If at any time the window
+is again reshaped to a size too small to display the selected
+grid size, icon will redisplay the grid icon and the ``menu on
+button 2'' message.
+.P
+When using icon, the meanings of the three mouse buttons are
+as follows:
+.TP 15
+\f3Button 1\f1
+Button 1, when depressed and held in, fills in the 
+grid position pointed to by the mouse cursor.
+.TP
+\f3Button 2\f1
+Button 2, when depressed and held in, clears the
+grid position pointed to by the mouse cursor.
+.TP
+\f3Button 3\f1
+Button 3, when depressed, displays a matrix of icons.
+By moving the cursor (now a box) over the desired icon and releasing the
+button, commands will be invoked.
+If the command requires a section of the grid display to be
+selected, depressing button 2 will select a 16x16 grid outline.
+To specify other than this 16x16 grid outline,
+depress button 3 and sweep out the rectangle you wish
+the command to act on.
+.bp
+.SS Commands
+The command selection matrix icons are described below from the upper left by rows
+to the bottom right.
+On the bottom row is a help command designated by the word "help."
+.TP 25
+\fBArrow\fR
+move selection to another portion of the grid.
+.TP
+\fBCopier\fR
+copy selection to another portion of the grid.
+.TP
+\fBBlack and white squares\fR
+change light squares to dark and dark squares
+to light (invert video).
+.TP
+\fBGarbage can\fR
+erase.
+.TP
+\fBHorizontal wrap arrow\fR
+flip on the x-axis.
+.TP
+\fBVertical wrap arrow\fR
+flip on the y-axis.
+.TP
+\fBTo right and down arrow\fR
+rotate 90 degrees clockwise.
+.TP
+\fBUp and to left arrow\fR
+rotate 90 degrees counterclockwise.
+.TP
+\fBHorizontal lines\fR
+shear along the x-axis.
+.TP
+\fBVertical lines\fR
+shear along the y-axis.
+.TP
+\fBFour line sets\fR
+stretch (expand).
+.TP
+\fBPinwheels\fR
+take one pattern and make many copies of it.
+.TP
+\fBEyeglasses\fR
+read an icon file.
+.TP
+\fBGrid\fR
+draw a reference grid.
+.TP
+\fBMouse\fR
+change current mouse cursor to selected 16 x 16 grid.
+.TP
+\fBQuill pen\fR
+write an icon file.
+.TP
+\fBGrid, arrow to grid\fR
+bitblt operator.  
+.TP
+\fBHELP\fR
+prints the help menu.
+.TP
+\fBSmoking gun\fR
+exit the \fIicon\fR program.
+.SS Cursor Icons
+The following are status indicator icons that the mouse cursor changes to
+under various conditions:
+.TP 25
+\fBAlarm clock\fR
+wait.
+.TP
+\fBDead Mouse\fR
+mouse inactive.
+.TP
+\fBDark square in stack\fR
+menu on button 3.
+.TP
+\fBSquare with arrow\fR
+sweep rectangle (button 3).
+.TP
+\fBDouble square with arrow\fR
+sweep rectangle (button 3)
+or get 16x16 grid frame (button 2).
+.bp
+.SH FILES
+.ta \w'$DMD/src/icons/texture/*     'u
+$DMD/lib/icon.m	terminal support program
+.br
+$DMD/icons/*	icons
+.SH SEE ALSO
+ucache(1).
+.br
+layers(1) in the
+\f2UNIX System V Release 3 User's Reference Manual\f1.
+.br
+layers(1) in the
+\f25620 Dot-Mapped Display Reference Manual\f1.

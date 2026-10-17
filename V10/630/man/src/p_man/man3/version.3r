@@ -1,0 +1,58 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH VERSION 3R "630 MTG"
+.XE "version()"
+.SH NAME
+version \- return terminal version number
+.SH SYNOPSIS
+.ft B
+long version ( )
+.SH DESCRIPTION
+The
+.I version 
+function
+returns a hex number which identifies the version of the 630
+MTG terminal.
+.PP
+The version number is the equivalent to the ASCII string given as the 
+response to the \f3<ESC>[c\f1
+escape sequence.  The ASCII string has three fields (f1;f2;f3)
+defined as follows:
+.TS
+center;
+l l.
+f1	identifies the 630 MTG as a  windowing
+	terminal
+f2	identifies the terminal as a 630 MTG
+f3	identifies the firmware release
+.TE
+.PP
+The long integer returned by 
+.I version 
+is a hex number rather than an ASCII
+string for easier parsing by the application program. 
+The hex number has the same three fields in the format 0xf1f2f3, 
+where each field is one byte.
+.SH EXAMPLE
+For example the hex number:
+.sp
+.ce
+.ft CM
+0x080806
+.ft R
+.sp
+returned by
+.I version
+is equivalent to the ASCII string:
+.sp
+.ce
+.ft CM
+8;8;6
+.sp
+.ft R
+given in response to the escape sequence \f3<ESC>[c\f1.
+This version number corresponds to Release 1.1 of the 630
+MTG.
+.SH SEE ALSO
+dmdversion(1).
+.br
+\f2630 MTG Terminal User's Guide\f1.

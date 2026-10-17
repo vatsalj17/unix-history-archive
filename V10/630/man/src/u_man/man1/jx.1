@@ -1,0 +1,130 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH JX 1 "630 MTG"
+.SH NAME
+jx \- 630 MTG execution and stdio interpreter
+.SH SYNOPSIS
+.B jx
+[\fB \-d \fR] [\fB \-p \fR] [\fB \-z \fR] [ \fB\-f\fR ] [ \fB\-Z\fR n ] [ \fB\-n\fR ] file
+.br
+[ command line arguments]
+.SH DESCRIPTION
+The
+.I jx
+utility
+downloads the program in
+.I file
+to the 630 MTG
+and runs it there, simulating most of the standard I/O library
+functions.
+This gives application programs downloaded into the 630 MTG the ability
+to perform operations such as file I/O to files resident on the host
+computer, using the same interface as programs
+written for execution on the host computer.
+.PP
+The jx utility calls 
+.I dmdld 
+to do the download into the terminal. Therefore, the 
+\f2-d\f1, \f2-p\f1, \f2-z\f1, \f2-f\f1, \f2-Z\f1, and \f2-n\f1 
+options are available for use with \f2jx\f1. See the 
+.I dmdld(1) 
+manual page for information on these options.
+.PP
+\fIStdin\fR directed to the host portion of \f2jx\f1, either through the \f2jx\f1
+command line or with the \fIpopen\fR function, is properly redirected.
+Note that input from the 630 MTG keyboard is not translated to \fIstdin\fR
+to the host portion of \f2jx\f1. Rather, programs wishing to read from the
+keyboard should use \fIkbdchar\fR(3R).
+.PP
+.I Stdout
+and \fIstderr\fR, written to by the below library functions,
+will be stored in a buffer during execution.
+After the terminal program has
+been rebooted,
+.I stdout
+and
+.I stdin
+will be redirected to the terminal.
+.PP
+Programs intended for use by
+.I jx
+should include \f3<dmd.h>\f1 and <\f3dmdio.h\f1>
+and call \fIexit\fR(3R) upon termination.  \fIExit\fR() returns control to
+the shell and causes a reboot of
+the default terminal emulator.
+.PP
+What follows is a list of
+stdio library functions available under \fIjx\fR.
+These functions are called
+from an application downloaded into the 630 MTG
+by \f2jx\f1. The \f2jx\f1 library routines in the terminal then
+translate the call into a message which is sent to the host portion
+of \f2jx\f1 for processing.
+.sp
+.TS
+center;
+l l l l.
+getc	getchar	fgets	fflush
+.sp
+putc	putchar	puts	fputs
+.sp
+fopen	freopen	fclose	access
+.sp
+popen	pclose	fread	fwrite
+.sp
+printf	Printf	fprintf	Fprintf
+.TE
+.sp
+The functions fprintf and printf are stripped down versions of
+those on UNIX. The functions that start with an upper case
+letter are identical to those on UNIX. See printf(3L) for more
+details.
+.bp
+.SH FILES
+.nf
+$DMD/include/dmdio.h
+
+$DMD/lib/sysint		host portion of \f2jx\f1 after download is complete
+
+$HOME/.jxout			saved standard output
+
+$HOME/.jxerr			saved standard diagnostic output
+.fi
+.SH SEE ALSO
+dmdld(1), exit(3R), kbdchar(3R), printf(3L).
+.br
+access(2),
+fopen(3S),
+fread(3S),
+getc(3S),
+popen(3S),
+printf(3S),
+putc(3S),
+puts(3S) in the
+\f2UNIX System V Programmer's Reference Manual\f1.
+.SH WARNING
+.P
+Because 630 MTG keyboard data is not sent to the \f2stdin\f1 of the
+host component of \f2jx\f1, applications running under \f2jx\f1 which read
+from the \f2stdin\f1 will hang if their \f2stdin\f1 is not redirected.
+.P
+The \f2stdin\f1 can be redirected either from the command line or by
+function calls inside the application process running on the
+630 MTG terminal.
+.SH BUGS
+.I Jx
+does not work when su'ed to another user.
+.P
+.I Jx
+does not work in the nonlayers environment.
+.P
+\fIJx\fR does not work with application cached with
+\fBA_SHARED\fR, \fBA_BSS\fR or \fBA_DATA\fR.
+.P
+\fIStderr\fR is buffered. Use fflush (stderr) if this is a
+problem.
+.P
+\fIgetc(), getchar(), putc()\fR, and \fIputchar()\fR are not
+macros as described in \fIgetc(3S)\fR and \fIputc(3S)\fR.
+.P
+The \fIfopen()\fR routine does not support the following
+modes: r+, w+, a+.

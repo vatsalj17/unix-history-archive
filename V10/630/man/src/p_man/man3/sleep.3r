@@ -1,0 +1,45 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH SLEEP 3R "630 MTG"
+.XE "sleep()"
+.XE "nap()"
+.SH NAME
+sleep, nap \- suspend program execution
+.SH SYNOPSIS
+\f3
+void sleep (nticks)
+.sp
+void nap (nticks)
+.sp
+unsigned int nticks;
+\fR
+.SH DESCRIPTION
+The
+.I nap
+function
+busy loops for
+.I nticks
+ticks of the 60 Hz internal clock.
+To avoid interfering with screen refresh,
+programs drawing rapidly changing scenes should
+.I nap
+for a couple ticks
+between updates
+to synchronize the display and memory.
+.PP
+The
+.I sleep
+function
+is identical to
+.I nap
+except that it gives up the processor for the interval.
+\f2Sleep\f1 should be used in preference to \f2nap\f1 unless there is some
+reason why other applications should not be allowed to run.
+A process
+that never calls
+.I wait
+or
+.I sleep
+can lock out all other 630 MTG processes.
+.PP
+.SH SEE ALSO
+resources(3R).

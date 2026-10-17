@@ -1,0 +1,87 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH PTARITH 3R "630 MTG"
+.XE "add()"
+.XE "sub()"
+.XE "mul()"
+.XE "div()"
+.SH NAME
+ptarith: add, sub, mul, div \- arithmetic on Points
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+Point add (p, q)
+.sp
+Point sub (p, q) 
+.sp
+Point mul (p, a)
+.sp
+Point div (p, a)
+.sp
+Point p, q;
+.br
+int a;
+.SH DESCRIPTION
+The
+.I add
+function
+returns the Point sum of its arguments:
+.sp
+.ce
+.ft CM
+{ p.x+q.x, p.y+q.y }
+.sp
+.ft R
+The
+.I sub
+function
+returns the Point difference of its arguments:
+.sp
+.ce
+.ft CM
+{ p.x-q.x, p.y-q.y }
+.sp
+.ft R
+The
+.I mul
+function
+returns the Point:
+.sp
+.ce
+.ft CM
+{ p.x*a, p.y*a }
+.sp
+.ft R
+The
+.I div
+function
+returns the Point:
+.sp
+.ce
+.ft CM
+{ p.x/a, p.y/a }.
+.sp
+.ft R
+.SH EXAMPLE
+The following routine returns the center Point of a \f2window\f1.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+Point add();
+Point sub();
+Point div();
+Point
+getcenter()
+{
+    Point offset;
+    offset = div (sub
+        (Drect.corner,Drect.origin), 2);
+    return add (Drect.origin, offset);
+}
+\fR
+.fi
+.RE
+.SH SEE ALSO
+globals(3R), rectarith(3R),  transform(3R/3L).

@@ -1,0 +1,25 @@
+ 
+ char* pq_open(); 
+ int pq_close(); 
+ int pq_read(); 
+ int pq_write(); 
+ char* join_open(); 
+ int join_close(); 
+ int join_read(); 
+ int join_write(); 
+ char* opt_open(); 
+ int opt_close(); 
+ int opt_read(); 
+ int opt_write(); 
+ char* call_open(); 
+ int call_close(); 
+ int call_read(); 
+ int call_write(); 
+ char* sys_open(); 
+ int sys_close(); 
+ int sys_read(); 
+ int sys_write(); 
+ char* ipc_open(); 
+ int sys_close(); 
+ int sys_read(); 
+ int sys_write();

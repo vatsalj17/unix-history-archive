@@ -1,0 +1,145 @@
+pkg=-ms
+name=$1
+shift
+
+case $name in
+
+index)
+	troff $pkg $* /usr/doc/v7index
+	;;
+as)
+	tbl /usr/doc/assembler | troff $pkg $*
+	;;
+ed*)
+	troff $pkg $* /usr/doc/edtut/e*
+	;;
+adv.ed)
+	troff $pkg $* /usr/doc/adv.ed/ae*
+	;;
+trofftut)
+	troff $pkg $* /usr/doc/trofftut/tt*
+	;;
+make)
+	troff $pkg $* /usr/doc/make
+	;;
+sum*|hel*)
+	eqn /usr/doc/summary/hel* | troff $pkg $*
+	;;
+cacm)
+	refer -e /usr/doc/cacm/p* | tbl | troff $pkg $*
+	;;
+impl*)
+	refer -e /usr/doc/implement | troff $pkg $*
+	;;
+learn)
+	refer -e /usr/bwk/learnpaper/p? | tbl | troff $pkg $*
+	;;
+bc)
+	troff $pkg $* /usr/doc/bc
+	;;
+dc)
+	eqn /usr/doc/dc | troff $pkg $*
+	;;
+eqn)
+	eqn /usr/doc/eqn/e* | troff $pkg $*
+	;;
+eqnguide)
+	eqn /usr/doc/eqn/g* | troff $pkg $*
+	;;
+troff)
+	case $1 in
+	-g)	shift; cd /usr/doc/troff; gprint $* ;;
+	*)	cd /usr/doc/troff; tprint $* ;;
+	esac
+	;;
+cman)
+	x=/usr/bwk/c
+	sed -f $x/cwscript $x/v2header $x/a1.?* | tbl | eqn '-d$$' | troff -rv7 $pkg $* $x/v2macs -
+	;;
+cexten)
+	x=/usr/bwk/c
+	sed -f $x/cwscript $x/cexten | troff $pkg $* $x/v2macs -
+	;;
+ctour)
+	troff $pkg $* ctour/cdoc*
+	;;
+shell)
+	x=/usr/srb/tm/sh
+	refer -e $x/maclib $x/t1.cstr $x/t[234] | troff -$pkg $*
+	;;
+sed)
+	troff $pkg $* /usr/lem/sed/memo/nmemo
+	;;
+f77)
+	tbl /usr/sif/fort/doc/f77.v7 | eqn | troff $pkg $*
+	;;
+begin*)
+	eqn -s9 /usr/doc/beginners/u* | troff $pkg $*
+	;;
+uprog)
+	x=/usr/doc/uprog
+	sed -f $x/cwscript $x/p? | troff $pkg $* $x/p.mac -
+	;;
+yacc)
+	refer -e /usr/doc/yacc/ss* | troff $pkg $*
+	;;
+lint)
+	refer -e /usr/doc/lint | troff $pkg $*
+	;;
+ratfor)
+	troff $pkg $* /usr/bwk/rf/rfmemo/m*
+	;;
+m4)
+	troff $pkg $* /usr/bwk/m4/memo 
+	;;
+refer)
+	refer /usr/doc/mel/refer | tbl | troff $pkg $*
+	;;
+pub*)
+	tbl /usr/doc/mel/pubuse | troff -rP1 $pkg $*
+	;;
+lex)
+	tbl /usr/doc/lex/lextypeset | troff -mcp $*
+	;;
+tbl)
+	tbl /usr/doc/mel/tables | eqn | troff $pkg $*
+	;;
+ms)
+	tbl /usr/doc/mel/msoutside | troff $pkg $*
+	tbl /usr/doc/mel/outrefcd | eqn | troff $*
+	;;
+awk)
+	refer -e /usr/bwk/awk/memo | tbl | troff $pkg $*
+	;;
+adb)
+	troff $pkg $* /usr/doc/adb/tut*
+	;;
+password)
+	tbl /usr/rhm/mm/mm78-5 | eqn | troff $pkg $*
+	;;
+secur*)
+	troff $pkg $* /usr/doc/security
+	;;
+uucp)
+	troff $pkg $* /usr/doc/uucp/implement
+	;;
+uucpbs)
+	refer -e /usr/doc/uucp/network | tbl | troff $pkg $*
+	;;
+iosys)
+	troff $pkg $* /usr/doc/iosys 
+	;;
+port|p*tour)
+	refer -e /usr/doc/porttour/porttour? | troff $pkg $*
+	;;
+set*)
+	troff $pkg $* /usr/doc/setup
+	;;
+regen)
+	troff $pkg $* /usr/doc/regen
+	;;
+*)
+	echo 'what is' $name 1>&2
+	;;
+
+esac

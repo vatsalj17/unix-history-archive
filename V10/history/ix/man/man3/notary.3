@@ -1,0 +1,92 @@
+.TH NOTARY 3
+.CT 2 sa secur
+.SH NAME
+xs, enroll, verify, reverify, keynotary \(mi certification functions
+.SH SYNOPSIS
+.nf
+.B "char *xs(char *key, char *buf, int n)
+.B "enroll(char *name, char *oldkey, char *newkey)
+.B "verify(char *name, char *xsum, char *buf, int n)
+.B "rverify(char *name, char *xsum, char *buf, int n)
+.B "keynotary(char *key1, char *key2)
+.fi
+.SH DESCRIPTION
+.PP
+All these functions except
+.I xs
+must be linked with option
+.B -lipc
+of
+.IR ld (1).
+.PP
+.I Xs
+composes a cryptographic checksum of the 
+.I n
+characters starting at
+.IR buf.
+The
+.I key
+argument points to an 8-character checksumming key.
+A pointer is returned to a null-terminated 
+.SM ASCII
+checksum.
+.PP
+.I Enroll
+registers a checksumming key for user 
+.I name
+with 
+.IR notary (1),
+only one checksumming key per user name at a time.
+On first registry
+the
+.I oldkey
+argument is ignored.
+On subsequent registries, the
+.I oldkey
+argument must match the currently stored
+checksumming key.
+The new checksumming key is
+.IR newkey ;
+if
+.I newkey
+is trivial,
+.I name
+is deregistered.
+.PP
+.I Verify
+consults the notary oracle
+to check the validity of a checksum composed by
+.IR xs.
+A non zero return value signifies that the checksum was
+calculated using the checksumming key registered with
+the notary oracle as belonging to user
+.IR name .
+.I Rverify
+does what 
+.I verify
+does, but leaves the connection to the oracle open
+until presented with a NULL
+value for
+.IR name .
+Hence, subsequent calls to
+.I rverify
+should be quicker.
+.PP
+.I Keynotary
+is used to tell the notary daemon the key for
+its private encrypted data.
+.I Key1
+is the key the data is currently encrypted with;
+.I key2
+(if nonzero)
+is the key to use in the future.
+A file descriptor is returned, from which diagnostic information
+may be read.
+.SH "SEE ALSO"
+.IR notary (1),
+.IR ipc (3)
+.SH DIAGNOSTICS
+.I Verify
+and
+.I enroll
+return zero on failure, otherwise nonzero.

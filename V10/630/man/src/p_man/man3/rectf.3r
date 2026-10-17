@@ -1,0 +1,62 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH RECTF 3R "630 MTG"
+.XE "rectf()"
+.SH NAME  
+rectf \- perform function on Rectangle in Bitmap
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B void rectf (b, r, f) 
+.br
+.B Bitmap \(**b;
+.br 
+.B Rectangle r; 
+.br
+.B Code f;
+.SH DESCRIPTION
+The
+.I rectf
+function
+performs the action specified by the function Code
+.I f
+on the Rectangle
+.I r
+within the Bitmap
+.I \(**b.
+.SH EXAMPLE
+The following routine will ``doodle'' on the screen using a Rectangle.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+
+int request();
+int wait();
+Point add();
+void rectf();
+
+main()
+{
+    Rectangle r;
+    Point s;
+
+    s.x = 16;
+    s.y = 16;
+    request (MOUSE);
+    for (wait(MOUSE); !button3();
+      wait(MOUSE)){
+        r.origin = mouse.jxy;
+        r.corner = add (r.origin, s);
+        if( button1() )
+            rectf (&display, r, F_STORE);
+        if( button2() )
+            rectf (&display, r, F_CLR);
+    }
+}
+.ft R
+.fi
+.RE
+.SH SEE ALSO
+jrectf(3R), structures(3R).
+.RE

@@ -1,0 +1,267 @@
+.ds M \fH
+.de Ds
+.nf
+.in +.5i
+.ft H
+.sp .5
+..
+.de De
+.ft R
+.in -.5i
+.fi
+.sp .5
+..
+.TH ICONT 1 "The University of Arizona \- 5/27/86"
+.SH NAME
+icont \- process Icon programs
+.SH SYNOPSIS
+\*Micont\fR
+[ option ... ] file ... [
+\*M\-x\fR
+arg ... ]
+.SH DESCRIPTION
+The program \*Micont\fR
+is a command processor for running Version 6.0 Icon programs.
+Used in its simplest form,
+it produces a file suitable for interpretation by the Icon
+interpreter.
+Processing consists of two phases:
+\fItranslation\fR
+and
+\fIlinking\fR.
+During translation,
+each Icon source file is translated into an intermediate language called \fIucode\fR;
+during linking,
+the one or more ucode files are combined and a single
+\fIicode\fR file is produced.
+Unless the
+\*M\-o\fR
+option is specified, the name of the resulting icode file is
+formed by deleting the suffix of the first input file named on the
+command line.
+If the
+\*M\-x\fR
+argument is used,
+the file is automatically executed by the interpreter
+and any arguments following the
+\*M\-x\fR
+are passed as execution arguments to the Icon program itself.
+.PP
+Files whose names end in \*M.icn\fR are assumed to be Icon source programs.
+These programs are translated, and the intermediate code is left in two ucode files of
+the same name with \*M.u1\fR and \*M.u2\fR substituted for \*M.icn\fR.
+The ucode code files normally are deleted when \*Micont\fR completes.
+Files whose names end in \*M.u1\fR are assumed to refer to ucode
+files from a previous translation; these files and the corresponding \*M.u2\fR
+files are included in the linking phase after any \*M.icn\fR
+files have been translated.
+A \*M.u1\fR or \*M.u2\fR file that is explicitly named is not deleted.
+Icon source programs may be read from standard input.
+The argument
+\*M\-\fR
+signifies the use of standard input as a source file.
+In this case, the ucode files are named \*Mstdin.u1\fR and \*Mstdin.u2\fR
+and the icode file is named \*Mstdin\fR.
+.PP
+The following options are recognized by
+\*Micont\fR:
+.TP 4
+\*M\-c\fR
+Suppress the linking phase.
+The ucode code files are not deleted.
+.TP
+\*M\-m\fR
+Preprocess each \*M.icn\fR source file
+with the \fIm4\^(1)\fR
+macro processor before translation.
+.TP
+\*M\-o \fIoutput\fR
+Name the icode file
+\fIoutput\fR.
+.TP
+\*M\-s\fR
+Suppress informative messages from the translator and
+linker.
+Normally, both informative messages and error messages are sent
+to standard error output.
+.TP
+\*M\-t\fR
+Arrange for \*M&trace\fR to have an initial value of \-1
+when the program is executed.
+Normally, \*M&trace\fR has an initial value of 0.
+.TP
+\*M\-u\fR
+Issue warning messages for undeclared identifiers in the program.
+The warnings are issued during the linking phase.
+.PP
+Icon has several tables related to the translation and linking
+of programs.
+These tables are large enough for most programs, but their sizes can be
+changed, if necessary, by the \*M\-S\fR option. This option has the
+form \*M\-S\^[cfgilrstCL]\fI n\fR, where the letter following the
+\*MS\fR specifies the table and \fIn\fR is the number of storage units to
+allocate for the table.
+Some sizes depend on the size of the address space of the computer.
+For this purpose, a VAX has a large address space,
+while a PDP-11 has a small address space.
+The tables and their default sizes for computers
+with large and small memory sizes are:
+.nf
+.in +.5i
+.sp
+.ta .3i 2.5iR 3.3iR
+		\fIlarge	small\fR
+.sp .5
+\*Mc\fR	constant table	100	100
+\*Mf\fR	field table	100	100
+\*Mg\fR	global symbol table	200	200
+\*Mi\fR	identifier table	500	500
+\*Ml\fR	local symbol table	100	100
+\*Mr\fR	field table for records	100	100
+\*Ms\fR	string space	15,000	7,500
+\*Mt\fR	tree space	15,000	5,000
+\*MC\fR	code buffer	20,000	4,000
+\*ML\fR	labels	500	500
+.sp
+.in -.5i
+.fi
+The units depend on the table involved, but the default values can
+be used as a general guide for appropriate settings of \*M\-S\fR
+options without knowing the units.
+.PP
+The environment variable \*MIPATH\fR controls the location of files
+specified in link directives. The value of \*MIPATH\fR should be a blank-separated
+form \fIp1\0p2 \*(El\0 pn\fR where the \fIpi\fR name directories.
+Each directory is searched in turn to locate files named in link
+directives. The default value for \*MIPATH\fR is \*M.\fR , that is, the current
+directory.
+.PP
+The icode
+file produced by the Icon linker is
+executable.
+\fRFor example, the command
+.nf
+.in +.5i
+\*M
+.sp -.5
+icont hello.icn
+.ft R
+.in -.5i
+.sp .5
+.fi
+produces a file named \*Mhello\fR
+that can be run by the command
+.nf
+.in +.5i
+\*M
+.sp -.5
+hello
+.ft R
+.in -.5i
+.sp .5
+.fi
+.PP
+Arguments can be passed to the Icon program by following the program
+name with the arguments.  Any such arguments are passed to the main
+procedure as a list of strings.
+.PP
+When an Icon program is executed, several environment variables
+are examined to determine certain execution parameters.
+The values assigned to these variables should be numbers.
+The variables that affect execution
+and the interpretations of their values are as follows:
+.TP 4
+\*MTRACE\fR
+Initialize the value of \*M&trace\fR.
+If this variable has a value, it overrides the translation-time
+\*M\-t\fR
+option.
+.TP
+\*MNBUFS\fR
+The number of i/o buffers to use for files.
+When a file is opened, it is assigned an i/o buffer if one is available
+and the file is not a tty.
+If no buffer is available, the file is not buffered.
+\*M&input\fR, \*M&output\fR, and \*M&errout\fR are buffered if buffers
+are available.
+On large-memory systems, the default value of \fINBUFS\fR is 10.
+On small-memory systems, it is 5.
+.TP
+\*MNOERRBUF\fR
+If set, \*M&errout\fR is not buffered.
+.TP
+\*MICONCORE\fR
+If set, a core dump is produced for error termination.
+.TP
+\*MSTRSIZE\fR
+The initial size of the string space, in bytes.
+The string space grows if necessary, but it never shrinks.
+On large-memory systems, the default value of \*MSTRSIZE\fR is 51,200;
+on small-memory systems, it is 10,240.
+.TP
+\*MHEAPSIZE\fR
+The initial size of the allocated block region, in bytes.
+The heap grows if necessary, but it never shrinks.
+On large-memory systems, the default value of \*MHEAPSIZE\fR is 51,200;
+on small-memory systems, it is 10,240.
+.TP
+\*MCOEXPSIZE\fR
+The size, in words, of each co-expression block.
+On large-memory systems, the default value of \*MCOEXPSIZE\fR is 2,000;
+on small-memory systems, it is 1,000.
+.TP
+\*MMSTKSIZE\fR
+The size, in words, of the main interpreter stack. On large-memory
+systems, the default value of \*MMSTKSIZE\fR is 10,000;
+on small-memory systems, it is 3,000.
+.TP
+\*MSTATSIZE\fR
+The size, in bytes, of the static region in which co-expression blocks
+are allocated. On large-memory systems, the default value of \*MSTATSIZE\fR
+is 20,480; on small-memory systems, it is 1,024.
+.TP
+\*MSTATINCR\fR
+The size of the increment used when the static region is expanded.
+The default increment is one-fourth of the initial size of the static
+region.
+.SH FILES
+.ta \w'\*Mitran\fR     'u
+\*Micont\fR	Icon command processor
+.br
+\*Mitran\fR	Icon translator
+.br
+\*Milink\fR	Icon linker
+.br
+\*Miconx\fR	Icon run-time system
+.br
+.SH SEE ALSO
+\fIThe Icon Programming Language\fR,
+Ralph E. Griswold and Madge T. Griswold,
+Prentice-Hall Inc.,
+Englewood Cliffs, New Jersey,
+1983.
+.LP
+\fIVersion 6.0 of Icon\fR, Ralph E. Griswold, William H. Mitchell,
+and Janalee O'Bagy,
+TR 86-10,
+Department of Computer Science, The University of Arizona,
+May 1986.
+.LP
+m4\^(1), icon_pi(1)
+.SH BUGS
+.LP
+Icode files do not stand alone; the Icon run-time system must be
+present.
+An icode
+file produced on one system will not work on another system unless
+the Icon run-time system is in the same place on both systems and
+the run-time system is of the same version of Icon as the linker
+that produced the icode file.
+.LP
+Stack overflow is checked using a heuristic that is not always effective.
+.LP
+If the
+\*M\-m\fR
+option is used,
+line numbers reported in error messages or tracing messages
+are from the file after, not before, preprocessing.

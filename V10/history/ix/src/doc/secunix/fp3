@@ -1,0 +1,336 @@
+.NH 2
+Ioctl requests
+.XL yG
+.NH 3
+Changed requests
+.NH 4
+ioctl(d, FIORCVFD, r)
+.XL y3
+.PP
+An extra field added to the
+.CW passfd
+structure pointed to by $r$ returns
+the capabilities $T(q)$ of the sending process $q$.
+.NH 4
+ioctl(d, TIOCSPGRP, r)
+.XL y4
+.LP
+If the third argument is not a null pointer (the stream
+is to be associated with the process group pointed to by $r$):
+.IP
+If userid of $p$ is not superuser then error
+.CW EPERM .
+.IP
+Otherwise, if $not Tuarea (p)$ then $error$.
+.SP
+The process group of a stream, being readable and writable,
+is subject to the security policy.  
+As the practical uses of this system call are akin to those of
+.I setpgrp,
+it is protected in the same way; see \*(yj.
+.NH 3
+New requests for process-exclusive access
+.XL zP
+.PP
+In these requests
+$f$ is the file $f(d)$; $f sup prime$ is the other end when
+$f$ is a pipe end; and $r$ is a pointer, which,
+if nonzero, points to a
+structure that is filled in on non-error returns as follows:
+.IP
+.TS
+lfCW lfCW lfCW.
+struct	pexclude {
+	int oldnear;	/* $roman "previous value of"~X(f)$ */
+	int newnear;	/* new value of $X(f)$ */
+	int farpid;	/* $0~if~f~roman "not pipe or"~X(f sup prime )^=^UNPEXED$ */
+		/* $roman otherwise~H(f sup prime )$ */
+	int farcap;	/* $if~font CW farpid~!=~0,~Tvec (H(f sup prime ))$ */
+	int faruid;	/* $if~font CW farpid~!=~0,~roman "userid~of"~H(f sup prime )$ */
+};
+.TE
+.PP
+Process-exclusive requests applied to streams
+skip over line discipline modules;
+neither the requests nor their return values can be forged
+by using the message line discipline.
+The process-exclusive state is inherited across
+.I exec.
+.PP
+$FIOPX$ and $FIONPX$ affect the pexity of pipes 
+as described by the following table.
+Changes in response to a request on file descriptor
+$d$ occur at both ends;
+code pairs in the table represent $X(f)$ and $X(f sup prime )$.
+.KS
+.TS
+center box;
+c | cs
+c | cfCW cfCW
+cfCW | cfCW | cfCW.
+old	new state
+state	FIOPX	FIONPX	
+_
+00	10	00
+01	11	01
+02	ECONC	02
+10	10	00
+20	20	00
+11	11	02
+_
+.T&
+lss.
+$font CW 0^=^UNPEXED$, $font CW 1^=^PEXED$, $font CW 2^=^UNPEXING$
+.TE
+.KE
+.SP
+The process-exclusive requests return
+.I "bona fides
+of the far process for use in establishing trust.
+To help assure that such trust does not unwittingly persist
+beyond the duration of exclusivity, a pipe goes into
+an $UNPEXING$ state, state 2 in the table, when
+one end goes from $PEXED$ to $UNPEXED$.
+In this state the pipe is unusable and it remains so
+until both ends reach the $UNPEXED$ state.
+.NH 4
+ioctl(d, FIOPX, r)
+.XL yX
+.LP
+$FIOPX$ attempts to obtain for $p$ exclusive access to the
+file $f~=~f(d)$.
+.LP
+If $APX(f)~=~false$
+.IP
+If $f$ is a directory then error
+.CW EISDIR .
+.IP
+Otherwise, error
+.CW EPERM .
+.LP
+Flush the stream $f$.
+.LP
+Set $H(f)~:=~p$.
+.LP
+If $f$ is not a pipe set $X(f)~=~PEXED$ and return 0.
+.LP
+Now $f$ is a pipe.
+.LP
+Set $X(f)$ and $X(f sup prime )$ according to the
+table in \*(zP.
+.LP
+If process $H(f sup prime )$ is waiting in
+.IP
+.CW FIOPX ,
+it awakens and returns 0.
+.IP
+.CW FIONPX ,
+it awakens and returns 1.
+.IP
+.I select,
+with $f sup prime$ among the enabled file
+descriptors, $f sup prime$ becomes ready.
+.IP
+.I read
+or
+.I write
+on $f sup prime$,
+it awakens and returns error 
+.CW ECONC .
+.LP
+If $X(f)~=~X(f sup prime )~=~PEXED$ return 0.
+.LP
+Otherwise wait, with timeout, for an answering $FIOPX$ or
+$FIONPX$ at the other end.
+.LP
+If the wait times out, return 1.
+.NH 4
+ioctl(d, FIONPX, r)
+.XL yn
+.LP
+This request is used to reject an exclusive-access request
+at the other end of a pipe or to terminate exclusive
+access on a stream $f~=~f(d)$.
+.LP
+Flush the stream $f$.
+.LP
+Set $H(f)~:=~0$.
+.LP
+If $f$ is not a pipe set $X(f)~:=~UNPEXED$ and return 0.
+.LP
+Now $f$ is a pipe.
+.LP
+Set $X(f)$ and $X(f sup prime )$ according to the
+table in \*(zP.
+.LP
+If process $H(f sup prime )$ is waiting in
+.IP
+$FIOPX$, it awakens and returns 1.
+.IP
+$FIONPX$, it awakens and returns 0.
+.IP
+.I select
+with $d(f sup prime )$ among the enabled file
+descriptors, $d(f sup prime )$ becomes ready.
+.IP
+.I read
+or
+.I write
+on $f sup prime$, it awakens and returns
+.CW ECONC .
+.LP
+If $X(f)~=~X(f sup prime )~=~UNPEXED$ return 0.
+.LP
+Otherwise wait, with timeout, for an answering 
+$FIOPX$ or $FIONPX$
+at the other end.
+.LP
+If the wait times out, return 1.
+.NH 4
+ioctl(d, FIOQX, r)
+.XL zp
+.LP
+This request queries pex state without changing it.
+.LP
+Return 0.
+.NH 4
+ioctl(d, FIOAPX, r), ioctl(d, FIOANPX, r)
+.XL zx
+.LP
+These requests specify whether a stream will accept
+process-exclusive access requests.
+The accept pex indicator $APX(f)$ is initialized automatically
+when stream $f~=~f(d)$
+is first opened (\*(yp), and remains constant until changed by 
+.CW FIOAPX
+or
+.CW FIOANPX
+or until last close.
+.LP
+If $f$ is a pipe or is not a stream then error
+.CW ENOTTY .
+.LP
+If $not Textern (p)$ then error
+.CW ECONC .
+.LP
+If the request is 
+.CW FIOAPX
+set $APX(f)~:=~true$.
+.LP
+If the request is 
+.CW FIOANPX
+set $APX(f)~:=~false$.
+.NH 3
+New requests for stream identifiers
+.XL zS
+.LP
+The requests
+.CW FIOGSRC
+and
+.CW FIOSSRC
+get and set stream identifiers, null-terminated
+strings of at most 32 characters.
+A stream identifier typically records security-related
+information about the stream.
+.NH 2
+ioctl(d, FIOGSRC, s)
+.XL z5
+.LP
+Copy the stream identifier of $d$ 
+into the character array $s$.
+.NH 2
+ioctl(d, FIOSSRC, s)
+.XL z6
+.LP
+If $not Textern$ then error $EPERM$.
+.LP
+Copy the null-terminated string pointed to by $s$
+into the stream identifier of $d$.
+.NH 3
+Table of ioctl requests
+.PP
+Let $d$ be the first argument of
+.I ioctl.
+In default of more careful analysis,
+requests should be checked with W($f(d)$); requests that return
+values should also be checked with R($f(d)$).
+.PP
+This table of particular requests
+is intended to be illustrative, not definitive.
+It covers only new requests and requests that are documented
+in the v10 manual,
+and omits all requests pertinent to networking.
+Being based on v10, it has little bearing on other versions of
+.UX .
+.PP
+The action entries mean
+.IP
+.TS
+ll.
+(empty)	no security checks
+R	check R($f(d)$), \*(zr
+W	check W($f(d)$), \*(zw
+.TE
+.IP
+.TS H
+|c|cs|c|
+|lfCW|lIe0l|l|.
+_
+Request	Man page	Action
+=
+.TH	
+FIOCLEX	ioctl	(2)	
+FIONCLEX	ioctl	(2)
+FIOACCEPT	connld	(4)	
+FIOREJECT	connld	(4)	
+MTIOCEEOT	mt	(4)	
+MTIOCGET	mt	(4)	R
+MTIOCIEOT	mt	(4)	
+MTIOCTOP	mt	(4)	W
+FIOANPX	pex	(4)	\*(zx
+FIOAPX	pex	(4)	\*(zx
+FIONPX	pex	(4)	\*(yn
+FIOPX	pex	(4)	\*(yX
+FIOQX	pex	(4)	\*(zp
+PIOCGETPR	proc	(4)	R
+PIOCKILL	proc	(4)	like \fIkill\fR, \*(ye
+PIOCNICE	proc	(4)	\*(z2
+PIOCOPENT	proc	(4)	
+PIOCREXEC	proc	(4)	
+PIOCRUN	proc	(4)	
+PIOCSEXEC	proc	(4)
+PIOCSMASK	proc	(4)
+PIOCSTOP	proc	(4)
+PIOCWSTOP	proc	(4)
+UIOCHAR	ra	(4)	R
+UIOREPL	ra	(4)	W
+UIORRCT	ra	(4)	R
+UIOWRCT	ra	(4)	W
+FIOGSRC	stream	(4)	R, \*(z5
+FIOINSLD	stream	(4)	W
+FIOLOOKLD	stream	(4)	R
+FIONREAD	stream	(4)	R
+FIOPOPLD	stream	(4)	W
+FIOPUSHLD	stream	(4)	W
+FIORCVFD	stream	(4)	R, \*(y3
+FIOSNDFD	stream	(4)	W
+FIOSSRC	stream	(4)	W, \*(z6
+TIOCEXCL	stream	(4)
+TIOCFLUSH	stream	(4)	W
+TIOCGPGRP	stream	(4)
+TIOCNXCL	stream	(4)
+TIOCSBRK	stream	(4)	W
+TIOCSPGRP	stream	(4)	\*(y4
+TIOCGDEV	tty	(4)	R
+TIOCSDEV	tty	(4)	W
+TIOCGETC	ttyld	(4)	R
+TIOCGETP	ttyld	(4)	R
+TIOCSETC	ttyld	(4)	W
+TIOCSETP	ttyld	(4)	W
+.TE
+.bp
+.SH
+References
+.LP
+.tr ~ 
+|reference_placement

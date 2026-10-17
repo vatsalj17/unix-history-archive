@@ -1,0 +1,77 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH TRANSFORM 3R/3L "630 MTG"
+.XE "transform()"
+.XE "rtransform()"
+.SH NAME
+transform, rtransform \- window to screen coordinates
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+Point transform (p) 
+.br
+Point p;
+.sp
+Rectangle rtransform (r)
+.br
+Rectangle r;
+.SH DESCRIPTION
+The
+.I transform
+function
+returns the screen coordinates of its argument window coordinate Point
+.IR p .
+.PP
+The
+.I rtransform
+function
+returns the screen coordinates of its argument window coordinate Rectangle
+.IR r .
+.PP
+Screen coordinates extend from (0, 0) to (XMAX-1, YMAX-1) and represent
+the terminal's screen. Window coordinates map (0, 0) to Drect.origin
+and (XMAX, YMAX) to Drect.corner.
+.SH EXAMPLE
+The following code will obtain the screen coordinates of
+the PtCurrent used by the j-routines.
+.sp
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+Point p;
+Point transform();
+
+p = transform(PtCurrent);
+.ft R
+.fi
+.RE
+.PP
+The following two routines draw the same line given the same points.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+Point transform();
+.sp
+draw1(p,q)
+Point p,q;
+{
+   jsegment (p,q,F_XOR);
+}
+.sp
+draw2(p,q)
+Point p,q;
+{
+   segment(&display, transform(p),
+		transform(q), F_XOR);
+}
+.ft R
+.fi
+.RE
+.SH SEE ALSO
+globals(3R),
+jsegment(3R),
+muldiv(3L),
+segment(3R).

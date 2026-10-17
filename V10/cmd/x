@@ -1,0 +1,2547 @@
+#line 1 "/usr/include/stdio.h"
+
+
+
+extern	struct	_iobuf {
+	int	_cnt;
+	unsigned char	*_ptr;
+	unsigned char	*_base;
+	short	_flag;
+	char	_file;
+} _iob[ 120 ];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ struct _iobuf *fopen();
+ struct _iobuf *fdopen();
+ struct _iobuf *freopen();
+ struct _iobuf *popen();
+long	ftell();
+char	*fgets();
+
+
+#line 1 "/usr/include/tmpnam.h"
+
+
+#line 46 "/usr/include/stdio.h"
+
+#line 2 "fsck.c"
+#line 1 "/usr/include/ctype.h"
+
+
+
+
+
+
+
+
+
+extern char	_ctype[];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#line 3 "fsck.c"
+#line 1 "/usr/include/sys/param.h"
+
+#line 4 "/usr/include/sys/param.h"
+
+
+
+
+
+
+
+
+
+
+
+#line 19 "/usr/include/sys/param.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#line 36 "/usr/include/sys/param.h"
+
+
+#line 1 "/usr/include/signal.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+typedef int	(*SIG_TYP)();
+
+SIG_TYP signal();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#line 39 "/usr/include/sys/param.h"
+
+
+
+#line 44 "/usr/include/sys/param.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+#line 63 "/usr/include/sys/param.h"
+
+
+
+
+
+
+
+
+
+
+#line 75 "/usr/include/sys/param.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#line 101 "/usr/include/sys/param.h"
+
+
+
+
+#line 107 "/usr/include/sys/param.h"
+
+
+
+
+
+
+#line 115 "/usr/include/sys/param.h"
+
+
+
+#line 121 "/usr/include/sys/param.h"
+
+
+
+
+
+
+
+
+#line 131 "/usr/include/sys/param.h"
+#line 1 "/usr/include/sys/types.h"
+
+#line 4 "/usr/include/sys/types.h"
+
+
+
+#line 9 "/usr/include/sys/types.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#line 33 "/usr/include/sys/types.h"
+typedef	unsigned char	u_char;
+typedef	unsigned short	u_short;
+typedef	unsigned int	u_int;
+typedef	unsigned long	u_long;
+
+typedef	long	daddr_t;
+typedef	char *	caddr_t;
+typedef	unsigned short	ino_t;
+typedef	long	swblk_t;
+typedef	long	clicks_t;
+typedef	long	time_t;
+typedef	long	label_t[14];
+typedef	unsigned short	dev_t;
+typedef	long	off_t;
+typedef	struct { unsigned long lo; long hi; } llong_t;
+
+
+
+
+
+
+
+
+
+
+
+#line 62 "/usr/include/sys/types.h"
+
+typedef struct		fd_set { unsigned int fds_bits[ (128+ sizeof(int) * 8 -1)/( sizeof(int) * 8 ) ]; } fd_set;
+
+
+
+
+#line 132 "/usr/include/sys/param.h"
+
+
+#line 136 "/usr/include/sys/param.h"
+
+llong_t	ltoL();
+llong_t	Lladd();
+llong_t	Luadd();
+llong_t	LLadd();
+
+unsigned Lshift();
+#line 4 "fsck.c"
+#line 1 "/usr/include/sys/filsys.h"
+
+#line 4 "/usr/include/sys/filsys.h"
+struct	filsys
+{
+	unsigned short s_isize;
+	daddr_t	s_fsize;
+	short  	s_ninode;
+	ino_t  	s_inode[ 100 ];
+	char   	s_flock;
+	char   	s_ilock;
+	char   	s_fmod;
+	char   	s_ronly;
+	time_t 	s_time;
+	daddr_t	s_tfree;
+	ino_t  	s_tinode;
+	short	s_dinfo[2];
+
+
+
+
+	char   	s_fsmnt[14];
+	ino_t	s_lasti;
+	ino_t	s_nbehind;
+	union {
+		struct {
+			short  	S_nfree;
+			daddr_t	S_free[ 178 ];
+		} R;
+		struct {
+			char	S_valid;
+			char	S_flag;
+
+			long	S_bfree[ 961 ];
+		} B;
+		struct {
+			char	S_valid;
+			char	S_flag;
+			long	S_bsize;
+			struct buf *	S_blk[ 961 -1];
+		} N;
+	} U;
+};
+
+
+
+
+
+
+#line 53 "/usr/include/sys/filsys.h"
+
+
+
+
+
+
+
+
+#line 5 "fsck.c"
+#line 1 "/usr/include/sys/dir.h"
+
+
+
+struct	direct
+{
+	ino_t	d_ino;
+	char	d_name[ 14 ];
+};
+#line 6 "fsck.c"
+#line 1 "/usr/include/sys/fblk.h"
+struct fblk
+{
+	int    	df_nfree;
+	daddr_t	df_free[ 178 ];
+};
+#line 7 "fsck.c"
+#line 1 "/usr/include/sys/ino.h"
+
+#line 5 "/usr/include/sys/ino.h"
+struct dinode
+{
+	unsigned short di_mode;
+	short	di_nlink;
+	short	di_uid;
+	short	di_gid;
+	off_t	di_size;
+	char	di_addr[40];
+	time_t	di_atime;
+	time_t	di_mtime;
+	time_t	di_ctime;
+};
+
+#line 22 "/usr/include/sys/ino.h"
+#line 8 "fsck.c"
+#line 1 "/usr/include/sys/inode.h"
+
+#line 11 "/usr/include/sys/inode.h"
+
+
+
+struct	inode
+{
+	short	i_flag;
+	dev_t	i_dev;
+	char	i_fstyp;
+	unsigned short i_count;
+	long	i_number;
+	unsigned short i_mode;
+	short	i_nlink;
+	short	i_uid;
+	short	i_gid;
+	off_t	i_size;
+	struct	inode *i_mroot;
+	struct	inode *i_mpoint;
+	struct	stdata *i_sptr;
+	union {
+		struct {
+			daddr_t	I_addr[ 13 ];
+			daddr_t	I_lastr;
+			struct buf *I_bufp;
+		} i_f;
+
+
+
+		struct {
+			daddr_t	I_rdev;
+		} i_d;
+
+		struct {
+			long I_tag;
+			struct inode *I_cip;
+			int I_fsflags;
+			time_t I_atime;
+			time_t I_mtime;
+			time_t I_ctime;
+			dev_t I_rdev;
+		} i_a;
+
+
+
+
+
+
+
+		struct {
+			struct proc *I_proc;
+			int	    I_sigmask;
+		} i_p;
+
+
+	} i_un;
+	struct inode *i_hlink;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+struct argnamei {
+	short flag;
+	short len;
+	union {
+		short	mode;
+		struct inode *il;
+		caddr_t	buf;
+	} un;
+};
+
+
+
+
+
+
+
+
+
+
+
+struct nx {
+	struct inode *dp;
+	char *cp;
+	char *nbuf;
+	short nlen;
+	short nlink;
+};
+
+
+#line 140 "/usr/include/sys/inode.h"
+
+
+
+
+#line 151 "/usr/include/sys/inode.h"
+
+
+#line 160 "/usr/include/sys/inode.h"
+
+
+#line 9 "fsck.c"
+#line 1 "/usr/include/sys/stat.h"
+struct	stat
+{
+	dev_t	st_dev;
+	ino_t	st_ino;
+	unsigned short st_mode;
+	short	st_nlink;
+	short	st_uid;
+	short	st_gid;
+	dev_t	st_rdev;
+	off_t	st_size;
+	time_t	st_atime;
+	time_t	st_mtime;
+	time_t	st_ctime;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#line 10 "fsck.c"
+#line 1 "/usr/include/fstab.h"
+
+#line 7 "/usr/include/fstab.h"
+
+
+#line 11 "/usr/include/fstab.h"
+
+
+
+
+
+struct	fstab{
+	char	fs_spec[ 32 ];
+	char	fs_file[ 32 ];
+	int	fs_ftype;
+	int	fs_flags;
+	int	fs_passno;
+};
+
+
+#line 28 "/usr/include/fstab.h"
+
+
+
+
+struct	fstab *getfsent();
+struct	fstab *getfsspec();
+struct	fstab *getfsfile();
+int	setfsent();
+int	endfsent();
+
+
+#line 41 "/usr/include/fstab.h"
+
+struct mtab {
+	char	file[ 32 ];
+	char	spec[ 32 -1];
+	char	type;
+};
+
+
+#line 11 "fsck.c"
+#line 1 "/usr/include/pwd.h"
+struct	passwd {
+	char	*pw_name;
+	char	*pw_passwd;
+	int	pw_uid;
+	int	pw_gid;
+	int	pw_quota;
+	char	*pw_comment;
+	char	*pw_gecos;
+	char	*pw_dir;
+	char	*pw_shell;
+};
+extern struct passwd *getpwent();
+extern struct passwd *getpwuid();
+extern struct passwd *getpwnam();
+extern struct passwd *pwdecode();
+#line 12 "fsck.c"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+typedef struct dinode	DINODE;
+typedef struct direct	DIRECT;
+
+
+
+
+
+
+
+
+
+
+
+
+
+daddr_t	startib;
+unsigned niblk;
+
+struct bufarea {
+	struct bufarea	*b_next;
+	daddr_t	b_bno;
+	union {
+		char	b_buf[ ( (( 64 ) & 64) ? 4096: 1024) ];
+		short	b_lnks[ ( ( (( 64 ) & 64) ? 4096: 1024) /sizeof(short)) ];
+		daddr_t	b_indir[ ( ( (( 64 ) & 64) ? 4096: 1024) /sizeof(daddr_t)) ];
+		struct filsys b_fs;
+		struct fblk b_fb;
+		struct dinode b_dinode[ ( (( 64 ) & 64) ? 64: 16) ];
+		DIRECT b_dir[ ( ( (( 64 ) & 64) ? 4096: 1024) /sizeof(struct direct)) ];
+	} b_un;
+	char	b_dirty;
+};
+
+typedef struct bufarea BUFAREA;
+
+BUFAREA	inoblk;
+BUFAREA	fileblk;
+BUFAREA	sblk;
+BUFAREA	*poolhead;
+
+
+
+
+
+
+
+
+
+
+
+struct filecntl {
+	int	rfdes;
+	int	wfdes;
+	int	mod;
+};
+
+struct filecntl	dfile;
+struct filecntl	sfile;
+
+typedef unsigned MEMSIZE;
+
+MEMSIZE	memsize;
+
+
+
+
+
+
+
+
+daddr_t	duplist[ 100 ];
+daddr_t	*enddup;
+daddr_t	*muldup;
+
+
+ino_t	badlncnt[ 500 ];
+ino_t	*badlnp;
+
+char	sflag;
+char	csflag;
+char	nflag;
+char	yflag;
+char	tflag;
+char	preen;
+char	rplyflag;
+char	hotroot;
+char	rawflg;
+char	rmscr;
+char	fixfree;
+char	*membase;
+char	*blkmap;
+char	*freemap;
+char	*statemap;
+char	*pathp;
+char	*thisname;
+char	*srchname;
+char	pathname[200];
+char	scrfile[80];
+char	*lfname =	"lost+found";
+char	*checklist = "/etc/fstab" ;
+char	big;
+
+short	*lncntp;
+
+int	cylsize;
+int	stepsize;
+int	badblk;
+int	dupblk;
+int	(*pfunc)();
+int	zcleared;
+
+ino_t	inum;
+ino_t	imax;
+ino_t	parentdir;
+ino_t	lastino;
+ino_t	lfdir;
+ino_t	orphan;
+
+off_t	filsize;
+off_t	maxblk;
+off_t	bmapsz;
+
+daddr_t	smapblk;
+daddr_t	lncntblk;
+daddr_t	fmapblk;
+daddr_t	n_free;
+daddr_t	n_blks;
+daddr_t	n_files;
+daddr_t	fmin;
+daddr_t	fmax;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int	(*signal())();
+long	lseek();
+long	time();
+DINODE	*ginode();
+BUFAREA	*getblk();
+BUFAREA	*search();
+int	dirscan();
+int	findino();
+int	catch();
+int	mkentry();
+int	chgdd();
+int	pass1();
+int	pass1b();
+int	pass2();
+int	pass3();
+int	pass4();
+int	pass5();
+
+char	*devname;
+
+main(argc,argv)
+int	argc;
+char	*argv[];
+{
+	register struct _iobuf *fp;
+	register n;
+	register char *p;
+	char filename[50];
+	char *sbrk();
+
+	setbuf( (&_iob[1]) , 0 );
+	sync();
+	while(--argc > 0 && **++argv == '-') {
+		switch(*++*argv) {
+			case 'p':
+				preen++;
+				break;
+			case 't':
+			case 'T':
+				tflag++;
+				if(**++argv == '-' || --argc <= 0)
+					errexit("Bad -t option\n");
+				p = scrfile;
+				while(*p++ = **argv)
+					(*argv)++;
+				break;
+			case 's':
+				stype(++*argv);
+				sflag++;
+				break;
+			case 'S':
+				stype(++*argv);
+				csflag++;
+				break;
+			case 'n':
+			case 'N':
+				nflag++;
+				yflag = 0;
+				break;
+			case 'y':
+			case 'Y':
+				yflag++;
+				nflag = 0;
+				break;
+			default:
+				errexit("%c option?\n",**argv);
+		}
+	}
+	if(nflag && (sflag || csflag))
+		errexit("Incompatible options: -n and -%s\n",sflag?"s":"S");
+	if(sflag && csflag)
+		sflag = 0;
+	memsize = (MEMSIZE)sbrk(0);
+	memsize = MAXDATA - memsize - sizeof(int);
+	while(memsize >= 2*sizeof(BUFAREA) &&
+		(membase = sbrk(memsize)) == (char *)-1)
+		memsize -= 1024;
+	if(memsize < 2*sizeof(BUFAREA))
+		errexit("Can't get memory\n");
+	if (signal( 2 , (SIG_TYP)1 ) != (SIG_TYP)1 )
+		signal( 2 , catch);
+	if(argc) {
+		while(argc-- > 0){
+			hotroot = 0;
+			check(*argv++);
+		}
+	}
+	else {
+		struct fstab *fsp;
+		int pid, passno, anygtr, sumstatus = 0;
+		passno = 1;
+		do {
+			anygtr = 0;
+			if (setfsent() == 0)
+				errexit("Can't open checklist file: %s\n",
+ "/etc/fstab" );
+			while ( (fsp = getfsent()) != 0){
+				if (fsp->fs_ftype != 0)
+					continue;
+				if (preen == 0 ||
+				    passno == 1 && fsp->fs_passno == passno) {
+					if (blockcheck(fsp->fs_spec) == 0 &&
+					    preen)
+						exit(8);
+				} else if (fsp->fs_passno > passno)
+					anygtr = 1;
+				else if (fsp->fs_passno == passno) {
+					pid = fork();
+					if (pid < 0) {
+						perror("fork");
+						exit(8);
+					}
+					if (pid == 0)
+						if (blockcheck(fsp->fs_spec)== 0 )
+							exit(8);
+						else
+							exit(0);
+				}
+			}
+			if (preen) {
+				int status;
+				while (wait(&status) != -1)
+					sumstatus |= status;
+			}
+			passno++;
+		} while (anygtr);
+		if (sumstatus)
+			exit(8);
+		endfsent();
+	}
+	exit(0);
+}
+
+char *rawname(), *strrchr(), *unrawname();
+
+blockcheck(name)
+	char	*name;
+{
+	struct	stat	stat_slash, stat_block, stat_char;
+	char	*raw;
+	int	looped = 0;
+
+	hotroot = 0;
+	if (stat("/", &stat_slash) < 0){
+		error("Can't stat root\n");
+		return( 0 );
+	}
+  retry:
+	if (stat(name, &stat_block) < 0){
+		error("Can't stat %s\n", name);
+		return( 0 );
+	}
+	big = 0 ;
+	if (stat_block.st_mode & 0060000 ){
+		if( (( stat_block.st_rdev ) & 64) )
+			big = 64 ;
+		raw = rawname(name);
+		if (stat(raw, &stat_char) < 0){
+			error("Can't stat %s\n", raw);
+			return( 0 );
+		}
+		if (stat_char.st_mode & 0020000 ){
+			if (stat_slash.st_dev == stat_block.st_rdev) {
+				hotroot++;
+				raw = unrawname(name);
+			}
+			check(raw);
+			return( 1 );
+		} else if(big == 64 ) {
+			check(name);
+			return( 1 );
+		} else {
+			error("%s is not a character device\n", raw);
+			return( 0 );
+		}
+	} else
+	if (stat_block.st_mode & 0020000 ){
+		if (looped) {
+			error("Can't make sense out of name %s\n", name);
+			return( 0 );
+		}
+		name = unrawname(name);
+		looped++;
+		goto retry;
+	}
+	error("Can't make sense out of name %s\n", name);
+	return( 0 );
+}
+
+char *
+unrawname(cp)
+	char	*cp;
+{
+	char	*dp = strrchr(cp, '/');
+	struct stat stb;
+	if (dp == 0)
+		return(cp);
+	if (stat(cp, &stb) < 0)
+		return(cp);
+	if ((stb.st_mode& 0170000 ) != 0020000 )
+		return(cp);
+	if (*(dp+1) != 'r')
+		return(cp);
+	strcpy(dp+1, dp+2);
+	return(cp);
+}
+
+char *
+rawname(cp)
+	char *cp;
+{
+	static char rawbuf[32];
+	char *dp = strrchr(cp, '/');
+
+	if (dp == 0)
+		return (0);
+	if(big == 64 )
+		return(cp);
+	*dp = 0;
+	strcpy(rawbuf, cp);
+	*dp = '/';
+	strcat(rawbuf, "/r");
+	strcat(rawbuf, dp+1);
+	return (rawbuf);
+}
+
+check(dev)
+char *dev;
+{
+
+	devname = dev;
+	check1(dev);
+	devname = 0;
+}
+
+check1(dev)
+char *dev;
+{
+	register DINODE *dp;
+	register n;
+	register ino_t *blp;
+	ino_t savino;
+	daddr_t blk;
+	BUFAREA *bp1, *bp2;
+
+	if(setup(dev) == 0 )
+		return;
+	if (preen==0) {
+		printf("** Checking %s\n", dev);
+		printf("** Phase 1 - Check Blocks and Sizes\n");
+	}
+	pfunc = pass1;
+	for(inum = 1; inum <= imax; inum++) {
+		if((dp = ginode()) == 0 )
+			continue;
+		if( ((dp->di_mode & 0170000 ) != 0) ) {
+			lastino = inum;
+			if(ftypeok(dp) == 0 ) {
+				pfatal("UNKNOWN FILE TYPE I=%u",inum);
+				if(reply("CLEAR") == 1 ) {
+ clear((char *)( dp ),sizeof(DINODE)) ;
+ inoblk.b_dirty = 1 ;
+				}
+				continue;
+			}
+			n_files++;
+			if( dolncnt( dp->di_nlink ,0) <= 0) {
+				if(badlnp < &badlncnt[ 500 ])
+					*badlnp++ = inum;
+				else {
+					pfatal("LINK COUNT TABLE OVERFLOW");
+					if(reply("CONTINUE") == 0 )
+						errexit("");
+				}
+			}
+ dostate( ((dp->di_mode & 0170000 ) == 0040000 ) ? 02 : 01 ,0) ;
+			badblk = dupblk = 0;
+			filsize = 0;
+			maxblk = 0;
+			ckinode(dp, 0 );
+			if((n = dostate(0,1) ) == 02 || n == 01 )
+				sizechk(dp);
+		}
+		else if(dp->di_mode != 0) {
+			pfatal("PARTIALLY ALLOCATED INODE I=%u",inum);
+			if(reply("CLEAR") == 1 ) {
+ clear((char *)( dp ),sizeof(DINODE)) ;
+ inoblk.b_dirty = 1 ;
+			}
+		}
+	}
+
+
+	if(enddup != &duplist[0]) {
+		if (preen)
+			pfatal("INTERNAL ERROR: dups with -p");
+		printf("** Phase 1b - Rescan For More DUPS\n");
+		pfunc = pass1b;
+		for(inum = 1; inum <= lastino; inum++) {
+			if( dostate(0,1) != 0 && (dp = ginode()) != 0 )
+				if(ckinode(dp, 0 ) & 01 )
+					break;
+		}
+	}
+	if(rawflg) {
+		if(inoblk.b_dirty)
+			bwrite(&dfile,membase,startib,(int)niblk* ( (( big ) & 64) ? 4096: 1024) );
+		inoblk.b_dirty = 0;
+		if(poolhead) {
+			clear(membase,niblk* ( (( 64 ) & 64) ? 4096: 1024) );
+			for(bp1 = poolhead;bp1->b_next;bp1 = bp1->b_next);
+			bp2 = &((BUFAREA *)membase)[(niblk* ( (( 64 ) & 64) ? 4096: 1024) )/sizeof(BUFAREA)];
+			while(--bp2 >= (BUFAREA *)membase) {
+ ( bp2 )->b_dirty = 0;( bp2 )->b_bno = (daddr_t)-1 ;
+				bp2->b_next = bp1->b_next;
+				bp1->b_next = bp2;
+			}
+		}
+		rawflg = 0;
+
+	}
+
+
+	if (preen == 0)
+		printf("** Phase 2 - Check Pathnames\n");
+	inum = ((ino_t)2) ;
+	thisname = pathp = pathname;
+	pfunc = pass2;
+	switch( dostate(0,1) ) {
+		case 0 :
+			errexit("ROOT INODE UNALLOCATED. TERMINATING.\n");
+		case 01 :
+			pfatal("ROOT INODE NOT DIRECTORY");
+			if(reply("FIX") == 0 || (dp = ginode()) == 0 )
+				errexit("");
+			dp->di_mode &= ~ 0170000 ;
+			dp->di_mode |= 0040000 ;
+ inoblk.b_dirty = 1 ;
+ dostate( 02 ,0) ;
+		case 02 :
+			descend();
+			break;
+		case 03 :
+			pfatal("DUPS/BAD IN ROOT INODE");
+			printf("\n");
+			if(reply("CONTINUE") == 0 )
+				errexit("");
+ dostate( 02 ,0) ;
+			descend();
+	}
+
+
+	if (preen == 0)
+		printf("** Phase 3 - Check Connectivity\n");
+	for(inum = 1; inum <= lastino; inum++) {
+		if( dostate(0,1) == 02 ) {
+			pfunc = findino;
+			srchname = "..";
+			savino = inum;
+			do {
+				orphan = inum;
+				if((dp = ginode()) == 0 )
+					break;
+				filsize = dp->di_size;
+				parentdir = 0;
+				ckinode(dp, 1 );
+				if((inum = parentdir) == 0)
+					break;
+			} while( dostate(0,1) == 02 );
+			inum = orphan;
+			if(linkup() == 1 ) {
+				thisname = pathp = pathname;
+				*pathp++ = '?';
+				pfunc = pass2;
+				descend();
+			}
+			inum = savino;
+		}
+	}
+
+
+	if (preen == 0)
+		printf("** Phase 4 - Check Reference Counts\n");
+	pfunc = pass4;
+	zcleared = 0;
+	for(inum = 1; inum <= lastino; inum++) {
+		switch( dostate(0,1) ) {
+			case 01 :
+				if(n = dolncnt(0,1) )
+					adjust((short)n);
+				else {
+					for(blp = badlncnt;blp < badlnp; blp++)
+						if(*blp == inum) {
+							clri("UNREF",preen? 0 : 1 , 1 );
+							break;
+						}
+				}
+				break;
+			case 02 :
+				clri("UNREF", 1 , 0 );
+				break;
+			case 03 :
+				clri("BAD/DUP", 1 , 0 );
+		}
+	}
+	if (zcleared)
+		pwarn("%u LINKLESS FILES CLEARED\n", zcleared);
+	if(imax - n_files != sblk.b_un.b_fs .s_tinode) {
+		pwarn("FREE INODE COUNT %u SHOULD BE %u IN SUPERBLK",
+ sblk.b_un.b_fs .s_tinode, imax - n_files);
+		if (preen)
+			printf(" (FIXED)\n");
+		if (preen || reply("FIX") == 1 ) {
+ sblk.b_un.b_fs .s_tinode = imax - n_files;
+ sblk.b_dirty = 1 ;
+		}
+	}
+	flush(&dfile,&fileblk);
+
+	if (preen == 0)
+		printf("** Phase 5 - Check Free List ");
+	if(sflag || (csflag && rplyflag == 0)) {
+		if (preen == 0)
+			printf("(Ignored)\n");
+		fixfree = 1;
+	}
+	else {
+		if (preen == 0)
+			printf("\n");
+		if(freemap)
+			copy(blkmap,freemap,(MEMSIZE)bmapsz);
+		else {
+			for(blk = 0; blk < fmapblk; blk++) {
+				bp1 = getblk((BUFAREA *) 0 ,blk);
+				bp2 = getblk((BUFAREA *) 0 ,blk+fmapblk);
+				copy(bp1->b_un.b_buf,bp2->b_un.b_buf, ( (( big ) & 64) ? 4096: 1024) );
+ ( bp2 )->b_dirty = 1 ;
+			}
+		}
+		badblk = dupblk = 0;
+		if(big == 0 ) {
+ fileblk.b_un.b_fb .df_nfree = sblk.b_un.b_fs . U.R.S_nfree ;
+			for(n = 0; n < 178 ; n++)
+ fileblk.b_un.b_fb .df_free[n] = sblk.b_un.b_fs . U.R.S_free [n];
+		}
+		freechk();
+		if(badblk) {
+			pfatal("%d BAD BLKS IN FREE LIST",badblk);
+			printf("\n");
+		}
+		if(dupblk)
+			pwarn("%d DUP BLKS IN FREE LIST\n",dupblk);
+		if(fixfree == 0) {
+			if((n_blks+n_free) != (fmax-fmin)) {
+				pwarn("%ld BLK(S) MISSING\n",
+					fmax-fmin-n_blks-n_free);
+				fixfree = 1;
+			}
+			else if(big == 0 && n_free != sblk.b_un.b_fs .s_tfree) {
+				pwarn("FREE BLK COUNT WRONG IN SUPERBLK");
+				if (preen)
+					printf(" (FIXED)\n");
+				if(preen || reply("FIX") == 1 ) {
+ sblk.b_un.b_fs .s_tfree = n_free;
+ sblk.b_dirty = 1 ;
+				}
+			}
+		}
+		if(fixfree) {
+			pwarn("BAD FREE LIST");
+			if (preen)
+				printf(" (SALVAGED)\n");
+			else if(reply("SALVAGE") == 0 )
+				fixfree = 0;
+		}
+	}
+
+	if(fixfree) {
+		if (preen == 0)
+			printf("** Phase 6 - Salvage Free List\n");
+		makefree();
+		n_free = sblk.b_un.b_fs .s_tfree;
+	}
+
+	pwarn("%ld files %ld blocks %ld free\n", n_files,n_blks,n_free);
+	if(dfile.mod) {
+		time(& sblk.b_un.b_fs .s_time);
+ sblk.b_dirty = 1 ;
+	}
+	ckfini();
+	sync();
+	if(dfile.mod && hotroot) {
+		printf("ROOT MODIFIED\n");
+	}
+	if(dfile.mod && preen == 0)
+		printf("\n***** FILE SYSTEM WAS MODIFIED *****\n");
+}
+
+
+error(s1,s2,s3,s4)
+char *s1;
+{
+	printf(s1,s2,s3,s4);
+}
+
+
+errexit(s1,s2,s3,s4)
+char *s1;
+{
+	error(s1,s2,s3,s4);
+	exit(8);
+}
+
+
+#line 718 "fsck.c"
+pfatal(s,a1,a2,a3)
+{
+
+	if (preen) {
+		printf("%s: ", devname);
+		printf(s, a1, a2, a3);
+		printf("\n");
+		preendie();
+	}
+	printf(s, a1, a2, a3);
+}
+
+
+#line 734 "fsck.c"
+preendie()
+{
+
+	printf("%s: UNEXPECTED INCONSISTENCY; RUN fsck MANUALLY.\n", devname);
+	exit(8);
+}
+
+
+#line 745 "fsck.c"
+pwarn(s,a1,a2,a3,a4,a5,a6)
+{
+
+	if (preen)
+		printf("%s: ", devname);
+	printf(s, a1, a2, a3, a4, a5, a6);
+}
+
+ckinode(dp,flg)
+DINODE *dp;
+register flg;
+{
+	register daddr_t *ap;
+	register ret;
+	int (*func)(), n;
+	daddr_t	iaddrs[ 13 ];
+
+	if( ( ((dp->di_mode & 0170000 ) == 0060000 ) || ((dp->di_mode & 0170000 ) == 0020000 ) ) )
+		return( 04 );
+	l3tol(iaddrs,dp->di_addr, 13 );
+	func = (flg == 0 ) ? pfunc : dirscan;
+	for(ap = iaddrs; ap < &iaddrs[ 13 -3]; ap++) {
+		if(*ap && (ret = (*func)(*ap)) & 01 )
+			return(ret);
+	}
+	for(n = 1; n < 4; n++) {
+		if(*ap && (ret = iblock(*ap,n,flg)) & 01 )
+			return(ret);
+		ap++;
+	}
+	return( 04 );
+}
+
+
+iblock(blk,ilevel,flg)
+daddr_t blk;
+register ilevel;
+{
+	register daddr_t *ap;
+	register n;
+	int (*func)();
+	BUFAREA ib;
+
+	if(flg == 0 ) {
+		func = pfunc;
+		if(((n = (*func)(blk)) & 04 ) == 0)
+			return(n);
+	}
+	else
+		func = dirscan;
+	if( ( blk < fmin || blk >= fmax) )
+		return( 02 );
+ ( &ib )->b_dirty = 0;( &ib )->b_bno = (daddr_t)-1 ;
+	if(getblk(&ib,blk) == 0 )
+		return( 02 );
+	ilevel--;
+	for(ap = ib.b_un.b_indir; ap < &ib.b_un.b_indir[ ( ( (( big ) & 64) ? 4096: 1024) /sizeof(daddr_t)) ]; ap++) {
+		if(*ap) {
+			if(ilevel > 0) {
+				n = iblock(*ap,ilevel,flg);
+			}
+			else
+				n = (*func)(*ap);
+			if(n & 01 )
+				return(n);
+		}
+	}
+	return( 04 );
+}
+
+
+pass1(blk)
+daddr_t blk;
+{
+	register daddr_t *dlp;
+
+	if( ( blk < fmin || blk >= fmax) ) {
+		blkerr("BAD",blk);
+		if(++badblk >= 10 ) {
+			printf("EXCESSIVE BAD BLKS I=%u",inum);
+			if(reply("CONTINUE") == 0 )
+				errexit("");
+			return( 01 );
+		}
+		return( 02 );
+	}
+	if( domap( blk ,1) ) {
+		blkerr("DUP",blk);
+		if(++dupblk >= 10 ) {
+			printf("EXCESSIVE DUP BLKS I=%u",inum);
+			if(reply("CONTINUE") == 0 )
+				errexit("");
+			return( 01 );
+		}
+		if(enddup >= &duplist[ 100 ]) {
+			printf("DUP TABLE OVERFLOW.");
+			if(reply("CONTINUE") == 0 )
+				errexit("");
+			return( 01 );
+		}
+		for(dlp = duplist; dlp < muldup; dlp++) {
+			if(*dlp == blk) {
+				*enddup++ = blk;
+				break;
+			}
+		}
+		if(dlp >= muldup) {
+			*enddup++ = *muldup;
+			*muldup++ = blk;
+		}
+	}
+	else {
+		n_blks++;
+ domap( blk ,0) ;
+	}
+	filsize++;
+	return( 04 );
+}
+
+
+pass1b(blk)
+daddr_t blk;
+{
+	register daddr_t *dlp;
+
+	if( ( blk < fmin || blk >= fmax) )
+		return( 02 );
+	for(dlp = duplist; dlp < muldup; dlp++) {
+		if(*dlp == blk) {
+			blkerr("DUP",blk);
+			*dlp = *--muldup;
+			*muldup = blk;
+			return(muldup == duplist ? 01 : 04 );
+		}
+	}
+	return( 04 );
+}
+
+
+pass2(dirp)
+register DIRECT *dirp;
+{
+	register char *p;
+	register n;
+	DINODE *dp;
+
+	if((inum = dirp->d_ino) == 0)
+		return( 04 );
+	thisname = pathp;
+	for(p = dirp->d_name; p < &dirp->d_name[ 14 ]; )
+		if((*pathp++ = *p++) == 0) {
+			--pathp;
+			break;
+		}
+	*pathp = 0;
+	n = 0 ;
+	if(inum > imax || inum <= 0)
+		n = direrr("I OUT OF RANGE");
+	else {
+	again:
+		switch( dostate(0,1) ) {
+			case 0 :
+				n = direrr("UNALLOCATED");
+				break;
+			case 03 :
+				if((n = direrr("DUP/BAD")) == 1 )
+					break;
+				if((dp = ginode()) == 0 )
+					break;
+ dostate( ((dp->di_mode & 0170000 ) == 0040000 ) ? 02 : 01 ,0) ;
+				goto again;
+			case 01 :
+ dolncnt(0,2) ;
+				break;
+			case 02 :
+ dolncnt(0,2) ;
+				descend();
+		}
+	}
+	pathp = thisname;
+	if(n == 0 )
+		return( 04 );
+	dirp->d_ino = 0;
+	return( 04 | 010 );
+}
+
+
+pass4(blk)
+daddr_t blk;
+{
+	register daddr_t *dlp;
+
+	if( ( blk < fmin || blk >= fmax) )
+		return( 02 );
+	if( domap( blk ,1) ) {
+		for(dlp = duplist; dlp < enddup; dlp++)
+			if(*dlp == blk) {
+				*dlp = *--enddup;
+				return( 04 );
+			}
+ domap( blk ,2) ;
+		n_blks--;
+	}
+	return( 04 );
+}
+
+
+pass5(blk)
+daddr_t blk;
+{
+	if( ( blk < fmin || blk >= fmax) ) {
+		fixfree = 1;
+		if (preen)
+			pfatal("BAD BLOCKS IN FREE LIST.");
+		if(++badblk >= 10 ) {
+			printf("EXCESSIVE BAD BLKS IN FREE LIST.");
+			if(reply("CONTINUE") == 0 )
+				errexit("");
+			return( 01 );
+		}
+		return( 02 );
+	}
+	if( domap( blk ,1+4) ) {
+		fixfree = 1;
+		if(++dupblk >= 100 ) {
+			printf("EXCESSIVE DUP BLKS IN FREE LIST.");
+			if(reply("CONTINUE") == 0 )
+				errexit("");
+			return( 01 );
+		}
+	}
+	else {
+		n_free++;
+ domap( blk ,0+4) ;
+	}
+	return( 04 );
+}
+
+
+blkerr(s,blk)
+daddr_t blk;
+char *s;
+{
+	pfatal("%ld %s I=%u",blk,s,inum);
+	printf("\n");
+ dostate( 03 ,0) ;
+}
+
+
+descend()
+{
+	register DINODE *dp;
+	register char *savname;
+	off_t savsize;
+
+ dostate( 01 ,0) ;
+	if((dp = ginode()) == 0 )
+		return;
+	savname = thisname;
+	*pathp++ = '/';
+	savsize = filsize;
+	filsize = dp->di_size;
+	ckinode(dp, 1 );
+	thisname = savname;
+	*--pathp = 0;
+	filsize = savsize;
+}
+
+
+dirscan(blk)
+daddr_t blk;
+{
+	register DIRECT *dirp;
+	register char *p1, *p2;
+	register n;
+	DIRECT direntry;
+
+	if( ( blk < fmin || blk >= fmax) ) {
+		filsize -= ( (( big ) & 64) ? 4096: 1024) ;
+		return( 02 );
+	}
+	for(dirp = fileblk.b_un .b_dir; dirp < & fileblk.b_un .b_dir[ ( ( (( big ) & 64) ? 4096: 1024) /sizeof(struct direct)) ] &&
+		filsize > 0; dirp++, filsize -= sizeof(DIRECT)) {
+		if(getblk(&fileblk,blk) == 0 ) {
+			filsize -= (& fileblk.b_un .b_dir[ ( ( (( big ) & 64) ? 4096: 1024) /sizeof(struct direct)) ]-dirp)*
+				sizeof(DIRECT);
+			return( 02 );
+		}
+		p1 = &dirp->d_name[ 14 ];
+		p2 = &direntry.d_name[ 14 ];
+		while(p1 > (char *)dirp)
+			*--p2 = *--p1;
+		if((n = (*pfunc)(&direntry)) & 010 ) {
+			if(getblk(&fileblk,blk) != 0 ) {
+				p1 = &dirp->d_name[ 14 ];
+				p2 = &direntry.d_name[ 14 ];
+				while(p1 > (char *)dirp)
+					*--p1 = *--p2;
+ fileblk.b_dirty = 1 ;
+			}
+			else
+				n &= ~ 010 ;
+		}
+		if(n & 01 )
+			return(n);
+	}
+	return(filsize > 0 ? 04 : 01 );
+}
+
+
+direrr(s)
+char *s;
+{
+	register DINODE *dp;
+
+	pwarn("%s ",s);
+	pinode();
+	printf("\n");
+	if((dp = ginode()) != 0 && ftypeok(dp))
+		pfatal("%s=%s", ((dp->di_mode & 0170000 ) == 0040000 ) ?"DIR":"FILE",pathname);
+	else
+		pfatal("NAME=%s",pathname);
+	return(reply("REMOVE"));
+}
+
+
+adjust(lcnt)
+register short lcnt;
+{
+	register DINODE *dp;
+
+	if((dp = ginode()) == 0 )
+		return;
+	if(dp->di_nlink == lcnt) {
+		if(linkup() == 0 )
+			clri("UNREF", 0 , 0 );
+	}
+	else {
+		pwarn("LINK COUNT %s",
+			(lfdir==inum)?lfname:( ((dp->di_mode & 0170000 ) == 0040000 ) ?"DIR":"FILE"));
+		pinode();
+		printf(" COUNT %d SHOULD BE %d",
+			dp->di_nlink,dp->di_nlink-lcnt);
+		if (preen) {
+			if (lcnt < 0) {
+				printf("\n");
+				preendie();
+			}
+			printf(" (ADJUSTED)\n");
+		}
+		if(preen || reply("ADJUST") == 1 ) {
+			dp->di_nlink -= lcnt;
+ inoblk.b_dirty = 1 ;
+		}
+	}
+}
+
+
+clri(s,flg,jclr)
+char *s;
+{
+	register DINODE *dp;
+
+	if((dp = ginode()) == 0 )
+		return;
+	if(flg == 1 ) {
+		pwarn("%s %s",s, ((dp->di_mode & 0170000 ) == 0040000 ) ?"DIR":"FILE");
+		pinode();
+	}
+	if(preen || reply("CLEAR") == 1 ) {
+		if (preen)
+			if (jclr == 1 )
+				zcleared++;
+			else
+				printf(" (CLEARED)\n");
+		n_files--;
+		pfunc = pass4;
+		ckinode(dp, 0 );
+ clear((char *)( dp ),sizeof(DINODE)) ;
+ inoblk.b_dirty = 1 ;
+	}
+}
+
+
+setup(dev)
+char *dev;
+{
+	register n;
+	register BUFAREA *bp;
+	register MEMSIZE msize;
+	char *mbase;
+	daddr_t bcnt, nscrblk;
+	dev_t rootdev;
+	off_t smapsz, lncntsz, totsz;
+	struct stat statarea;
+
+	if(stat("/",&statarea) < 0)
+		errexit("Can't stat root\n");
+	rootdev = statarea.st_dev;
+	if(stat(dev,&statarea) < 0) {
+		error("Can't stat %s\n",dev);
+		return( 0 );
+	}
+	rawflg = 0;
+	big = 0 ;
+	if((statarea.st_mode & 0170000 ) == 0060000 ) {
+		if( (( statarea.st_rdev ) & 64) )
+			big = 64 ;
+	}
+	else if((statarea.st_mode & 0170000 ) == 0020000 )
+		rawflg++;
+	else {
+		if (reply("file is not a block or character device; OK") == 0 )
+			return( 0 );
+	}
+	if(rootdev == statarea.st_rdev)
+		hotroot++;
+	if((dfile.rfdes = open(dev,0)) < 0) {
+		error("Can't open %s\n",dev);
+		return( 0 );
+	}
+	if (preen == 0)
+		printf("\n%s",dev);
+	if(nflag || (dfile.wfdes = open(dev,1)) < 0) {
+		dfile.wfdes = -1;
+		if (preen)
+			pfatal("NO WRITE ACCESS");
+		printf(" (NO WRITE)");
+	}
+	if (preen == 0)
+		printf("\n");
+	fixfree = 0;
+	dfile.mod = 0;
+	n_files = n_blks = n_free = 0;
+	muldup = enddup = &duplist[0];
+	badlnp = &badlncnt[0];
+	lfdir = 0;
+	rplyflag = 0;
+ ( &sblk )->b_dirty = 0;( &sblk )->b_bno = (daddr_t)-1 ;
+ ( &fileblk )->b_dirty = 0;( &fileblk )->b_bno = (daddr_t)-1 ;
+ ( &inoblk )->b_dirty = 0;( &inoblk )->b_bno = (daddr_t)-1 ;
+	sfile.wfdes = sfile.rfdes = -1;
+	rmscr = 0;
+	if(getblk(&sblk, ((daddr_t)1) ) == 0 ) {
+		ckfini();
+		return( 0 );
+	}
+	imax = ((ino_t) sblk.b_un.b_fs .s_isize - ( ((daddr_t)1) +1)) * ( (( big ) & 64) ? 64: 16) ;
+	fmin = (daddr_t) sblk.b_un.b_fs .s_isize;
+	fmax = sblk.b_un.b_fs .s_fsize;
+	if(fmin >= fmax ||
+		(imax/ ( (( big ) & 64) ? 64: 16) ) != ((ino_t) sblk.b_un.b_fs .s_isize-( ((daddr_t)1) +1))) {
+		pfatal("Size check: fsize %ld isize %d",
+ sblk.b_un.b_fs .s_fsize, sblk.b_un.b_fs .s_isize);
+		printf("\n");
+		ckfini();
+		return( 0 );
+	}
+	if (preen == 0)
+		printf("File System: %.12s\n\n", sblk.b_un.b_fs .s_fsmnt);
+	bmapsz = (((( ((( fmax )+(( 8 )-1))/( 8 )) )+(( sizeof(*lncntp) )-1))/( sizeof(*lncntp) ))*( sizeof(*lncntp) )) ;
+	smapsz = (((( ((( (long)(imax+1) )+(( ( 8 / 2 ) )-1))/( ( 8 / 2 ) )) )+(( sizeof(*lncntp) )-1))/( sizeof(*lncntp) ))*( sizeof(*lncntp) )) ;
+	lncntsz = (long)(imax+1) * sizeof(*lncntp);
+	if(bmapsz > smapsz+lncntsz)
+		smapsz = bmapsz-lncntsz;
+	totsz = bmapsz+smapsz+lncntsz;
+	msize = memsize;
+	mbase = membase;
+	if(rawflg) {
+		if(msize < (MEMSIZE)( 11 * ( (( big ) & 64) ? 4096: 1024) ) + 2*sizeof(BUFAREA))
+			rawflg = 0;
+		else {
+			msize -= (MEMSIZE) 11 * ( (( big ) & 64) ? 4096: 1024) ;
+			mbase += (MEMSIZE) 11 * ( (( big ) & 64) ? 4096: 1024) ;
+			niblk = 11 ;
+			startib = fmax;
+		}
+	}
+	clear(mbase,msize);
+	if((off_t)msize < totsz) {
+		bmapsz = (((( bmapsz )+(( ( (( big ) & 64) ? 4096: 1024) )-1))/( ( (( big ) & 64) ? 4096: 1024) ))*( ( (( big ) & 64) ? 4096: 1024) )) ;
+		smapsz = (((( smapsz )+(( ( (( big ) & 64) ? 4096: 1024) )-1))/( ( (( big ) & 64) ? 4096: 1024) ))*( ( (( big ) & 64) ? 4096: 1024) )) ;
+		lncntsz = (((( lncntsz )+(( ( (( big ) & 64) ? 4096: 1024) )-1))/( ( (( big ) & 64) ? 4096: 1024) ))*( ( (( big ) & 64) ? 4096: 1024) )) ;
+		nscrblk = (bmapsz+smapsz+lncntsz)>> ( (( big ) & 64) ? 12: 10) ;
+		if(tflag == 0) {
+			printf("\nNEED SCRATCH FILE (%ld BLKS)\n",nscrblk);
+			do {
+				printf("ENTER FILENAME:  ");
+				if((n = getline( (&_iob[0]) ,scrfile,sizeof(scrfile))) == (-1) )
+					errexit("\n");
+			} while(n == 0);
+		}
+		if(stat(scrfile,&statarea) < 0 ||
+			(statarea.st_mode & 0170000 ) == 0100000 )
+			rmscr++;
+		if((sfile.wfdes = creat(scrfile,0666)) < 0 ||
+			(sfile.rfdes = open(scrfile,0)) < 0) {
+			error("Can't create %s\n",scrfile);
+			ckfini();
+			return( 0 );
+		}
+		bp = &((BUFAREA *)mbase)[(msize/sizeof(BUFAREA))];
+		poolhead = 0 ;
+		while(--bp >= (BUFAREA *)mbase) {
+ ( bp )->b_dirty = 0;( bp )->b_bno = (daddr_t)-1 ;
+			bp->b_next = poolhead;
+			poolhead = bp;
+		}
+		bp = poolhead;
+		for(bcnt = 0; bcnt < nscrblk; bcnt++) {
+			bp->b_bno = bcnt;
+ ( bp )->b_dirty = 1 ;
+			flush(&sfile,bp);
+		}
+		blkmap = freemap = statemap = (char *) 0 ;
+		lncntp = (short *) 0 ;
+		smapblk = bmapsz / ( (( big ) & 64) ? 4096: 1024) ;
+		lncntblk = smapblk + smapsz / ( (( big ) & 64) ? 4096: 1024) ;
+		fmapblk = smapblk;
+	}
+	else {
+		if(rawflg && (off_t)msize > totsz+ ( (( big ) & 64) ? 4096: 1024) ) {
+			niblk += (unsigned)((off_t)msize-totsz)>> ( (( big ) & 64) ? 12: 10) ;
+			if(niblk > 110 )
+				niblk = 110 ;
+			msize = memsize - (niblk* ( (( big ) & 64) ? 4096: 1024) );
+			mbase = membase + (niblk* ( (( big ) & 64) ? 4096: 1024) );
+		}
+		poolhead = 0 ;
+		blkmap = mbase;
+		statemap = &mbase[(MEMSIZE)bmapsz];
+		freemap = statemap;
+		lncntp = (short *)&statemap[(MEMSIZE)smapsz];
+	}
+	return( 1 );
+}
+
+
+DINODE *
+ginode()
+{
+	register DINODE *dp;
+	register char *mbase;
+	daddr_t iblk;
+
+	if(inum > imax)
+		return( 0 );
+	iblk = ((daddr_t)((((unsigned)( inum )+2* ( (( big ) & 64) ? 64: 16) -1)/ ( (( big ) & 64) ? 64: 16) ))) ;
+	if(rawflg) {
+		mbase = membase;
+		if(iblk < startib || iblk >= startib+niblk) {
+			if(inoblk.b_dirty)
+				bwrite(&dfile,mbase,startib,(int)niblk* ( (( big ) & 64) ? 4096: 1024) );
+			inoblk.b_dirty = 0;
+			if(bread(&dfile,mbase,iblk,(int)niblk* ( (( big ) & 64) ? 4096: 1024) ) == 0 ) {
+				startib = fmax;
+				return( 0 );
+			}
+			startib = iblk;
+		}
+		dp = (DINODE *)&mbase[(unsigned)((iblk-startib)<< ( (( big ) & 64) ? 12: 10) )];
+	}
+	else if(getblk(&inoblk,iblk) != 0 )
+		dp = inoblk.b_un.b_dinode;
+	else
+		return( 0 );
+	return(dp + ((int)((( inum )+2* ( (( big ) & 64) ? 64: 16) -1)% ( (( big ) & 64) ? 64: 16) )) );
+}
+
+
+ftypeok(dp)
+DINODE *dp;
+{
+	switch(dp->di_mode & 0170000 ) {
+		case 0040000 :
+		case 0100000 :
+		case 0060000 :
+		case 0020000 :
+
+		case 0120000 :
+
+			return( 1 );
+		default:
+			return( 0 );
+	}
+}
+
+
+reply(s)
+char *s;
+{
+	char line[80];
+
+	if (preen)
+		pfatal("INTERNAL ERROR: GOT TO reply()");
+	rplyflag = 1;
+	printf("\n%s? ",s);
+	if(nflag || csflag || dfile.wfdes < 0) {
+		printf(" no\n\n");
+		return( 0 );
+	}
+	if(yflag) {
+		printf(" yes\n\n");
+		return( 1 );
+	}
+	if(getline( (&_iob[0]) ,line,sizeof(line)) == (-1) )
+		errexit("\n");
+	printf("\n");
+	if(line[0] == 'y' || line[0] == 'Y')
+		return( 1 );
+	else
+		return( 0 );
+}
+
+
+getline(fp,loc,maxlen)
+ struct _iobuf *fp;
+char *loc;
+{
+	register n;
+	register char *p, *lastloc;
+
+	p = loc;
+	lastloc = &p[maxlen-1];
+	while((n = (--( fp )->_cnt>=0? (int)*( fp )->_ptr++:_filbuf( fp )) ) != '\n') {
+		if(n == (-1) )
+			return( (-1) );
+		if(! ((_ctype+1)[ n ]& 010 ) && p < lastloc)
+			*p++ = n;
+	}
+	*p = 0;
+	return(p - loc);
+}
+
+
+stype(p)
+register char *p;
+{
+	if(*p == 0)
+		return;
+	cylsize = atoi(p);
+	while(*p && *p != ':')
+		p++;
+	if(*p)
+		p++;
+	stepsize = atoi(p);
+	if(stepsize <= 0 || stepsize > cylsize ||
+	cylsize <= 0 || cylsize > 1000 ) {
+		error("Invalid -s argument, defaults assumed\n");
+		cylsize = stepsize = 0;
+	}
+}
+
+
+dostate(s,flg)
+{
+	register char *p;
+	register unsigned byte, shift;
+	BUFAREA *bp;
+
+	byte = (inum)/ ( 8 / 2 ) ;
+	shift = 2 * ((inum)% ( 8 / 2 ) );
+	if(statemap != 0 ) {
+		bp = 0 ;
+		p = &statemap[byte];
+	}
+	else if((bp = getblk((BUFAREA *) 0 ,
+			(daddr_t)(smapblk+(byte/ ( (( big ) & 64) ? 4096: 1024) )))) == 0 )
+		errexit("Fatal I/O error\n");
+	else
+		p = &bp->b_un.b_buf[byte% ( (( big ) & 64) ? 4096: 1024) ];
+	switch(flg) {
+		case 0:
+			*p &= ~( 03 <<(shift));
+			*p |= s<<(shift);
+			if(bp != 0 )
+ ( bp )->b_dirty = 1 ;
+			return(s);
+		case 1:
+			return((*p>>(shift)) & 03 );
+	}
+	return( 0 );
+}
+
+
+domap(blk,flg)
+daddr_t blk;
+{
+	register char *p;
+	register unsigned n;
+	register BUFAREA *bp;
+	off_t byte;
+
+	byte = blk >> 3 ;
+	n = 1<<((unsigned)(blk & 07 ));
+	if(flg & 04) {
+		p = freemap;
+		blk = fmapblk;
+	}
+	else {
+		p = blkmap;
+		blk = 0;
+	}
+	if(p != 0 ) {
+		bp = 0 ;
+		p += (unsigned)byte;
+	}
+	else if((bp = getblk((BUFAREA *) 0 ,blk+(byte>> ( (( big ) & 64) ? 12: 10) ))) == 0 )
+		errexit("Fatal I/O error\n");
+	else
+		p = &bp->b_un.b_buf[(unsigned)(byte& ( (( big ) & 64) ? 07777: 01777) )];
+	switch(flg&03) {
+		case 0:
+			*p |= n;
+			break;
+		case 1:
+			n &= *p;
+			bp = 0 ;
+			break;
+		case 2:
+			*p &= ~n;
+	}
+	if(bp != 0 )
+ ( bp )->b_dirty = 1 ;
+	return(n);
+}
+
+
+dolncnt(val,flg)
+short val;
+{
+	register short *sp;
+	register BUFAREA *bp;
+
+	if(lncntp != 0 ) {
+		bp = 0 ;
+		sp = &lncntp[inum];
+	}
+	else if((bp = getblk((BUFAREA *) 0 ,(daddr_t)(lncntblk+(inum/ ( ( (( big ) & 64) ? 4096: 1024) /sizeof(short)) )))) == 0 )
+		errexit("Fatal I/O error\n");
+	else
+		sp = &bp->b_un.b_lnks[inum% ( ( (( big ) & 64) ? 4096: 1024) /sizeof(short)) ];
+	switch(flg) {
+		case 0:
+			*sp = val;
+			break;
+		case 1:
+			bp = 0 ;
+			break;
+		case 2:
+			(*sp)--;
+	}
+	if(bp != 0 )
+ ( bp )->b_dirty = 1 ;
+	return(*sp);
+}
+
+
+BUFAREA *
+getblk(bp,blk)
+daddr_t blk;
+register BUFAREA *bp;
+{
+	register struct filecntl *fcp;
+
+	if(bp == 0 ) {
+		bp = search(blk);
+		fcp = &sfile;
+	}
+	else
+		fcp = &dfile;
+	if(bp->b_bno == blk)
+		return(bp);
+	flush(fcp,bp);
+	if(bread(fcp,bp->b_un.b_buf,blk, ( (( big ) & 64) ? 4096: 1024) ) != 0 ) {
+		bp->b_bno = blk;
+		return(bp);
+	}
+	bp->b_bno = (daddr_t)-1;
+	return( 0 );
+}
+
+
+flush(fcp,bp)
+struct filecntl *fcp;
+register BUFAREA *bp;
+{
+	if(bp->b_dirty) {
+		bwrite(fcp,bp->b_un.b_buf,bp->b_bno, ( (( big ) & 64) ? 4096: 1024) );
+	}
+	bp->b_dirty = 0;
+}
+
+
+rwerr(s,blk)
+char *s;
+daddr_t blk;
+{
+	if (preen == 0)
+		printf("\n");
+	pfatal("CAN NOT %s: BLK %ld",s,blk);
+	if(reply("CONTINUE") == 0 )
+		errexit("Program terminated\n");
+}
+
+
+sizechk(dp)
+register DINODE *dp;
+{
+
+#line 1559 "fsck.c"
+	if( ((dp->di_mode & 0170000 ) == 0040000 ) && (dp->di_size % sizeof(DIRECT)) != 0) {
+		pwarn("DIRECTORY MISALIGNED I=%u\n",inum);
+		if (preen == 0)
+			printf("\n");
+	}
+}
+
+
+ckfini()
+{
+	flush(&dfile,&fileblk);
+	flush(&dfile,&sblk);
+	flush(&dfile,&inoblk);
+	close(dfile.rfdes);
+	close(dfile.wfdes);
+	close(sfile.rfdes);
+	close(sfile.wfdes);
+	if(rmscr) {
+		unlink(scrfile);
+	}
+}
+
+
+pinode()
+{
+	register DINODE *dp;
+	register char *p;
+	struct passwd *passwd;
+	char *ctime();
+
+	printf(" I=%u ",inum);
+	if((dp = ginode()) == 0 )
+		return;
+	printf(" OWNER=");
+	if((passwd = getpwuid((int)dp->di_uid)) != 0) {
+		printf("%s ", passwd->pw_name);
+	}
+	else {
+		printf("%d ",dp->di_uid);
+	}
+	printf("MODE=%o\n",dp->di_mode);
+	if (preen)
+		printf("%s: ", devname);
+	printf("SIZE=%ld ",dp->di_size);
+	p = ctime(&dp->di_mtime);
+	printf("MTIME=%12.12s %4.4s ",p+4,p+20);
+}
+
+
+copy(fp,tp,size)
+register char *tp, *fp;
+MEMSIZE size;
+{
+	while(size--)
+		*tp++ = *fp++;
+}
+
+
+freechk()
+{
+	register daddr_t *ap;
+	register int i, j;
+
+	if(big == 64 ) {
+		for(i = sblk.b_un.b_fs .s_isize; i < sblk.b_un.b_fs .s_fsize; i++) {
+			j = i - sblk.b_un.b_fs .s_isize;
+			if(! domap( i ,1+4) ) {
+ sblk.b_un.b_fs . U.B.S_bfree [j>>5] |= (1 << (j&31));
+				n_free++;
+			}
+			else
+ sblk.b_un.b_fs . U.B.S_bfree [j>>5] &= ~(1 << (j&31));
+		}
+ sblk.b_un.b_fs . U.B.S_valid = 1;
+ sblk.b_un.b_fs .s_tfree = n_free;
+ sblk.b_dirty = 1 ;
+		return;
+	}
+	if( fileblk.b_un.b_fb .df_nfree == 0)
+		return;
+	do {
+		if( fileblk.b_un.b_fb .df_nfree <= 0 || fileblk.b_un.b_fb .df_nfree > 178 ) {
+			pwarn("BAD FREEBLK COUNT");
+			printf("\n");
+			fixfree = 1;
+			return;
+		}
+		ap = & fileblk.b_un.b_fb .df_free[ fileblk.b_un.b_fb .df_nfree];
+		while(--ap > & fileblk.b_un.b_fb .df_free[0]) {
+			if(pass5(*ap) == 01 )
+				return;
+		}
+		if(*ap == (daddr_t)0 || pass5(*ap) != 04 )
+			return;
+	} while(getblk(&fileblk,*ap) != 0 );
+}
+
+
+makefree()
+{
+	register i, cyl, step;
+	int j;
+	char flg[ 1000 ];
+	short addr[ 1000 ];
+	daddr_t blk, baseblk;
+
+	if(big == 64 )
+		return;
+ sblk.b_un.b_fs . U.R.S_nfree = 0;
+ sblk.b_un.b_fs .s_flock = 0;
+ sblk.b_un.b_fs .s_fmod = 0;
+ sblk.b_un.b_fs .s_tfree = 0;
+ sblk.b_un.b_fs .s_ninode = 0;
+ sblk.b_un.b_fs .s_ilock = 0;
+ sblk.b_un.b_fs .s_ronly = 0;
+	if(cylsize == 0 || stepsize == 0) {
+		step = sblk.b_un.b_fs .s_dinfo[0];
+		cyl = sblk.b_un.b_fs .s_dinfo[1];
+	}
+	else {
+		step = stepsize;
+		cyl = cylsize;
+	}
+	if(step > cyl || step <= 0 || cyl <= 0 || cyl > 1000 ) {
+		error("Default free list spacing assumed\n");
+		step = 9 ;
+		cyl = 400 ;
+	}
+ sblk.b_un.b_fs .s_dinfo[0] = step;
+ sblk.b_un.b_fs .s_dinfo[1] = cyl;
+	clear(flg,sizeof(flg));
+	i = 0;
+	for(j = 0; j < cyl; j++) {
+		while(flg[i])
+			i = (i + 1) % cyl;
+		addr[j] = i + 1;
+		flg[i]++;
+		i = (i + step) % cyl;
+	}
+	baseblk = (daddr_t) (((( fmax )+(( cyl )-1))/( cyl ))*( cyl )) ;
+	clear((char *)& fileblk.b_un.b_fb , ( (( big ) & 64) ? 4096: 1024) );
+ fileblk.b_un.b_fb .df_nfree++;
+	for( ; baseblk > 0; baseblk -= cyl)
+		for(i = 0; i < cyl; i++) {
+			blk = baseblk - addr[i];
+			if(! ( blk < fmin || blk >= fmax) && ! domap( blk ,1) ) {
+ sblk.b_un.b_fs .s_tfree++;
+				if( fileblk.b_un.b_fb .df_nfree >= 178 ) {
+ fileblk.b_dirty = 1 ;
+					fileblk.b_bno = blk;
+					flush(&dfile,&fileblk);
+					clear((char *)& fileblk.b_un.b_fb , ( (( big ) & 64) ? 4096: 1024) );
+				}
+ fileblk.b_un.b_fb .df_free[ fileblk.b_un.b_fb .df_nfree] = blk;
+ fileblk.b_un.b_fb .df_nfree++;
+			}
+		}
+ sblk.b_un.b_fs . U.R.S_nfree = fileblk.b_un.b_fb .df_nfree;
+	for(i = 0; i < 178 ; i++)
+ sblk.b_un.b_fs . U.R.S_free [i] = fileblk.b_un.b_fb .df_free[i];
+ sblk.b_dirty = 1 ;
+}
+
+
+clear(p,cnt)
+register char *p;
+MEMSIZE cnt;
+{
+	while(cnt--)
+		*p++ = 0;
+}
+
+
+BUFAREA *
+search(blk)
+daddr_t blk;
+{
+	register BUFAREA *pbp, *bp;
+
+	for(bp = (BUFAREA *) &poolhead; bp->b_next; ) {
+		pbp = bp;
+		bp = pbp->b_next;
+		if(bp->b_bno == blk)
+			break;
+	}
+	pbp->b_next = bp->b_next;
+	bp->b_next = poolhead;
+	poolhead = bp;
+	return(bp);
+}
+
+
+findino(dirp)
+register DIRECT *dirp;
+{
+	register char *p1, *p2;
+
+	if(dirp->d_ino == 0)
+		return( 04 );
+	for(p1 = dirp->d_name,p2 = srchname;*p2++ == *p1; p1++) {
+		if(*p1 == 0 || p1 == &dirp->d_name[ 14 -1]) {
+			if(dirp->d_ino > 0 && dirp->d_ino <= imax)
+				parentdir = dirp->d_ino;
+			return( 01 );
+		}
+	}
+	return( 04 );
+}
+
+
+mkentry(dirp)
+register DIRECT *dirp;
+{
+	register ino_t in;
+	register char *p;
+
+	if(dirp->d_ino)
+		return( 04 );
+	dirp->d_ino = orphan;
+	in = orphan;
+	p = &dirp->d_name[8];
+	*--p = 0;
+	while(p > dirp->d_name) {
+		*--p = (in % 10) + '0';
+		in /= 10;
+	}
+	*p = '#';
+	return( 010 | 01 );
+}
+
+
+chgdd(dirp)
+register DIRECT *dirp;
+{
+	if(dirp->d_name[0] == '.' && dirp->d_name[1] == '.' &&
+	dirp->d_name[2] == 0) {
+		dirp->d_ino = lfdir;
+		return( 010 | 01 );
+	}
+	return( 04 );
+}
+
+
+linkup()
+{
+	register DINODE *dp;
+	register lostdir;
+	register ino_t pdir;
+
+	if((dp = ginode()) == 0 )
+		return( 0 );
+	lostdir = ((dp->di_mode & 0170000 ) == 0040000 ) ;
+	pdir = parentdir;
+	if (preen && dp->di_size == 0)
+		return( 0 );
+	pwarn("UNREF %s ",lostdir ? "DIR" : "FILE");
+	pinode();
+	if (preen)
+		printf(" (RECONNECTED)\n");
+	else
+		if (reply("RECONNECT") == 0 )
+			return( 0 );
+	orphan = inum;
+	if(lfdir == 0) {
+		inum = ((ino_t)2) ;
+		if((dp = ginode()) == 0 ) {
+			inum = orphan;
+			return( 0 );
+		}
+		pfunc = findino;
+		srchname = lfname;
+		filsize = dp->di_size;
+		parentdir = 0;
+		ckinode(dp, 1 );
+		inum = orphan;
+		if((lfdir = parentdir) == 0) {
+			pfatal("SORRY. NO lost+found DIRECTORY");
+			printf("\n\n");
+			return( 0 );
+		}
+	}
+	inum = lfdir;
+	if((dp = ginode()) == 0 || ! ((dp->di_mode & 0170000 ) == 0040000 ) || dostate(0,1) != 01 ) {
+		inum = orphan;
+		pfatal("SORRY. NO lost+found DIRECTORY");
+		printf("\n\n");
+		return( 0 );
+	}
+	if(dp->di_size & ( (( big ) & 64) ? 07777: 01777) ) {
+		dp->di_size = (((( dp->di_size )+(( ( (( big ) & 64) ? 4096: 1024) )-1))/( ( (( big ) & 64) ? 4096: 1024) ))*( ( (( big ) & 64) ? 4096: 1024) )) ;
+ inoblk.b_dirty = 1 ;
+	}
+	filsize = dp->di_size;
+	inum = orphan;
+	pfunc = mkentry;
+	if((ckinode(dp, 1 ) & 010 ) == 0) {
+		pfatal("SORRY. NO SPACE IN lost+found DIRECTORY");
+		printf("\n\n");
+		return( 0 );
+	}
+ dolncnt(0,2) ;
+	if(lostdir) {
+		pfunc = chgdd;
+		dp = ginode();
+		filsize = dp->di_size;
+		ckinode(dp, 1 );
+		inum = lfdir;
+		if((dp = ginode()) != 0 ) {
+			dp->di_nlink++;
+ inoblk.b_dirty = 1 ;
+ dolncnt( dolncnt(0,1) +1 ,0) ;
+		}
+		inum = orphan;
+		pwarn("DIR I=%u CONNECTED. ",orphan);
+		printf("PARENT WAS I=%u\n",pdir);
+		if (preen == 0)
+			printf("\n");
+	}
+	return( 1 );
+}
+
+
+bread(fcp,buf,blk,size)
+daddr_t blk;
+register struct filecntl *fcp;
+register size;
+char *buf;
+{
+	if(lseek(fcp->rfdes,blk<< ( (( big ) & 64) ? 12: 10) ,0) < 0)
+		rwerr("SEEK",blk);
+	else if(read(fcp->rfdes,buf,size) == size)
+		return( 1 );
+	rwerr("READ",blk);
+	return( 0 );
+}
+
+
+bwrite(fcp,buf,blk,size)
+daddr_t blk;
+register struct filecntl *fcp;
+register size;
+char *buf;
+{
+	if(fcp->wfdes < 0)
+		return( 0 );
+	if(lseek(fcp->wfdes,blk<< ( (( big ) & 64) ? 12: 10) ,0) < 0)
+		rwerr("SEEK",blk);
+	else if(write(fcp->wfdes,buf,size) == size) {
+		fcp->mod = 1;
+		return( 1 );
+	}
+	rwerr("WRITE",blk);
+	return( 0 );
+}
+
+catch()
+{
+	ckfini();
+	exit(12);
+}

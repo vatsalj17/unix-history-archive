@@ -1,0 +1,233 @@
+.EQ
+delim off
+.EN
+.ig
+.so /usr/lib/tmac/tmac.cs
+.TI
+The Design of IX
+.AH "M. D. McIlroy" MH 11270 6050 2C526 research!mcilroy ""
+.AH "J. A. Reeds" MH 11217 7066 2C357 alice!reeds ""
+.SA
+.LP
+IX is a modestly modified
+.UX
+system that is capable of enforcing 
+mandatory access controls, admits
+controlled downgrading by trusted processes, and hampers
+the superuser's power to do mischief.
+A lattice-based security model imposed on files and processes
+requires modest modifications to the behavior of existing system
+calls and a few new security-related system calls.
+Superuser privileges are highly restricted.
+Privileges are subdivided and are in general restricted to
+``trusted'' programs running on behalf of ``licensed'' processes.
+Covert channels are identified, quantified, and,
+where reasonable means are available, plugged.
+.LP
+We have tried to maintain the familiar and
+productive feel of the
+.UX
+system and to keep information as widely accessible
+as is consistent with security policy.
+In particular, processes and files always start
+at the lowest possible security classification.
+Classification labels change automatically as needed when
+higher-level data arrives.
+.SE
+.TY TM y
+.NU 11270 870414 04 39199-11 ""
+.NU 11217 870414 05 20878 311404-2499
+.MY "" "" y "" "" "" ""
+.CI ""
+.CO n
+Executive Directors 112
+Directors 112
+Department Heads 1127
+Department Heads 1121
+.CE
+.CV n
+A. A. Penzias
+1127 MTS
+1121 MTS
+R. B. Ardis
+T. F. Houghton	IS
+J. D. Weiss
+.CE
+.SC 16 1 0 2 2
+.ND "April 14, 1987
+..
+.	\" cross-ref initialize
+.de XI
+.ds XR \\$1
+.so \\$1
+.sy >\\$1
+..
+.de XX
+.ds y\\$1 [y\\$1]
+.ds z\\$1 [z\\$1]
+..
+.XX 0
+.XX 1
+.XX 2
+.XX 3
+.XX 4
+.XX 5
+.XX 6
+.XX 7
+.XX 8
+.XX 9
+.XX a
+.XX b
+.XX c
+.XX d
+.XX e
+.XX f
+.XX g
+.XX h
+.XX i
+.XX j
+.XX k
+.XX l
+.XX m
+.XX n
+.XX o
+.XX p
+.XX q
+.XX r
+.XX s
+.XX t
+.XX u
+.XX v
+.XX w
+.XX x
+.XX y
+.XX z
+.XX A
+.XX B
+.XX C
+.XX D
+.XX E
+.XX F
+.XX G
+.XX H
+.XX I
+.XX J
+.XX K
+.XX L
+.XX M
+.XX N
+.XX O
+.XX P
+.XX Q
+.XX R
+.XX S
+.XX T
+.XX U
+.XX V
+.XX W
+.XX X
+.XX Y
+.XX Z
+.	\" label of section to be cross-referenced
+.de XL
+.	\"\(rh \\$1 \(lh	\" $
+.ds SN \\n(H1
+.if \\n(NS-1 .as SN .\\n(H2
+.if \\n(NS-2 .as SN .\\n(H3
+.if \\n(NS-3 .as SN .\\n(H4
+.if \\n(NS-4 .as SN .\\n(H5
+.if !"\\*(\\$1"\(sc\\*(SN" .tm \\$1 redefined
+.sy echo .ds \\$1 '\\\\(sc\\*(SN' >>\\*(XR
+..
+.if "\*(.T"202" .fp 4 SC M2
+.if "\*(.T"post" .fp 4 SC HB
+.fp 8 U6 UnivMath6
+.de CW
+.ie !'\\$1'' \&\\$3\f(CW\\$1\fP\\$2
+.el .ft CW
+..
+.de SP	\" small paragraph
+.IP \(rh
+..
+.EQ
+delim $$
+define !<= % "\o'\(<=/'" %
+define ->* % => %
+define bottom % "\fS\N'94'\fP" %
+define top % "\f(U6\N'193'\fP" %
+define not % "\(no" % 
+define empty % "\(es" %
+define or % "\fS\(l|\fP" %
+define and % "\fS\(l&\fP" %
+define error % bold "error" %
+define true % bold "true" %
+define false % bold "false" %
+define min % roman "inf" %
+define max % roman "sup" %
+define ELAB % font CW "ELAB" %
+define EPRIV % font CW "EPRIV" %
+define EPERM % font CW "EPERM" %
+define EPERM % font CW "ECONC" %
+define SIGLAB % font CW "SIGLAB" %
+define SIGPIPE % font CW "SIGPIPE" %
+define SIGSPY % font CW "SIGSPY" %
+define member % "\(mo" %
+define within % "\(sb" %
+define meet % "\(ca" %
+define join % "\(cu" %
+define LL %font SC L%
+define LLstar %LL *%
+define YES %bold y%
+define NO %bold n%
+define Lnew %L sub { roman "new"} %
+define Tsetpriv %Cap sub {roman "setpriv"}%
+define Tsetlic %Cap sub {roman "setlic"}%
+define Tnochk %Cap sub {roman "nochk"}%
+define Textern %Cap sub {roman "extern"}%
+define Tuarea %Cap sub {roman "uarea"}%
+define Tlog %Cap sub {roman "log"}%
+define Tvec % Cap %
+define Uvec % Lic %
+define Uk %Lic sub k%
+define Tk %Cap sub k%
+define Vvec %roman "Priv"%
+define Cap % roman "Cap" %
+define Lic % roman "Lic" %
+define exists %"\(te" %
+define Usetpriv %Lic sub {roman "setpriv"}%
+define Usetlic %Lic sub {roman "setlic"}%
+define Unochk %Lic sub {roman "nochk"}%
+define Umount %Lic sub {roman "mount"}%
+define Uuarea %Lic sub {roman "uarea"}%
+define CONST %bold constant%
+define FROZEN %bold frozen%
+define RIGID %bold rigid%
+define LOOSE %bold loose%
+define PEXED %bold pexed%
+define UNPEXED %bold unpexed%
+define UNPEXING %bold unpexing%
+define FIOPX %font CW "FIOPX"%
+define FIONPX %font CW "FIONPX"%
+define FIOQX %font CW "FIOQX"%
+.EN
+.TL
+The Design of IX
+.AU
+M. D. McIlroy
+.AU
+J. A. Reeds
+.AB
+The mandatory security behavior of the IX kernel is
+specified semiformally.
+The security policy and the label mechanisms and
+checks that implement the policy are given, as are
+arrangements for privilege, private paths, and
+auditing.
+The security behavior of special files and
+of all system calls, new and old,
+is described.
+Covert channels are illustrated.
+.AE
+|reference_database(summa.ref)
+.XI .secref
+.tr ~ 

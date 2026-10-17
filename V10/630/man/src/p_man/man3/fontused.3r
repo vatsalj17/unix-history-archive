@@ -1,0 +1,59 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH FONTUSED 3R "630 MTG"
+.XE "fontused()"
+.XE "fontiname()"
+.SH NAME
+fontused, fontiname \- font menu generator routines
+.SH SYNOPSIS
+.B int fontused (fname)
+.PP
+.B char \(**fontiname (i)
+.sp
+.B char \(**fname;
+.br
+.B int i;
+.SH DESCRIPTION
+The
+.I fontused
+function
+tests if a given font has been requested by some process.
+This is a way to test if a call to
+.I fontremove
+will succeed.
+A font requested by a process cannot be removed.
+\f2Fontused\f1 returns 1 if the font has been requested and 0 otherwise.
+.P
+The
+.I fontiname
+function
+returns the name of the
+.I ith+1
+font in the font queue.
+This is useful for generating a menu of fonts in the cache.
+If there are less than
+.I i+1
+fonts, (char *)0 is returned.
+.SH EXAMPLE
+The following example is a menu generator function that holds
+all the fonts in the cache. The fonts in use are greyed.
+
+.nf
+.ft CM
+
+Titem *
+fontmenu(i, m)
+int i;
+Tmenu *m;
+{
+   static Titem ti;
+   int fontused();
+   char *fontiname();
+
+   if(ti.text = fontiname(i))
+      ti.ufield.grey = fontused(ti.text);
+   return(&ti);
+}
+.ft R
+
+.SH SEE ALSO
+fontname(3R), fontrequest(3R), fontsave(3L), tmenuhit(3R).

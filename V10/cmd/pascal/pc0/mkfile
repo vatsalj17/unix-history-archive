@@ -1,0 +1,383 @@
+CC = cc
+WHOAMI = pc
+INSTALLNAME = $DESTDIR/usr/lib/pascal/pc0
+VERSION = 2.0
+O=o
+BUILTINS=
+
+MKSTR = /n/bowell/usr/bin/mkstr
+EYACC = /usr/bin/eyacc
+RM = rm -f
+GET = touch
+
+CFLAGS = -O
+LDFLAGS = -z
+
+LIBDIR = ${DESTDIR}/usr/lib/pascal
+TMPDIR = tmp
+
+ERRORSTRINGS = ${WHOAMI}${VERSION}strings
+
+SRCS =	ato.c \
+	call.c case.c clas.c const.c conv.c cset.c \
+	error.c fdec.c fend.c fhdr.c flvalue.c forop.c func.c gen.c hash.c \
+	lab.c lookup.c lval.c stklval.c \
+	main.c nl.c proc.c put.c \
+	rec.c rval.c stkrval.c\
+	stat.c string.c subr.c \
+	tmps.c tree.c type.c var.c \
+	TRdata.c \
+	treen.c yycopy.c \
+	yycosts.c yyerror.c yyget.c yyid.c yylex.c yymain.c yyoptions.c \
+	yypanic.c yyparse.c yyprint.c yyput.c yyrecover.c yyseman.c yytree.c \
+	p2put.c stab.c pcproc.c pcfunc.c pccaseop.c pclval.c
+
+HDRS =	0.h OPnames.h align.h iorec.h objfmt.h pstab.h pc.h pcops.h \
+	send.h tree.h whoami.h yy.h
+
+OTHERS = pas.y opc.c version.c gram pic.c
+
+OBJS =	ato.$O \
+	call.$O case.$O clas.$O const.$O conv.$O cset.$O \
+	error.$O fdec.$O fend.$O fhdr.$O flvalue.$O forop.$O func.$O gen.$O hash.$O \
+	lab.$O lookup.$O lval.$O stklval.$O \
+	main.$O nl.$O proc.$O put.$O \
+	rec.$O rval.$O stkrval.$O\
+	stat.$O string.$O subr.$O \
+	tmps.$O tree.$O type.$O var.$O \
+	TRdata.$O \
+	treen.$O yycopy.$O \
+	y.tab.$O \
+	yycosts.$O yyerror.$O yyget.$O yyid.$O yylex.$O yymain.$O yyoptions.$O \
+	yypanic.$O yyparse.$O yyprint.$O yyput.$O yyrecover.$O yyseman.$O yytree.$O \
+	p2put.$O stab.$O pcproc.$O pcfunc.$O pccaseop.$O pclval.$O
+
+%.$O:	%.c
+	${RM} ${TMPDIR}/$stem.c
+	${MKSTR} - ${ERRORSTRINGS} ${TMPDIR}/ $stem.c
+	(cd ${TMPDIR}; ${CC} ${CFLAGS} -c -I.. $stem.c; ${RM} ../$stem.$O; mv $stem.$O ..)
+	${RM} ${TMPDIR}/$stem.c
+
+a.out: ${OBJS} version
+	${RM} Version.[2oc]
+	./version > Version.c
+	${CC} ${CFLAGS} ${LDFLAGS} ${OBJS} Version.c
+
+sources: ${SRCS} ${HDRS} ${OTHERS}
+	
+${SRCS} ${HDRS} ${OTHERS}:
+	${GET} ${target}
+
+y.tab.h: pas.y gram
+	${RM} y.tab.h y.tab.c
+	${EYACC} pas.y > /dev/null
+	ex - y.tab.c <gram
+	echo that makes y.tab.h and y.tab.c
+
+opcode.h: OPnames.h opc.c
+	${RM} opcode.h
+	cc opc.c -o opc
+	opc >opcode.h
+	${RM} opc
+
+pTree.h:
+	echo "/* this is not pTree.h */" > pTree.h
+
+version: version.c
+	${CC} version.c -o version
+
+clean:
+	${RM} *.$O ${TMPDIR}/*.c
+	${RM} ${ERRORSTRINGS}
+	${RM} version Version.c
+	${RM} a.out core *.list *.bak
+	${RM} opc pic tags
+#	${RM} y.tab.h y.tab.c y.tab.out
+
+install: a.out
+	cp ${ERRORSTRINGS} ${LIBDIR}/${ERRORSTRINGS}
+	chown bin,bin ${LIBDIR}/${ERRORSTRINGS}
+	chmod o-w,g+w ${LIBDIR}/${ERRORSTRINGS}
+	strip a.out
+	cp a.out ${INSTALLNAME}
+	chown bin,bin ${INSTALLNAME}
+	chmod o-w,g+w ${INSTALLNAME}
+
+depend:	sources
+	/bin/grep '^#[ 	]*include' *.h \
+		| sed '/<.*>/d' \
+		| sed 's/\(.*\):[^"]*"\([^"]*\)".*/\1: \2/' >makedep
+	/bin/grep '^#[ 	]*include' *.c \
+		| sed '/<.*>/d' \
+		| sed 's/:[^"]*"\([^"]*\)".*/: \1/' \
+		| sed 's/\.c/.$O/' >>makedep
+	echo '/^# DO NOT DELETE THIS LINE/+2,$$d' >eddep
+	echo '$$r makedep' >>eddep
+	echo 'w' >>eddep
+	cp makefile makefile.bak
+	ed - makefile < eddep
+	rm eddep makedep
+	echo '# DEPENDENCIES MUST END AT END OF FILE' >> makefile
+	echo '# IF YOU PUT STUFF HERE IT WILL GO AWAY' >> makefile
+	echo '# see make depend above' >> makefile
+
+# DO NOT DELETE THIS LINE -- make depend uses it
+
+0.h: pTree.h
+yy.h: y.tab.h
+TRdata.$O: whoami.h
+TRdata.$O: 0.h
+ato.$O: whoami.h
+ato.$O: 0.h
+call.$O: whoami.h
+call.$O: 0.h
+call.$O: tree.h
+call.$O: opcode.h
+call.$O: objfmt.h
+call.$O: pc.h
+call.$O: pcops.h
+case.$O: whoami.h
+case.$O: 0.h
+case.$O: tree.h
+case.$O: opcode.h
+clas.$O: whoami.h
+clas.$O: 0.h
+clas.$O: tree.h
+const.$O: whoami.h
+const.$O: 0.h
+const.$O: tree.h
+conv.$O: whoami.h
+conv.$O: 0.h
+conv.$O: opcode.h
+conv.$O: pcops.h
+cset.$O: whoami.h
+cset.$O: 0.h
+cset.$O: tree.h
+cset.$O: opcode.h
+cset.$O: objfmt.h
+cset.$O: pc.h
+cset.$O: pcops.h
+error.$O: whoami.h
+error.$O: 0.h
+error.$O: yy.h
+fdec.$O: whoami.h
+fdec.$O: 0.h
+fdec.$O: tree.h
+fdec.$O: opcode.h
+fdec.$O: objfmt.h
+fdec.$O: align.h
+fdec.$O: pc.h
+fdec.$O: pcops.h
+fend.$O: whoami.h
+fend.$O: 0.h
+fend.$O: tree.h
+fend.$O: opcode.h
+fend.$O: objfmt.h
+fend.$O: align.h
+fend.$O: pc.h
+fend.$O: pcops.h
+fhdr.$O: whoami.h
+fhdr.$O: 0.h
+fhdr.$O: tree.h
+fhdr.$O: opcode.h
+fhdr.$O: objfmt.h
+fhdr.$O: align.h
+fhdr.$O: pc.h
+fhdr.$O: pcops.h
+flvalue.$O: whoami.h
+flvalue.$O: 0.h
+flvalue.$O: tree.h
+flvalue.$O: opcode.h
+flvalue.$O: objfmt.h
+flvalue.$O: pc.h
+flvalue.$O: pcops.h
+forop.$O: whoami.h
+forop.$O: 0.h
+forop.$O: opcode.h
+forop.$O: tree.h
+forop.$O: objfmt.h
+forop.$O: pc.h
+forop.$O: pcops.h
+func.$O: whoami.h
+func.$O: 0.h
+func.$O: tree.h
+func.$O: opcode.h
+gen.$O: whoami.h
+gen.$O: 0.h
+gen.$O: tree.h
+gen.$O: opcode.h
+gen.$O: objfmt.h
+hash.$O: whoami.h
+hash.$O: 0.h
+hash.$O: yy.h
+lab.$O: whoami.h
+lab.$O: 0.h
+lab.$O: tree.h
+lab.$O: opcode.h
+lab.$O: objfmt.h
+lab.$O: pc.h
+lab.$O: pcops.h
+lookup.$O: whoami.h
+lookup.$O: 0.h
+lval.$O: whoami.h
+lval.$O: 0.h
+lval.$O: tree.h
+lval.$O: opcode.h
+lval.$O: objfmt.h
+lval.$O: pc.h
+lval.$O: pcops.h
+main.$O: whoami.h
+main.$O: 0.h
+main.$O: yy.h
+main.$O: objfmt.h
+nl.$O: whoami.h
+nl.$O: 0.h
+nl.$O: opcode.h
+nl.$O: objfmt.h
+opc.$O: OPnames.h
+p2put.$O: whoami.h
+p2put.$O: 0.h
+p2put.$O: pcops.h
+p2put.$O: pc.h
+pccaseop.$O: whoami.h
+pccaseop.$O: 0.h
+pccaseop.$O: tree.h
+pccaseop.$O: objfmt.h
+pccaseop.$O: pcops.h
+pccaseop.$O: pc.h
+pcfunc.$O: whoami.h
+pcfunc.$O: 0.h
+pcfunc.$O: tree.h
+pcfunc.$O: opcode.h
+pcfunc.$O: pc.h
+pcfunc.$O: pcops.h
+pclval.$O: whoami.h
+pclval.$O: 0.h
+pclval.$O: tree.h
+pclval.$O: opcode.h
+pclval.$O: objfmt.h
+pclval.$O: pc.h
+pclval.$O: pcops.h
+pcproc.$O: whoami.h
+pcproc.$O: 0.h
+pcproc.$O: tree.h
+pcproc.$O: opcode.h
+pcproc.$O: pc.h
+pcproc.$O: pcops.h
+pic.$O: OPnames.h
+proc.$O: whoami.h
+proc.$O: 0.h
+proc.$O: tree.h
+proc.$O: opcode.h
+proc.$O: objfmt.h
+put.$O: whoami.h
+put.$O: opcode.h
+put.$O: 0.h
+put.$O: objfmt.h
+put.$O: pc.h
+put.$O: OPnames.h
+rec.$O: whoami.h
+rec.$O: 0.h
+rec.$O: tree.h
+rec.$O: opcode.h
+rval.$O: whoami.h
+rval.$O: 0.h
+rval.$O: tree.h
+rval.$O: opcode.h
+rval.$O: objfmt.h
+rval.$O: pc.h
+rval.$O: pcops.h
+stab.$O: whoami.h
+stab.$O: 0.h
+stab.$O: pstab.h
+stab.$O: pc.h
+stat.$O: whoami.h
+stat.$O: 0.h
+stat.$O: tree.h
+stat.$O: objfmt.h
+stat.$O: pcops.h
+stat.$O: pc.h
+stat.$O: opcode.h
+stklval.$O: whoami.h
+stklval.$O: 0.h
+stklval.$O: tree.h
+stklval.$O: opcode.h
+stklval.$O: objfmt.h
+stkrval.$O: whoami.h
+stkrval.$O: 0.h
+stkrval.$O: tree.h
+stkrval.$O: opcode.h
+stkrval.$O: objfmt.h
+stkrval.$O: pcops.h
+string.$O: whoami.h
+string.$O: 0.h
+string.$O: send.h
+subr.$O: whoami.h
+subr.$O: 0.h
+tmps.$O: whoami.h
+tmps.$O: 0.h
+tree.$O: whoami.h
+tree.$O: 0.h
+type.$O: whoami.h
+type.$O: 0.h
+type.$O: tree.h
+type.$O: objfmt.h
+var.$O: whoami.h
+var.$O: 0.h
+var.$O: align.h
+var.$O: iorec.h
+var.$O: pc.h
+var.$O: pcops.h
+y.tab.$O: whoami.h
+y.tab.$O: 0.h
+y.tab.$O: yy.h
+y.tab.$O: tree.h
+yycopy.$O: 0.h
+yycopy.$O: yy.h
+yycosts.$O: whoami.h
+yycosts.$O: 0.h
+yycosts.$O: yy.h
+yyerror.$O: whoami.h
+yyerror.$O: 0.h
+yyerror.$O: yy.h
+yyget.$O: whoami.h
+yyget.$O: 0.h
+yyget.$O: yy.h
+yyid.$O: whoami.h
+yyid.$O: 0.h
+yyid.$O: yy.h
+yylex.$O: whoami.h
+yylex.$O: 0.h
+yylex.$O: yy.h
+yymain.$O: whoami.h
+yymain.$O: 0.h
+yymain.$O: yy.h
+yymain.$O: objfmt.h
+yyoptions.$O: whoami.h
+yyoptions.$O: 0.h
+yyoptions.$O: yy.h
+yypanic.$O: whoami.h
+yypanic.$O: 0.h
+yypanic.$O: yy.h
+yyparse.$O: whoami.h
+yyparse.$O: 0.h
+yyparse.$O: yy.h
+yyprint.$O: whoami.h
+yyprint.$O: 0.h
+yyprint.$O: yy.h
+yyput.$O: whoami.h
+yyput.$O: 0.h
+yyput.$O: tree.h
+yyput.$O: yy.h
+yyrecover.$O: whoami.h
+yyrecover.$O: 0.h
+yyrecover.$O: yy.h
+yyseman.$O: whoami.h
+yyseman.$O: 0.h
+yyseman.$O: yy.h
+yytree.$O: whoami.h
+yytree.$O: 0.h
+yytree.$O: tree.h
+# DEPENDENCIES MUST END AT END OF FILE
+# IF YOU PUT STUFF HERE IT WILL GO AWAY
+# see make depend above

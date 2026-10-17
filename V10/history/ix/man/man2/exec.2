@@ -1,0 +1,288 @@
+.TH EXEC 2
+.CT 2 proc_man
+.SH NAME
+execl, execv, execle, execve, execlp, execvp, exect, environ \(mi execute a file
+.SH SYNOPSIS
+.nf
+.B int "execl(name, arg0, arg1, ..., argn, (char *)0)"
+.B char *name, *arg0, *arg1, ..., *argn;
+.PP
+.B int execv(name, argv)
+.B char *name, *argv[];
+.PP
+.B "int execle(name, arg0, arg1, ..., argn, (char *)0, envp)"
+.B "char *name, *arg0, *arg1, ..., *argn, *envp[];"
+.PP
+.B int execve(name, argv, envp)
+.B char *name, *argv[], *envp[];
+.PP
+.B int "execlp(name, arg0, arg1, ..., argn, (char *)0)"
+.B char *name, *arg0, *arg1, ..., *argn;
+.PP
+.B int execvp(name, argv)
+.B char *name, *argv[];
+.PP
+.B int exect(name, argv, envp)
+.B char *name, *argv[], *envp[];
+.PP
+.B extern char **environ;
+.fi
+.SH DESCRIPTION
+.I Exec
+in all its forms
+overlays the calling process with the named file, then
+transfers to the
+entry point of the image of the file.
+There can be no return from a successful
+.IR exec ;
+the calling image is lost.
+.PP
+Files remain open across
+.I exec
+unless explicit arrangement has been made;
+see
+.IR ioctl (2).
+Signals that are caught (see
+.IR signal (2))
+are reset
+to their default values.
+Other signals' behavior is unchanged.
+.PP
+Each user has a
+.I real
+userid and groupid and an
+.I effective
+userid and groupid.
+The real userid (groupid)
+identifies the person using the system;
+the effective userid (groupid)
+determines access privileges.
+.I Exec
+changes the effective userid and groupid to
+the owner of the executed file if the file has the set-userid
+or set-groupid modes.
+The real userid is not affected.
+.PP
+The security label (see
+.IR getflab (2))
+of the process is set as follows.
+If any arguments or environment parameters are present,
+or if and file descriptor numbers greater than 3 are in use,
+the lattice value of the process label
+is ascribed to them, otherwise lattice bottom.
+This value is ORed with the lattice value of
+the executed file to obtain the new lattice value for the process.
+If the new lattice value does not dominate the old,ÃÂ
+the permission mask (see
+.IR umask (2))
+is set to 022.
+.PP
+Process licenses persist.
+In the simplest case, the process obtains from the
+file the capabilities
+for which the process has licenses; see
+.IR getplab (2).
+The detailed computation for process capabilities is: 
+Nominal capabilities are determined
+by ANDing the file capabilities with the 
+capabilities in the file system ceiling (see
+.IR mount (2))
+and then ORing with built-in minima.
+Nominal licenses are determined by ANDing the file licenses 
+with the licenses in the file system
+ceiling and with built-in maxima.
+Process capabilities are set by ORing the
+process licenses with the nominal licenses, then ANDing
+with the nominal capabilities.
+.PP
+The builtin minimum file capabilities are all 0.
+The builtin maximum file licenses for
+.B T_SETPRIV
+and
+.B T_LOG
+are 0; the rest are 1.
+.B 
+.PP
+The
+.I name
+argument
+is a pointer to the name of the file
+to be executed.
+If the first two bytes of that file are the ASCII
+characters
+.LR #! ,
+then the first line of the file is taken to be ASCII and
+determines the name of the program to execute.
+The first nonblank string following
+.L #!
+in that line is substituted for
+.I name.
+Any second string, separated from the first by blanks or tabs,
+is inserted between
+the first two arguments (arguments 0 and 1) passed to the invoked file.
+.PP
+The argument pointers
+.I arg0, arg1, ...
+or the pointers in
+.I argv
+address null-terminated strings.
+Conventionally argument 0
+is the name of the
+file.
+.PP
+.I Execl
+is useful when a known file with known arguments is
+being called;
+the arguments to
+.I execl
+are the character strings
+constituting the file and the arguments.
+.PP
+.I Execv
+is useful when the number of arguments is unknown
+in advance;
+the arguments to
+.I execv
+are the name of the file to be
+executed and a vector of strings containing
+the arguments.
+The last argument string must be followed
+by a 0
+pointer.
+.PP
+When a C program is executed,
+it is called as follows:
+.IP
+.EX
+main(argc, argv, envp)
+int argc;
+char **argv, **envp;
+.EE
+.PP
+where
+.IR argc ""
+is the argument count
+and
+.IR argv ""
+is an array of character pointers
+to the arguments themselves.
+Conventionally
+.I argc
+is at least 1
+and 
+.B argv[0]
+points to
+the name of the file.
+.PP
+.I Argv
+is directly usable in another
+.I execv
+because
+.BR argv[argc]==0 .
+.PP
+.I Envp
+is a pointer to an array of strings that constitute
+the
+.I environment
+of the process.
+Each string conventionally consists of a name, an
+.LR = ,
+and a null-terminated value;
+or a name, a pair of parentheses
+.LR (),
+a value bracketed by
+.L {
+and
+.LR } ,
+and a null character.
+The array of pointers is terminated by a null pointer.
+The shell
+.IR sh (1)
+passes an environment entry for each global shell variable
+defined when the program is called.
+See
+.IR environ (5)
+for some conventionally
+used names.
+.PP
+The C run-time start-off routine places a copy of
+.I envp
+in the global cell
+.I environ,
+which is used
+by
+.I execv
+and
+.I execl
+to pass the environment to any subprograms executed by the
+current program.
+The
+.I exec
+routines use lower-level routines as follows
+to pass an environment explicitly:
+.IP
+.nf
+\fLexecve(file, argv, environ);
+execle(file, arg0, arg1, . . . , argn, (char *)0, environ);\fP
+.fi
+.PP
+.I Execlp
+and
+.I execvp
+are called with the same arguments as
+.I execl
+and
+.I execv,
+but duplicate the shell's actions in searching for an executable
+file in a list of directories given in the
+.B PATH
+environment variable.
+.PP
+.I Exect
+is the same as
+.I execve,
+except it arranges for a stop to occur on the first instruction
+of the new core image for the benefit of tracers, see
+.IR proc (4).
+.SH FILES
+.TF /bin/sh
+.TP
+.F /bin/sh
+shell, invoked if command file found
+by
+.I execlp
+or
+.I execvp
+.SH "SEE ALSO"
+.IR fork (2), 
+.IR environ (5)
+.SH DIAGNOSTICS
+.BR E2BIG ,
+.BR EACCES ,
+.BR EFAULT ,
+.BR EIO ,
+.BR ELAB ,
+.BR ELOOP ,
+.BR ENOENT ,
+.BR ENOEXEC ,
+.BR ENOMEM ,
+.BR ENOTDIR ,
+.BR ENXIO ,
+.BR EROFS ,
+.BR ETXTBSY
+.SH BUGS
+If
+.I execvp
+is called to execute a file that turns out to be a shell
+command file,
+and if it is impossible to execute the shell,
+some of the values in
+.I argv
+may be modified before return.
+.br
+The path search of
+.I execlp
+and
+.I execvp
+does not extend to names substituted by
+.LR #! .

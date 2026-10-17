@@ -1,0 +1,94 @@
+.TH NOTARY 1 
+.CT 1 comm_term sa_mortals secur
+.SH NAME
+sign, enroll, verify, key, notaryd \(mi sign and verify certificates
+.SH SYNOPSIS
+.B "notary sign
+.PP
+.B "notary enroll
+[
+.B -n
+]
+.I name
+.PP
+.B "notary verify
+.I name
+.I xsum
+.I text
+.PP
+.B lmask
+.B xn 
+.B /usr/notary/notaryd
+[
+.B -m
+.I mtpt
+]
+[
+.B -d
+.I dir
+]
+.PP
+.B "notary key
+.SH DESCRIPTION
+.I Notary
+provides a document-authentication service.
+Any user may `sign' a document by presenting it and
+a secret key to the notary.
+The notary returns a certificate (a cryptographic checksum made
+with the secret key).
+For the certificate to be useful, the key must
+be enrolled with the notary under some public name.
+Given the certificate and the public name, any user may
+ask the notary to authenticate the document by verifying that
+it is indeed as certified.
+.PP
+.I Sign
+writes on the standard output a certificate for its standard input.
+The secret key
+is demanded from the terminal.
+.PP
+.I Enroll
+prompts the terminal for a secret key to associate with the
+public
+.IR name .
+Unless this is a new enrollment for
+.I name,
+indicated by option
+.BR -n ,
+the previous value of the key is demanded from the terminal.
+If a trivial new key is presented, the 
+.I name
+is erased from the database.
+.PP
+.I Verify
+tells whether
+.I xsum
+is the checksum of
+.IR text,
+figured with the enrolled key for the public 
+.IR name .
+.PP
+.I Notaryd
+is the notary daemon, which mounts itself on
+.I mtpt
+(default
+.FR /cs/notary )
+and keeps its log files and database in directory
+.I dir
+(default
+.FR /usr/notary ).
+The database is encrypted, so that although
+.I notaryd
+is normally started by
+.IR rc (8),
+it cannot serve other requests until it has been primed by a
+.L "notary key
+request, which obtains the notary's master key from
+the terminal.
+.SH FILES
+.nf
+.F /cs/notary
+.F /usr/notary/*
+.fi
+.SH "SEE ALSO
+.IR notary (3)

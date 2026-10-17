@@ -1,0 +1,54 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH KBDCHAR 3R "630 MTG"
+.XE "kbdchar()"
+.SH NAME
+kbdchar \- read character from keyboard
+.SH SYNOPSIS
+\fB
+int kbdchar ( )
+\fR
+.SH DESCRIPTION
+The
+.I kbdchar
+function
+returns the next keyboard character typed to the process.
+If no characters have been typed,
+.I kbdchar
+returns \-1.
+If
+.I \s-1KBD\s+1
+has not been
+requested,
+.I kbdchar
+will always return \-1,
+even if characters have been typed to the process.
+.SH EXAMPLE
+This code will prevent a program from exiting until the 'q' character
+has been typed on the keyboard.
+.PP
+.RS 3
+.ft CM
+.nf
+#include <dmd.h>
+
+main( )
+{
+     request (KBD);
+
+     .
+     .
+     .
+
+     do
+          wait(KBD);
+     while( kbdchar ( ) != 'q' );
+}
+.fi
+.RE
+.ft R
+.SH SEE ALSO
+resources(3R).
+.SH WARNING
+Since the keyboard routine is a process, you must release the
+CPU in order to have typed characters placed on the
+application's keyboard queue.

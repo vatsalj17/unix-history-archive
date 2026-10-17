@@ -1,0 +1,46 @@
+.TH UCACHE 1 "630 MTG"
+.SH NAME
+ucache \- List and remove objects in the Application cache
+.SH SYNOPSIS
+.B ucache
+.SH DESCRIPTION
+After being downloaded, the program
+.I ucache
+will cache itself as a global command and exits.
+The user can access the command through the \fBMore\fR
+submenu under the item \fIucache\fR displayed with a garbage
+can icon. An arrow from the item directs the user to a 
+submenu that lists sequentially all objects (commands and
+applications) that are currently in the terminal's Application
+cache.
+.PP
+The names listed in the \fIucache\fR submenu are the
+\fImenu names\fR of the objects. Menu names are names that
+cached applications use to advertise themselves in the
+\fBMore\fR menu. They may be different from \fItag names\fR
+which uniquely identify an object in the Application cache.
+(For further discussion, see \fIcache(3L)\fR.) If an
+object in the Application cache does not have a menu name,
+its tag name is displayed instead.
+.PP
+Items in the \fIucache\fR submenu may be greyed. Greyed
+items mean they cannot be selected for removal because:
+.IP "\f3\(em\f1"
+they have been cached with the \fBA_PERMANENT\fR bit set
+(see \fIcache(3L)\fR). In this case, the item names are
+displayed with a lock icon, and they can never be uncached
+by \fIucache\fR.
+.ce
+\f3or\f1
+.IP "\f3\(em\f1"
+they have been requested (used) by some running process.
+If all processes using the object exit or are deleted, then the
+item's name corresponding to the object will be un-greyed.
+.PP
+Items that are not greyed can be selected for removal. All caching 
+information concerning the object will be erased and the memory freed.
+Note that \fIucache\fR can remove itself from the Application cache.
+
+
+.SH SEE ALSO
+cache(3L), cmdcache(3L), decache(3L).

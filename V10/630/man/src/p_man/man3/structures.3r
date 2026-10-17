@@ -1,0 +1,308 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH STRUCTURES 3R "630 MTG"
+.XE "Word"
+.XE "Code"
+.XE "Point"
+.XE "Rectangle"
+.XE "Bitmap"
+.XE "Texture16"
+.XE "Font"
+.XE "Fontchar"
+.XE "msgbuf"
+.XE "message_list"
+.XE "msqid_ds"
+.SH NAME
+structures: Word, Code, Point, Rectangle, Bitmap, Texture16, Font, Fontchar, msgbuf, message_list, msqid_ds \- 630 MTG Structures
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+#include <font.h>
+.sp
+#include <message.h>
+.SH DESCRIPTION
+In the following summaries,
+all coordinates are screen or Bitmap coordinates
+(which are scaled the same)
+unless specified as window coordinates.
+.I Word ,
+.I Code ,
+.I Point ,
+.I Rectangle ,
+.I Bitmap
+and
+.I Texture16
+are included in a program
+by including
+.BR dmd.h .
+.I Font
+and
+.I Fontchar
+are defined in
+.BR font.h .
+.IR Msgbuf ,
+.IR message_list ,
+and
+.I msqid_ds
+are defined in
+.BR message.h .
+.SH \fIWord\fR
+.RS 3
+.ft CM
+typedef short Word;
+.br
+typedef unsigned short UWord;
+.RE
+.PP
+A
+.I Word
+is a 16-bit integer and is the unit of storage used in the graphics software.
+.SH \fICode\fR
+.RS 3
+.ft CM
+typedef int Code;
+.RE
+.PP
+.I Code
+is the functional constant used in all graphical drawing or copying 
+operations.  Available Codes are:
+.PP
+.RS 3
+.nf
+.ft CM
+F_STORE     target  =  source
+F_OR        target |=  source
+F_XOR       target ^=  source
+F_CLR       target &= ~source
+.fi
+.ft 1
+.RE
+.SH \fIPoint\fR
+.RS 3
+.nf
+.ft CM
+typedef struct Point {
+   short  x;	/* x-coordinate */
+   short  y;	/* y-coordinate */
+} Point;
+.fi
+.ft 1
+.RE
+.PP
+A
+.I Point
+is a location in a
+.IR Bitmap ,
+such as the display.
+The coordinate system has
+.I x
+increasing to the right and
+.I y
+increasing down.
+.SH \fIRectangle\fR
+.RS 3
+.nf
+.ft CM
+typedef struct Rectangle {
+   Point  origin;        /* Upper left corner */
+   Point  corner;        /* Lower right corner*/
+} Rectangle;
+.fi
+.ft 1
+.RE
+.PP
+A
+.I Rectangle
+is a rectangular area in a
+.IR Bitmap .
+By definition
+.BR "origin.x<=corner.x" " and " "origin.y<=corner.y"
+define the rectangle.
+By convention, the right (maximum \f2x\f1) and bottom (maximum \f2y\f1) edges are
+excluded from the represented rectangle, so abutting rectangles have no
+points in common.  Thus
+.I corner
+is the coordinates of the first point beyond the rectangle.
+The data on the screen of the 630 MTG is contained in the
+.B Rectangle
+\f3{0, 0, \s-1XMAX, YMAX\s+1}\f1
+where
+\f3\s-1XMAX\s+1=1024\f1
+and
+\f3\s-1YMAX\s+1=1024\f1.
+.SH \fIBitmap\fR
+.RS 3
+.nf
+.ft CM
+typedef struct Bitmap {
+   Word      *base;/* pointer to start of data */
+   unsigned short width;/* width in Words of total data area */
+   Rectangle rect;	/* rectangle describing data area */
+   char      *_null;	/* unused, must always be zero */
+} Bitmap;
+.fi
+.ft 1
+.RE
+.PP
+A
+.I Bitmap
+holds a rectangular image stored in contiguous memory starting at
+.I base.
+Each
+.I width
+words of memory form a scan-line of the image.
+The
+.I rect
+argument
+defines the coordinate system inside the
+.IR Bitmap .
+Argument
+.I rect.origin
+is the location in the
+.I Bitmap
+of the upper-leftmost point in the image
+and is not necessarily (0,0).
+Graphical operations performed on a \f2Bitmap\f1 are clipped to
+.I rect.
+.SH \fITexture16\fR
+.RS 3
+.nf
+.ft CM
+typedef struct Texture16 {
+	Word   bits[16];
+} Texture16;
+.fi
+.ft 1
+.RE
+.PP
+A
+.I Texture16
+is a 16\(mu16 bit dot pattern.
+\f2Texture16\f1's
+are aligned to absolute display positions,
+so adjacent areas colored with the same
+.I Texture16
+align smoothly.
+.SH \fIFont\fR \fRand \fIFontchar\fR
+.RS 3
+\s-3
+.nf
+.ft CM
+typedef struct Fontchar
+{
+   short         x;       /* left edge of character cell in Font.bits */
+   unsigned char top;     /* first non-zero scan-line of character image */
+   unsigned char bottom;  /* last non-zero scan-line of character image */
+   char          left;    /* offset of baseline from x; used for kerning */
+   unsigned char width;   /* width of baseline for character image */
+} Fontchar;
+
+typedef struct Font
+{
+   short    n;       /* number of characters in font */
+   char     height;  /* height of the Bitmap bits */
+   char     ascent;  /* top of Bitmap to baseline of character image */
+   long     unused;
+   Bitmap   *bits;   /* Bitmap where the characters are stored */
+   Fontchar info[1]; /* n+1 character descriptors */
+} Font;
+.fi
+.ft 1
+.RE
+.PP
+A
+.I Font
+is a character set.  For each character in a
+.I Font
+there is information stored in a
+.I Fontchar
+structure.  
+.B Font.info[n] 
+is a dummy fontchar descriptor used to determine
+the right edge of the last character in 
+.BR Font.bits .  
+The actual character images in the
+.I Font
+are stored in a single
+.I Bitmap
+pointed to by
+\f2bits\f1.
+The
+.I Bitmap
+contains the bit pattern for each character, arrayed adjacently into a
+long horizontal strip.  The characters in the
+.I Bitmap
+must appear in ASCII order and are aligned on the same baseline.
+Characters in the
+.I Bitmap
+abut exactly, so the width of a character
+.I c
+is
+.BR "Font.info[c+1].x-Font.info[c].x" .
+When a character is displayed on the screen at a point
+.I p ,
+the upper left-hand corner of the rectangle enclosing the
+character image coincides with the point
+.IR p .
+.SH \fImsqid_ds\fR, \fImessage_list\fR and \fImsgbuf\fR
+.RS 3
+.nf
+.ft CM
+typedef struct msgbuf
+{
+   long	 mtype;	    /* message type */
+   char	 mtext[1];	/* text of message */
+} msgbuf;
+
+typedef struct message_list
+{
+   msgbuf *msg;			/* the message in the queue */
+   int    size;			/* size of the message */
+   struct message_list  *next;	/* link to next message */
+} message_list;
+
+typedef struct msqid_ds
+{
+   Struct Proc	*cid;		/* creator process id */
+   short		msg_qnum;	/* number of messages */
+   short		msg_qbytes;	/* max number of bytes */
+   Struct Proc	*msg_lspid;	/* last process to send */
+   Struct Proc	*msg_lrpid;	/* last process to rcv */
+   unsigned long	msg_stime;	/* time of last send */
+   unsigned long	msg_rtime;	/* time of last rcv */
+   unsigned long	msg_ctime;	/* time of last change */
+   message_list	*msg_list;	/* linked list of messages */
+   short		msg_curbytes	/* current # of bytes */
+   short		state;	/* remove queue if cid exits? */
+   long		name;		/* name of queue (key) */
+   struct msqid_ds *next;	/* link to next queue */
+} msqid_ds;
+.ft 1
+.fi
+.RE
+.PP
+A
+.I msqid_ds
+is a message queue. The messages in the queue are kept in a linked list
+referenced by the pointer
+.IR msg_list .
+The actual messages are stored in
+.IR msgbuf s
+which are pointed to by
+.IR message_list .
+.I Msg_qbytes
+is initialized to
+.B MAX_QBYTES
+where
+.B MAX_QBYTES=020000
+(decimal 8192).
+The
+.I msqid_ds
+is stored in a linked list in the 630 so that the number
+of message queues is limited only by memory.
+.SH FILES
+$DMD/include/dmd.h
+.br
+$DMD/include/font.h
+.br
+$DMD/include/message.h

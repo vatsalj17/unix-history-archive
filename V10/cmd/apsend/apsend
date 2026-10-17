@@ -1,0 +1,248 @@
+#!/bin/sh
+#***************     APSEND     **********************
+#
+# Apsend sends device-independent troff output from the user's home UNIX
+# system to the dedicated UNIX driving the APS-5 phototypesetter.
+#
+# The following shell variables should be completed (lines 35-38):
+#
+#NODE - use '`uname -n`' or the actual system nodename
+#
+#MKHEAD - use 'apsend.mkhd' (if apsend and apsend.mkhd reside in same
+#          directory; otherwise use full pathname of apsend.mkhd
+#
+#FNTABLES - use '/usr/lib/font' or actual pathname
+#
+#NETWORK - use 'uucp1' or 'uucp2' or 'usend' or 'nusend' as explained below:
+#
+#	use 'uucp1' for those systems selecting uucp network - AND uucp
+#	BY DEFAULT copies source files to the spool directory ('uucp -C'
+#	is usually illegal on these systems)
+#
+#	use 'uucp2' for those systems selecting uucp network - AND uucp
+#	does NOT by default copy source files to the spool directory
+#	(invokes '-C' option of uucp)
+#
+#	use 'usend' for those systems selecting usend network (must also
+#	have the entry 'mhuxm mhuxv  /usr/asp/unpackm' in /usr/asp/udest)
+#
+#	use 'nusend' for those systems selecting nusend network (must
+#	have NSC link to MHCC dedicated UNIX)
+#
+#						Virginia Turner, x4661
+#
+#
+NODE=researc
+MKHEAD=/usr/lib/apsend/apsend.mkhd
+FNTABLES=/usr/lib/font
+NETWORK=uucp2
+#
+export NODE
+DEST=research!mhuxm
+TARGET=/usr/spool/uucppublic/aps
+ITARGET=/usr/spool/uucppublic/i10
+USAGE="Usage: apsend [options] [-] [files]"
+AVERS=113082
+export AVERS
+BCT=0
+STDIN=0
+ACCOUNT=0; BBIN=0; COMMENT=0;
+DEVICE=0; MAILADDR=0; MHINFO=0;
+umask 022
+#
+# check for options
+#
+if test $# != 0
+    then
+	for OPTION in "$@"; do
+		case $OPTION in
+			a*=*|A*=*)	ACCOUNT=`echo $OPTION | sed "s/.*=//"`; export ACCOUNT; shift;;
+			b*=*|B*=*)	BBIN=`echo $OPTION | sed "s/.*=//"`; export BBIN; shift;;
+			c*=*|C*=*)	DUMMY=`echo $OPTION | sed "s/.*=//"`; COMMENT=1; shift;;
+			d*=i*|d*=I*|D*=i*|D*=I*)	DEVICE=i; shift;;
+			m*=*|M*=*)      MAILADDR=`echo $OPTION | sed "s/.*=/mail: /"`; export MAILADDR; shift;;
+			-i*)		MHINFO=`echo $OPTION | sed "s/-i//"`; export MHINFO; shift;;
+			-f)		DUMMY=$2; COMMENT=1; shift; shift;;
+	-)
+	if test -t 0
+	    then
+		echo apsend: Standard input not found
+		echo $USAGE
+		exit 1
+	    else
+		STDIN=1
+	fi
+	shift;;
+	*=*)
+	    echo apsend: Illegal option $OPTION; shift;;
+	-*)
+	    echo apsend: Illegal option $OPTION; shift;;
+	esac
+    done
+fi
+#
+# change target if DEVICE is not 'aps'
+#
+if test $DEVICE = i
+    then
+	TARGET=$ITARGET
+fi
+#
+# get version of font tables and export
+#
+if test -r $FNTABLES/devaps/version
+    then
+	VERS=`cat $FNTABLES/devaps/version`
+    else
+	VERS=000000
+fi
+export VERS
+#
+# if no other arguments, see if stdin
+#
+if test $# = 0
+    then
+	if test -t 0
+	    then
+		echo apsend: Input not found
+		echo $USAGE
+		exit 2
+	    else
+		STDIN=1
+	fi
+fi
+#
+# process standard input, if found
+#
+if test $STDIN = 1
+    then
+	true &
+	PID=$!
+	export PID
+	RETURN=0
+	trap 'rm -f /tmp/aps*$PID; exit $RETURN' 0 1 2 3 15
+	if $MKHEAD
+	    then
+		HEADFILE=/tmp/apshead$PID
+		JOBNAME=$NODE.$PID
+		JOBFILE=/tmp/$JOBNAME
+		CNTFILE=/tmp/apscnt$PID
+		DTFILE=/tmp/apsdate$PID
+		INFILE=/tmp/apsinput$PID
+
+		cat > $INFILE
+		cat $HEADFILE $INFILE > $JOBFILE
+		wc -c $JOBFILE | awk '{print $1}' > $CNTFILE
+		BCT=`cat $CNTFILE`
+		if test $BCT = 160
+		    then
+			echo apsend: Input not found - apsjob not submitted
+			rm -f $JOBFILE
+			RETURN=3
+			exit $RETURN
+		fi
+		if test $NETWORK = uucp1
+		    then
+			(cd /tmp; uucp $JOBNAME $DEST!$TARGET)
+		elif test $NETWORK = uucp2
+		    then
+			(cd /tmp; uucp -C $JOBNAME $DEST!$TARGET)
+		elif test $NETWORK = usend
+		    then
+			(cd /tmp; usend -s -d $DEST -f $TARGET/$JOBNAME $JOBNAME)
+		elif test $NETWORK = nusend
+		    then
+			(cd /tmp; nusend -s -e -d $DEST -c -f $TARGET/$JOBNAME $JOBNAME)
+		fi
+		if test $COMMENT = 0
+		    then
+			DUMMY="pipe.end"
+		fi
+		if test $DEVICE = i
+		    then
+			(echo `cat $DTFILE`; echo " $DUMMY sent to imagen as $JOBNAME - $BCT bytes") >> $HOME/APSLOG
+		    else
+			(echo `cat $DTFILE`; echo " $DUMMY sent to APS-5 as $JOBNAME - $BCT bytes") >> $HOME/APSLOG
+		fi
+		rm -f $JOBFILE
+		rm -f /tmp/aps*$PID
+	    else
+		echo apsend: apsjob not submitted
+		RETURN=4
+		exit $RETURN
+	fi
+fi
+#
+# if no other arguments, exit
+#
+if test $# = 0
+    then
+	exit
+fi
+#
+#  else process file arguments
+#
+for i
+    do
+	true &
+	PID=$!
+	export PID
+	RETURN=0
+	trap 'rm -f /tmp/aps*$PID; exit $RETURN' 0 1 2 3 15
+	if $MKHEAD
+	    then
+		HEADFILE=/tmp/apshead$PID
+		JOBNAME=$NODE.$PID
+		JOBFILE=/tmp/$JOBNAME
+		CNTFILE=/tmp/apscnt$PID
+		DTFILE=/tmp/apsdate$PID
+
+		if test -r $i
+		    then
+		cat $HEADFILE $i > $JOBFILE
+		wc -c $JOBFILE | awk '{print $1}' > $CNTFILE
+		BCT=`cat $CNTFILE`
+		if test $BCT = 160
+		    then
+			echo apsend: Input not found - apsjob not submitted
+			rm -f $JOBFILE
+			RETURN=5
+			exit $RETURN
+		fi
+		if test $NETWORK = uucp1
+		    then
+			(cd /tmp; uucp $JOBNAME $DEST!$TARGET)
+		elif test $NETWORK = uucp2
+		    then
+			(cd /tmp; uucp -C $JOBNAME $DEST!$TARGET)
+		elif test $NETWORK = usend
+		    then
+			(cd /tmp; usend -s -d $DEST -f $TARGET/$JOBNAME $JOBNAME)
+		elif test $NETWORK = nusend
+		    then
+			(cd /tmp; nusend -s -e -d $DEST -c -f $TARGET/$JOBNAME $JOBNAME)
+		fi
+		if test $COMMENT = 0
+		    then
+			DUMMY=$i
+		fi
+		if test $DEVICE = i
+		    then
+			(echo `cat $DTFILE`; echo " $DUMMY sent to imagen as $JOBNAME - $BCT bytes") >> $HOME/APSLOG
+		    else
+			(echo `cat $DTFILE`; echo " $DUMMY sent to APS-5 as $JOBNAME - $BCT bytes") >> $HOME/APSLOG
+		fi
+		COMMENT=0
+		rm -f $JOBFILE
+		rm -f /tmp/aps*$PID
+		    else
+		echo "apsend: can't read" $i - "apsjob not submitted"
+		RETURN=6
+		exit $RETURN
+		fi
+	    else
+		echo apsend: apsjob not submitted
+		RETURN=7
+		exit $RETURN
+	fi
+    done

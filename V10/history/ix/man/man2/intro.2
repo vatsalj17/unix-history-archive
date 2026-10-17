@@ -1,0 +1,271 @@
+.TH INTRO 2
+.de en
+.HP
+\\$1  \\fL\\$2\\fP  \\$3
+.br
+..
+.SH NAME
+intro, errno \(mi introduction to system calls and error numbers
+.SH SYNOPSIS
+.B #include <errno.h>
+.SH DESCRIPTION
+Section 2
+describes the entries into the kernel.
+.PP
+Calls that deal with file systems refer to directory entries by name.
+In order to
+.I read
+or
+.IR write (2)
+data on a file, the file must be opened
+.RI ( open,
+.I pipe,
+.IR creat (2));
+an open file is known by a integer called a
+.IR "file descriptor" .
+Certain open files admit control operations that alter their behavior;
+see in particular
+.IR ioctl (2),
+.IR stream (4),
+and
+.IR ttyld (4).
+.PP
+Besides ordinary file systems, which are passive repositories of data,
+organized in a hierarchical directory structure,
+there are
+special file systems \(em virtual constructs with an interface
+that mimics an ordinary file system.
+In particular, access to files on remote computers is
+mediated by the special file system
+.IR netfs (8).
+Other special file systems support
+.IR proc (4)
+and
+.IR faced (9.5).
+.SH SEE ALSO
+.IR intro (3)
+.SH DIAGNOSTICS
+A `Diagnostics' paragraph appears below for each system call
+that has an error return.
+Unless otherwise stated, the error value is the integer \-1,
+and the success value is 0.
+Upon an error return,
+an error number is assigned to
+the external variable
+.IR errno .
+.I Errno
+is not cleared on successful calls, so it should be tested only
+after an error has occurred.
+.PP
+There is a table of messages that describe the errors
+and a routine for printing them;
+see
+.IR perror (3).
+The list below gives
+the number, the name (as defined in
+.BR <errno.h> ),
+and the
+.I perror
+message for each error type.
+The reasons for error returns are explained in general terms;
+further explanations for less obvious error returns
+appear in the writeups of individual system calls.
+.en 0 \h'\w'EIO'u' "Error 0
+No error has occurred.
+.en 1 EPERM "Not owner
+An attempt was made to modify a file in some way forbidden
+except to its owner or the super-user,
+or an ordinary user attempted to do something
+allowed only to the super-user.
+.en 2 ENOENT "No such file or directory
+A file name was specified
+and the file should exist but doesn't, or one
+of the directories in a path name does not exist.
+.en 3 ESRCH "No such process
+The process whose number was given to
+.I kill
+does not exist, or is already dead.
+.en 4 EINTR "Interrupted system call
+An asynchronous signal (such as interrupt or quit),
+which the user has elected to catch,
+occurred during a system call.
+If execution is resumed
+after processing the signal,
+it will appear as if the interrupted system call
+returned this error condition.
+.en 5 EIO "I/O error
+A physical I/O error or timeout occurred during 
+.IR read ,
+.I write,
+or
+.I ioctl.
+This error may in some cases be returned
+on a call following the one to which it actually applies.
+.en 6 ENXIO "No such device or address
+I/O on a special file refers to a subdevice which does not
+exist,
+or beyond the limits of the device.
+It may also occur when, for example, a tape drive
+is off line or no disk pack is loaded on a drive.
+.en 7 E2BIG "Arg list too long
+An argument list longer than 16384 bytes
+was presented to
+.IR exec .
+.en 8 ENOEXEC "Exec format error
+A request was made to execute a file
+which, although it has the appropriate permissions,
+does not start with a valid magic number, see
+.IR a.out (5).
+.en 9 EBADF "Bad file number
+A file descriptor referred to no
+open file,
+or a read (resp. write) request was made to
+a file which is open only for writing (resp. reading).
+.en 10 ECHILD "No children
+In a
+.IR wait ,
+the process had no
+living or unwaited-for children.
+.en 11 EAGAIN "No more processes
+In a
+.IR fork ,
+the system's process table was full
+or the user is not allowed to create any more
+processes.
+.en 12 ENOMEM "Not enough memory
+During an
+.I exec
+or
+.I brk,
+a program asked for more memory or swap space
+than the system is able to supply.
+.en 13 EACCES "Permission denied
+An attempt was made to access a file in a way forbidden
+by the protection system.
+.en 14 EFAULT "Bad address
+The system encountered a hardware fault in attempting to
+access the arguments of a system call.
+.en 15 EHASF "Directory not empty
+An attempt was made to remove a nonempty directory.
+.en 16 EBUSY "In use
+An attempt was made to mount a device that was already mounted
+(or crashed or was copied in mounted state),
+to dismount a device
+on which there is an active file
+(open file, current directory, mounted-on file, active text segment),
+or to remove the current directory of some process.
+.en 17 EEXIST "File exists
+An existing file was mentioned in an inappropriate context,
+e.g.
+.IR link .
+.en 18 EXDEV "Cross-device link
+A link to a file on another device
+was attempted.
+.en 19 ENODEV "No such device
+An attempt was made to apply an inappropriate
+system call to a device;
+e.g. read a write-only device.
+.en 20 ENOTDIR "Not a directory
+A non-directory was specified where a directory
+is required,
+for example in a path name or
+as an argument to
+.IR chdir .
+.en 21 EISDIR "Is a directory
+An attempt to write on a directory.
+.en 22 EINVAL "Invalid argument
+Some invalid argument:
+dismounting a non-mounted
+device,
+mentioning an unknown signal in
+.IR signal ,
+reading or writing a file for which
+.I lseek
+has generated a negative pointer.
+Also set by math functions, see
+.IR intro (3).
+.en 23 ENFILE "File table overflow
+The system's table of open files is full,
+and temporarily no more
+.I opens
+can be accepted.
+.en 24 EMFILE "Too many open files
+The limit is 128 per process.
+.en 25 ENOTTY "Illegal ioctl
+The function code mentioned in
+.I ioctl
+does not apply to the file or device.
+.en 26 ETXTBSY "Text file busy
+An attempt to execute a pure-procedure
+program which is currently open.
+Also an attempt to open for writing a pure-procedure
+program that is being executed.
+.en 27 EFBIG "File too large
+The size of a file exceeded the maximum (about
+.if t 10\u\s-29\s+2\d
+.if n 1.0E9
+bytes).
+.en 28 ENOSPC "No space left on device
+During a
+.I write
+to an ordinary file,
+there was no free space left on the device.
+.en 29 ESPIPE "Illegal seek
+An
+.I lseek
+was issued to a pipe or
+other non-seekable device.
+.en 30 EROFS "Read-only file system
+An attempt to modify a file or directory
+was made
+on a device mounted read-only.
+.en 31 EMLINK "Too many links
+An attempt to make more than 32767 links to a file.
+.en 32 EPIPE "Broken pipe
+A write on a pipe for which there is no process
+to read the data, or on a file with insufficient
+security clearance.
+This condition normally generates a signal;
+the error is returned if the signal is ignored.
+.en 33 EDOM "Math argument
+The argument of a function in the math package (3M)
+is out of the domain of the function.
+.en 34 ERANGE "Result too large
+The value of a function in the math package (3M)
+is unrepresentable within machine precision.
+.en 35 ELOOP "Link loop
+An endless cycle of symbolic links was encountered.
+.en 36 ECONC "Concurrency violation
+The open was in violation of the concurrent access specified
+for the file,
+or an attempted IO operation violated a process exclusive (pex) lock.
+.en 37 EGREG "It's all Greg's fault
+Something went wrong.
+.en 38 ELAB "Security label violation
+An action which would, if completed, break security rules; see
+.IR getplab (2).
+.en 39 ENOSYS "No such system call
+An attempt to execute a nonexistent or unsupported system call.
+.en 40 ENLAB "Out of security labels
+A system table for security labels is full:
+a trouble similar to 
+.BR ENFILE .
+.en 41 EPRIV "Insufficient privilege
+An attempt was made to execute a priviledged system call, or
+exercise a privileged feature of a regular system call.
+.SH SEE ALSO
+.IR perror (3)
+.SH BUGS
+Device drivers and special file systems may use error codes in
+unexpected or unconventional ways;
+it is infeasible to list them all.
+For example, the crash of a remote computer or the
+failure of a communication protocol can produce
+.L ENOENT
+(no such file or directory) in response to
+an attempt to open a file through the network file system.
+.br
+To avoid publishing duplicates of trivially changed manual pages,
+.L ELAB
+is not recorded among diagnostics when that would be the only
+difference from v9.

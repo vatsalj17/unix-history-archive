@@ -1,0 +1,743 @@
+.	\"CW - constant width (typewriter-like) font; macro copied from .B
+.de CW
+.nr PQ \\n(.f
+.if t .ft CW
+.if t .if !"\\$1"" \&\\$1\\f\\n(PQ\\$2
+.if n \{\
+.	ie "\\$1"" .ul 1000
+.	el .ul 1
+.	if \\n(.$=1 \&\\$1
+.	if \\n(.$>1 \&\\$1\\c
+.	if \\n(.$>1 \\&\\$2\}
+..
+.EQ
+delim $$
+define YES % bold "YES" %
+define NO % bold "NO" %
+define cup % \(cu %
+define cap % \(ca %
+.EN
+.hy 14
+.if t .ds em \(em
+.if n .ds em --
+.if n .na
+.TL
+Multilevel Security with Fewer Fetters
+.AU
+M. D. McIlroy
+.AU
+J. A. Reeds
+.AI
+.MH
+.AB
+We have built an experimental
+.UX
+system that provides
+security labels (document classifications), where
+the security labels are
+calculated dynamically at the granularity
+of kernel activity, namely, at each data transfer between
+files and processes.
+Labels follow data through the system and maintain the
+lowest possible classification level consistent with
+the requirement that the labels of outputs dominate the
+labels of inputs from which they were computed.
+More rigid control is exerted over the labels of data
+passing out of reach of the system to and from
+tapes, communication lines, terminals, and the like.
+Necessary exceptions to the security rules (as
+for system administration, user authentication,
+or document declassification)
+are handled by a simple, but general,
+privilege mechanism that can restrict
+the exceptions to
+trusted programs run by ``licensed'' users.
+Privileges are subdivided; there is no omnipotent superuser.
+Carefully arranged data structures and checking
+algorithms accomplish
+this fine-grained security control at a cost of only
+a few percent in running time.
+.PP
+Dynamic labels should help mitigate the suffocating
+tendencies of multilevel security.
+At the same time dynamic labels admit
+covert channels by which dishonest, but authorized, users
+can leak data to unauthorized places at modest rates.
+The system is still highly resistant to other
+.hw cor-ruption
+kinds of threat: intrusion, corruption of data by 
+unauthorized users, Trojan horses,
+administrative mistakes, and joyriding superusers.
+In most real settings, we believe, worries about potential
+leaks will be far outweighed by these latter concerns and by
+the overriding consideration of utility.
+.AE
+.PP
+The standard security mechanisms of the
+.UX
+system are, in
+military parlance, ``discretionary'': protection
+depends primarily upon the individual owners
+of data taking care to set permissions on files.
+Some automatic help is offered: the owner/group mechanism,
+.I umask,
+and clean files uncontaminated by
+old trash from shared disks.
+The responsibility for
+further precautions, such as setting owner-only permissions on
+files in the shared temporary directory, is delegated to
+programs.
+.PP
+A carefully administered
+.UX
+system can be quite resistant
+to penetration.
+But careful administration is not easy.
+Great reliance is placed on the probity, accuracy, and vigilance
+of superusers.
+It is all too easy for a busy superuser inadvertently to misset
+permission bits, to execute
+a Trojan horse[1],
+.FS
+.if n na
+[1] The hoariest of all: a bad guy feigns trouble,
+and asks a superuser for help.
+The first thing the superuser does is 
+.CW "cd badguy; ls" .
+The game is up.
+The bad guy's own program named
+.CW ls
+has been executed by the superuser; it has silently bugged
+some setuid root program, removed itself, and then called the real
+.CW ls .
+.FE
+to make temporarily unprotected
+copies of secrets, or to promote unvetted files
+to trusted status.
+.PP
+Because
+.UX
+systems are simple enough to be administered by
+amateurs, whose first interest is in use, not operation,
+security holes are the rule, not the exception, in real life.
+A few famous security holes have been distributed in
+major software.
+And some add-ons, such as Berkeley's network file system,
+seem to have been deliberately designed for insecurity.
+.PP
+Is there, then, hope of running a
+.UX
+system securely?
+Of course.
+Lots of systems are run quite soundly today.
+Raising the question a notch, is there hope of making
+a
+.UX
+system that conforms to government-style
+security policies?
+.PP
+In a sense the answer is yes;
+.UX
+systems need less fundamental
+patching than most to achieve government security goals.
+But the yes must be qualified.
+In almost any production system
+it is difficult, if not
+impossible, to guarantee that many megabytes
+of code do not contain one fatal crack that can topple
+the whole edifice.
+Such guarantees are especially elusive in environments that
+change frequently, as do so many typical
+.UX
+installations.
+How can one be sure that no flaws are inserted
+by any of the software tools\*(emshell,
+editor, compiler, assembler, library\*(emthat touch
+new code as it is being installed?
+.PP
+In another sense the answer is not so clear.
+Rigid security measures must surely damage the
+plasticity that attracts users to the
+.UX
+system.
+Is the conflict so fundamental that a ``secured'' system
+will lose its appeal?
+The possibility is very real under ordinary security models;
+hence we have undertaken a somewhat more flexible approach.
+.PP
+We have built an experimental system with mandatory
+controls: security classification automatically
+follows data through the system.
+At the same time we have blunted the vulnerability of
+the system to mistakes by the superuser.
+In our system
+all data files have security classification
+.I labels,
+with ``higher'' labels designating more sensitive data.
+The normal flow of data must be
+.I up :
+in general output labels must be at least as high as input labels.
+A security system also needs escape hatches
+for declassifying data that is no longer sensitive, or
+extracting nonsensitive parts from sensitive documents.
+For this purpose we allow certain carefully designed
+.I trusted
+programs to violate the rules and
+produce output with labels lower than input.
+.PP
+We have attempted to provide mandatory, inescapable controls
+without utterly destroying the basic
+feel and productivity of the system.
+To obtain early warnings of snags caused by the controls,
+we are doing our development work under the system itself.
+At the time of writing we are working quite honestly
+and relatively comfortably within the confines of the system.
+.SH
+The main idea
+.PP
+Each file or process
+has a label, shared by all data in it[2].
+.FS
+[2] For technical reasons, seek pointers also have
+labels of their own.
+Seek pointers are shared between processes;
+information can flow through a shared seek pointer (via
+.I lseek )
+at a substantial rate\*(emthousands of bits per second.
+Since a seek pointer is ``written'' into by
+.I read
+as well as by
+.I write,
+the contents of a seek pointer, unlike
+the regular contents of a file open for reading, must have
+a label as high as that of the reading process.
+Hence the separate label.
+.FE
+Terminals and other devices such as tapes have labels
+that reflect the system's understanding of the clearance
+of the source to which the device is currently connected.
+The labels form\*(emalmost\*(ema mathematical lattice.
+Whenever a system call causes a transfer of
+data, the labels are checked
+to ensure that data flows only up the lattice.
+.PP
+The security of data explicitly passed among labeled entities
+is safeguarded.
+Examples of protected transfers are bytes transmitted by
+.I read
+and
+.I write
+and bits set by
+.I chmod .
+Implicitly set inode data, such as file modification times and
+link counts, are also protected as far as possible without
+making the system unusable.
+.PP
+Other ways of communicating information, including but not
+limited to arguments of
+.I exec ,
+error returns from system calls, file access times,
+the identity of open files, and otherwise inferred knowledge,
+we declare to be ``covert channels.''
+We have studied covert channels
+and arranged to throttle or stop completely covert channels of
+significant bandwidth.
+In effect we have divided
+information transfers into ``lawful'' transfers,
+which honor the US Department of Defense ``Orange Book''[3],
+.FS
+[3]
+.I
+Department of Defense Trusted Computer System Evaluation Criteria,
+.R
+Department of Defense Computer Security Center,
+Fort Meade, MD,
+15 August 1983.
+This bible has set the terms of discussion for most
+current work in computer security.
+.FE
+and covert channels.
+Just which covert channels to leave unplugged we have
+decided by balancing risk versus utility and compatibility.
+.PP
+We keep all
+processes and files at their minimum allowable labels
+as long as possible.
+The label of a process will increase only when necessary
+and only as far as needed
+to allow reading of inputs.
+Similarly when the label of a process exceeds the labels of
+its output files, the file labels will rise.
+.PP
+A few system programs must be exempt from the usual label checking.
+Such programs are
+granted special privileges\(emfor instance to set the
+label on a user's terminal at
+login time, to read foreign tapes, or to perform backups.
+These privileges are zealously guarded: no program can pass its
+privileges intact to another or alter a privileged program
+in any way (aside from removal of privilege).
+.PP
+Thus we have three kinds of security mechanism in our system: 
+(1) the usual discretionary 
+permission scheme, based on userid and groupid and the familiar
+.CW rwxrwxrwx
+bits, but with the superuser stripped of the right to ignore 
+permissions,
+(2) the mandatory label scheme, 
+which strives only to maintain correct label relationships, and
+which pays no attention at all to
+userid or groupid, not even superuser,
+and (3) the privilege scheme, which guards the administration of
+labels and of the privilege scheme itself.
+.SH
+Labels
+.PP
+A label can be any element of a given finite lattice.
+In addition there are two nonlattice labels, $NO$ and $YES$.
+No data may flow to or from a file or inode labeled $NO$;
+it is effectively blocked out of the system, and can only
+be readmitted by special arrangement.
+``External media,'' such as terminals, tape drives, and
+raw disks, where labeling is beyond the control of the
+usual mechanism, are normally marked $NO$.
+Label $YES$, on the other hand, is universally permissive.
+Only one file,
+.CW /dev/null ,
+is marked $YES$.
+At the moment no other file can gain such blessing, but
+it might also be appropriate for an append-only audit file.
+.PP
+Our lattice is the lattice of subsets of 480 items, represented
+by 60-byte bit vectors.
+How these bits are used is arbitrary.
+For example, the first three bits might represent
+the customary classification levels\*(emunclassified,
+confidential, secret, top secret\*(emencoded as 000, 001, 011, 111
+respectively.
+Further bits might represent compartments:
+000 100 for Iran, 000 010 for Nicaragua, etc.
+Oliver North would have been cleared for 111 110.
+A possible history of a process initially labeled secret
+(011 000) is:
+.IP
+Create a new file
+.CW north/contragate ;
+it is labeled (000 000) by default, but writing in directory
+.CW north 
+causes the label of
+.CW north
+to become at least secret (011 000).
+.br
+Read
+.CW iran.data ,
+which, say, is confidential and compartmented (001 100).
+The process label rises to (011 000)\(cu(001 100) = (011 100).
+.br
+Read
+.CW nicaragua.data ,
+top secret and compartmented (111 010).
+The process label rises again to (111 110).
+.br
+Write
+.CW north/contragate .
+The file label rises to (111 110).
+The directory label is unchanged.
+.PP
+Not all labels can change automatically.
+A label may be ``frozen'', which stops operations that
+would normally require a label change.
+In particular, labels of terminals are guaranteed to
+be frozen, typically at the value determined
+by login.
+Suppose our example process had been initiated from a terminal
+that had been cleared only for top secret Iran data (111 100)
+and attempted finally to write to the terminal.
+The write would fail, thus keeping Nicaragua data
+from a user not known to be cleared for it.
+Further attempts to launder the label,
+perhaps through a pipeline like
+.CW "cat north/contragate | grep ." ,
+would meet the same fate.
+Only a properly authenticated fresh login (or subsession)
+can authorize the terminal for the higher label.
+.PP
+The idea of a lattice of labels is well known.
+Our deviation
+from the strict model, with $NO$ and $YES$, answers 
+needs to regulate entry from places where labels are not
+under control of the system, and to deal with the important
+special case of
+.CW /dev/null .
+.SH
+Privileges
+.PP
+Our privilege mechanism is simple, but flexible.
+In its purest form it restricts special powers
+to trusted users using trusted tools.
+.PP
+To some extent the privilege mechanism may be understood
+as partitioning the supreme powers once accorded to the superuser.
+Superuser status itself is diminished.
+The superuser is fully bound by security labels and 
+cannot ignore write permissions.
+Largely to avoid rewriting masses of code, the superuser
+retains most other powers.
+Thus the superuser can still do damage (to data he is
+cleared for), but mainly by tedious
+methods that leave tracks\(emchanging modes and owners.
+Superuser status must be augmented by privilege
+to execute powerful restricted system calls
+such as setting the userid or mounting a file system.
+.PP
+We have identified
+five distinct privileges, listed below, each governed by one-bit
+.I licenses
+and
+.I capabilities,
+which are separate from labels.
+A trusted process or file is one
+with some nonzero capability or license.
+In the strictest policy regime
+each privilege of a process $p$ executing file $f$ is determined
+by the intersection of the process's license for that privilege and
+the file's capability for the same privilege:
+.IP
+$Priv(p)~=~Lic(p)~cap~Cap(f)$.
+.LP
+Process licenses are assigned at login, are inherited across
+.I exec,
+and may be relinquished at will, never to be regained.
+Licenses effectively identify trusted users, while
+capabilities identify trusted programs.
+.PP
+The trusted-user-trusted-tool model of privilege may be 
+eased in various ways.
+It is possible to grant a
+default ``system capability'', $Cap(s)$,
+to every file by the rule
+.IP
+$Priv(p)~=~Lic(p)~cap~(Cap(f)^cup^Cap(s))$.
+.LP
+By setting $Cap(s)~=~bold true$, we can make
+$Priv(p)~=~Lic(p)$, which means that
+any program can do magic provided its user is licensed.
+In such a regime a superuser possessing
+licenses for all privileges
+could act with the same impunity as a standard superuser.
+.PP
+It is also possible to give a program file a license, $Lic(f)$,
+making the program ``self-licensing'' for
+one or more of its capabilities.
+Then the effective license of a process $p$ executing
+program $f$ is $Lic(p)^cup^Lic(f)$.
+Self-licensing is limited by another policy constant,
+the ``system license'', $Lic(s)$, which is used as a mask.
+The full formula for determining each privilege of a process
+is
+.IP
+$Priv(p)~=~(Lic(p)~cup~(Lic(f)^cap^Lic(s)))~cap~(Cap(f)^cup^Cap(s))$.
+.LP
+In a typical self-licensing case, where $Cap(s)~=~bold false$,
+$Lic(f)~=~Cap(f)$, and $Lic(s)~=~bold true$, this reduces to
+$Priv(p)~=~Cap(f)$.
+In this regime a
+self-licensed program gets power in much 
+the same way as does a setuid-root program in standard systems,
+except that
+the power is not inherited across
+.I exec.
+.PP
+With appropriate settings of
+the two (compile-time) system policy constants, $Lic(s)$ and $Cap(s)$,
+our privilege model is able to mimic the disparate privilege
+features of most current operating systems.
+In our experimental system we have set $Cap(s)~=~bold false$
+for every privilege.
+We have also also set $Lic(s)~=~bold false$ for
+the most powerful privilege, ``set privileges''.
+Thus privileges can be set only by trusted users using
+trusted programs.
+.PP
+The five privileges are:
+.LP
+.I Mount.
+The right to make new data sources or sinks available to the system.
+One way is by changing a file label away from $NO$; a second
+is by the 
+.I mount 
+system call; a third is by changing the label on an external
+medium.
+A process with mount privilege
+would normally execute an authentication
+protocol before actually performing any of these operations.
+.LP
+.I Nocheck.
+The right to read or write data without regard to security label
+(but still respecting the standard permission scheme).
+Although mount and nocheck both provide extraordinary
+access to data, they are qualitatively different.
+Nocheck handles (and may censor) every suspect bit.
+Mount opens resources to the whole system\*(ema much more
+sensitive responsibility.
+.LP
+.I "Set licenses.
+The right to increase the license or ceiling of a process.
+The principle use for this is in setting up ``sessions'',
+where a user entitled to play more than one role
+wishes to suspend one role temporarily and switch to another.
+Sessions are merely a refinement of
+.CW su ,
+which changes rights by the crude expedient
+of changing identity.
+.LP
+.I "Set privileges.
+The right to change file capabilities and licenses.
+We expect not more than one or two programs to be given
+this most powerful of all capabilities.
+In a thoroughly security-conscious installation,
+only an identified security administrator, different from
+the system administrator,
+would be licensed to set privilege.
+.LP
+.I "Write uarea.
+The right to change values, such as userid, that
+are remembered by the system
+for the benefit of the process and its offspring.
+This peculiar capability arises because
+a child process need not be as highly classified
+as its parent.
+Without some control, uarea items (especially BSD
+group permissions)
+would provide a covert channel of significant bandwidth.
+.PP
+By dividing privileges we promote safety from errors
+by an omnipotent superuser.
+At the same time we introduce complexity, which can cut the other way.
+Thus we have deliberately kept the number of identified privileges
+small.
+We have refrained from
+defining new special roles (for
+example system administrator, operator, or security
+administrator) in the superuser tradition.
+Notions of such roles did influence our choice of privileges
+and will guide the design of administrators' tools.
+But the notions seem inappropriate to build in
+at the ground level: no single administrative model makes
+sense across the spectrum of real installations.
+.SH
+System features
+.PP
+To implement the above facilities relatively few new system features are
+involved:
+.LP
+New system calls get and set file labels.
+Another new system call sets the process label.
+Privileges and frozenness are set along with labels.
+Unless executed by a trusted process, the system
+calls permit only safe changes: labels may not decrease;
+process privileges may not increase;
+file privileges may not be changed.
+.LP
+A special system call allows nocheck processes to confine their
+powers to certain files.
+For example, consider
+.CW df ,
+which needs nocheck privilege to read the file system device.
+Its outputs, however, should be subject to ordinary
+security checks to prevent a mole from getting his message through[4].
+.FS
+[4] If
+.CW df
+is exempt from all security checks,
+the mole can get a message to the standard output this way:
+.IP
+.CW
+df /dev/disk0 /dev/disk1 /dev/disk1 >unclassified
+.R
+.LP
+which produces binary code in the last character of the file names:
+.IP
+.CW
+.nf
+.ta \w'kbytes 'u +\w'kbytes 'u +\w'kbytes 'u +\w'kbytes 'u
+dev	kbytes	used	free	%
+disk0	5044	4124	920	82%
+disk1	4984	4420	564	89%
+disk1	4984	4420	564	89%
+.R
+.LP
+or, much more quickly, in the clear on the standard error:
+.IP
+.CW
+df secret news 2>unclassified
+.IP
+.CW
+.nf
+.ta \w'kbytes 'u +\w'kbytes 'u +\w'kbytes 'u +\w'kbytes 'u
+dev	kbytes	used	free	%use
+cannot open /dev/secret
+cannot open /dev/news
+.R
+.FE
+.LP
+Every process has an inherited
+.I ceiling
+label,
+above which the process cannot do any business.
+This has little to do with stopping ordinary leaks: if a lowly
+process raises its label high, its output will be high
+and thus protected anyway.
+It does, however, cut off some possibilities for mischief with 
+covert channels. 
+And it prevents unauthorized userids from injecting
+noise in high places.
+.LP
+Mounted file systems also have ceilings, both on labels
+and privileges.
+File system ceilings may be used to restrict
+the content of file systems being prepared for
+export, or to prevent contamination, especially by unknown
+privileged files, from imported file systems.
+.LP
+A directory may be ``blinded.''
+Blind directories are immune to automatic label
+changes and thus provide a convenient way to gather,
+yet keep hidden, data of
+disparate labels, as for the temporary directory
+.CW /tmp.
+Untrusted processes cannot open
+a blind directory for reading, and
+every new file created in such a directory is assigned
+a random name.
+A new system call retrieves the name.
+.SH
+Implementation
+.PP
+Dynamic label changing involves considerable overhead of
+implementation.
+It is insufficient simply to add label checks at file open.
+In principle, labels must be checked on every read,
+every directory search, and every
+write, including writes of new entries into directories.
+When a write check fails, the file label is
+raised if possible; for a read the process label is raised.
+Every other process dealing with the file must become aware
+of the change on a fine time scale; in the worst case
+a label may change between disk blocks
+of a long IO transaction.
+A carefully designed data structure for intra- and inter-process
+notification of label changes has accomplished this
+with only a few percent time overhead.
+.PP
+Space overhead is another matter.
+A production-size kernel is considerably bigger than 
+before: about 16K of extra text and nearly 400K extra data for
+a 500-process system.
+In partial compensation, uareas are smaller.
+To accommodate labels,
+inodes on disk have been doubled to 128 bytes.
+.PP
+In effect labels flow along with data.
+Upon
+.I exec
+a process begins with the lowest label possible: the
+least label that dominates both that of the executed file
+and that of the arguments.
+The arguments, of course, have the label of the parent
+process.
+However, if no arguments are supplied, as for an ordinary
+filter, the argument label is taken to be the minimum, or bottom
+element of the lattice.
+Thereafter the label of a process changes to keep up with the
+data that it reads.
+(Notice that the
+.I open
+system call does not read;
+.I stat
+does.)
+In particular labels may propagate through pipes.
+.PP
+Similarly files are created with the bottom label.
+(We accept a narrow covert channel through the mode field.)
+However, the label of the directory in which a new
+file's name is recorded must dominate that of the creator; the
+name could bear secrets.
+.SH
+Covert channels
+.PP
+Having classified many communication paths
+as ``covert channels,'' we have an obligation to
+recognize generic classes of covert channels and to
+characterize their effectiveness.
+This we have done.
+Aside from very narrow ``timing channels,'' most of the covert 
+channels in our system involve unusual behavior: forking
+enormous numbers of processes or opening enormous numbers of
+files[5].
+.FS
+[5]
+One example: create a collection of files named 
+.CW A ,
+.CW B ,
+.CW C ,
+\&...
+each containing one letter, 
+.CW a ,
+.CW b ,
+.CW c ,
+\&...
+A high process opens files to spell out a message
+and does an
+.I exec
+with no arguments.
+The resulting low process reads from the open file descriptors
+to receive the message at several hundred bits per second.
+The channel can be throttled by refusing to reduce the label
+across an
+.I exec 
+with too many open files.
+.FE
+Thus any extensive use of covert channels should be detectable
+from audit records.
+.PP
+A mole could certainly use such covert channels
+to smuggle out precious small secrets to unauthorized users;
+however an unauthorized user
+could not exploit them unaided, except by planting a Trojan horse.
+We supply a special featureless shell to holders of the most
+powerful licenses to help keep them away from horses.[6]
+.FS
+[6]
+This shell has no variables, no filename expansion, no compound
+commands, and no search path.
+The only builtin commands are
+.CW cd ,
+.CW exit ,
+and a command to drop privileges.
+Other command names must begin with slash or dot.
+.FE
+We have also designed audit tools along familiar lines
+to monitor the stability and safety of security settings.
+.PP
+We undertook this project because
+we believe it is desirable to try other models than
+those implied by thoroughgoing adherence to the Orange Book.
+In particular we suspect that a faithful Orange-Book
+.UX
+system would sacrifice much of the system's productive flavor,
+with security barriers surprising users at every turn.
+Dynamic labels should help alleviate the surprises.
+Moreover, faithful Orange-Book security may be inappropriate
+in applications where security breaches
+do not entail risks as final as military defeat.
+(Commercial users, for example, may recoup damages in court.)
+In such a setting 
+security priorities are more likely to concern keeping outsiders out,
+preventing inadvertent leaks by insiders,
+limiting the chance for mistakes by superusers,
+frustrating attempts to plant Trojan horses, and reducing the
+vulnerability of the overall system to a single disaffected
+superuser\*(emall while maintaining high productivity.
+Procrustean solutions to curtail covert channels are not
+so critical.

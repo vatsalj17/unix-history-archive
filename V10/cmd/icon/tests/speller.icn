@@ -1,0 +1,46 @@
+procedure spell(n)
+   local m
+   n := integer(n)
+   return (
+      if n <= 12 then
+         "0zero,1one,2two,3three,4four,5five,6six,7seven,8eight,_
+            9nine,10ten,11eleven,12twelve," ? {
+               tab(find(n))
+               move(*n)
+               tab(upto(","))
+               }
+      else if n <= 19 then
+         spell(n[2] || "0") ?
+            (if ="for" then "four" else tab(find("ty"))) || "teen"
+      else if n <= 99 then
+         "2twen,3thir,4for,5fif,6six,7seven,8eigh,9nine," ? {
+            tab(upto(n[1]))
+            move(1)
+            tab(upto(",")) || "ty" ||
+               if n[2] ~= 0 then "-" || spell(n[2])
+            }
+      else if n <= 999 then
+         spell(n[1]) || " hundred" ||
+            (if (m := n[2+:2]) ~= 0 then " and " || spell(m))
+      else if n <= 999999999 then
+         spell(n[1:-3]) ?
+            (tab(find("thousand")) || (move(8) & "million") | "") ||
+            tab(0) ||
+            " thousand" ||
+            (if (m := n[-3:0]) ~= 0 then ", " || spell(m))
+      else
+         "number too large"
+      )
+end
+
+procedure spellw(n)
+   write(n, "	", spell(n))
+   return
+end
+
+procedure main()
+   every spellw(1 to 25)
+   every spellw(30 to 110 by 3)
+   spellw(945123342)
+   every spellw(10000000 to 10000500)
+end

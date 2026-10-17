@@ -1,0 +1,28 @@
+#  Version for the Wyse75.
+procedure main(x)
+   i := x[1] | 1000			# "length of pattern"
+   j := x[2] | 2000			# steady state time
+   r := 0				# with credits to sbw
+   ran1 := create 2(&random :=: r, |?(24 | 80), &random <-> r)
+   ran2 := ^ran1
+   clear()
+   every 1 to i do			# start up the universe
+      place(ran1,"*")
+   every 1 to j do {			# steady state condition
+      place(ran2," ")			# clean up the beginning
+      place(ran1,"*")			# create more
+      }
+   every 1 to i do			# and the universe dies
+      place(ran2," ")			# clean up the end
+   clear()
+end
+
+procedure clear()
+   write(image("\^[[2J\^[[1;1;H"))	# remove image and change write
+					# to writes for the real thing.
+end
+
+procedure place(e,s)
+   write(image("\^[["),@e,";",@e,"H",s) # remove image and change write to
+					# writes for the real thing.
+end

@@ -1,0 +1,55 @@
+.\"#ident	"@(#)ccsman:g3c/strtod	1.2"
+'\"macro stdmacro
+.nr X
+.if \nX=0 .ds x} ATOF 3L "630 MTG" "\&"
+.TH \*(x}
+.SH NAME
+atof \- convert string to double-precision number
+.SH SYNOPSIS
+.nf
+.B double atof (str)
+.B char \(**str;
+.SH DESCRIPTION
+.I atof\^
+returns (as a double-precision floating-point number)
+the value represented by the character string pointed to by
+.IR str .
+The string is scanned up to the first unrecognized character.
+.PP
+.I atof\^
+recognizes an optional string of ``white-space'' characters
+[as defined by
+.I isspace\^
+in 
+.IR ctype (3L)],
+then an optional sign, then
+a string of digits optionally containing a decimal
+point, then an optional
+.BR e " or " E
+followed by an optional sign or space, followed by an integer.
+.SH SEE ALSO
+ctype(3L), strtol(3L).
+.SH DIAGNOSTICS
+If the correct value
+would cause overflow,
+.SM
+.B \(+-\s-1HUGE\s+1
+(as defined in
+\f3<ccs/math.h>\f1)
+is returned
+(according to the sign of the value),
+and
+.I errno\^
+is set to
+.SM
+.BR \s-1ERANGE\s+1\*S .
+.br
+If the correct value would cause underflow,
+zero
+is returned
+and
+.I errno\^
+is set to
+.SM
+.BR \s-1ERANGE\s+1\*S .
+.Ee

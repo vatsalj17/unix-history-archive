@@ -1,0 +1,70 @@
+.TH PT 3L "630 MTG"
+.XE "Pt()"
+.XE "Rpt()"
+.XE "Rect()"
+.SH NAME
+pt: Pt, Rpt, Rect \- create a Point or Rectangle from arguments
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+Point Pt (x, y)
+.br
+int x, y;
+.sp
+Rectangle Rpt (p, q)
+.br
+Point p, q;
+.sp
+Rectangle Rect (a, b, c, d)
+.br
+int a, b, c, d;
+.SH DESCRIPTION
+These functions
+are special macros that are
+to be used
+.B only
+in an argument list to a function.
+They are functionally equivalent to the ones in \fIfpt(3L)\fR but are
+faster for the above situation. 
+.PP
+The
+.I Pt
+argument
+passes a coordinate pair as a Point to a function.
+.PP
+The
+.I Rpt
+argument
+passes two Points as a Rectangle to a function.
+.PP
+The
+.I Rect
+argument
+passes four coordinates (two coordinate pairs) as a Rectangle to a function. 
+.SH EXAMPLE
+The following subroutine draws two boxes in the upper
+left corner of the window.
+.sp
+.nf
+.ft CM
+#include <dmd.h>
+
+drawboxes()
+{
+	Point add();
+	Rectangle raddp();
+
+	box(&display,
+	    Rpt(Drect.origin, add(Drect.origin, Pt(100,100))),
+	    F_STORE);
+
+	box(&display,
+	    raddp(Rect(0,0,200,200), Drect.origin),
+	    F_STORE);
+}
+.fi
+.ft 1
+.PP
+.SH SEE ALSO
+fpt(3L).

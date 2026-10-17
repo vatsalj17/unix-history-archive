@@ -1,0 +1,129 @@
+.TH BITBLT 3R "630 MTG"
+.XE "bitblt()"
+.SH NAME
+bitblt \- bit-block transfer
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+\f3void bitblt (sb, r, db, p, f)\f1
+.br
+.B Bitmap \(**sb, \(**db;
+.br
+.B Rectangle r;
+.br
+.B Point p;
+.br
+.B Code f;
+.SH DESCRIPTION
+The
+.I bitblt
+function
+copies the data from Rectangle
+.I r
+in Bitmap
+.I sb
+to the congruent Rectangle with origin
+.I p
+in Bitmap
+.IR db .
+Copy is specified by the function Code
+.IR f .
+.PP
+The source and destination Bitmaps may be the same or different and
+the source and destination Rectangles may even overlap;
+.I bitblt
+always does the assignments in the correct order.
+.SH EXAMPLES
+The following subroutine paints a mouse icon into the upper left corner
+of the applications window.
+.PP
+.RS 3
+.ft CM
+.nf
+.S -4
+unsigned short mouseicon[] = {
+	 0x0000, 0x0000, 0x03E0, 0x17F0,
+	 0x3FF0, 0x5FFE, 0xFFF1, 0x0421,
+	 0x0002, 0x00FC, 0x0100, 0x0080,
+	 0x0040, 0x0080, 0x0000, 0x0000,
+};
+
+Bitmap mousemap = {
+	(Word *)mouseicon,
+	1,
+	(short)0, (short)0, (short)16, (short)16,
+	(char *)0
+};
+
+paintmouse()
+{
+	bitblt(&mousemap, mousemap.rect, &display,
+		   Drect.origin, F_XOR);
+}
+.fi
+.ft R
+.RE
+.S +4
+.bp
+.PP
+The following subroutine paints the character \fIc\fR of font
+\fI\(**ffont\fR into the upper left corner of the applications window.
+This is similar to the library function
+.IR string,
+which paints strings of characters.
+.PP
+.RS 3
+.ft CM
+.nf
+.S -4
+#include <font.h>
+
+character(ffont, c)
+Font *ffont;
+char c;
+{
+	Fontchar *fchar;
+	Rectangle r;
+	Rectangle fRect();
+
+	fchar = ffont->info + c;
+	r = fRect(fchar->x, 0, (fchar+1)->x,
+		   ffont->height);
+	bitblt(ffont->bits, r, &display,
+		   Drect.origin, F_STORE);
+}
+.fi
+.ft R
+.RE
+.S +4
+.PP
+The following subroutine scrolls a Rectangle
+.I r
+in a Bitmap
+.I \(**b
+by
+.I n
+pixels.
+.PP
+.RS 3
+.ft CM
+.nf
+.S -2
+scroll(b, r, n)
+Bitmap *b;
+Rectangle r;
+{
+     Rectangle s;
+
+     s = r;
+     s.origin.y += n; /* scroll up */
+     bitblt (b, s, b, r.origin, F_STORE);
+     s.origin.y = r.corner.y - n; /* clear bottom */
+     rectf (b, s, F_CLR);
+}
+.fi
+.ft R
+.RE
+.S +2
+.SH SEE ALSO
+structures(3R), string(3R).

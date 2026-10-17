@@ -1,0 +1,1135 @@
+.NH 1
+Introduction
+.PP
+In a
+.I "multilevel secure
+operating system
+all data files have security classification labels.
+.I "Mandatory controls
+assure that no combination of computer programs may
+copy data from a file into another with a lesser label.
+Thus the normal flow of data is
+.I up :
+as data move from place to place, the classification
+label must not decrease as a result of negligent
+or unauthorized action.
+However, certain
+.I privileged
+programs are allowed to copy data
+.I down ,
+that is, to
+declassify or
+.I downgrade 
+data.
+.PP
+We describe a simple, but thorough,
+way to add mandatory controls to a
+.UX
+operating system without severely impairing the basic
+nature and usefulness of the system.
+This paper recounts the modifications to the
+calling interface to the system kernel.
+Using this kernel, we have built a multilevel secure
+system called IX, which includes
+tools for authentication, administration of
+privilege, safe networking to untrusted machines,
+and management of multilevel windowed terminals.
+Multilevel secure networking should fit well within the model.
+.PP
+Higher-level aspects of the IX system are
+described in the accompanying paper,
+``Multilevel security in the 
+.UX
+tradition.''
+Based on the Tenth Edition
+.UX
+research system, commonly known as v10,
+|reference(v10)
+IX was built to experiment with new security mechanisms.
+It bears no direct relationship to
+security features in production systems from AT&T.
+|reference(SVMLS)
+|reference(bendet)
+.PP
+Section \*(yE covers the ideas, \*(yJ gives details.
+The reader is expected to be fully familiar with
+.UX
+system calls.
+The technical details are deliberately concise, as
+they are intended as an implementation reference.
+Additional expository material is relegated to fine print.
+.NH 1
+The model
+.XL yE
+.PP
+Each file or process has a
+.I label,
+shared by all data in it.
+For technical reasons given in \*(yh and \*(yd, seek pointers
+and ceilings, which are defined below, also have labels.
+The labels form a (slightly augmented) mathematical lattice, a structure rich
+enough to express both multilevel and categorical, or compartmented,
+classification systems.
+Whenever a system call causes a transfer of
+data, the labels are checked
+to ensure that data only flows up the lattice.
+.PP
+The security of data explicitly passed between labeled entities,
+in particular from
+process to file and vice versa, is safeguarded.
+Examples of such data are bytes transmitted by
+.I read
+and
+.I write
+system calls and bits set by
+.I chmod .
+Implicitly set inode data, such as modification times and
+link counts, are protected as far as possible without making the
+system unusable.
+Special consideration is given to external media such as
+terminals or tape drives, where authentication protocols
+may be required in order to determine proper labels.
+To reduce overhead in label checking we cache
+the results of label checks involved with file descriptors.
+.PP
+Other ways of communicating information, including but not
+limited to 
+error returns from system calls, file change times,
+the identity of open files, and otherwise inferred knowledge
+(e.g. the Denning example in \*(yT)
+we declare to be
+.I "covert channels.
+Just which covert channels to leave unplugged we have
+decided by balancing risk versus utility and compatibility.
+At worst, covert channels of nontrivial bandwidth
+provide routes for leaks, not for burglaries.
+As extremely abnormal behavior is required to exploit
+them (see notes in \*(yj),
+systematic use of covert channels should be easy
+to detect by auditing.
+.PP
+In effect we have divided
+information transfers into ``lawful'' transfers,
+which honor the Department of Defense
+``Orange Book'' criteria,|reference(
+%type book
+%title Department of Defense Trusted Computer System Evaluation Criteria
+%author Department~of~Defense~Computer~Security~Center
+%publisher US Department of Defense
+%address Fort Meade, MD
+%date 15 August 1983)
+and covert channels.
+.PP
+We attempt to minimize label inflation by keeping all
+processes and files at their minimum allowable labels
+as long as possible.
+A program's label may start low and drift up as necessary
+to a maximum value authorized for its user.
+The label rises only when needed
+to allow reading of inputs.
+When a running program's label rises, the labels of
+its output files may also rise correspondingly.
+.PP
+A few system programs must be exempt from the usual label checking
+described above.
+Such programs are trusted with special
+.I privileges,
+which give them
+the ability, for instance, to set the label on a user's terminal at
+login time, read foreign tapes, perform backups\(emand assign
+privilege.
+These privileges are zealously guarded: a program cannot pass its
+privileges to another and privileged programs cannot be modified.
+.PP
+Privileged processes, which have the right to break the rules, must
+know that they are doing so safely and are not allowing
+unwashed programs to piggyback on the privilege.
+For example, the login program, which authenticates a user's identity
+and then sets security labels accordingly, needs to receive
+the user's password via a path immune to
+eavesdropping by untrusted agents.
+(Security clearance is not at issue; no distinguishing
+security label to guarantee the user's privacy
+can be established before the user
+has been identified.)
+.PP
+To obtain a private path, such as that
+necessary for logging in, a process may assert 
+process exclusive, or
+.I pex,
+access to any file or pipe.
+On a pipe,
+the processes at both ends are apprised of
+each other's trustedness.
+On an external connection, an associated
+.I "stream identifier
+may be queried for other assurances, such as whether it
+is understood to be physically secure.
+.PP
+An audit mechanism records
+security-related events.
+Audit records are collected mandatorily, to
+an administratively determined level of detail.
+Extra audit records may be volunteered, typically
+by privileged programs, to capture
+data (e.g. password rejections)
+that happen outside the kernel.
+.LP
+In summary, IX has five major security mechanisms:
+.IP 1.
+The usual
+.UX
+permission scheme provides discretionary controls.
+The superuser can override permissions other than
+write permission.
+.IP 2.
+The label scheme provides mandatory controls.
+Label inequalities are maintained regardless of
+user- or group-ids.
+.IP 3.
+The privilege scheme guards the administration of the
+label scheme (and of itself).
+.IP 4.
+Process exclusive streams allow private transmission of data
+among privileged processes and files.
+.IP 5.
+Detailed auditing allows security surveillance
+and furnishes post-mortems in case of trouble.
+.PP
+Each process has a
+.I ceiling,
+a maximum label
+that it may read or write, first set when the user logs in.
+Ceilings prevent lowly users from
+injecting noise into high places.
+Ceilings also prevent lowly users from raising their processes
+to high levels where they might use covert channels to pry out secrets.
+Only with the (possibly unwitting) collusion of a
+(possibly duped) cleared user can covert channels
+be used to see above the ceiling.
+.PP
+Each system call is identified as a 
+.I "read action,
+a 
+.I "write action,
+or both, depending on the direction of data transfer.
+The destination of a read action is a process;
+the destination of a write action is a file.
+A security check is made at each system call.
+When a check is violated, the violation may
+sometimes be prevented by changing a label, otherwise
+the system call aborts.
+Thus, in the absence of privilege, the system obeys
+two golden rules, which are elaborated in \*(y5.
+.IP
+.B "Upward flow.
+Only upward data flow is permitted.
+If possible, the label of the destination of an action is
+raised to allow the action to proceed.
+.IP
+.B "Impenetrable ceilings.
+A process label must stay under the process ceiling.
+.ig
+.LP
+For efficiency, the results of the checks associated with
+file descriptors
+are stored in
+.I safe-to-read
+and
+.I safe-to-write
+bits:
+.IP
+Whenever a file label changes, the safe-to-read
+bits are cleared in all file descriptors open on
+that file, forcing fresh security check computations
+on reads from the file.
+.IP
+Whenever a process label changes, the safe-to-write
+bits are cleared in all file descriptors open
+in that process, forcing fresh security check computations
+on writes from the process.
+..
+.PP
+Each file system has a ceiling label, distinct from the
+labels of any file in it.
+No information with a label
+above the ceiling can be transferred to or from the file system.
+The ceiling, which may be understood as a process label on
+a virtual file manager, 
+may be used to prevent import or export of sensitive labels
+via remote file systems or removable media.
+In addition, the file system ceiling
+may be used to deny privilege to
+executable files obtained from such sources.
+.PP
+We understand the system call
+.I exec
+to extinguish a process and make in its place a new
+.I empty
+process.
+To keep labels as low as possible, an empty process
+begins with a bottom label.
+If an empty
+process has arguments, its label may have to rise
+immediately to cover the label of its parent, the
+source of the arguments.
+It may have to rise further
+to cover the label of the initializing text file, and
+perhaps again to cover data that it reads.
+.NH 2
+Terminology
+.XL zD
+.PP
+A
+.I file
+is anything that can have a file descriptor, or equivalently
+anything that can have an in-core inode: file system
+entries, pipes, and process images.
+An inode is deemed to be part of its file.
+An open file that is not a stream has a
+.I "seek pointer.
+A file descriptor
+$d$ names an association $(p,^s,^f)$ between process, seek pointer,
+and file.
+Given $d$, the corresponding process is denoted
+$p(d)$, the file $f(d)$,
+and the seek pointer $s(d)$.
+The file system that file $f$ resides in is denoted $FS(f)$.
+If $f$ is one end of a pipe, $f sup prime$ is
+the other end.
+$L(f,t)$, $L(p,t)$, $L(s,t)$ are the labels of a file, a
+process, and a seek pointer respectively
+at time $t$; $C(p,t)$ and $C(FS,t)$ are the
+ceilings of a process and file system.
+When only one time is under consideration, $t$ may be elided:
+$L(f)$, $L(p)$, $C(p)$, etc.
+.PP
+A
+.I "data flow
+occurs when bits are copied from one place
+(process, file, seek pointer, uarea) to another.
+Such flows, caused by system calls, are
+effectively atomic and are serializable.
+A nonatomic data transfer in a very long
+.I read
+or
+.I write
+is considered to be several data flows.
+The residence of data in an entity
+(usually a process or file) also constitutes data flow, called a
+.I "persistent flow,
+from the entity at one time to the entity at 
+another time.
+.PP
+Transfer of information without direct replication of
+bits is not considered to be data flow.
+Most such transfers are sensed by error returns from system
+calls.  Others are sensed by reading quantities that the
+system calculates: link counts, process numbers, resource levels,
+file access times, clock values, and so on.
+.PP
+Data flow from source $x$ to destination
+$y$ is symbolized $x~->~y$.
+.PP
+The symbols := and = mean assignment and the
+equality predicate respectively.
+.SP
+In the more formal parts of the paper fact is distinguished
+from supporting commentary, which looks like this.
+.NH 3
+Summary of notations
+.LP
+.TS
+center;
+lll.
+Notation	Meaning	Reference
+$f,^r,^w$	file
+$d$	file descriptor	\*(zD
+$p$	current process
+$q$	process
+$t$	time
+$s$	seek pointer	\*(zD
+$FS$	file system	\*(zD
+$x,^y$	labelable entity
+$YES$	label yes	\*(zL
+$NO$	label no	\*(zL
+$L(x,t),~L(x)$	label	\*(zL
+$C(x,t),~C(x)$	ceiling	\*(zL
+$Tk (x,t),~Tk (x)$	capability	\*(zC
+$Uk (x,t),~Uk (x)$	license	\*(zC
+$Tvec (x,t),~Tvec (x)$	capability vector	\*(zC
+$Uvec (x,t),~Uvec (x)$	license vector	\*(zC
+$Uvec sup 0 (x,t),~Uvec sup 0 (x)$	maximum file license	\*(zB, \*(zC
+$Vvec (x,t),~Vvec (x)$	privilege vector	\*(zC
+$H(f)$	pex-holding process	\*(zA
+$APX(f)$	accept pex indicator	\*(zA
+$X(f)$	pexity indicator	\*(zA
+$AM(p)$	process audit mask	\*(za
+$SAM$	system audit mask	\*(za
+$PC(f)$	poison class	\*(za
+$PM[i]$	poison mask	\*(za
+.TE
+.NH 2
+Labels
+.XL zL
+.PP
+A label can be any element of a given finite lattice $LL$,
+or the special symbol $YES$, or the special symbol $NO$.
+Let $LLstar ~=~ LL \(cu roman "{" YES , ^ NO roman "}"$
+denote this set of possible labels.
+The lattice $LL$ is a design parameter.
+We have chosen the lattice of subsets of 480 elements, represented
+as vectors of 480 bits.
+.SP
+The bit vectors $000~<~001~<~011~<~111$ might represent the
+customary classification levels:
+unclassified, confidential, secret, top secret.
+Further bits might represent compartments:
+000 100 for Iran, 000 010 for Nicaragua, 000 001 for submarine
+traffic, etc.
+Oliver North was cleared at least for 111 110.
+.PP
+Let the ordering relation on $LL$ be denoted $<=$,
+the meet operation $min$,
+the join operation $max$,
+bottom element $bottom$ and top element $top$.
+The only comparison predicates we use are $=$, $<=$, and $!<=$.
+The predicate $!<=$ means ``not $<=$'' or
+``is not dominated by''; it should not
+be thought of as $>$.
+.PP
+A data flow $x~->~y$ is said to be
+.I up
+if $L(x) ~<=~ L(y)$.
+Otherwise the flow is
+.I down .
+.SP
+Up describes a $<=$ relation and down
+describes $!<=$.
+By always referring to the direction of flow, we avoid the
+common, but confusing, phrases ``write up'' and
+``read down,'' both of which describe upward flow.
+.QE
+We extend the meaning of $<=$ to $LLstar$:
+for all $x$ in $LLstar$, $x ~ <= ~ YES$, $YES ~ <= ~ x$,
+$max (x,^YES )~=~min (x,^YES )~=~x$, 
+and $max (x,^NO )~=~min (x,^NO )~=~NO$.
+For all $x$ in $LL$, $x ~ !<= ~ NO$ and $NO ~ !<= ~ x$.
+Also $NO~ !<=~ NO$.
+Note that $( LLstar , <= )$ is not a lattice, and that $<=$ is only
+partially transitive on $LLstar$ in that
+$L sub 1~<=~L sub 2$ and $L sub 2~<=~L sub 3$ imply
+$L sub 1~<=~L sub 3$ only if $L sub 2 ~member~LL$.
+.SP
+Label $YES$ (yes) is intended for files such as
+.CW /dev/null
+that may always be read or written.
+A place labeled $YES$ is amnesiac; what comes out
+is unrelated to what goes in.
+Label $NO$ (no) is intended for files that may never be read
+or written except by
+trusted processes.
+.NH 2
+Privileges and superuser
+.XL zB
+.PP
+File permissions behave as always, except that superuser status
+does not automatically confer write permission.
+Historically restricted operations
+such as mounting a file system or changing userid
+are still reserved to the superuser.
+However, most such operations require privilege
+in addition to superuser status.
+.PP
+There are two classes of privileges, called capabilities
+and licenses.
+Privileges are stored with labels;
+system calls that set and retrieve labels handle privileges
+at the same time.
+.PP
+Users may be given
+.I licenses
+to perform security-related tasks.
+Licenses may persist across
+.I exec
+and can be given up at any time.
+To exercise a privilege,
+a process with a license for that privilege
+must be running a program marked
+with a corresponding
+.I capability.
+Thus, in general, sensitive actions can only
+be performed by trusted users using trusted software.
+.PP
+Files, too, may have licenses.
+The licenses of an executable file augment the inherited licenses of
+processes that execute the file.
+File licensing is limited by a permanent maximum
+file license $Uvec sup 0$; the effective set of licenses for
+file $f$ is $Uvec (f) and Uvec sup 0$.
+.SP
+File licensing is much like the classic set-userid mechanism.
+Any user who can execute a licensed program
+automatically enjoys the privileges of the program.
+Unlike the effective userid, however, a license obtained from a file on
+.I exec
+is not inherited by child processes.
+.ig
+.PP
+Privilege may be granted to every program
+through a permanent minimum capability $Tvec sup 0$.
+In this case any user with licenses $Uvec$
+can exercise those privilege in any program, regardless
+of the trustedness of the program.
+.SP
+A highly secure system would best be run with
+minimum capabilities set to zero.
+Some maximum licenses, though, would be nonzero:
+File licensing would be
+permitted for certain privileges, so that trusted code
+may perform privileged acts for unprivileged users.
+But stringent control would be maintained over the most
+powerful privileges, especially $Tsetpriv$ and
+$Tsetlic$, which would
+only be exercisable by licensed users running trusted
+code.
+..
+.PP
+Capabilities of a process are computed
+from the licenses inherited from its parent
+(ultimately from the initialization process) and
+from the capabilities and licenses of the program it is executing;
+see \*(yQ.
+The capabilities express the 
+powers the process can acutally exercise.
+.SP
+For example, to set userid, a superuser process must have
+capability $Tuarea$ (\*(yQ);
+to initiate or change accounting,
+it must have capability $Tlog$; and
+to mount a file system or make an external medium accessible,
+it must have capability $Textern$.
+.NH 2
+Ingredients
+.PP
+The following notions are added to the usual
+.UX
+model.
+.NH 3
+Labels and ceilings
+.LP
+Each participant $x$ in data flow
+has a time-varying $LLstar$-valued label, $L(x,^t)$,
+written $L(x)$ when $t$ doesn't matter.
+Labels of processes and seek pointers are restricted to $LL$.
+.LP
+Each participant $x$ in data flow
+has a time-varying $LLstar$-valued ceiling, $C(x,^t)$,
+sometimes written $C(x)$.
+By convention all files in file system $FS$ share the same
+ceiling, called $C(FS)$, i.e. $C(f)~=~C(FS(f))$.
+By convention, any entity $x$ that lacks
+a specific ceiling has $C(x)~=~top$.
+.LP
+Each file system type has a default ceiling value.
+.LP
+Each file or process has a time-varying
+.I fixity
+attribute, $F(f)$ or $F(p)$,
+which governs the mutability
+of label $L(f)$ or $L(p)$, and takes on values
+.IP
+$LOOSE$: Label or fixity may change.
+.br
+$FROZEN$: Label may not change; fixity may change.
+.br
+$RIGID$: Fixity may not change; label may change only with privilege.
+.br
+$CONST$: Neither label nor fixity may change.
+.LP
+New system calls,
+.I setflab ,
+.I fsetflab ,
+.I getflab,
+.I fgetflab,
+.I setplab ,
+.I getplab ,
+set and query labels and privileges of files and processes; see \*(zT.
+.NH 3
+Capabilities and licenses
+.XL zC
+.LP
+Each process or file has a set of time-varying boolean
+capabilities,
+further described in \*(yQ:
+$Tsetpriv (x,^t)$,
+$Tsetlic (x,^t)$,
+$Tnochk (x,^t)$,
+$Textern (x,^t)$,
+$Tuarea (x,^t)$,
+$Tlog (x,^t)$.
+The six predicates together constitute a bit vector $Tvec (x,^t)$.
+Predicates may be written $Tnochk (x)$, $Tvec (x)$, and so on,
+when time is unimportant.
+.SP
+Capabilities $Tvec (p)$ are rights of a process to override
+security policy.
+The capabilities of a process are limited by the capabilities
+$Tvec (f)$ of the currently executing file $f$
+and are not inherited.
+.LP
+Each process or file has a set of boolean licenses
+$U k (x)$,
+subscripted like capabilities and
+together constituting a bit vector $Uvec (x)$.
+.LP
+The set of capabilities and licenses of a file or process are
+collectively known as privileges and are denoted $Vvec (f)$ or
+$Vvec (p)$.
+A
+.I trusted
+predicate, $T(x)$,
+is defined on files as the logical OR of all the privileges,
+.EQ
+T(f)~=~{size +2 or}from k^( Tk (f)^or^Uk (f)),
+.EN
+and on processes as the OR of the capabilities,
+.EQ
+T(p)~=~{size +2 or}from k^Tk (p).
+.EN
+.ig
+.LP
+Correspondingly subscripted
+.ig
+sets of 
+.I "minimum capabilities
+$Tx sup 0$ with collective vector $Tvec sup 0$ and
+..
+.I "maximum licenses
+$Ux sup 0$ with collective vector $Uvec sup 0$.
+..
+.LP
+Each file system has a set of boolean
+.I "privilege masks
+$Tk  (FS)$ and
+$Uk (FS)$,
+subscripted like capabilities, with collective
+vectors $Tvec (FS)$, $Uvec (FS)$, and $Vvec (FS)$.
+.LP
+Each file system type has a default privilege mask.
+.NH 3
+Private paths
+.XL zA
+.LP
+Each open inode $f$ has a
+.I "pex state,
+comprising a
+.I  "holding process
+$H(f)$, a boolean
+.I "accept pex
+indicator $APX(f)$, and a
+.I pexity
+indicator $X(f)$, which can take on three values:
+.IP
+$UNPEXED$: $H(f)$ is irrelevant. 
+.br
+$PEXED$: Process $H(f)$ has exclusive access to $f$.
+.br
+$UNPEXING$: $f$ is unusable by any process until becoming $UNPEXED$.
+.LP
+A new family of IO controls manipulates the pex state;
+see \*(zP.
+.LP
+Each stream has a 
+.I "stream identifier,
+which is an arbitrary string.
+Stream identifiers are retrieved by an IO control
+and set by a privileged IO control; see \*(zS.
+.SP
+In v10 and IX
+streams comprise pipes, terminals, and communication
+ports; pipes may be mounted in the file system.
+The stream identifier conventionally holds security-related
+information such as the trustedness and authentication record
+of a terminal port.
+.NH 3
+Auditing
+.XL za
+.LP
+Each process $p$ has a
+.I "audit mask,
+$AM(p)$.
+A
+.I "system audit mask,
+$SAM$,
+determines the base level of auditing.
+Each file has a
+.I "poison class,
+$PC(f)$,
+which takes integer values in the range 0 through 3.
+For each poison class $i$ there is a
+.I "poison mask,
+$PM[i]$.
+.SP
+Process audit masks control auditing coverage and
+are inherited across fork and exec.
+The poison class of a file determines a poison mask
+that augments the audit mask of each process that
+deals with the file; see \*(yl.
+.LP
+Logging data is collected in a new kind of special
+file; see \*(yL.
+.LP
+A new system call
+.I syslog
+controls auditing; see \*(yl.
+.NH 3
+Miscellaneous
+.LP
+There are two new file modes:
+.IP
+.CW S_IAPPEND 
+forces all writing to occur at the end of the file
+and prevents truncation by
+.I creat .
+.IP
+.CW S_IBLIND 
+makes a directory unreadable and
+immune to label checking; see \*(yb.
+.LP
+There are two new error return codes:
+.IP
+.CW ELAB
+is returned for security label violations; see \*(yT.
+.IP
+.CW EPRIV 
+is returned for lack of privilege; see \*(yU.
+.LP
+A new signal,
+.CW SIGLAB,
+detects changes in labels of open files; see \*(yS.
+.LP
+The old signal
+.CW SIGPIPE
+may be triggered in a new way; see \*(yT.
+.LP
+Each file descriptor in each process has a
+.I safe-to-write
+bit, a
+.I safe-to-read
+bit, and an
+.I exempt
+bit; see \*(zk.
+.LP
+A new system call,
+.I unsafe,
+queries and resets safe-to-read and safe-to-write bits; see \*(y8.
+.LP
+A new system call,
+.I nochk,
+changes exempt bits; see \*(zk and \*(y8.
+.LP
+Two old system calls,
+.I seek
+and
+.I tell,
+have been recalled to active duty; see \*(yH and \*(yI.
+.NH 2
+Formal policy
+.XL y5
+.PP
+In the policy statements below, variables $t sub 0$ and $t sub 1$
+represent times such that $t sub 0~<=~t sub 1$.
+The entities among which flows occur are not designated;
+for a complete list of recognized flows, see
+Table \*(zT.
+.PP
+Certain system calls
+.I renew
+entities; a renewed entity is actually or nominally
+bereft of memory of past contents.
+If an entity $x$ is renewed in the interval $t sub 0$ to $t sub 1$,
+there is no persistent flow $x~->~x$ across that interval.
+The following actions are recognized as renewals.
+.IP
+Seeking relative to
+beginning of file renews the seek pointer.
+.IP
+Setting a process ceiling renews the ceiling.
+.IP
+Setting a file label away from $NO$ renews the file.
+.SP
+Files labeled $NO$ are unobservable in the absence of privilege.
+Thus reclassifying to $NO$ is harmless.
+.SP
+.I Exec
+with no arguments could be considered to be a renewal, but our
+understanding that 
+.I exec
+starts a new process makes that unnecessary.
+.NH 3
+Generic policy
+.PP
+The policy is to be observed by all untrusted processes.
+Trusted process may deviate from the policy only in ways 
+recorded as ``exceptions.''
+.LP
+.B "Upward flow.
+If a flow $x~->~y$ occurs at time $t$, it must be upward.
+.IP
+$L(x,^t)~<=~L(y,^t)$
+.LP
+Exception: either $x$ or $y$ is a process $p$ and
+$Tnochk (p,^t)$ is true.
+.LP
+.B "Monotone labels.
+A persistent flow $x~->~x$ must be upward unless $L(x,^t sub 1 )~=~NO$.
+so it is harmless to relabel a file $NO$.
+.IP
+$L(x,^t sub 0 )~<=~L(x,^t sub 1 )$
+.SP
+A file labeled $NO$ is inaccessible to untrusted processes,
+.LP
+.B "Impenetrable Ceilings.
+If a flow $x~->~y$ occurs at time $t$, it must respect
+the ceiling of the causative process $p$, and any ceilings
+of the participating entities.
+.IP
+$max ( L(x,^t),~L(y,^t))~<=~min ( C(p,^t),~C(x,^t),~C(y,^t))$
+.LP
+Exception: either $x$ or $y$ is a process $p$ and
+$Tnochk (p,^t)$ is true.
+.LP
+.B "Monotone ceilings.
+A ceiling can only decrease.
+.IP
+$C(x,^t sub 1 )~<=~C(x,^t sub 0 )$
+.LP
+Exception: $x$ is a process $p$ and $Tsetlic (p,^t sub 0 )$ is true.
+.LP
+.B "Inherited ceilings.
+At the time $t sub 0$ of starting,
+the ceiling of a new process $q$ is dominated by that
+of the process $p$ that started it.
+.IP
+$C(q,^t sub 0 )~<=~C(p,^t sub 0 )$
+.PP
+In the absence of
+privilege, the generic policy forbids a
+chain of flows $x sub 0~->~x sub 1~->~...~->~x sub n$,
+between entities observed at
+times $t sub 0~<=~t sub 1~<=~...~<=~t sub n$, where
+$L(x sub 0 ,^t sub 0 )~!<=~L(x sub n ,^t sub n )$.
+The label policy also forbids such a chain of flows when
+$L(x sub n ,^t sub 0 )$ is defined and
+$L(x sub n ,^t sub 0 )~!<=~C(x sub n ,^t sub 0 )$.
+.SP
+Correct implementation depends on identifying all
+entities and flows and then assuring that each flow respects
+the policy.
+.NH 3
+Privilege policy
+.XL y9
+.PP
+These rules do not address the
+initial setting of capabilities in a process; see \*(yQ.
+.LP
+.B "Monotone capabilities.
+The capabilities of a
+process $p$ can only decrease.
+.IP
+$Cap (p,^t sub 1 )~<=~Cap (p,^t sub 0 )$
+.LP
+.B "Monotone licenses.
+The licenses of a process $p$ can only decrease.
+.IP
+$Lic (p,^t sub 1 )~<=~Lic (p,^t sub 0 )$
+.LP
+Exception: $Tsetlic (p,^t sub 0 )$ is true.
+.LP
+.B "Inherited licenses.
+At the time $t sub 0$ of starting,
+the license of a new process $q$ is dominated by that
+of the process $p$ that started it.
+.IP
+$Lic (q,^t sub 0 )~<=~Lic (p,^t sub 0 )$
+.LP
+.B "Persistent file privilege.
+The privileges of a file cannot be changed.
+.IP
+$Vvec (f,^t sub 1 )~=~Vvec (f,^t sub 0 )$
+.LP
+Exception: process $p$ with capability $Tsetpriv (p,^t)$
+causes a change during $t sub 0~<=~t~<=~t sub 1$.
+.LP
+.B "Persistent trusted files.
+A trusted file $f$ cannot be written into.
+.IP
+$x~->~f~=>~not T(f)$.
+.ig
+.NH 2
+Some scenarios
+.PP
+These examples show ways to cope with some of the
+difficulties imposed by security controls.
+Most of them are discussed in more detail elsewhere.
+.NH 3
+System maintenance
+.PP
+System administrators are expected to be entitled to superuser
+status and enough privileges to install software.
+In a highly security-conscious installation
+the power to mark newly installed code trusted
+would be invested in
+a separate security administrator.
+The separation of powers is intended both to prevent
+possible mischief by single individuals
+and to provide checks and balances against hasty and
+mistaken changes to the security environment.
+.NH 3
+Individual users
+.PP
+User authentication is done by a trusted
+.CW login
+program.
+Once
+.CW login
+has set the userid, groupid, terminal label, process label,
+process ceiling, and privileges,
+access is determined solely by permissions, labels, and privileges.
+.NH 3
+Reading process status,
+.I ps
+.PP
+The
+.I ps
+command can print the arguments of any process,
+which it reads from files in
+the process file system
+.CW /proc .
+The files share labels with the processes themselves,
+so ordinary label checks prevent improper snooping.
+However, checking the essentially random labels in
+.CW /proc
+could have the unpleasant side effect of raising the
+label of
+.I ps,
+perhaps above the label of its terminal, so that no
+output, even about low-label processes, could get to the terminal at all.
+This we prevent by freezing the process label before
+probing the process files.
+.PP
+For reasons of common prudence, process files do not have
+general read permission.
+Customarily
+.I ps
+is made setuid root so it can peek anyway.
+Hoping to abolish the superuser's
+universal read privilege,
+we instead give process files a conventional group
+number (\-1) and make
+.I ps
+setgid to that group.
+.PP
+.I Ps
+has options to print information about open files, which it
+obtains from
+.CW /dev/kmem .
+This information comes from many processes and
+is not properly labeled; it is instead hidden by the
+$NO$ label on 
+.CW /dev/kmem 
+and can only be seen by processes with $Tnochk$ privilege.
+If the security administrator deems it acceptable,
+.I ps
+may be given capability $Tnochk$.
+Then administrators licensed for $Tnochk$ can
+obtain the information.
+.NH 3
+Mail
+.PP
+To send mail to a low user, a high user must
+effectively log in afresh with a low label.
+One way to do this is with an analogue of
+.CW su
+for temporarily changing the label of a terminal; see \*(yf.
+.PP
+Another way is to log in from another terminal, particularly
+a virtual terminal in the style of v10.
+A trusted
+.CW mux
+communicates with a terminal whose (necessarily trusted)
+software can not be replaced.
+The security policy applies to
+data copied between windows.
+.PP
+To receive mail sent without regard to level (assuming that it is
+below the recipient's ceiling), each user may have a low
+directory in
+.CW /usr/spool/mail .
+The
+.CW mail
+program calls on simple trusted programs to move letters
+into the recipient's directory under randomly generated names
+and to delete letters.
+.NH 3
+Temporary directory,
+.CW /tmp
+.PP
+The temporary directory will be
+.I blind.
+It will be owned by a special administrative account,
+and perhaps have some administrative label.
+Files can be freely created in it, but nobody\(emnot
+even an administrator\(emcan read the directory to
+find the file names.
+To clean up 
+.CW /tmp ,
+the administrator must turn blind mode off.
+While blind mode is off, label checks will be enforced and
+.CW /tmp
+will run safely, but not multi-level: cleanup should 
+happen only in single-user mode.
+.NH 3
+Writing magnetic tape
+.PP
+Tapes, being external media, the labels of which are
+beyond the ordinary control of the system, must be opened by trusted
+processes.
+Moreover Orange Book standards require
+tapes to be correctly labeled: no untrusted
+process may be offered the opportunity to rewrite the label.
+We are thus compelled to write tapes with a trusted program.
+.SP
+An untrusted program could write a tape that a trusted
+program had opened append-only,
+an opening mode that is in System V, but not in v10.
+.PP
+Trusted programs other than the tape-writer
+must be proof against
+being fooled into opening a tape for writing.
+This requirement is not peculiar to tape-writing; trusted programs
+must always check authorization before opening
+arbitrary files.
+.NH 3
+Retrieving classical UNIX
+.PP
+We would like to recover the usual
+.UX
+system call semantics in an appropriate limiting case.
+Three approaches follow, none of them as clean as we would like.
+.PP
+If no files were trusted, and
+if a process could run with $L(p)~=~YES$ and $C(p)~=~YES$
+it would notice little difference in system calls
+from their classical behavior.
+The process label $YES$ would have to be inheritable and
+some dispensation would have to be given to 
+.CW init
+in order for it to assume label
+$YES$ .
+.PP
+If we make all labels $bottom$
+ordinary users will never see an $ELAB$ error or receive
+$SIGLAB$.
+A simple self-licensing trusted program will suffice to mark as trusted
+occasional programs that have to do special operations such as
+opening terminals.
+.PP
+If we modify the system so that all privileges
+are always true (by setting all bits in $Tvec sup 0$), then the
+label apparatus becomes invisible.
+Notice that treating all processes as trusted does not spoil the existing
+.UX 
+permissions system:
+it merely bypasses the new labeling scheme.
+.PP
+In no scenario, however, will the superuser regain 
+general write permission.
+.NH 3
+Integrity
+.PP
+``Integrity'' refers to the credibility of data, not its secrecy.
+Perfectly public programs, such as compilers, must 
+be of the highest integrity if they are to be trusted
+to manipulate trusted code\(emfor example, to
+recompile the login command.
+In controlling integrity we wish to avoid copying 
+low-integrity data into high-integrity places.
+This goal is opposite to that of security, where
+we wish to avoid 
+copying high-security data into low-security places.
+``Integrity labels'' behave like negative
+security labels.
+.PP
+Simply by setting a default ``floor'' label above $bottom$,
+we obtain a ``negative'' part of the label lattice,
+which may be used for integrity.
+High-integrity data have very negative labels.
+When such a file is written into
+by a process with an ordinary label at or above the floor,
+its label will rise (become less negative), thus revealing
+the loss of integrity.
+By convention we may make some bits of a label normally on\(emthese
+bits serve for integrity control; the rest are still 
+available for security labeling.
+.NH 2
+What isn't covered
+.PP
+The proposal does not cover networking.
+Logically it presupposes a single multi-user system with
+hard-wired dumb terminals.
+Nothing in it will
+.I "per se
+safeguard information
+that passes through long communication links or through
+other computers, even the computers in smart terminals.
+.PP
+Like any other security system,
+ours does not assure the integrity of data
+against inadvertent or deliberate corruption by authorized agents.
+Nor can it prevent users from
+mistakenly entering secret information into nonsecret terminals.
+Finally, it does not directly preclude old Trojan horse tricks
+like suckering the superuser into executing the wrong
+.CW ls
+command.
+.PP
+To us a ``covert channel'' is any channel not covered by
+the formal policy, which concerns
+only flows between process and objects.
+In standard
+.UX
+there exist other flows that go
+directly from object to object or process to process.
+In the design that follows we have considered
+such formally covert flows and
+interdicted them where feasible within our overall intent.
+Thus the system as implemented is somewhat stronger
+than is implied by the formal policy.
+Nevertheless formally covert channels with bandwidths
+of tens of bits per second\(emconsiderably
+more than the term normally
+implies\(emdo remain.
+.PP
+Process-to-process flows are exemplified by arguments to
+.I exec,
+the security of which is fully accounted for; see \*(y6.
+Object-to-object flows are exemplified by the interaction
+of the seek pointer and file contents on 
+.I read
+and
+.I write.
+These flows are also fully checked.
+.PP
+Other covert channels are discussed in part \*(yJ.
+None will help prying solo
+users to see data they are not cleared for.
+Nor will programmers ever use them inadvertently.
+These are moles' channels, through which the beans
+can be spilled only by corrupt or hoodwinked insiders.
+Moreover the channels involve abnormal usage:
+large numbers of open files or pipes and
+rapid-fire forking of processes.
+They should draw auditing attention if much used.
+..

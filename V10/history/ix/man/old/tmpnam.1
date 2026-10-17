@@ -1,0 +1,24 @@
+.TH TMPNAM 1
+.SH NAME
+tmpnam \- make a file in the temporary directory
+.SH SYNOPSIS
+.B tmpnam
+.SH DESCRIPTION
+.I Tmpnam
+creates a new file with a unique name in directory
+.F /tmp
+and places the full pathname on the standard output.
+.SH EXAMPLES
+.EX
+tmp1=`tmpnam` tmp2=`tmpnam`
+trap 'rm tmp1 tmp2; exit' 0 1 2 3 13 15
+sort file1 >tmp1; sort file2 >tmp2
+join tmp1 tmp2
+.EE
+Notice that the classical trick for getting unique names,
+.LR "sort file1 >/tmp/$$a; sort file2 >/tmp/$$b" ,
+does not work when
+.F /tmp
+is a blind directory.
+.SH SEE ALSO
+.IR mkunique (3)

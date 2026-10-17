@@ -1,0 +1,208 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH MENUHIT 3L "630 MTG"
+.XE "menuhit()"
+.SH NAME
+menuhit \- present user with menu and get selection
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+int menuhit (m, n) 
+.sp
+Menu \(**m;  
+.br
+int n;
+.PP
+.nf
+\s-2
+.ft CM
+typedef struct Menu {
+  char  **item;       /* string array, ending with 0 */
+  short prevhit;       /* retained from previous call */
+  short prevtop;       /* retained from previous call */
+  char  *(*generator)(); /* used if item == 0 */
+} Menu;
+.ft R
+.fi
+\s+2
+.SH DESCRIPTION
+The
+.I menuhit
+function
+presents the user with a menu specified by the Menu pointer
+.I m
+and returns an integer indicating the selection made.
+A returned 0 would indicate that the first item in the menu had been 
+selected; if a 1 is returned, the second item has been selected, etc.
+A -1 indicates no selection.
+The
+.I n
+argument is an integer which
+specifies which button to use for the interaction: 1, 2 or 3.
+The
+.I menuhit
+function
+assumes that the button is already depressed when it is called.
+The user makes a selection by lifting the button when the cursor
+points to the desired selection.
+Lifting the button outside the menu indicates no selection.
+.PP
+The maximum number of menu items displayed at any one time is 16 items.
+When the number of items is 16 or less,
+all the items are displayed and are centered one entry per line in the menu.
+This is the normal menu mode.
+When there are more than 16 menu items to be displayed, the menu becomes a 
+.B scrolling
+menu.
+The left portion of the menu contains a scroll bar which is 
+used for scrolling quickly through the menu selections.
+The vertical size of the scroll bar is an indication of the size
+of the user's view of the menu (16 items) relative to the number
+of selections in the entire menu.  
+.PP
+There are two ways to scroll through the menu items.
+The first is to move the mouse cursor to the left side of the menu
+into the scroll bar area.
+By moving the mouse cursor up or down within the scroll bar area, the menu items
+will scroll accordingly.
+The second method used to scroll through the menu 
+items is to place the mouse cursor on the top or bottom entry of the menu
+list.  The menu will scroll up or down by one item at a time if 
+there are additional items to be displayed in that direction.
+.PP
+The \fIprevhit\fR variable is used to store the menu's previous selection.
+When \fImenuhit\fR is called, the menu is displayed such that, if possible, 
+the mouse cursor will be displayed over the previous selection.
+\f2Prevhit\f1 holds the index from the top of the displayed menu. The \fIprevtop\fR
+variable is used to store the previous topmost item displayed in a scrolling menu.
+The values of \f2prevhit\f1 and \f2prevtop\f1 are initialized to 0 and need not normally
+be manipulated by the application program.
+.PP
+Menus may be generated dynamically from a program by specifying
+a generator 
+function in the \f2Menu\f1 structure.
+If
+.I item
+is set to 0 when \f2menuhit\f1 is called,
+then the routine specified by \f2generator\f1
+is called with one parameter which is an integer index beginning at 0.
+The generator must return a pointer to a character string containing the text
+for the corresponding menu item.
+This generator function is called repeatedly 
+with the index increasing by 1 until the generator returns a \s-1NULL\s+1,
+indicating the end of the menu selections.
+The generator function is called
+each time the \f2menuhit\f1 routine is called with item set to NULL (i.e., 0).
+.PP
+Another facility provided by
+.I menuhit
+is that of a spread character.
+A spread character is any ascii character with the high-order bit set.
+The spread character acts somewhat like a spring pushing against the adjacent text
+and borders within a menu entry.
+The spread character can be placed at the beginning, middle, or end
+of the string defining the menu entry.
+If placed at the beginning of the string,
+the text in the menu item will be right-justified.
+If placed at the end of the string,
+the text will be left-justified.
+If placed in the middle of the string, the text on each
+side of the spread character will be pushed against the corresponding
+menu border.
+In each case,
+the space created by the spread character will be filled in with
+the ascii character contained in the spread character.
+For entries without a spread character,
+the default is to have the text centered.
+.PP
+Whenever a menu is displayed, the original screen image obscured by the menu is
+saved in the terminal and then later restored when the menu disappears.
+If the terminal is
+out of memory and therefore cannot save the screen image,
+then the menu will be displayed in \s-1XOR\s+1 (exclusive or) mode on top of the existing screen image.
+Menu items may still be selected in this mode but the items might be hard to read.
+To remedy this problem,
+memory may be freed up by either deleting or
+reshaping windows before the menu is displayed.
+.SH EXAMPLE
+The following example includes both a menu with the spread character
+and a menu that is dynamically generated. Button 2 and Button 3 are used to
+bring up the two menus and Button 1 exits.
+.PP
+.RS 0
+\s-1
+.nf
+.ft CM
+#include <dmd.h>
+
+char *menutext[] = {
+	"left\e240",           /* space char with
+	                   high bit set */
+	"\e256right",          /* . char with high
+	                          bit set */
+	"middle",
+	"left\e337right",      /* _ char with high
+	                          bit set */
+	"a very long string",
+	NULL };
+Menu menu = { menutext };      /* static menu */
+
+/*	Note the above menu will appear as:
+
+       --------------------
+       |left              |
+       |.............right|
+       |      middle      |
+       |left_________right|
+       |a very long string|
+       --------------------
+*/
+
+char scrlstr[8]="scroll";
+
+char *
+generate(i)
+int i;
+{
+    if (i>99)   /* generator stopping condition */
+        return NULL;
+    else {  /* generate test for items (ie. "scroll56") */
+        scrlstr[6] = i/10 + '0';
+        scrlstr[7] = i - (i/10 *10) + '0';
+        scrlstr[8] = '\\0';
+    }
+    return scrlstr;
+   
+}
+
+
+Menu menugen = {0, 0, 0, generate};
+            /* dynamically generated menu */
+
+
+main()
+{
+	int m;
+
+   for (;;) {
+       request(MOUSE);
+       wait(MOUSE);
+       if (button1())
+          break;        
+       else if (button2()) {
+          m = menuhit(&menugen,2);
+          lprintf("your selection was %d\en",m);
+       }
+       else if (button3()) {
+          m = menuhit(&menu,3);
+          lprintf("your selection was %d\en",m);
+       }
+   }
+
+}
+\fR
+.fi
+.RE
+\s+1
+.SH SEE ALSO
+tmenuhit(3R).

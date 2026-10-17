@@ -1,0 +1,142 @@
+.TH SETLAB 1
+.SH NAME
+setlab, downgrade, setpriv \- set security label on files
+.SH SYNOPSIS
+.B setlab
+[
+.I option ...
+]
+.I label file ...
+]
+.PP
+.B priv downgrade 
+[
+.B -v
+] 
+.I delta file ...
+.PP
+.B priv setpriv 
+.I cap lic file ...
+.SH DESCRIPTION
+.I Setlab
+sets the security label on the named
+.I files,
+or on the standard input if no files are named.
+The
+.I label
+is a single argument in the style accepted by
+.IR atolab ;
+see
+.IR labtoa (3).
+The options are
+.TP
+.B -a
+Add
+.I label
+to the current file label 
+.RI ( new = old | label\fR).
+.TP
+.B -s
+Subtract
+.I label
+from the current file label
+.RI ( new = old &~ label\fR).
+.TP
+.B -p
+Set privileges (capabilities and licenses) only.
+.TP
+.B -v
+Print a blow-by-blow account on standard error file.
+.PP
+The process must be able to open the file, either for
+reading or writing.
+One or more licenses (see
+.IR getplab (2))
+are needed in some instances:
+.TF T_SETPRIV
+.TP
+.B T_EXTERN
+to downgrade (new label does not dominate old)
+.PD
+.TP
+.B T_SETPRIV
+if either the old or the new label
+has nonzero privilege bits
+.TP
+.BR T_NOCHK 
+if the old label has flag
+.BR L_NO 
+(also need
+.B T_EXTERN
+to change away from
+.BR L_NO ).
+.PP
+.I Downgrade
+uses
+.I setlab
+to clear the label bits designated by
+.IR delta .
+It is a conventional request defined in the privilege file,
+.IR privs (5),
+which checks that the user has authority over the specified
+label bits and supplies the necessary privilege to
+.I setlab.
+.PP
+.I Setpriv
+is a conventional interface to
+.I setlab
+for changing file capabilities and licenses.
+.PP
+.I
+.SH EXAMPLES
+.TP
+.L
+setlab ffff... file
+Give the file a top label.
+.TP
+.L
+setlab -a F file
+Freeze a file label to keep writes from
+raising the lattice value.
+.TP
+.L
+lmask x setlab -s 03 file
+Downgrade a security label using a privileged
+.IR nosh (8)
+session.
+The 
+.I downgrade
+priv request is preferred.
+.TP
+.L
+priv downgrade 03 file
+Same, using obtaining the necessary authorization and privilege from
+.IR priv (1).
+.TP
+.L
+priv setpriv - n file
+Give the file a license, but no capabilities.
+This is a conventional trick to make the file immutable until
+its privileges are turned off again.
+The lattice value of the label is bottom (all zero).
+.SH DIAGNOSTICS
+`Locking file for vetting'.
+As a matter of policy,
+.I setlab
+refuses to assign arbitrary privileges to a previously unprivileged
+(`untrusted') file.
+Instead it marks the file immutable as in the last example.
+The file may then be examined at leisure to assess
+whether its contents are indeed trustable before
+privileges are finally assigned.
+.SH SEE ALSO
+.IR getflab (2),
+.IR getlab (1),
+.IR priv (1)
+.SH BUGS
+The strings
+.B -a
+and
+.B -p
+happen to be legitimate, if unusual, labels.
+They will always be understood as option flags.

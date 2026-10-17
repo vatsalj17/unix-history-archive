@@ -1,0 +1,26 @@
+This is a hacked-down version of Post 4.0 for Research Unix systems.
+You don't get mailx source (who wants it anyway?) or upas source
+(you have it already).
+
+It installs in /usr/bin:
+	pq	the post query program
+	post	post interface for mailers and trivia; usage is:
+		-S	to send an update to the directory
+		-D	for directory tidbits (pretty silly)
+		-x	called from upas/rewrite to hook into mail
+		otherwise, it just execs /bin/mail
+
+In /usr/lib/post:
+	dispatch  list of addresses of the post servers; used by pq and post
+	update	-S shell script
+	dbinfo	-D shell script
+
+The contents of "rewrite" should be put in /usr/lib/upas/rewrite,
+usually near the top, depending on how your upas is set up.
+You can send mail by name (or any query), but by not using mailx,
+you don't get the interactive resolution script in case you get
+a name wrong.  You'll get some mail back instead, assuming you have
+the newer upas with the post tweak that sends stderr back instead of
+"broken translate".
+
+Contact Michael.Scott.Baldwin to shower praise, make death threats, whatever.

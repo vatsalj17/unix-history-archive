@@ -1,0 +1,79 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH PEEL 3R "630 MTG"
+.XE "peel()"
+.SH NAME
+peel \- make process local and create new process
+.SH SYNOPSIS
+.B #include <dmd.h>
+.sp
+.B Proc \(**peel (dstrect, flag)
+.br
+.B Rectangle dstrect;
+.br
+.B int flag;
+.SH DESCRIPTION
+.PP
+The \fIpeel\fP function is an uncommon feature that allows a process
+to be made local and reshaped (or moved). The  \f2peel\f1
+function then creates a new
+process that uses the previous process's window and host connection.
+The rectangle \fIdstrect\fP defines the new window (display) to be used by
+the peeled local process.  The
+remaining window is associated with a new process that takes on the
+status of the connection of the previous process.
+.PP
+If argument \f2flag\f1 is zero, the terminal's default process
+is started in the old window.
+If argument \f2flag\f1 has a non-zero value, the process that is
+used to replace the peeled process is another invocation of
+the same process. 
+The process must be cached to do this.
+.PP
+The peeled process will have its \fIP->state\fP variable updated.
+If the \fIdstrect\fP rectangle is the same size
+as the original window, both the MOVED and RESHAPED bits
+will be set; otherwise, just the RESHAPED bit is set.  If the MOVED bit
+is set, the new window will have the contents of the old window
+copied into it.
+Otherwise, it is the responsibility of the peeled process to draw the new window's
+contents.
+The old window is always cleared.
+.PP
+The function will return -1 if it failed due to a lack of memory.
+It will return 0 if it failed because dstrect is smaller than 32x32.
+Otherwise, it will return a pointer to the newly created process
+running in the old window.
+.SH EXAMPLE
+.PP
+The following example shows how a process can peel itself and
+leave behind the default terminal process.
+The rectangle \fIdstrect\fP is specified through the mouse interface
+that allows the user to position or sweep out a rectangle using a
+default size as specified by the rectangle of the window or a new size
+using the mouse and button 2.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+Proc *peel();
+Rectangle newrect();
+
+int
+peelme()
+{
+   Proc *p;
+
+   p = peel(newrect(2, display.rect), 0);
+   if(p == (Proc *)-1)
+      msgbox("no memory", (char *)0);
+   else if(p == (Proc *)0)
+      msgbox("swept window too small", (char *)0);
+   return((long)p > 0);
+}
+\fR
+.fi
+.RE
+\s+1
+.SH SEE ALSO
+cache(3L), local(3R), state(3R).

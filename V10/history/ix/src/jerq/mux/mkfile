@@ -1,0 +1,81 @@
+PDIR = proto
+INCL = $PDIR
+JINCL = /usr/jerq/include
+CFLAGS = -g -I$INCL -I$JINCL
+PHEADERS = $PDIR/pconfig.h $PDIR/packets.h $PDIR/proto.h $PDIR/pstats.h
+
+L=lib.a
+T=tlib.a
+S=slib.a
+LL=	$L(32ld.o) $L(mux.o) $L(pcheck.o) $L(pinit.o) $L(precv.o) \
+	$L(psend.o) $L(ptimeout.o)
+
+SS=	$S(32ld.os) $S(mux.os) $S(pcheck.os) $S(pinit.os) $S(precv.os) \
+	$S(psend.os) $S(ptimeout.os)
+
+TT=	$T(32ld.ot) $T(mux.ot) $T(pcheck.ot) $T(pinit.ot) $T(precv.ot) \
+	$T(psend.ot) $T(ptimeout.ot)
+
+
+mux: $L
+	$CC -u _main $LDFLAGS -o mux $L
+
+tmux: $T
+	$CC -u _main $LDFLAGS -o tmux $T
+
+smux: $S
+	$CC -u _main $LDFLAGS -o smux $S
+
+$L: $LL
+	names=`membername $newprereq`
+	ar r $target $names && rm $names
+	ranlib $target
+$S: $SS
+	names=`membername $newprereq`
+	ar r $target $names && rm $names
+	ranlib $target
+$T: $TT
+	names=`membername $newprereq`
+	ar r $target $names && rm $names
+	ranlib $target
+
+$L(%):N: %
+$S(%):N: %
+$T(%):N: %
+
+
+mux.o:	msgs.h $JINCL/tty.h 
+mux.ot:	msgs.h $JINCL/tty.h
+mux.os:	msgs.h $JINCL/tty.h
+
+%.o:	$PHEADERS
+%.o:	%.c
+	$CC -c $CFLAGS $stem.c 
+%.o:	$PDIR/%.c
+	$CC -c $CFLAGS $PDIR/$stem.c 
+
+%.os:	$PHEADERS
+%.os:	%.c
+	$CC -c $CFLAGS -DPSTATISTICS  -DSTATDESC $stem.c && mv $stem.o $stem.os
+%.os:	$PDIR/%.c
+	$CC -c $CFLAGS -DPSTATISTICS  -DSTATDESC $PDIR/$stem.c && mv $stem.o $stem.os
+
+%.ot:	$PHEADERS
+%.ot:	%.c
+	$CC -c $CFLAGS -DTRACING -DEBUG $stem.c && mv $stem.o $stem.ot
+%.ot:	$PDIR/%.c
+	$CC -c $CFLAGS -DTRACING -DEBUG $PDIR/$stem.c && mv $stem.o $stem.ot
+print:
+	pr *.h *.c
+
+pp:
+	pp -tmux *.h *.c proto/*.? | dcan
+
+cyntax:
+	cyntax -I$INCL -I$JINCL -DDEBUG -DTRACING mux.c 32ld.c $PDIR/*.c
+lint:
+	lint -I$INCL -I$JINCL -DTRACING mux.c $PDIR/*.c
+
+clean:
+	rm -f *.a *.o *.ot *.os mux tmux smux core
+	cd term; make clean

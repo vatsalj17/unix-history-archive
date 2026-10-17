@@ -1,0 +1,210 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH DMDLD 1 "630 MTG"
+.SH NAME
+dmdld \- 630 MTG application bootstrap loader
+.SH SYNOPSIS
+\f3dmdld [\f1 options \f3]\f1 file \f3[\f1 application - arguments \f3]\f1
+.SH DESCRIPTION
+The 
+.I dmdld 
+program downloads the named 
+.I file
+from the host, for execution in the 630 MTG terminal's window connected
+to its standard output. It can also be used to invoke 
+cached applications.
+.PP
+The \fIdmdld\fR program works in \fIlayers(1)\fR and non-layers environments.
+In \fIlayers(1)\fR, the download runs on top of the existing \fIxt\fR error-correcting
+protocol. In non-layers, \fIdmdld\fR temporarily puts the 630
+MTG terminal into 
+\fIxt\fR protocol, and mimics that protocol from its side, thus insuring an error-free
+download.
+.PP
+.I Dmdld
+first asks the terminal if there is a cached application
+of name
+.I file
+already in the terminal. The inquiry uses the filename
+clipped from any pathname prefix.
+If such an application exists and is
+available, that application will be booted in the window without going
+through the download sequence.
+.PP
+If a cached application of inquired filename 
+does not exist
+in the terminal or is not available (see \fIcache(3L)\fR for reasons), 
+.I dmdld
+will attempt to download
+.I file
+from the host. 
+Files to be downloaded by
+.I dmdld
+must be 630 object files created with
+\fIdmdcc(1)\fR.
+.PP
+During compilation, \fIdmdcc(1)\fR looks for the programming environment identification
+(PEID) number of all the library functions link-loaded, and assumes the highest number
+as the PEID of the application. During the download initialization, \fIdmdld\fR
+will send this number to the terminal. If the terminal's firmware version does not support
+this PEID - in other words, the firmware does not have some new library functions used
+by the application, the download will be aborted. The argument flag 
+.B \-f
+will override this checking, but the sanity of the application (after being downloaded
+and running) cannot be guaranteed. 
+.PP
+The optional \f2application-arguments\f1 are also sent to the terminal in order to 
+initialize the parameters \fIargc\fR and \fIargv\fR of the function \fImain\fR
+of the application.
+.PP
+During the download, the 630 mouse cursor will turn into a
+"coffee cup" and the progress
+of the download is shown by a gradual filling of the window with inverse video.
+The code to be downloaded is relocated on-the-fly by \fIdmdld\fR to the
+memory area allocated for it by the terminal. 
+If the download succeeds, the application will take over the
+window and start execution.
+.PP
+The following options are supported by \fIdmdld\fR:
+.TP
+.B \-d
+causes a printout of the download information on the
+diagnostic output (standard error).
+.TP
+.B \-p
+prints non-layers protocol statistics on the diagnostic output (standard error).
+Note that this option forces the
+.B \-d
+option. In \fIlayers(1)\fR, this option is the same as the 
+.B \-d
+option. 
+.TP
+.B \-z
+loads the process but does not run it.
+The process can then be started using
+.IR dmdpi (1).
+This option works only under
+.IR layers (1).
+.TP
+.B \-f
+forces the download even if the programming environment identification
+number of the application is not supported by the terminal it is downloaded
+into. 
+.TP
+.B \-n
+is a null option, and is ignored by \f2dmdld\f1. It is used by
+processes that want to fork \f2dmdld\f1 with a variable argument
+option.
+.TP
+\f3\-Z\f1 \f2n\f1
+overrides the inherent stack size of the download application and sets it
+to \fIn\fR bytes.  \fIN\fR must be greater than or equal to 2048, or else stack
+size is defaulted to 2048.  Inherent stack size of the download application
+is specified through the -Z option of \fIdmdcc(1)\fR (or defaulted to 2048).
+
+.TP
+.B \-T
+loads an absolute file (already link-loaded to a fixed address)
+such as a new version of the terminal's firmware into the terminal's RAM space.
+This download is called a takeover (overlay) download because it will close all
+physical ports except for the one running \fIdmdld\fR. The whole terminal screen
+will turn blank, and will be gradually filled up with inverse video representing
+the code being downloaded. When the download is finished, execution will begin at
+the first address of \fIfile\fR. Relocation will be done by \fIdmdld\fR only if the
+first address of \fIfile\fR is lower than the first available RAM address of the
+terminal. This is necessary because low-addressed RAM is used to store the
+terminal's system tables and variables, and overwriting them with the downloaded data
+may put the terminal into undetermined states. The \f3\-N\f1
+option can be used instead, if the relocation possibility is
+not wanted.
+.TP
+.B \-N
+loads an absolute file into the terminal's RAM space. The
+difference between the \f3\-T\f1 and \f3\-N\f1 options is that
+the \f3\-N\f1 does not relocate the absolute file. Therefore
+the absolute file can be generated without relocation
+information.
+.PP
+The \f3\-T\f1 and \f3\-N\f1 options only work in the
+non-layers environment, and are exclusive of each other.
+\
+.PP
+The environment variable
+.B JPATH
+is the analog of the shell's
+.B PATH
+variable to define a set of directories in which to search for
+.IR file .
+.TP
+\s-1\f3NOTE\s+1\f1:
+Standard error should be redirected when using the
+.B \-d
+or
+.B \-p
+options.
+.SH EXAMPLE
+Invoking the terminal resident \fBPF Edit\fR application using \fIdmdld\fR:
+.br
+.ti +4
+.ft CM
+dmdld "PF Edit"
+.ft R
+.PP
+Invoking a \fIdmdcc(1)\fR compiled application:
+.br
+.ti +4
+.ft CM
+dmdld dmda.out
+.ft R
+.PP
+Invoking a \fIdmdcc(1)\fR compiled application with the 
+.B \-d
+flag, redirecting standard error to \fItemp\fR:
+.br
+.ti +4
+.ft CM
+dmdld -d dmda.out 2>temp
+.ft R
+.PP
+Invoking a \fIdmdcc(1)\fR compiled application with \f2application-argument\f1:
+.br
+.ti +4
+.ft CM
+dmdld $DMD/lib/demolib/clock "`date`"
+.ft R
+
+.SH SEE ALSO
+cache(3L), dmdcc(1), dmdpi(1), jx(1).
+.br
+layers(1) in the
+\fIUNIX System V Release 3 User's Reference Manual\fR.
+.br
+layers(1) in the \fI5620 Dot-Mapped Display Reference Manual\fR.
+
+.SH DIAGNOSTICS
+.PP
+The error message "\fIdmdld: ... is not compatible with terminal\fR"
+means that the application the user attempts to
+download cannot execute safely in the terminal because it calls
+library routines which do not exist in the terminal's firmware version
+(i.e. the programming environment ID of the application is "newer" than the
+one supported
+by the terminal). A firmware upgrade is necessary, or the user can force
+the download by using the 
+.B \-f
+flag. 
+.PP
+The error messages "\fIdmdld: cannot access ...\fR" or "\fIdmdld: cannot open ...\fR"
+appearing when the named \fIfile\fR is known to be in the cache, indicate that the
+application is not available for booting, and \fIdmdld\fR cannot find or open the
+named \fIfile\fR in the host.
+.PP
+The error message "\fIdmdld: no memory in terminal\fR" indicates
+that the terminal has run out of memory to accept the download. The user may
+free up memory (by deleting windows, etc..) and re-try.
+.PP
+Other error messages are self-explanatory.
+
+.SH BUGS
+The \f2application-arguments\f1 are not sent to the terminal 
+to update \fIargc\fR and \fIargv\fR if the named
+\fIfile\fR is found in the terminal's application cache.

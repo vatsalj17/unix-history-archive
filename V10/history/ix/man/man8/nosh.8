@@ -1,0 +1,138 @@
+.TH NOSH 8
+.CT 1 shell proc_man dirs files
+.SH NAME
+nosh \- `no-surprise' shell, a sub-standard command interpreter
+.SH SYNOPSIS
+.B /etc/nosh
+[
+.I file
+]
+.PP
+.B priv nosh -gunxlp
+.I file
+.SH DESCRIPTION
+.I Nosh
+executes commands read from its standard input
+or from the named
+.IR file .
+It has few of the advanced features of
+.IR sh (1),
+making it more trustable for use in
+security administration tasks.
+In the second usage,
+.I nosh
+is endowed with one or more of the licenses
+.BR gunxlp ;
+see
+.IR labtoa (3).
+.SS Commands
+A
+command is either
+.I simple
+or
+.I builtin.
+Each command consists of
+a sequence of
+.I words
+separated by white space,
+terminated by a new-line character or end of input.
+Backslash quoting and sharp commenting are honored.
+The first word specifies the name of the command to
+be executed.
+If the command name matches one of the builtins
+listed below it is executed in the shell process.
+If the command name matches no
+builtin command, it is taken to be the 
+pathname of an executable file; the name must begin with
+.L /
+or
+.LR . .
+A new process is created and an attempt is made to
+execute the file via
+.IR exec (2) 
+with an empty environment.
+.SS Input-Output Redirection
+The standard input is inherited by simple commands.
+Simple
+.B >
+output redirection to named files as in 
+.IR sh (1)
+works only for simple commands, and only for file
+descriptors 1 (default) and 2.
+.SS Builtin Commands
+.PP
+.PD 0
+.TP
+.BI cd " dir
+Change the current directory to
+.I dir.
+.TP
+.BI exit " status
+Exit with given status, 0 by default.
+.TP
+.B set +e
+.TP
+.B set -e
+Turn an ignore-error switch on
+.RB ( +e ,
+default) or off
+.RB ( -e ).
+.I Nosh
+normally ignores nonzero exit status from an executed
+command, but exits with that status if
+.B -e
+is set.
+.TP
+.B set +x
+.TP
+.B set -x
+Refrain from echoing
+.RB ( +x ,
+default) or echo
+.RB ( -x )
+each command as it is executed.
+.TP
+.BI lmask " licenses command \fR[\fP arg \fR... ]\fP 
+Run a simple command, allowing licenses
+indicated by a nonempty string from the set
+.BR gunxlp- 
+to be inherited from
+.I nosh.
+Normally no licenses are inherited.
+.SS Missing features
+Features of
+.IR sh (1)
+that
+.IR nosh 
+lacks include:
+background commands, pipelines, compound commands, most builtins, 
+multicharacter quotation,
+command substitution, parameter substitution, variables, environments,
+file name generation, redirection of input, signal traps,
+search paths, mail notification,
+.BR .profile ,
+user specification of prompts.
+.SH DIAGNOSTICS
+.I Nosh
+prints nonzero exit or termination status
+of executed commands as octal numbers labeled
+.L e=
+and
+.LR t= ;
+see
+.IR wait (2).
+If invoked with a
+.I file
+argument, it exits unconditionally for nonzero termination
+status or syntax error, and conditionally (under control of
+.LR set )
+for nonzero exit status.
+.PP
+.I Nosh
+exits immediately if
+invoked with more than one argument,
+if invoked with an argument with a relative path name,
+if invoked by a relative path name, or if invoked
+with interrupt or quit signals ignored.
+.SH SEE ALSO
+.IR sh (1)

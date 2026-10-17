@@ -1,0 +1,96 @@
+.TH MSGCTL 3L "630 MTG"
+.XE "msgctl()"
+.SH NAME
+msgctl \- message control operations
+.SH SYNOPSIS
+.B #include <message.h>
+.sp
+.B int msgctl (msqid, cmd, buf)
+.br
+.B long msqid;
+.br
+.B int cmd;
+.br
+.B struct msqid_ds \(**buf;
+.SH DESCRIPTION
+.I Msgctl
+provides a variety of message control operations as
+specified by
+.IR cmd.
+The following
+.I cmds
+are available:
+.sp
+.B IPC_STAT
+.br
+.RS 6
+Place the current value of each member of the
+data structure associated with
+.I msqid
+into the structure pointed to by
+.IR buf .
+.RE
+.PP
+.B IPC_SET
+.br
+.RS 6
+Set the value of the following members of the
+data structure associated with
+.I msqid
+to the corresponding value found in the structure
+pointed to by
+.IR buf:
+.ft B
+.RS 6
+msg_qbytes
+.br
+cid
+.br
+state
+.ft R
+.sp
+.RE
+The creator process id can be changed.
+This is done so that when this
+process is deleted, the queue will be deleted with it.
+.RE
+.PP
+.B IPC_RMID
+.br
+.RS 6
+Remove the message queue identifier specified by
+.I msqid
+from the system and destroy the
+message queue and data structure associated
+with it. This can be executed by any process.
+.RE
+.PP
+.I Msgctl
+will fail if one or more of the following are true:
+.sp
+.RS 6
+.I Msqid
+is not a valid message queue identifier.
+.sp
+.I Cmd
+is not a valid command.
+.sp
+.I Cmd
+is equal to
+.B IPC_SET
+and an attempt is being made to increase the value of
+.B msg_qbytes
+over
+.B MAX_BYTES
+(8192).
+.RE
+.P
+A side effect of \f2msgctl\f1 is that it clears the MSG
+resource ready condition used by the \f2wait\f1 and \f2own\f1
+resource functions.
+.SS Return Value
+Upon successful completion, a value of 0 is returned.
+Otherwise, a value of -1 is returned.
+.PP
+.SH SEE ALSO
+msgget(3L), msgop(3L), realtime(3R), resources(3R), structures(3R).

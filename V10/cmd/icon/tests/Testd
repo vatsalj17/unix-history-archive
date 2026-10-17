@@ -1,0 +1,11 @@
+. ../Setpath
+for i in `cat $1.ls`
+do
+        rm -f local/$i.out
+        echo Running $i
+	$Icont -s $i.icn
+	./$i <$i.dat >local/$i.out 2>&1
+        echo Checking $i
+        diff local/$i.out stand/$i.out
+	rm -f $i
+done

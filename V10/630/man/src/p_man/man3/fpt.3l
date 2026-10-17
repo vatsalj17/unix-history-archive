@@ -1,0 +1,70 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH FPT 3L "630 MTG"
+.XE "fPt()"
+.XE "fRpt()"
+.XE "fRect()"
+.SH NAME
+fpt: fPt, fRpt, fRect \- create a Point or Rectangle from arguments
+.SH SYNOPSIS
+.ft B
+#include <dmd.h>
+.sp
+Point fPt (x, y)
+.br
+int x, y;
+.sp
+Rectangle fRpt (p, q)
+.br
+Point p, q;
+.sp
+Rectangle fRect (a, b, c, d)
+.br
+int a, b, c, d;
+
+.SH DESCRIPTION
+.PP
+The
+.I fPt
+function returns a point made from the two arguments.
+.PP
+The
+.I fRpt
+function returns a rectangle made from the two points.
+.PP
+The
+.I fRect
+function returns a rectangle made from the four arguments.
+This function differs from \fIcanon(3R)\fR in that the points are not sorted first
+to guarantee a positive area.
+.PP
+The above functions are not macros as are the ones in \fIpt(3L)\fR; therefore,
+allow C language assignment constructs.
+.SH EXAMPLE
+The following subroutine draws two boxes in the upper
+left corner of the window.
+.nf
+.ft CM
+#include <dmd.h>
+
+Point fPt();
+Rectangle fRpt();
+Rectangle fRect();
+
+Point add();
+Rectangle raddp();
+
+drawboxes()
+{
+	Rectangle r;
+	
+	r = fRpt(Drect.origin, add(Drect.origin, Pt(100,100)));
+	box(&display, r, F_STORE);
+
+	r = fRect(0,0,200,200);
+	box(&display, raddp(r, Drect.origin), F_STORE);
+}
+\fR
+.fi
+.RE
+.SH SEE ALSO
+canon(3R), pt(3L).

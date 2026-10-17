@@ -1,0 +1,42 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH REALTIME 3R "630 MTG"
+.XE "realtime()"
+.SH NAME
+realtime \- terminal clock
+.SH SYNOPSIS
+\f3
+unsigned long realtime ( ) 
+\fR
+.SH DESCRIPTION
+The
+.I realtime
+function
+returns the number of 60Hz clock ticks since
+the terminal was booted.
+.SH EXAMPLE
+The following code could be used to roughly measure the performance
+of \f2bitblt\f1.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+unsigned long realtime();
+
+unsigned long
+perf_bitblt( sb, r, db, p, f)
+Bitmap *sb, *db;
+Rectangle r;
+Point p;
+Code f;
+{
+	unsigned long begin;
+
+	begin = realtime ();
+	bitblt (sb, r, db, p, f);
+	return (realtime () - begin);
+}
+\fR
+.fi
+.RE
+.ft R

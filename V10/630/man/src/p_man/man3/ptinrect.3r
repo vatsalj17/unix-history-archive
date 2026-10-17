@@ -1,0 +1,57 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH PTINRECT 3R "630 MTG"
+.SH NAME
+ptinrect \- check for Point inclusion in a Rectangle
+.SH SYNOPSIS
+.ft B
+# include <dmd.h>
+.sp
+int ptinrect (p, r)
+.br
+Point p;
+.br
+Rectangle r;
+.SH DESCRIPTION
+The
+.I ptinrect 
+function
+returns 1 if
+.I p
+is a Point within Rectangle
+.I r ;
+and 0, otherwise.
+.SH EXAMPLE
+The following routine will draw a box in the middle of a window.
+Then when button 1 is depressed within the box,
+the bell will ring.
+The routine returns when a key is typed.
+.PP
+.RS 3
+.nf
+.ft CM
+#include <dmd.h>
+Point add();
+Point sub();
+Point div();
+
+ringbox()
+{
+   Point center, offset;
+   Rectangle midbox;
+
+   offset = div (sub (Drect.corner,
+                Drect.origin), 2);
+   center = add (Drect.origin, offset);
+   midbox.origin = sub (center, Pt (16, 16));
+   midbox.corner = add (center, Pt (16, 16));
+   box (&display, midbox, F_XOR);
+   request (MOUSE|KBD);
+   while (kbdchar () == -1){
+   	wait (MOUSE);
+   	if (ptinrect (mouse.xy, midbox) &&
+             button1()) ringbell();
+   }
+}
+\fR
+.fi
+.RE

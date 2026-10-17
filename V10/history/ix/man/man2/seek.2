@@ -1,0 +1,83 @@
+.TH SEEK 2
+.CT 2 file_io
+.SH NAME
+seek, tell, lseek, llseek \(mi manipulate read/write pointer
+.SH SYNOPSIS
+.B int seek(fildes, offset, whence)
+.br
+.B long offset
+.PP
+.B long tell(fildes)
+.PP
+.B long lseek(fildes, offset, whence)
+.B long offset;
+.PP
+.B Long llseek(fildes, offset, whence)
+.br
+.B Long offset;
+.SH DESCRIPTION
+.I Seek
+sets the file pointer for the file
+associated with
+.I fildes
+as follows:
+.IP
+If
+.I whence
+is 0, the pointer is set to
+.I offset
+bytes.
+.IP
+If
+.I whence
+is 1, the pointer is set to its current location plus
+.IR offset .
+.IP
+If
+.I whence
+is 2, the pointer is set to the size of the
+file plus
+.IR offset .
+.PP
+.I Tell
+returns the value of the file pointer associated with
+.I fildes.
+.PP
+.I Lseek
+is equivalent to
+.I seek
+followed by
+.I tell.
+.PP
+.I Llseek
+is like
+.I lseek,
+but handles
+.CW Long ,
+i.e. 64-bit, file pointers.
+.PP
+Seeking far beyond the end of a file, then writing,
+creates a gap or `hole,' which occupies no
+physical space and reads as zeros.
+.PP
+File pointers have security labels separate from files.
+For security-label calculations,
+.I seek
+is understood to `write' the pointer,
+.I tell
+to `read' it.
+If
+.I whence
+is 0 on
+.I seek,
+the new value of the file pointer does not depend on
+the old value.
+.SH "SEE ALSO"
+.IR open (2),
+.IR fseek (3)
+.SH DIAGNOSTICS
+.BR EBADF ,
+.BR ESPIPE
+.SH BUGS
+.I Lseek
+doesn't affect some special files.

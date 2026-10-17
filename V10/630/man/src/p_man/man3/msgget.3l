@@ -1,0 +1,120 @@
+.ds ZZ DEVELOPMENT PACKAGE
+.TH MSGGET 3L "630 MTG"
+.XE "msgget()"
+.SH NAME
+msgget \- get message queue
+.SH SYNOPSIS
+.B #include <message.h>
+.sp
+.B long msgget (key, msgflg)
+.br
+.B long key;
+.br
+.B int msgflg;
+.SH DESCRIPTION
+.I Msgget
+returns the message queue identifier associated with
+.IR key .
+.PP
+A message queue identifier and associated message queue and
+data structure are created for
+.I key
+if one of the following is true:
+.PP
+.RS 6
+.I Key
+is equal to \fBIPC_PRIVATE\fR.
+.PP
+.I Key
+does not already have a message queue identifier
+associated with it, and
+.RI ( msgflg
+& 
+.BR IPC_CREAT )
+is ``true''.
+.PP
+.RE
+Upon creation, the data structure associated with the new
+message queue identifier is initialized as follows:
+.PP
+.RS 6
+.BR Msg_qnum ,
+.BR msg_curbytes ,
+.BR msg_list ,
+.BR msg_lspid ,
+.BR msg_lrpid ,
+.BR msg_stime ,
+and
+.B msg_rtime
+are set equal to 0.
+.sp
+.B Msg_ctime
+is set equal to the current time
+.RI ( realtime ).
+.sp
+.B Msg_qbytes
+is set equal to
+.BR MAX_QBYTES .
+.sp
+.B State
+is set to
+.RB ( msgflg
+&
+.BR NO_SAVE ).
+.sp
+.B Cid
+is set to the calling process's id
+.RI ( P ).
+.sp
+.B Name
+is set to
+.IR key .
+.RE
+.PP
+If
+.I state
+is ``true'', the message queue will be deleted when the process
+.I cid
+is deleted.
+.PP
+.I Msgget
+will fail if one or more of the following are true:
+.sp
+.RS 6
+A message queue identifier does not exist for
+.I key
+and
+.RI ( msgflg
+&
+.BR IPC_CREAT )
+is ``false''.
+.sp
+A message queue identifier is to be created
+but there isn't enough memory.
+.sp
+A message queue identifier exists for
+.I key
+but (
+.RI [ msgflg
+&
+.BR IPC_CREAT ]
+&& 
+.RI [ msgflg
+&
+.BR IPC_EXCL ]
+) is ``true''.
+.PP
+.RE
+.PP
+Each message queue identifier that \fImsgget\fR returns is added to 
+a list maintained for the application.
+This list defines which message queues constitute the MSG resource when
+using the \fIwait\fR(MSG) and \fIown\fR(MSG) functions.
+.PP
+.SS Return Value
+Upon successful completion, a non-negative long, namely a
+message queue identifier (pointer to msqid_ds structure), is returned.
+Otherwise, a value of -1 is returned.
+.PP
+.SH SEE ALSO
+msgctl(3L), msgop(3L), realtime(3R), resources(3R), structures(3R).

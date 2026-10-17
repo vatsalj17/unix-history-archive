@@ -1,0 +1,469 @@
+.de H
+.LP
+.in 1n
+.ti 0
+.HI \\$1 \\$2 \\$3 \\$4 \\$5 \\$6
+..
+.de HI
+.B
+\\$1 \\$2 \\$3 \\$4 \\$5 \\$6
+.R
+..
+.de C
+.I
+.if \\n(.$=1 \\$1
+.if \\n(.$=2 \\$1 \\$2
+.if \\n(.$=3 \\$1 \\$2 \\$3
+.if \\n(.$=4 \\$1 \\$2 \\$3 \\$4
+.if \\n(.$=5 \\$1 \\$2 \\$3 \\$4 \\$5
+.if \\n(.$=6 \\$1 \\$2 \\$3 \\$4 \\$5 \\$6
+.R
+..
+.rs
+.SP .5i
+.TL
+GLOSSARY
+.SP 2
+.LP
+This glossary defines terms peculiar to IX.
+The glossary for
+the Unix Research System, 10th Edition, which is incorporated by
+reference, defines certain terms used here:
+.I
+argument,
+executable file,
+file,
+groupid,
+inode,
+kernel,
+permission,
+process,
+stream,
+superuser,
+system call,
+terminal,
+u-area,
+umask,
+userid,
+utility.
+.R
+.SP 1.3v
+.nr PS 9
+.nr VS 10
+.2C
+.H accept pex indicator\ 
+a control, set with
+.C privilege
+[1], on a stream to permit or deny
+.C pexing
+according as the stream is or is not 
+.C trusted
+[3].
+.H assured path\ 
+a channel comprising 
+.C trusted
+streams and processes that is understood to pass 
+information faithfully without tampering or
+eavesdropping.
+.H audit\ 
+to record security-related events, such as file accesses, process
+creation, and exercise of
+.C privilege
+[1].
+.H audit mask\ 
+a bit vector associate with each process to specify
+the intensity of
+.C auditing.
+.H bottom\ 
+see
+.C lattice label.
+.H capability\ 
+1.
+actual right of a process to exercise a
+.C privilege
+[2]; cf.\&
+.C license.
+Process capabilities, which can be relinquished
+at any time, are determined at
+.I exec (2),
+either by intersecting its licenses and the
+.C capabilities
+[2] of the file it is executing or by
+.C self-licensing.
+2.
+potential right of an executable file to exercise privilege.
+.H ceiling\ 
+a
+.C label
+[1], which must dominate the label of any file involved in
+a system call.
+Every process and every file system has a ceiling.
+.H constant\ 
+see
+.C fixity.
+.H covert channel\ 
+an information path between untrusted processes
+that does not obey the
+.C mandatory security policy.
+Always of low
+bandwidth, covert channels usually involve inferences from
+error returns rather than
+.C data flows.
+.H data flow\ 
+explicit transfer of bits from place to place by system calls.
+Pertinent places are processes, files, directories,
+inodes, seek pointers,
+and u-area data, such as process
+.C ceiling,
+exit status,
+umask,
+userid,
+and groupid;
+cf.\&
+.C covert channel.
+.H domination\ 
+a relationship among
+.C labels
+[1].
+A
+.C lattice label
+is said to
+.HI dominate
+another if and only if the former has one bits in all
+positions that the latter does.
+A label with label flag value
+.C yes
+dominates and is dominated by any label.
+A label with 
+.C label flag
+value
+.C no
+does not dominate and is not dominated by 
+.B no
+or by any lattice label.
+.H downgrade\ 
+to change, by use of 
+.C privilege,
+the lattice label of a file to a lattice label
+that does not 
+.C dominate
+the previous value.
+.H drop\ 
+1.
+to change the value of a process
+.C label
+so that the new value does not
+.C dominate
+the old value.
+A process label can drop only at
+.I exec (2)
+with no arguments.
+2.
+to decrease the
+.C ceiling
+of a process, as by
+.I drop (1).
+.H extern\ 
+a
+.C privilege 
+[2] that allows the
+.C label 
+[1] of an open
+.C external medium
+to be set away from its quiescent value of
+.B no .
+.H external medium\ 
+a file, such as a terminal or
+magnetic tape, that communicates with the outside world.
+Because the
+.C mandatory security policy
+cannnot automatically be assured on external media,
+.C privilege
+[2] is required to initiate input/output thereon.
+.H fixity\ 
+the degree to which a
+.C label
+[1] on a file or process may be changed.
+The values of fixity are:
+.HI loose,
+freely changeable to a dominating value;
+.HI frozen,
+changeable only explicitly by the owner;
+.HI rigid,
+changeable only with privilege; and
+.HI constant,
+not changeable.
+.H floor\ 
+a conventional
+.C lattice label
+[1] assigned to a user's shell process at login.
+The floor is the label of the file
+.CW /etc/floor .
+.H frozen\ 
+see
+.C fixity.
+.H label\ 
+1.
+a designation of the
+.C mandatory security 
+status of a file or process.
+2.
+the representation of a label [1], comprising:
+.C label flag,
+.C fixity,
+.C lattice label,
+.C capabilities
+[2], and
+.C licenses
+[2].
+.H label flag\ 
+part of a
+.C label
+[2] that tells whether the label's value is a
+.C lattice label,
+or one of two special values,
+.C yes
+for generally readable and writable data, such as
+.CW /dev/null ,
+or
+.C no
+for generally unreadable and unwritable data, such as
+.C external media.
+.H lattice label\ 
+a designation of security level, the lattice label comprises
+480 bits.  Data flow is permitted only if the lattice label
+of the destination
+.C dominates
+the lattice label of the source.
+Lattice labels of all zeros and all ones are called
+.HI bottom
+and
+.HI top
+respectively.
+.H license\ 
+1.
+potential right of a process to exercise a
+.C privilege
+[2].
+A license can be relinquished at any time and is inherited across
+.I exec (2).
+2.
+an indicator of
+.C self-licensing
+of a file.
+.H log\ 
+a
+.C privilege
+[2] that allows querying and changing the intensity of
+.C auditing.
+.H log file\ 
+a special file for 
+.C audit
+information.
+A log file can be written regardless of
+labels and can be read by no process.
+Audit files are associated with
+ordinary files by
+.I setlog (2).
+.H loose\ 
+see
+.C fixity.
+.H mandatory security policy\ 
+rules to govern
+.C data flow
+regardless of
+`discretionary' user decisions about file permissions.
+Except on certain actions of
+.C trusted 
+processes, a security
+.C label
+of the destination of any data flow must
+.C dominate
+the label of the source.
+Labels are calculated at every system call
+and are adjusted as necessary to preserve dominance.
+cf.\& 
+.C covert channel
+and
+.C TCB.
+.H no\ 
+a non-\c
+.C lattice label
+that neither dominates nor is dominated by any
+.C label
+[1] other
+than
+.C yes .
+Because a file labeled
+.C no
+cannot be read or written by any un\c
+.C trusted
+[2] process, it is safe to set a file label to
+.B no ;
+cf.\&
+.C extern.
+.H nochk\ 
+a
+.C privilege
+[2] that allows a process to access a file regardless of
+.C domination.
+.H pex\ 
+to assert process-exclusive access to a file.
+A pipe pexed at one end can be used only if it is also pexed
+at the other; see
+.I pex (4).
+.H poison class\ 
+a file attribute, visible and settable only with
+.C privilege
+[1], that forces auditing to at least a specified
+.C "poison mask
+level when a process mentions the file.
+.H poison mask\ 
+one of several auxiliary bit vectors that can augemnt the
+.C "audit mask.
+.H privilege\ 
+1.
+mechanism of
+.C capabilities
+and
+.C licenses
+for controlling deviation from the basic
+.C mandatory security policy
+and for administering privilege.
+2.
+one of six distinct classes of privilege:
+.C extern,
+.C log,
+.C nochk,
+.C setlic,
+.C setpriv,
+and
+.C uarea;
+cf.\&
+.C trusted.
+.H privilege server\ 
+the utility
+.I priv (1),
+which, following rules in the file
+.I privs (5),
+grants
+.C licenses
+[1] needed to exercise
+.C privilege.
+.H rigid\ 
+see
+.C fixity.
+.H self-license\ 
+possession by a file of a
+.C capability
+[2] and a corresponding
+.C license
+[2].  Self-licensing gives the corresponding
+.C capability
+[1] to a process at
+.I exec (2).
+.H session\ 
+an interval of running with special rights,
+usually evidenced by a distinct terminal
+.C label
+[1], 
+.C ceiling,
+or
+.C stream identifier;
+see
+.I session (1).
+.H setlic\ 
+a
+.C privilege
+[2] that allows the
+.C licenses
+[1] or
+.C ceiling
+of a process to be set arbitrarily.
+.H setpriv\ 
+a 
+.C privilege
+[2] that allows changing the 
+.C capabilities
+[2] and
+.C licenses
+[2] of files.
+.H stream identifier\ 
+a string that is by exercise of
+.C privilege
+[1] attached to a stream to describe properties of the
+stream and its destination; see
+.B FIOGSRC
+and
+.B FIOSSRC
+in
+.I stream (4).
+.H tar-baby\ 
+a file, and especially a directory, with an unintended
+.C label
+[1], so called because the label sticks to
+every process that looks at it.
+.H TCB, trusted computing base\ 
+the kernel,
+.C trusted 
+[1] utilities,
+critical data for these
+utilities, and utilities that may be used
+to process files in the TCB.
+Faithfulness to the
+.C mandatory security policy
+depends on the correctness of the TCB.
+.H top\ 
+see
+.C lattice label.
+.H trusted\ 
+1.
+having some
+.C capability
+or
+.C license;
+said of a file, especially an executable file.
+The only way a trusted file can be modified is to
+change its privileges with capability
+.C setpriv.
+2.
+having some capability; said of a process.
+Superuser processes are not necessarily trusted.
+3.
+understood to be immune to tampering or eavesdropping,
+said of a stream associated with an
+.C external medium;
+cf\.
+.C assured path.
+.H trusted computing base\ 
+Same as
+.C TCB.
+.H uarea\ 
+a
+.C privilege
+[2] that allows changing userid, groupid, and logname in the per-process
+u-area.
+The privilege is required lest these items, being
+both readable and writable by untrusted
+processes, provide a means
+to violate the
+.C mandatory security policy.
+The permission mask
+(umask),
+and the process
+.C ceiling
+are protected by other means; see
+.I exec (2)
+and
+.I setplab (2).
+.H yes\ 
+a non-\c
+.C lattice label
+that dominates and is dominated by any
+.C label
+[1].
+A file labeled
+.B yes
+can be read or written by any un\c
+.C trusted
+[2] process.
