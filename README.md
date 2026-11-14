@@ -139,3 +139,19 @@ Production open-source descendants that rewrote or replaced all proprietary code
 - **CSRG (UC Berkeley)**, the Minix developers, the Mark Williams Company estate, the Free Software Foundation, the Linux kernel contributors, the FreeBSD, NetBSD, OpenBSD projects, and the OpenSolaris community.
 
 The file [`unixtree.md`](unixtree.md) in this root directory is the original upstream catalog and index written by Warren Toomey for the Unix Tree project (~2010). It is preserved untouched for historical provenance and cross-referencing with the TUHS online archives.
+
+---
+
+## License
+
+**Original documentation and tooling** in this repository - `README.md`, `LANDMARK_TOOLS.md`, the per-OS architecture guides (`*/<NAME>.md`), and `scripts/` - are original work by [Vatsal](https://github.com/vatsalj17) and are licensed under the **[Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)** license. You are free to share and adapt them with attribution.
+
+**The historical operating system source code** in each subdirectory is **not** covered by the CC BY 4.0 license. Every distribution retains its original upstream copyright, license, or proprietary status. See **[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)** for the complete, legally precise breakdown.
+
+Key boundaries and legal distinctions to note:
+- **`V1/` through `V7/`, `32V/`**: Permissive open-source BSD-style grant from Caldera International (2002); covers AT&T/Bell Labs PDP-11 and 32V code only.
+- **`V8/`, `V9/`, `V10/`**: Governed by the 2017 Alcatel-Lucent / Nokia Bell Laboratories **Covenant Not to Assert Copyright** for **non-commercial research and educational use only**. Commercial use is strictly excluded.
+- **`Linux-0.01/`**: Governed by Linus Torvalds's original September 1991 non-commercial notice forbidding fee-based or commercial distribution (was never retroactively relicensed; GPL adopted starting with 0.12).
+- **`SunOS-4.1.4/` & `Ultrix-3.1/`**: Proprietary commercial systems owned respectively by Oracle (Sun Microsystems) and HPE (DEC); neither vendor has granted an open-source redistribution license.
+- **`NFSv2/`**: Composite developer release from Sun Microsystems (Dec 1985) requiring an original Sun license, combining proprietary Sun NFS code, permissive Sun RPC, and modified 4.2BSD.
+- **`Minix1.1/` through `2.0/` & `Coherent4.2.10/`**: Both officially relicensed under the **3-clause BSD license** (Minix by Prentice-Hall in April 2000; Coherent by Bob Swartz in January 2015).
