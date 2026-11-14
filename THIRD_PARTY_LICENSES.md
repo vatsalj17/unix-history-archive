@@ -2,7 +2,7 @@
 
 This document summarizes the copyright and licensing status of each historical operating system and subsystem preserved in this archive, as best the maintainer can determine it.
 
-**Scope.** The original documentation in this repository (`README.md`, `LANDMARK_TOOLS.md`, the per-OS guides `*/<NAME>.md`) is © Vatsal and licensed under **CC BY 4.0** (see [LICENSE](LICENSE)). Original scripts in `scripts/` are licensed under the **MIT License**. **None of the third-party historical source code is relicensed by this repository.** Each directory keeps its own upstream copyright, license, or proprietary status.
+**Scope.** The original documentation in this repository (`README.md`, `LANDMARK_TOOLS.md`, the per-OS guides `*/<NAME>.md`) is (c) Vatsal and licensed under **CC BY 4.0** (see [LICENSE](LICENSE)). Original scripts in `scripts/` are licensed under the [**MIT License**](LICENSE-MIT). **None of the third-party historical source code is relicensed by this repository.** Each directory keeps its own upstream copyright, license, or proprietary status.
 
 **Important limits of this document.**
 
@@ -16,7 +16,7 @@ This document summarizes the copyright and licensing status of each historical o
 | Label | Meaning |
 | :---: | :--- |
 | Yes | A public grant permits redistribution (usually with attribution/notice conditions) |
-| Mixed | Conditional, mixed, contested, or not confirmed |
+| Mixed | Different parts have different terms, or the status is contested or unconfirmed |
 | No | No public grant permits redistribution, or only non-commercial / restricted use |
 
 The status labels describe permission to **redistribute**, not whether a license is OSI- or FSF-approved.
@@ -100,7 +100,8 @@ The kernel is **GPLv2 only** (see `Linux-2.6.33.2/COPYING`, which also contains 
 In March 2017, Alcatel-Lucent USA Inc., on behalf of itself and Nokia Bell Laboratories, issued a statement to TUHS. It is **not a license grant**. It is a covenant not to assert copyright. In summary:
 
 - ALU-USA agrees, "to the extent of its ability to do so," not to assert its copyright against **non-commercial** copying, distribution, performance, display, or creation of derivative works of Research Unix Editions 8, 9 and 10.
-- The statement is kept in this repository at `LICENSES/Bell_Laboratories_license.txt`.
+- The statement also says it does not transfer ownership of, or relinquish, any intellectual property rights (including patent rights), and that neither ALU-USA nor Nokia Bell Laboratories provides support or warranties, including any warranty that the editions do not infringe third-party rights.
+- A copy of the statement is kept in this repository at `LICENSES/Nokia-Research-Unix-8-9-10-statement.pdf`. The original is on the TUHS archive under `Distributions/Research/Dan_Cross_v8/` (`statement_regarding_Unix_3-7-17.pdf`).
 
 ### Practical consequences
 
@@ -158,7 +159,7 @@ These trees are included for historical scholarship and emulator testing. **This
 
 ### `Minix1.1/`, `Minix1.5/`, `Minix2.0/`: BSD-licensed
 
-Minix was originally published with Prentice-Hall textbooks under restrictive educational terms. In April 2000, Andrew Tanenbaum and Prentice-Hall relicensed it under a **BSD-style license**, generally understood to cover earlier releases. See `Minix2.0/src/LICENSE`.
+Minix was originally published with Prentice-Hall textbooks under restrictive educational terms (see `Minix2.0/src/LICENSE` for the historical 1996 Prentice-Hall educational license agreement). In April 2000, Andrew Tanenbaum and Prentice-Hall relicensed Minix under a **BSD-style license**, which was applied to Minix 2 and retroactively to earlier releases.
 
 Individual components contributed by others keep their own notices, e.g. Kenneth Almquist's `ash`. `Minix1.5/` also bundles third-party programs under their own terms, including `commands/elvis`, `commands/kermit`, `commands/zmodem`, `elle/` and the `amoeba/` directory.
 
@@ -194,7 +195,7 @@ Copyright Douglas E. Comer / Prentice-Hall. Distributed with the 1987 textbook f
 
 **Applies to:** `1BSD/`, `2BSD/`, `2.9BSD/`, `2.11BSD/`, `3BSD/`, `4BSD/`, `4.1cBSD/`, `4.2BSD/`, `4.3BSD/`, `4.3BSD-UWisc/`
 
-- Berkeley's own code is © the Regents of the University of California, under UCB terms that vary by release and file.
+- Berkeley's own code is copyright the Regents of the University of California, under UCB terms that vary by release and file.
 - Portions substantially derived from Bell Labs/AT&T UNIX remain Novell/AT&T copyright, per TUHS. Where that code derives from V7 or 32V, the Caldera grant applies. Code derived from System III/V is not covered.
 - Third-party contributions carry their own copyrights. 4.3BSD, for example, added files copyrighted by DEC, Tektronix and others.
 - `4.3BSD-UWisc/` appears to include Sun NFS/RPC/YP-derived components (`nfs`, `rpc`, `etc/yp`). Treat those as Sun copyright with Sun's notices.
@@ -256,12 +257,12 @@ CDDL v1.0 (`OPENSOLARIS.LICENSE`) is a file-level copyleft license. The tree als
 | **`FreeBSD-5.3/`** | BSD-style (mixed) | Yes | The FreeBSD Project / others | Third-party components |
 | **`NetBSD-5.0.2/`** | BSD-style (mixed) | Mixed | The NetBSD Foundation / others | Contains an Intel firmware EULA and GPL code |
 | **`OpenBSD-4.6/`** | BSD / ISC (mixed) | Yes | The OpenBSD Project / others | Contains GPL and OpenSSL-licensed code |
-| **`Linux-0.01/`** | Torvalds custom (1991) | Mixed | Linus Torvalds | **No fee, non-commercial**; never relicensed |
-| **`Linux0.96c/`** | GPL | Yes | Linus Torvalds & contributors | No `COPYING` in tree; see `LICENSES/` |
+| **`Linux-0.01/`** | Torvalds custom (1991) | No | Linus Torvalds | **No fee, non-commercial**; never relicensed |
+| **`Linux0.96c/`** | GPL | Yes | Linus Torvalds & contributors | No `COPYING` in tree; see `LICENSES/GPL-2.0.txt` |
 | **`Linux-2.6.33.2/`** | GPLv2 only (predominantly) | Yes | Linus Torvalds & contributors | Firmware per `WHENCE` |
-| **`Minix1.1/`, `1.5/`, `2.0/`** | BSD-style (April 2000) | Yes | Prentice Hall / Andrew Tanenbaum | `Minix1.5/` bundles third-party programs |
+| **`Minix1.1/`, `Minix1.5/`, `Minix2.0/`** | BSD-style (April 2000) | Yes | Prentice Hall / Andrew Tanenbaum | `Minix1.5/` bundles third-party programs |
 | **`Coherent4.2.10/`** | 3-clause BSD (January 2015) | Yes | Robert Swartz / Mark Williams Co. | Released by the copyright holder |
-| **`Xinu7/`** | Educational (Prentice-Hall) | Mixed | Douglas Comer / Prentice-Hall | Not OSI-approved |
+| **`Xinu7/`** | Educational (Prentice-Hall) | No | Douglas Comer / Prentice-Hall | Not OSI-approved |
 | **`NFSv2/`** | Composite (Sun proprietary + BSD + Sun RPC) | No | Sun Microsystems / UC Berkeley | "Must be licensed from Sun" |
 | **`SunOS-4.1.4/`** | Proprietary | No | Sun / Oracle | No public license known |
 | **`Ultrix-3.1/`** | Proprietary | No | DEC / Compaq / HP / HPE | No public license known |

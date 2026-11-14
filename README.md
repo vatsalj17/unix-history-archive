@@ -144,14 +144,17 @@ The file [`unixtree.md`](unixtree.md) in this root directory is the original ups
 
 ## License
 
-**Original documentation and tooling** in this repository - `README.md`, `LANDMARK_TOOLS.md`, the per-OS architecture guides (`*/<NAME>.md`), and `scripts/` - are original work by [Vatsal](https://github.com/vatsalj17) and are licensed under the **[Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)** license. You are free to share and adapt them with attribution.
+**Original documentation** in this repository - `README.md`, `LANDMARK_TOOLS.md`, and the per-OS guides (`*/<NAME>.md`) - is original work by [Vatsal](https://github.com/vatsalj17) and is licensed under the **[Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)** license (see [LICENSE](LICENSE)). Original tooling and scripts in `scripts/` are licensed under the **[MIT License](LICENSE-MIT)** (see [LICENSE-MIT](LICENSE-MIT)). You are free to share and adapt them with attribution.
 
-**The historical operating system source code** in each subdirectory is **not** covered by the CC BY 4.0 license. Every distribution retains its original upstream copyright, license, or proprietary status. See **[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)** for the complete, legally precise breakdown.
+**The historical operating system source code** in each subdirectory is **not** covered by those licenses. Each distribution keeps its own upstream copyright, license, or proprietary status, and many trees mix several licenses. See **[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)** for a best-effort breakdown. It is not legal advice, and the notices inside each directory take precedence.
 
-Key boundaries and legal distinctions to note:
-- **`V1/` through `V7/`, `32V/`**: Permissive open-source BSD-style grant from Caldera International (2002); covers AT&T/Bell Labs PDP-11 and 32V code only.
-- **`V8/`, `V9/`, `V10/`**: Governed by the 2017 Alcatel-Lucent / Nokia Bell Laboratories **Covenant Not to Assert Copyright** for **non-commercial research and educational use only**. Commercial use is strictly excluded.
-- **`Linux-0.01/`**: Governed by Linus Torvalds's original September 1991 non-commercial notice forbidding fee-based or commercial distribution (was never retroactively relicensed; GPL adopted starting with 0.12).
-- **`SunOS-4.1.4/` & `Ultrix-3.1/`**: Proprietary commercial systems owned respectively by Oracle (Sun Microsystems) and HPE (DEC); neither vendor has granted an open-source redistribution license.
-- **`NFSv2/`**: Composite developer release from Sun Microsystems (Dec 1985) requiring an original Sun license, combining proprietary Sun NFS code, permissive Sun RPC, and modified 4.2BSD.
-- **`Minix1.1/` through `2.0/` & `Coherent4.2.10/`**: Both officially relicensed under the **3-clause BSD license** (Minix by Prentice-Hall in April 2000; Coherent by Bob Swartz in January 2015).
+Key boundaries:
+- **`V1/` - `V7/`, `32V/`**: BSD-style license from Caldera International (2002); covers AT&T/Bell Labs PDP-11 and 32V code only. Keep the Caldera notice if you redistribute.
+- **`V8/`, `V9/`, `V10/`**: A 2017 Alcatel-Lucent / Nokia Bell Laboratories **covenant not to assert copyright** for **non-commercial** use. It is not a license, and it does not cover third-party code in these trees. Commercial use is outside it.
+- **`Linux-0.01/`**: Torvalds's original 1991 terms: redistribution only free of charge, no fee or commercial distribution. Never relicensed; the GPL starts with 0.12.
+- **`SunOS-4.1.4/`, `Ultrix-3.1/`, `NFSv2/`**: Proprietary (Sun/Oracle, DEC and its successors, Sun). No public redistribution license is known. They are included for preservation and study and are **not claimed to be licensed for redistribution**.
+- **Early BSD (`1BSD` - `4.3BSD`, `4.3BSD-Tahoe/`, `4.3BSD-Reno/`), `Net2/`, `4.4BSD/`**: Berkeley code mixed with AT&T-derived and third-party code. Not uniformly 4-clause BSD. Net/2's status is contested, and `4.4BSD/` predates 4.4BSD-Lite.
+- **`Minix1.1/` - `Minix2.0/`, `Coherent4.2.10/`**: BSD-style (Minix, relicensed April 2000) and 3-clause BSD (Coherent, January 2015). Some bundled third-party programs keep their own terms.
+- **FreeBSD, NetBSD, OpenBSD, OpenSolaris, Linux 2.6.33.2**: predominantly BSD-style, CDDL, or GPLv2, but each bundles components under other licenses.
+
+If you hold rights in anything here and want it removed or relabeled, please open an issue on this repository.
