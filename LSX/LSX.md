@@ -5,16 +5,16 @@
 | Attribute | Details |
 | :--- | :--- |
 | **System Name** | LSX (LSI-11 UNIX) |
-| **Release Date** | 1976 (Developed at Bell Labs; restored in 2006 by Leonid Broukhis) |
-| **Origin / Creators** | Bell Laboratories (Murray Hill, NJ) — Heinz Lycklama |
-| **Source Donation** | Recovered and donated to TUHS by Leonid Broukhis via the LSX Restoration Project |
-| **Target Architecture** | DEC LSI-11 (PDP-11/03) microprocessor (no MMU, 20K–28K words / 40KB–56KB total RAM) |
+| **Release Date** | 1976 (Developed at Bell Labs) |
+| **Origin / Creators** | Bell Laboratories (Murray Hill, NJ) - Heinz Lycklama |
+| **Source Donation** | Preserved in the TUHS archive |
+| **Target Architecture** | DEC LSI-11 (PDP-11/03) microprocessor (no MMU, 20K-28K words / 40KB-56KB total RAM) |
 | **Key Historical Milestones** | First true microcomputer UNIX; ran in ~12K words with no hardware memory management unit; single-process swapping model; software emulation of missing CPU math instructions |
 
 ### Significance & Historical Context
 In the mid-1970s, Digital Equipment Corporation introduced the LSI-11 (PDP-11/03), bringing PDP-11 CPU architecture to a low-cost, single-board microprocessor. However, unlike full minicomputers (PDP-11/40, 11/45, 11/70), the LSI-11 was severely crippled:
-1. It possessed **no Memory Management Unit (MMU)**—meaning physical memory was directly addressed with zero hardware protection between kernel and userland.
-2. It lacked the **Extended Instruction Set (EIS)**—hardware multiply (`mul`), divide (`div`), and multi-bit arithmetic shifts (`ash`) were missing.
+1. It possessed **no Memory Management Unit (MMU)** - meaning physical memory was directly addressed with zero hardware protection between kernel and userland.
+2. It lacked the **Extended Instruction Set (EIS)** - hardware multiply (`mul`), divide (`div`), and multi-bit arithmetic shifts (`ash`) were missing.
 3. System RAM was often limited to a meager 20K to 28K words (40KB to 56KB total address space).
 
 Heinz Lycklama at Bell Labs set out to adapt Sixth Edition UNIX (V6) to run on this tiny microcomputer, producing **LSX** (alongside Mini-Unix). Because memory was so scarce, Lycklama made drastic architectural trade-offs:
@@ -22,7 +22,7 @@ Heinz Lycklama at Bell Labs set out to adapt Sixth Edition UNIX (V6) to run on t
 - **File-Backed Interprocess Communication**: UNIX pipes, which normally occupied precious kernel memory buffers, were redirected to write to temporary hidden disk files.
 - **Instruction Emulation (`emul.s`)**: Whenever compiled C code executed a `mul` or `div` instruction, the CPU triggered an illegal instruction trap. LSX intercepted the trap and emulated the arithmetic instruction in software before resuming user execution.
 
-For decades, LSX was feared permanently lost because it was treated as internal Bell Labs experimental firmware. In 2006, Leonid Broukhis recovered raw floppy disk images and reconstructed the complete source tree.
+For decades, LSX was feared permanently lost because it was treated as internal Bell Labs experimental firmware before surviving floppy disk images were preserved.
 
 ---
 

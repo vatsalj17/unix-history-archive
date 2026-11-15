@@ -6,6 +6,8 @@ The files originate from Warren Toomey's **Unix Tree** and **The Unix Heritage S
 
 Each operating system directory includes its own dedicated markdown guide detailing its kernel architecture, userland structure, and key source files to read first.
 
+*Dates in the tables follow the TUHS Unix Tree snapshot dates. The individual guides give historical release dates, which can differ slightly (for example 1BSD shipped on 9 March 1978, 2BSD in May 1979, 3BSD in December 1979).*
+
 > **Don't want to dig through 51 OS directories to find where pipes, `vi`, or TCP congestion control were born?**  
 > Jump straight to **[`LANDMARK_TOOLS.md`](LANDMARK_TOOLS.md)** - a subsystem-by-subsystem field guide linking directly to the exact `.c` and `.s` files where computing's greatest inventions first hit disk.
 
@@ -16,7 +18,7 @@ Each operating system directory includes its own dedicated markdown guide detail
 ### 1. Bell Labs Research Unix
 The foundational releases written by Ken Thompson, Dennis Ritchie, Doug McIlroy, and their colleagues at Bell Telephone Laboratories.
 
-| Version | Release Date | Architecture | Guide & Notes |
+| Version | Date (TUHS snapshot) | Architecture | Guide & Notes |
 | :--- | :--- | :--- | :--- |
 | **PDP-7 Unix** | Jan 1970 | 18-bit DEC PDP-7 | [PDP7-Unix.md](PDP7-Unix/PDP7-Unix.md) |
 | **First Edition (V1)** | Nov 1971 | DEC PDP-11/20 | [V1.md](V1/V1.md) |
@@ -28,7 +30,7 @@ The foundational releases written by Ken Thompson, Dennis Ritchie, Doug McIlroy,
 | **Seventh Edition (V7)** | Jan 1979 | DEC PDP-11/45, 11/70 | [V7.md](V7/V7.md) |
 | **Addenda to 7th Edition** | Dec 1980 | DEC PDP-11 | [V7addenda.md](V7addenda/V7addenda.md) |
 | **Eighth Edition (V8)** | Feb 1985 | DEC VAX-11/750, 11/780 | [V8.md](V8/V8.md) |
-| **Ninth Edition (V9)** | Sep 1986 | DEC VAX, Sun-2/3 (68020) | [V9.md](V9/V9.md) |
+| **Ninth Edition (V9)** | Sep 1986 | DEC VAX, Sun-3 (68020) | [V9.md](V9/V9.md) |
 | **Tenth Edition (V10)** | Oct 1989 | DEC VAX-11/750, VAX 8550 | [V10.md](V10/V10.md) |
 
 ---
@@ -36,14 +38,14 @@ The foundational releases written by Ken Thompson, Dennis Ritchie, Doug McIlroy,
 ### 2. Early Ports & USG Variants
 The first ports to non-DEC architectures, internal AT&T production systems, and academic distributions.
 
-| Version | Release Date | Architecture | Guide & Notes |
+| Version | Date (TUHS snapshot) | Architecture | Guide & Notes |
 | :--- | :--- | :--- | :--- |
 | **LSX** | 1976 | DEC LSI-11 (Tiny memory, no MMU) | [LSX.md](LSX/LSX.md) |
 | **Mini-Unix** | Dec 1976 | DEC PDP-11/05, 11/10, 11/20 | [Mini-Unix.md](Mini-Unix/Mini-Unix.md) |
 | **PWB/UNIX 1.0** | Jul 1977 | DEC PDP-11/45, 11/70 | [PWB1.md](PWB1/PWB1.md) |
-| **Interdata 7/32 Port** | Jun 1977 | Interdata 7/32 (First non-DEC port) | [Interdata732.md](Interdata732/Interdata732.md) |
+| **Interdata 7/32 Port** | Apr 1977 (first boot 28 Apr) | Interdata 7/32 (First non-DEC port) | [Interdata732.md](Interdata732/Interdata732.md) |
 | **32V Unix** | May 1979 | DEC VAX-11/780 (32-bit V7 port) | [32V.md](32V/32V.md) |
-| **AUSAM** | Oct 1979 | DEC PDP-11 (Fair-share scheduling) | [AUSAM.md](AUSAM/AUSAM.md) |
+| **AUSAM** | Oct 1979 | DEC PDP-11 (Share accounting; precursor of fair-share scheduling) | [AUSAM.md](AUSAM/AUSAM.md) |
 | **V7M 2.1** | Oct 1981 | DEC PDP-11 (DEC-supported Unix) | [V7M.md](V7M/V7M.md) |
 
 ---
@@ -51,7 +53,7 @@ The first ports to non-DEC architectures, internal AT&T production systems, and 
 ### 3. Early Networking
 Pioneering implementations of network protocols on Unix before BSD sockets became ubiquitous.
 
-| Version | Release Date | Architecture | Guide & Notes |
+| Version | Date (TUHS snapshot) | Architecture | Guide & Notes |
 | :--- | :--- | :--- | :--- |
 | **SRI-NOSC Unix** | May 1979 | DEC PDP-11 + ARPANET IMP | [SRI-NOSC.md](SRI-NOSC/SRI-NOSC.md) |
 | **BBN V6 with TCP/IP** | Jun 1979 | DEC PDP-11 + ARPANET IMP | [BBN-V6.md](BBN-V6/BBN-V6.md) |
@@ -63,7 +65,7 @@ Pioneering implementations of network protocols on Unix before BSD sockets becam
 ### 4. Berkeley Software Distribution (BSD)
 Developed by the Computer Systems Research Group (CSRG) at UC Berkeley. Introduced virtual memory, the fast file system (FFS), and the BSD socket networking stack.
 
-| Version | Release Date | Architecture | Guide & Notes |
+| Version | Date (TUHS snapshot) | Architecture | Guide & Notes |
 | :--- | :--- | :--- | :--- |
 | **1BSD** | Jan 1978 | DEC PDP-11 | [1BSD.md](1BSD/1BSD.md) |
 | **2BSD** | Apr 1979 | DEC PDP-11 | [2BSD.md](2BSD/2BSD.md) |
@@ -85,7 +87,7 @@ Developed by the Computer Systems Research Group (CSRG) at UC Berkeley. Introduc
 ### 5. Commercial Unix Releases
 Proprietary distributions built by computer vendors for their production hardware platforms.
 
-| Version | Release Date | Architecture | Guide & Notes |
+| Version | Date (TUHS snapshot) | Architecture | Guide & Notes |
 | :--- | :--- | :--- | :--- |
 | **Ultrix-11 3.1** | Jan 1988 | DEC PDP-11 family | [Ultrix-3.1.md](Ultrix-3.1/Ultrix-3.1.md) |
 | **SunOS 4.1.4** | Nov 1994 | Sun SPARC & 680x0 | [SunOS-4.1.4.md](SunOS-4.1.4/SunOS-4.1.4.md) |
@@ -95,7 +97,7 @@ Proprietary distributions built by computer vendors for their production hardwar
 ### 6. Clean-Room Unix Clones
 Independent systems implementing Unix system calls and userland without using original AT&T code.
 
-| Version | Release Date | Architecture | Guide & Notes |
+| Version | Date (TUHS snapshot) | Architecture | Guide & Notes |
 | :--- | :--- | :--- | :--- |
 | **Minix 1.1** | Jan 1987 | IBM PC/XT (Intel 8088 real-mode) | [Minix1.1.md](Minix1.1/Minix1.1.md) |
 | **Minix 1.5** | Nov 1989 | Intel 286/386, 68000, SPARC | [Minix1.5.md](Minix1.5/Minix1.5.md) |
@@ -111,7 +113,7 @@ Independent systems implementing Unix system calls and userland without using or
 ### 7. Modern BSD & OpenSolaris Derivatives
 Production open-source descendants that rewrote or replaced all proprietary code.
 
-| Version | Release Date | Architecture | Guide & Notes |
+| Version | Date (TUHS snapshot) | Architecture | Guide & Notes |
 | :--- | :--- | :--- | :--- |
 | **FreeBSD 5.3** | Nov 2004 | x86, Alpha, IA-64, SPARC64, AMD64 | [FreeBSD-5.3.md](FreeBSD-5.3/FreeBSD-5.3.md) |
 | **NetBSD 5.0.2** | Feb 2010 | 50+ architectures (RUMP anykernel) | [NetBSD-5.0.2.md](NetBSD-5.0.2/NetBSD-5.0.2.md) |

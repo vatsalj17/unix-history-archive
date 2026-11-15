@@ -4,7 +4,7 @@
 - **Release Date**: March 2010 (Build 135)
 - **Author / Organization**: Sun Microsystems, Inc. (under the CDDL - Common Development and Distribution License) in collaboration with the OpenSolaris community
 - **Target Architectures**: Multi-platform: SPARC (UltraSPARC `sun4u`, Niagara multicore `sun4v`) and x86/x64 (`i86pc`, Xen paravirtualized `i86xpv`)
-- **Historical Milestone**: Represents the apex of enterprise Unix engineering: the SunOS 5.11 / Solaris OS/Net (ON) consolidation source code. Build 135 was the final planned build for the OpenSolaris 2010.05 release prior to Oracle's acquisition of Sun Microsystems and the subsequent closure of OpenSolaris in August 2010. The source tree preserved here served as the immediate genetic ancestor and direct foundation for the open-source **illumos** project (and modern descendants like SmartOS, OmniOS, and OpenIndiana).
+- **Historical Milestone**: Represents the apex of enterprise Unix engineering: the SunOS 5.11 / Solaris OS/Net (ON) consolidation source code. Build 135 is a late snapshot of the OS/Net consolidation from the period when Oracle acquired Sun; the planned 2010.05 release was never shipped, and OpenSolaris was closed in August 2010. The source tree preserved here served as an ancestor of illumos (which forked from the later ON build 147) and modern descendants like SmartOS, OmniOS, and OpenIndiana.
 
 ### Key Architectural Revolutions
 - **ZFS (Zettabyte File System)**: Created by Jeff Bonwick and Matthew Ahrens. Completely reimagined enterprise storage by combining the volume manager and filesystem:

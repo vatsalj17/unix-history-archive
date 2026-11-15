@@ -6,7 +6,7 @@
 | :--- | :--- |
 | **System Name** | Mini-Unix (also designated MX or Mini-UNIX) |
 | **Release Date** | December 10, 1976 (Bell Labs Technical Memorandum 76-1352-7) |
-| **Origin / Creators** | Bell Laboratories (Murray Hill, NJ) — Heinz Lycklama |
+| **Origin / Creators** | Bell Laboratories (Murray Hill, NJ) - Heinz Lycklama |
 | **Source Donation** | Preserved in the TUHS archive; documented via original Bell Labs memoranda |
 | **Target Architecture** | DEC PDP-11 minicomputers lacking MMU hardware (PDP-11/05, 11/10, 11/15, 11/20, and LSI-11) with 28K words (56KB) total RAM |
 | **Key Historical Milestones** | Brought multi-user UNIX time-sharing to low-cost hardware lacking memory management; squeezed full kernel into 12K words (24KB); supported up to 4 concurrent users via swapping |

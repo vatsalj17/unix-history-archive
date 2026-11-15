@@ -1,9 +1,9 @@
 # OpenBSD-4.6 Source Code Archive
 
 ## Historical Overview
-- **Release Date**: October 19, 2009 (Release 4.6; official song/artwork: *"Planet of the Users"*)
+- **Release Date**: October 18, 2009 (Release 4.6; official song/artwork: *"Planet of the Users"*)
 - **Author / Organization**: Theo de Raadt and the OpenBSD Project (Calgary, Alberta, Canada)
-- **Target Architectures**: 13 supported architectures in `sys/arch/`: `i386`, `amd64`, `sparc`, `sparc64`, `macppc`, `arm`, `hppa`, `landisk`, `luna88k`, `sgi`, `socppc`, `vax`, and `zaurus`.
+- **Target Architectures**: The `sys/arch/` tree holds about 31 directories (CPU-family and platform directories such as alpha, amd64, armish, hp300, hppa, i386, landisk, luna88k, mac68k, macppc, mvme68k, mvme88k, sgi, socppc, sparc, sparc64, vax, zaurus).
 - **Historical Milestone**: The premier benchmark for proactive software security, extreme code auditing, and uncompromising software freedom in the Unix lineage. Branching from NetBSD in 1995 under the fierce leadership of Theo de Raadt, OpenBSD established the world-renowned track record: *"Only two remote holes in the default install, in a heck of a long time!"*
 
 ### Key Architectural & Security Revolutions
@@ -14,8 +14,8 @@
   - **Kernel Cryptographic Randomness**: Direct integration of `arc4random()` across the kernel and libc for predictable-free entropy.
 - **Privilege Separation (privsep)**: Pioneered the architecture of dividing monolithic network daemons into unprivileged worker chroots and minimal privileged master controllers.
 - **PF (Packet Filter)**: Developed by Daniel Hartmeier after IPFilter was ejected due to licensing conflicts. PF (`sys/net/pf.c`, `sbin/pfctl/`) became the gold standard for stateful firewalling, NAT, packet normalization, and traffic shaping.
-- **The Upstream Birthplace of OpenSSH (`usr.bin/ssh/`, `usr.sbin/sshd/`)**: OpenBSD developers created and maintain OpenSSH, which powers secure shell access for the entire global Internet infrastructure.
-- **Clean Networking Daemons**: Engineered clean-room, robust routing protocols: OpenBGPD (`usr.sbin/bgpd/`), OpenOSPFD, OpenNTPD, OpenIKED, relayd, and spamd.
+- **The Upstream Birthplace of OpenSSH (`usr.bin/ssh/`)**: OpenBSD developers created and maintain OpenSSH, which powers secure shell access for the entire global Internet infrastructure.
+- **Clean Networking Daemons**: Engineered clean-room, robust routing protocols: OpenBGPD (`usr.sbin/bgpd/`), OpenOSPFD, OpenNTPD, relayd, and spamd.
 - **CARP (Common Address Redundancy Protocol)**: Free, unencumbered failover clustering protocol created as an open patent-free alternative to Cisco VRRP.
 
 ---
@@ -34,12 +34,11 @@ OpenBSD-4.6/
 │   ├── mount/                   # Mount filesystem front-end
 │   └── sysctl/                  # Kernel dynamic tuning interface
 ├── usr.bin/                     # Standard userland utilities
-│   ├── ssh/                     # OpenSSH client (ssh, scp, sftp, ssh-keygen, ssh-agent)
+│   ├── ssh/                     # OpenSSH suite (ssh, sshd, scp, sftp, ssh-keygen, ssh-agent)
 │   ├── mg/                      # Lightweight Emacs-compatible editor
 │   ├── mandoc/                  # High-performance roff/man parser and formatter
 │   └── ...                      # 226 standard Unix utilities
 ├── usr.sbin/                    # Secure system daemons and servers
-│   ├── sshd/                    # OpenSSH daemon server
 │   ├── bgpd/                    # OpenBGPD Border Gateway Protocol routing daemon
 │   ├── ospfd/                   # OpenOSPFD routing daemon
 │   ├── ntpd/                    # OpenNTPD Network Time Protocol daemon
@@ -89,11 +88,11 @@ OpenBSD-4.6/
 | :--- | :--- |
 | `sys/net/pf.c` | The Packet Filter (PF) core engine. Evaluates incoming/outgoing network packets against state tables, handles NAT translations, evaluates keep-state connections, and enforces firewall policy. |
 | `sys/net/pf_norm.c` | Packet scrubber and normalizer (`pf_normalize_ip`). Reassembles IP fragments and strips illegal TCP flag combinations (SYN+FIN, illegal options) to prevent firewall evasion attacks. |
-| `usr.bin/ssh/ssh.c` & `usr.sbin/sshd/sshd.c` | OpenSSH client and server. The authoritative upstream source code for the world's most widely deployed secure remote access system, showcasing privilege separation and clean cryptography. |
+| `usr.bin/ssh/ssh.c` & `usr.bin/ssh/sshd.c` | OpenSSH client and server. The authoritative upstream source code for the world's most widely deployed secure remote access system, showcasing privilege separation and clean cryptography. |
 | `lib/libc/string/strlcpy.c` & `strlcat.c` | Todd C. Miller's famous bounded string functions. Designed to replace unsafe `strcpy()` and clumsy `strncpy()`, guaranteeing null-termination and preventing off-by-one errors. |
 | `lib/libc/stdlib/malloc.c` | OpenBSD's security-hardened userspace memory allocator. Uses randomized page mappings, guard pages (mprotecting unmapped boundary pages to catch overruns), and memory canaries. |
 | `sys/kern/init_main.c` | Kernel bootstrap `main()`. Initializes entropy pools, sets up memory pools with guard boundaries, mounts the root filesystem, and launches `/sbin/init`. |
-| `sys/uvm/uvm_fault.c` | UVM page fault resolver enforcing W^X policies. Rejects requests to grant execute permissions to memory ranges marked writable. |
+| `sys/uvm/uvm_fault.c` | part of the UVM code that participates in enforcing W^X (the policy is enforced mainly in the pmap and map-protection code). |
 | `sys/net/if_carp.c` | Common Address Redundancy Protocol (CARP). Enables multiple redundant firewalls and routers to share a virtual IP address with automated sub-second failover. |
 
 ---
@@ -107,6 +106,6 @@ OpenBSD-4.6/
    - Read `sys/net/pf.c` and `sys/net/pf_norm.c` to understand modern stateful firewalling.
    - Trace how `sbin/pfctl/pfctl.c` communicates with the kernel via `/dev/pf`.
 3. **OpenSSH & Privilege Separation**:
-   - Inspect `usr.sbin/sshd/sshd.c` and `usr.sbin/sshd/privsep.c` to see how daemons partition authority between root and sandboxed unprivileged users.
+   - Inspect `usr.bin/ssh/sshd.c` to see how privilege separation is implemented there and in the monitor code (`usr.bin/ssh/monitor.c`).
 4. **Kernel Hardening**:
    - Inspect `sys/uvm/uvm_fault.c` to observe W^X memory protection enforcement during page fault handling.

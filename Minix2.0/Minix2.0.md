@@ -9,7 +9,7 @@
 
 ### Key Architectural Advances
 - **Full POSIX.1 Conformance**: System call definitions, process semantics, job control, signals, and header files were overhauled to adhere strictly to IEEE POSIX 1003.1 standards.
-- **Native 32-bit Flat Paging Memory**: Completely left behind the 64 KB segment limitations of the 16-bit 8086 architecture. Applications in Minix 2.0 could access full 32-bit linear address spaces with paging.
+- **Native 32-bit Protected-Mode Memory**: Completely left behind the 64 KB segment limitations of the 16-bit 8086 architecture. Processes use 32-bit segments with per-process base and limit; Minix 2.0 has no paging or virtual memory.
 - **Integrated TCP/IP Networking (`src/inet/`)**: Engineered by Philip Homburg. Implemented as an independent network server process running alongside the Memory Manager and File System, providing IP, TCP, UDP, ICMP, and Ethernet drivers (`mnx_eth.c`).
 - **Modular Boot Monitor (`src/boot/`)**: Created by Kees J. Bot. Provided a sophisticated interactive boot environment with scripting capabilities, kernel parameter overrides, multi-boot loading, and dynamic disk partitioning (`installboot`).
 - **Sound & Multimedia**: Introduced audio driver support for the Sound Blaster 16 (`sb16_mixer.c`).
@@ -102,7 +102,7 @@ Minix2.0/
 | Source File | Functionality / Significance |
 | :--- | :--- |
 | `src/kernel/mpx386.s` | 32-bit protected-mode assembly backbone. Configures 32-bit interrupt handlers, intercepts hardware interrupts, saves general registers into `proc` structs, and switches CPU context. |
-| `src/kernel/protect.c` | Manages 32-bit Intel GDT and IDT tables. Sets up flat 4 GB code and data segments for user processes and isolates the microkernel in ring 0. |
+| `src/kernel/protect.c` | Manages 32-bit Intel GDT and IDT tables. Sets up 32-bit protected-mode segments (per-process base and limit) for user processes and isolates the microkernel in ring 0. |
 | `src/kernel/driver.c` | Standardized driver library written to allow Minix device drivers to be implemented uniformly as task loops responding to standard driver message opcodes. |
 | `src/inet/inet.c` & `tcp.c` | Philip Homburg's network server. Demonstrates how a complete TCP/IP protocol stack operates as a clean user-level server in a microkernel architecture without compromising kernel stability. |
 | `src/fs/select.c` | Implementation of POSIX `select()`. Bridges the File System server with device drivers (TTY, network) to support non-blocking asynchronous I/O multiplexing. |

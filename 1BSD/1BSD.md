@@ -7,7 +7,7 @@
 - **Historical Milestones:**
   - 1BSD was the very first Berkeley Software Distribution. It was not a standalone operating system, but an add-on distribution tape mailed to fellow UNIX license holders for $50 (covering the cost of the magnetic tape and shipping). Approximately thirty copies were distributed.
   - Introduced the instructional **Berkeley Pascal** system: the `pi` compiler, `px` bytecode interpreter, `pxp` profiler and execution formatter, and `pxref` cross-reference generator.
-  - Debut of Bill Joy's **`ex` text editor** (version 1.1), the direct ancestor of `vi`. Joy enhanced standard AT&T `ed` with line addressing, regular expressions, crash-recovery daemons (`exrecover`, `expreserve`), and an early "open" visual mode.
+  - Debut of Bill Joy's **`ex` text editor** (version 1.1), the direct ancestor of `vi`. Joy enhanced standard AT&T `ed` with line addressing, regular expressions, crash-recovery helper programs (`exrecover`, `expreserve`), and an early "open" visual mode.
   - Introduced **`ashell`** (the ancestor of the C Shell), an experimental prototype shell with early command history and alias concepts.
   - Included **`eyacc`** (Enhanced Yacc by Bill Joy), tuned to generate Pascal parsers with improved error diagnostic recovery.
   - Included Eric Allman's legendary Star Trek tactical simulation game (**`trek`**).

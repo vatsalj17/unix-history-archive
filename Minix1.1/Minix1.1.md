@@ -5,11 +5,11 @@
 - **Author**: Andrew S. Tanenbaum (Vrije Universiteit Amsterdam, Netherlands)
 - **Publisher**: Prentice-Hall, Inc.
 - **Target Architecture**: IBM PC, XT, and compatibles (Intel 8088 / 8086 processor, 640 KB RAM, real mode)
-- **Historical Milestone**: The original, world-changing educational microkernel accompanying Andrew Tanenbaum's seminal textbook, *Operating Systems: Design and Implementation*. Because AT&T strictly prohibited the educational disclosure of Unix V6/V7 source code in universities, Tanenbaum undertook a total clean-room reimplementation of the Unix Seventh Edition (V7) system call interface from scratch—without looking at a single line of AT&T source code.
+- **Historical Milestone**: The original, world-changing educational microkernel accompanying Andrew Tanenbaum's seminal textbook, *Operating Systems: Design and Implementation*. Because AT&T strictly prohibited the educational disclosure of Unix V6/V7 source code in universities, Tanenbaum undertook a total clean-room reimplementation of the Unix Seventh Edition (V7) system call interface from scratch - without looking at a single line of AT&T source code.
 
 ### The 4-Layer Microkernel Architecture
-Minix 1.1 pioneered modular microkernel design on personal computers, dividing the operating system into four distinct isolation layers:
-1. **Layer 1 (The Kernel)**: Executes in supervisor/hardware mode. Handles interrupts, CPU traps, low-level process scheduling, and pure message-passing inter-process communication (IPC) via `mini_send`, `mini_receive`, and `mini_both`.
+Minix 1.1 popularized modular microkernel design on personal computers, dividing the operating system into four distinct isolation layers:
+1. **Layer 1 (The Kernel)**: Executes in supervisor/hardware mode. Handles interrupts, CPU traps, low-level process scheduling, and pure message-passing inter-process communication (IPC) via `mini_send`, `mini_rec` (and the combined send-and-receive call).
 2. **Layer 2 (I/O Tasks / Device Drivers)**: Device drivers running as separate, isolated processes with their own state: floppy disk (`floppy.c`), hard disk (`wini.c`), console/terminal (`tty.c`), system task (`system.c`), and clock (`clock.c`).
 3. **Layer 3 (Server Processes)**: Core operating system intelligence running entirely as userspace server daemons:
    - **Memory Manager (`mm/`)**: Manages process memory allocation, segment limits, `fork()`, `exec()`, and signals.

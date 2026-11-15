@@ -6,11 +6,11 @@
 - **Machine Architecture:** Multi-platform: Intel 80386 (`i386`), HP 9000/300 (`hp300`), DEC VAX (`vax`), and CCI Tahoe (`tahoe`).
 - **Historical Milestones:**
   - Berkeley Networking Release 2 (Net/2) was the **watershed moment in the history of open-source operating systems**.
-  - **The Keith Bostic Clean-Room Crusade:** In the late 1980s, BSD was still encumbered by AT&T proprietary source code licensing. Keith Bostic organized a massive community campaign to systematically rewrite every single AT&T command, library, and kernel module from scratch based on manual pages and POSIX specifications.
+  - **The Keith Bostic Clean-Room Crusade:** In the late 1980s, BSD was still encumbered by AT&T proprietary source code licensing. Keith Bostic organized volunteers to rewrite nearly all AT&T userland and library code; only six kernel files remained AT&T-derived.
   - **William Jolitz's 386 Port (`386BSD`):** William Jolitz contributed the initial Intel 80386 PC architecture port (`usr/src/sys/i386/`), demonstrating that a complete, 32-bit UNIX operating system could run on inexpensive, off-the-shelf PC hardware.
   - **Mach Virtual Memory (`vm/`):** Replaced the 1979 Babaoglu/Joy VAX paging system with the clean, architecture-independent Mach virtual memory subsystem (`vm_map.c`, `vm_fault.c`, `vm_pageout.c`).
   - **The Genesis of Modern BSDs:** Net/2 contained nearly an entire bootable, open-source operating system (only 6 kernel files still had AT&T code). It formed the **direct common ancestor of 386BSD, BSD/386 (BSDi), FreeBSD, and NetBSD**.
-  - **USL v. BSDi Lawsuit:** Triggered the historic 1992 lawsuit where AT&T's Unix System Laboratories sued BSDi and UC Berkeley, a legal battle whose settlement in 1994 permanently validated open-source UNIX code.
+  - **USL v. BSDi Lawsuit:** Triggered the historic 1992 lawsuit where AT&T's Unix System Laboratories sued BSDi and UC Berkeley. The lawsuit was settled in January 1994; 4.4BSD-Lite then removed or rewrote the few remaining encumbered files.
 
 ---
 
@@ -51,7 +51,7 @@ Net2/
 | `usr/src/sys/i386/i386/machdep.c` | Machine-dependent initialization for the IBM PC AT architecture (ISA bus, memory sizing). |
 | `usr/src/sys/vm/vm_fault.c` | Mach-derived virtual memory page fault handler, managing address maps and shadow objects. |
 | `usr/src/sys/vm/vm_pageout.c` | The Mach pageout daemon, scanning memory objects and writing dirty pages to swap. |
-| `usr/src/sys/kern/vfs_bio.c` | Clean-room implementation of the unified kernel buffer cache. |
+| `usr/src/sys/kern/vfs_bio.c` | Implementation of the kernel buffer cache. |
 | `usr/src/sys/ufs/ufs_alloc.c` | Unencumbered Berkeley Fast File System cylinder group block allocator. |
 | `usr/src/sys/netinet/tcp_input.c` | The reference Berkeley TCP input processing engine with Van Jacobson congestion control. |
 | `usr/src/bin/sh/` | Kenneth Almquist's **ash** (Almquist shell), a clean-room rewrite of the Bourne shell free of AT&T code. |

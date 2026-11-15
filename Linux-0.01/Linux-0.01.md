@@ -4,12 +4,12 @@
 - **Release Date**: September 17, 1991
 - **Author**: Linus Benedict Torvalds (University of Helsinki, Finland)
 - **Target Architecture**: Intel 80386 (strictly 32-bit x86 protected mode)
-- **Historical Milestone**: The primordial first public release of the Linux kernel. Comprising only 88 files and ~10,239 lines of code, Linux 0.01 represents Linus Torvalds' initial experimental monolithic Unix kernel. Written out of a desire to understand the hardware capabilities of the Intel 80386 (specifically task switching and paging) and motivated by dissatisfaction with Minix's educational licensing and terminal emulation limitations, Linux 0.01 could compile itself under Minix using GCC and execute GNU Bash.
+- **Historical Milestone**: The primordial first public release of the Linux kernel. Comprising only 88 files and ~10,239 lines of code, Linux 0.01 represents Linus Torvalds' initial experimental monolithic Unix kernel. Written out of a desire to understand the hardware capabilities of the Intel 80386 (specifically task switching and paging) and motivated by dissatisfaction with Minix's educational licensing and terminal emulation limitations, Linux 0.01 ran simple programs (it had to be built under Minix; GNU Bash was running by 0.02).
 
 ### Architectural Innovations & Limitations
 - **TSS Hardware Task Switching**: Unlike modern Linux, 0.01 directly leveraged the 80386 hardware Task State Segment (TSS) for context switching via far jumps (`ljmp`).
 - **Memory Management Ceiling**: Memory management was hard-coded to a maximum of 16 MB RAM, configured using demand paging without virtual memory swap.
-- **Filesystem**: Implemented a clean-room driver for Andrew Tanenbaum's Minix V1 filesystem (14-character filename limit, 32-bit blocks).
+- **Filesystem**: Implemented a clean-room driver for Andrew Tanenbaum's Minix V1 filesystem (14-character filename limit, 16-bit zone/inode numbers).
 - **Process Model**: Primitive implementation of `fork()`, `execve()`, and `exit()` with process 0 hardcoded as the idle task and process 1 executing `/bin/sh`.
 
 ---
@@ -114,7 +114,7 @@ Linux-0.01/
 │       ├── utsname.h    # uname system identification
 │       └── wait.h       # Process wait status macros
 └── tools/               # Host build utilities
-    └── build.c          # Host C program to splice bootsect, setup, and system into a floppy image
+    └── build.c          # Host C program to splice boot and system into a floppy image
 ```
 
 ---
@@ -123,7 +123,7 @@ Linux-0.01/
 
 | Source File | Functionality / Significance |
 | :--- | :--- |
-| `boot/boot.s` | The 512-byte floppy bootsector written in 8086 assembly. It reads `setup.s` and the kernel `system` image from disk sectors into memory using BIOS `int 0x13`, relocates itself to `0x90000`, and transfers execution. |
+| `boot/boot.s` | The 512-byte floppy bootsector written in 8086 assembly. It reads the kernel `system` image from disk sectors into memory using BIOS `int 0x13`, relocates itself to `0x90000`, and transfers execution. |
 | `boot/head.s` | 32-bit startup code. Sets up the initial 256 interrupt descriptors in the IDT, establishes a temporary GDT, maps the first 8 MB of RAM with identity page tables, and enters protected mode by executing a far jump to `_main`. |
 | `init/main.c` | Entry point `main()`. Calculates memory limits, initializes interrupts (`trap_init`), serial ports (`tty_init`), hard disk (`hd_init`), buffer cache (`buffer_init`), and the timer/scheduler (`sched_init`). Transitions from supervisor mode (ring 0) to user mode (ring 3) via `move_to_user_mode()` and forks the first user shell (`/bin/sh`). |
 | `kernel/sched.c` | Implements the primordial scheduler (`schedule()`). Loops through the static `task[]` array (maximum 64 processes), evaluates remaining runtime `counter`, applies dynamic priority boosting, and switches context using the inline macro `switch_to(next)` via 386 hardware TSS task switching. |

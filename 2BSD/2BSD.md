@@ -3,10 +3,10 @@
 ## Historical Overview
 - **Release Date:** May 1979
 - **Key Developers:** Bill Joy, Chuck Haley, Kurt Shoens (Mail), Ken Arnold, Eric Schmidt (Berknet), Keith Sklower.
-- **Machine Architecture:** DEC PDP-11 (running AT&T UNIX Version 6 or Version 7).
+- **Machine Architecture:** DEC PDP-11 (running AT&T UNIX V6 (later releases also V7)).
 - **Historical Milestones:**
   - The second Berkeley Software Distribution (2BSD) expanded the Berkeley environment for PDP-11 systems, offering an unprecedented leap in interactive usability.
-  - **The C Shell (`csh`):** Debut of Bill Joy's C-style shell, introducing interactive history substitution (`!`), aliases, job control prelude, tilde (`~`) expansion, and filename completion.
+  - **The C Shell (`csh`):** Debut of Bill Joy's C-style shell, introducing interactive history substitution (`!`), aliases, and tilde (`~`) expansion.
   - **Visual Mode Editor (`vi`):** Official debut of `vi` (version 2 of `ex`), introducing full-screen cursor movement, modal text manipulation, and macro definitions.
   - **`termcap` (Terminal Capabilities Database):** Joy created `termlib` and the `/etc/termcap` database, eliminating hardware lock-in by abstracting escape sequences across disparate visual display terminals (Lear Siegler ADM-3A, DEC VT52, Hazeltine).
   - **Berkeley Mail (`Mail`):** Kurt Shoens created the interactive `Mail` system, supporting message folders, aliases, subject headers, and reply chains.

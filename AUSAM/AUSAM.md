@@ -6,16 +6,16 @@
 | :--- | :--- |
 | **System Name** | AUSAM (Australian Unix Share Accounting Method) |
 | **Release Date** | October 1979 |
-| **Origin / Creators** | University of New South Wales (UNSW) & University of Sydney, Australia — Peter Ivanov, Ian Johnstone, Chris Maltby, Bob Kummerfeld, Greg Rose, supervised in part by John Lions |
+| **Origin / Creators** | University of New South Wales (UNSW) & University of Sydney, Australia - Peter Ivanov, Ian Johnstone, Chris Maltby, Bob Kummerfeld, Greg Rose |
 | **Source Donation** | Extracted from the UNSW 04 magnetic tape and donated to TUHS by the University of New South Wales |
 | **Target Architecture** | DEC PDP-11 (PDP-11/34, PDP-11/40, PDP-11/45, and PDP-11/70) |
-| **Key Historical Milestones** | First comprehensive Fair-Share / Share Accounting scheduler; pioneer in UNIX multi-user security, password aging, and disk limits; numerous bug fixes contributed back to Bell Labs for V7 and System V |
+| **Key Historical Milestones** | Precursor of fair-share scheduling with per-user share accounting and limits; pioneer in UNIX multi-user security, password aging, and disk limits; numerous bug fixes contributed back to Bell Labs for V7 and System V |
 
 ### Significance & Historical Context
-In the mid-to-late 1970s, Australian universities were early adopters of UNIX. At the University of New South Wales (UNSW)—where Professor John Lions authored his celebrated *Lions' Commentary on UNIX 6th Edition*—and the University of Sydney, hundreds of undergraduate students relied on single PDP-11 minicomputers for their coursework. Standard Bell Labs Sixth Edition UNIX (V6) was completely unsuited for this hostile, resource-constrained academic environment: it lacked resource quotas, fine-grained accounting, and process isolation.
+In the mid-to-late 1970s, Australian universities were early adopters of UNIX. At the University of New South Wales (UNSW) - where Professor John Lions authored his celebrated *Lions' Commentary on UNIX 6th Edition* - and the University of Sydney, hundreds of undergraduate students relied on single PDP-11 minicomputers for their coursework. Standard Bell Labs Sixth Edition UNIX (V6) was completely unsuited for this hostile, resource-constrained academic environment: it lacked resource quotas, fine-grained accounting, and process isolation.
 
 To solve this, Australian computer scientists developed **AUSAM (Australian Unix Share Accounting Method)**. AUSAM completely overhauled the V6 kernel with:
-1. **Share Accounting & Fair-Share Scheduling**: Rather than relying purely on simple priority boosts, the scheduler allocated CPU time proportional to a user or group's assigned "shares," preventing runaway processes from monopolizing the machine.
+1. **Per-User Share Accounting and Limits**: AUSAM added per-user share accounting and limits (`lnode`); the fair-share scheduler proper is credited to Judy Kay and Piers Lauder, who evolved AUSAM into Share II at the University of Sydney in the 1980s.
 2. **Security & Cryptographic Passwords**: Introduced salted passwords, shadow-like validation files (`/usr/adm/records`), supervisor permission delegation, and login restrictions.
 3. **Resource Controls**: Enforced disk block quotas, connect-time limits, and CPU time limits per user.
 4. **Upstream Impact on Bell Labs**: The Australian developers identified and fixed hundreds of race conditions, deadlocks, and buffer bugs in V6 (denoted in the code by comments like `/* fix nnn */`). Many of these fixes were communicated to Ken Thompson and Dennis Ritchie and were incorporated directly into **Seventh Edition UNIX (V7)** and later early releases of **UNIX System V**.
@@ -68,7 +68,7 @@ AUSAM/
 
 ### 1. Share Scheduling & Accounting Primitives
 - `sys/lnode.h`: Definition of the `lnode` structure. Represents a user's persistent resource account (shares allocated, CPU time consumed, disk space used, connect time) linked across all concurrent processes belonging to that user ID.
-- `sys/ken/slp.c`: AUSAM scheduler. Computes dynamic process priority based on the user's allocated shares (`lnode`) versus actual CPU time accumulated, implementing fair-share scheduling.
+- `sys/ken/slp.c`: AUSAM scheduler. Computes dynamic process priority based on the user's allocated shares (`lnode`) versus actual CPU time accumulated, implementing per-user share accounting.
 - `sys/pzomb.h`: Data structure managing zombie processes and capturing precise process exit metrics for billing and accounting records.
 
 ### 2. Upstream Bug Fixes & Kernel Stability

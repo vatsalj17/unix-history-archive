@@ -2,13 +2,13 @@
 
 ## Historical Overview
 - **Release Date:** December 1979
-- **Key Developers:** Bill Joy, Ozalp Babaoglu, Kirk McKusick, Bob Kridle.
+- **Key Developers:** Bill Joy, Ozalp Babaoglu, Bob Kridle.
 - **Machine Architecture:** DEC VAX-11/780 (32-bit architecture).
 - **Historical Milestones:**
   - 3BSD was the **first Berkeley Software Distribution to run on the 32-bit DEC VAX architecture**.
-  - AT&T had created UNIX/32V for the VAX-11/780, but 32V lacked virtual memory paging—it merely swapped whole processes in and out of memory just like the 16-bit PDP-11 UNIX.
+  - AT&T had created UNIX/32V for the VAX-11/780, but 32V lacked virtual memory paging - it merely swapped whole processes in and out of memory just like the 16-bit PDP-11 UNIX.
   - Graduate students **Ozalp Babaoglu and Bill Joy implemented full virtual memory paging** into 32V, adding demand paging, page replacement (the clock algorithm / page daemon), and address space virtualization using VAX page tables (`sys/sys/vm*.c`).
-  - This breakthrough made 3BSD the world's premier operating system for the VAX, rapidly eclipsing DEC's own VMS in academic and research institutions.
+  - 3BSD quickly gained popularity in academic and research installations.
   - Included the Berkeley Pascal compiler, Franz Lisp (essential for AI research at Berkeley), the C Shell, and `vi`.
 
 ---
@@ -57,7 +57,7 @@
 1. **Understand VAX Low-Level Initialization (`usr/src/sys/sys/locore.s`):**
    - Read `locore.s` to see how the VAX System Control Block (SCB) is established and how control transfers to C.
 2. **Study the Birth of Demand Paged Virtual Memory:**
-   - Read `usr/src/sys/sys/vm.c`, `vmpt.c`, and `vmsched.c`. Observe the clock page replacement algorithm that became the archetype for virtual memory in modern operating systems.
+   - Read `usr/src/sys/sys/vm.c`, `vmpt.c`, and `vmsched.c`. The clock-style page replacement approach influenced later virtual-memory designs.
 3. **Inspect Fault Handling (`usr/src/sys/sys/trap.c`):**
    - Follow how a VAX translation fault (page fault) triggers page-in from disk swap space.
 4. **Examine Userland (`usr/src/cmd/`):**

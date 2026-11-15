@@ -9,7 +9,7 @@
   - **The First Inode and Hierarchical Filesystem:** Introduced inodes (information nodes), directory files containing filename-to-inode mappings, and pathname resolution (`namei`).
   - **Origins of the Shell and Pipeline Concept:** The initial design featured independent processes connected by basic redirection and communication primitives, leading McIlroy and Thompson to formalize pipelines in later editions.
   - **Language Evolution:** Written 100% in DEC PDP-7 assembly language (`.s`), with early applications written in Ken Thompson's **B language** (`.b`), the direct precursor to C.
-  - **Source Provenance:** Surviving paper scans discovered in Bell Labs notebooks by Norman Wilson and Robert Morris, subsequently transcribed into digital assembly code by Warren Toomey and the TUHS (The Unix Heritage Society) team.
+  - **Source Provenance:** The surviving source comes from paper listings that were scanned and transcribed by the Unix Heritage Society.
 
 ---
 
@@ -59,7 +59,7 @@ For a systems programmer wishing to understand how the very first Unix operated:
 2. **Examine the Kernel Entry & Traps:**
    Study `sys/s1.s` to see how the PDP-7 hardware `CAL` instruction is intercepted at location `020` to invoke system calls, and how user registers are saved.
 3. **Trace Pathname Resolution & Inodes:**
-   Read `sys/s2.s` to understand `namei`—how Unix parsed slash-separated directory paths by reading directory entries sequentially to extract inode numbers.
+   Read `sys/s2.s` to understand `namei` - how Unix parsed slash-separated directory paths by reading directory entries sequentially to extract inode numbers.
 4. **Follow Memory Allocation & Swapping:**
    Look at `sys/s4.s` for the free block list management, and `sys/s5.s` to see how the system swapped user memory directly to the RB09 drum/disk when switching between its maximum of 2 concurrent users.
 5. **Inspect the Birth of B and Early Userland:**

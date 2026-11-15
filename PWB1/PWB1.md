@@ -6,16 +6,16 @@
 | :--- | :--- |
 | **System Name** | PWB/UNIX 1.0 (Programmer's Workbench UNIX Edition 1.0) |
 | **Release Date** | July 1977 |
-| **Origin / Creators** | Bell Laboratories (BISP / USG, Piscataway, NJ) — Evan L. Ivie, Rudd Canaday, John R. Mashey, Ted Dolotta |
+| **Origin / Creators** | Bell Laboratories (BISP / USG, Piscataway, NJ) - Evan L. Ivie, T. A. (Ted) Dolotta, John R. Mashey |
 | **Source Donation** | Preserved from `spencer_pwb.tar.gz` and donated to TUHS by Henry Spencer |
 | **Target Architecture** | DEC PDP-11 (specifically PDP-11/45 and PDP-11/70 with MMU) |
-| **Key Historical Milestones** | Birthplace of SCCS (Source Code Control System), the PWB Mashey Shell, RJE (Remote Job Entry), `uname()`, `find`, `xargs`, `egrep`, `fgrep`, and the USG kernel directory structure |
+| **Key Historical Milestones** | Birthplace of SCCS (Source Code Control System), the PWB Mashey Shell, RJE (Remote Job Entry), `uname()`, `find`, `xargs`, and the USG kernel directory structure |
 
 ### Significance & Historical Context
-In 1973, Evan L. Ivie and Rudd Canaday founded the Programmer's Workbench (PWB) project within the Business Information Systems Programs (BISP) division of Bell Laboratories. While Research UNIX (V4, V5, V6) developed by Thompson and Ritchie was oriented toward experimental computer science research, PWB was created to serve production engineering: supporting over 1,000 developers working simultaneously on massive telecommunications and database projects. By 1977, PWB was the largest and busiest UNIX installation in the world.
+In 1973, Evan L. Ivie and T. A. (Ted) Dolotta founded the Programmer's Workbench (PWB) project within the Business Information Systems Programs (BISP) division of Bell Laboratories. While Research UNIX (V4, V5, V6) developed by Thompson and Ritchie was oriented toward experimental computer science research, PWB was created to serve production engineering: supporting over 1,000 developers working simultaneously on massive telecommunications and database projects. By 1977, PWB was the largest and busiest UNIX installation in the world.
 
 Based on Sixth Edition UNIX (V6), PWB/UNIX 1.0 introduced foundational software engineering concepts:
-1. **SCCS (Source Code Control System)**: Created by Marc J. Rochkind in 1972–1975, SCCS was the first major version control system in computer history, introducing interleaved deltas, source checkouts, and release tagging.
+1. **SCCS (Source Code Control System)**: Created by Marc J. Rochkind in 1972-1975, SCCS was one of the first major version control systems, introducing interleaved deltas, source checkouts, and release tagging.
 2. **The PWB Shell (Mashey Shell)**: Written by John R. Mashey, it extended the rudimentary V6 shell with structured programming primitives (`if`/`then`/`else`, `goto`, `switch`), internal variables, and environment management, laying the groundwork for shell scripting prior to Steve Bourne's V7 shell.
 3. **Enterprise Mainframe Interoperability (RJE)**: PWB introduced Remote Job Entry subsystems (`hasp`, `send`, `rjestat`) allowing developers at UNIX terminals to submit batch compilation jobs directly to IBM System/360, System/370, and UNIVAC mainframes.
 4. **New System Calls**: Defined the `pwbsys` multiplexer, establishing `uname()` (system identification), `ustat()` (filesystem statistics), and `utime()` (file timestamp updating).
@@ -74,10 +74,10 @@ PWB1/
 
 ### 1. PWB System Call Innovations
 - `sys/sys/os/pwbsys.c`: Implements the `pwbsys` system call multiplexer. Contains the earliest implementations of:
-  - `case 0: uname` — copies system identification (`pwbname`) to user space.
-  - `case 1: udata` — user identification data.
-  - `case 2: ustat` — reports free blocks and free inodes on mounted filesystems.
-  - `case 3: utime` — sets modification and access times for files.
+  - `case 0: uname` - copies system identification (`pwbname`) to user space.
+  - `case 1: udata` - user identification data.
+  - `case 2: ustat` - reports free blocks and free inodes on mounted filesystems.
+  - `case 3: utime` - sets modification and access times for files.
 
 ### 2. SCCS (Source Code Control System)
 - `sys/source/sccs4/cmd/admin.c`: SCCS administration tool for creating and tuning `s.` history files.

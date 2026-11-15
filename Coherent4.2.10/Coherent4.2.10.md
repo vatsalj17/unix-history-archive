@@ -4,13 +4,13 @@
 - **Release Date**: December 1994 (Version 4.2, patchlevel 10)
 - **Author / Organization**: Mark Williams Company (MWC), founded by Robert Swartz (Chicago, Illinois)
 - **Target Architecture**: Intel 80386 and 80486 (32-bit protected mode)
-- **Historical Milestone**: The definitive commercial clean-room Unix clone for the IBM PC. Originally engineered in the late 1970s and 1980s by former University of Waterloo graduates (including Dave Conroy), Coherent offered near-complete AT&T Version 7 and System V compatibility for just $99.95, complete with multi-volume printed manuals. Legendarily, AT&T lawyers and engineers audited Coherent's source code line by line and concluded it was a genuine, independent, clean-room reimplementation containing zero AT&T trade secrets. In 2015, the Swartz family officially released Coherent under the open-source 3-clause BSD license.
+- **Historical Milestone**: The definitive commercial clean-room Unix clone for the IBM PC. Originally engineered in the late 1970s and 1980s by former University of Waterloo graduates (including Dave Conroy), Coherent offered near-complete AT&T Version 7 and System V compatibility for just $99.95, complete with multi-volume printed manuals. Legendarily, AT&T lawyers and engineers reportedly audited Coherent's source code and concluded it was a genuine, independent, clean-room reimplementation containing zero AT&T trade secrets. In 2015, the Swartz family officially released Coherent under the open-source 3-clause BSD license.
 
 ### Key Architectural Advances
 - **Full 32-Bit Monolithic Kernel (`coh.386/`)**: Upgraded from 16-bit 286 segmented real/protected mode to native 32-bit flat memory addressing with demand paging and hardware protection rings.
 - **AT&T STREAMS Framework (`conf/streams/`)**: Implemented the modular System V STREAMS character I/O mechanism, enabling dynamic stacking of network protocols and line disciplines.
 - **DDI / DKI Conformance (`coh.386/lib/`)**: Adhered to AT&T's Device Driver Interface / Driver-Kernel Interface specifications, standardizing driver routines (`ddi_defer.c`, `ddi_unref.c`).
-- **Modular Dynamic Kernel Linking (`conf/bin/`)**: Unlike traditional monolithic Unix kernels requiring full recompilation, Coherent featured the `mkdev` / `idbuild` modular kernel configuration framework, which linked driver object modules into a customized `/coherent` kernel binary at boot time.
+- **Modular Kernel Configuration (`conf/bin/`)**: Unlike traditional monolithic Unix kernels requiring full recompilation, Coherent featured the `mkdev` / `idbuild` modular kernel configuration framework, where driver object modules were linked into the kernel at configuration time (with idbuild), not loaded dynamically.
 - **Virtual Consoles (`conf/vtkb/`, `conf/vtnkb/`)**: Support for multiple concurrent virtual terminal sessions on the PC monitor.
 
 ---

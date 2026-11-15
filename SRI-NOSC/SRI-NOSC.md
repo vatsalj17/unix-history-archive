@@ -6,7 +6,7 @@
 | :--- | :--- |
 | **System Name** | SRI-NOSC UNIX (with Illinois ARPANET NCP Stack) |
 | **Release Date** | May 1979 (Initial development 1974–1975 at UIUC; enhanced 1977–1979 at SRI and NOSC) |
-| **Origin / Creators** | Center for Advanced Computation at University of Illinois (Gary R. Grossman, Steve F. Holmgren), Naval Ocean Systems Center (NOSC — Greg Noel), and Stanford Research Institute (SRI) |
+| **Origin / Creators** | Center for Advanced Computation at University of Illinois (Gary R. Grossman, Steve F. Holmgren), Naval Ocean Systems Center (NOSC - Greg Noel), and Stanford Research Institute (SRI) |
 | **Source Donation** | Preserved from NOSC distribution tapes and donated to TUHS |
 | **Target Architecture** | DEC PDP-11 (PDP-11/40, 11/45, and 11/70 with 1822 IMP interface hardware) |
 | **Key Historical Milestones** | **The First Networked UNIX System in History**: Connected UNIX to the ARPANET; pioneered ARPANET NCP protocol, early FTP, Telnet, MMDF mail, and Rand MH |

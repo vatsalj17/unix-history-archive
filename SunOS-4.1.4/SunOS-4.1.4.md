@@ -6,7 +6,7 @@
 | :--- | :--- |
 | **System Name** | SunOS 4.1.4 (Commercial designation: Solaris 1.1.2) |
 | **Release Date** | November 1994 (Source tree populated January 18, 1995) |
-| **Origin / Creators** | Sun Microsystems, Inc. (Mountain View, CA) — Bill Shannon, Robert Gingell, Joseph Moran, Steve Kleiman, Dan Walsh, and the SunOS kernel team |
+| **Origin / Creators** | Sun Microsystems, Inc. (Mountain View, CA) - Bill Shannon, Robert Gingell, Joseph Moran, Steve Kleiman, Dan Walsh, and the SunOS kernel team |
 | **Source Donation** | Preserved from internal Sun Microsystems source trees |
 | **Target Architecture** | Sun SPARC family (sun4, sun4c, sun4m, sun4d: SPARCstation 1, 2, 5, 10, 20; SPARCserver 1000/2000 multiprocessors) and Motorola 68020/68030 (sun3/sun3x) |
 | **Key Historical Milestones** | **The Zenith of BSD-Derived Commercial UNIX**: Final release of BSD-based SunOS before the SVR4 Solaris 2.x transition; introduced modern Virtual Memory (`mmap`, `seg_vn`, `anon`); pioneered dynamic shared libraries (`ld.so`, `libdl`); multi-universe BSD/SysV/POSIX support |
@@ -16,9 +16,9 @@ Released in late 1994, **SunOS 4.1.4** represents the absolute pinnacle of class
 
 Key technological breakthroughs showcased in this codebase include:
 1. **The Modern Virtual Memory (VM) Subsystem**: Designed by Robert Gingell, Joseph Moran, and William Shannon, SunOS 4 replaced the aging 4.3BSD paging system with an object-oriented memory architecture. It introduced address spaces (`as`), memory segment drivers (`seg_vn`, `seg_map`, `seg_dev`, `seg_u`), anonymous memory pools (`anon`), and Hardware Address Translation layers (`hat`). This design made **`mmap()` memory-mapped files** a first-class citizen and unified the filesystem cache with system virtual memory.
-2. **Dynamic Shared Libraries & Dynamic Linking**: SunOS 4 was the first production UNIX to provide runtime dynamic linking (`ld.so`, `libdl`, `dlopen`, `dlsym`), drastically reducing executable sizes and system RAM consumption across desktop environments.
+2. **Dynamic Shared Libraries & Dynamic Linking**: SunOS 4 was one of the first production UNIX systems to provide runtime dynamic linking (`ld.so`, `libdl`, `dlopen`, `dlsym`), drastically reducing executable sizes and system RAM consumption across desktop environments.
 3. **Multi-Universe Personality System**: Allowed programmers to execute software seamlessly in BSD 4.3 (`/usr/ucb`), System V Release 3 (`/usr/5bin`), POSIX.1 (`posixlib`), or X/Open (`xpgbin`) environments simply by altering their `$PATH`.
-4. **Rich Virtual File System (VFS) Suite**: Featured native support for UFS (Fast File System), NFS v2, HSFS (High Sierra / ISO 9660 CD-ROM), PCFS (MS-DOS FAT), LOFS (Loopback), TFS (Translucent File System—an early copy-on-write union filesystem), and RFS (Remote File Sharing).
+4. **Rich Virtual File System (VFS) Suite**: Featured native support for UFS (Fast File System), NFS v2, HSFS (High Sierra / ISO 9660 CD-ROM), PCFS (MS-DOS FAT), LOFS (Loopback), TFS (Translucent File System - an early copy-on-write union filesystem), and RFS (Remote File Sharing).
 5. **Multiprocessor Architecture (`sun4d`, `sun4m`)**: Contained symmetrical multiprocessing (SMP) extensions for SPARCstation 10/20 and enterprise SPARCserver 1000/2000 hardware.
 
 ---

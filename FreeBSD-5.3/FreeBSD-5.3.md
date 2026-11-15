@@ -1,15 +1,15 @@
 # FreeBSD-5.3 Source Code Archive
 
 ## Historical Overview
-- **Release Date**: November 5, 2004 (Release branched August 2004)
+- **Release Date**: November 6, 2004 (Release branched August 2004)
 - **Author / Organization**: The FreeBSD Project (The FreeBSD Core Team, Release Engineering Team, and The FreeBSD Foundation)
-- **Target Architectures**: Multi-platform Tier 1 and Tier 2 support: `i386`, `amd64` (x86_64, one of the earliest production 64-bit Unix releases), `alpha`, `ia64` (Intel Itanium), `sparc64`, and `pc98`.
-- **Historical Milestone**: The watershed release of the FreeBSD 5 series, declared "Tier 1 Production Ready" for enterprise deployments. FreeBSD 5 represented a five-year architectural re-engineering effort transitioning the classic 4.4BSD-Lite monolithic architecture into a fine-grained multithreaded symmetric multiprocessing (SMP) operating system with advanced storage and security frameworks.
+- **Target Architectures**: Multi-platform Tier 1 and Tier 2 support: `i386`, `amd64` (the first FreeBSD release with amd64 as a fully supported Tier-1 architecture), `alpha`, `ia64` (Intel Itanium), `sparc64`, and `pc98`.
+- **Historical Milestone**: The watershed release of the FreeBSD 5 series, the first release of the 5-STABLE branch, considered production quality. FreeBSD 5 represented a five-year architectural re-engineering effort transitioning the classic 4.4BSD-Lite monolithic architecture into a fine-grained multithreaded symmetric multiprocessing (SMP) operating system with advanced storage and security frameworks.
 
 ### Key Architectural Revolutions
-- **SMPng (Symmetric Multi-Processing Next Generation)**: Replaced the historical BSD "Giant Lock" with fine-grained mutexes (`mtx_lock`), reader/writer locks (`rwlock`), condition variables, and turnstiles (`sys/kern/subr_turnstile.c`), unlocking high-performance multiprocessing on multi-socket servers.
-- **KSE (Kernel Sched Entity) & 1:1 Threading**: Provided dual threading support: M:N user-to-kernel scheduler activations via KSE (`libkse`) and native 1:1 kernel threads via `libthr`.
-- **ULE Scheduler (`sys/kern/sched_ule.c`)**: Introduced Jeff Roberson's modern multi-core, NUMA-aware, affinity-based scheduler as an alternative to the traditional 4BSD scheduler.
+- **SMPng (Symmetric Multi-Processing Next Generation)**: Replaced the historical BSD "Giant Lock" with fine-grained mutexes (`mtx_lock`), sx (shared/exclusive) locks, condition variables, and turnstiles (`sys/kern/subr_turnstile.c`), unlocking high-performance multiprocessing on multi-socket servers.
+- **KSE (Kernel Scheduled Entities) & 1:1 Threading**: Provided dual threading support: M:N user-to-kernel scheduler activations via KSE (`libkse`) and native 1:1 kernel threads via `libthr`.
+- **ULE Scheduler (`sys/kern/sched_ule.c`)**: Jeff Roberson's modern multi-core, affinity-based scheduler, available as an optional alternative since 5.0 (the default in 5.3 was still the 4BSD scheduler).
 - **GEOM Storage Framework (`sys/geom/`)**: Designed by Poul-Henning Kamp. A pluggable, object-oriented storage topology layer allowing block transformations (slicing, striping `g_stripe`, mirroring `g_mirror`, and encryption) to be chained dynamically.
 - **UFS2 & Dirhash**: Introduced UFS2 with 64-bit block pointers (supporting multi-terabyte filesystems), extended attributes for access control lists, and `dirhash` in-memory directory indexing.
 - **TrustedBSD MAC (Mandatory Access Control)**: Merged the TrustedBSD security framework (`sys/security/mac/`), enabling dynamic security policies (Biba, MLS, multi-level security) to intercept kernel operations.

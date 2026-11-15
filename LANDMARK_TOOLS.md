@@ -20,7 +20,7 @@ Every tool and kernel subsystem you rely on today (from piping `stdout` and `for
 | **[6. Filesystems & Storage Subsystems](#6-filesystems--storage-subsystems)** | Inodes (`namei`), `pipe()`, Fast File System (FFS), VFS & `vnode`, NFSv2, `/proc`, `ext`, ZFS | 1970 to 2010 |
 | **[7. Networking & Protocols](#7-networking--protocols)** | BBN TCP/IP & `mbuf`, Berkeley Sockets, `sendmail`, Van Jacobson TCP, OpenSSH | 1981 to 2009 |
 | **[8. Security & Cryptography](#8-security--cryptography)** | Salted `crypt()`, OpenBSD `pf`, `sudo` | 1979 to 2009 |
-| **[9. Schedulers, Virtual Memory & Observability](#9-schedulers-virtual-memory--observability)** | Fair-Share (`lnode`), 3BSD Paging & `vfork()`, `mmap()`, Linux 0.01, DTrace, CFS & KVM | 1979 to 2010 |
+| **[9. Schedulers, Virtual Memory & Observability](#9-schedulers-virtual-memory--observability)** | Per-user share accounting (`lnode`), 3BSD Paging & `vfork()`, `mmap()`, Linux 0.01, DTrace, CFS & KVM | 1979 to 2010 |
 
 ---
 
@@ -47,16 +47,16 @@ The direct ancestor of every POSIX `sh`, Bash, and Zsh script running today. Bou
 Bourne missed working on ALGOL-68 so much that he abused the C preprocessor in [`mac.h`](V7/usr/src/cmd/sh/mac.h) to turn C into ALGOL (`#define IF if(`, `#define THEN ){`, `#define FI ;}`). Even wilder is [`stak.c`](V7/usr/src/cmd/sh/stak.c): instead of calling `malloc()`, Bourne wrote a bump allocator that intentionally let pointers run off the end of the process data segment, caught the kernel's `SIGSEGV` fault, called `sbrk()` inside the signal handler to grow the heap, and resumed execution right where it faulted.
 
 ### The C Shell (`csh`)
-> **Distro:** [2BSD (1979)](2BSD/2BSD.md) & [3BSD (1980)](3BSD/3BSD.md) · **Author:** Bill Joy  
+> **Distro:** [2BSD (1979)](2BSD/2BSD.md) & [3BSD (1979)](3BSD/3BSD.md) · **Author:** Bill Joy  
 > **Source:** [`2BSD/src/csh/sh.c`](2BSD/src/csh/sh.c) · [`3BSD/usr/src/cmd/csh/sh.c`](3BSD/usr/src/cmd/csh/sh.c)
 
-Bourne won scripting, but Bill Joy won interactive terminal ergonomics. `csh` invented almost every interactive feature terminal power users rely on: command history substitution (`!`), aliases, tilde expansion (`~`), directory stacks (`pushd`/`popd`), and interactive job control (`Ctrl+Z`, `fg`, `bg`) wired into the new BSD job-control signal architecture (`SIGTSTP`, `SIGCONT`, `SIGCHLD`).
+Bourne won scripting, but Bill Joy won interactive terminal ergonomics. `csh` invented almost every interactive feature terminal power users rely on: command history substitution (`!`), aliases, tilde expansion (`~`), directory stacks (`pushd`/`popd`), and, from 4BSD onward, interactive job control (`Ctrl+Z`, `fg`, `bg`), implemented by Jim Kulp at IIASA and integrated by Bill Joy.
 
 ### The Almquist Shell (`ash`)
 > **Distro:** [The Net/2 Distribution (1991)](Net2/Net2.md) & [Minix 2.0 (1996)](Minix2.0/Minix2.0.md) · **Author:** Kenneth Almquist  
 > **Source:** [`Net2/usr/src/bin/sh/main.c`](Net2/usr/src/bin/sh/main.c) · [`Minix2.0/src/commands/ash/main.c`](Minix2.0/src/commands/ash/main.c)
 
-A fast, brutally lean, clean-room reimplementation of the System V Bourne shell written to bypass AT&T licensing. No bloat, tiny memory footprint, and near-zero startup overhead. Ported to Linux and Debian as `dash`, it remains the default `/bin/sh` on Ubuntu/Debian and the root shell on FreeBSD and NetBSD.
+A fast, brutally lean, clean-room reimplementation of the System V Bourne shell written to bypass AT&T licensing. No bloat, tiny memory footprint, and near-zero startup overhead. Ported to Linux and Debian as `dash`, it remains the default `/bin/sh` on Ubuntu/Debian and FreeBSD's and NetBSD's `/bin/sh` descend from it.
 
 ---
 
@@ -90,7 +90,7 @@ Rob Pike got tired of line-oriented Unix tools choking on multi-line C structs. 
 > **Distro:** [Fifth Edition (1974)](V5/V5.md) & [Seventh Edition (1979)](V7/V7.md) · **Authors:** Joe Ossanna, Brian Kernighan  
 > **Source:** [`V7/usr/src/cmd/troff/t10.c`](V7/usr/src/cmd/troff/t10.c)
 
-The program that literally bought Bell Labs its first PDP-11/20. Management refused to fund an OS research machine after Multics, so Thompson and Ritchie promised to build a text-typesetting system for the Bell Labs patent department. Ossanna wrote `roff` in assembly, evolved it into `troff` to drive a Graphic Systems CAT phototypesetter, and Kernighan later overhauled it in C. Every `man` page rendered in your terminal still speaks its macro language.
+The program that literally bought Bell Labs its first PDP-11/20. Management refused to fund an OS research machine after Multics, so Thompson and Ritchie promised to build a text-typesetting system for the Bell Labs patent department. Ossanna wrote `roff` in assembly and evolved it into `troff` to drive a Graphic Systems CAT phototypesetter. Ossanna rewrote it in C, and after his death Kernighan made it device-independent (1979). Every `man` page rendered in your terminal still speaks its macro language.
 
 ---
 
@@ -112,7 +112,7 @@ The Genesis block of modern systems programming: `/* C compiler Copyright 1972 B
 > **Distro:** [Seventh Edition Unix (1979)](V7/V7.md) · **Author:** Stephen C. Johnson  
 > **Source:** [`V7/usr/src/cmd/pcc/code.c`](V7/usr/src/cmd/pcc/code.c) · [`V7/usr/src/cmd/pcc/order.c`](V7/usr/src/cmd/pcc/order.c)
 
-Ritchie's original `cc` was tightly coupled to PDP-11 addressing modes and registers. Johnson engineered `pcc` around a machine-independent front end that emitted expression trees, paired with a table-driven Sethi-Ullman code generator backend. Swapping out roughly 25% of the files let you retarget C to a completely new CPU architecture (like the [Interdata 7/32](Interdata732/Interdata732.md) or [VAX-11/780](32V/32V.md)), turning Unix from a DEC-specific OS into portable software.
+Ritchie's original `cc` was tightly coupled to PDP-11 addressing modes and registers. Johnson engineered `pcc` around a machine-independent front end that emitted expression trees, paired with a table-driven Sethi-Ullman code generator backend. Swapping out roughly 25% of the files let you retarget C to a completely new CPU architecture (like the Interdata 8/32 or the [VAX-11/780](32V/32V.md)), turning Unix from a DEC-specific OS into portable software.
 
 ### Cfront: The Original C++ Translator
 > **Distro:** [Tenth Edition Unix (1989)](V10/V10.md) · **Author:** Bjarne Stroustrup  
@@ -130,7 +130,7 @@ Johnson wanted to add an `XOR` (`^`) operator to Ritchie's B compiler and found 
 > **Distro:** [Seventh Edition Unix (1979)](V7/V7.md) · **Authors:** Mike Lesk, Eric Schmidt  
 > **Source:** [`V7/usr/src/cmd/lex/lmain.c`](V7/usr/src/cmd/lex/lmain.c)
 
-Co-written in the summer of 1976 by a Bell Labs intern named Eric Schmidt (decades before becoming CEO of Google). `lex` compiles regular expression token definitions into deterministic finite automaton (DFA) state-transition tables emitted directly as C arrays, feeding lexed tokens straight into `yacc`.
+Co-written in 1975 by a Bell Labs intern named Eric Schmidt (decades before becoming CEO of Google). `lex` compiles regular expression token definitions into deterministic finite automaton (DFA) state-transition tables emitted directly as C arrays, feeding lexed tokens straight into `yacc`.
 
 ### AWK: Pattern Scanning & Processing Language
 > **Distro:** [Seventh Edition Unix (1979)](V7/V7.md) · **Authors:** Alfred Aho, Peter Weinberger, Brian Kernighan  
@@ -152,7 +152,7 @@ The Trojan horse that launched BSD. When Ken Thompson visited UC Berkeley on sab
 > **Distro:** [Seventh Edition Unix (1979)](V7/V7.md) · **Author:** Stuart Feldman  
 > **Source:** [`V7/usr/src/cmd/make/main.c`](V7/usr/src/cmd/make/main.c)
 
-Born out of frustration after Steve Johnson spent an entire morning debugging a compiler bug, only to realize he had forgotten to recompile a modified `.c` file into the binary. Feldman went home and wrote `make` over a single weekend: a directed acyclic graph (DAG) evaluator that inspects `stat()` modification timestamps (`mtime`) to recompile only the exact targets downstream of a change.
+Born out of frustration after Steve Johnson spent an entire morning debugging a compiler bug, only to realize he had forgotten to recompile a modified `.c` file into the binary. Feldman went home and wrote `make`: a directed acyclic graph (DAG) evaluator that inspects `stat()` modification timestamps (`mtime`) to recompile only the exact targets downstream of a change.
 
 *(Why does `make` strictly require leading `TAB` characters? Feldman used a quick-and-dirty lexing check in his first prototype; by the time he realized leading tabs were a terrible UI trap, he already had a "massive" user base of about a dozen Bell Labs colleagues and refused to break their Makefiles).*
 
@@ -160,13 +160,13 @@ Born out of frustration after Steve Johnson spent an entire morning debugging a 
 > **Distro:** [PWB/UNIX 1.0 (1977)](PWB1/PWB1.md) · **Author:** Marc J. Rochkind  
 > **Source:** [`PWB1/sys/source/sccs4/cmd/admin.c`](PWB1/sys/source/sccs4/cmd/admin.c) · [`delta.c`](PWB1/sys/source/sccs4/cmd/delta.c) · [`get.c`](PWB1/sys/source/sccs4/cmd/get.c)
 
-The first real version control system in computing history. Instead of copying whole source files on every revision, SCCS invented *interleaved weave deltas* (`s.` files), storing lines tagged with birth and death revision numbers so any historical version could be reconstructed in a single forward pass. Ancestor to RCS, CVS, SVN, BitKeeper, and Git.
+One of the first widely used version control systems. Instead of copying whole source files on every revision, SCCS invented *interleaved weave deltas* (`s.` files), storing lines tagged with birth and death revision numbers so any historical version could be reconstructed in a single forward pass. Ancestor to RCS, CVS, SVN, BitKeeper, and Git.
 
 ### `diff` and `diff3`: LCS & 3-Way Merging
-> **Distro:** [Sixth Edition (1975)](V6/V6.md) & [Seventh Edition (1979)](V7/V7.md) · **Authors:** Douglas McIlroy, James W. Hunt  
+> **Distro:** [Sixth Edition (1975)](V6/V6.md) & [Seventh Edition (1979)](V7/V7.md) · **Authors:** Douglas McIlroy, James W. Hunt (diff); diff3 from Bell Labs  
 > **Source:** [`V6/usr/source/s1/diff1.c`](V6/usr/source/s1/diff1.c) · [`V7/usr/src/cmd/diff.c`](V7/usr/src/cmd/diff.c) · **3-Way Merge:** [`V7/usr/src/cmd/diff3.c`](V7/usr/src/cmd/diff3.c)
 
-Solving the Longest Common Subsequence (LCS) problem naively takes $O(M \times N)$ memory, which immediately blew out a 16-bit PDP-11's 64KB address space. Hunt and McIlroy hashed every line of text into a 16-bit integer, sorted equivalence classes, and searched "k-candidates" in near-linear time. Later, McIlroy wrote `diff3.c`, inventing automated 3-way reconciliation between two diverged files and their common ancestor: the exact algorithmic backbone behind `git merge` and `git rebase` today.
+Solving the Longest Common Subsequence (LCS) problem naively takes $O(M \times N)$ memory, which immediately blew out a 16-bit PDP-11's 64KB address space. Hunt and McIlroy hashed every line of text into a 16-bit integer, sorted equivalence classes, and searched "k-candidates" in near-linear time. Later, `diff3.c` added automated 3-way reconciliation between two diverged files and their common ancestor: the exact algorithmic backbone behind `git merge` and `git rebase` today.
 
 ---
 
@@ -176,10 +176,10 @@ Solving the Longest Common Subsequence (LCS) problem naively takes $O(M \times N
 > **Distro:** [Sixth Edition (1975)](V6/V6.md) & [Seventh Edition (1979)](V7/V7.md) · **Authors:** Ken Thompson (`grep`), Alfred Aho (`egrep`)  
 > **Source:** [`V6/usr/source/s1/grep.c`](V6/usr/source/s1/grep.c) · [`V7/usr/src/cmd/egrep.y`](V7/usr/src/cmd/egrep.y)
 
-Doug McIlroy asked Thompson if he had a tool to search large dictionary files for patterns. Thompson claimed he stayed up all night writing a brand-new utility, when in reality he spent an hour ripping the `g/re/p` (Global / Regular Expression / Print) routine out of `ed` and wrapping it in `main()`. Four years later, Aho wrote `egrep` (`egrep.y`) using a deterministic finite automaton (DFA) that constructs state transitions lazily in memory, giving us full alternation (`|`) and `+`/`?` quantifiers with guaranteed $O(N)$ linear-time scanning and zero catastrophic backtracking.
+Doug McIlroy asked Thompson if he had a tool to search large dictionary files for patterns. Thompson (who had already written it as a private tool, first in PDP-11 assembly) reworked the existing `g/re/p` (Global / Regular Expression / Print) routine out of `ed` and wrapped it in `main()`. Four years later, Aho wrote `egrep` (`egrep.y`) using a deterministic finite automaton (DFA) that constructs state transitions lazily in memory, giving us full alternation (`|`) and `+`/`?` quantifiers with guaranteed $O(N)$ linear-time scanning and zero catastrophic backtracking.
 
 ### `tar`: Tape Archiver
-> **Distro:** [Seventh Edition Unix (1979)](V7/V7.md) · **Author:** John Fuller  
+> **Distro:** [Seventh Edition Unix (1979)](V7/V7.md) · **Author:** Bell Labs (V7)  
 > **Source:** [`V7/usr/src/cmd/tar/tar.c`](V7/usr/src/cmd/tar/tar.c)
 
 Built to stream directory trees continuously onto magnetic tape drives without seeking backwards. Open `tar.c` and look at `union hblock`: that 512-byte header block (storing permissions, UID, file size, and `mtime` as ASCII octal strings so archives stayed endian-independent across machines) is still the exact binary format unpacking every `.tar.gz`, OCI Docker image layer, and source release on your machine today.
@@ -191,7 +191,7 @@ Built to stream directory trees continuously onto magnetic tape drives without s
 Early Unix C programs either invoked raw `read()`/`write()` syscalls on every byte or used clumsy 518-byte struct buffers. Ritchie standardized user-space stream buffering with `struct _iobuf` (`FILE`), giving C `fopen`, `fread`, `fprintf`, and inline macro definitions for `getc()` and `putc()` that decrement buffer counters directly in CPU registers and only trap into kernel space via `_filbuf()` / `_flsbuf()` when a 512-byte buffer empties or fills.
 
 ### `cron`: The Clock Daemon
-> **Distro:** [Seventh Edition Unix (1979)](V7/V7.md) · **Author:** Brian Kernighan  
+> **Distro:** [Seventh Edition Unix (1979)](V7/V7.md) · **Author:** Ken Thompson  
 > **Source:** [`V7/usr/src/cmd/cron.c`](V7/usr/src/cmd/cron.c)
 
 At barely 230 lines of C, the original `cron` is a masterclass in Unix minimalism. It parses `/usr/lib/crontab` into an in-memory character list, checks `localtime()`, forks `/bin/sh` for any matching time entry, and calls `sleep(60)` in an infinite loop.
@@ -228,7 +228,7 @@ The old V7 filesystem placed *all* inodes at the start of the spinning disk and 
 > **Distro:** [Sun NFS v2 Release (1985)](NFSv2/NFSv2.md) · **Authors:** Steve Kleiman, Russel Sandberg, Bill Joy  
 > **Source:** [`NFSv2/usr/src/sun/sys/sys/vfs.c`](NFSv2/usr/src/sun/sys/sys/vfs.c) · [`NFSv2/usr/src/sun/sys/sys/vfs_vnode.c`](NFSv2/usr/src/sun/sys/sys/vfs_vnode.c)
 
-Before 1985, the Unix kernel's `open()` and `read()` syscalls were hardcoded directly to on-disk UFS structures (`struct inode`). To build NFS, Sun needed a single kernel to talk to local disks and remote servers simultaneously without littering every syscall with `if (is_remote)` branches. Kleiman implemented object-oriented polymorphism in pure C via `struct vfs` and `struct vnode`: tables of function pointers (`vop_open`, `vop_read`, `vop_lookup`) that decoupled the syscall interface from the physical filesystem. Linux's `struct file_operations` and `struct inode_operations` descend directly from this design.
+Before 1985, the Unix kernel's `open()` and `read()` syscalls were hardcoded directly to on-disk UFS structures (`struct inode`). To build NFS, Sun needed a single kernel to talk to local disks and remote servers simultaneously without littering every syscall with `if (is_remote)` branches. Kleiman implemented object-oriented polymorphism in pure C via `struct vfs` and `struct vnode`: tables of function pointers (`vop_open`, `vop_read`, `vop_lookup`) that decoupled the syscall interface from the physical filesystem. Linux's `struct file_operations` and `struct inode_operations` were influenced by this design.
 
 ### Network File System (NFS v2)
 > **Distro:** [Sun NFS v2 Release (1985)](NFSv2/NFSv2.md) · **Authors:** Russel Sandberg, Bob Lyon, Steve Kleiman  
@@ -262,13 +262,13 @@ Bonwick and Ahrens threw out 30 years of partition tables, volume managers, and 
 > **Distro:** [BBN-Vax-TCP / 4.1BSD (1981)](BBN-Vax-TCP/BBN-Vax-TCP.md) · **Authors:** Rob Gurwitz, Jack Haverty  
 > **Source:** [`BBN-Vax-TCP/bbnnet/mbuf.c`](BBN-Vax-TCP/bbnnet/mbuf.c) · [`BBN-Vax-TCP/bbnnet/tcp_input.c`](BBN-Vax-TCP/bbnnet/tcp_input.c)
 
-Funded by DARPA so every university running BSD on a VAX would have working TCP/IP ahead of the 1983 ARPANET flag-day cutover. To avoid expensive `memcpy()` calls every time a packet moved down the stack from TCP to IP to the network interface driver, Gurwitz invented the **`mbuf`** (memory buffer): chained fixed-size buffers with adjustable offset pointers that let each protocol layer prepend or strip headers in $O(1)$ time without copying payload bytes. Both BSD `mbuf` chains and Linux's `sk_buff` (`skb`) descend from this pattern.
+Funded by DARPA so every university running BSD on a VAX would have working TCP/IP ahead of the 1983 ARPANET flag-day cutover. To avoid expensive `memcpy()` calls every time a packet moved down the stack from TCP to IP to the network interface driver, Gurwitz helped pioneer the **`mbuf`**-style chained buffers that influenced later BSD designs: chained fixed-size buffers with adjustable offset pointers that let each protocol layer prepend or strip headers in $O(1)$ time without copying payload bytes. BSD `mbuf` chains, and later Linux's `sk_buff`, build on this pattern.
 
 ### The Berkeley Sockets API
 > **Distro:** [4.2BSD (1983)](4.2BSD/4.2BSD.md) · **Authors:** Bill Joy, Sam Leffler  
 > **Source:** [`4.2BSD/usr/src/sys/sys/uipc_socket.c`](4.2BSD/usr/src/sys/sys/uipc_socket.c)
 
-Network connections don't naturally fit the Unix "everything is a file" pathname model; you can't cleanly pass ephemeral ports, remote IP addresses, and listen backlog queues into an `open("/dev/tcp")` string. Joy and Leffler solved this with the socket syscall lifecycle: `socket()`, `bind()`, `listen()`, `accept()`, `connect()`. Once connected, it hands you back a standard file descriptor that works with normal `read()`, `write()`, and `close()`. Every network program on Earth still calls the exact API defined in `uipc_socket.c`.
+Network connections don't naturally fit the Unix "everything is a file" pathname model; you can't cleanly pass ephemeral ports, remote IP addresses, and listen backlog queues into an `open("/dev/tcp")` string. Joy and Leffler solved this with the socket syscall lifecycle: `socket()`, `bind()`, `listen()`, `accept()`, `connect()`. Once connected, it hands you back a standard file descriptor that works with normal `read()`, `write()`, and `close()`. Every network program still uses the socket API whose kernel side begins in `uipc_socket.c`.
 
 ### Sendmail: Internetwork Mail Router
 > **Distro:** [4.1cBSD (1982)](4.1cBSD/4.1cBSD.md) & [4.2BSD (1983)](4.2BSD/4.2BSD.md) · **Author:** Eric Allman  
@@ -286,7 +286,7 @@ In October 1986, the early Internet suffered catastrophic "congestion collapse":
 > **Distro:** [OpenBSD 4.6 (1999 to 2009)](OpenBSD-4.6/OpenBSD-4.6.md) · **Authors:** Theo de Raadt, Markus Friedl, Niels Provos  
 > **Source:** [`OpenBSD-4.6/usr.bin/ssh/ssh.c`](OpenBSD-4.6/usr.bin/ssh/ssh.c)
 
-When Tatu Ylönen's original SSH 1.x shifted to a proprietary license, the OpenBSD team forked the last open release (1.2.12), stripped out every patent-encumbered cipher over a single weekend, added SSH 2.0 support, and pioneered **privilege separation** (`privsep`): isolating untrusted network parsing inside an unprivileged `chroot()` child process while keeping keys inside a minimal privileged monitor over a socketpair.
+When Tatu Ylönen's original SSH 1.x shifted to a proprietary license, the OpenBSD team forked the last open release (1.2.12), stripped out every patent-encumbered cipher, added SSH 2.0 support, and pioneered **privilege separation** (`privsep`): isolating untrusted network parsing inside an unprivileged `chroot()` child process while keeping keys inside a minimal privileged monitor over a socketpair.
 
 ---
 
@@ -294,9 +294,9 @@ When Tatu Ylönen's original SSH 1.x shifted to a proprietary license, the OpenB
 
 ### Salted Password Hashes (`crypt`)
 > **Distro:** [AUSAM (1979)](AUSAM/AUSAM.md) & [Seventh Edition Unix (1979)](V7/V7.md) · **Authors:** Robert Morris, Ken Thompson (with parallel work by Peter Ivanov)  
-> **Source:** [`V7/usr/src/cmd/crypt.c`](V7/usr/src/cmd/crypt.c) · [`AUSAM/sys/ken/slp.c`](AUSAM/sys/ken/slp.c)
+> **Source:** [`V7/usr/src/libc/gen/crypt.c`](V7/usr/src/libc/gen/crypt.c)
 
-Because `/etc/passwd` had to be world-readable so utilities like `ls -l` could map numeric UIDs to usernames, Unix stored one-way password hashes. To stop attackers from pre-computing hashes of an entire dictionary once and comparing them against every user on every machine (what we now call a rainbow table attack), Morris and Thompson injected a 12-bit random **salt** that physically mutated the internal expansion tables (`E`-box) of the DES cipher across 25 rounds in [`crypt.c`](V7/usr/src/cmd/crypt.c), multiplying pre-computation work by 4,096x ($2^{12}$) and breaking off-the-shelf DES hardware chips.
+Because `/etc/passwd` had to be world-readable so utilities like `ls -l` could map numeric UIDs to usernames, Unix stored one-way password hashes. To stop attackers from pre-computing hashes of an entire dictionary once and comparing them against every user on every machine (what we now call a rainbow table attack), Morris and Thompson injected a 12-bit random **salt** that physically mutated the internal expansion tables (`E`-box) of the DES cipher across 25 rounds in [`crypt.c`](V7/usr/src/libc/gen/crypt.c), multiplying pre-computation work by 4,096x ($2^{12}$) and breaking off-the-shelf DES hardware chips.
 
 ### Packet Filter (`pf`)
 > **Distro:** [OpenBSD 4.6 (2001 to 2009)](OpenBSD-4.6/OpenBSD-4.6.md) · **Author:** Daniel Hartmeier  
@@ -314,27 +314,27 @@ The authoritative upstream C implementation of `sudo`: evaluating `/etc/sudoers`
 
 ## 9. Schedulers, Virtual Memory & Observability
 
-### Fair-Share Scheduling (`lnode`)
-> **Distro:** [AUSAM (1979)](AUSAM/AUSAM.md) · **Authors:** Peter Ivanov, Bob Kummerfeld (UNSW)  
+### Per-User Share Accounting (`lnode`) - Precursor of Fair-Share Scheduling
+> **Distro:** [AUSAM (1979)](AUSAM/AUSAM.md) · **Authors:** AUSAM team (UNSW / University of Sydney)  
 > **Source:** [`AUSAM/sys/ken/slp.c`](AUSAM/sys/ken/slp.c)
 
-Standard V6/V7 Unix scheduled each *process* equally, meaning any clever student at the University of New South Wales could hog 90% of the PDP-11's CPU simply by running a `fork()` loop of 20 background jobs while everyone else ran one. Kummerfeld and Ivanov modified [`slp.c`](AUSAM/sys/ken/slp.c) to track CPU decay per *user account* (`lnode`), inventing fair-share scheduling and laying the conceptual foundation for modern Linux `cgroups`.
+Standard V6/V7 Unix scheduled each *process* equally, so a student running many background jobs could take most of the CPU. AUSAM tracked per-user resource usage and limits through a per-user `lnode` record, modifying [`slp.c`](AUSAM/sys/ken/slp.c). AUSAM is the ancestor of the Share scheduler; the fair-share scheduler itself is credited to Judy Kay and Piers Lauder (University of Sydney, 1980s, who evolved AUSAM into Share II).
 
 ### Paged Virtual Memory & `vfork()`
-> **Distro:** [3BSD (1980)](3BSD/3BSD.md) · **Authors:** Özalp Babaoğlu, Bill Joy  
+> **Distro:** [3BSD (1979)](3BSD/3BSD.md) · **Authors:** Özalp Babaoğlu, Bill Joy  
 > **Source:** [`3BSD/usr/src/sys/sys/vmpage.c`](3BSD/usr/src/sys/sys/vmpage.c) · [`3BSD/usr/src/sys/sys/vmproc.c`](3BSD/usr/src/sys/sys/vmproc.c)
 
-Bell Labs' VAX port ([32V](32V/32V.md)) ignored the VAX-11/780's hardware MMU paging and still swapped entire processes to disk to free RAM. Babaoğlu and Joy wired true demand-paged virtual memory into 3BSD (`vmpage.c`) using a global two-handed clock replacement algorithm. And because copying multi-megabyte page tables during `fork()` just to immediately overwrite them with `exec()` was slow prior to Copy-on-Write, Joy added `vfork()`, letting the child borrow the parent's address space and page tables directly until `execve()`.
+Bell Labs' VAX port ([32V](32V/32V.md)) ignored the VAX-11/780's hardware MMU paging and still swapped entire processes to disk to free RAM. Babaoğlu and Joy wired true demand-paged virtual memory into 3BSD (`vmpage.c`) using a global clock-style page replacement algorithm. And because copying multi-megabyte page tables during `fork()` just to immediately overwrite them with `exec()` was slow prior to Copy-on-Write, Joy added `vfork()`, letting the child borrow the parent's address space and page tables directly until `execve()`.
 
 ### Memory-Mapped Files (`mmap`) & Shared Libraries
 > **Distro:** [SunOS 4.1.4 (1988 to 1994)](SunOS-4.1.4/SunOS-4.1.4.md) · **Authors:** Bill Joy, Robert Gingell, Joseph Moran  
 > **Source:** **Syscall:** [`SunOS-4.1.4/sys/os/kern_mman.c`](SunOS-4.1.4/sys/os/kern_mman.c) · **Vnode Segment Driver:** [`SunOS-4.1.4/sys/vm/seg_vn.c`](SunOS-4.1.4/sys/vm/seg_vn.c) · **Hardware Translation:** [`SunOS-4.1.4/sys/sun4/vm_hat.c`](SunOS-4.1.4/sys/sun4/vm_hat.c)
 
-Unifying the VFS `vnode` layer with the virtual memory pager, SunOS 4.0 replaced the old BSD buffer cache with a unified page cache and delivered the first production implementation of `mmap()`. By mapping `vnode` pages directly into process virtual address spaces (`seg_vn.c` via the `smmap()` system call in `kern_mman.c`), Sun also invented modern dynamic shared libraries (`.so` / `ld.so`), allowing hundreds of processes to share a single physical RAM copy of `libc`.
+Unifying the VFS `vnode` layer with the virtual memory pager, SunOS 4.0 replaced the old BSD buffer cache with a unified page cache and delivered the first production implementation of `mmap()`. By mapping `vnode` pages directly into process virtual address spaces (`seg_vn.c` via the `smmap()` system call in `kern_mman.c`), Sun also brought dynamic linking and shared libraries (`.so` / `ld.so`), allowing hundreds of processes to share a single physical RAM copy of `libc`.
 
 ### Linus Torvalds' Original Linux 0.01 Scheduler & Pager
 > **Distro:** [Linux 0.01 (1991)](Linux-0.01/Linux-0.01.md) · **Author:** Linus Torvalds  
-> **Source:** **Scheduler:** [`Linux-0.01/kernel/sched.c`](Linux-0.01/kernel/sched.c) · **x86 TSS Switch:** [`Linux-0.01/kernel/system_call.s`](Linux-0.01/kernel/system_call.s) · **Paging & CoW:** [`Linux-0.01/mm/memory.c`](Linux-0.01/mm/memory.c)
+> **Source:** **Scheduler:** [`Linux-0.01/kernel/sched.c`](Linux-0.01/kernel/sched.c) · **x86 TSS Switch (`switch_to` macro):** [`Linux-0.01/include/linux/sched.h`](Linux-0.01/include/linux/sched.h) · **Paging & CoW:** [`Linux-0.01/mm/memory.c`](Linux-0.01/mm/memory.c)
 
 If modern Linux's millions of lines of code feel overwhelming, read these three files. All of `schedule()` in `sched.c` is literally 35 lines of C: iterating backwards through a fixed 64-slot `task[]` array, picking the runnable task with the highest tick `counter`, and decaying counters (`(*p)->counter = ((*p)->counter >> 1) + (*p)->priority`) when all runnable tasks hit zero. Context switching uses the Intel 386 hardware Task State Segment (`ljmp` macro `switch_to(next)`), while `memory.c` implements full 386 page-table allocation, demand paging, and Copy-on-Write (`do_wp_page`) in barely 400 lines of code.
 
@@ -342,13 +342,13 @@ If modern Linux's millions of lines of code feel overwhelming, read these three 
 > **Distro:** [OpenSolaris Build 135 (2004 to 2010)](OpenSolaris_b135/OpenSolaris_b135.md) · **Authors:** Bryan Cantrill, Mike Shapiro, Adam Leventhal  
 > **Source:** [`OpenSolaris_b135/uts/common/dtrace/dtrace.c`](OpenSolaris_b135/uts/common/dtrace/dtrace.c)
 
-Before DTrace, diagnosing a live production kernel meant either recompiling with debug `printf`s or risking a panic with raw debugger breakpoints. DTrace embedded a register-based virtual machine inside the kernel (the DIF bytecode interpreter inside `dtrace.c`, a direct philosophical precursor to modern Linux **eBPF**) that statically verifies tracing programs for safety (no unbounded loops, no arbitrary memory writes) and dynamically patches live kernel instructions in RAM only when a probe fires, achieving strictly *zero* overhead when disabled.
+Before DTrace, diagnosing a live production kernel meant either recompiling with debug `printf`s or risking a panic with raw debugger breakpoints. DTrace embedded a register-based virtual machine inside the kernel (the DIF bytecode interpreter inside `dtrace.c`, a direct philosophical precursor to modern Linux **eBPF**) that statically verifies tracing programs for safety (no unbounded loops, no arbitrary memory writes) and dynamically patches live kernel instructions in RAM only while a probe is enabled, achieving strictly *zero* overhead when disabled.
 
 ### Completely Fair Scheduler (CFS) & KVM Hypervisor
 > **Distro:** [Linux 2.6.33.2 (2007 to 2010)](Linux-2.6.33.2/Linux-2.6.33.2.md) · **Authors:** Ingo Molnár (CFS), Avi Kivity (KVM)  
 > **Source:** **CFS:** [`Linux-2.6.33.2/kernel/sched_fair.c`](Linux-2.6.33.2/kernel/sched_fair.c) · **KVM:** [`Linux-2.6.33.2/virt/kvm/kvm_main.c`](Linux-2.6.33.2/virt/kvm/kvm_main.c)
 
-Two modern titans in one tree. In `sched_fair.c`, Molnár threw out complex interactivity heuristics and $O(1)$ active/expired runqueue arrays in favor of a time-ordered red-black tree keyed by **virtual runtime** (`vruntime`) tracked down to the nanosecond, always scheduling the leftmost node (`rb_first`) that has received the least weighted CPU time. Over in `kvm_main.c`, Avi Kivity exposed Intel VT-x and AMD-V hardware virtualization extensions through a clean character device (`/dev/kvm`), turning the standard Linux kernel into a full Type-1 hypervisor without reinventing the scheduler or memory manager.
+Two modern titans in one tree. In `sched_fair.c`, Molnár threw out complex interactivity heuristics and $O(1)$ active/expired runqueue arrays in favor of a time-ordered red-black tree keyed by **virtual runtime** (`vruntime`) tracked down to the nanosecond, always scheduling the leftmost node (`rb_first`) that has received the least weighted CPU time. Over in `kvm_main.c`, Avi Kivity exposed Intel VT-x and AMD-V hardware virtualization extensions through a clean character device (`/dev/kvm`), turning the standard Linux kernel into a hypervisor (often described as Type-1 or Type-2) without reinventing the scheduler or memory manager.
 
 ---
 

@@ -6,7 +6,7 @@
 | :--- | :--- |
 | **System Name** | UNIX/V7M 2.1 (UNIX Version 7 Modified for PDP-11 / V7M11) |
 | **Release Date** | October 1981 (Version 2.1) |
-| **Origin / Creators** | Digital Equipment Corporation (DEC) Unix Engineering Group (UEG, Merrimack, NH) — Fred Canter, Jerry Brenner, Armando Stettner, Bill Burns, Mary Anne Cacciola, Bill Munson |
+| **Origin / Creators** | Digital Equipment Corporation (DEC) Unix Engineering Group (UEG, Merrimack, NH) - Fred Canter, Jerry Brenner, Armando Stettner, Bill Burns, Mary Anne Cacciola, Bill Munson |
 | **Source Donation** | Preserved from DEC release tapes and donated to TUHS |
 | **Target Architecture** | DEC PDP-11 family (PDP-11/23, 11/24, 11/34, 11/44, 11/45, and 11/70) |
 | **Key Historical Milestones** | **DEC's First Supported Commercial UNIX Product**: Introduced the overlay kernel for 16-bit addressing; supported both separate and non-separate I/D spaces; foundation for ULTRIX-11 |

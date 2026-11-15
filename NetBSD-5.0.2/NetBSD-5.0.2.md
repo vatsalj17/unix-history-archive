@@ -1,7 +1,7 @@
 # NetBSD-5.0.2 Source Code Archive
 
 ## Historical Overview
-- **Release Date**: February 6, 2010 (NetBSD 5.0 initial release April 2009; 5.0.2 maintenance update)
+- **Release Date**: February 12, 2010 (NetBSD 5.0 initial release April 2009; 5.0.2 maintenance update)
 - **Author / Organization**: The NetBSD Foundation, Inc.
 - **Target Architectures**: Over 50 supported hardware architectures in `sys/arch/` (including `i386`, `amd64`, `sparc`, `sparc64`, `alpha`, `vax`, `hp300`, `macppc`, `amiga`, `atari`, `sgimips`, `dreamcast`, `zaurus`, and `xen`)
 - **Historical Milestone**: The culmination of the massive NetBSD 5 kernel overhaul led by developer Andrew Doran. Embodying NetBSD's legendary motto, *"Of course it runs NetBSD"*, version 5.0.2 combined extreme multi-platform portability with an ultra-modern symmetric multiprocessing (SMP) kernel, lockless concurrency algorithms, 1:1 POSIX threading, and the groundbreaking RUMP anykernel architecture.

@@ -5,19 +5,19 @@
 | Attribute | Details |
 | :--- | :--- |
 | **System Name** | Wollongong Interdata UNIX (Level 6 UNIX Port to Interdata 7/32) |
-| **Release Date** | 1977 (Booted April 1977; documented 1978 ACM SOSP / USENIX 1998) |
-| **Origin / Creators** | University of Wollongong, Australia — Richard Miller, Ross Nealon; supervised by Prof. Juris Reinfelds |
+| **Release Date** | 1977 (Booted April 1977; documented by Miller, Reinfelds, and Johnson & Ritchie) |
+| **Origin / Creators** | University of Wollongong, Australia - Richard Miller, Ross Nealon; supervised by Prof. Juris Reinfelds |
 | **Source Donation** | Donated to TUHS (The Unix Heritage Society) by Richard Miller |
 | **Target Architecture** | Interdata 7/32 (32-bit minicomputer, big-endian, linear address space, 16 32-bit general-purpose registers) |
 | **Key Historical Milestones** | **The First UNIX Port in History**: First time UNIX was ported to a non-DEC architecture; proved UNIX was a portable operating system rather than a PDP-11 proprietary artifact |
 
 ### Significance & Historical Context
-Until 1977, UNIX existed exclusively on Digital Equipment Corporation (DEC) hardware—originally the PDP-7, then the PDP-11. Because the operating system and Ritchie's C compiler were filled with implicit assumptions about 16-bit word size, PDP-11 byte order (middle-endian), and PDP-11 Memory Management Unit (MMU) registers, many in the computer science community believed UNIX was fundamentally tethered to PDP hardware.
+Until 1977, UNIX existed exclusively on Digital Equipment Corporation (DEC) hardware - originally the PDP-7, then the PDP-11. Because the operating system and Ritchie's C compiler were filled with implicit assumptions about 16-bit word size, PDP-11 byte order (middle-endian), and PDP-11 Memory Management Unit (MMU) registers, many in the computer science community believed UNIX was fundamentally tethered to PDP hardware.
 
 In early 1976, the University of Wollongong acquired an Interdata 7/32, a 32-bit minicomputer with a completely different architecture: 32-bit words, big-endian byte ordering, 16 general-purpose 32-bit registers, and a primitive memory segmentation scheme. Richard Miller undertook the monumental task of porting Sixth Edition UNIX (V6) to this foreign machine:
 1. **Compiler Retargeting**: Miller modified Dennis Ritchie's PDP-11 C compiler to generate code for the Interdata 7/32 and authored an entire Interdata assembler (`as`) and linker.
-2. **Beating Bell Labs**: Dennis Ritchie and Steve Johnson at Bell Labs were concurrently attempting to port UNIX to an Interdata 8/32. However, Richard Miller booted UNIX on the Interdata 7/32 at Wollongong on **April 28, 1977**—several months before Bell Labs succeeded.
-3. **Proof of Portability**: Miller's port demonstrated that an operating system written in C could be migrated to a wildly different architecture without a complete redesign. This success directly prompted Steve Johnson to build the Portable C Compiler (PCC) and influenced Bell Labs to overhaul the kernel for Version 7 UNIX, ensuring portability across 16-bit, 32-bit, little-endian, and big-endian systems.
+2. **Parallel Porting Efforts**: Wollongong's kernel first booted on 28 April 1977; the Bell Labs Interdata 8/32 port had a working kernel by June 1977, about two months later. The two teams worked independently and were unaware of each other.
+3. **Proof of Portability**: Miller's port demonstrated that an operating system written in C could be migrated to a wildly different architecture without a complete redesign. Richard Miller's account of the port, Juris Reinfelds' "The First Port of UNIX", and Johnson and Ritchie's "Portability of C Programs and the UNIX System" (BSTJ, 1978) document this work.
 
 ---
 
@@ -105,7 +105,7 @@ Interdata732/
 2. **Examine the 32-Bit Machine Layer**:
    - Inspect `usr/sys/low.s` and `usr/sys/start.s` to observe how Miller handled the Interdata register set and Program Status Doubleword (PSD).
 3. **Study the Selector Channel (SELCH)**:
-   - Read `usr/sys/selch.c` to see how DMA on the Interdata was coordinated—a marked departure from the DEC Unibus map.
+   - Read `usr/sys/selch.c` to see how DMA on the Interdata was coordinated - a marked departure from the DEC Unibus map.
 4. **Compare Kernel Data Structures**:
    - Compare `usr/sys/param.h` and `usr/sys/user.h` against standard V6 PDP-11 headers to observe how type declarations were adapted for 32-bit pointers and integers.
 5. **Inspect the Toolchain**:

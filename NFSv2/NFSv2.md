@@ -6,15 +6,15 @@
 | :--- | :--- |
 | **System Name** | Sun Microsystems Network File System Release 2.0 (NFS 2.0 / VFS Subsystem) |
 | **Release Date** | December 16, 1985 (Documented in `release.ms`) |
-| **Origin / Creators** | Sun Microsystems, Inc. (Mountain View, CA) — Russel Sandberg, Bob Lyon, Bill Joy, Steve Kleiman, Dan Walsh |
+| **Origin / Creators** | Sun Microsystems, Inc. (Mountain View, CA) - Russel Sandberg, Bob Lyon, Bill Joy, Steve Kleiman, Dan Walsh |
 | **Source Donation** | Preserved from Sun's 1985 external distribution tape and archived in TUHS |
 | **Target Architecture** | DEC VAX (port for 4.2BSD) and Motorola 68010/68020 (Sun-2, Sun-3 workstations) |
 | **Key Historical Milestones** | **Invention of the Virtual File System (VFS) and Vnode interface**; release of NFS Version 2 (RFC 1094); invention of the Directory Name Lookup Cache (DNLC); introduction of ONC RPC, XDR, and Yellow Pages (YP/NIS) |
 
 ### Significance & Historical Context
-In 1984–1985, Sun Microsystems revolutionized distributed computing by solving one of operating systems' greatest hurdles: how to allow multiple machines across a local area network to transparently share files as if they resided on local disks.
+In 1984-1985, Sun Microsystems revolutionized distributed computing by solving one of operating systems' greatest hurdles: how to allow multiple machines across a local area network to transparently share files as if they resided on local disks.
 
-To achieve this, Sun engineer Steve Kleiman invented the **Virtual File System (VFS)** and **Vnode** architecture. Prior to this innovation, the UNIX file system syscalls (`open`, `read`, `write`, `close`, `stat`) were hardcoded to manipulate disk blocks and in-memory inodes belonging directly to the Berkeley Fast File System (UFS). Kleiman inserted an object-oriented virtual dispatch table into the kernel (`struct vnodeops` and `struct vfsops`), decoupling file semantics from storage implementations. Local filesystems (UFS) and remote filesystems (NFS) simply implemented the same vnode operation vectors (`VOP_LOOKUP`, `VOP_READ`, `VOP_WRITE`). Today, virtually every modern operating system (Linux, macOS, FreeBSD, Windows NT, Solaris) utilizes a descendant of Sun's VFS/Vnode design.
+To achieve this, Sun engineer Steve Kleiman invented the **Virtual File System (VFS)** and **Vnode** architecture. Prior to this innovation, the UNIX file system syscalls (`open`, `read`, `write`, `close`, `stat`) were hardcoded to manipulate disk blocks and in-memory inodes belonging directly to the Berkeley Fast File System (UFS). Kleiman inserted an object-oriented virtual dispatch table into the kernel (`struct vnodeops` and `struct vfsops`), decoupling file semantics from storage implementations. Local filesystems (UFS) and remote filesystems (NFS) simply implemented the same vnode operation vectors (`VOP_LOOKUP`, `VOP_READ`, `VOP_WRITE`). Today, virtually every modern operating system (Linux, macOS, FreeBSD, Solaris) utilizes a descendant of Sun's VFS/Vnode design.
 
 Alongside VFS, Sun introduced:
 1. **The NFSv2 Protocol (RFC 1094)**: Built over UDP and designed to be **stateless**. The server maintains no open file descriptors or client state; each request is authenticated and contains a persistent file handle (`fhandle`). If an NFS server crashes and reboots, clients simply pause until the server resumes, without lost files or application crashes.

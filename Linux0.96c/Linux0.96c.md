@@ -7,12 +7,12 @@
 - **Historical Milestone**: The critical turning point transitioning Linux from a toy educational experiment into a capable, multi-subsystem production operating system. Between Linux 0.01 (September 1991) and the upcoming 1.0 (March 1994), 0.96c laid the foundations for modern Linux storage, networking, and virtual memory.
 
 ### Key Architectural Revolutions
-- **The First Native Linux Filesystem (`fs/ext/`)**: Linux 0.01 was handcuffed to Andrew Tanenbaum's Minix filesystem (14-character filename limit, 64 MB partition limit). In 0.96c, French software engineer Rémy Card introduced the Extended Filesystem (`ext`), expanding filename limits to 255 characters and partition limits to 2 gigabytes.
-- **The Birth of Linux Networking (`net/`)**: Introduced the primordial BSD socket abstraction layer written by Ross Biro, laying the bedrock for TCP/IP and Unix domain IPC (`AF_UNIX`).
-- **Paging to Disk & Swapping (`mm/swap.c`, `mm/mmap.c`)**: Surpassed the physical memory bottleneck by introducing disk-backed swapping with bitmap allocation and early memory-mapped files (`mmap`).
-- **SCSI Subsystem (`kernel/blk_drv/scsi/`)**: Hardware support expanded from standard IDE/AT disks to enterprise SCSI host adapters (Adaptec AHA-1542, Seagate ST01/ST02).
-- **FPU Math Emulation (`kernel/math/`)**: Allowed Linux to run on cost-effective Intel 386SX/DX chips lacking an 80387 hardware math coprocessor.
-- **Virtual Consoles (`kernel/chr_drv/vt.c`)**: Introduced Alt+Fn keyboard switching across multiple virtual teletype consoles.
+- **The First Native Linux Filesystem (`fs/ext/`)**: Linux 0.01 was handcuffed to Andrew Tanenbaum's Minix filesystem (14-character filename limit, 64 MB partition limit). In 0.96c, French software engineer Rémy Card introduced the Extended Filesystem (`ext`), expanding filename limits to 255 characters and partition limits to 2 gigabytes. ext was still labelled alpha in 0.96c, released 5 July 1992; the same release added FIFOs and st_blocks.
+- **Early Stage of Linux Networking (`net/`)**: Introduced the primordial BSD socket abstraction layer written by Ross Biro, laying the bedrock for TCP/IP and Unix domain IPC (`AF_UNIX`).
+- **Swapping and mmap**: Paging to disk was already added in Linux 0.12 (January 1992); 0.96c contains `mm/swap.c` and an early `mm/mmap.c`.
+- **SCSI Subsystem (`kernel/blk_drv/scsi/`)**: Hardware support expanded from standard IDE/AT disks to enterprise SCSI host adapters (Adaptec AHA-1542, Seagate ST01/ST02) (first added in 0.96a, May 1992).
+- **FPU Math Emulation (`kernel/math/`)**: Allowed Linux to run on cost-effective Intel 386SX/DX chips lacking an 80387 hardware math coprocessor (introduced in 0.12, January 1992).
+- **Virtual Consoles (`kernel/chr_drv/vt.c`)**: Introduced Alt+Fn keyboard switching across multiple virtual teletype consoles (introduced in 0.12, January 1992, by Peter MacDonald).
 
 ---
 
@@ -99,7 +99,7 @@ Linux0.96c/
 │   │   ├── Makefile         # Ext build rules
 │   │   ├── dir.c            # Ext directory scanning and entry creation
 │   │   ├── file.c           # Regular file operations
-│   │   ├── freespace.c      # Ext free block bitmap allocation
+│   │   ├── freelists.c      # Ext free block/inode linked lists
 │   │   ├── inode.c          # Ext inode reading, writing, and block indexing
 │   │   └── namei.c          # Ext directory entry lookup and unlinking
 │   └── minix/               # Minix V1 Filesystem driver

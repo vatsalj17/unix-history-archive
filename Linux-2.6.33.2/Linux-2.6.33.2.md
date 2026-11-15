@@ -3,14 +3,14 @@
 ## Historical Overview
 - **Release Date**: April 1, 2010
 - **Author / Organization**: Linus Torvalds and thousands of developers worldwide (The Linux Foundation)
-- **Target Architectures**: 23 supported hardware architectures in `arch/`: `x86` (unified 32/64-bit), `arm`, `mips`, `powerpc`, `sparc`, `ia64`, `s390`, `blackfin`, `cris`, `frv`, `h8300`, `m32r`, `m68k`, `m68knommu`, `microblaze`, `mn10300`, `parisc`, `score`, `sh`, `um` (User-Mode Linux), `avr32`, `xtensa`.
+- **Target Architectures**: 23 supported hardware architectures in `arch/`: `alpha`, `x86` (unified 32/64-bit), `arm`, `mips`, `powerpc`, `sparc`, `ia64`, `s390`, `blackfin`, `cris`, `frv`, `h8300`, `m32r`, `m68k`, `m68knommu`, `microblaze`, `mn10300`, `parisc`, `score`, `sh`, `um` (User-Mode Linux), `avr32`, `xtensa`.
 - **Historical Milestone**: Represents the apex of the mature Linux 2.6 kernel series. While Linux 0.01 contained 88 files and ~10,000 lines of code targeting a single PC with 16 MB of RAM, Linux 2.6.33.2 contains **31,528 files** and over **13.5 million lines of code**, running on everything from tiny embedded cell phones (Android) to massive multi-terabyte supercomputers.
 
 ### Key Architectural Revolutions
 - **CFS (Completely Fair Scheduler)**: Engineered by Ingo Molnar, replacing the previous O(1) scheduler with a red-black tree tracking virtual runtime (`vruntime`), delivering nanosecond scheduling fairness.
 - **Cgroups & Namespaces**: Comprehensive resource partitioning (CPU, memory, blkio, network) and process namespace isolation (`PID`, `NET`, `IPC`, `MNT`, `UTS`), forming the technological foundation for modern container runtimes (Docker, Kubernetes, LXC).
-- **SLUB Allocator**: Written by Christoph Lameter, replacing the aging SLAB allocator with a lockless, per-CPU slab allocator optimized for multi-socket multicore NUMA machines.
-- **KVM (Kernel-based Virtual Machine)**: In-tree hypervisor in `virt/kvm/` that turns the Linux kernel into a Type-1 bare-metal hypervisor leveraging Intel VT-x and AMD-V hardware virtualization extensions.
+- **SLUB Allocator**: Written by Christoph Lameter, replacing the aging SLAB allocator with a per-CPU slab allocator optimized for multi-socket multicore NUMA machines.
+- **KVM (Kernel-based Virtual Machine)**: In-tree hypervisor in `virt/kvm/` that turns Linux itself into the host leveraging Intel VT-x and AMD-V hardware virtualization extensions.
 - **Next-Generation Storage & Filesystems**: Mature Ext4 (delayed allocation, extents, multiblock allocator), early mainline support for Btrfs, scalable XFS, NILFS2 log-structured filesystem, and Device Mapper.
 - **Dynamic Tick & Power Management**: Support for tickless idle (`CONFIG_NO_HZ`) and CPU frequency governors (`cpufreq`), drastically reducing energy consumption in data centers and mobile devices.
 - **In-Kernel Tracing (`tools/perf/`, `ftrace`)**: Production performance instrumentation through the `perf` subsystem, tracepoints, and ring-buffer events.
@@ -116,7 +116,7 @@ Linux-2.6.33.2/
 | `kernel/rcutree.c` | Tree Read-Copy Update (RCU). Provides lockless, wait-free concurrent read access to shared data structures across thousands of CPU cores. |
 | `mm/page_alloc.c` | Physical memory buddy allocator (`alloc_pages()`). Manages page frame blocks grouped by powers of two across NUMA memory zones (`ZONE_DMA`, `ZONE_NORMAL`, `ZONE_HIGHMEM`). |
 | `mm/slub.c` | Christoph Lameter's SLUB allocator. Replaced SLAB with an elegant, queue-free memory cache utilizing page struct flags and fast per-CPU local buffers. |
-| `fs/dcache.c` | VFS directory cache. Implements the lock-free dentry hash table and path lookup acceleration (`d_lookup`). |
+| `fs/dcache.c` | VFS directory cache. Implements the RCU-protected dentry hash table and path lookup acceleration (`d_lookup`). |
 | `fs/ext4/super.c` | Ext4 filesystem registration. Implements 48-bit block addressing, delayed allocation, and extent trees supporting 16-terabyte files. |
 | `net/core/dev.c` | Network packet processing backbone. Dispatches incoming frames via NAPI polling and routes packets up to the network layer via `netif_receive_skb()`. |
 | `virt/kvm/kvm_main.c` | Kernel-based Virtual Machine (KVM) core. Exposes `/dev/kvm` ioctls allowing userspace (QEMU) to manage hardware-accelerated guest virtual machines. |

@@ -99,7 +99,7 @@ Xinu7/
 | Source File | Functionality / Significance |
 | :--- | :--- |
 | `src/sys/sys/initialize.c` | Entry point `sysinit()`. Sets up the interrupt vector table, initializes process tables, semaphores, memory free lists, and device drivers, spawning the idle null process (`pid 0`). |
-| `src/sys/sys/resched.c` | Core preemptive scheduler. Checks the highest-priority runnable process in the delta list `readylist`. If different from the currently running process, calls assembly context switch `ctxsw()`. |
+| `src/sys/sys/resched.c` | Core preemptive scheduler. Checks the highest-priority runnable process in the priority-ordered ready list. If different from the currently running process, calls assembly context switch `ctxsw()`. |
 | `src/sys/sys/ctxsw.s` | PDP-11 assembly context switch. Saves registers `r0` through `r5`, the processor status word (`PS`), and stack pointer (`SP`), swaps stack pointers to the new process, and restores registers. |
 | `src/sys/sys/create.c` | Process creation routine. Allocates a stack frame from heap memory, mimics an interrupt stack frame, initializes saved registers, and inserts the process into `proctab[]`. |
 | `src/sys/sys/wait.c` & `signal.c` | Classic Dijkstra counting semaphore primitives. Decrements/increments semaphore counts, placing waiting processes into suspension queues or waking blocked processes. |

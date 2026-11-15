@@ -1,15 +1,15 @@
 # Minix1.5 Source Code Archive
 
 ## Historical Overview
-- **Release Date**: November 1989
+- **Release Date**: 1991 (the TUHS snapshot is dated November 1989)
 - **Author / Community**: Andrew S. Tanenbaum with contributions from a worldwide academic community
-- **Target Architectures**: IBM PC/XT/AT (Intel 8088, 80286, 80386 protected mode) and non-Intel architectures: Motorola 68000 (Atari ST, Commodore Amiga, Apple Macintosh) and SPARC (Sun SPARCstation)
-- **Historical Milestone**: The transition of Minix from a 16-bit IBM PC-only educational project into a portable, multi-architecture operating system. Minix 1.5 added protected-mode support for Intel 286/386 CPUs, introduced network-oriented distributed systems code via Amoeba, adopted modern ANSI C library standards, and expanded its userland tools.
+- **Target Architectures**: IBM PC/XT/AT (Intel 8088, 286 and 386 CPUs in 16-bit protected mode (the official release ran 16-bit even on a 386; 32-bit 386 Minix came from unofficial patches by Bruce Evans and then Minix 2.0)) and non-Intel architectures: Motorola 68000 (Atari ST, Commodore Amiga, Apple Macintosh) and SPARC (Sun SPARCstation)
+- **Historical Milestone**: The transition of Minix from a 16-bit IBM PC-only educational project into a portable, multi-architecture operating system. Minix 1.5 added support for 286 and 386 CPUs in 16-bit protected mode (the official release ran 16-bit even on a 386; 32-bit 386 Minix came from unofficial patches by Bruce Evans and then Minix 2.0), introduced network-oriented distributed systems code via Amoeba, adopted modern ANSI C library standards, and expanded its userland tools.
 
 ### Key Architectural Advances
 - **Protected Mode & Memory Segmentation (`kernel/protect1.c`)**: Introduced Intel 80286/80386 Global Descriptor Table (GDT), Local Descriptor Table (LDT), and Interrupt Descriptor Table (IDT) configuration, enabling Minix to access extended memory beyond the 640 KB real-mode ceiling.
 - **Amoeba Distributed System Support (`amoeba/`)**: Integrated experimental protocols and transactions from Tanenbaum's Amoeba distributed microkernel project (`amoeba/kernel/trans.c`), establishing distributed RPC client/server capabilities.
-- **Elle Text Editor (`elle/`)**: Included "Elle Looks Like Emacs", a lightweight text editor engineered by Michael Plass, providing an Emacs-style editing environment on microcomputers.
+- **Elle Text Editor (`elle/`)**: Included "Elle Looks Like Emacs", a lightweight text editor engineered by Ken Harrenstien, providing an Emacs-style editing environment on microcomputers.
 - **Standardized C Libraries (`lib/`)**: Reorganized the C runtime library into standard compliance domains: `lib/ansi/` (ANSI C compliance), `lib/posix/` (POSIX.1 system call interface), `lib/ibm/` (PC hardware assembly stubs), and `lib/string/`.
 
 ---
@@ -61,7 +61,7 @@ Minix1.5/
 │   ├── util/                    # Distributed utilities (rcp, from, sherver)
 │   └── examples/                # Amoeba client/server demonstration code
 ├── commands/                    # 156 Userland commands and utilities
-│   ├── mined/                   # Andy Tanenbaum's Minix text editor
+│   ├── mined/                   # Minix text editor written by Michiel Huisjes
 │   ├── make/                    # Minix Make build tool
 │   ├── patch/                   # Larry Wall's patch utility ported to Minix
 │   ├── kermit/                  # Kermit serial file transfer program
@@ -93,7 +93,7 @@ Minix1.5/
 | `kernel/protect1.c` | First protected mode implementation in Minix. Sets up the 80286/80386 GDT and LDT segment descriptors, switching the processor into protected mode and expanding addressing beyond real-mode 1 MB limits. |
 | `kernel/proc.c` | Microkernel scheduler and message passing core. Implements synchronous message rendezvous via `mini_send()` and `mini_rec()` with task preemption. |
 | `amoeba/kernel/trans.c` | Implements the Amoeba transaction layer protocol. Enables transparent network RPC across network nodes using capability-based ports and client/server transaction primitives. |
-| `commands/mined/mined1.c` | Andrew Tanenbaum's "Mined" (Minix Editor). A full-screen visual text editor designed to be simple, fast, and educational for undergraduate students. |
+| `commands/mined/mined1.c` | "Mined" (Minix Editor), written by Michiel Huisjes. A full-screen visual text editor designed to be simple, fast, and educational for undergraduate students. |
 | `commands/dis88/dismain.c` | An in-tree 8088/8086 disassembler written for Minix, allowing programmers to inspect compiled system binaries directly on the platform. |
 | `tools/menu.c` | The first interactive boot menu for Minix, allowing users to select root devices, RAM disk sizes, and processor modes during startup. |
 

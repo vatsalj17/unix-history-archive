@@ -6,9 +6,9 @@
 - **Machine Architecture:** DEC VAX-11/780 and VAX-11/750.
 - **Historical Milestones:**
   - 4BSD represented a major architectural enhancement over 3BSD on the VAX platform, cementing Berkeley UNIX as the premiere academic and research operating system.
-  - **Job Control:** Bill Joy introduced full job control into the C Shell (`csh`), allowing users to suspend foreground processes (`Ctrl-Z`), run them in the background (`bg`), and recall them (`fg`, `jobs`).
+  - **Job Control:** Job control in csh was implemented by Jim Kulp (IIASA, Austria) and integrated by Bill Joy, allowing users to suspend foreground processes (`Ctrl-Z`), run them in the background (`bg`), and recall them (`fg`, `jobs`).
   - **Eric Allman's `delivermail`:** The predecessor of Sendmail debuted here, providing multi-network mail routing between ARPANET, UUCP, and Berknet.
-  - **Reliable Signals:** Addressed the historic UNIX signal race condition by implementing signal masking and blocking (`sigsetmask`, `sigpause`).
+  - **Reliable Signals:** Addressed the historic UNIX signal race condition with reliable signals provided by the `jobs` library (`sigset`, `sighold`, `sigrelse`, `sigpause`); `sigvec`, `sigblock` and `sigsetmask` arrived in 4.2BSD.
   - **Curses Library:** Ken Arnold developed the `curses` screen management library, enabling portable terminal applications with optimized redrawing.
   - **Hardware Autoconfiguration:** Implemented dynamic VAX UNIBUS and MASSBUS device discovery (`autoconf.c`).
 

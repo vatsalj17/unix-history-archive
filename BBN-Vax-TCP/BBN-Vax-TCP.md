@@ -6,16 +6,16 @@
 | :--- | :--- |
 | **System Name** | BBN TCP/IP VAX-UNIX (BBN TCP/IP 3.0 Beta-Test Distribution for 4.1BSD) |
 | **Release Date** | November 24, 1981 (with October 1982 update snapshot `bbnnet-oct82`) |
-| **Origin / Creators** | Bolt Beranek & Newman Inc. (BBN, Cambridge, MA) — Rob Gurwitz, Jack Haverty; sponsored by DARPA |
+| **Origin / Creators** | Bolt Beranek & Newman Inc. (BBN, Cambridge, MA) - Rob Gurwitz, Jack Haverty; sponsored by DARPA |
 | **Source Donation** | Recovered from BBN Distribution Tape #4 and donated to TUHS |
 | **Target Architecture** | DEC VAX-11/780 (32-bit CISC with Unibus and Massbus adapters) running 4.1BSD |
 | **Key Historical Milestones** | **The Official DARPA Reference TCP/IP Implementation**: Built to prepare ARPANET for the Jan 1, 1983 Flag Day; introduced in-kernel `mbuf` memory management and finite-state TCP before 4.2BSD sockets |
 
 ### Significance & Historical Context
-In 1980, the United States Department of Defense (DoD) mandated TCP/IP as its official inter-networking standard and established **January 1, 1983 as "Flag Day"**, after which all computers connected to the ARPANET were prohibited from using the old NCP protocol. DARPA contracted Bolt Beranek and Newman (BBN)—the originators of the ARPANET packet-switching nodes—to build the official, production-grade reference implementation of TCP/IP for 32-bit VAX-11/780 systems running UNIX.
+In March 1982 the US Department of Defense declared TCP/IP its standard, and RFC 801 (November 1981) set 1 January 1983 as the date NCP would be switched off on the ARPANET. DARPA contracted Bolt Beranek and Newman (BBN) - the originators of the ARPANET packet-switching nodes - to build the official, production-grade reference implementation of TCP/IP for 32-bit VAX-11/780 systems running UNIX.
 
 BBN documented their architecture in **IEN 168** (*The BBN TCP/IP Protocol Implementation for VAX/UNIX*, January 1981) and distributed beta tapes to research contractors in November 1981. This distribution marks the historic moment where TCP/IP moved into the UNIX kernel:
-1. **The In-Kernel `mbuf` Memory Subsystem**: BBN created the first kernel memory-buffer architecture (`mbuf.c`, `mbuf.h`) designed specifically for network packets—featuring chained buffer descriptors that allowed protocol headers to be prepended and stripped without copying packet payloads.
+1. **The In-Kernel `mbuf` Memory Subsystem**: BBN created an early kernel memory-buffer architecture (`mbuf.c`, `mbuf.h`) designed specifically for network packets - featuring chained buffer descriptors that allowed protocol headers to be prepended and stripped without copying packet payloads.
 2. **Table-Driven TCP Finite State Machine**: Unlike ad-hoc state transitions, BBN implemented a formal state table (`fsm.h`, `fsmdef.h`, `tcp_states.c`) enforcing strict RFC 793 compliance for connections (`LISTEN`, `SYN_SENT`, `ESTABLISHED`, `FIN_WAIT`, `TIME_WAIT`).
 3. **The DARPA vs. Berkeley Duel**: DARPA initially envisioned BBN's TCP/IP stack as the national standard for UNIX. However, UC Berkeley's Computer Systems Research Group (CSRG), led by Bill Joy and Sam Leffler, wanted a more flexible socket abstraction for local IPC as well as networking. Berkeley incorporated ideas from BBN's stack (especially `mbufs`) but rewrote the network subsystem for **4.2BSD** (1983). The BBN VAX implementation remains the historic bridge that made the Internet Flag Day possible.
 
